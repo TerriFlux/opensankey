@@ -120,7 +120,7 @@ export abstract class Class_LinkElementPlus
 
   public override _draw(){
     // Don't put this condition in is_visible because we need node to take into account link value of links visualy filtered for node size
-    if(this.is_value_above_threshold){ 
+    if(this.is_value_above_threshold){
       super._draw()
     }else{
       this.unDraw()
@@ -281,6 +281,7 @@ export abstract class Class_LinkElementPlus
     }
     return default_shape_shape_is_gradient
   }
+
   public set shape_is_gradient(_: boolean) {
     this._display.attributes.shape_is_gradient = _
     // Need to redraw from nodes

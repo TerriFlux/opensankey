@@ -132,35 +132,72 @@ export abstract class Class_NodeElementPlus
 
   // Nothing ...
 
-  // PUBLIC METHOD ======================================================================
+  // COPY METHODS =======================================================================
 
-  // Overrides --------------------------------------------------------------------------
-
-  public override _draw() {
-    super._draw()
-    this._drawIllustration()
-    this._drawFO()
+  /**
+   * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
+   *
+   * @param {Class_NodeElementPlus} node_to_copy
+   * @memberof Class_NodeElementPlus
+   */
+  public copyAttrFrom(
+    node_to_copy: Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  ): void {
+    super.copyAttrFrom(node_to_copy)
+    this._iconName = node_to_copy._iconName
+    this._iconColor = node_to_copy._iconColor
+    this._iconVisible = node_to_copy._iconVisible
+    this._iconViewBox = node_to_copy._iconViewBox
+    this._iconColorSustainable = node_to_copy._iconColorSustainable
+    this._has_FO = node_to_copy._has_FO
+    this._is_FO_raw = node_to_copy._is_FO_raw
+    this._FO_content = node_to_copy._FO_content
+    this._is_image = node_to_copy._is_image
+    this._image_src = node_to_copy._image_src
+    this._hyperlink = node_to_copy._hyperlink
   }
 
-  public override _drawNameLabel() {
-    super._drawNameLabel()
-    this._drawNodeLabelBg()
+  // SAVING METHODS =====================================================================
+
+  /**
+   * Convert node to JSON
+   * @memberof Class_NodeElementPlus
+   */
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Extract root attributes
+    super._toJSON(json_object, kwargs)
+    // Added attributes
+    json_object['iconName'] = this._iconName
+    json_object['iconColor'] = this._iconColor
+    json_object['iconVisible'] = this._iconVisible
+    if (this._iconViewBox) json_object['iconViewBox'] = this._iconViewBox
+    json_object['iconColorSustainable'] = this._iconColorSustainable
+    json_object['has_FO'] = this._has_FO
+    json_object['is_FO_raw'] = this._is_FO_raw
+    json_object['FO_content'] = this._FO_content
+    json_object['is_image'] = this._is_image
+    json_object['image_src'] = this._image_src
+    json_object['hyperlink'] = this._hyperlink
   }
 
   /**
-   *Extract node attributes from json
-   *
+   * Assign to node implementation values from json,
+   * Does not assign links -> need to read links from JSON before
+   * @protected
    * @param {Type_JSON} json_node_object
-   * @param {{ [_: string]: string }} [matching_taggs_id]
-   * @param {{ [_: string]: { [_: string]: string } }} [matching_tags_id]
-   * @memberof Class_NodeElementPlus
+   * @param {Type_JSON} [kwargs]
+   * @memberof Class_NodeElement
    */
-  public override fromJSON(
+  protected _fromJSON(
     json_node_object: Type_JSON,
-    matching_taggs_id?: { [_: string]: string },
-    matching_tags_id?: { [_: string]: { [_: string]: string } }
-  ): void {
-    super.fromJSON(json_node_object, matching_taggs_id, matching_tags_id)
+    kwargs?: Type_JSON
+  ) {
+    // Get root attributes
+    super._fromJSON(json_node_object, kwargs)
+    // New attributes
     this._iconName = getStringFromJSON(json_node_object, 'iconName', this._iconName)
     this._iconColor = getStringFromJSON(json_node_object, 'iconColor', this._iconColor)
     this._iconVisible = getBooleanFromJSON(json_node_object, 'iconVisible', this._iconVisible)
@@ -174,52 +211,20 @@ export abstract class Class_NodeElementPlus
     this._hyperlink = getStringFromJSON(json_node_object, 'hyperlink', this._hyperlink)
   }
 
-  /**
-   * Convert node to JSON
-   *
-   * @return {*}  {Type_JSON}
-   * @memberof Class_NodeElementPlus
-   */
-  public override toJSON(): Type_JSON {
-    const json_entry = super.toJSON()
+  // PUBLIC METHOD ======================================================================
 
-    json_entry['iconName'] = this._iconName
-    json_entry['iconColor'] = this._iconColor
-    json_entry['iconVisible'] = this._iconVisible
-    if (this._iconViewBox) json_entry['iconViewBox'] = this._iconViewBox
-    json_entry['iconColorSustainable'] = this._iconColorSustainable
-    json_entry['has_FO'] = this._has_FO
-    json_entry['is_FO_raw'] = this._is_FO_raw
-    json_entry['FO_content'] = this._FO_content
-    json_entry['is_image'] = this._is_image
-    json_entry['image_src'] = this._image_src
-    json_entry['hyperlink'] = this._hyperlink
+  // Overrides --------------------------------------------------------------------------
 
-    return json_entry
+  public override _draw() {
+    super._draw()
+    this._drawNodeLabelBg()
+    this._drawIllustration()
+    this._drawFO()
   }
 
-  /**
-   * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
-   *
-   * @param {Class_NodeElementPlus} node_to_copy
-   * @memberof Class_NodeElementPlus
-   */
-  public copyAttrFrom(
-    node_to_copy: Class_NodeElementPlus<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-  ): void {
-    super.copyAttrFrom(node_to_copy)
-
-    this._iconName = node_to_copy._iconName
-    this._iconColor = node_to_copy._iconColor
-    this._iconVisible = node_to_copy._iconVisible
-    this._iconViewBox = node_to_copy._iconViewBox
-    this._iconColorSustainable = node_to_copy._iconColorSustainable
-    this._has_FO = node_to_copy._has_FO
-    this._is_FO_raw = node_to_copy._is_FO_raw
-    this._FO_content = node_to_copy._FO_content
-    this._is_image = node_to_copy._is_image
-    this._image_src = node_to_copy._image_src
-    this._hyperlink = node_to_copy._hyperlink
+  public override _drawNameLabel() {
+    super._drawNameLabel()
+    this._drawNodeLabelBg()
   }
 
   public isAttributeOverloaded(attr: keyof Class_NodeAttributePlus) {
@@ -285,7 +290,7 @@ export abstract class Class_NodeElementPlus
    * @memberof Class_Legend
    */
   public drawIllustration() {
-    this._add_waiting_process('drawIllustration', () => { this._drawIllustration() })
+    this._process_or_bypass(() => this._drawIllustration())
   }
 
   /**
@@ -326,8 +331,8 @@ export abstract class Class_NodeElementPlus
    * @private
    * @memberof Class_Legend
    */
-  private drawFO() {
-    this._add_waiting_process('drawFO', () => { this._drawFO() })
+  public drawFO() {
+    this._process_or_bypass(() => this._drawFO())
   }
 
   /**
@@ -468,14 +473,9 @@ export abstract class Class_NodeElementPlus
       .attr('height', this.getShapeHeightToUse())
       .attr('width', this.getShapeWidthToUse())
   }
-  /**
-   * _drawNodeLabelBg with timeout
-   *
-   * @private
-   * @memberof Class_Legend
-   */
-  private drawIllustrationImage() {
-    this._add_waiting_process('drawIllustrationImage', () => { this.drawIllustrationImage() })
+
+  public drawIllustrationImage() {
+    this._process_or_bypass(() => this.drawIllustrationImage())
   }
 
   private _drawIllustrationIcon() {
@@ -497,8 +497,8 @@ export abstract class Class_NodeElementPlus
  * @private
  * @memberof Class_Legend
  */
-  private drawIllustrationIcon() {
-    this._add_waiting_process('drawIllustrationIcon', () => { this._drawIllustrationIcon() })
+  public drawIllustrationIcon() {
+    this._process_or_bypass(() => this._drawIllustrationIcon())
   }
 
   /**
@@ -559,8 +559,8 @@ export abstract class Class_NodeElementPlus
    * @private
    * @memberof Class_Legend
    */
-  private drawNodeLabelBg() {
-    this._add_waiting_process('drawNodeLabelBg', () => { this._drawNodeLabelBg() })
+  public drawNodeLabelBg() {
+    this._process_or_bypass(() => this._drawNodeLabelBg())
   }
 
   /**
@@ -602,7 +602,7 @@ export abstract class Class_NodeElementPlus
 
     // Launch a timeout that will activate at the end of the animation to reset drawing_area
     setTimeout(
-      () => { this.drawing_area.reset() },
+      () => { this.drawing_area.draw() },
       time_to_animate)
 
   }

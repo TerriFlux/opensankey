@@ -25,7 +25,6 @@ import {
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 import { convert_data_plus_legacy, getArrayFromJSON } from '../SankeyPlusUtils'
-import { get_sync_lists } from '../deps/OpenSankey/types/Sankey'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -48,10 +47,6 @@ export abstract class Class_DrawingAreaPlus
     Type_GenericNodeElement,
     Type_GenericLinkElement
   > {
-
-  // TODO Faire le menage ?
-  // override _sankey:Type_GenericSankey
-  // private _sankey_plus:Type_GenericSankey=this.sankey
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -83,10 +78,6 @@ export abstract class Class_DrawingAreaPlus
   // Attr for views
   private _heredited_attr: string[] = []
 
-
-  // Objects containeds in drawing area -------------------------------------------------
-
-
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -115,13 +106,115 @@ export abstract class Class_DrawingAreaPlus
 
   protected abstract createNewSelectionZone(): Class_ZoneSelectionPlus<Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
-  // PUBLIC METHODS =====================================================================
+  // CLEANING METHODS ===================================================================
 
   public delete() {
     super.delete()
     // Override also relations with views
+    this._heredited_attr = []
     this.application_data.deleteView(this.id)
   }
+
+  /**
+   * Delete a given container -> container will not exist anymore
+   * @param {Class_ContainerElement<any, any>} container
+   * @memberof Class_DrawingAreaPlus
+   */
+  public deleteContainer(container: Class_ContainerElement<any, any>) { // eslint-disable-line
+    // Remove from selection if necessary
+    this.removeContainerFromSelection(container)
+    // Remove container from sankey
+    this.sankey.deleteContainer(container)
+    // Self delete container
+    container.delete()
+    // Update related menus
+    this.application_data.menu_configuration.updateComponentRelatedToContainers()
+  }
+
+  /**
+   * Permanently delete selected containers
+   * Update menu accordingly
+   * @memberof Class_DrawingAreaPlus
+   */
+  public deleteSelectedContainers() {
+    // Get copy of selected nodes
+    const selected_containers = this.selected_containers_list
+    // Delete each one of them
+    selected_containers.forEach(container => { this.deleteContainer(container) })
+    // Then let garbage collector do the rest...
+  }
+
+  /**
+   * Delete all selected elements
+   *
+   * @memberof Class_DrawingArea
+   */
+  public deleteSelection() {
+    super.deleteSelection()
+    this.deleteSelectedContainers()
+  }
+
+  // COPY METHODS =======================================================================
+
+  protected _copyAttrFrom(drawing_area_to_copy: Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+    // Call heredited method
+    super._copyAttrFrom(drawing_area_to_copy)
+    // Name
+    this.name = drawing_area_to_copy.name
+    // Attribute for background image
+    this._show_background_image = drawing_area_to_copy._show_background_image
+    this._background_image = drawing_area_to_copy._background_image
+    // Attr for views
+    this._heredited_attr =  Object.assign([], drawing_area_to_copy._heredited_attr)
+  }
+
+  // SAVING METHODS =====================================================================
+
+  /**
+   * Setting value of drawing area and substructur from JSON
+   *
+   * @param {boolean} [only_visible_elements]
+   * @param {boolean} [with_values]
+   * @return {*}
+   * @memberof Class_DrawingAreaPlus
+   */
+  public toJSON(only_visible_elements?: boolean, with_values?: boolean) {
+    // Herited toJSON
+    const json_entry: Type_JSON = super.toJSON(only_visible_elements, with_values)
+    // Add new attributes
+    json_entry['show_background_image'] = this._show_background_image
+    json_entry['background_image'] = this._background_image
+    json_entry['name'] = this.name
+    json_entry['heredited_attr'] = this._heredited_attr
+    return json_entry
+  }
+
+  /**
+   * Extract Drawing area attributes from JSON
+   *
+   * @param {Type_JSON} json_object
+   * @param {boolean} [redraw]
+   * @param {boolean} [match_and_update]
+   * @memberof Class_DrawingAreaPlus
+   */
+  public fromJSON(json_object: Type_JSON, match_and_update?: boolean): void {
+    const version = getStringOrUndefinedFromJSON(json_object, 'version')
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.9)
+    ) {
+      convert_data_plus_legacy(json_object) // FIXME
+    }
+    super.fromJSON(json_object, match_and_update)
+    // New attributes
+    this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
+    this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
+    this.name = getStringFromJSON(json_object, 'name', this.name)
+    this._heredited_attr = getArrayFromJSON(json_object, 'heredited_attr', []) as string[]
+  }
+
+  // PUBLIC METHODS =====================================================================
+
 
   /**
    * Override switchMode to setEvent listener when changing drawing area mode (in selection mode drag event are enabled)
@@ -137,8 +230,8 @@ export abstract class Class_DrawingAreaPlus
    * Override Reset drawing area from OS
    * @memberof Class_DrawingArea
    */
-  public reset() {
-    super.reset()
+  public draw() {
+    super.draw()
     // Add specific groups for free_labels, link and others
     this.d3_selection_free_label = this.d3_selection?.insert('g', '#g_links').attr('id', 'g_labels') ?? null
     this.d3_selection_def_gradient = this.d3_selection?.append('g').attr('id', 'def_gradient') ?? null
@@ -183,22 +276,6 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
-   * Delete a given container -> container will not exist anymore
-   * @param {Class_ContainerElement<any, any>} container
-   * @memberof Class_DrawingAreaPlus
-   */
-  public deleteContainer(container: Class_ContainerElement<any, any>) { // eslint-disable-line
-    // Remove from selection if necessary
-    this.removeContainerFromSelection(container)
-    // Remove container from sankey
-    this.sankey.deleteContainer(container)
-    // Self delete container
-    container.delete()
-    // Update related menus
-    this.application_data.menu_configuration.updateComponentRelatedToContainers()
-  }
-
-  /**
    * Override getElementsPosInDA so it take into account container
    *
    * @memberof Class_DrawingAreaPlus
@@ -216,7 +293,7 @@ export abstract class Class_DrawingAreaPlus
 
     const max_x = Math.max(max_free_label_pos_x, max_x_node)
     const max_y = Math.max(max_free_label_pos_y, max_y_node)
-  
+
     return [max_x, max_y]
   }
 
@@ -258,127 +335,6 @@ export abstract class Class_DrawingAreaPlus
     }
   }
 
-  /**
-   * Permanently delete selected containers
-   * Update menu accordingly
-   * @memberof Class_DrawingAreaPlus
-   */
-  public deleteSelectedContainers() {
-    // Get copy of selected nodes
-    const selected_containers = this.selected_containers_list
-    // Delete each one of them
-    selected_containers.forEach(container => { this.deleteContainer(container) })
-    // Then let garbage collector do the rest...
-  }
-
-  /**
-   * Delete all selected elements
-   *
-   * @memberof Class_DrawingArea
-   */
-  public deleteSelection() {
-    super.deleteSelection()
-    this.deleteSelectedContainers()
-  }
-
-  public copyFrom(_: Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
-    const json = _.toJSON()
-    delete json.id
-    delete json.name
-    this.fromJSON(json, false)
-  }
-
-  /**
-   * Extract Drawing area attributes from JSON
-   *
-   * @param {Type_JSON} json_object
-   * @param {boolean} [redraw]
-   * @param {boolean} [match_and_update]
-   * @memberof Class_DrawingAreaPlus
-   */
-  public fromJSON(json_object: Type_JSON, redraw?: boolean, match_and_update?: boolean): void {
-    const version = getStringOrUndefinedFromJSON(json_object, 'version')
-
-    if (
-      (version === undefined) ||
-      (Number(version) < 0.9)
-    ) {
-      convert_data_plus_legacy(json_object) // FIXME
-    }
-    super.fromJSON(json_object, redraw, match_and_update)
-    // New attributes
-    this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
-    this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
-    this.name = getStringFromJSON(json_object, 'name', this.name)
-    this._heredited_attr = getArrayFromJSON(json_object, 'heredited_attr', []) as string[]
-  }
-
-  /**
-   * Setting value of drawing area and substructur from JSON
-   *
-   * @param {boolean} [only_visible_elements]
-   * @param {boolean} [with_values]
-   * @return {*}
-   * @memberof Class_DrawingAreaPlus
-   */
-  public toJSON(only_visible_elements?: boolean, with_values?: boolean) {
-    // Herited toJSON
-    const json_entry: Type_JSON = super.toJSON(only_visible_elements, with_values)
-
-    json_entry['show_background_image'] = this._show_background_image
-    json_entry['background_image'] = this._background_image
-    json_entry['name'] = this.name
-    json_entry['heredited_attr'] = this._heredited_attr
-    return json_entry
-  }
-
-  /**
-   * Copy attributes from a given Class_DrawingAreaPlus & create/copy attributes to current sankey
-   *
-   * @param {Class_DrawingAreaPlus} other
-   * @memberof Class_DrawingAreaPlus
-   */
-  public updateFrom(
-    other_drawing_area: Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
-    mode: string[]
-  ): void {
-    // Transfert all attributes = Copy everything from other drawing area
-    const all = mode.includes('*')
-    // Transfer DA attributs
-    if (mode.includes('attrDrawingArea') || all) {
-      this._show_background_image = other_drawing_area._show_background_image
-      this._background_image = other_drawing_area._background_image
-      this.name = other_drawing_area.name
-    }
-
-    if (all) {// Update Contaiers
-      // TODO add container create/update/delete options in mode
-      const [to_remove, to_add,] = get_sync_lists(this._sankey.containers_dict, other_drawing_area._sankey.containers_dict,{})
-      // Add containers that are in other sankey but not in this sankey
-      if (all) {
-        to_add
-          .map(id => {
-            const n = other_drawing_area._sankey.containers_dict[id]
-            this._sankey.addNewFreeLabel(n.id)
-            this._sankey.containers_dict[id].copyFrom(n)
-
-            this._sankey.containers_dict[id].display.position = structuredClone(n.display.position)
-
-            return id
-          })
-      }
-
-      // Delete containers that are in other sankey but not in this sankey
-      if (all) {
-        to_remove
-          .forEach(id => {
-            this.deleteContainer(this._sankey.containers_dict[id])
-          })
-      }
-    }
-    // Transfert other inherited DA attributes + Sankey attributes
-    super.updateFrom(other_drawing_area, mode)
-  }
 
   /**
    * remove a container from a selection set
@@ -402,27 +358,6 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
-   * Special purge to use before launching sankey animation from node,
-   * it cancel timeout of all visible elements so the purge doesn't redraw element while animation is launched
-   *
-   * @memberof Class_DrawingAreaPlus
-   */
-  public purgeSelectionBeforeAnimation() {
-    // Gets all visible elements that can be affected by the purge & the animation
-    const visible_element = [...this._sankey.visible_nodes_list, ...this._sankey.visible_links_list]
-
-    // Cancel timeout of all visible elements
-    visible_element
-      .forEach((element) => element.has_timeout = false)
-
-    this.purgeSelection() //purge selection without timeout
-
-    // Reset timeout of all visible elements
-    visible_element
-      .forEach((element) => element.has_timeout = true)
-  }
-
-  /**
    * Remove all container selected
    * @memberof Class_DrawingArea
    */
@@ -434,7 +369,6 @@ export abstract class Class_DrawingAreaPlus
       })
     this.application_data.menu_configuration.updateComponentRelatedToContainers()
   }
-
 
   /**
    * Function used to move selected nodes from another element drag event,
