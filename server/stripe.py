@@ -42,7 +42,7 @@ STRIPE_KEYS = {
     'publishable_key': None,
     'price_id_osplusmensuel': None,
     'endpoint_secret': None}
-CLIENT_ROOT_URL=None
+CLIENT_ROOT_URL = None
 if 'STRIPE_SECRET_KEY' in os.environ:
     STRIPE_KEYS = {
         'secret_key': os.environ['STRIPE_SECRET_KEY'],

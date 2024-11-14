@@ -15,7 +15,7 @@ from flask import render_template
 
 # ---------------------------------------------------------------
 # CONSTANTS FROM ENV
-if 'MAIL_SENDING_ADRESS' in  os.environ:
+if 'MAIL_SENDING_ADRESS' in os.environ:
     MAIL_SENDING_ADRESS = os.environ['MAIL_SENDING_ADRESS']
     MAIL_SENDING_PWD = os.environ['MAIL_SENDING_PWD']
     MAIL_SERVER = os.environ['MAIL_SERVER']
@@ -36,7 +36,7 @@ else:
 
     DBG_MODE = True
 
-    CLIENT_ROOT_URL = None 
+    CLIENT_ROOT_URL = None
 
 
 # ---------------------------------------------------------------
