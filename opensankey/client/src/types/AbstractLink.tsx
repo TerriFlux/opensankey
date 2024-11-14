@@ -33,22 +33,22 @@ export abstract class Class_AbstractLinkElement
   public abstract removeDataTag(_: Class_AbstractTag): void;
   public abstract getAllValues(): { [_: string]: [Class_AbstractLinkValue, Class_AbstractTag[] | undefined]; };
   public abstract hasGivenTag(tag: Class_AbstractTag):boolean
-  
+  // Mandatory getters / setters
   public abstract get source():Type_AbstractNodeElement;
   public abstract get target():Type_AbstractNodeElement;
-
 }
 
-
 export abstract class Class_AbstractLinkValue {
-  public abstract get id(): string
   // Mandatory methods
   public abstract draw(): void
   public abstract addTag(_: Class_AbstractTag): void
   public abstract removeTag(_: Class_AbstractTag): void
   public abstract getAllValues(): { [_: string]: [Class_AbstractLinkValue, Class_AbstractTag[] | undefined]; };
+  // Mandatory getters / setters
+  public abstract get id(): string
 }
 
 export abstract class Class_AbstractLinkStyle {
+  // Mandatory getters / setters
   public abstract get id(): string
 }

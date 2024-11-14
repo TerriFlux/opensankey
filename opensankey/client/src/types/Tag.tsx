@@ -97,6 +97,8 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
     this._ref_sankey = sankey
   }
 
+  // CLEANING METHODS ===================================================================
+
   /**
    * Define deletion behavior
    * @memberof Class_Tag
@@ -113,17 +115,103 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
     }
   }
 
+  // COPY METHODS =======================================================================
+
+  /**
+   * Copy given tag
+   * @param {Class_ProtoTag} tag_to_copy
+   * @memberof Class_ProtoTag
+   */
+  public copyFrom(tag_to_copy: Class_ProtoTag) {
+    // Get infos
+    this._ref_sankey.drawing_area.bypass_redraws = true // Security
+    this._copyFrom(tag_to_copy)
+    this._ref_sankey.drawing_area.bypass_redraws = false // Security
+  }
+
+  /**
+   * Overridable method to copy a given tag
+   * @protected
+   * @param {Class_ProtoTag} tag_to_copy
+   * @memberof Class_ProtoTag
+   */
+  protected _copyFrom(tag_to_copy: Class_ProtoTag) {
+    this._name = tag_to_copy._name
+    this._color = tag_to_copy._color
+    this._is_selected = tag_to_copy._is_selected
+    this._ref_sankey = tag_to_copy._ref_sankey
+    // Groups are switched from related group class
+  }
+
+  /**
+   * Convert element to JSON
+   * @param {Type_JSON} [kwargs]
+   * @return {*}
+   * @memberof Class_ProtoTag
+   */
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
+    // Init output JSON
+    const json_object: Type_JSON = {}
+    // Fill data
+    this._toJSON(json_object, kwargs)
+    // Return
+    return json_object
+  }
+
+  /**
+   * Overridable method for JSON conversion
+   * @protected
+   * @param {Type_JSON} json_object
+   * @param {Type_JSON} [_kwargs]
+   * @memberof Class_ProtoTag
+   */
+  protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    json_object['name'] = this._name
+    json_object['selected'] = this._is_selected
+    json_object['color'] = this._color
+  }
+
+  /**
+   *
+   *
+   * @param {Type_JSON} json_object
+   * @param {Type_JSON} [kwargs]
+   * @memberof Class_ProtoTag
+   */
+  public fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+    // Get infos
+    this._ref_sankey.drawing_area.bypass_redraws = true // Security
+    this._fromJSON(json_object, kwargs)
+    this._ref_sankey.drawing_area.bypass_redraws = false // Security
+  }
+
+  /**
+   * Set Tag value from JSON
+   * @protected
+   * @param {Type_JSON} json_object
+   * @param {Type_JSON} [_kwargs]
+   * @memberof Class_ProtoTag
+   */
+  protected _fromJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ): void {
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._is_selected = getBooleanFromJSON(json_object, 'selected', false)
+    this._color = getStringFromJSON(json_object, 'color', this._color)
+  }
+
   // PUBLIC METHODES ==================================================================
 
   public abstract update(): void
-
-  public copyFrom(element: Class_ProtoTag) {
-    this._name = element._name
-    this._color = element._color
-    this._is_selected = element._is_selected
-    this._ref_sankey = element._ref_sankey
-    // Groups are switched from related group class
-  }
 
   public setSelected() {
     // Avoid useless update
@@ -150,26 +238,6 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
     this._is_selected = !this._is_selected
     // Redraw all related elements
     this.update()
-  }
-
-  public toJSON() {
-    const json_object = {} as Type_JSON
-    json_object['name'] = this._name
-    json_object['selected'] = this._is_selected
-    json_object['color'] = this._color
-    return json_object
-  }
-
-  /**
-   *Set Tag value from JSON
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_Tag
-   */
-  public fromJSON(json_object: Type_JSON) {
-    this._name = getStringFromJSON(json_object, 'name', this._name)
-    this._is_selected = getBooleanFromJSON(json_object, 'selected', false)
-    this._color = getStringFromJSON(json_object, 'color', this._color)
   }
 
   // PROTECTED METHODS ==================================================================
@@ -238,6 +306,21 @@ export class Class_Tag extends Class_ProtoTag {
     this._group = group
   }
 
+  // CLEANING METHODS ===================================================================
+
+  /**
+   * Define deletion behavior
+   * @memberof Class_Tag
+   */
+  protected cleanForDeletion() {
+    // Unref this tag from all references
+    Object.values(this._references)
+      .forEach(element => {
+        element.removeTag(this)
+      })
+    this._references = {}
+  }
+
   // PUBLIC METHODS =====================================================================
 
   public update() {
@@ -264,44 +347,6 @@ export class Class_Tag extends Class_ProtoTag {
       delete this._references[_.id]
       _.removeTag(this)
     }
-  }
-
-  /**
-   * Copy attributes from external tag
-   *
-   * @param {Class_Tag} element
-   * @memberof Class_Tag
-   */
-  public copyFrom(tag: Class_Tag) {
-    super.copyFrom(tag)
-    // Synchronize references
-    let all_possible_reference: { [x: string]: Type_TagReference } = { ... this._ref_sankey.nodes_dict }
-    this._ref_sankey.links_list
-      .map(link => all_possible_reference = {
-        ...all_possible_reference,
-        ...Object.fromEntries(Object.entries(link.getAllValues()).map(([id, list]) => [id, list[0]]))
-      })
-    Object.keys(tag._references) // Add missing refs
-      .filter(ref_id => ref_id in all_possible_reference)
-      .forEach(ref_id => this.addReference(all_possible_reference[ref_id]))
-    Object.keys(this._references) // Remove extra refs
-      .filter(ref_id => !tag._references[ref_id])
-      .forEach(ref_id => this.removeReference(this._references[ref_id]))
-  }
-
-  // PROTECTED METHODS ==================================================================
-
-  /**
-   * Define deletion behavior
-   * @memberof Class_Tag
-   */
-  protected cleanForDeletion() {
-    // Unref this tag from all references
-    Object.values(this._references)
-      .forEach(element => {
-        element.removeTag(this)
-      })
-    this._references = {}
   }
 
   // GETTERS ============================================================================
@@ -355,19 +400,6 @@ export class Class_DataTag extends Class_ProtoTag {
         element.drawWithNodes()
       })
     this._ref_sankey.drawing_area.legend.draw()
-  }
-
-  /**
-   * Copy all attributes from input tags + Set the same refs
-   *
-   * @param {Class_DataTag} tag
-   * @memberof Class_DataTag
-   */
-  public copyFrom(tag: Class_DataTag) {
-    super.copyFrom(tag)
-    // No need for reference synchro here
-    // -> will be done from new links creation / removal
-    // + will be done from new datatags creation / removal
   }
 
   // PROTECTED METHODS ==================================================================
@@ -446,6 +478,8 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
     this._ref_sankey = sankey
   }
 
+  // CLEANING METHODS ====================================================================
+
   /**
    * Define deletion behavior
    * @memberof Class_Tag
@@ -462,16 +496,63 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
     }
   }
 
+  protected abstract cleanForDeletion(): void
+
+  // COPY METHODS =====================================================================
+
+  public copyFrom(tag_to_copy: Class_ProtoLevelTag) {
+    // Get infos
+    this._ref_sankey.drawing_area.bypass_redraws = true // Security
+    this._copyFrom(tag_to_copy)
+    this._ref_sankey.drawing_area.bypass_redraws = false // Security
+  }
+
+  protected _copyFrom(tag_to_copy: Class_ProtoLevelTag) {
+    this._name = tag_to_copy._name
+    this._color = tag_to_copy._color
+    this._is_selected = tag_to_copy._is_selected
+    // Groups are switched from related group class
+  }
+
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
+    const json_object = {} as Type_JSON
+    this._toJSON(json_object, kwargs)
+    return json_object
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    json_object['name'] = this._name
+    json_object['selected'] = this._is_selected
+    json_object['color'] = this._color
+  }
+
+  public fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Get infos
+    this._ref_sankey.drawing_area.bypass_redraws = true // Security
+    this._fromJSON(json_object, kwargs)
+    this._ref_sankey.drawing_area.bypass_redraws = false // Security
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._is_selected = getBooleanFromJSON(json_object, 'selected', false)
+    this._color = getStringFromJSON(json_object, 'color', this._color)
+  }
+
   // PUBLIC METHODES ==================================================================
 
   public abstract update(): void
-
-  public copyFrom(element: Class_ProtoLevelTag) {
-    this._name = element._name
-    this._color = element._color
-    this._is_selected = element._is_selected
-    // Groups are switched from related group class
-  }
 
   public setSelected() {
     // Avoid useless update
@@ -499,30 +580,6 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
     // Redraw all related elements
     this.update()
   }
-
-  public toJSON() {
-    const json_object = {} as Type_JSON
-    json_object['name'] = this._name
-    json_object['selected'] = this._is_selected
-    json_object['color'] = this._color
-    return json_object
-  }
-
-  /**
-   *Set Tag value from JSON
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_Tag
-   */
-  public fromJSON(json_object: Type_JSON) {
-    this._name = getStringFromJSON(json_object, 'name', this._name)
-    this._is_selected = getBooleanFromJSON(json_object, 'selected', false)
-    this._color = getStringFromJSON(json_object, 'color', this._color)
-  }
-
-  // PROTECTED METHODS ==================================================================
-
-  protected abstract cleanForDeletion(): void
 
   // GETTERS / SETTERS ==================================================================
 
@@ -585,7 +642,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     this._group = group
   }
 
-  // PROTECTED METHODS ==================================================================
+  // CLEANING METHODS ===================================================================
 
   /**
    * Define deletion behavior
@@ -602,145 +659,147 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     // Let the garbage collector do the rest
   }
 
-  /**
-   * Copy all attributes from input tags + Set the same refs
-   *
-   * @param {Class_DataTag} tag
-   * @memberof Class_DataTag
-   */
-  public copyFrom(other_tag: Class_LevelTag) {
-    // Copy herited attributes
-    super.copyFrom(other_tag)
-    // Get all existing references ------------------------------------------------------
-    // Create a dict of all existing node in this related sankey
-    const all_existing_nodes = this._ref_sankey.nodes_dict
-    // Create a dict of all existing dimensions in this related sankey
-    const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
-    this._ref_sankey.level_taggs_list
-      .forEach(tagg => {
-        (tagg as Class_LevelTagGroup).tags_list
-          .forEach(tag => {
-            // Check children dimensions
-            tag.dimensions_list_as_tag_for_children
-              .filter(dim => !(dim.id in all_existing_dim))
-              .forEach(dim => all_existing_dim[dim.id] = dim)
-            // Check parent dimensions
-            tag.dimensions_list_as_tag_for_parent
-              .filter(dim => !(dim.id in all_existing_dim))
-              .forEach(dim => all_existing_dim[dim.id] = dim)
-          })
-      })
-    // Synchro dimensions where tag is for children -------------------------------------
-    // Add missing but existing dimensions where this is a tag for children
-    other_tag.dimensions_list_as_tag_for_children
-      .filter(dim => {
-        return (
-          (dim.id in all_existing_dim) &&
-          !(dim.id in this._dimensions_as_tag_for_children)
-        )
-      })
-      .forEach(dim => {
-        this.addAsChildrenLevel(all_existing_dim[dim.id])
-      })
-    // Add missing and non-existing dimensions where this is a tag for children
-    other_tag.dimensions_list_as_tag_for_children
-      .filter(dim => {
-        // Verify if there is at least one child that exist in related sankey
-        let at_least_one_match_for_children = false
-        dim.children
-          .forEach(child => at_least_one_match_for_children = (
-            (at_least_one_match_for_children) ||
-            (child.id in all_existing_nodes)))
-        // And verify that parent also exists in related sankey
-        // And that related tag for parent is in the same group
-        return (
-          !(dim.id in all_existing_dim) &&
-          (dim.parent.id in all_existing_nodes) &&
-          (at_least_one_match_for_children) &&
-          (dim.parent_level_tag.id in this.group.tags_dict)
-        )
-      })
-      .forEach(dim => {
-        const parent = all_existing_nodes[dim.parent.id]
-        const children = dim.children.map(_ => all_existing_nodes[_.id])
-        const parent_level_tag = this.group.tags_dict[dim.parent_level_tag.id]
-        const new_dim = new Class_NodeDimension(
-          parent,
-          children,
-          parent_level_tag as Class_AbstractLevelTag,
-          [this] as Class_AbstractLevelTag[],
-          dim.id
-        )
-        this.addAsChildrenLevel(new_dim)
-      })
-    // Remove existing dimension where this tag is no more
-    this.dimensions_list_as_tag_for_children
-      .filter(dim => {
-        return (
-          !(dim.id in other_tag._dimensions_as_tag_for_children)
-        )
-      })
-      .forEach(dim => this.removeChildrenLevel(dim))
-    // Synchro dimensions where tag is for parents --------------------------------------
-    // Add missing but existing dimensions where this is a tag for parent
-    other_tag.dimensions_list_as_tag_for_parent
-      .filter(dim => {
-        return (
-          (dim.id in all_existing_dim) &&
-          !(dim.id in this._dimensions_as_tag_for_parent)
-        )
-      })
-      .forEach(dim => {
-        this.addAsParentLevel(all_existing_dim[dim.id])
-      })
-    // Add missing and non-existing dimensions where this is a tag for parent
-    other_tag.dimensions_list_as_tag_for_parent
-      .filter(dim => {
-        // Verify if there is at least one child that exist in related sankey
-        let ok_for_children_nodes = false
-        dim.children
-          .forEach(child => ok_for_children_nodes = (
-            (ok_for_children_nodes) ||
-            (child.id in all_existing_nodes)))
-        // And that related tag for parent is in the same group
-        let ok_children_level_tags = false
-        dim.children_level_tags
-          .forEach(tag => ok_children_level_tags = (
-            (ok_children_level_tags) ||
-            (tag.id in this.group.tags_dict)
-          ))
-        // And verify that parent also exists in related sankey
-        return (
-          !(dim.id in all_existing_dim) &&
-          (dim.parent.id in all_existing_nodes) &&
-          (ok_for_children_nodes) &&
-          (ok_children_level_tags)
-        )
-      })
-      .forEach(dim => {
-        const parent = all_existing_nodes[dim.parent.id]
-        const children = dim.children.map(_ => all_existing_nodes[_.id])
-        const children_level_tag = dim.children_level_tags
-          .filter(tag => tag.id in this.group.tags_dict)
-          .map(tag => this.group.tags_dict[tag.id])
-        const new_dim = new Class_NodeDimension(
-          parent,
-          children,
-          this as Class_AbstractLevelTag,
-          children_level_tag,
-          dim.id
-        )
-        this.addAsParentLevel(new_dim)
-      })
-    // Remove existing dimension where this tag is no more
-    this.dimensions_list_as_tag_for_parent
-      .filter(dim => {
-        return (
-          !(dim.id in other_tag._dimensions_as_tag_for_parent)
-        )
-      })
-      .forEach(dim => this.removeParentLevel(dim))
-  }
+  // COPY METHODS =======================================================================
+
+  // /**
+  //  * Copy all attributes from input tags + Set the same refs
+  //  *
+  //  * @param {Class_DataTag} tag
+  //  * @memberof Class_DataTag
+  //  */
+  // protected _copyFrom(tag_to_copy: Class_LevelTag) {
+  //   // Copy herited attributes
+  //   super._copyFrom(tag_to_copy)
+  //   // Get all existing references ------------------------------------------------------
+  //   // Create a dict of all existing node in this related sankey
+  //   const all_existing_nodes = this._ref_sankey.nodes_dict
+  //   // Create a dict of all existing dimensions in this related sankey
+  //   const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
+  //   this._ref_sankey.level_taggs_list
+  //     .forEach(tagg => {
+  //       (tagg as Class_LevelTagGroup).tags_list
+  //         .forEach(tag => {
+  //           // Check children dimensions
+  //           tag.dimensions_list_as_tag_for_children
+  //             .filter(dim => !(dim.id in all_existing_dim))
+  //             .forEach(dim => all_existing_dim[dim.id] = dim)
+  //           // Check parent dimensions
+  //           tag.dimensions_list_as_tag_for_parent
+  //             .filter(dim => !(dim.id in all_existing_dim))
+  //             .forEach(dim => all_existing_dim[dim.id] = dim)
+  //         })
+  //     })
+  //   // Synchro dimensions where tag is for children -------------------------------------
+  //   // Add missing but existing dimensions where this is a tag for children
+  //   tag_to_copy.dimensions_list_as_tag_for_children
+  //     .filter(dim => {
+  //       return (
+  //         (dim.id in all_existing_dim) &&
+  //         !(dim.id in this._dimensions_as_tag_for_children)
+  //       )
+  //     })
+  //     .forEach(dim => {
+  //       this.addAsChildrenLevel(all_existing_dim[dim.id])
+  //     })
+  //   // Add missing and non-existing dimensions where this is a tag for children
+  //   tag_to_copy.dimensions_list_as_tag_for_children
+  //     .filter(dim => {
+  //       // Verify if there is at least one child that exist in related sankey
+  //       let at_least_one_match_for_children = false
+  //       dim.children
+  //         .forEach(child => at_least_one_match_for_children = (
+  //           (at_least_one_match_for_children) ||
+  //           (child.id in all_existing_nodes)))
+  //       // And verify that parent also exists in related sankey
+  //       // And that related tag for parent is in the same group
+  //       return (
+  //         !(dim.id in all_existing_dim) &&
+  //         (dim.parent.id in all_existing_nodes) &&
+  //         (at_least_one_match_for_children) &&
+  //         (dim.parent_level_tag.id in this.group.tags_dict)
+  //       )
+  //     })
+  //     .forEach(dim => {
+  //       const parent = all_existing_nodes[dim.parent.id]
+  //       const children = dim.children.map(_ => all_existing_nodes[_.id])
+  //       const parent_level_tag = this.group.tags_dict[dim.parent_level_tag.id]
+  //       const new_dim = new Class_NodeDimension(
+  //         parent,
+  //         children,
+  //         parent_level_tag as Class_AbstractLevelTag,
+  //         [this] as Class_AbstractLevelTag[],
+  //         dim.id
+  //       )
+  //       this.addAsChildrenLevel(new_dim)
+  //     })
+  //   // Remove existing dimension where this tag is no more
+  //   this.dimensions_list_as_tag_for_children
+  //     .filter(dim => {
+  //       return (
+  //         !(dim.id in tag_to_copy._dimensions_as_tag_for_children)
+  //       )
+  //     })
+  //     .forEach(dim => this.removeChildrenLevel(dim))
+  //   // Synchro dimensions where tag is for parents --------------------------------------
+  //   // Add missing but existing dimensions where this is a tag for parent
+  //   tag_to_copy.dimensions_list_as_tag_for_parent
+  //     .filter(dim => {
+  //       return (
+  //         (dim.id in all_existing_dim) &&
+  //         !(dim.id in this._dimensions_as_tag_for_parent)
+  //       )
+  //     })
+  //     .forEach(dim => {
+  //       this.addAsParentLevel(all_existing_dim[dim.id])
+  //     })
+  //   // Add missing and non-existing dimensions where this is a tag for parent
+  //   tag_to_copy.dimensions_list_as_tag_for_parent
+  //     .filter(dim => {
+  //       // Verify if there is at least one child that exist in related sankey
+  //       let ok_for_children_nodes = false
+  //       dim.children
+  //         .forEach(child => ok_for_children_nodes = (
+  //           (ok_for_children_nodes) ||
+  //           (child.id in all_existing_nodes)))
+  //       // And that related tag for parent is in the same group
+  //       let ok_children_level_tags = false
+  //       dim.children_level_tags
+  //         .forEach(tag => ok_children_level_tags = (
+  //           (ok_children_level_tags) ||
+  //           (tag.id in this.group.tags_dict)
+  //         ))
+  //       // And verify that parent also exists in related sankey
+  //       return (
+  //         !(dim.id in all_existing_dim) &&
+  //         (dim.parent.id in all_existing_nodes) &&
+  //         (ok_for_children_nodes) &&
+  //         (ok_children_level_tags)
+  //       )
+  //     })
+  //     .forEach(dim => {
+  //       const parent = all_existing_nodes[dim.parent.id]
+  //       const children = dim.children.map(_ => all_existing_nodes[_.id])
+  //       const children_level_tag = dim.children_level_tags
+  //         .filter(tag => tag.id in this.group.tags_dict)
+  //         .map(tag => this.group.tags_dict[tag.id])
+  //       const new_dim = new Class_NodeDimension(
+  //         parent,
+  //         children,
+  //         this as Class_AbstractLevelTag,
+  //         children_level_tag,
+  //         dim.id
+  //       )
+  //       this.addAsParentLevel(new_dim)
+  //     })
+  //   // Remove existing dimension where this tag is no more
+  //   this.dimensions_list_as_tag_for_parent
+  //     .filter(dim => {
+  //       return (
+  //         !(dim.id in tag_to_copy._dimensions_as_tag_for_parent)
+  //       )
+  //     })
+  //     .forEach(dim => this.removeParentLevel(dim))
+  // }
 
   // PUBLIC METHODS =====================================================================
 
@@ -931,6 +990,8 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
     this._ref_sankey = sankey
   }
 
+  // CLEANING METHODS ===================================================================
+
   /**
    * Define deletion behavior
    * @memberof Class_ProtoTagGroup
@@ -947,6 +1008,108 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
       this._tags = {}
       // Garbage collection will do the rest ...
     }
+  }
+
+  // COPY METHODS =======================================================================
+
+  public copyFrom(
+    tagg_to_copy: Class_ProtoTagGroup,
+    tags_synchro = true
+  ) {
+    this._ref_sankey.drawing_area.bypass_redraws = true
+    this._copyFrom(tagg_to_copy, tags_synchro)
+    this._ref_sankey.drawing_area.bypass_redraws = false
+  }
+
+  protected _copyFrom(
+    tagg_to_copy: Class_ProtoTagGroup,
+    tags_synchro = true
+  ) {
+    // Common attributes
+    this._name = tagg_to_copy._name
+    this._banner = tagg_to_copy._banner
+    this._tag_count = tagg_to_copy._tag_count
+
+    // Synchronize tags
+    if (tags_synchro) {
+
+      // Synchro current tags
+      this.tags_list
+        .forEach(tag => {
+          // Delete tags not present in new layout but present in curr
+          if (!(tag.id in tagg_to_copy.tags_dict))
+            this.removeTag(tag)
+          // Transfer tags attr present in new layout and in curr
+          else
+            tag.copyFrom(tagg_to_copy.tags_dict[tag.id])
+        })
+
+      // Add missing tags
+      tagg_to_copy.tags_list
+        .forEach(tag => {
+          if (!(tag.id in this.tags_dict))
+            this.addTag(tag.name, tag.id).copyFrom(tag)
+        })
+    }
+  }
+
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
+    // Create empty structs
+    const json_object = {} as Type_JSON
+    this._toJSON(json_object, kwargs)
+    return json_object
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    // Fill group attributes
+    json_object['name'] = this._name
+    json_object['banner'] = this._banner
+    // Update tags infos
+    const json_object_tags = {} as Type_JSON
+    this.tags_list
+      .forEach(tag => {
+        json_object_tags[tag.id] = tag.toJSON()
+      })
+    json_object['tags'] = json_object_tags
+  }
+
+  public fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    this._ref_sankey.drawing_area.bypass_redraws = true
+    this._fromJSON(json_object, kwargs)
+    this._ref_sankey.drawing_area.bypass_redraws = false
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Read legacy JSON
+    this.fromLegacyJSON(json_object)
+    // Read group attributes
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
+    // Create new tags & read their attributes
+    const matching_tags_id: { [_: string]: string } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string } : {}
+    Object.entries(json_object['tags'])
+      .forEach(([_, tag_json]) => {
+        // Get or Create tag
+        const tag_id = matching_tags_id[_] ?? _
+        const tag = this._tags[_] ?? this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
+        // Update tag with json
+        tag.fromJSON(tag_json as Type_JSON)
+      })
+  }
+
+  private fromLegacyJSON(json_object: Type_JSON) {
+    this._name = getStringFromJSON(json_object, 'group_name', this._name)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -1007,96 +1170,12 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
       .forEach(tag => tag.update())
   }
 
-  public toJSON() {
-    // Create empty structs
-    const json_object = {} as Type_JSON
-    const json_object_tags = {} as Type_JSON
-    // Fill group attributes
-    json_object['name'] = this._name
-    json_object['banner'] = this._banner
-    // Update tags infos
-    this.tags_list
-      .forEach(tag => {
-        json_object_tags[tag.id] = tag.toJSON()
-      })
-    json_object['tags'] = json_object_tags
-    // Out
-    return json_object
-  }
-
-  /**
-   * Set Tag_group value & substructure from JSON
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_TagGroup
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    matching_tags_id: { [_: string]: string } = {}
-  ) {
-    // Read legacy JSON
-    this.fromLegacyJSON(json_object)
-    // Read group attributes
-    this._name = getStringFromJSON(json_object, 'name', this._name)
-    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
-    // Create new tags & read their attributes
-    Object.entries(json_object['tags'])
-      .forEach(([_, tag_json]) => {
-        // Get or Create tag
-        const tag_id = matching_tags_id[_] ?? _
-        const tag = this._tags[_] ?? this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
-        // Update tag with json
-        tag.fromJSON(tag_json as Type_JSON)
-      })
-  }
-
-  public copyFrom(
-    element: Class_ProtoTagGroup,
-    tags_synchro = true
-  ) {
-    // Common attributes
-    this._name = element._name
-    this._banner = element._banner
-    this._tag_count = element._tag_count
-
-    // Synchronize tags
-    if (tags_synchro) {
-
-      // Delete tags not present in new layout but present in curr
-      this.tags_list
-        .filter(tag => !(tag.id in element.tags_dict))
-        .forEach(tag => {
-          this.removeTag(tag)
-        })
-
-      // Transfer tags attr present in new layout and in curr
-      this.tags_list
-        .filter(tag => (tag.id in element.tags_dict))
-        .forEach(tag => {
-          tag.copyFrom(element.tags_dict[tag.id])
-        })
-
-      // Add tag present in element but not this
-      element.tags_list
-        .filter(tag => !(tag.id in this.tags_dict))
-        .forEach(tag => {
-          this.addTag(tag.name, tag.id).copyFrom(tag)
-        })
-    }
-  }
-
   // PROTECTED METHODS ==================================================================
 
   protected abstract createTag(
     name: string,
     id: string | undefined
   ): Class_ProtoTag
-
-  // PRIVATE METHODS ====================================================================
-
-  private fromLegacyJSON(json_object: Type_JSON) {
-    this._name = getStringFromJSON(json_object, 'group_name', this._name)
-  }
 
   // GETTERS ============================================================================
 
@@ -1206,37 +1285,32 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     if (with_a_tag) this.addTag('Etiquette 0')
   }
 
-  // PUBLIC METHODS =====================================================================
+  // CLEANING METHODS ==================================================================
 
-  public toJSON() {
-    const json_object = super.toJSON()
+  // COPY METHODS =====================================================================
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, kwargs)
     json_object['show_legend'] = this._show_legend
-    return json_object
   }
 
-  /**
-   *Set Tag_group value & substructur from JSON
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_TagGroup
-   */
-  public fromJSON(
+  protected _fromJSON(
     json_object: Type_JSON,
-    matching_tags_id: { [_: string]: string } = {}
+    kwargs?: Type_JSON
   ) {
-    super.fromJSON(json_object, matching_tags_id)
+    super._fromJSON(json_object, kwargs)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
   }
 
-  /**
-   * Copy tags group attributes from element to current & copy tags
-   *
-   * @param {Class_TagGroup} element
-   * @memberof Class_TagGroup
-   */
-  public copyFrom(element: Class_TagGroup) {
-    super.copyFrom(element)
-    this._show_legend = element.show_legend
+  protected _copyFrom(
+    tagg_to_copy: Class_TagGroup,
+    tags_synchro = true
+  ) {
+    super._copyFrom(tagg_to_copy, tags_synchro)
+    this._show_legend = tagg_to_copy.show_legend
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1325,6 +1399,32 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     }
   }
 
+  // COPY METHODS =======================================================================
+
+  protected _copyFrom(
+    tagg_to_copy: Class_DataTagGroup,
+    tags_synchro = true
+  ) {
+    super._copyFrom(tagg_to_copy, tags_synchro)
+    this._show_legend = tagg_to_copy.show_legend
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, kwargs)
+    json_object['show_legend'] = this._show_legend
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._fromJSON(json_object, kwargs)
+    this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
+  }
+
   // PUBLIC METHODS =====================================================================
 
   public selectTagsFromId(
@@ -1339,30 +1439,6 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   ) {
     super.selectTagsFromIds(ids)
     this.checkSelectionCoherence()
-  }
-
-  public toJSON() {
-    const json_object = super.toJSON()
-    json_object['show_legend'] = this._show_legend
-    return json_object
-  }
-
-  /**
-   * Set Tag_group value & substructure from JSON
-   * @param {Type_JSON} json_object
-   * @memberof Class_TagGroup
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    matching_tags_id: { [_: string]: string } = {}
-  ) {
-    super.fromJSON(json_object, matching_tags_id)
-    this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
-  }
-
-  public copyFrom(element: Class_DataTagGroup) {
-    super.copyFrom(element, true)
-    this._show_legend = element.show_legend
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1472,6 +1548,8 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
     this._ref_sankey = sankey
   }
 
+  // CLEANING METHODS ====================================================================
+
   /**
    * Define deletion behavior
    * @memberof Class_ProtoTagGroup
@@ -1488,6 +1566,105 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
       this._tags = {}
       // Garbage collection will do the rest ...
     }
+  }
+
+  // COPY METHODS ========================================================================
+
+  public copyFrom(
+    tagg_to_copy: Class_ProtoLevelTagGroup,
+    tags_synchro = true
+  ) {
+    this._ref_sankey.drawing_area.bypass_redraws = true
+    this._copyFrom(tagg_to_copy, tags_synchro)
+    this._ref_sankey.drawing_area.bypass_redraws = false
+  }
+
+  protected _copyFrom(
+    tagg_to_copy: Class_ProtoLevelTagGroup,
+    tags_synchro = true
+  ) {
+    // Common attributes
+    this._name = tagg_to_copy._name
+    this._banner = tagg_to_copy._banner
+    this._tag_count = tagg_to_copy._tag_count
+
+    // Synchronize tags
+    if (tags_synchro) {
+      // Synchronise current tag group's tag with tag groupto copy
+      this.tags_list
+        .forEach(tag => {
+          // Delete tags not present in new layout but present in curr
+          if (!(tag.id in tagg_to_copy.tags_dict))
+            this.removeTag(tag)
+          // Transfer tags attr present in new layout and in curr
+          else
+            tag.copyFrom(tagg_to_copy.tags_dict[tag.id])
+        })
+      // Add tag present in tagg_to_copy but not this
+      tagg_to_copy.tags_list
+        .forEach(tag => {
+          if (!(tag.id in this.tags_dict))
+            this.addTag(tag.name, tag.id).copyFrom(tag)
+        })
+    }
+  }
+
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
+    const json_object = {} as Type_JSON
+    this._toJSON(json_object, kwargs)
+    return json_object
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    // Fill group attributes
+    json_object['name'] = this._name
+    json_object['banner'] = this._banner
+    // Update tags infos
+    const json_object_tags = {} as Type_JSON
+    this.tags_list
+      .forEach(tag => {
+        json_object_tags[tag.id] = tag.toJSON()
+      })
+    json_object['tags'] = json_object_tags
+  }
+
+  public fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    this._ref_sankey.drawing_area.bypass_redraws = true
+    this._fromJSON(json_object, kwargs)
+    this._ref_sankey.drawing_area.bypass_redraws = false
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Read legacy JSON
+    this.fromLegacyJSON(json_object)
+    // Read group attributes
+    this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
+    // Create new tags & read their attributes
+    const matching_tags_id: { [_: string]: string } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string } : {}
+    Object.entries(json_object['tags'])
+      .forEach(([_, tag_json]) => {
+        // Get or Create tag
+        const tag_id = matching_tags_id[_] ?? _
+        const tag = this._tags[_] ?? this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
+        // Update tag with json
+        tag.fromJSON(tag_json as Type_JSON)
+      })
+  }
+
+  private fromLegacyJSON(json_object: Type_JSON) {
+    this._name = getStringFromJSON(json_object, 'group_name', this._name)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -1548,96 +1725,12 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
       .forEach(tag => tag.update())
   }
 
-  public toJSON() {
-    // Create empty structs
-    const json_object = {} as Type_JSON
-    const json_object_tags = {} as Type_JSON
-    // Fill group attributes
-    json_object['name'] = this._name
-    json_object['banner'] = this._banner
-    // Update tags infos
-    this.tags_list
-      .forEach(tag => {
-        json_object_tags[tag.id] = tag.toJSON()
-      })
-    json_object['tags'] = json_object_tags
-    // Out
-    return json_object
-  }
-
-  /**
-   * Set Tag_group value & substructure from JSON
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_TagGroup
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    matching_tags_id: { [id: string]: string } = {}
-  ) {
-    // Read legacy JSON
-    this.fromLegacyJSON(json_object)
-    // Read group attributes
-    this._name = getStringFromJSON(json_object, 'name', this._name)
-    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
-    // Create new tags & read their attributes
-    Object.entries(json_object['tags'])
-      .forEach(([_, tag_json]) => {
-        // Get or Create tag
-        const tag_id = matching_tags_id[_] ?? _
-        const tag = this._tags[_] ?? this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
-        // Update tag with json
-        tag.fromJSON(tag_json as Type_JSON)
-      })
-  }
-
-  public copyFrom(
-    element: Class_ProtoLevelTagGroup,
-    tags_synchro = true
-  ) {
-    // Common attributes
-    this._name = element._name
-    this._banner = element._banner
-    this._tag_count = element._tag_count
-
-    // Synchronize tags
-    if (tags_synchro) {
-
-      // Delete tags not present in new layout but present in curr
-      this.tags_list
-        .filter(tag => !(tag.id in element.tags_dict))
-        .forEach(tag => {
-          this.removeTag(tag)
-        })
-
-      // Transfer tags attr present in new layout and in curr
-      this.tags_list
-        .filter(tag => (tag.id in element.tags_dict))
-        .forEach(tag => {
-          tag.copyFrom(element.tags_dict[tag.id])
-        })
-
-      // Add tag present in element but not this
-      element.tags_list
-        .filter(tag => !(tag.id in this.tags_dict))
-        .forEach(tag => {
-          this.addTag(tag.name, tag.id).copyFrom(tag)
-        })
-    }
-  }
-
   // PROTECTED METHODS ==================================================================
 
   protected abstract createTag(
     name: string,
     id: string | undefined
   ): Class_ProtoLevelTag
-
-  // PRIVATE METHODS ====================================================================
-
-  private fromLegacyJSON(json_object: Type_JSON) {
-    this._name = getStringFromJSON(json_object, 'group_name', this._name)
-  }
 
   // GETTERS ============================================================================
 
@@ -1729,7 +1822,7 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   private _siblings: string[] = []
   private _antitagged_refs: Type_AbstractNodeElement[] = []
 
-  // PUBLIC METHODS =====================================================================
+  // CLEANING METHODS ===================================================================
 
   /**
    * Define deletion behavior
@@ -1745,12 +1838,36 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     }
   }
 
-  public toJSON() {
-    const json_object = super.toJSON()
+  // COPY METHODS =======================================================================
+
+  protected _copyFrom(
+    tagg_to_copy: Class_LevelTagGroup,
+    tags_synchro = true
+  ) {
+    super._copyFrom(tagg_to_copy, tags_synchro)
+    this._activated = tagg_to_copy._activated
+    this._siblings = tagg_to_copy._siblings
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, kwargs)
     json_object['activated'] = this._activated
     json_object['siblings'] = this._siblings
-    return json_object
   }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._fromJSON(json_object, kwargs)
+    this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
+    this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
+  }
+
+  // PUBLIC METHODS =====================================================================
 
   public sibling_activated() {
     return this._siblings.filter(tagg => {
@@ -1771,21 +1888,6 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
       this._antitagged_refs.splice(idx, 1)
       _.removeAsAntiTagged(this)
     }
-  }
-
-  public fromJSON(
-    json_object: Type_JSON,
-    matching_tags_id: { [_: string]: string } = {}
-  ) {
-    super.fromJSON(json_object, matching_tags_id)
-    this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
-    this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
-  }
-
-  public copyFrom(element: Class_LevelTagGroup) {
-    super.copyFrom(element)
-    this._activated = element._activated
-    this._siblings = element._siblings
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1836,4 +1938,6 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
    * @memberof Class_DataTagGroup
    */
   public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
+
+  public get antitagged_refs() { return this._antitagged_refs }
 }
