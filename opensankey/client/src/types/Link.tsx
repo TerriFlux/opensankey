@@ -48,7 +48,6 @@ import {
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringOrNullFromJSON,
-  getStringOrUndefinedFromJSON,
   makeId,
 } from './Utils'
 
@@ -348,6 +347,7 @@ export abstract class Class_LinkElement
   private _scaleValueToPx = d3.scaleLinear()
     .domain([0, 1])
     .range([0, 100])
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -365,56 +365,8 @@ export abstract class Class_LinkElement
   ) {
     // Init parent class attributes
     super(id, menu_config, 'g_links')
-
     // Add control points
-    this._control_points = {
-      starting_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
-        'cp_start_' + id,
-        drawing_area,
-        menu_config,
-        this,
-        this.dragHandleStart(),
-        this.startCurvePointDragEvent(),
-        this.dragHandleEnd(),
-        { class: 'cp_start' }),
-      ending_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
-        'cp_end_' + id,
-        drawing_area,
-        menu_config,
-        this,
-        this.dragHandleStart(),
-        this.endCurvePointDragEvent(),
-        this.dragHandleEnd(),
-        { class: 'cp_end' }),
-      starting_bezier_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
-        'bz_start_' + id,
-        drawing_area,
-        menu_config,
-        this,
-        this.dragHandleStart(),
-        this.startTangeantDragEvent(),
-        this.dragHandleEnd(),
-        { class: 'bz_start' }),
-      ending_bezier_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
-        'bz_end_' + id,
-        drawing_area,
-        menu_config,
-        this,
-        this.dragHandleStart(),
-        this.endTangeantDragEvent(),
-        this.dragHandleEnd(),
-        { class: 'bz_end' }),
-      middle_recycling_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
-        'recy_middle_' + id,
-        drawing_area,
-        menu_config,
-        this,
-        this.dragHandleStart(),
-        this.middleRecyclingDragEvent(),
-        this.dragHandleEnd(),
-        { class: 'recy_middle' }),
-      is_dragged: false
-    }
+    this._control_points = this.initControlPoints(drawing_area)
     // Values
     this._values = new Class_LinkValue(this)
     drawing_area.sankey.data_taggs_list
@@ -423,13 +375,60 @@ export abstract class Class_LinkElement
       })
     // Source
     this._source = source
-    this._target = target// Target
-    // TODO fix that
-    // this._source.addOutputLink(this)
-    // this._target.addInputLink(this)// Target
-    // // Instanciate display on svg
-    // this.computeControlPoints()
-    // this.draw()
+    this._target = target
+  }
+
+  protected initControlPoints(
+    drawing_area: Type_GenericDrawingArea
+  ) {
+    return {
+      starting_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+        'cp_start_' + this.id,
+        drawing_area,
+        this.menu_config,
+        this,
+        this.dragHandleStart(),
+        this.startCurvePointDragEvent(),
+        this.dragHandleEnd(),
+        { class: 'cp_start' }),
+      ending_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+        'cp_end_' + this.id,
+        drawing_area,
+        this.menu_config,
+        this,
+        this.dragHandleStart(),
+        this.endCurvePointDragEvent(),
+        this.dragHandleEnd(),
+        { class: 'cp_end' }),
+      starting_bezier_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+        'bz_start_' + this.id,
+        drawing_area,
+        this.menu_config,
+        this,
+        this.dragHandleStart(),
+        this.startTangeantDragEvent(),
+        this.dragHandleEnd(),
+        { class: 'bz_start' }),
+      ending_bezier_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+        'bz_end_' + this.id,
+        drawing_area,
+        this.menu_config,
+        this,
+        this.dragHandleStart(),
+        this.endTangeantDragEvent(),
+        this.dragHandleEnd(),
+        { class: 'bz_end' }),
+      middle_recycling_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+        'recy_middle_' + this.id,
+        drawing_area,
+        this.menu_config,
+        this,
+        this.dragHandleStart(),
+        this.middleRecyclingDragEvent(),
+        this.dragHandleEnd(),
+        { class: 'recy_middle' }),
+      is_dragged: false
+    }
   }
 
   // CLEANING ===========================================================================
@@ -453,7 +452,146 @@ export abstract class Class_LinkElement
     this.style.removeReference(this)
     // Delete related values
     this._values.delete()
-    // TODO remove handler
+  }
+
+  // COPY METHODS =======================================================================
+
+  protected _copyFrom(_: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+    super._copyFrom(_)
+    // Source relations
+    if (this._source.id !== _._source.id) {
+      let source = this._display.sankey.nodes_dict[_._source.id] as Type_GenericNodeElement
+      if (source === undefined) {
+        source = this._display.sankey.addNewNode(_._source.id, _._source.name) as Type_GenericNodeElement
+        // source.copyFrom(_._source)
+      }
+      this.source = source
+    }
+    // target relations
+    if (this._target.id !== _._target.id) {
+      let target = this._display.sankey.nodes_dict[_._target.id] as Type_GenericNodeElement
+      if (target === undefined) {
+        target = this._display.sankey.addNewNode(_._target.id, _._target.name) as Type_GenericNodeElement
+        // target.copyFrom(_._target)
+      }
+      this.target = target
+    }
+    // Update style
+    if (this._display.style.id !== _._display.style.id) {
+      let style = this._display.sankey.link_styles_dict[_._display.style.id] as Class_LinkStyle
+      if (style === undefined) {
+        style = this.sankey.addNewLinkStyle(_._display.style.id, _._display.style.name) as Class_LinkStyle
+        style.copyFrom(_._display.style)
+      }
+      this.style = style
+    }
+    // Local attributes
+    this._display.attributes.copyFrom(_._display.attributes)
+    // Display
+    this._display.displaying_order = _._display.displaying_order
+    this._display.position_starting = structuredClone(_._display.position_starting)
+    this._display.position_ending = structuredClone(_._display.position_ending)
+    this._display.position_x_label = _._display.position_x_label
+    this._display.position_y_label = _._display.position_y_label
+    this._display.position_offset_label = _._display.position_offset_label
+    // Tooltips
+    this._tooltip_text = _._tooltip_text
+    // Values
+    if (_._values instanceof Class_LinkValue) {
+      this._values = new Class_LinkValue(this)
+      this._values.copyFrom(_._values)
+    }
+    else if (_._values instanceof Class_LinkValueTree) {
+      const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
+      if (first_data_tag_group) {
+        this._values = new Class_LinkValueTree(this, first_data_tag_group)
+        this._values.copyFrom(_._values)
+      }
+    }
+    // // Control points
+    // this._control_points = this.initControlPoints(this.drawing_area)
+    // this._control_points.starting_curve_point.copyFrom(_._control_points.starting_curve_point)
+    // this._control_points.ending_curve_point.copyFrom(_._control_points.ending_curve_point)
+    // this._control_points.starting_bezier_point.copyFrom(_._control_points.starting_bezier_point)
+    // this._control_points.ending_bezier_point.copyFrom(_._control_points.ending_bezier_point)
+    // this._control_points.middle_recycling_point.copyFrom(_._control_points.middle_recycling_point)
+    // this._control_points.is_dragged = _._control_points.is_dragged
+    // Others
+    // this._scaleValueToPx = _.scaleValueToPx
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object, kwargs)
+    // Related nodes
+    json_object['idSource'] = this._source.id
+    json_object['idTarget'] = this._target.id
+    // Fill style & local attributes
+    json_object['style'] = this.style.id
+    json_object['local'] = this._display.attributes.toJSON()
+    // Fill positions attributes
+    json_object['displaying_order'] = this._display.displaying_order
+    json_object['position_starting_x'] = this._display.position_starting.x
+    json_object['position_starting_y'] = this._display.position_starting.y
+    json_object['position_ending_x'] = this._display.position_ending.x
+    json_object['position_ending_y'] = this._display.position_ending.y
+    if (this._display.position_offset_label !== undefined) json_object['position_offset_label'] = this._display.position_offset_label
+    if (this._display.position_x_label !== undefined) json_object['position_x_label'] = this._display.position_x_label
+    if (this._display.position_y_label !== undefined) json_object['position_y_label'] = this._display.position_y_label
+    // Tooltips
+    json_object['tooltip_text'] = this._tooltip_text
+    // Values
+    if (!(kwargs && kwargs['without_values']))
+      json_object['value'] = this._values.toJSON()
+    // Out
+    return json_object
+  }
+
+  /**
+   * Possible kwargs :
+   * - matching_nodes_id: { [_: string]: string } as "id in JSON" -> "id in model"
+   * - matching_taggs_id: { [_: string]: string } as "id in JSON" -> "id in model"
+   * - matching_tags_id: { [_: string]: { [_: string]: string } }  as "id in JSON" -> "id in model", sorted per "group id in JOSN"
+   * @protected
+   * @param {Type_JSON} json_object
+   * @param {Type_JSON} [kwargs]
+   * @memberof Class_LinkElement
+   */
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Root attributes
+    super._fromJSON(json_object)
+    // Matching names if needed
+    const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
+    const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
+    // Get style & local attributes
+    const style_id = getStringFromJSON(json_object, 'style', default_style_id)
+    this._display.style = this.sankey.link_styles_dict[style_id] as Class_LinkStyle
+    const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
+    if (json_local_object) {
+      this._display.attributes.fromJSON(json_local_object)
+      // If local attribute have key local_scale then update local scale domain
+      if ('local_link_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.local_link_scale)
+    }
+    // Get positions infos
+    this._display.displaying_order = getNumberFromJSON(json_object, 'displaying_order', this._display.displaying_order)
+    this._display.position_starting.x = getNumberFromJSON(json_object, 'position_starting_x', this._display.position_starting.x)
+    this._display.position_starting.y = getNumberFromJSON(json_object, 'position_starting_y', this._display.position_starting.y)
+    this._display.position_ending.x = getNumberFromJSON(json_object, 'position_ending_x', this._display.position_starting.x)
+    this._display.position_ending.x = getNumberFromJSON(json_object, 'position_ending_y', this._display.position_starting.y)
+    this._display.position_offset_label = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
+    this._display.position_x_label = getNumberOrUndefinedFromJSON(json_object, 'position_x_label')
+    this._display.position_y_label = getNumberOrUndefinedFromJSON(json_object, 'position_y_label')
+    // Get value
+    this._values.fromJSON(
+      getJSONFromJSON(json_object, 'value', {}),
+      matching_taggs_id,
+      matching_tags_id
+    )
   }
 
   // PUBLIC METHODS =====================================================================
@@ -463,7 +601,7 @@ export abstract class Class_LinkElement
    * @private
    * @memberof Class_LinkElement
    */
-  public _draw() {
+  protected _draw() {
     // Heritance
     super._draw()
     // Update class attributes
@@ -480,17 +618,18 @@ export abstract class Class_LinkElement
       this.target.draw()
     }
   }
+
   public drawAsSelected() {
     this.drawControlPoint()
   }
 
-  public _drawElements() {
+  protected _drawElements() {
     this._drawPath()
     this._drawLabel()
   }
-  public drawElements() {
-    this._add_waiting_process('drawElements', () => this._drawElements())
 
+  public drawElements() {
+    this._process_or_bypass(() => this._drawElements())
   }
 
   /**
@@ -510,10 +649,10 @@ export abstract class Class_LinkElement
   public inverse() {
 
     const tmp_target = this._target
-    tmp_target.removeInputLink(this) // remove link from curr IO dict 
+    tmp_target.removeInputLink(this) // remove link from curr IO dict
 
     const tmp_source = this._source
-    tmp_source.removeOutputLink(this) // remove link from curr IO dict 
+    tmp_source.removeOutputLink(this) // remove link from curr IO dict
 
     this._source = tmp_target
     this._target = tmp_source
@@ -703,75 +842,6 @@ export abstract class Class_LinkElement
     return true
   }
 
-  public toJSON(
-    with_values: boolean = true
-  ) {
-    // Root attributes
-    const json_object = super.toJSON()
-    // Related nodes
-    json_object['idSource'] = this._source.id
-    json_object['idTarget'] = this._target.id
-    // Fill style & local attributes
-    json_object['style'] = this.style.id
-    json_object['local'] = this._display.attributes.toJSON()
-    // Fill dragged postion attribute
-    if (this._display.position_offset_label !== undefined) json_object['position_offset_label'] = this._display.position_offset_label
-    if (this._display.position_x_label !== undefined) json_object['position_x_label'] = this._display.position_x_label
-    if (this._display.position_y_label !== undefined) json_object['position_y_label'] = this._display.position_y_label
-
-    // Values
-    if (with_values)
-      json_object['value'] = this._values.toJSON()
-    // Out
-    return json_object
-  }
-
-  public fromJSON(
-    json_object: Type_JSON,
-    matching_nodes_id: { [_: string]: string } = {},
-    matching_taggs_id: { [_: string]: string } = {},
-    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
-  ) {
-    // Root attributes
-    super.fromJSON(json_object)
-    // Related nodes
-    let source_node_id = getStringOrUndefinedFromJSON(json_object, 'idSource')
-    if (source_node_id) {
-      source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
-      if (this.sankey.nodes_dict[source_node_id]) {
-        this.source = this.sankey.nodes_dict[source_node_id] as Type_GenericNodeElement
-        this._display.attributes.shape_is_recycling = false
-      }
-    }
-    let target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
-    if (target_node_id) {
-      target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
-      if (this.sankey.nodes_dict[target_node_id]) {
-        this.target = this.sankey.nodes_dict[target_node_id] as Type_GenericNodeElement
-        this._display.attributes.shape_is_recycling = false
-      }
-    }
-    // Get style & local attributes
-    const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-    this._display.style = this.sankey.link_styles_dict[style_id] as Class_LinkStyle
-    const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
-    if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object)
-      // If local attribute have key local_scale then update local scale domain
-      if ('local_link_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.local_link_scale)
-    }
-    // Get dragged label pos if defined
-    this._display.position_offset_label = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
-    this._display.position_x_label = getNumberOrUndefinedFromJSON(json_object, 'position_x_label')
-    this._display.position_y_label = getNumberOrUndefinedFromJSON(json_object, 'position_y_label')
-    // Get value
-    this._values.fromJSON(
-      getJSONFromJSON(json_object, 'value', {}),
-      matching_taggs_id,
-      matching_tags_id
-    )
-  }
-
   public getPathColorToUse() {
     // TODO revoir : la couleur d'un flux devrait aussi être definie par la couleur de ses noeuds sources / target
     // Default color
@@ -800,13 +870,13 @@ export abstract class Class_LinkElement
         }).length > 0
       const trgt_taggs_activated = this._target.taggs_list
         .filter(tagg => tagg.show_legend).filter(grp => {
-          return this._target.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1
+          return (this._target.grouped_taggs_dict[grp.id] ?? []).filter(tag => tag.is_selected).length == 1
         }).length > 0
 
       const trgt_node_type = this._target.grouped_taggs_dict['type de noeud']
       const src_node_type = this._source.grouped_taggs_dict['type de noeud']
 
-      // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt 
+      // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt
       if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {
         shape_color = this._source.getShapeColorToUse()
       } else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
@@ -825,44 +895,6 @@ export abstract class Class_LinkElement
   }
 
   /**
-   * Copy attributes from element & create/copy ref to current sankey (ref to link_taggs & style & values)
-   *
-   * @param {Class_LinkElement} element
-   * @memberof Class_LinkElement
-   */
-  public copyFrom(element: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
-
-    // this._display.position = structuredClone(element._display.position)
-    this._display.position_x_label = element._display.position_x_label
-    this._display.position_y_label = element._display.position_y_label
-    this._tooltip_text = element._tooltip_text
-
-    // Copy local attributes
-    this._display.attributes.copyFrom(element._display.attributes)
-
-    // Copy control points attributes from new layout
-    this._control_points.starting_curve_point.copyFrom(element._control_points.starting_curve_point)
-    this._control_points.ending_curve_point.copyFrom(element._control_points.ending_curve_point)
-    this._control_points.starting_bezier_point.copyFrom(element._control_points.starting_bezier_point)
-    this._control_points.ending_bezier_point.copyFrom(element._control_points.ending_bezier_point)
-    this._control_points.middle_recycling_point.copyFrom(element._control_points.middle_recycling_point)
-
-    // Set link style to element style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
-    if (this.drawing_area.sankey.link_styles_list.map(ls => ls.id).includes(element._display.style.id)) {
-      const new_style_id = this.drawing_area.sankey.link_styles_list
-        .map(ls => ls.id)
-        .filter(ls => ls.includes(element._display.style.id))[0]
-      this._display.style = this.drawing_area.sankey.link_styles_dict[new_style_id] as Class_LinkStyle
-      this._display.style.addReference(this)
-    }
-
-    // Set dragged position from element if defined
-    if (element._display.position_offset_label !== undefined) this._display.position_offset_label = element._display.position_offset_label
-    if (element._display.position_x_label !== undefined) this._display.position_x_label = element._display.position_x_label
-    if (element._display.position_y_label !== undefined) this._display.position_y_label = element._display.position_y_label
-  }
-
-  /**
    * Return maximum value possible for this link
    *
    * @return {*}
@@ -876,10 +908,10 @@ export abstract class Class_LinkElement
     return this._values.getAllValues()
   }
   public drawPath() {
-    this._add_waiting_process('drawPath', () => this._drawPath())
+    this._process_or_bypass(() => this._drawPath())
   }
   public drawLabel() {
-    this._add_waiting_process('drawLabel', () => this._drawLabel())
+    this._process_or_bypass(() => this._drawLabel())
   }
 
   public setDomainLocalScale(_: number | undefined) {
@@ -1187,7 +1219,7 @@ export abstract class Class_LinkElement
       label_position = offset
 
     } else {
-      // offset attributes 
+      // offset attributes
       if (this.value_label_position === 'middle') {
         label_anchor = 'middle'
         label_position = 50
@@ -3128,7 +3160,7 @@ export abstract class Class_LinkElement
 
   /**
    * If link has tags :
-   * - check for each tag group if the flow has at least one selected tag that isn't filtered out 
+   * - check for each tag group if the flow has at least one selected tag that isn't filtered out
    * else if the link doesn't have tag it isn't filtered by them
    * @readonly
    * @memberof Class_LinkElement
@@ -3148,7 +3180,7 @@ export abstract class Class_LinkElement
   }
 
   /**
-   * If link value for current dataTagg parameter is different of 0 then pass the check, 
+   * If link value for current dataTagg parameter is different of 0 then pass the check,
    *
    * @readonly
    * @memberof Class_LinkElement
@@ -3771,13 +3803,15 @@ export class Class_LinkValueTree {
     })
   }
 
+  // CLEANING METHODS ====================================================================
+
   /**
    * Define deletion behavior
    * - Remove self from parent
    * - Delete childrens
    * @memberof Class_LinkValueTree
    */
-  delete() {
+  public delete() {
     if (!this._is_currently_deleted) {
       // Set as currently deleted
       this._is_currently_deleted = true
@@ -3793,6 +3827,66 @@ export class Class_LinkValueTree {
       // // Unref taggroup
       // this.data_tag_group = null
     }
+  }
+
+  // COPY METHODS =======================================================================
+
+  public copyFrom(element: Class_LinkValueTree) {
+    // Check types of children
+    const [allValues, allTrees] = element.kindOfChildren()
+    // Clean children
+    Object.values(this.children)
+      .forEach(child => child.delete())
+    // Copy children recursively
+    Object.keys(element.children)
+      .forEach(tag_id => {
+        const child_to_copy = element.children[tag_id]
+        if ((child_to_copy instanceof Class_LinkValueTree) && (allTrees)) {
+          const new_child = new Class_LinkValueTree(
+            this,
+            this.link?.sankey.data_taggs_dict[child_to_copy.data_tag_group.id] as Class_DataTagGroup ?? child_to_copy.data_tag_group) // Fallback should never happen !!
+          this.children[tag_id] = new_child
+          new_child.copyFrom(child_to_copy)
+        }
+        else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
+          const new_child = new Class_LinkValue(this)
+          this.children[tag_id] = new_child
+          new_child.copyFrom(child_to_copy)
+        }
+      })
+  }
+
+  public toJSON() {
+    const json_object: Type_JSON = {}
+    json_object['datatag_group'] = this.data_tag_group.id
+    Object.entries(this.children)
+      .forEach(([id, child]) => {
+        json_object[id] = child.toJSON()
+      })
+    return json_object
+  }
+
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
+  ) {
+    // All parentality relations are sets via sankey struct with fromJSON + addDataTag
+    // So it is not necessary to read datatag group -> it should be the same as in JSON
+    // if (this.data_tag_group.id !== json_object['datatag_group'])
+    //   console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
+    // else {
+    Object.entries(json_object)
+      .filter(([id,]) => id !== 'datatag_group') // Skip this entry in JSON
+      .forEach(([id, sub_json_object]) => {
+        if (typeof sub_json_object === 'object')
+          this.children[id]?.fromJSON(
+            sub_json_object as Type_JSON,
+            matching_taggs_id,
+            matching_tags_id
+          )
+      })
+    //}
   }
 
   // PUBLIC METHODS =====================================================================
@@ -4033,39 +4127,6 @@ export class Class_LinkValueTree {
     return []
   }
 
-  public toJSON() {
-    const json_object: Type_JSON = {}
-    json_object['datatag_group'] = this.data_tag_group.id
-    Object.entries(this.children)
-      .forEach(([id, child]) => {
-        json_object[id] = child.toJSON()
-      })
-    return json_object
-  }
-
-  public fromJSON(
-    json_object: Type_JSON,
-    matching_taggs_id: { [_: string]: string } = {},
-    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
-  ) {
-    // All parentality relations are sets via sankey struct with fromJSON + addDataTag
-    // So it is not necessary to read datatag group -> it should be the same as in JSON
-    // if (this.data_tag_group.id !== json_object['datatag_group'])
-    //   console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
-    // else {
-    Object.entries(json_object)
-      .filter(([id,]) => id !== 'datatag_group') // Skip this entry in JSON
-      .forEach(([id, sub_json_object]) => {
-        if (typeof sub_json_object === 'object')
-          this.children[id]?.fromJSON(
-            sub_json_object as Type_JSON,
-            matching_taggs_id,
-            matching_tags_id
-          )
-      })
-    //}
-  }
-
   /**
    * Browse children & search for the maximum value among them
    *
@@ -4111,29 +4172,6 @@ export class Class_LinkValueTree {
         allLinkValueTree = allLinkValueTree && (child instanceof Class_LinkValueTree)
       })
     return [allLinkValue, allLinkValueTree]
-  }
-
-  private copyFrom(element: Class_LinkValueTree) {
-    // Check types of children
-    const [allValues, allTrees] = element.kindOfChildren()
-    // Clean children
-    Object.values(this.children)
-      .forEach(child => child.delete())
-    // Copy children recursively
-    Object.keys(element.children)
-      .forEach(tag_id => {
-        const child_to_copy = element.children[tag_id]
-        if ((child_to_copy instanceof Class_LinkValueTree) && (allTrees)) {
-          const new_child = new Class_LinkValueTree(this, child_to_copy.data_tag_group)
-          this.children[tag_id] = new_child
-          new_child.copyFrom(child_to_copy)
-        }
-        else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
-          const new_child = new Class_LinkValue(this)
-          this.children[tag_id] = new_child
-          new_child.copyFrom(child_to_copy)
-        }
-      })
   }
 
   private removeAndReplaceChild(
@@ -4221,7 +4259,9 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     this._id = makeId(name)
   }
 
-  delete() {
+  // CLEANING METHODS ===================================================================
+
+  public delete() {
     if (!this._is_currently_deleted) {
       // Set as currently deleted
       this._is_currently_deleted = true
@@ -4235,19 +4275,105 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     }
   }
 
-  // PUBLIC METHODS =====================================================================
-
-  public draw() {
-    this.link?.draw()
-  }
+  // COPY METHODS =======================================================================
 
   public copyFrom(element: Class_LinkValue) {
     this.data_value = element.data_value
     this.text_value = element.text_value
+    // Tags - Cleaning
+    this.flux_tags_list.forEach(tag => tag.removeReference(this))
+    this._flux_tags = []
+    this._taggs_dict = {}
+    // Re-associating
     element.flux_tags_list
       .forEach(flux_tag => {
         flux_tag.addReference(this)
       })
+  }
+
+  /**
+   * Extract this link value as JSON
+   *
+   * @return {*}
+   * @memberof Class_LinkValue
+   */
+  public toJSON() {
+    // Init output JSON
+    const json_object: Type_JSON = {}
+    json_object['id'] = this._id
+    // Fill data
+    json_object['id'] = this._id
+    if (this.data_value) json_object['data_value'] = this.data_value
+    if (this.text_value) json_object['text_value'] = this.text_value
+    json_object['tags'] = Object.fromEntries(
+      this.flux_taggs_list
+        .map(tagg => [
+          tagg.id,
+          this.flux_tags_list
+            .filter(tag => (tag.group === tagg))
+            .map(tag => tag.id)
+        ]))
+    // Output
+    return json_object
+  }
+
+  private fromJSONLegacy(json_object: Type_JSON) {
+    this.data_value = getNumberOrNullFromJSON(json_object, 'value')
+    this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
+  }
+
+  /**
+   * Read this link value from JSON
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_LinkValue
+   */
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
+  ) {
+    this._id = getStringFromJSON(json_object, 'id', this._id)
+    // Update attributes
+    if (Object.prototype.hasOwnProperty.call(json_object, 'value')) { // Value key => Legacy JSON
+      this.fromJSONLegacy(json_object)
+    }
+    else {
+      this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
+      this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
+    }
+    // Get Flux tags
+    // In JSON here are how supposed tags var is :
+    // tags: {key_grp_tag: [key_tag, ...] }
+    // where 'key_grp_tag' represent the id of a flux tag group
+    // &  '[key_tag, ...]' represent the array of id of tag selected
+    // for that flux tag group
+    const flux_taggs_dict = ((this.link?.drawing_area as Class_AbstractDrawingArea).sankey.flux_taggs_dict ?? {})
+    Object.entries(json_object['tags'] ?? {})
+      .filter(([_id_tagg, list]) => {
+        if (matching_tags_id[_id_tagg] === undefined) //Sanity check, it is possible that json_object link have ref to tag that fluxTags doesn't have (it can occurs with legecy view)
+          return false
+
+        const tagg_id = matching_taggs_id[_id_tagg] ?? _id_tagg
+        const tag_ids = (list as string[]).map(_ => (matching_tags_id[_id_tagg][_] ?? _))
+        return (
+          (tagg_id in flux_taggs_dict) &&
+          (tag_ids.length > 0))
+      })
+      .forEach(([id, list]) => {
+        const tagg_id = matching_taggs_id[id] ?? id
+        const tagg = flux_taggs_dict[tagg_id] as Class_TagGroup
+        const tag_ids = (list as string[]).map(_ => matching_tags_id[id][_] ?? _)
+        tagg.tags_list
+          .filter(tag => tag_ids.includes(tag.id))
+          .forEach(tag => this.addTag(tag))
+      })
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  public draw() {
+    this.link?.draw()
   }
 
   public expand(data_tag_group: Class_DataTagGroup) {
@@ -4320,85 +4446,6 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     else
       tmp[this.id] = [this, undefined]
     return tmp
-  }
-
-  /**
-   * Extract this link value as JSON
-   *
-   * @return {*}
-   * @memberof Class_LinkValue
-   */
-  public toJSON() {
-    // Init output JSON
-    const json_object: Type_JSON = {}
-    json_object['id'] = this._id
-    // Fill data
-    json_object['id'] = this._id
-    if (this.data_value) json_object['data_value'] = this.data_value
-    if (this.text_value) json_object['text_value'] = this.text_value
-    json_object['tags'] = Object.fromEntries(
-      this.flux_taggs_list
-        .map(tagg => [
-          tagg.id,
-          this.flux_tags_list
-            .filter(tag => (tag.group === tagg))
-            .map(tag => tag.id)
-        ]))
-    // Output
-    return json_object
-  }
-
-  private fromJSONLegacy(json_object: Type_JSON) {
-    this.data_value = getNumberOrNullFromJSON(json_object, 'value')
-    this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
-  }
-
-  /**
-   * Read this link value from JSON
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_LinkValue
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    matching_taggs_id: { [_: string]: string } = {},
-    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
-  ) {
-    this._id = getStringFromJSON(json_object, 'id', this._id)
-    // Update attributes
-    if (Object.prototype.hasOwnProperty.call(json_object, 'value')) { // Value key => Legacy JSON
-      this.fromJSONLegacy(json_object)
-    }
-    else {
-      this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
-      this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
-    }
-    // Get Flux tags
-    // In JSON here are how supposed tags var is :
-    // tags: {key_grp_tag: [key_tag, ...] }
-    // where 'key_grp_tag' represent the id of a flux tag group
-    // &  '[key_tag, ...]' represent the array of id of tag selected
-    // for that flux tag group
-    const flux_taggs_dict = ((this.link?.drawing_area as Class_AbstractDrawingArea).sankey.flux_taggs_dict ?? {})
-    Object.entries(json_object['tags'] ?? {})
-      .filter(([_id_tagg, list]) => {
-        if (matching_tags_id[_id_tagg] === undefined) //Sanity check, it is possible that json_object link have ref to tag that fluxTags doesn't have (it can occurs with legecy view) 
-          return false
-
-        const tagg_id = matching_taggs_id[_id_tagg] ?? _id_tagg
-        const tag_ids = (list as string[]).map(_ => (matching_tags_id[_id_tagg][_] ?? _))
-        return (
-          (tagg_id in flux_taggs_dict) &&
-          (tag_ids.length > 0))
-      })
-      .forEach(([id, list]) => {
-        const tagg_id = matching_taggs_id[id] ?? id
-        const tagg = flux_taggs_dict[tagg_id] as Class_TagGroup
-        const tag_ids = (list as string[]).map(_ => matching_tags_id[id][_] ?? _)
-        tagg.tags_list
-          .filter(tag => tag_ids.includes(tag.id))
-          .forEach(tag => this.addTag(tag))
-      })
   }
 
   // PRIVATE ===================================================
@@ -4587,11 +4634,9 @@ export class Class_GhostLinkElement
     this.target.addInputLink(this)// Target
     // Instanciate display on svg
     this.computeControlPoints()
-    this.has_timeout = false
   }
 
-
-
   // GETTER / SETTER ====================================================================
+
   public get is_visible() { return (this._is_visible && this.sankey.is_visible) }
 }

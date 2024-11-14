@@ -140,8 +140,6 @@ export abstract class Class_ZoneSelection
     this._draw()
   }
 
-
-
   // PROTECTED METHOD ==================================================================
 
   public override applyPosition(): void {

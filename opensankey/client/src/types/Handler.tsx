@@ -52,6 +52,7 @@ export class Class_Handler
   }
 
   // PRIVATE ATTRIBUTES =================================================================
+
   private _size: number = 5
   private _color: string = 'black'
   private _filled: boolean = true
@@ -116,10 +117,20 @@ export class Class_Handler
     }
   }
 
+  // COPY METHODS =======================================================================
+
+  protected _copyFrom(element: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
+    super._copyFrom(element)
+    this._size = element._size
+    this._color = element._color
+    this._filled = element._filled
+    this._custom_class = element._custom_class
+  }
+
   // PUBLIC METHODS =====================================================================
 
   public drawElements() {
-    this._add_waiting_process('drawElement', () => { this._drawElement() })
+    this._process_or_bypass(() => this._drawElement())
   }
 
   protected _drawElement() {
@@ -138,13 +149,6 @@ export class Class_Handler
       .attr('fill-opacity', this._filled ? 1 : 0)
   }
 
-  public copyFrom(element: this) {
-    this._size = element._size
-    this._color = element._color
-    this._filled = element._filled
-    this._custom_class = element._custom_class
-    this.setPosXY(element.position_x, element.position_y)
-  }
 
   // PROTECTED METHODS =====================================================================
 

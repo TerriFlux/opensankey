@@ -169,8 +169,8 @@ export abstract class Class_NodeElement
     position: Type_ElementPosition,
     style: Class_NodeStyle,
     attributes: Class_NodeAttribute
-    position_x_label?: number// Relative x position of label when dragged (optionnal)
-    position_y_label?: number// Relative y position of label when dragged (optionnal)
+    position_x_label?: number // Relative x position of label when dragged (optionnal)
+    position_y_label?: number // Relative y position of label when dragged (optionnal)
   }
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -187,10 +187,6 @@ export abstract class Class_NodeElement
 
   // Set to true when we are in a dragging process
   private _drag: boolean = false
-
-  // Value of node
-  private _input_data_value: number = 0
-  private _output_data_value: number = 0
 
   // Handles used to move related IO links relativly to eachother
   private _handle_input_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
@@ -243,12 +239,59 @@ export abstract class Class_NodeElement
     this._display.style.addReference(this)
   }
 
+  // CLEANING METHODS ===================================================================
 
-  // ABSTRACT METHODS ===================================================================
+  /**
+   * Define deletion behavior
+   * @memberof Class_Node
+   */
+  protected cleanForDeletion() {
+    // Delete all related links
+    this._links_order = []
+    Object.values(this._input_links)
+      .forEach(link => {
+        this.removeInputLink(link)
+        link.delete()
+      })
+    Object.values(this._output_links)
+      .forEach(link => {
+        this.removeOutputLink(link)
+        link.delete()
+      })
+    this._input_links = {}
+    this._output_links = {}
+    this._links_order = []
+    this._handle_input_links = {}
+    this._handle_output_links = {}
+    // Remove reference of self in related tags
+    this.tags_list.forEach(tag => tag.removeReference(this))
+    this._tags = []
+    // Remove dims
+    this._leveltaggs_as_antitagged.forEach(tag => tag.removeAntiTaggedRef(this))
+    this._leveltaggs_as_antitagged = []
+    this._taggs_dict = {}
+    // Remove reference of self in style
+    this.style.removeReference(this)
+  }
 
-  // Nothing
+  // COPY METHODS =======================================================================
 
-  // PUBLIC METHODS =====================================================================
+  /**
+   * Full copy
+   * @protected
+   * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} _
+   * @memberof Class_NodeElement
+   */
+  protected _copyFrom(_: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): void {
+    // Attributes
+    this.copyAttrFrom(_)
+    this._tooltip_text = _._tooltip_text
+    // Links are not copied here to avoid redonduncies
+    // Add existing tags
+    this._addTagsReferecingFrom(_)
+    // Add dimensions
+    this.copyDimensionsFrom(_)
+  }
 
   /**
    * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
@@ -256,33 +299,34 @@ export abstract class Class_NodeElement
    * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node_to_copy
    * @memberof Class_NodeElement
    */
-  public copyAttrFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
-    // Copy attributes ------------------------------------------------------------------
+  public copyAttrFrom(_: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): void {
+    super._copyFrom(_)
     // Name
-    this._name = node_to_copy.name
-    // Display
-    this._display.position = structuredClone(node_to_copy._display.position)
-    this._display.position_x_label = node_to_copy._display.position_x_label
-    this._display.position_y_label = node_to_copy._display.position_y_label
-    // Copy local attributes
-    this._display.attributes.copyFrom(node_to_copy._display.attributes)
-    // Set node style to node_to_copy style if they have the same id & existing in current data (style should have been updated with new layout when we do this function)
-    if (this.drawing_area.sankey.node_styles_list.map(ns => ns.id).includes(node_to_copy._display.style.id)) {
-      const new_style_id = this.drawing_area.sankey.node_styles_list.map(ns => ns.id).filter(ns => ns.includes(node_to_copy._display.style.id))[0]
-      this._display.style = this.drawing_area.sankey.node_styles_dict[new_style_id] as Class_NodeStyle
-      this._display.style.addReference(this)
+    this._name = _.name
+    // Update style
+    if (this._display.style.id !== _._display.style.id) {
+      let style = this._display.sankey.node_styles_dict[_._display.style.id] as Class_NodeStyle
+      if (style === undefined) {
+        style = this.sankey.addNewNodeStyle(_._display.style.id, _._display.style.name) as Class_NodeStyle
+        style.copyFrom(_._display.style)
+      }
+      this.style = style
     }
+    // Local attributes
+    this._display.attributes.copyFrom(_._display.attributes)
+    // Display
+    this._display.position_x_label = _._display.position_x_label
+    this._display.position_y_label = _._display.position_y_label
   }
 
   public copyLinkOrderingFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     // Copy links orders ----------------------------------------------------------------
     this._links_order = []  // Empty current link order list
-    // Fill with link that exist in current sankey and avoid duplicates in link ordre list
+    // Fill with link that exist in current sankey and avoid duplicates in link order list
     node_to_copy._links_order
-      .filter(link_to_copy => link_to_copy.id in this.drawing_area.sankey.links_dict)
       .forEach(link_to_copy => {
         const link = this.drawing_area.sankey.links_dict[link_to_copy.id] as Type_GenericLinkElement
-        if (!this._links_order.includes(link))
+        if ((link !== undefined) && (!this._links_order.includes(link)))
           this._links_order.push(link)
       })
   }
@@ -297,18 +341,27 @@ export abstract class Class_NodeElement
     this.tags_list
       .forEach(tag => this.removeTag(tag))
     // Add missing tags
+    this._addTagsReferecingFrom(node_to_copy, matching_tagg, matching_tags)
+  }
+
+  private _addTagsReferecingFrom(
+    node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    matching_tagg: {[_:string]: string} = {},
+    matching_tags: { [_: string]: { [_: string]: string } } = {}
+  ) {
+    // Add missing tags
     node_to_copy.tags_list
-      .filter(tag => (matching_tagg[tag.group.id]??tag.group.id) in this.sankey.node_taggs_dict)
-      .filter(tag => tag.id in this.sankey.node_taggs_dict[matching_tagg[tag.group.id]??tag.group.id].tags_dict)
-      .forEach(tag => {
-        const tag_group_id = matching_tagg[tag.group.id]??tag.group.id
-        const tag_id = matching_tags[tag.group.id] ? matching_tags[tag.group.id][tag.id]??tag.id : tag.id
-        this.addTag(this.sankey.node_taggs_dict[tag_group_id].tags_dict[tag_id] as Class_Tag)
+      .forEach(tag_to_copy => {
+        const tagg = this.sankey.node_taggs_dict[matching_tagg[tag_to_copy.group.id] ?? tag_to_copy.group.id]
+        if (tagg !== undefined) {
+          const tag = tagg.tags_dict[(matching_tags[tag_to_copy.group.id] ?? {})[tag_to_copy.id] ?? tag_to_copy.id]
+          if (tag !== undefined)
+            this.addTag(tag as Class_Tag)
+        }
       })
   }
 
   public copyDimensionsFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
-    // Copy dimensions ------------------------------------------------------------------
     // Create a dict of all existing dimensions in this related sankey
     const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
     this.sankey.level_taggs_list
@@ -317,104 +370,356 @@ export abstract class Class_NodeElement
           .forEach(tag => {
             // Chech children dimensions
             tag.dimensions_list_as_tag_for_children
-              .filter(dim => !(dim.id in all_existing_dim))
-              .forEach(dim => all_existing_dim[dim.id] = dim)
+              .forEach(dim => {
+                if (!(dim.id in all_existing_dim))
+                  all_existing_dim[dim.id] = dim
+              })
             // Check parent dimensions
             tag.dimensions_list_as_tag_for_parent
-              .filter(dim => !(dim.id in all_existing_dim))
-              .forEach(dim => all_existing_dim[dim.id] = dim)
+              .forEach(dim => {
+                if (!(dim.id in all_existing_dim))
+                  all_existing_dim[dim.id] = dim
+              })
           })
       })
+
     // Add existing and missing child dimensions
     Object.values(node_to_copy._dimensions_as_child)
-      .forEach(dim => {
+      .forEach(dim_to_copy => {
         if (
-          (dim.id in all_existing_dim) &&
-          !(dim.id in this._dimensions_as_child)
+          (dim_to_copy.id in all_existing_dim)
         ) {
-          this.addNewDimensionAsChild(all_existing_dim[dim.id])
-        } else if (
-          !(dim.id in all_existing_dim)
-        ) {
-          const parent = this.sankey.nodes_dict[dim.parent.id]
-          const tagg = this.sankey.level_taggs_dict[dim.children_level_tagg.id]
-          const parent_tag = tagg?.tags_dict[dim.parent_level_tag.id] ?? undefined
-          const children_tags = dim.children_level_tags
-            .map(tag => {
-              return tagg?.tags_dict[tag.id] ?? undefined
-            })
-            .filter(tag => tag !== undefined)
-
-          if (
-            (parent !== undefined) &&
-            (parent_tag !== undefined) &&
-            (children_tags.length > 0)
-          ) {
-            const new_dim = new Class_NodeDimension(parent, [this], parent_tag, children_tags, dim.id)
-            all_existing_dim[dim.id] = new_dim
+          this.addNewDimensionAsChild(all_existing_dim[dim_to_copy.id])
+        }
+        else {
+          // Get possible parent
+          const parent = this.sankey.nodes_dict[dim_to_copy.parent.id]
+          if (parent !== undefined) {
+            // Get possible level tagg
+            const level_tagg = this.sankey.level_taggs_dict[dim_to_copy.children_level_tagg.id]
+            if (level_tagg !== undefined) {
+              // Get possible parent tagg
+              const parent_tag = level_tagg.tags_dict[dim_to_copy.parent_level_tag.id]
+              if (parent_tag !== undefined) {
+                // Get possible children taggs
+                const children_tags: Class_LevelTag[] = []
+                dim_to_copy.children_level_tags
+                  .forEach(tag_to_copy => {
+                    const tag = level_tagg.tags_dict[tag_to_copy.id]
+                    if (tag !== undefined)
+                      children_tags.push(tag as Class_LevelTag)
+                  })
+                if (children_tags.length > 0) {
+                  // Create new dim if everything is ok
+                  const new_dim = new Class_NodeDimension(parent, [this], parent_tag, children_tags, dim_to_copy.id)
+                  all_existing_dim[dim_to_copy.id] = new_dim
+                }
+              }
+            }
           }
         }
       })
+
     // Add existing and missing parent dimensions
     Object.values(node_to_copy._dimensions_as_parent)
-      .filter(dim => {
-        return (
-          (dim.id in all_existing_dim) &&
-          !(dim.id in this._dimensions_as_parent)
-        )
-      })
-      .forEach(dim => {
-        if (
-          (dim.id in all_existing_dim) &&
-          !(dim.id in this._dimensions_as_parent)
-        ) {
-          this.addNewDimensionAsParent(all_existing_dim[dim.id])
-        }
-        else if (
-          !(dim.id in all_existing_dim)
-        ) {
-          const children = dim.children.map(child => this.sankey.nodes_dict[child.id]).filter(child => child !== undefined)
-          const tagg = this.sankey.level_taggs_dict[dim.parent_level_tag.group.id]
-          const parent_tag = tagg?.tags_dict[dim.parent_level_tag.id] ?? undefined
-          const children_tags = dim.children_level_tags.map(tag => {
-            return tagg?.tags_dict[tag.id] ?? undefined
-          })
-            .filter(tag => tag !== undefined)
-
-          if (
-            (children.length > 0) &&
-            (parent_tag !== undefined) &&
-            (children_tags.length > 0)
-          ) {
-            const new_dim = new Class_NodeDimension(this, children, parent_tag, children_tags, dim.id)
-            all_existing_dim[dim.id] = new_dim
+      .forEach(dim_to_copy => {
+        if (!(dim_to_copy.id in all_existing_dim)) {
+          // Get relative leveltag
+          const level_tagg = this.sankey.level_taggs_dict[dim_to_copy.parent_level_tag.group.id]
+          if (level_tagg !== undefined) {
+            const parent_tag = level_tagg.tags_dict[dim_to_copy.parent_level_tag.id]
+            if (parent_tag !== undefined) {
+              // Get possible childrens
+              const children: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[] = []
+              dim_to_copy.children
+                .forEach(child_to_copy => {
+                  const child = this.sankey.nodes_dict[child_to_copy.id]
+                  if (child !== undefined)
+                    children.push(child as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>)
+                })
+              // Get possible children tags
+              const children_tags: Class_LevelTag[] = []
+              dim_to_copy.children_level_tags
+                .forEach(tag_to_copy => {
+                  const tag = level_tagg.tags_dict[tag_to_copy.id]
+                  if (tag !== undefined)
+                    children_tags.push(tag as Class_LevelTag)
+                })
+              // Create new dim if everything is ok
+              if ((children.length > 0) && (children_tags.length > 0)) {
+                const new_dim = new Class_NodeDimension(this, children, parent_tag, children_tags, dim_to_copy.id)
+                all_existing_dim[dim_to_copy.id] = new_dim
+              }
+            }
           }
         }
       })
-    // TODO Create non-existing and missing child & parent dimensions
-    // Delete unnecessary child dimensions
-    Object.values(this._dimensions_as_child)
-      .filter(dim => {
-        return (
-          !(dim.id in node_to_copy._dimensions_as_child)
-        )
+    // Check antitags
+    node_to_copy.sankey.level_taggs_list
+      .forEach((level_tagg_to_copy) => {
+        const level_tagg = this.sankey.level_taggs_dict[level_tagg_to_copy.id]
+        if (level_tagg) {
+          if ((level_tagg_to_copy as Class_LevelTagGroup).antitagged_refs.indexOf(node_to_copy) >= 0) {
+            (level_tagg as Class_LevelTagGroup).addAntiTaggedRef(this)
+          }
+        }
       })
-      .forEach(dim => this.removeDimensionAsChild(dim))
-    // Delete unnecessary parent dimensions
-    Object.values(this._dimensions_as_parent)
-      .filter(dim => {
-        return (
-          !(dim.id in node_to_copy._dimensions_as_parent)
-        )
-      })
-      .forEach(dim => this.removeDimensionAsParent(dim))
-    // Sync child dimensions
-    Object.values(this._dimensions_as_child)
-      .forEach(dim => dim.synchroWith(node_to_copy._dimensions_as_child[dim.id]))
-    // Sync parent dimensions
-    Object.values(this._dimensions_as_parent)
-      .forEach(dim => dim.synchroWith(node_to_copy._dimensions_as_parent[dim.id]))
   }
+
+  // SAVING METHODS =====================================================================
+
+  /**
+   * Convert node to JSON
+   *
+   *
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Extract root attributes
+    super._toJSON(json_object, kwargs)
+    // Name
+    json_object['name'] = this._name
+    // Fill displaying values
+    if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
+    if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
+    // Fill style & local attributes
+    json_object['style'] = this.style.id
+    json_object['local'] = this._display.attributes.toJSON()
+    // Tooltip
+    if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
+    // Tags
+    json_object['tags'] = Object.fromEntries(
+      this.taggs_list
+        .map(tagg => [
+          tagg.id,
+          this.tags_list
+            .filter(tag => (tag.group === tagg))
+            .map(tag => tag.id)
+        ])
+    )
+    // Dimension - relations
+    let dimensions: { [_: string]: Type_JSON }
+    if (this.is_child) {
+      dimensions = Object.fromEntries(
+        Object.values(this._dimensions_as_child)
+          .map(dimension => [
+            dimension.parent_level_tag.group.id,
+            {
+              'parent_name': dimension.parent.id,
+              'parent_tag': dimension.parent_level_tag.id,
+              'children_tags': dimension.children_level_tags.map(_ => _.id),
+              'antitag': false
+            }
+          ])
+      )
+    }
+    else {
+      dimensions = Object.fromEntries(
+        Object.values(this._dimensions_as_parent)
+          .map(dimension => [
+            dimension.parent_level_tag.group.id,
+            {}
+          ])
+      )
+    }
+    // Dimensions - antitag
+    this._leveltaggs_as_antitagged
+      .forEach(leveltagg => {
+        if (!dimensions[leveltagg.id]) {
+          dimensions[leveltagg.id] = {}
+        }
+        dimensions[leveltagg.id]['antitag'] = true
+      })
+    // Dimension
+    json_object['dimensions'] = dimensions
+    // Links
+    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
+    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
+    json_object['links_order'] = this._links_order.map(link => link.id)
+  }
+
+  /**
+   * Assign to node implementation values from json,
+   * Does not assign links -> need to read links from JSON before
+   * @protected
+   * @param {Type_JSON} json_node_object
+   * @param {Type_JSON} [kwargs]
+   * @memberof Class_NodeElement
+   */
+  protected _fromJSON(
+    json_node_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Get root attributes
+    super._fromJSON(json_node_object, kwargs)
+    // Get kwargs
+    const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
+    const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
+    this._name = getStringFromJSON(json_node_object, 'name', this._name)
+    // Update displaying values
+    this._display.position_x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
+    this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
+    // Update style & local attributes
+    const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
+    this.style = this.sankey.node_styles_dict[style_id] as Class_NodeStyle
+    const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
+    if (json_local_object) {
+      this._display.attributes.fromJSON(json_local_object)
+    }
+    // Tooltip
+    this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
+    // Node Tags
+    //   In JSON here are how supposed tags var is :
+    //   tags:{key_grp_tag:string[] (key_tag_selected) }
+    //   where 'key_grp_tag' represent the id of a node_taggs group
+    //   &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
+    Object.entries(json_node_object['tags'] ?? {})
+      .forEach(([tagg_id, tag_ids]) => {
+        const tagg = this.sankey.node_taggs_dict[matching_taggs_id[tagg_id] ?? tagg_id]
+        if (tagg !== undefined){
+          (tag_ids as string[])
+            .forEach(tag_id => {
+              const tag = tagg.tags_dict[matching_tags_id[tagg_id][tag_id] ?? tag_id]
+              if (tag !== undefined)
+                this.addTag(tag as Class_Tag)
+            })
+        }
+      })
+
+  }
+
+  /**
+   * When reading JSON, we must wait for all links to be created in ordre
+   * to correctly set input & output link for each nodes
+   * @param {Type_JSON} json_node_object
+   * @memberof Class_NodeElement
+   */
+  public linksFromJSON(
+    json_node_object: Type_JSON,
+    matching_links_id: { [_: string]: string } = {}
+  ) {
+    // Input links
+    getStringListFromJSON(json_node_object, 'inputLinksId', [])
+      .forEach(l_id => {
+        if (l_id !== 'ghost_link') {
+          const link_id = matching_links_id[l_id] ?? l_id
+          this.addInputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
+        }
+      })
+    // Output links
+    getStringListFromJSON(json_node_object, 'outputLinksId', [])
+      .forEach(l_id => {
+        if (l_id !== 'ghost_link') {
+          const link_id = matching_links_id[l_id] ?? l_id
+          this.addOutputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
+        }
+      })
+    // Ordering
+    const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
+    if (ordered_link_ids.length === this._links_order.length) { // Avoid creation of loose links on node
+      this._links_order = ordered_link_ids
+        .map(_ => {
+          const link_id = matching_links_id[_] ?? _
+          return this.sankey.links_dict[link_id]
+        }) as Type_GenericLinkElement[]
+    }
+  }
+
+  /**
+   * When reading JSON, we must wait for all nodes to be created in order
+   * to correctly set dimensions for each nodes
+   * @param {Type_JSON} json_node_object
+   * @memberof Class_NodeElement
+   */
+  public dimensionsFromJSON(
+    json_node_object: Type_JSON,
+    matching_nodes_id: { [_: string]: string } = {},
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
+  ) {
+    let local_aggregation: boolean | undefined
+    if (json_node_object.local) {
+      local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
+    }
+    if (local_aggregation != undefined) {
+      if (local_aggregation) {
+        this.forceShow()
+      } else {
+        this.forceHide()
+      }
+    }
+    // Extract dimensions JSON struct from node JSON Struct
+    const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
+    // For each dimension in dimensions JSON Struct, create the parent / child relation
+    if (dimensions_as_JSON) {
+      Object.keys(dimensions_as_JSON)
+        .forEach(_ => {
+          const tagg_id = matching_taggs_id[_] ?? _
+          const dimension_as_json = getJSONOrUndefinedFromJSON(dimensions_as_JSON, _)
+          if (dimension_as_json) {
+            // Get level tag group from id
+            const tagg = this.sankey.level_taggs_dict[tagg_id] as Class_LevelTagGroup
+            // Continue only in level tag group exists
+            if (tagg) {
+              // Get parents and leveltags ids
+              let parent_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_name')
+              const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
+              const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
+              const anti_tag = getBooleanFromJSON(dimension_as_json, 'antitag', false)
+              // Case 1 : We found parent and level ids -> get or create related tags
+              if (
+                (parent_id !== undefined) &&
+                (children_tags_ids !== undefined) &&
+                (parent_tag_id !== undefined) &&
+                (!anti_tag)
+              ) {
+                // Get parent
+                parent_id = matching_nodes_id[parent_id] ?? parent_id
+                const parent = this.sankey.nodes_dict[parent_id] ?? this.sankey.addNewNode(parent_id, parent_id)
+                // Get child & parent tags
+                if (parent) {
+                  let children_tags: Class_LevelTag[] | undefined
+                  let parent_tag: Class_LevelTag | undefined
+                  // Use tags id in priority if existing
+                  const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
+                  const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
+                  if (children_tags_ids && parent_tag_id) {
+                    children_tags = children_tags_ids
+                      .map(_ => {
+                        const child_tag_id = matching_tags_id[tagg_id][_] ?? _
+                        if (tagg.tags_dict[child_tag_id] === undefined)
+                          tagg.addTag(child_tag_id, child_tag_id)
+                        return tagg.tags_dict[child_tag_id]
+                      })
+                    parent_tag = tagg.tags_dict[(matching_tags_id[tagg_id][parent_tag_id] ?? parent_tag_id)]
+                    // If tags has been found,
+                    // create a new dimension OR add parent & child relation to an existing dimension
+                    if (children_tags && parent_tag) {
+                      parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
+                    }
+                  }
+                }
+              }
+              // Case 2 : We only found anti-tag
+              else if (
+                (parent_id === undefined) &&
+                (children_tags_ids === undefined) &&
+                (parent_tag_id === undefined) &&
+                (anti_tag)
+              ) {
+                this.addAsAntiTagged(tagg)
+              }
+            }
+          }
+        })
+    }
+  }
+
+  // PUBLIC METHODS =====================================================================
 
   // Drawing methods --------------------------------------------------------------------
 
@@ -680,7 +985,7 @@ export abstract class Class_NodeElement
     }
   }
 
-  private _show : boolean | undefined
+  private _show: boolean | undefined
 
   public show() {
     return this._show
@@ -699,7 +1004,6 @@ export abstract class Class_NodeElement
     delete this._show
   }
 
-  
   public drawParent() {
     if (this.is_child) {
       Object.values(this._dimensions_as_child)[0].parent.forceShow()
@@ -729,7 +1033,7 @@ export abstract class Class_NodeElement
         }
         return false
       }).map(lid=>lid.target)
-      export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawParent())  
+      export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawParent())
 
       Object.values(this._dimensions_as_child)[0].children.forEach(n=>n.forceHide())
     }
@@ -767,7 +1071,7 @@ export abstract class Class_NodeElement
         }
         return false
       }).map(lid=>lid.target)
-      export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawChildren())  
+      export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawChildren())
     }
   }
 
@@ -798,6 +1102,15 @@ export abstract class Class_NodeElement
   }
 
   // Links related methods --------------------------------------------------------------
+
+
+  public drawLinks() {
+    this._process_or_bypass(() => this._drawLinks())
+  }
+
+  public drawLinksArrow() {
+    this._process_or_bypass(() => this._drawLinksArrow())
+  }
 
   /**
    * Return true if this node hase at least one input link
@@ -1013,7 +1326,6 @@ export abstract class Class_NodeElement
 
   // Values related methods -------------------------------------------------------------
 
-
   /**
    * Hide the name label of the node & set visible the input to modify it
    * @memberof Class_NodeElement
@@ -1036,309 +1348,6 @@ export abstract class Class_NodeElement
     this.menu_config.updateComponentRelatedToNodesSelection()
   }
 
-  // JSON files read / write related methods --------------------------------------------
-
-  /**
-   * Convert node to JSON
-   *
-   *
-   * @return {*}
-   * @memberof Class_NodeElement
-   */
-  public toJSON() {
-    // Extract root attributes
-    const json_object = super.toJSON()
-    json_object['name'] = this._name
-    // Fill displaying values
-    json_object['position'] = this.position_type
-    json_object['x'] = this.position_x
-    json_object['y'] = this.position_y
-    json_object['u'] = this.position_u
-    json_object['v'] = this.position_v
-    if (this._display.position.dx) json_object['dx'] = this._display.position.dx
-    if (this._display.position.dy) json_object['dy'] = this._display.position.dy
-    if (this._display.position.relative_dx) json_object['relative_dx'] = this._display.position.relative_dx
-    if (this._display.position.relative_dy) json_object['relative_dy'] = this._display.position.relative_dy
-    if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
-    if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
-    // Fill style & local attributes
-    json_object['style'] = this.style.id
-    json_object['local'] = this._display.attributes.toJSON()
-    // Tooltip
-    if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
-    // Tags
-    json_object['tags'] = Object.fromEntries(
-      this.taggs_list
-        .map(tagg => [
-          tagg.id,
-          this.tags_list
-            .filter(tag => (tag.group === tagg))
-            .map(tag => tag.id)
-        ])
-    )
-    // Dimension - relations
-    let dimensions: { [_: string]: Type_JSON }
-    if (this.is_child) {
-      dimensions = Object.fromEntries(
-          Object.values(this._dimensions_as_child)
-            .map(dimension => [
-              dimension.parent_level_tag.group.id,
-              {
-                'parent_name': dimension.parent.id,
-                'parent_tag': dimension.parent_level_tag.id,
-                'children_tags': dimension.children_level_tags.map(_ => _.id),
-                'antitag': false,
-                'level': dimension.getLevel()
-              }
-            ])
-        )
-    }
-    else {
-      dimensions = Object.fromEntries(
-          Object.values(this._dimensions_as_parent)
-            .map(dimension => [
-              dimension.parent_level_tag.group.id,
-              {}
-            ])
-        )
-    }
-    // Dimensions - antitag
-    this._leveltaggs_as_antitagged
-      .forEach(leveltagg => {
-        if (!dimensions[leveltagg.id]) {
-          dimensions[leveltagg.id] = {}
-        }
-        dimensions[leveltagg.id]['antitag'] = true
-      })
-    // Dimension
-    json_object['dimensions'] = dimensions
-    // Links
-    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
-    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
-    json_object['links_order'] = this._links_order.map(link => link.id)
-    // Return
-    return json_object
-  }
-
-  /**
-   * Assign to node implementation values from json,
-   * Does not assign links -> need to read links from JSON before
-   *
-   * @param {Type_JSON} json_node_object
-   * @memberof Class_NodeElement
-   */
-  public fromJSON(
-    json_node_object: Type_JSON,
-    matching_taggs_id: { [_: string]: string } = {},
-    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
-  ) {
-    // Get root attributes
-    super.fromJSON(json_node_object)
-    this._name = getStringFromJSON(json_node_object, 'name', this._name)
-    // Update displaying values
-    const position_type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-    if (position_type && position_type != this.style.position.type) {
-      this._display.position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-    }
-    this._display.position.x = getNumberFromJSON(json_node_object, 'x', this._display.position.x)
-    this._display.position.y = getNumberFromJSON(json_node_object, 'y', this._display.position.y)
-    this._display.position.u = getNumberFromJSON(json_node_object, 'u', this._display.position.u)
-    this._display.position.v = getNumberFromJSON(json_node_object, 'v', this._display.position.v)
-    this._display.position.dx = getNumberOrUndefinedFromJSON(json_node_object, 'dx')
-    this._display.position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
-    this._display.position.dy = getNumberOrUndefinedFromJSON(json_node_object, 'dy')
-    this._display.position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
-    this._display.position_x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
-    this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
-    // Update style & local attributes
-    const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
-    //this._display.style = this.sankey.node_styles_dict[style_id] as Class_NodeStyle
-    this.style = this.sankey.node_styles_dict[style_id] as Class_NodeStyle
-    const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
-    if (this._display.position.relative_dx == undefined && json_local_object!=undefined) {
-      this._display.position.relative_dx = json_local_object!.relative_dx as number
-      this._display.position.relative_dy = json_local_object!.relative_dy as number
-      if (json_local_object!.position != undefined) {
-        this._display.position.type = json_local_object!.position as Type_Position
-      } else {
-        this._display.position.type = this._display.style.position.type
-      }
-    }
-    if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object)
-    }
-    // Tooltip
-    this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
-    // Node Tags
-    //   In JSON here are how supposed tags var is :
-    //   tags:{key_grp_tag:string[] (key_tag_selected) }
-    //   where 'key_grp_tag' represent the id of a node_taggs group
-    //   &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
-    Object.entries(json_node_object['tags'] ?? {})
-      .filter(([_tagg_id, _tag_ids]) => {
-        const tagg_id = matching_taggs_id[_tagg_id] ?? _tagg_id
-        const tag_ids = (_tag_ids as string[]).map(_ => matching_tags_id[_tagg_id][_] ?? _)
-        return (
-          (tagg_id in this.sankey.node_taggs_dict) &&
-          ((tag_ids as string[]).length > 0)
-        )
-      })
-      .forEach(([_tagg_id, _tag_ids]) => {
-        const tagg_id = matching_taggs_id[_tagg_id] ?? _tagg_id
-        const tag_ids = (_tag_ids as string[]).map(_ => matching_tags_id[_tagg_id][_] ?? _)
-        const tagg = this.sankey.node_taggs_dict[tagg_id] as Class_TagGroup
-        tagg.tags_list
-          .filter(tag => tag_ids.includes(tag.id))
-          .forEach(tag => {
-            this.addTag(tag)
-            if (tagg_id == 'type de noeud' && tag.name == 'produit') {
-              // associate node of type produit with style produit
-              this.style= this.sankey.node_styles_dict['NodeProductStyle'] as Class_NodeStyle
-            } else if (tagg_id == 'type de noeud' && tag.name == 'sector') {
-              // associate node of type sector with style sector
-              this.style= this.sankey.node_styles_dict['NodeSectorStyle'] as Class_NodeStyle
-            }
-          })
-
-      })
-  }
-
-  /**
-   * When reading JSON, we must wait for all links to be created in ordre
-   * to correctly set input & output link for each nodes
-   * @param {Type_JSON} json_node_object
-   * @memberof Class_NodeElement
-   */
-  public linksFromJSON(
-    json_node_object: Type_JSON,
-    matching_links_id: { [_: string]: string } = {}
-  ) {
-    // Input links
-    const input_link_ids = getStringListFromJSON(json_node_object, 'inputLinksId', [])
-    input_link_ids
-      .filter(l_id => l_id != 'ghost_link')
-      .forEach(_ => {
-        const link_id = matching_links_id[_] ?? _
-        this.addInputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
-      })
-    // Output links
-    const output_link_ids = getStringListFromJSON(json_node_object, 'outputLinksId', [])
-    output_link_ids
-      .filter(l_id => l_id != 'ghost_link')
-      .forEach(_ => {
-        const link_id = matching_links_id[_] ?? _
-        this.addOutputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
-      })
-    // Ordering
-    const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
-    if (ordered_link_ids.length === this._links_order.length) { // Avoid creation of loose links on node
-      this._links_order = ordered_link_ids
-        .map(_ => {
-          const link_id = matching_links_id[_] ?? _
-          return this.sankey.links_dict[link_id]
-        }) as Type_GenericLinkElement[]
-    }
-  }
-
-  /**
-   * When reading JSON, we must wait for all nodes to be created in order
-   * to correctly set dimensions for each nodes
-   * @param {Type_JSON} json_node_object
-   * @memberof Class_NodeElement
-   */
-  public dimensionsFromJSON(
-    json_node_object: Type_JSON,
-    matching_nodes_id: { [_: string]: string } = {},
-    matching_taggs_id: { [_: string]: string } = {},
-    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
-  ) {
-    let local_aggregation : boolean | undefined
-    if (json_node_object.local) {
-      local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
-    }
-    if (local_aggregation != undefined) {
-      if (local_aggregation) {
-        this.forceShow()
-      } else {
-        this.forceHide()
-      }
-    }
-    // Extract dimensions JSON struct from node JSON Struct
-    const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
-    // For each dimension in dimensions JSON Struct, create the parent / child relation
-    if (dimensions_as_JSON) {
-      Object.keys(dimensions_as_JSON)
-        .forEach(_ => {
-          const original_tagg_id = _
-          const tagg_id = matching_taggs_id[_] ?? _
-          const dimension_as_json = getJSONOrUndefinedFromJSON(dimensions_as_JSON, _)
-          if (dimension_as_json) {
-            // Get level tag group from id
-            const tagg = this.sankey.level_taggs_dict[tagg_id] as Class_LevelTagGroup
-            // Continue only in level tag group exists
-            if (tagg) {
-              // Get parents and leveltags ids
-              let parent_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_name')
-              const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
-              const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
-              const anti_tag = getBooleanFromJSON(dimension_as_json, 'antitag', false)
-              // Case 1 : We found parent and level ids -> get or create related tags
-              if (
-                (parent_id !== undefined) &&
-                (children_tags_ids !== undefined) &&
-                (parent_tag_id !== undefined) &&
-                (!anti_tag)
-              ) {
-                // Get parent
-                parent_id = matching_nodes_id[parent_id] ?? parent_id
-                const parent = this.sankey.nodes_dict[parent_id]
-                // Get child & parent tags
-                if (parent) {
-                  let children_tags: Class_LevelTag[] | undefined
-                  let parent_tag: Class_LevelTag | undefined
-                  // Use tags id in priority if existing
-                  const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
-                  const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
-                  if (children_tags_ids && parent_tag_id) {
-                    children_tags = children_tags_ids
-                      .map(_ => {
-                        const child_tag_id = matching_tags_id[original_tagg_id][_] ?? _
-                        if (tagg.tags_dict[child_tag_id] === undefined)
-                          tagg.addTag(child_tag_id, child_tag_id)
-                        return tagg.tags_dict[child_tag_id]
-                      })
-                    parent_tag = tagg.tags_dict[(matching_tags_id[original_tagg_id][parent_tag_id] ?? parent_tag_id)]
-                    // If tags has been found,
-                    // create a new dimension OR add parent & child relation to an existing dimension
-                    if (children_tags && parent_tag) {
-                      parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
-                    }
-                  }
-                }
-              }
-              // Case 2 : We only found anti-tag
-              else if (
-                (parent_id === undefined) &&
-                (children_tags_ids === undefined) &&
-                (parent_tag_id === undefined) &&
-                (anti_tag)
-              ) {
-                this.addAsAntiTagged(tagg)
-              }
-            }
-          }
-        })
-    }
-  }
-
-  public drawLinks() {
-    this._add_waiting_process('drawLinks', () => this._drawLinks())
-  }
-
-  public drawLinksArrow() {
-    this._add_waiting_process('drawLinksArrow', () => this._drawLinksArrow())
-  }
-
   public shiftVertically(
     shift:number
   ) {
@@ -1355,8 +1364,8 @@ export abstract class Class_NodeElement
   protected _applyPosition() {
     if (this.d3_selection !== null) {
       // Default positions
-      let x = this.position_x
-      let y = this.position_y
+      const x = this.position_x
+      const y = this.position_y
       // Deal with import / export nodes
       if (this.position_type === 'relative' && !this._drag) {
         if (this.hasInputLinks()) {
@@ -1395,7 +1404,7 @@ export abstract class Class_NodeElement
           same_u = same_u.filter(n=>n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
           const nodeAbove = same_u[same_u.indexOf(this)-1]
           if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y 
+            this._display.position.y = nodeAbove.position_y
             + nodeAbove.getShapeHeightToUse()
             + this.position_dy
           } else {
@@ -1403,37 +1412,37 @@ export abstract class Class_NodeElement
           }
           if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y+200) {
             const shift = 200 +this.position_y - firstNonEchangeNodeBelow.position_y
-            this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag) ).forEach(n=>n.shiftVertically(shift));
-            this.drawing_area.reset()
-          } 
+            this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag) ).forEach(n=>n.shiftVertically(shift))
+            this.drawing_area.draw()
+          }
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         } else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0 ) {
           // Exportations
           same_u = same_u.filter(n=>n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
           const nodeAbove = same_u[same_u.indexOf(this)-1]
           if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y 
+            this._display.position.y = nodeAbove.position_y
             + nodeAbove.getShapeHeightToUse()
             + this.position_dy
           } else {
             let max_vertical_offset = 0
             this.sankey.visible_nodes_list.filter(n=>!n.hasGivenTag(echangeTag)).forEach(n=>{
-              max_vertical_offset = Math.max(n.position_y+n.getShapeHeightToUse(), max_vertical_offset)            
+              max_vertical_offset = Math.max(n.position_y+n.getShapeHeightToUse(), max_vertical_offset)
             })
             this._display.position.y = max_vertical_offset+200
           }
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')  
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         } else {
           const nodeAbove = same_u[same_u.indexOf(this)-1]
           if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y 
+            this._display.position.y = nodeAbove.position_y
             + nodeAbove.getShapeHeightToUse()
             + this.position_dy
-          } 
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')          
+          }
+          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         }
       } else {
-        this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')        
+        this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
       }
     }
     // Update also position for links
@@ -1604,15 +1613,15 @@ export abstract class Class_NodeElement
                   node_above.position_v = n.position_v
                   n.position_v = tmp
                 }
-                  n.position_dy = n.position_y - node_above.position_y - node_above.getShapeHeightToUse()
+                n.position_dy = n.position_y - node_above.position_y - node_above.getShapeHeightToUse()
               }
             }
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
             n.output_links_list.forEach(link => {
               link.target.applyPosition()
-          })
-        }
-      })
+            })
+          }
+        })
 
       // Move all elements so none of them are outside the DA
       this.drawing_area.recenterElements()
@@ -1766,7 +1775,7 @@ export abstract class Class_NodeElement
 
   /**
    * Select the right color to use for this node (attribute / style / tags / ...)
-   * 
+   *
    * If node tag color palette is activated then search if the node has 1 tag of the group displayed and apply tag color
    *  if the node has more than 1 tag associated then return default color
    * @public
@@ -1823,42 +1832,6 @@ export abstract class Class_NodeElement
     this.removeLinkFromOrderingLinksList(link)
   }
 
-  // CLEANING ---------------------------------------------------------
-
-  /**
-   * Define deletion behavior
-   * @memberof Class_Node
-   */
-  protected cleanForDeletion() {
-    // Delete all related links
-    this._links_order = []
-    Object.values(this._input_links)
-      .forEach(link => {
-        this.removeInputLink(link)
-        link.delete()
-      })
-    Object.values(this._output_links)
-      .forEach(link => {
-        this.removeOutputLink(link)
-        link.delete()
-      })
-    this._input_links = {}
-    this._output_links = {}
-    this._links_order = []
-    this._handle_input_links = {}
-    this._handle_output_links = {}
-    // Remove reference of self in related tags
-    this.tags_list.forEach(tag => tag.removeReference(this))
-    this._tags = []
-    // Remove dims
-    this._leveltaggs_as_antitagged.forEach(tag => tag.removeAntiTaggedRef(this))
-    this._leveltaggs_as_antitagged = []
-    this._taggs_dict = {}
-    // Remove reference of self in style
-    this.style.removeReference(this)
-  }
-
-
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -1907,9 +1880,9 @@ export abstract class Class_NodeElement
         .style('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
     }
   }
-  private drawShape() {
-    this._add_waiting_process('drawShape', () => this._drawShape())
 
+  private drawShape() {
+    this._process_or_bypass(() => this._drawShape())
   }
 
   /**
@@ -2004,8 +1977,7 @@ export abstract class Class_NodeElement
   }
 
   private drawNameLabel() {
-    this._add_waiting_process('drawNameLabel', () => this._drawNameLabel())
-
+    this._process_or_bypass(() => this._drawNameLabel())
   }
 
   /**
@@ -2171,7 +2143,7 @@ export abstract class Class_NodeElement
   }
 
   private drawValueLabel() {
-    this._add_waiting_process('drawValueLabel', () => this._drawValueLabel())
+    this._process_or_bypass(() => this._drawValueLabel)
   }
 
   /**
@@ -2191,7 +2163,6 @@ export abstract class Class_NodeElement
     this.drawShape()  // Node shape can be modified by link's changes
     this.applyPositionOnLinks()  // Links positions can be modified by link's changes
   }
-
 
   /**
    * Function that draw all the arrow of link visible linked to this node (if the link have shape_is_arrow at true)
@@ -2253,29 +2224,29 @@ export abstract class Class_NodeElement
           // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
           let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
           switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+          case 'left':
+            node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+            break
+          case 'top':
+            node_face_size = sumLinkBottom
+            break
+          case 'bottom':
+            node_face_size = sumLinkTop
+            break
           }
           node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
           let node_face_size2 = sumLinkLeft
           switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+          case 'left':
+            node_face_size2 = sumLinkRight
+            break
+          case 'top':
+            node_face_size2 = sumLinkBottom
+            break
+          case 'bottom':
+            node_face_size2 = sumLinkTop
+            break
           }
           arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
           arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2460,11 +2431,10 @@ export abstract class Class_NodeElement
             dx_bottom = dx_bottom + thickness
           }
         }
-
-        this._handle_output_links[link.id].d3_selection?.attr('class', 'node_io ' + link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor
+        if (this._handle_output_links[link.id] !== undefined)
+          this._handle_output_links[link.id].d3_selection?.attr('class', 'node_io ' + link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor
 
         link.target.drawLinksArrow() //redraw arrow of node target of output links visible
-
       }
       // Or current node is link's target
       if (link.target === this) {
@@ -2497,7 +2467,8 @@ export abstract class Class_NodeElement
             dx_bottom = dx_bottom + thickness
           }
         }
-        this._handle_input_links[link.id].d3_selection?.attr('class', 'node_io ' + link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor
+        if (this._handle_input_links[link.id] !== undefined)
+          this._handle_input_links[link.id].d3_selection?.attr('class', 'node_io ' + link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor
       }
     })
     this.drawLinksArrow()
@@ -2719,10 +2690,10 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private addTagToGroupTagDict(tag: Class_Tag) {
-    const grp_id = tag.group.id
-    if (grp_id in this._taggs_dict) {
-      if (!(this._taggs_dict[tag.group.id].includes(tag)))
-        this._taggs_dict[tag.group.id].push(tag)
+    const grp_name = tag.group.name
+    if (grp_name in this._taggs_dict) {
+      if (!(this._taggs_dict[tag.group.name].includes(tag)))
+        this._taggs_dict[tag.group.name].push(tag)
     } else {
       this._taggs_dict[tag.group.id] = [tag]
     }
@@ -2781,7 +2752,7 @@ export abstract class Class_NodeElement
     if (this.drawing_area.application_data.node_label_separator !== '') {
       // If separator affect name label & the separator part is after then return label after separator else return first part
       const splitted_label=this._name.split(this.drawing_area.application_data.node_label_separator)
-      return (splitted_label.length>1 && !this.drawing_area.application_data.isLabelSeparatorPartBefore()) ? splitted_label[1] : splitted_label[0];
+      return (splitted_label.length>1 && !this.drawing_area.application_data.isLabelSeparatorPartBefore()) ? splitted_label[1] : splitted_label[0]
     }
     return this._name
   }
@@ -2851,7 +2822,7 @@ export abstract class Class_NodeElement
       .filter(dimension => dimension.parent_level_tag.group.id == tagGroup.id)
     return _.length > 0 ? _[0] : null
   }
-  
+
   /**
    * List of level tags related to node
    * @readonly
@@ -3926,7 +3897,7 @@ export abstract class Class_NodeElement
 
     if (this.show()) {
       return true
-    } else if (this.show() == false) { 
+    } else if (this.show() == false) {
       return false
     }
     // First check if activated tag group is in antitaggs
@@ -4091,7 +4062,7 @@ export abstract class Class_NodeElement
 
       (new_node as Type_AnyNodeElement).style=importation?new_node.sankey.node_styles_dict['NodeImportStyle']as Class_NodeStyle:new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle
       input_or_output_link.style=importation?new_node.sankey.link_styles_dict['LinkImportStyle']as Class_LinkStyle:new_node.sankey.link_styles_dict['LinkExportStyle']as Class_LinkStyle
-      (new_node as Type_AnyNodeElement).show = extremity_node.show;
+      (new_node as Type_AnyNodeElement).show = extremity_node.show
 
       input_or_output_link.shape_is_recycling = false
 
@@ -4101,7 +4072,7 @@ export abstract class Class_NodeElement
         }
         new_node.addTag(tag)
       })
-      
+
       if (importation) {
         input_or_output_link.source = new_node as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
         new_node.output_links_list.push(input_or_output_link)
@@ -4119,28 +4090,28 @@ export abstract class Class_NodeElement
     (importation?this.output_links_list:this.input_links_list).forEach((input_or_output_link)=>{
       const extremity_node = importation?input_or_output_link.target:input_or_output_link.source
       Object.values(extremity_node._dimensions_as_child)
-      .forEach(dim => {
-        const extremity_node_parent = dim.parent;
-        (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
-          this.sankey.nodes_dict[extremity_node_parent.id+'-'+root_name+(importation?'Importations':'Exportations')], 
-          this, 
+        .forEach(dim => {
+          const extremity_node_parent = dim.parent;
+          (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
+            this.sankey.nodes_dict[extremity_node_parent.id+'-'+root_name+(importation?'Importations':'Exportations')],
+            this,
           dim.children_level_tags as Class_LevelTag[]
-        )        
-      })
+          )
+        })
       Object.values(extremity_node._dimensions_as_parent)
-      .forEach(dim => {
-        const extremity_node_children = dim.children.filter(n=>
-          this.sankey.nodes_dict[n.id+'-'+root_name+(importation?'Importations':'Exportations')]!=undefined
-        ).map(n=>
-          this.sankey.nodes_dict[n.id+'-'+root_name+(importation?'Importations':'Exportations')]
-        )
-        new Class_NodeDimension(
-          this,
-          extremity_node_children,
-          dim.parent_level_tag,
-          dim.children_level_tags
-        )       
-      })
+        .forEach(dim => {
+          const extremity_node_children = dim.children.filter(n=>
+            this.sankey.nodes_dict[n.id+'-'+root_name+(importation?'Importations':'Exportations')]!=undefined
+          ).map(n=>
+            this.sankey.nodes_dict[n.id+'-'+root_name+(importation?'Importations':'Exportations')]
+          )
+          new Class_NodeDimension(
+            this,
+            extremity_node_children,
+            dim.parent_level_tag,
+            dim.children_level_tags
+          )
+        })
     })
   }
 }
@@ -4535,24 +4506,22 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._value_label_background = false
   }
 
-/**
+  /**
    * Assign to node implementation values from json,
    * Does not assign links -> need to read links from JSON before
    *
    * @param {Type_JSON} json_node_object
    * @memberof Class_NodeElement
    */
-public fromJSON(
-  json_node_object: Type_JSON,
-  matching_taggs_id: { [_: string]: string } = {},
-  matching_tags_id: { [_: string]: { [_: string]: string } } = {},
-) {
-  super.fromJSON(json_node_object)
+  public fromJSON(
+    json_node_object: Type_JSON
+  ) {
+    super.fromJSON(json_node_object)
 
-  this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-  this._position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
-  this._position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
-}
+    this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
+    this._position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
+    this._position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
+  }
 
   // CLEANING ===========================================================================
 
