@@ -740,7 +740,7 @@ export abstract class Class_LinkElement
       source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
       if (this.sankey.nodes_dict[source_node_id]) {
         this.source = this.sankey.nodes_dict[source_node_id] as Type_GenericNodeElement
-        this.shape_is_recycling = false
+        this._display.attributes.shape_is_recycling = false
       }
     }
     let target_node_id = getStringOrUndefinedFromJSON(json_object, 'idTarget')
@@ -748,7 +748,7 @@ export abstract class Class_LinkElement
       target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
       if (this.sankey.nodes_dict[target_node_id]) {
         this.target = this.sankey.nodes_dict[target_node_id] as Type_GenericNodeElement
-        this.shape_is_recycling = false
+        this._display.attributes.shape_is_recycling = false
       }
     }
     // Get style & local attributes
@@ -803,8 +803,8 @@ export abstract class Class_LinkElement
           return this._target.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length == 1
         }).length > 0
 
-      const trgt_node_type = this._target.grouped_taggs_dict['Type de noeud']
-      const src_node_type = this._source.grouped_taggs_dict['Type de noeud']
+      const trgt_node_type = this._target.grouped_taggs_dict['type de noeud']
+      const src_node_type = this._source.grouped_taggs_dict['type de noeud']
 
       // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt 
       if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {

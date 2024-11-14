@@ -454,9 +454,9 @@ export type CreateObjectFuncType = (data: SankeyData, l: string[]) => SankeyLink
 
 export type DefaultLinkFuncType = (data: SankeyData) => SankeyLink
 
-export type SetNodeStyleToTypeNode = (data: SankeyData) => void
+// export type SetNodeStyleToTypeNode = (data: SankeyData) => void
 
-export type SetNodeStyleToTypeNodeFuncType = (data: SankeyData) => void
+// export type SetNodeStyleToTypeNodeFuncType = (data: SankeyData) => void
 
 export type ReturnValueNodeFuncType = (data: SankeyData, n: SankeyNode, k: keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle) => string | number | boolean
 
@@ -485,11 +485,11 @@ export type ConvertDataFuncType = (
   DefaultSankeyData: () => SankeyData
 ) => void
 
-export type complete_sankey_dataFunctType = (
-  data: SankeyData, DefaultSankeyData: () => SankeyData,
-  DefaultNode: (data: SankeyData) => SankeyNode,
-  DefaultLink: (data: SankeyData) => SankeyLink
-) => void
+// export type complete_sankey_dataFunctType = (
+//   data: SankeyData, DefaultSankeyData: () => SankeyData,
+//   DefaultNode: (data: SankeyData) => SankeyNode,
+//   DefaultLink: (data: SankeyData) => SankeyLink
+// ) => void
 
 export type convert_nodesFuncType = (data: SankeyData) => void
 
