@@ -363,15 +363,21 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   new_data.fromJSON(data_as_json)
   // Apply extracted layout if present
   if (data_as_json['layout']) {
-    const layout = data_as_json['layout'] as Type_JSON
-    const tmp_DA = new_data.createNewDrawingArea()
-    tmp_DA.fromJSON(layout, false)
+    // const layout = data_as_json['layout'] as Type_JSON
+    // const tmp_DA = new_data.createNewDrawingArea()
+    // tmp_DA.fromJSON(layout)
+    // new_data.menu_configuration.function_on_wait.current = () => {
+    //   new_data.drawing_area.updateFrom(
+    //     tmp_DA,
+    //     ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
+    //   )
+    //   new_data.drawing_area.areaAutoFit()
+    // }
     new_data.menu_configuration.function_on_wait.current = () => {
-      new_data.drawing_area.updateFrom(
-        tmp_DA,
-        ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
+      new_data.drawing_area.fromJSON(
+        data_as_json['layout'] as Type_JSON
       )
-      new_data.drawing_area.areaAutoFit()
+      new_data.drawing_area.draw()
     }
     new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
   } else {
@@ -380,13 +386,13 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
       new_data.drawing_area.computeAutoSankey(true)
       // Initially there is only one node per type of exchanges.
       // it must be splitted to have one import and one export per product
-      // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation 
+      // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
       new_data.drawing_area.SplitTrade()
       // Computes u v,x and initial y for trade nodes
       new_data.drawing_area.ArrangeTrade(true)
       const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
       new_data.drawing_area.sankey.visible_nodes_list.forEach((n,i,a)=> {
-        n.reorganizeIOLinks();
+        n.reorganizeIOLinks()
         new_data.drawing_area.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
       })
       new_data.drawing_area.sankey.links_list.forEach(l=>{

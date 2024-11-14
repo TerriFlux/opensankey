@@ -45,7 +45,6 @@ import {
 } from './Abstract'
 import { Class_ProtoElement } from './Element'
 import { Class_AbstractNodeElement } from './AbstractNode'
-import { Class_LevelTagGroup } from './Tag'
 
 // CONSTANTS ****************************************************************************
 
@@ -158,7 +157,7 @@ export abstract class Class_DrawingArea
    */
   public static: boolean = false
 
-  public bypass_timeout: boolean = false
+  public bypass_redraws: boolean = false
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -191,7 +190,7 @@ export abstract class Class_DrawingArea
   // Objects containeds in drawing area -------------------------------------------------
 
   protected _sankey: Type_GenericSankey
-  protected _legend: Class_Legend<this, Type_GenericSankey>
+  protected _legend: Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -205,7 +204,6 @@ export abstract class Class_DrawingArea
    */
   private _scale: number = default_scale
   private _fit_margin: number = 10
-
 
   /**
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
@@ -291,13 +289,13 @@ export abstract class Class_DrawingArea
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
 
-    public getZoomScale(){
-      const tmp =this.d3_selection_zoom_area?.node()
-      if(tmp && tmp !== null)
-        return d3.zoomTransform(tmp).k
-      else
-        return 1
-    }
+  public getZoomScale(){
+    const tmp =this.d3_selection_zoom_area?.node()
+    if(tmp && tmp !== null)
+      return d3.zoomTransform(tmp).k
+    else
+      return 1
+  }
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -315,9 +313,11 @@ export abstract class Class_DrawingArea
     this._height = this.window_fitting_height
     this._width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
-    this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
+    this._legend = new Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
     this._selection_zone = this.createNewSelectionZone()
   }
+
+  // CLEANING METHODS ===================================================================
 
   public delete() {
     // Empty selection
@@ -329,12 +329,146 @@ export abstract class Class_DrawingArea
     this._link_contextualied = undefined
     this._node_contextualied = undefined
     // Clean Elements
-    this.sankey.delete()
+    this._sankey.delete()
     this._legend.delete()
     this._selection_zone.delete()
     // Clean drawing area
     this.unDraw()
   }
+
+  // COPY METHODS ======================================================================
+
+  public copyFrom(drawing_area_to_copy: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+    // Delete everything
+    this.delete()
+    // Copy All attributes
+    this._copyAttrFrom(drawing_area_to_copy)
+    // Copy Sankey
+    this._sankey.copyFrom(drawing_area_to_copy._sankey)
+    // Copy Legend
+    this._legend.copyFrom(drawing_area_to_copy._legend)
+  }
+
+  protected _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+    // Copy All attributes
+    this._color = drawing_area_to_copy._color
+    this._filter_label = drawing_area_to_copy._filter_label
+    this._filter_link_value = drawing_area_to_copy._filter_link_value
+    this._fit_margin = drawing_area_to_copy._fit_margin
+    this._grid_color = drawing_area_to_copy._grid_color
+    this._grid_size = drawing_area_to_copy._grid_size
+    this._grid_visible = drawing_area_to_copy._grid_visible
+    this._height = drawing_area_to_copy._height
+    this._horizontal_spacing = drawing_area_to_copy._horizontal_spacing
+    this._maximum_flux = drawing_area_to_copy._maximum_flux
+    this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._number_of_elements = drawing_area_to_copy._number_of_elements
+    this._scale = drawing_area_to_copy._scale
+    this._scaleValueToPx.domain([0, this._scale])
+    this._show_structure = drawing_area_to_copy._show_structure
+    this._vertical_spacing  = drawing_area_to_copy._vertical_spacing
+    this._width = drawing_area_to_copy._width
+  }
+
+  public updateFrom(
+    other_drawing_area: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    mode: string[]
+  ) {
+    // Transfert all attributes = Copy everything from other drawing area
+    const all = mode.includes('*')
+    // Transfer DA attributs
+    if (mode.includes('attrDrawingArea') || all) {
+      this._copyAttrFrom(other_drawing_area)
+      this._legend.copyFrom(other_drawing_area._legend)
+    }
+    // Transfert Sankey Attributes
+    this.sankey.updateFrom(other_drawing_area.sankey, mode)
+  }
+
+  // SAVING METHODS =====================================================================
+
+  /**
+   * Convert current drawing area & all substructure as JSON data
+   * @param {boolean} [only_visible_elements=false]
+   * @param {boolean} [with_values=true]
+   * @return {*}
+   * @memberof Class_DrawingArea
+   */
+  public toJSON(
+    only_visible_elements: boolean = false,
+    with_values: boolean = true
+  ) {
+    // Create json struct
+    const json_object = {} as Type_JSON
+    // Add current version of app
+    json_object['version'] = this.application_data.version
+    // Dump DA attributes
+    json_object['height'] = this._height
+    json_object['width'] = this._width
+    json_object['grid_visible'] = this._grid_visible
+    json_object['grid_square_size'] = this._grid_size
+    json_object['h_space'] = this._horizontal_spacing
+    json_object['v_space'] = this._vertical_spacing
+    json_object['user_scale'] = this._scale
+    json_object['couleur_fond_sankey'] = this._color
+    if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
+    if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
+    json_object['filter_label'] = this._filter_label
+    json_object['filter_link_value'] = this._filter_link_value
+    json_object['show_structure'] = this._show_structure
+    json_object['number_of_elements'] = this._number_of_elements
+    // Dump with json of contained elements
+    const out = {
+      ...json_object,
+      ...this._legend.toJSON(),
+      ...this._sankey.toJSON(
+        only_visible_elements,
+        with_values
+      )
+    }
+    return out
+  }
+
+  /**
+   * Export current drawing area & its contents as json struct
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_DrawingArea
+   */
+  public fromJSON(
+    json_object: Type_JSON,
+    match_and_update: boolean = true,
+  ) {
+    const version = getStringOrUndefinedFromJSON(json_object, 'version')
+    // Only legacy convert old sankey
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.9)
+    ) {
+      convert_data_legacy(json_object) // FIXME
+    }
+    // Update direct attributes
+    this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
+    this._filter_label = getNumberFromJSON(json_object, 'filter_label', 0)
+    this._filter_link_value = getNumberFromJSON(json_object, 'filter_link_value', 0)
+    this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
+    this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
+    this._height = getNumberFromJSON(json_object, 'height', this._height)
+    this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
+    this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
+    this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
+    this._number_of_elements = getNumberFromJSON(json_object, 'number_of_elements', this._number_of_elements)
+    this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
+    this._scaleValueToPx.domain([0, this._scale])
+    this._show_structure = getStringFromJSON(json_object, 'show_structure', this._show_structure) as Type_Structure
+    this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
+    this._width = getNumberFromJSON(json_object, 'width', this._width)
+    // Update legend
+    this._legend.fromJSON(json_object)
+    // Update Sankey
+    this.sankey.fromJSON(json_object, match_and_update)
+  }
+
 
   // ABSTRACT METHODS ==================================================================
 
@@ -343,30 +477,11 @@ export abstract class Class_DrawingArea
 
   // PUBLIC METHODS ====================================================================
 
-  public reinit() {
-    // Delete everything
-    this.delete()
-    // Recreate everything
-    this._sankey = this.createNewSankey()
-    this._legend = new Class_Legend<this, Type_GenericSankey>(this, this.application_data.menu_configuration)
-    this._selection_zone = this.createNewSelectionZone()
-
-    // reset some attributes
-    delete this._maximum_flux
-    delete this._minimum_flux
-    this._filter_label = 0
-    this._filter_link_value = 0
-    this._show_structure = initial_show_structure
-
-    // Redraw
-    this.reset()
-  }
-
   /**
    * Reset drawing area
    * @memberof Class_DrawingArea
    */
-  public reset() {
+  public draw() {
 
     // Clean drawing area
     this.unDraw()
@@ -404,6 +519,10 @@ export abstract class Class_DrawingArea
 
     // Draw Everything
     this.drawElements()
+
+    // Fit area
+    this.checkAndUpdateAreaSize()
+    this.areaAutoFit()
 
     // Added events listeners
     this.setEventsListeners()
@@ -460,7 +579,7 @@ export abstract class Class_DrawingArea
     // Draw grid
     this.drawGrid()
     // Draw all nodes
-    this.sankey.draw()
+    this._sankey.draw()
     // Draw legend
     this._legend.draw()
   }
@@ -978,7 +1097,7 @@ export abstract class Class_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-      (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+        (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -1050,7 +1169,7 @@ export abstract class Class_DrawingArea
    * @param {object} nodes
    */
   public computeRecyclingHorizontalIndex(
-    nodes_to_process: Type_GenericNodeElement[],    
+    nodes_to_process: Type_GenericNodeElement[],
     link: Type_GenericLinkElement,
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
@@ -1106,7 +1225,7 @@ export abstract class Class_DrawingArea
   /**
    * Initially there is only one node per type of exchanges.
    * it must be splitted to have one import and one export per product
-   * International will be split to give InternationalProduct1Importation InternationalProduc1Exportation 
+   * International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
    *
    * @memberof Class_DrawingArea
    */
@@ -1484,20 +1603,20 @@ export abstract class Class_DrawingArea
     }
     const process_nodes = this.sankey.nodes_list
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
-    let import_nodes = process_nodes.filter(n=>
+    const import_nodes = process_nodes.filter(n=>
       n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
     )
-    let export_nodes = process_nodes.filter(n=>
-      n.hasGivenTag(echangeTag)  && n.input_links_list.length > 0 
+    const export_nodes = process_nodes.filter(n=>
+      n.hasGivenTag(echangeTag)  && n.input_links_list.length > 0
     )
-    let other_nodes = process_nodes.filter(n=>!n.hasGivenTag(echangeTag))
-  
-    let max_vertical_offset = 0  
+    const other_nodes = process_nodes.filter(n=>!n.hasGivenTag(echangeTag))
+
+    let max_vertical_offset = 0
     other_nodes.forEach(n=>
       max_vertical_offset = Math.max(n.position_y+n.getShapeHeightToUse(), max_vertical_offset)
     )
     max_vertical_offset = max_vertical_offset + 200
-    const firstNonEchangeNodeBelow = other_nodes.sort((n1,n2)=> n1.position_y-n2.position_y)[0]
+    // const firstNonEchangeNodeBelow = other_nodes.sort((n1,n2)=> n1.position_y-n2.position_y)[0]
 
     const default_style = this.sankey.node_styles_dict['default']
     const h_space = default_style.position.dx!
@@ -1513,10 +1632,10 @@ export abstract class Class_DrawingArea
         // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < node.position_y+200) {
         //   const shift = 200 +node.position_y - firstNonEchangeNodeBelow.position_y
         //   this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag)).forEach(n=>n.shiftVertically(shift))
-        // }         
+        // }
       }
     })
-  
+
     export_nodes.forEach(node => {
       const input_link = node.input_links_list[0]
       const source_node = input_link.source
@@ -1547,7 +1666,7 @@ export abstract class Class_DrawingArea
         smaller_x = n.position_x
       }
     })
-  
+
     this.sankey.visible_nodes_list.forEach(n=>{
       if (n.position_type === 'relative' ) {
         return
@@ -1615,7 +1734,7 @@ export abstract class Class_DrawingArea
       const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
       if (!nodeDimParent) {
         return
-      }   
+      }
       desagregated_nodes = [...desagregated_nodes,...(nodeDimParent.children as Type_GenericNodeElement[])]
       desagregated_nodes = [...new Set(desagregated_nodes)]
     })
@@ -1642,122 +1761,6 @@ export abstract class Class_DrawingArea
       const shift_y = node.position_y - (node.position_y % this.grid_size)// get position so that the node position_y is set to previous vertical grid line
       node.setPosXY(shift_x, shift_y)
     })
-  }
-
-  /**
-   * Export current drawing area & its contents as json struct
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_DrawingArea
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    redraw: boolean = true,
-    match_and_update: boolean = true,
-  ) {
-    const version = getStringOrUndefinedFromJSON(json_object, 'version')
-    // Only legacy convert old sankey
-    if (
-      (version === undefined) ||
-      (Number(version) < 0.9)
-    ) {
-      convert_data_legacy(json_object) // FIXME
-    }
-    // Update direct attributes
-    this._height = getNumberFromJSON(json_object, 'height', this._height)
-    this._width = getNumberFromJSON(json_object, 'width', this._width)
-    this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
-    this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
-    this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
-    this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
-    this.scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
-    this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
-    this._scaleValueToPx.domain([0, this._scale])
-    this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
-    this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
-    this._filter_label = getNumberFromJSON(json_object, 'filter_label', 0)
-    this._filter_link_value = getNumberFromJSON(json_object, 'filter_link_value', 0)
-    // Update legend
-    this._legend.fromJSON(json_object)
-    // Update Sankey
-    this.sankey.fromJSON(json_object, match_and_update)
-    if (redraw) {
-      // Draw
-      this.reset()
-    }
-  }
-
-  /**
-   * Convert current drawing area & all substructure as JSON data
-   * @param {boolean} [only_visible_elements=false]
-   * @param {boolean} [with_values=true]
-   * @return {*}
-   * @memberof Class_DrawingArea
-   */
-  public toJSON(
-    only_visible_elements: boolean = false,
-    with_values: boolean = true
-  ) {
-    // Create json struct
-    const json_object = {} as Type_JSON
-    // Add current version of app
-    json_object['version'] = this.application_data.version
-    // Dump DA attributes
-    json_object['height'] = this._height
-    json_object['width'] = this._width
-    json_object['grid_visible'] = this._grid_visible
-    json_object['grid_square_size'] = this._grid_size
-    json_object['h_space'] = this._horizontal_spacing
-    json_object['v_space'] = this._vertical_spacing
-    json_object['user_scale'] = this._scale
-    json_object['couleur_fond_sankey'] = this._color
-    if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
-    if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
-    json_object['filter_label'] = this._filter_label
-    json_object['filter_link_value'] = this._filter_link_value
-
-    // Dump with json of contained elements
-    return {
-      ...json_object,
-      ...this._legend.toJSON(),
-      ...this.sankey.toJSON(
-        only_visible_elements,
-        with_values
-      )
-    }
-  }
-
-  public updateFrom(
-    other_drawing_area: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
-    mode: string[]
-  ) {
-    // Transfert all attributes = Copy everything from other drawing area
-    const all = mode.includes('*')
-    // Transfer DA attributs
-    if (mode.includes('attrDrawingArea') || all) {
-      this.color = other_drawing_area.color
-      this.grid_size = other_drawing_area.grid_size
-      this.grid_visible = other_drawing_area.grid_visible
-
-      // Transfer legend attribute from new layout
-      this.legend.masked = other_drawing_area.legend.masked
-      this.legend.display_legend_scale = other_drawing_area.legend.display_legend_scale
-      this.legend.legend_police = other_drawing_area.legend.legend_police
-      this.legend.legend_bg_border = other_drawing_area.legend.legend_bg_border
-      this.legend.legend_bg_color = other_drawing_area.legend.legend_bg_color
-      this.legend.legend_bg_opacity = other_drawing_area.legend.legend_bg_opacity
-      this.legend.legend_show_dataTags = other_drawing_area.legend.legend_show_dataTags
-      this.legend.node_label_separator = other_drawing_area.legend.node_label_separator
-      this.legend.width = other_drawing_area.legend.width
-    }
-    // Transfert Sankey Attributes
-    this.sankey.updateFrom(other_drawing_area.sankey, mode)
-  }
-
-  public copyFrom(_: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
-    const json = _.toJSON()
-    delete json.id
-    this.fromJSON(json, false)
   }
 
   /**
@@ -1990,8 +1993,6 @@ export abstract class Class_DrawingArea
         target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
         // Make target a 'ghost' node
         target.setInvisible()
-        source.has_timeout = false
-        target.has_timeout = false
         // Ref newly created link this var to be used in other mouse event
         this._ghost_link = new Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
           'ghost_link',
@@ -2057,8 +2058,6 @@ export abstract class Class_DrawingArea
         else {
           // Make ghost target visible
           this._ghost_link.target.setVisible()
-          this._ghost_link.target.has_timeout = true
-          this._ghost_link.source.has_timeout = true
 
 
           // Create new link
@@ -2263,8 +2262,8 @@ export abstract class Class_DrawingArea
   public get sankey() { return this._sankey }
 
   // Legend
-  public get legend(): Class_Legend<this, Type_GenericSankey> { return this._legend }
-  public set legend(value: Class_Legend<this, Type_GenericSankey>) { this._legend = value }
+  public get legend(): Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._legend }
+  public set legend(value: Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>) { this._legend = value }
 
   public get ghost_link() { return this._ghost_link }
   public set ghost_link(value: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null) { this._ghost_link = value }
