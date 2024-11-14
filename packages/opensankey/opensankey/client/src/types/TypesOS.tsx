@@ -38,20 +38,20 @@ export type Type_AdditionalMenus = {
   advanced_label_content: JSX.Element[],
   advanced_label_value_content: JSX.Element[],
   additional_menu_configuration_nodes: { [_: string]: JSX.Element },
-  additional_node_label_layout_content:JSX.Element[],
-  additional_node_apparence_content:JSX.Element[],
+  additional_node_label_layout_content: JSX.Element[],
+  additional_node_apparence_content: JSX.Element[],
 
-  context_node_order:string[],
-  additional_context_node_element:{ [_: string]: JSX.Element },
+  context_node_order: string[],
+  additional_context_node_element: { [_: string]: JSX.Element },
   // Links
-  additional_menu_configuration_links:{ [_: string]: JSX.Element },
+  additional_menu_configuration_links: { [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
   additional_link_appearence_items: JSX.Element[],
-  additional_link_appearence_value:JSX.Element[]
+  additional_link_appearence_value: JSX.Element[]
   additional_link_visual_filter_content: JSX.Element[],
 
-  context_link_order:string[],
-  additional_context_link_element:{ [_: string]: JSX.Element },
+  context_link_order: string[],
+  additional_context_link_element: { [_: string]: JSX.Element },
 
   // Preferences
   additional_preferences: JSX.Element[],
@@ -73,8 +73,8 @@ export type Type_AdditionalMenus = {
   example_menu: object,
   formations_menu: object,
 
-  toolbar_order:string[],
-  toolbar_elements:{ [k: string]: JSX.Element; }
+  toolbar_order: string[],
+  toolbar_elements: { [k: string]: JSX.Element; }
 
   cards_template: JSX.Element
 }
@@ -92,7 +92,7 @@ export class Class_ApplicationDataOS
   public createNewMenuConfiguration(): Class_MenuConfig {
     return new Class_MenuConfig()
   }
-  public createNewDrawingArea(id?:string): Class_DrawingAreaOS {
+  public createNewDrawingArea(id?: string): Class_DrawingAreaOS {
     const drawing_area = new Class_DrawingAreaOS(
       this,
       id
@@ -110,9 +110,9 @@ export class Class_DrawingAreaOS
 
   constructor(
     application_data: Class_ApplicationDataOS,
-    id?:string
+    id?: string
   ) {
-    super(application_data,id)
+    super(application_data, id)
   }
 
   protected createNewSankey(id: string = default_main_sankey_id) {
@@ -120,15 +120,15 @@ export class Class_DrawingAreaOS
     return sankey
   }
 
-  protected createNewSelectionZone(){
+  protected createNewSelectionZone() {
     return new Class_ZoneSelectionOS(this, this.application_data.menu_configuration)
   }
 
 }
 
-export class Class_ZoneSelectionOS extends Class_ZoneSelection<Class_DrawingAreaOS,Class_SankeyOS>{
-  constructor(drawing_area:Class_DrawingAreaOS,menu_config:Class_MenuConfig){
-    super(drawing_area,menu_config)
+export class Class_ZoneSelectionOS extends Class_ZoneSelection<Class_DrawingAreaOS, Class_SankeyOS> {
+  constructor(drawing_area: Class_DrawingAreaOS, menu_config: Class_MenuConfig) {
+    super(drawing_area, menu_config)
   }
 }
 
@@ -149,6 +149,7 @@ export class Class_SankeyOS
   ) {
     super(drawing_area, menu_config, id)
     this._link_styles[default_style_id] = this.createNewLinkStyle(default_style_id, default_style_name, false)
+    this._node_styles[default_style_id] = this.createNewNodeStyle(default_style_id, default_style_name, false)
   }
 
   protected createNewNode(id: string, name: string): Class_NodeElementOS {
@@ -167,7 +168,7 @@ export class Class_SankeyOS
   }
 
   protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
-    return new Class_NodeStyle(id,name,is_deletable)
+    return new Class_NodeStyle(id, name, is_deletable)
   }
 
   public get default_link_style() {
@@ -180,7 +181,7 @@ export class Class_SankeyOS
 export class Class_NodeElementOS
   extends Class_NodeElement<
     Class_DrawingAreaOS, Class_SankeyOS, Class_LinkElementOS
-  > {}
+  > { }
 
 // LINK ===========================================================================================
 

@@ -31,7 +31,10 @@ import {
   getStringFromJSON,
   Type_JSON,
 } from './Utils'
-import { Type_GenericLinkElementOS, Type_GenericNodeElementOS } from './TypesOS'
+import {
+  Type_GenericLinkElementOS,
+  Type_GenericNodeElementOS
+} from './TypesOS'
 
 
 // CLASS LEGEND *************************************************************************
@@ -68,7 +71,6 @@ export class Class_Legend
   private _width: number = 180
   private _info_link_value_void: boolean = false
 
-
   /**
    * Attribute for legend content positionning.
    * Souldn't have getter & setter public because the variable is only use & computed when we draw the legend
@@ -88,7 +90,7 @@ export class Class_Legend
   private _dy: number = 0
 
   /**
-   * Attribute used for the scale of the legend 
+   * Attribute used for the scale of the legend
    * so the legend can still be visible when we de-zoom DA.
    * The attr is automaticaly updated when we zoom/de-zooom on the DA (see setter)
    *
@@ -142,11 +144,36 @@ export class Class_Legend
     }
   }
 
-  // PUBLIC METHODS =====================================================================
+  // COPY METHODS =======================================================================
 
-  public toJSON() {
-    const json_object = super.toJSON()
+  protected _copyFrom(_: Class_Legend<Type_GenericDrawingArea, Type_GenericSankey>): void {
+    super._copyFrom(_)
+    this._masked = _._masked
+    this._dx = _._dx
+    this._dy = _._dy
+    this._scale = _._scale
+    this._width = _._width
+    this._display_legend_scale = _._display_legend_scale
+    this._legend_police = _._legend_police
+    this._legend_bg_border = _._legend_bg_border
+    this._legend_bg_color = _._legend_bg_color
+    this._legend_bg_opacity = _._legend_bg_opacity
+    this._legend_show_dataTags = _._legend_show_dataTags
+    this._node_label_separator = _._node_label_separator
+    this._info_link_value_void = _._info_link_value_void
+  }
+
+  // SAVING METHODS =====================================================================
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+    super._toJSON(json_object, kwargs)
     json_object['mask_legend'] = this._masked
+    json_object['legend_dx'] = this._dx
+    json_object['legend_dy'] = this._dy
+    json_object['legend_scale'] = this._scale
     json_object['legend_width'] = this._width
     json_object['display_legend_scale'] = this._display_legend_scale
     json_object['legend_police'] = this._legend_police
@@ -154,21 +181,19 @@ export class Class_Legend
     json_object['legend_bg_color'] = this._legend_bg_color
     json_object['legend_bg_opacity'] = this._legend_bg_opacity
     json_object['legend_show_dataTags'] = this._legend_show_dataTags
-    json_object['legend_position_x'] = this.position_x
-    json_object['legend_position_y'] = this.position_y
-
-    return json_object
+    json_object['node_label_separator'] = this._node_label_separator
+    json_object['info_link_value_void'] = this._info_link_value_void
   }
 
-  /**
-   * Setting value of legend from JSON
-   *
-   * @param {Type_JSON json_object
-   * @memberof Class_Legend
-   */
-  public fromJSON(json_object: Type_JSON) {
-    // TODO : define default value in case data is not in JSON
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+    super._fromJSON(json_object, kwargs)
     this._masked = getBooleanFromJSON(json_object, 'mask_legend', this._masked)
+    this._dx = getNumberFromJSON(json_object, 'legend_dx', this._dx)
+    this._dy = getNumberFromJSON(json_object, 'legend_dy', this._dy)
+    this._scale = getNumberFromJSON(json_object, 'legend_scale', this._scale)
     this._width = getNumberFromJSON(json_object, 'legend_width', this._width)
     this._display_legend_scale = getBooleanFromJSON(json_object, 'display_legend_scale', this._display_legend_scale)
     this._legend_police = getNumberFromJSON(json_object, 'legend_police', this._legend_police)
@@ -176,9 +201,60 @@ export class Class_Legend
     this._legend_bg_color = getStringFromJSON(json_object, 'legend_bg_color', this._legend_bg_color)
     this._legend_bg_opacity = getNumberFromJSON(json_object, 'legend_bg_opacity', this._legend_bg_opacity)
     this._legend_show_dataTags = getBooleanFromJSON(json_object, 'legend_show_dataTags', this._legend_show_dataTags)
-    this._display.position.x = getNumberFromJSON(json_object, 'legend_position_x', default_element_position.x)
-    this._display.position.y = getNumberFromJSON(json_object, 'legend_position_y', default_element_position.y)
+    this._node_label_separator = getStringFromJSON(json_object, 'node_label_separator', this._node_label_separator)
+    this._info_link_value_void = getBooleanFromJSON(json_object, 'info_link_value_void', this._info_link_value_void)
+  }
 
+  // PUBLIC METHODS =====================================================================
+
+  /**
+   * _drawLegendBg with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  public drawLegendBg() {
+    this._process_or_bypass(() => this._drawLegendBg())
+  }
+
+  /**
+   * _drawTagDisplayed with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  public drawTagDisplayed() {
+    this._process_or_bypass(() => this._drawTagDisplayed())
+  }
+
+  /**
+   * _drawInfoDataType with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  public drawInfoDataType() {
+    this._process_or_bypass(() => this._drawInfoDataType())
+  }
+
+  /**
+   * _drawInfoDashedLink with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  public drawInfoDashedLink() {
+    this._process_or_bypass(() => this._drawInfoDashedLink())
+  }
+
+  /**
+   * _drawSankeyScale with timeout
+   *
+   * @private
+   * @memberof Class_Legend
+   */
+  public drawSankeyScale() {
+    this._process_or_bypass(() => this._drawSankeyScale())
   }
 
   // PROTECTED METHODS ==================================================================
@@ -248,7 +324,7 @@ export class Class_Legend
   /**
  * Override applyPosition for legend so it take into accound scale transformation
  * @protected
- * @return {*}  
+ * @return {*}
  * @memberof Class_Node
  */
   protected override _applyPosition() {
@@ -286,16 +362,6 @@ export class Class_Legend
   }
 
   /**
-   * _drawLegendBg with timeout
-   *
-   * @private
-   * @memberof Class_Legend
-   */
-  public drawLegendBg() {
-    this._add_waiting_process('drawLegendBg', () => { this._drawLegendBg() })
-  }
-
-  /**
    * Function to draw tags in legend that are used in the sankey
    * (when they're activated in the toolbar)
    * @private
@@ -314,7 +380,7 @@ export class Class_Legend
       .filter(tag_group => tag_group.show_legend)
       .forEach(tag_group => {
         // Tag froup id can have caracter that 'break' html id selection so we normalize it
-        const id_to_use=tag_group.id.replaceAll(' ','_').replaceAll('\'','_')
+        const id_to_use = tag_group.id.replaceAll(' ', '_').replaceAll('\'', '_')
 
         // Ajout du tagGroup.name
         this.d3_selection?.append('text')
@@ -344,7 +410,7 @@ export class Class_Legend
               )
               .attr('transform', () => 'translate(' + this._dx + ',' + (this._dy) + ')')
               .on('mouseover', () => {
-                //Add event on hovering tag in legend that allow to highlight elemnt of the sankey that have the tag we are hovering 
+                //Add event on hovering tag in legend that allow to highlight elemnt of the sankey that have the tag we are hovering
 
                 const nodes_tied_to_link_with_tag_hovered = ([] as Type_GenericNodeElementOS[])
                 //Get nodes tied to links who have the tag we hovering & get the list of links that have the tag hovered
@@ -366,12 +432,12 @@ export class Class_Legend
                     return el
                   })
 
-                //Reduce opacity of all link that doesn't have the tag hovered or aren't tied to a node that have the tag hovered 
+                //Reduce opacity of all link that doesn't have the tag hovered or aren't tied to a node that have the tag hovered
                 flux_list
                   .filter(link => !flux_with_tag_overed.includes(link) && !link_tied_to_node_with_tag_hovered.includes(link as Type_GenericLinkElementOS))
                   .forEach(el => el.d3_selection?.attr('opacity', 0.1))
 
-                //Reduce opacity of all node that doesn't have the tag hovered or aren't tied to a link that have the tag hovered 
+                //Reduce opacity of all node that doesn't have the tag hovered or aren't tied to a link that have the tag hovered
                 node_list
                   .filter(n => !node_with_tag_overed.includes(n) && !nodes_tied_to_link_with_tag_hovered.includes(n as Type_GenericNodeElementOS))
                   .forEach(el => el.d3_selection?.attr('opacity', 0.1))
@@ -426,16 +492,6 @@ export class Class_Legend
   }
 
   /**
-   * _drawTagDisplayed with timeout
-   *
-   * @private
-   * @memberof Class_Legend
-   */
-  private drawTagDisplayed() {
-    this._add_waiting_process('drawTagDisplayed', () => { this._drawTagDisplayed() })
-  }
-
-  /**
    * Add text to describe why there is * in some link value
    * @private
    * @memberof Class_Legend
@@ -463,16 +519,6 @@ export class Class_Legend
       .attr('x', '35')
       .text('MEP.show_legend_free_value')
       .call(this._wrapper)
-  }
-
-  /**
-   * _drawInfoDataType with timeout
-   *
-   * @private
-   * @memberof Class_Legend
-   */
-  private drawInfoDataType() {
-    this._add_waiting_process('drawInfoDataType', () => { this._drawInfoDataType() })
   }
 
   /**
@@ -509,16 +555,6 @@ export class Class_Legend
   }
 
   /**
-   * _drawInfoDashedLink with timeout
-   *
-   * @private
-   * @memberof Class_Legend
-   */
-  private drawInfoDashedLink() {
-    this._add_waiting_process('drawInfoDashedLink', () => { this._drawInfoDashedLink() })
-  }
-
-  /**
    * Add info zone in legend for "Sankey scale"
    * @private
    * @memberof Class_Legend
@@ -552,23 +588,12 @@ export class Class_Legend
       .text(Math.round((this.drawing_area.scale / 2)))
 
 
-
     // Add drag event for the scale representation
     g_draggable?.call(d3.drag<SVGGElement, unknown, unknown>()
       .subject(Object)
       .on('drag', function (event) {
         g_draggable.style('transform', 'translate(' + (event.x) + 'px,' + (event.y) + 'px)')
       }))
-  }
-
-  /**
-   * _drawSankeyScale with timeout
-   *
-   * @private
-   * @memberof Class_Legend
-   */
-  private drawSankeyScale() {
-    this._add_waiting_process('drawSankeyScale', () => { this._drawSankeyScale() })
   }
 
   private _updateLegendHeight() {
@@ -582,7 +607,7 @@ export class Class_Legend
    * @memberof Class_Legend
    */
   private updateLegendHeight() {
-    this._add_waiting_process('updateLegendHeight', () => { this.updateLegendHeight() })
+    this._process_or_bypass(() => this.updateLegendHeight())
   }
 
   // GETTERS / SETTERS ==================================================================

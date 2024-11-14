@@ -85,7 +85,6 @@ export const setDiagram: FType_SetDiagram = (
   )
 
   new_data.fromJSON(new_data_as_json)
-
 }
 
 

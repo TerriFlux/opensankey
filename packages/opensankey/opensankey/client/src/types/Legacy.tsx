@@ -1,5 +1,4 @@
 import { Type_JSON } from './Utils'
-import colormap from 'colormap'
 import {
   SankeyNode,
   SankeyNodeStyle,
@@ -12,9 +11,6 @@ import {
   TagsGroup,
   SankeyData,
   ConvertSankeyData,
-  compute_flux_maxFType,
-  compute_initial_colorsFType,
-  convert_booleanFType,
   SankeyLinkStyle,
   //complete_sankey_dataFunctType,
   convert_linksFuncType,
@@ -110,7 +106,7 @@ const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
     position: 'absolute',
     relative_dx: default_relative_dx,
     relative_dy: default_relative_dy,
-    dy: default_dy    
+    dy: default_dy
   }
 }
 
@@ -155,7 +151,7 @@ export const DefaultNodeExportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
   const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
   node_style.idNode='NodeExportStyle'
   node_style.name='Noeuds de type exportations'
-  // relative  
+  // relative
   node_style.position = 'relative'
   node_style.relative_dx = 100
   node_style.relative_dy = 50
@@ -712,146 +708,147 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
   Object.assign(l.local, { [k.toString()]: v })
 }
 
-const compute_initial_colors: compute_initial_colorsFType = (
-  data: SankeyData
-) => {
-  Object.values(data.nodeTags).forEach(
-    tags_group => {
-      if (Object.values(tags_group.tags).filter(tag => tag.color !== '').length === 0) {
-        const nb_tags = Object.keys(tags_group.tags).length
-        if (tags_group.color_map === 'custom') {
-          return
-        }
-        const colors = colormap({
-          colormap: tags_group.color_map,
-          nshades: Math.max(11, nb_tags),
-          format: 'hex',
-          alpha: 1
-        })
-        let step = 1
-        if (nb_tags < 11) {
-          step = Math.round(11 / nb_tags)
-        }
-        Object.keys(tags_group.tags).forEach(
-          (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
-        )
-      }
-    }
-  )
+// TODO Remove if useless
+// const compute_initial_colors: compute_initial_colorsFType = (
+//   data: SankeyData
+// ) => {
+//   Object.values(data.nodeTags).forEach(
+//     tags_group => {
+//       if (Object.values(tags_group.tags).filter(tag => tag.color !== '').length === 0) {
+//         const nb_tags = Object.keys(tags_group.tags).length
+//         if (tags_group.color_map === 'custom') {
+//           return
+//         }
+//         const colors = colormap({
+//           colormap: tags_group.color_map,
+//           nshades: Math.max(11, nb_tags),
+//           format: 'hex',
+//           alpha: 1
+//         })
+//         let step = 1
+//         if (nb_tags < 11) {
+//           step = Math.round(11 / nb_tags)
+//         }
+//         Object.keys(tags_group.tags).forEach(
+//           (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
+//         )
+//       }
+//     }
+//   )
 
-  Object.values(data.fluxTags).forEach(
-    tags_group => {
-      if (Object.values(tags_group.tags).filter(tag => tag.color !== '').length === 0) {
-        const nb_tags = Object.keys(tags_group.tags).length
-        if (tags_group.color_map === 'custom') {
-          return
-        }
-        const colors = colormap({
-          colormap: tags_group.color_map,
-          nshades: Math.max(11, nb_tags),
-          format: 'hex',
-          alpha: 1
-        })
-        let step = 1
-        if (nb_tags < 11) {
-          step = Math.round(11 / nb_tags)
-        }
-        Object.keys(tags_group.tags).forEach(
-          (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
-        )
-      }
-    }
-  )
+//   Object.values(data.fluxTags).forEach(
+//     tags_group => {
+//       if (Object.values(tags_group.tags).filter(tag => tag.color !== '').length === 0) {
+//         const nb_tags = Object.keys(tags_group.tags).length
+//         if (tags_group.color_map === 'custom') {
+//           return
+//         }
+//         const colors = colormap({
+//           colormap: tags_group.color_map,
+//           nshades: Math.max(11, nb_tags),
+//           format: 'hex',
+//           alpha: 1
+//         })
+//         let step = 1
+//         if (nb_tags < 11) {
+//           step = Math.round(11 / nb_tags)
+//         }
+//         Object.keys(tags_group.tags).forEach(
+//           (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
+//         )
+//       }
+//     }
+//   )
 
-  Object.values(data.dataTags).forEach(
-    tags_group => {
-      if (Object.values(tags_group.tags).filter(tag => tag.color !== '').length === 0) {
-        const nb_tags = Object.keys(tags_group.tags).length
-        if (tags_group.color_map === 'custom') {
-          return
-        }
-        const colors = colormap({
-          colormap: tags_group.color_map,
-          nshades: Math.max(11, nb_tags),
-          format: 'hex',
-          alpha: 1
-        })
-        let step = 1
-        if (nb_tags < 11) {
-          step = Math.round(11 / nb_tags)
-        }
-        Object.keys(tags_group.tags).forEach(
-          (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
-        )
-      }
-    }
-  )
-}
+//   Object.values(data.dataTags).forEach(
+//     tags_group => {
+//       if (Object.values(tags_group.tags).filter(tag => tag.color !== '').length === 0) {
+//         const nb_tags = Object.keys(tags_group.tags).length
+//         if (tags_group.color_map === 'custom') {
+//           return
+//         }
+//         const colors = colormap({
+//           colormap: tags_group.color_map,
+//           nshades: Math.max(11, nb_tags),
+//           format: 'hex',
+//           alpha: 1
+//         })
+//         let step = 1
+//         if (nb_tags < 11) {
+//           step = Math.round(11 / nb_tags)
+//         }
+//         Object.keys(tags_group.tags).forEach(
+//           (tag_key, i) => tags_group.tags[tag_key].color = colors[i * step]
+//         )
+//       }
+//     }
+//   )
+// }
 
-const convert_boolean: convert_booleanFType = (
-  data: SankeyData
-) => {
+// const convert_boolean: convert_booleanFType = (
+//   data: SankeyData
+// ) => {
 
-  Object.values(data.nodeTags).forEach(
-    tags_group => {
-      Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
-      tags_group.activated = Boolean(tags_group.activated)
-    }
-  )
-  Object.values(data.fluxTags).forEach(
-    tags_group => {
-      Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
-      tags_group.activated = Boolean(tags_group.activated)
-    }
-  )
-  Object.values(data.dataTags).forEach(
-    tags_group => {
-      Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
-      tags_group.activated = Boolean(tags_group.activated)
-    }
-  )
-}
+//   Object.values(data.nodeTags).forEach(
+//     tags_group => {
+//       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+//       tags_group.activated = Boolean(tags_group.activated)
+//     }
+//   )
+//   Object.values(data.fluxTags).forEach(
+//     tags_group => {
+//       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+//       tags_group.activated = Boolean(tags_group.activated)
+//     }
+//   )
+//   Object.values(data.dataTags).forEach(
+//     tags_group => {
+//       Object.values(tags_group.tags).forEach(tag => tag.selected = Boolean(tag.selected))
+//       tags_group.activated = Boolean(tags_group.activated)
+//     }
+//   )
+// }
 
-const compute_flux_max: compute_flux_maxFType = (
-  data: SankeyData
-): void => {
-  let flux_max = 0
-  const compute_flux_max_internal = (
-    dataTags: TagsGroup[],
-    v: SankeyLinkValue | SankeyLinkValueDict,
-    depth: number,
-    flux_max: number
-  ) => {
-    if (dataTags.length == 0 || depth === dataTags.length) {
-      if (v.value && v.value as number > flux_max) {
-        flux_max = v.value as number
-      }
-      return flux_max
-    }
-    const dataTag = Object.values(dataTags)[depth]
-    const listKey = Object.keys(dataTag.tags)
+// const compute_flux_max: compute_flux_maxFType = (
+//   data: SankeyData
+// ): void => {
+//   let flux_max = 0
+//   const compute_flux_max_internal = (
+//     dataTags: TagsGroup[],
+//     v: SankeyLinkValue | SankeyLinkValueDict,
+//     depth: number,
+//     flux_max: number
+//   ) => {
+//     if (dataTags.length == 0 || depth === dataTags.length) {
+//       if (v.value && v.value as number > flux_max) {
+//         flux_max = v.value as number
+//       }
+//       return flux_max
+//     }
+//     const dataTag = Object.values(dataTags)[depth]
+//     const listKey = Object.keys(dataTag.tags)
 
-    for (const i in listKey) {
-      if ((v as SankeyLinkValueDict)[listKey[i]]) {
-        if (v === undefined) {
-          break
-        }
-        flux_max = compute_flux_max_internal(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1, flux_max)
-      }
-    }
-    return flux_max
-  }
+//     for (const i in listKey) {
+//       if ((v as SankeyLinkValueDict)[listKey[i]]) {
+//         if (v === undefined) {
+//           break
+//         }
+//         flux_max = compute_flux_max_internal(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1, flux_max)
+//       }
+//     }
+//     return flux_max
+//   }
 
-  const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
-  Object.values(data.links).forEach(
-    l => {
-      flux_max = compute_flux_max_internal(dataTagsArray, l.value as SankeyLinkValue, 0, flux_max)
-    }
-  )
-  if (data.display_style.filter_label === undefined) {
-    data.display_style.filter_label = flux_max / 10
-  }
-}
+//   const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
+//   Object.values(data.links).forEach(
+//     l => {
+//       flux_max = compute_flux_max_internal(dataTagsArray, l.value as SankeyLinkValue, 0, flux_max)
+//     }
+//   )
+//   if (data.display_style.filter_label === undefined) {
+//     data.display_style.filter_label = flux_max / 10
+//   }
+// }
 
 const convert_tags: convert_tagsFuncType = (
   data: SankeyData
@@ -1509,13 +1506,13 @@ const convert_nodes: convert_nodesFuncType = (
           }
           // Dimension detection
           if (Object.keys(n.dimensions[leveltagg_id]).includes('parent_name')) {
-              n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
-              let possible_parent_tag = ''
-              possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
-              n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
+            n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
+            let possible_parent_tag = ''
+            possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
+            n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
           } else if (Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && +n.tags[leveltagg_id][0] > 1 && n.dimensions['Primaire'].parent_name) {
             let parent_tag : number | undefined
-            let parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
+            const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
             if ( leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
               parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
             } else if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].children_tags) {
@@ -1532,11 +1529,13 @@ const convert_nodes: convert_nodesFuncType = (
         }
         // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
         delete n.tags[leveltagg_id]
-      });
+      })
+
+
     // Add links_order to node by combining input/outputs id (for version>=0.9)
     const n_tmp=(n as Type_JSON)
     n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
-    
+
     // Add in links_order links not in links_order but that reference this node
     list_links
       .filter(l=>(l.idTarget==n.idNode || l.idSource==n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
@@ -1545,7 +1544,7 @@ const convert_nodes: convert_nodesFuncType = (
     if (n.local && n.local.position == 'relative') {
       n.position = 'relative'
       n.relative_dx = n.local.relative_dx
-      n.relative_dy = n.local.relative_dy      
+      n.relative_dy = n.local.relative_dy
     }
 
   }
@@ -1903,7 +1902,7 @@ const convert_links: convert_linksFuncType = (
     if (l.local && l.local.recycling) {
       l.local.left_horiz_shift = 0.05
       l.local.right_horiz_shift = 0.95;
-      
+
       // Add variable in legacy JSOn
       (l.local as Type_JSON).starting_tangeant = 0.01; // special assignement for attr not present in legacy but usefull in current Class_link
       (l.local as Type_JSON).ending_tangeant = 0.01 // special assignement for attr not present in legacy but usefull in current Class_link

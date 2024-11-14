@@ -23,7 +23,12 @@ import {
   Type_JSON,
   const_default_position_x,
   const_default_position_y,
-  Type_ElementPosition
+  Type_ElementPosition,
+  getStringFromJSON,
+  getNumberFromJSON,
+  Type_Position,
+  getNumberOrUndefinedFromJSON,
+  getStringOrUndefinedFromJSON
 } from './Utils'
 
 
@@ -131,18 +136,6 @@ export abstract class Class_ProtoElement
    */
   private _is_currently_deleted = false
 
-  protected _timeouts_draw: { [_: string]: NodeJS.Timeout } = {}
-
-  /**
-   * Timeout before executing function in _add_waiting_process
-   *
-   * @private
-   * @type {number}
-   * @memberof Class_DrawingArea
-   */
-  private _draw_timeout: number = 3
-  public has_timeout: boolean = true
-
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -165,9 +158,7 @@ export abstract class Class_ProtoElement
     this._menu_config.ref_to_save_in_cache_indicator.current(false)
   }
 
-
-
-  // PUBLIC METHODS ====================================================================
+  // DELETION METHODS ===================================================================
 
   /**
    * Define deletion behavior
@@ -187,12 +178,110 @@ export abstract class Class_ProtoElement
   }
 
   /**
+   * Methods that needs to be overrides to properly clean elements
+   * @protected
+   * @memberof Class_ProtoElement
+   */
+  protected cleanForDeletion() {
+    // Does nothing here
+  }
+
+  // COPY METHODS =======================================================================
+
+  /**
+   * Copy only attributes that are not references
+   * /!\ Id is not copied
+   * @param {Class_ProtoElement} element_to_copy
+   * @memberof Class_ProtoElement
+   */
+  public copyFrom(element_to_copy: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
+    // Remove from drawing area
+    this.unDraw()
+    // // Clean relations between elements
+    // this.cleanForDeletion()
+    // this._is_currently_deleted = false // Might pass to true on some elements
+    // Copy intrasect values
+    this._display.drawing_area.bypass_redraws = true // Security
+    this._copyFrom(element_to_copy)
+    this._display.drawing_area.bypass_redraws = false
+  }
+
+  /**
+   * Copy only intrasect attributes that are not references
+   * Function to override
+   * @param {Class_ProtoElement} element_to_copy
+   * @memberof Class_ProtoElement
+   */
+  protected _copyFrom(element_to_copy: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
+    this._is_visible = element_to_copy._is_visible
+    this._is_selected = element_to_copy._is_selected
+    this._svg_group = element_to_copy._svg_group
+  }
+
+  // SAVING METHODS =====================================================================
+
+  /**
+   * Convert element to JSON
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
+    // Init output JSON
+    const json_object: Type_JSON = {}
+    // Fill data
+    this._toJSON(json_object, kwargs)
+    // Return
+    return json_object
+  }
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    json_object['id'] = this._id
+    json_object['is_visible'] = this._is_visible
+    json_object['is_selected'] = this._is_selected
+    json_object['svg_group'] = this._svg_group
+  }
+
+  /**
+   * Apply json to element
+   * @param {Type_JSON} json_object
+   * @memberof Class_NodeElement
+   */
+  public fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    // Remove from drawing area
+    this.unDraw()
+    // Get infos
+    this._display.drawing_area.bypass_redraws = true // Security
+    this._fromJSON(json_object, kwargs)
+    this._display.drawing_area.bypass_redraws = false
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    this._id = getStringFromJSON(json_object, 'id', this._id)
+    this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
+    this._is_selected = getBooleanFromJSON(json_object, 'is_selected', this._is_selected)
+    this._svg_group = getStringFromJSON(json_object, 'svg_group', this._svg_group)
+  }
+
+  // PUBLIC METHODS ====================================================================
+
+  /**
    * Set up element on d3 svg area
    * @protected
    * @memberof Class_Element
    */
   public draw() {
-    this._add_waiting_process('draw', () => { this._draw() })
+    this._process_or_bypass(() => this._draw())
   }
 
   /**
@@ -260,73 +349,27 @@ export abstract class Class_ProtoElement
     }
   }
 
+  // PROTECTED METHODS ==================================================================
+
   /**
-   * Convert element to JSON
+   * Create a timed out process - Used to avoid multiple reloading of components
    *
-   * @return {*}
-   * @memberof Class_NodeElement
-   */
-  public toJSON() {
-    // Init output JSON
-    const json_object: Type_JSON = {}
-    // Fill data
-    json_object['is_visible'] = this._is_visible
-    json_object['is_selected'] = this._is_selected
-    // Return
-    return json_object
-  }
-
-  /**
-   * Apply json to element
+   * The process_func is meant to be use by setTimeout(),
+   * and inside setTimeOut 'this' keyword has another meaning,
+   * so the current object must be passed directly as an argument.
+   * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
    *
-   * @param {Type_JSON} json_object
-   * @memberof Class_NodeElement
+   * @protected
+   * @param {string} process_id
+   * @param {(_: Class_ProtoElement) => void} process_func
+   * @memberof Class_ProtoElement
    */
-  public fromJSON(json_object: Type_JSON) {
-    this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
-    this._is_selected = getBooleanFromJSON(json_object, 'is_selected', this._is_selected)
-  }
-
-  // PROTECTED METHODES =================================================================
-
-  /**
-* Cancel a timed out process - It wont happen
-* @protected
-* @param {string} process_id
-* @memberof Class_ProtoElement
-*/
-  protected _cancel_waiting_process(process_id: string) {
-    if (this._timeouts_draw[process_id] !== undefined)
-      clearTimeout(this._timeouts_draw[process_id])
-  }
-
-  /**
- * Create a timed out process - Used to avoid multiple reloading of components
- *
- * The process_func is meant to be use by setTimeout(),
- * and inside setTimeOut 'this' keyword has another meaning,
- * so the current object must be passed directly as an argument.
- * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
- *
- * @protected
- * @param {string} process_id
- * @param {(_: Class_ProtoElement) => void} process_func
- * @memberof Class_ProtoElement
- */
-  protected _add_waiting_process(
-    process_id: string,
+  protected _process_or_bypass(
     process_func: () => void
   ) {
-    if (this._display.drawing_area.bypass_timeout)
+    if (this._display.drawing_area.bypass_redraws)
       return
-    this._cancel_waiting_process(process_id)
-    if (this.has_timeout)
-      this._timeouts_draw[process_id] = setTimeout(
-        process_func,
-        this._draw_timeout
-      )
-    else
-      process_func()
+    process_func()
   }
 
   protected _draw() {
@@ -347,10 +390,6 @@ export abstract class Class_ProtoElement
         }
       }
     }
-  }
-
-  protected cleanForDeletion() {
-    // Does nothing here
   }
 
   /**
@@ -589,7 +628,79 @@ export abstract class Class_Element
     super(id, menu_config, svg_group)
   }
 
+  // COPY METHODS =======================================================================
+
+  /**
+   * Copy only intrasect attributes that are not references
+   * Function to override
+   * @param {Class_ProtoElement} _
+   * @memberof Class_ProtoElement
+   */
+  protected _copyFrom(_: Class_Element<Type_GenericDrawingArea, Type_GenericSankey>): void {
+    super._copyFrom(_)
+    this._display.position.type = _._display.position.type
+    this._display.position.x = _._display.position.x
+    this._display.position.y = _._display.position.y
+    this._display.position.u = _._display.position.u
+    this._display.position.v = _._display.position.v
+    this._display.position.dx = _._display.position.dx
+    this._display.position.dy = _._display.position.dy
+    this._display.position.relative_dx = _._display.position.relative_dx
+    this._display.position.relative_dy = _._display.position.relative_dy
+  }
+
+  // SAVING METHODS =====================================================================
+
+  protected _toJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+    super._toJSON(json_object, kwargs)
+    if (this._display.position.type) json_object['position'] = this._display.position.type
+    json_object['x'] = this._display.position.x
+    json_object['y'] = this._display.position.y
+    json_object['u'] = this._display.position.u
+    json_object['v'] = this._display.position.v
+    if (this._display.position.dx) json_object['dx'] = this._display.position.dx
+    if (this._display.position.dy) json_object['dy'] = this._display.position.dy
+    if (this._display.position.relative_dx) json_object['relative_dx'] = this._display.position.relative_dx
+    if (this._display.position.relative_dy) json_object['relative_dy'] = this._display.position.relative_dy
+  }
+
+  protected _fromJSON(
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+    super._fromJSON(json_object, kwargs)
+    this._display.position.type = getStringOrUndefinedFromJSON(json_object, 'position') as Type_Position
+    this._display.position.x = getNumberFromJSON(json_object, 'x', this._display.position.x)
+    this._display.position.y = getNumberFromJSON(json_object, 'y', this._display.position.y)
+    this._display.position.u = getNumberFromJSON(json_object, 'u', this._display.position.u)
+    this._display.position.v = getNumberFromJSON(json_object, 'v', this._display.position.v)
+    this._display.position.dx = getNumberOrUndefinedFromJSON(json_object, 'dx')
+    this._display.position.relative_dx = getNumberOrUndefinedFromJSON(json_object, 'relative_dx')
+    this._display.position.dy = getNumberOrUndefinedFromJSON(json_object, 'dy')
+    this._display.position.relative_dy = getNumberOrUndefinedFromJSON(json_object, 'relative_dy')
+  }
+
   // PUBLIC METHODS =====================================================================
+
+  // Positioning
+  public setPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.applyPosition() }
+  public initPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.draw() }
+  public initDefaultPosXY() { this.initPosXY(const_default_position_x, const_default_position_y) }
+
+  /**
+   * Apply node position to it shape in d3
+   * @protected
+   * @return {*}
+   * @memberof Class_Node
+   */
+  public applyPosition() {
+    this._process_or_bypass(() => this._applyPosition())
+  }
+
+  // PROTECTED METHODS ==================================================================
 
   /**
    * Set up element on d3 svg area
@@ -604,13 +715,6 @@ export abstract class Class_Element
       this._applyPosition()
     }
   }
-
-  // Positioning
-  public setPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.applyPosition() }
-  public initPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.draw() }
-  public initDefaultPosXY() { this.initPosXY(const_default_position_x, const_default_position_y) }
-
-  // PROTECTED METHODS ==================================================================
 
   /**
    * Unset element from d3 svg area
@@ -639,16 +743,6 @@ export abstract class Class_Element
         'translate(' + this.position_x + ', ' + this.position_y + ')')
     }
   }
-  /**
- * Apply node position to it shape in d3
- * @protected
- * @return {*}
- * @memberof Class_Node
- */
-  public applyPosition() {
-    this._add_waiting_process('applyPos', () => { this._applyPosition() })
-  }
-
 
 
   // GETTERS / SETTERS ==================================================================
