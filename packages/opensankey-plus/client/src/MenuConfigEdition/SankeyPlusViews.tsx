@@ -80,7 +80,7 @@ declare const window: Window &
  * Then if we are in a view there is additionnal button
  * - a button to choose variable of the view that get their value from master
  * - a button to clone the actual view
- * a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'Type de noeud'
+ * a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'type de noeud'
  *
  * @param {*} {
  *   new_data_plus
