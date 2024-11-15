@@ -182,6 +182,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
     const process_nodes = applicationData.drawing_area.sankey.nodes_list
     const echangeTag = applicationData.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
     const exchange_nodes = process_nodes.filter(n=>n.hasGivenTag(echangeTag))
+    // Position of trade nodes need to be recomputed
     exchange_nodes.forEach(n=>n.applyPosition())
     applicationData.drawing_area.draw()
   }
