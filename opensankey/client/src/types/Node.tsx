@@ -1007,6 +1007,7 @@ export abstract class Class_NodeElement
   public drawParent() {
     if (this.is_child) {
       Object.values(this._dimensions_as_child)[0].parent.forceShow()
+      Object.values(this._dimensions_as_child)[0].children.forEach(n=>n.forceHide())
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
       }
@@ -1035,7 +1036,6 @@ export abstract class Class_NodeElement
       }).map(lid=>lid.target)
       export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawParent())
 
-      Object.values(this._dimensions_as_child)[0].children.forEach(n=>n.forceHide())
     }
   }
 
