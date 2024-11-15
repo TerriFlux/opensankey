@@ -260,7 +260,10 @@ export function getJSONFromJSON(
   key: string,
   fallback_value: Type_JSON
 ) {
-  if (json_object[key] && typeof json_object[key] === typeof fallback_value) {
+  if (
+    (json_object[key] !== undefined) && 
+    (typeof json_object[key] === typeof fallback_value)
+  ) {
     return json_object[key] as Type_JSON
   }
   return fallback_value
