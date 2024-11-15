@@ -88,10 +88,7 @@ export type SankeyNode = {
     }
   }, local?: SankeyNodeAttrLocal, colorParameter: string,
   colorTag: string,
-  // geometry
-  position: 'absolute' | 'relative',
-  relative_dx?: number | undefined
-  relative_dy?: number | undefined
+
 
   x: number,
   y: number,
