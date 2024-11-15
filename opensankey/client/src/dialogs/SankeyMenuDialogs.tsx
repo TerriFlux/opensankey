@@ -124,8 +124,15 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   // }
   const all_element_UpdateLayout = os_all_element_to_transform
 
+    /**
+   * Trade Nodes and Links are controlled by style which are edited here. For now there are two modes close or top and bottom
+   *
+   * @param {boolean} trade_close
+   * @memberof ApplyLayoutDialog
+   */
   const setTrade = (trade_close: boolean) => {
     if (trade_close) {
+      // nodes of type 
       node_styles_dict['NodeImportStyle'].position.type = 'relative'
       node_styles_dict['NodeImportStyle'].shape_visible = false
       node_styles_dict['NodeImportStyle'].shape_min_height = 40
@@ -144,7 +151,6 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 
       link_styles_dict['LinkImportStyle'].shape_orientation = 'vh'
       link_styles_dict['LinkExportStyle'].shape_orientation = 'hv'
-      //set_data({ ...data })
     } else {
       node_styles_dict['NodeImportStyle'].position.type = 'parametric'
       node_styles_dict['NodeImportStyle'].shape_visible = false
@@ -172,8 +178,12 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       link_styles_dict['LinkImportStyle'].value_label_is_visible = false
       link_styles_dict['LinkExportStyle'].shape_orientation = 'hh'
       link_styles_dict['LinkExportStyle'].value_label_is_visible = false
-      //set_data({ ...data })
     }
+    const process_nodes = applicationData.drawing_area.sankey.nodes_list
+    const echangeTag = applicationData.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
+    const exchange_nodes = process_nodes.filter(n=>n.hasGivenTag(echangeTag))
+    exchange_nodes.forEach(n=>n.applyPosition())
+    applicationData.drawing_area.draw()
   }
 
   // const applyStretch=(param:string)=>{
