@@ -75,7 +75,8 @@ export abstract class Class_AbstractNodeDimension {
   // Mandatory methods
   public abstract getLevel(): number
   public abstract removeTagFromChildrenLevelTag(_: Class_AbstractLevelTag): void
-  protected abstract unsetForcingToShow(): Set<Type_AbstractNodeElement>
+  public abstract unsetForcingToShow(): void
+  protected abstract _unsetForcingToShow(): Set<Type_AbstractNodeElement>
   // Mandatory getters
   public abstract get id(): string
   public abstract get parent_level_tag(): Class_AbstractLevelTag

@@ -233,6 +233,14 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     }
   }
 
+  public unsetForcingToShow() {
+    // Unset booleans
+    const nodes_to_redraw = this._unsetForcingToShow()
+    // Redraw
+    Object.values(nodes_to_redraw)
+      .forEach(node => node.draw())
+  }
+
   /**
    * Force to set this dimension's parent as visible
    * @memberof Class_NodeDimension
@@ -251,7 +259,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
         child.dimensions_as_child
           .forEach(dim => {
             if (dim !== this) {
-              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension).unsetForcingToShow())
+              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
             }
           })
       })
@@ -277,7 +285,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     this.parent.dimensions_as_parent
       .forEach(dim => {
         if (dim !== this) {
-          nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension).unsetForcingToShow())
+          nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
         }
       })
     // Redraw
@@ -287,7 +295,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
 
   // PROTECTED METHODS ==================================================================
 
-  protected unsetForcingToShow() {
+  protected _unsetForcingToShow() {
     // Set booleans accordingly
     this._force_show_children = false
     this._force_show_parent = false
@@ -301,7 +309,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
         child.dimensions_as_child
           .forEach(dim => {
             if (dim !== this) {
-              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension).unsetForcingToShow())
+              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
             }
           })
       })
