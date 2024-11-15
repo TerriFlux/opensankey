@@ -36,6 +36,10 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   private _parent_level_tag: Class_AbstractLevelTag
   private _children_level_tags: Class_AbstractLevelTag[]
 
+  // Forcing
+  private _force_show_children: boolean = false
+  private _force_show_parent: boolean = false
+
   /**
    * True if element is currently on a deletion process
    * Avoid cross calls of delete() method
@@ -67,7 +71,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
 
     else
       this._id = (
-        parent_level_tag.group.id + 
+        parent_level_tag.group.id +
         '_' +
         parent.id +
         '_' +
@@ -124,7 +128,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       this._children
         .forEach(_ => _.removeDimensionAsChild(this))
       this._children
-        .forEach(_ => this.removeNodeFromChildren(_))        
+        .forEach(_ => this.removeNodeFromChildren(_))
       this._children = []
       // Remove cross references with leveltags
       this._parent_level_tag.removeParentLevel(this)
@@ -229,15 +233,92 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     }
   }
 
+  /**
+   * Force to set this dimension's parent as visible
+   * @memberof Class_NodeDimension
+   */
+  public setForceToShowParent() {
+    // Set booleans accordingly
+    this._force_show_children = false
+    this._force_show_parent = true
+    // Unset all other children node's dimensions
+    let nodes_to_redraw = new Set([
+      this._parent,
+      ...this._children
+    ])
+    this._children
+      .forEach(child => {
+        child.dimensions_as_child
+          .forEach(dim => {
+            if (dim !== this) {
+              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension).unsetForcingToShow())
+            }
+          })
+      })
+    // Redraw
+    Object.values(nodes_to_redraw)
+      .forEach(node => node.draw())
+  }
 
-  // PRIVATE METHODS ====================================================================
-  private drawElements() {
-    this._parent.draw()
-    this._children.forEach(child => child.draw())
+  /**
+   * Force to set this dimension's children as visibles
+   * @memberof Class_NodeDimension
+   */
+  public setForceToShowChildren() {
+    // Set booleans accordingly
+    this._force_show_children = true
+    this._force_show_parent = false
+    // Unset other dimensions
+    let nodes_to_redraw = new Set([
+      this._parent,
+      ...this._children
+    ])
+    // Unset forcing to show children on all other parent node's dimensions where he is parent
+    this.parent.dimensions_as_parent
+      .forEach(dim => {
+        if (dim !== this) {
+          nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension).unsetForcingToShow())
+        }
+      })
+    // Redraw
+    Object.values(nodes_to_redraw)
+      .forEach(node => node.draw())
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected unsetForcingToShow() {
+    // Set booleans accordingly
+    this._force_show_children = false
+    this._force_show_parent = false
+    // Unsetting boolean are propagated through childrens
+    let nodes_to_redraw = new Set([
+      this._parent,
+      ...this._children
+    ])
+    this._children
+      .forEach(child => {
+        child.dimensions_as_child
+          .forEach(dim => {
+            if (dim !== this) {
+              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension).unsetForcingToShow())
+            }
+          })
+      })
+    // Return set of all nodes that need to be redrawn
+    return nodes_to_redraw
   }
 
   // GETTERS / SETTERS ==================================================================
+
   public get id() { return this._id }
+
+  /**
+   * Level tag group reference is from parent level tag
+   * @readonly
+   * @memberof Class_NodeDimension
+   */
+  public get related_level_tagg() { return this.parent_level_tag.group }
 
   public get parent_level_tag() { return this._parent_level_tag }
   public set parent_level_tag(_: Class_AbstractLevelTag) {
@@ -269,9 +350,24 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   public get children() { return this._children }
 
   public get show_parent() {
+    // Forcing to show parents
+    if (this._force_show_parent)
+      return true
+    // Forcing to show children
+    if (this._force_show_children)
+      return false
+    // Otherwise show if parent tags is selected
     return this.parent_level_tag.is_selected
   }
+
   public get show_children() {
+    // Forcing to show children
+    if (this._force_show_children)
+      return true
+    // Forcing to show parents
+    if (this._force_show_parent)
+      return false
+    // Otherwise, check if related children level tags are all selected
     let ok_children_level_tags = false
     this.children_level_tags
       .forEach(tag => ok_children_level_tags = (ok_children_level_tags || tag.is_selected))
