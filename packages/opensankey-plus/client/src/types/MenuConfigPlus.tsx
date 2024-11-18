@@ -76,6 +76,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
   private _r_editor_content_fo_node_updater: MutableRefObject<(() => void)>
 
+  private _ref_to_updater_modal_apply_layout_plus: MutableRefObject<(() => void)>
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -105,6 +107,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
     this._ref_to_toolbar_link_visual_filter_updater=useRef(()=>null)
     this._ref_to_menu_config_node_icon_updater=useRef(()=>null)
+
+    this._ref_to_updater_modal_apply_layout_plus=useRef(()=>null)   
 
     this._dict_setter_show_dialog_plus = {
       ref_setter_show_menu_node_icon: useRef(() => null),
@@ -266,6 +270,11 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     super.updateMenuConfigComponent()
   }
 
+  public override updateComponentApplyLayout(){
+    super.updateComponentApplyLayout()
+    this._ref_to_updater_modal_apply_layout_plus.current()
+  }
+
   // PROTECTED METHODS ==================================================================
 
   protected override _updateComponentRelatedToNodesApparence(): void {
@@ -309,4 +318,5 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get ref_to_menu_config_node_icon_updater(){return this._ref_to_menu_config_node_icon_updater}
 
+  public get ref_to_updater_modal_apply_layout_plus(): MutableRefObject<(() => void)> {return this._ref_to_updater_modal_apply_layout_plus}
 }

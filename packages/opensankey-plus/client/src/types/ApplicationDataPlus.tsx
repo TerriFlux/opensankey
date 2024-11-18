@@ -73,6 +73,15 @@ export abstract class Class_ApplicationDataPlus
 
   protected _original_current_view: Type_GenericDrawingArea | undefined
 
+  /**
+   * Override all possible attr to update in copyFrom  
+   *
+   * @protected
+   * @type {string[]}
+   * @memberof Class_ApplicationDataPlus
+   */
+  protected _transform_layout_all_attr:string[]=[...this.transform_layout_all_attr,'freeLabels','icon_catalog']
+
   // PRIVATE ATTRIBUTES =================================================================
 
   private _logo_sankey_plus: string = ''

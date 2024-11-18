@@ -361,9 +361,11 @@ export const TransformationElementsOSP: FunctionComponent<FCType_TransformationE
   new_data_plus,
 }) => {
 
-  const { t, data_var_to_update} = new_data_plus
-  const [forceUpdate, setForceUpdate] = useState(false)
+  const { t, data_var_to_update,menu_configuration} = new_data_plus
+  const {ref_to_updater_modal_apply_layout_plus}=menu_configuration
 
+  const [, setForceUpdate] = useState(false)
+  ref_to_updater_modal_apply_layout_plus.current=()=>setForceUpdate(b=>!b)
   if (!new_data_plus.has_sankey_plus) {
     return <></>
   }
@@ -376,11 +378,10 @@ export const TransformationElementsOSP: FunctionComponent<FCType_TransformationE
           onClick={() => {
             if (!data_var_to_update.current.includes('freeLabels')) {
               data_var_to_update.current.push('freeLabels')
-              setForceUpdate(!forceUpdate)
             } else {
               data_var_to_update.current.splice(data_var_to_update.current.indexOf('freeLabels'), 1)
-              setForceUpdate(!forceUpdate)
             }
+            menu_configuration.updateComponentApplyLayout()
           }
           }
         >{data_var_to_update.current.includes('freeLabels') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}</Button>
@@ -418,11 +419,10 @@ export const TransformationElementsOSP: FunctionComponent<FCType_TransformationE
             onClick={() => {
               if (!data_var_to_update.current.includes('icon_catalog')) {
                 data_var_to_update.current.push('icon_catalog')
-                setForceUpdate(!forceUpdate)
               } else {
                 data_var_to_update.current.splice(data_var_to_update.current.indexOf('icon_catalog'), 1)
-                setForceUpdate(!forceUpdate)
               }
+              menu_configuration.updateComponentApplyLayout()
             }
             }
           >{data_var_to_update.current.includes('icon_catalog') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}</Button>
