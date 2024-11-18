@@ -363,19 +363,13 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   new_data.fromJSON(data_as_json)
   // Apply extracted layout if present
   if (data_as_json['layout']) {
-    // const layout = data_as_json['layout'] as Type_JSON
-    // const tmp_DA = new_data.createNewDrawingArea()
-    // tmp_DA.fromJSON(layout)
-    // new_data.menu_configuration.function_on_wait.current = () => {
-    //   new_data.drawing_area.updateFrom(
-    //     tmp_DA,
-    //     ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
-    //   )
-    //   new_data.drawing_area.areaAutoFit()
-    // }
+    const layout = data_as_json['layout'] as Type_JSON
+    const tmp_DA = new_data.createNewDrawingArea()
+    tmp_DA.fromJSON(layout)
     new_data.menu_configuration.function_on_wait.current = () => {
-      new_data.drawing_area.fromJSON(
-        data_as_json['layout'] as Type_JSON
+      new_data.drawing_area.updateFrom(
+        tmp_DA,
+        ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
       )
       new_data.drawing_area.draw()
     }
