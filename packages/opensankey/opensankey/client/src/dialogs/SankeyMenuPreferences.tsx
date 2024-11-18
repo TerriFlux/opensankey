@@ -103,6 +103,8 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         value={i18next.language}
         onChange={evt => {
           i18next.changeLanguage((evt.target.value))
+          setUpdate(a => a + 1)
+          new_data.menu_configuration.updateAllMenuComponents()
         }}
       >
         <option key={'francais'} value={'fr'}>Français</option>
