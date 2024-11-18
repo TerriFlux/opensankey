@@ -84,9 +84,9 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   if (
     (mode_pref) &&
     (mode_pref === 'expert') &&
-    menu_config.accordions_to_show.length !== 6
+    menu_config.accordions_to_show.length !== 7
   ) {
-    menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
+    menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED','EL', 'LL', 'Vis']
   }
 
   /*************************************************************************************************/

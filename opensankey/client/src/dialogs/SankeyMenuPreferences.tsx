@@ -29,7 +29,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
 
   // Component updater ------------------------------------------------------------------
   const [, setUpdate] = useState(0)
-  const menus = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
+  const menus = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
   const checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
   menus.forEach(menu => checkbox_refs[menu] = useRef<HTMLInputElement>(null))
 
@@ -129,7 +129,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
           <Button variant='menuconfigpanel_option_button_right'
             onClick={() => {
               sessionStorage.setItem('modepref', 'expert')
-              update_checkboxes(['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis'])
+              update_checkboxes(['MEP', 'EN', 'EF', 'ED','EL', 'LL', 'Vis'])
             }}
           >
             Mode Expert
@@ -199,6 +199,16 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         }}>
         {t('Menu.ED')}
       </Checkbox>,
+      <Checkbox
+      key={9}
+      ref={checkbox_refs['EL']}
+      variant='menuconfigpanel_option_checkbox'
+      defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EL')}
+      onChange={() => {
+        new_data.menu_configuration.toggleGivenAccordion('EL')
+      }}>
+      {t('Menu.level')}
+    </Checkbox>,
       additionalMenus.additional_preferences
 
     ],
