@@ -376,6 +376,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
   } else {
     new_data.menu_configuration.function_on_wait.current = () => {
+      new_data.drawing_area.bypass_redraws = true
       // First compute position of nodes which are not trade
       new_data.drawing_area.computeAutoSankey(true)
       // Initially there is only one node per type of exchanges.
@@ -395,7 +396,8 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
           l.shape_ending_tangeant=0.01
         }
       })
-
+      new_data.drawing_area.bypass_redraws = false
+      new_data.drawing_area.draw()
       new_data.drawing_area.areaAutoFit()
     }
     new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
