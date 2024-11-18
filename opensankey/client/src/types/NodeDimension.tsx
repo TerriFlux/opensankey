@@ -67,6 +67,8 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
 
     else
       this._id = (
+        parent_level_tag.group.id + 
+        '_' +
         parent.id +
         '_' +
         parent_level_tag.id +
