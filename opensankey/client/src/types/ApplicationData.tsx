@@ -116,6 +116,15 @@ export abstract class Class_ApplicationData
   private _node_label_separator = '-'
   private _node_label_separator_part: 'before' | 'after' = 'before'
 
+  /**
+   * All possible attr to update in copyFrom  
+   *
+   * @protected
+   * @type {string[]}
+   * @memberof Class_ApplicationData
+   */
+  protected _transform_layout_all_attr: string[] = ['addNode','addFlux','removeNode','removeFlux','posNode','Values','attrNode','attrFlux','tagNode','tagFlux','tagData','tagLevel','attrDrawingArea']
+
   // OPTIONNAL ATTRIBUTES ===============================================================
 
   // File name
@@ -467,5 +476,7 @@ export abstract class Class_ApplicationData
   public set node_label_separator(_: string) { this._node_label_separator = _ }
 
   public get processFunction(): FType_ProcessFunctions { return this._processFunction }
+
+  public get transform_layout_all_attr(): string[] {return this._transform_layout_all_attr}
 }
 

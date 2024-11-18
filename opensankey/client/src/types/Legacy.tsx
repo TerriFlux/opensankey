@@ -54,7 +54,6 @@ export const DefaultNode: DefaultNodeFuncType = (
     idNode: 'default',
 
     colorParameter: 'local',
-    position: 'absolute',
     x: 100,
     y: 100,
     inputLinksId: [],
@@ -1408,8 +1407,8 @@ const convert_nodes: convert_nodesFuncType = (
       }
     }
 
-    if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 && (n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close && !n.position) {
-      n.position = 'relative'
+    if (n.tags && n.tags['Exchanges'] && n.tags['Exchanges'].length > 0 && (n.tags['Exchanges'][0].includes('mport') || n.tags['Exchanges'][0].includes('xport')) && n_depreciated.trade_close) {
+      //n.position = 'relative'
       n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
       n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
     }
@@ -1540,13 +1539,6 @@ const convert_nodes: convert_nodesFuncType = (
     list_links
       .filter(l=>(l.idTarget==n.idNode || l.idSource==n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
       .forEach(l=>(n_tmp.links_order as string[]).push(l.idLink))
-
-    if (n.local && n.local.position == 'relative') {
-      n.position = 'relative'
-      n.relative_dx = n.local.relative_dx
-      n.relative_dy = n.local.relative_dy
-    }
-
   }
 
   )
