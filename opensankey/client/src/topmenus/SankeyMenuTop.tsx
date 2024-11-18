@@ -217,7 +217,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
 ) => {
   const { t } = new_data
   const _load_json = useRef<HTMLInputElement>(null)
-
+  const [,setUpdate]=useState(0)
+  new_data.menu_configuration.ref_to_submenu_updater.current=()=>setUpdate(b=>b+1)
   const {
     ref_setter_show_modal_styles_nodes,
     ref_setter_show_modal_styles_links,
@@ -1664,12 +1665,11 @@ export const launchToastConstructor: FType_LaunchToastConstructor = (
   toast,
   intake?
 ) => {
-  intake?.success
-  // TODO : utilisé pour d'autres chose que la sauvegarde -> à generaliser sur les titre & descriptions
+  const {t}= new_data
   const defaultToastText = {
-    success: { title: (intake?.success) ? intake?.success : 'Terminé', description: '' },
-    error: { title: 'Echec de la sauvegarde', description: '' },
-    loading: { title: (intake?.loading) ? intake?.loading : 'Sauvegarde', description: 'Veuillez patienter' },
+    success: { title: intake?.success ?? t('toast_loading_success'), description: t('toast_loading_success_desc') },
+    error: { title: t('toast_loading_failed'), description: t('toast_loading_failed_desc')},
+    loading: { title: intake?.loading ?? t('toast_loading_waiting'), description: t('toast_loading_waiting_desc') },
   }
   const tmp = new Promise((resole) => {
     setTimeout(() => {
