@@ -264,7 +264,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
           })
       })
     // Redraw
-    Object.values(nodes_to_redraw)
+    nodes_to_redraw
       .forEach(node => node.draw())
   }
 
@@ -289,7 +289,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
         }
       })
     // Redraw
-    Object.values(nodes_to_redraw)
+    nodes_to_redraw
       .forEach(node => node.draw())
   }
 
@@ -358,12 +358,12 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   public get children() { return this._children }
 
   public get show_parent() {
-    // Forcing to show parents
-    if (this._force_show_parent)
-      return true
     // Forcing to show children
     if (this._force_show_children)
       return false
+    // Forcing to show parents
+    if (this._force_show_parent)
+      return true
     // Otherwise show if parent tags is selected
     return this.parent_level_tag.is_selected
   }
