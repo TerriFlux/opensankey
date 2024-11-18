@@ -333,8 +333,8 @@ export abstract class Class_NodeElement
 
   public copyTagsReferencingFrom(
     node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
-    matching_tagg:{[_:string]:string},
-    matching_tags:{ [_: string]: { [_: string]: string } }
+    matching_tagg: { [_: string]: string },
+    matching_tags: { [_: string]: { [_: string]: string } }
   ) {
     // Copy tags ------------------------------------------------------------------------
     // Clear all tags
@@ -346,7 +346,7 @@ export abstract class Class_NodeElement
 
   private _addTagsReferecingFrom(
     node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
-    matching_tagg: {[_:string]: string} = {},
+    matching_tagg: { [_: string]: string } = {},
     matching_tags: { [_: string]: { [_: string]: string } } = {}
   ) {
     // Add missing tags
@@ -580,7 +580,7 @@ export abstract class Class_NodeElement
     Object.entries(json_node_object['tags'] ?? {})
       .forEach(([tagg_id, tag_ids]) => {
         const tagg = this.sankey.node_taggs_dict[matching_taggs_id[tagg_id] ?? tagg_id]
-        if (tagg !== undefined){
+        if (tagg !== undefined) {
           (tag_ids as string[])
             .forEach(tag_id => {
               const tag = tagg.tags_dict[matching_tags_id[tagg_id][tag_id] ?? tag_id]
@@ -1011,12 +1011,12 @@ export abstract class Class_NodeElement
   public drawParent() {
     if (this.is_child) {
       Object.values(this._dimensions_as_child)[0].parent.forceShow()
-      Object.values(this._dimensions_as_child)[0].children.forEach(n=>n.forceHide())
+      Object.values(this._dimensions_as_child)[0].children.forEach(n => n.forceHide())
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
       }
       const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-      const import_nodes = this.input_links_list.filter(lid=>{
+      const import_nodes = this.input_links_list.filter(lid => {
         // if (!(lid.is_visible)) {
         //   return false
         // }
@@ -1025,10 +1025,10 @@ export abstract class Class_NodeElement
           return true
         }
         return false
-      }).map(lid=>lid.source)
-      import_nodes.forEach(n=>(n as Type_AnyNodeElement).drawParent())
+      }).map(lid => lid.source)
+      import_nodes.forEach(n => (n as Type_AnyNodeElement).drawParent())
 
-      const export_nodes = this.output_links_list.filter(lid=>{
+      const export_nodes = this.output_links_list.filter(lid => {
         // if (!(lid.is_visible)) {
         //   return false
         // }
@@ -1037,8 +1037,8 @@ export abstract class Class_NodeElement
           return true
         }
         return false
-      }).map(lid=>lid.target)
-      export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawParent())
+      }).map(lid => lid.target)
+      export_nodes.forEach(n => (n as Type_AnyNodeElement).drawParent())
 
     }
   }
@@ -1053,7 +1053,7 @@ export abstract class Class_NodeElement
         return
       }
       const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-      const import_nodes = this.input_links_list.filter(lid=>{
+      const import_nodes = this.input_links_list.filter(lid => {
         // if (!(lid.is_visible)) {
         //   return false
         // }
@@ -1062,10 +1062,10 @@ export abstract class Class_NodeElement
           return true
         }
         return false
-      }).map(lid=>lid.source)
-      import_nodes.forEach(n=>(n as Type_AnyNodeElement).drawChildren())
+      }).map(lid => lid.source)
+      import_nodes.forEach(n => (n as Type_AnyNodeElement).drawChildren())
 
-      const export_nodes = this.output_links_list.filter(lid=>{
+      const export_nodes = this.output_links_list.filter(lid => {
         // if (!(lid.is_visible)) {
         //   return false
         // }
@@ -1074,8 +1074,8 @@ export abstract class Class_NodeElement
           return true
         }
         return false
-      }).map(lid=>lid.target)
-      export_nodes.forEach(n=>(n as Type_AnyNodeElement).drawChildren())
+      }).map(lid => lid.target)
+      export_nodes.forEach(n => (n as Type_AnyNodeElement).drawChildren())
     }
   }
 
@@ -1353,10 +1353,63 @@ export abstract class Class_NodeElement
   }
 
   public shiftVertically(
-    shift:number
+    shift: number
   ) {
     this._display.position.y += shift
   }
+
+
+  /**
+   * function to use at in eventMouseDragEnd
+   *
+   * @protected
+   * @memberof Class_NodeElement
+   */
+  protected functionAtMouseDragEnd() {
+    if (this.position_type === 'parametric') {
+      let smaller_x: number = Number.MAX_VALUE
+      this.sankey.visible_nodes_list.forEach(n => {
+        if (smaller_x === undefined) {
+          smaller_x = n.position_x
+        }
+        if (n.position_x < smaller_x) {
+          smaller_x = n.position_x
+        }
+      })
+      const previous_u = this.position_u
+      this.position_u = Math.floor((this.position_x - smaller_x / 3) / (this.sankey.node_styles_dict['default'] as Class_NodeStyle).position.dx!)
+      if (this.position_u !== previous_u) {
+        this.drawing_area.computeParametricV()
+      } else {
+        const same_u = this.sankey.visible_nodes_list
+          .filter(nn => nn.position_type === 'parametric')
+          .filter(nn => nn.position_u === this.position_u)
+        same_u.sort((n1, n2) => n1.position_v - n2.position_v)
+        const nodes_below = same_u.filter(nn => nn.position_v > this.position_v).reverse()
+        const node_below = nodes_below.pop()
+        if (node_below) {
+          if (this.position_y > node_below.position_y) {
+            const tmp = node_below.position_v
+            node_below.position_v = this.position_v
+            this.position_v = tmp
+          } else {
+            node_below.position_dy = node_below.position_y - this.position_y - this.getShapeHeightToUse()
+          }
+        }
+        const nodes_above = same_u.filter(nn => nn.position_v < this.position_v)
+        const node_above = nodes_above.pop()
+        if (node_above) {
+          if (this.position_y < node_above.position_y) {
+            const tmp = node_above.position_v
+            node_above.position_v = this.position_v
+            this.position_v = tmp
+          }
+          this.position_dy = this.position_y - node_above.position_y - node_above.getShapeHeightToUse()
+        }
+      }
+    }
+  }
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -1400,48 +1453,48 @@ export abstract class Class_NodeElement
         }
       } else if (this.position_type === 'parametric' && !this._drag) {
         const process_nodes = this.sankey.visible_nodes_list
-        let same_u = process_nodes.filter(n=>n.position_u === this.position_u)
-        const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']as Class_Tag:undefined
-        if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0 ) {
+        let same_u = process_nodes.filter(n => n.position_u === this.position_u)
+        const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
+        if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
           // Importations
-          const firstNonEchangeNodeBelow = process_nodes.filter(n=>!n.hasGivenTag(echangeTag)).sort((n1,n2)=> n1.position_y-n2.position_y)[0]
-          same_u = same_u.filter(n=>n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
-          const nodeAbove = same_u[same_u.indexOf(this)-1]
+          const firstNonEchangeNodeBelow = process_nodes.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
+          same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
+          const nodeAbove = same_u[same_u.indexOf(this) - 1]
           if (nodeAbove) {
             this._display.position.y = nodeAbove.position_y
-            + nodeAbove.getShapeHeightToUse()
-            + this.position_dy
+              + nodeAbove.getShapeHeightToUse()
+              + this.position_dy
           } else {
             this._display.position.y = 200
           }
-          if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y+200) {
-            const shift = 200 +this.position_y - firstNonEchangeNodeBelow.position_y
-            this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag) ).forEach(n=>n.shiftVertically(shift))
+          if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
+            const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
+            this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
             this.drawing_area.draw()
           }
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
-        } else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0 ) {
+        } else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
           // Exportations
-          same_u = same_u.filter(n=>n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
-          const nodeAbove = same_u[same_u.indexOf(this)-1]
+          same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
+          const nodeAbove = same_u[same_u.indexOf(this) - 1]
           if (nodeAbove) {
             this._display.position.y = nodeAbove.position_y
-            + nodeAbove.getShapeHeightToUse()
-            + this.position_dy
+              + nodeAbove.getShapeHeightToUse()
+              + this.position_dy
           } else {
             let max_vertical_offset = 0
-            this.sankey.visible_nodes_list.filter(n=>!n.hasGivenTag(echangeTag)).forEach(n=>{
-              max_vertical_offset = Math.max(n.position_y+n.getShapeHeightToUse(), max_vertical_offset)
+            this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
+              max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
             })
-            this._display.position.y = max_vertical_offset+200
+            this._display.position.y = max_vertical_offset + 200
           }
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         } else {
-          const nodeAbove = same_u[same_u.indexOf(this)-1]
+          const nodeAbove = same_u[same_u.indexOf(this) - 1]
           if (nodeAbove) {
             this._display.position.y = nodeAbove.position_y
-            + nodeAbove.getShapeHeightToUse()
-            + this.position_dy
+              + nodeAbove.getShapeHeightToUse()
+              + this.position_dy
           }
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         }
@@ -1510,24 +1563,24 @@ export abstract class Class_NodeElement
     }
   }
 
-  /**
-   * Define event when mouse drag element
-   * @protected
-   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_NodeElement
-   */
-  protected eventMouseDragStart(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    // Apply parent behavior first
-    super.eventMouseDragStart(event)
-    if (event.sourceEvent.shiftKey) {
-      return
-    }
-    const drawing_area = this.drawing_area
-    drawing_area.addNodeToSelection(this)
-    this._drag = true
-  }
+  // /**
+  //  * Define event when mouse drag element
+  //  * @protected
+  //  * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+  //  * @memberof Class_NodeElement
+  //  */
+  // protected eventMouseDragStart(
+  //   event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  // ) {
+  //   // Apply parent behavior first
+  //   super.eventMouseDragStart(event)
+  //   if (event.sourceEvent.shiftKey) {
+  //     return
+  //   }
+  //   const drawing_area = this.drawing_area
+  //   drawing_area.addNodeToSelection(this)
+  //   this._drag = true
+  // }
 
   /**
    * Define event when mouse drag element
@@ -1558,6 +1611,16 @@ export abstract class Class_NodeElement
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
           })
       }
+    } else {
+      if (drawing_area.isInEditionMode()) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position
+        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+      }
     }
   }
 
@@ -1579,61 +1642,19 @@ export abstract class Class_NodeElement
       // redraw node on target of output links
       nodes_selected
         .forEach(n => {
-          if (this.position_type === 'parametric') {
-            let smaller_x : number = Number.MAX_VALUE
-            this.sankey.visible_nodes_list.forEach(n=>{
-              if (smaller_x === undefined) {
-                smaller_x = n.position_x
-              }
-              if (n.position_x < smaller_x) {
-                smaller_x = n.position_x
-              }
-            })
-            const previous_u = n.position_u
-            n.position_u = Math.floor((n.position_x-smaller_x/3)/(n.sankey.node_styles_dict['default'] as Class_NodeStyle).position.dx!)
-            if (n.position_u !== previous_u) {
-              this.drawing_area.computeParametricV()
-            } else {
-              const same_u = this.sankey.visible_nodes_list
-                .filter(nn=>nn.position_type === 'parametric')
-                .filter(nn=>nn.position_u === n.position_u)
-              same_u.sort((n1,n2)=>n1.position_v-n2.position_v)
-              const nodes_below = same_u.filter(nn=>nn.position_v>n.position_v).reverse()
-              const node_below= nodes_below.pop()
-              if (node_below) {
-                if (n.position_y > node_below.position_y) {
-                  const tmp = node_below.position_v
-                  node_below.position_v = n.position_v
-                  n.position_v = tmp
-                } else {
-                  node_below.position_dy = node_below.position_y - n.position_y - n.getShapeHeightToUse()
-                }
-              }
-              const nodes_above = same_u.filter(nn=>nn.position_v<n.position_v)
-              const node_above = nodes_above.pop()
-              if (node_above) {
-                if (n.position_y < node_above.position_y) {
-                  const tmp = node_above.position_v
-                  node_above.position_v = n.position_v
-                  n.position_v = tmp
-                }
-                n.position_dy = n.position_y - node_above.position_y - node_above.getShapeHeightToUse()
-              }
-            }
-            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-            n.output_links_list.forEach(link => {
-              link.target.applyPosition()
-            })
-          }
+          n.functionAtMouseDragEnd()
         })
 
-      // Move all elements so none of them are outside the DA
-      this.drawing_area.recenterElements()
-      this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
-
-      this._drag = false
+    } else {
+      this.functionAtMouseDragEnd()
     }
+    // Move all elements so none of them are outside the DA
+    this.drawing_area.recenterElements()
+    this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+
+    this._drag = false
   }
 
   /**
@@ -1899,7 +1920,7 @@ export abstract class Class_NodeElement
     this.d3_selection?.selectAll('.name_label').remove()
     // Add name label
     if (this.name_label_visible) {
-      const label_to_display=this.name_label
+      const label_to_display = this.name_label
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
       // - Shape : ref point if top-left corner
@@ -1925,7 +1946,7 @@ export abstract class Class_NodeElement
         .style('stroke', 'none')
         .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .text(label_to_display)
-        .filter(()=>label_to_display.split(' ').length>1)//only call wrapper if text displayed has space to be splitted by wrapper (sometime 1 word label can have some wrap problem with label bg)
+        .filter(() => label_to_display.split(' ').length > 1)//only call wrapper if text displayed has space to be splitted by wrapper (sometime 1 word label can have some wrap problem with label bg)
         .call(wrapper)
 
       // Position label & return it coord_x, coord_y & it text anchor for use in other element (label bg, label fo)
@@ -1933,11 +1954,11 @@ export abstract class Class_NodeElement
       let box_pos_x = label_pos_x
       let box_pos_y = label_pos_y
       if (this.name_label_vert == 'top') {
-        box_pos_y -=(((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size)
+        box_pos_y -= (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size)
         label_text?.attr('y', -(((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size))
       } else if (this.name_label_vert == 'middle') {
         box_pos_y -= this.name_label_font_size / 2
-        label_text?.attr('y', label_pos_y-(((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size/2))
+        label_text?.attr('y', label_pos_y - (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size / 2))
       }
       if (label_anchor === 'end') {
         box_pos_x = box_pos_x - box_width
@@ -2228,29 +2249,29 @@ export abstract class Class_NodeElement
           // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
           let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-            break
-          case 'top':
-            node_face_size = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size = sumLinkTop
-            break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
           }
           node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
           let node_face_size2 = sumLinkLeft
           switch (node_angle_direction) {
-          case 'left':
-            node_face_size2 = sumLinkRight
-            break
-          case 'top':
-            node_face_size2 = sumLinkBottom
-            break
-          case 'bottom':
-            node_face_size2 = sumLinkTop
-            break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
           }
           arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
           arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2755,8 +2776,8 @@ export abstract class Class_NodeElement
   public get name_label() {
     if (this.drawing_area.application_data.node_label_separator !== '') {
       // If separator affect name label & the separator part is after then return label after separator else return first part
-      const splitted_label=this._name.split(this.drawing_area.application_data.node_label_separator)
-      return (splitted_label.length>1 && !this.drawing_area.application_data.isLabelSeparatorPartBefore()) ? splitted_label[1] : splitted_label[0]
+      const splitted_label = this._name.split(this.drawing_area.application_data.node_label_separator)
+      return (splitted_label.length > 1 && !this.drawing_area.application_data.isLabelSeparatorPartBefore()) ? splitted_label[1] : splitted_label[0]
     }
     return this._name
   }
@@ -2779,7 +2800,7 @@ export abstract class Class_NodeElement
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get grouped_taggs_dict(){
+  public get grouped_taggs_dict() {
     return this._taggs_dict
   }
 
@@ -2821,7 +2842,7 @@ export abstract class Class_NodeElement
    * For a given tagGroup return the corresponding parent Class_NodeDimension
    * @memberof Class_NodeElement
    */
-  public nodeDimensionAsParent(tagGroup:Class_LevelTagGroup) {
+  public nodeDimensionAsParent(tagGroup: Class_LevelTagGroup) {
     const _ = Object.values(this._dimensions_as_parent)
       .filter(dimension => dimension.parent_level_tag.group.id == tagGroup.id)
     return _.length > 0 ? _[0] : null
@@ -4049,29 +4070,29 @@ export abstract class Class_NodeElement
   }
 
   // Fonctions d'individualisation des imports/exports
-  public SplitIOrE (
+  public SplitIOrE(
     importation: boolean
   ) {
-    (importation?this.output_links_list:this.input_links_list).forEach((input_or_output_link)=>{
-      const extremity_node = importation?input_or_output_link.target:input_or_output_link.source
-      const le_nom = this.name + ' - ' + (importation?'Importations':'Exportations') + ' - ' + extremity_node.name
-      let idTrade = extremity_node.id + '-' + this.id+ (importation?'Importations':'Exportations')
-      idTrade = idTrade.replaceAll(' ','')
+    (importation ? this.output_links_list : this.input_links_list).forEach((input_or_output_link) => {
+      const extremity_node = importation ? input_or_output_link.target : input_or_output_link.source
+      const le_nom = this.name + ' - ' + (importation ? 'Importations' : 'Exportations') + ' - ' + extremity_node.name
+      let idTrade = extremity_node.id + '-' + this.id + (importation ? 'Importations' : 'Exportations')
+      idTrade = idTrade.replaceAll(' ', '')
 
-      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade,le_nom)
+      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom)
 
       this.tags_list.forEach(tag => {
         new_node.addTag(tag)
       });
 
-      (new_node as Type_AnyNodeElement).style=importation?new_node.sankey.node_styles_dict['NodeImportStyle']as Class_NodeStyle:new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle
-      input_or_output_link.style=importation?new_node.sankey.link_styles_dict['LinkImportStyle']as Class_LinkStyle:new_node.sankey.link_styles_dict['LinkExportStyle']as Class_LinkStyle
+      (new_node as Type_AnyNodeElement).style = importation ? new_node.sankey.node_styles_dict['NodeImportStyle'] as Class_NodeStyle : new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle
+      input_or_output_link.style = importation ? new_node.sankey.link_styles_dict['LinkImportStyle'] as Class_LinkStyle : new_node.sankey.link_styles_dict['LinkExportStyle'] as Class_LinkStyle
       (new_node as Type_AnyNodeElement).show = extremity_node.show
 
       input_or_output_link.shape_is_recycling = false
 
       extremity_node.tags_list.forEach(tag => {
-        if ( tag.group.id === 'type de noeud' ) {
+        if (tag.group.id === 'type de noeud') {
           return
         }
         new_node.addTag(tag)
@@ -4091,23 +4112,23 @@ export abstract class Class_NodeElement
     importation: boolean
   ) {
     const root_name = this.name.split(' - ')[0];
-    (importation?this.output_links_list:this.input_links_list).forEach((input_or_output_link)=>{
-      const extremity_node = importation?input_or_output_link.target:input_or_output_link.source
+    (importation ? this.output_links_list : this.input_links_list).forEach((input_or_output_link) => {
+      const extremity_node = importation ? input_or_output_link.target : input_or_output_link.source
       Object.values(extremity_node._dimensions_as_child)
         .forEach(dim => {
           const extremity_node_parent = dim.parent;
           (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
-            this.sankey.nodes_dict[extremity_node_parent.id+'-'+root_name+(importation?'Importations':'Exportations')],
+            this.sankey.nodes_dict[extremity_node_parent.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')],
             this,
-          dim.children_level_tags as Class_LevelTag[]
+            dim.children_level_tags as Class_LevelTag[]
           )
         })
       Object.values(extremity_node._dimensions_as_parent)
         .forEach(dim => {
-          const extremity_node_children = dim.children.filter(n=>
-            this.sankey.nodes_dict[n.id+'-'+root_name+(importation?'Importations':'Exportations')]!=undefined
-          ).map(n=>
-            this.sankey.nodes_dict[n.id+'-'+root_name+(importation?'Importations':'Exportations')]
+          const extremity_node_children = dim.children.filter(n =>
+            this.sankey.nodes_dict[n.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')] != undefined
+          ).map(n =>
+            this.sankey.nodes_dict[n.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')]
           )
           new Class_NodeDimension(
             this,
