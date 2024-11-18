@@ -940,7 +940,6 @@ export abstract class Class_Sankey
             'matching_taggs_id': { ...matching_taggs_id['nodeTags'], ...matching_taggs_id['levelTags'] },
             'matching_tags_id': { ...matching_tags_id['nodeTags'], ...matching_tags_id['levelTags'] }
           })
-          this.drawing_area.bypass_redraws = true // Security
         // Order links io position in each nodes
         node.linksFromJSON(
           getJSONFromJSON(json_node_object, node.id, {}),
@@ -953,7 +952,6 @@ export abstract class Class_Sankey
           matching_taggs_id['levelTags'] ?? {},
           matching_tags_id['levelTags'] ?? {}
         )
-        this.drawing_area.bypass_redraws = false // Security
       }))
   }
 
