@@ -44,21 +44,7 @@ import {
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { isPositionOverloaded } from '../types/Node'
 
-export const os_all_element_to_transform = [
-  'addNode',
-  'addFlux',
-  'removeNode',
-  'removeFlux',
-  'posNode',
-  'Values',
-  'attrNode',
-  'attrFlux',
-  'tagNode',
-  'tagFlux',
-  'tagData',
-  'tagLevel',
-  'attrDrawingArea'
-]
+
 
 /**
  *
@@ -70,29 +56,21 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   diagramSelector,
   apply_transformation_additional_elements
 }: FCType_ApplyLayoutDialog) => {
-  const { data_var_to_update } = applicationData
-  const { t } = applicationData
+  const { data_var_to_update, t, menu_configuration} = applicationData
   const { node_styles_dict, link_styles_dict } = applicationData.drawing_area.sankey
-  // const [prev_sankey_data,set_prev_sankey_data] = useState(data)
-  const [forceUpdate, setForceUpdate] = useState(true)
-  // const [stretchFactorH,]=useState(1)
-  // const [stretchFactorV,]=useState(1)
+  const {ref_to_updater_modal_apply_layout}=menu_configuration
+
+  const [, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
   const [parametric, set_parametric] = useState(node_styles_dict['default'].position.type == 'parametric')
-
   const [trade_close, set_trade_close] = useState(true)
-  // const [node_hspace,set_node_hspace] = useState(node_styles_dict['default'].position.dx)
-  // const [node_vspace,set_node_vspace] = useState(node_styles_dict['default'].position.dy)
-  // if ( node_hspace !== node_styles_dict['default'].position.dx) {
-  //   set_node_hspace(node_styles_dict['default'].position.dx)
-  // }
-  // if ( node_vspace !== node_styles_dict['default'].position.dy) {
-  //   set_node_vspace(node_styles_dict['default'].position.dy)
-  // }
+
+  ref_to_updater_modal_apply_layout.current=()=>setForceUpdate(b=>!b)
+  
   if (parametric !== (node_styles_dict['default'].position.type == 'parametric')) {
     set_parametric(node_styles_dict['default'].position.type == 'parametric')
   }
-  // const node_visible=NodeVisibleOnsSvg()
+
   const simple_element_to_transform = [
     'posNode',
     'attrNode', 'attrFlux',
@@ -103,26 +81,6 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
     'attrNode', 'attrFlux',
     'attrDrawingArea'
   ]
-
-  // const applyStretch = (param: string) => {
-  //   const attr = param == 'h' ? 'position_x' : 'position_y'
-  //   const stretchFactor = param == 'h' ? stretchFactorH : stretchFactorV
-
-  //   let min = applicationData.drawing_area.sankey.visible_nodes_list[0][attr]
-  //   // Cheche la position en y du noeud le plus en haut à gauche
-  //   applicationData.drawing_area.sankey.visible_nodes_list.forEach(n => {
-  //     min = (n[attr] < min) ? n[attr] : min
-  //   })
-
-  //   // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
-  //   // applique le delta mutiplié par le facteur au noeud
-  //   applicationData.drawing_area.sankey.visible_nodes_list.forEach(n => {
-  //     const delta = n[attr] - min
-  //     n[attr] = min + (delta * stretchFactor)
-  //   })
-  //   applicationData.drawing_area.checkAndUpdateAreaSize()
-  // }
-  const all_element_UpdateLayout = os_all_element_to_transform
 
   const setTrade = (trade_close: boolean) => {
     if (trade_close) {
@@ -176,23 +134,6 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
     }
   }
 
-  // const applyStretch=(param:string)=>{
-  //   const attr=param=='h'?'x':'y'
-  //   const stretchFactor=param=='h'?stretchFactorH:stretchFactorV
-  //   let min=Object.values(data.nodes)[0][attr]
-  //   // Cheche la position en y du noeud le plus en haut à gauche
-  //   Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && ReturnValueNode(data,n,'position')!='relative').forEach(n=>{
-  //     min=(n[attr]<min)?n[attr]:min
-  //   })
-
-  //   // Parcours les noeuds --> calcule le delta des position en y entre ceux-ci --> multiplie le delta par le facteur du input -->
-  //   // applique le delta mutiplié par le facteur au noeud
-  //   Object.values(data.nodes).filter(n=>node_visible.includes(n.idNode) && ReturnValueNode(data,n,'position')!='relative').forEach(n=>{
-  //     const delta=n[attr]-min
-  //     n[attr]=min+(delta*stretchFactor)
-  //   })
-  //   set_data({...data})
-  // }
   const content_modal_layout = <Tabs>
     <TabList>
       <Box layerStyle='submenuconfig_tab' >
@@ -231,7 +172,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   variant='menuconfigpanel_option_button'
                   onClick={() => {
                     data_var_to_update.current.length = 0
-                    setForceUpdate(!forceUpdate)
+                    menu_configuration.updateComponentApplyLayout()
                   }}
                 >{t('Menu.Transformation.unSelectAll')}</Button>
                 <Button
@@ -241,9 +182,9 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     if (mode_trans === 'simple') {
                       simple_element_to_transform.forEach(el => data_var_to_update.current.push(el))
                     } else {
-                      all_element_UpdateLayout.forEach(el => data_var_to_update.current.push(el))
+                      applicationData.transform_layout_all_attr.forEach(el => data_var_to_update.current.push(el))
                     }
-                    setForceUpdate(!forceUpdate)
+                    menu_configuration.updateComponentApplyLayout()
                   }}
                 >{t('Menu.Transformation.selectAll')}</Button>
                 <Button
@@ -251,7 +192,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   onClick={() => {
                     data_var_to_update.current.length = 0
                     default_element_to_transform.forEach(el => data_var_to_update.current.push(el))
-                    setForceUpdate(!forceUpdate)
+                    menu_configuration.updateComponentApplyLayout()
                   }}
                 >{t('Menu.Transformation.selectDefault')}</Button>
 
@@ -269,10 +210,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     onClick={() => {
                       if (!data_var_to_update.current.includes('addNode')) {
                         data_var_to_update.current.push('addNode')
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('addNode'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       }
                     }
                     }
@@ -282,10 +223,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     onClick={() => {
                       if (!data_var_to_update.current.includes('removeNode')) {
                         data_var_to_update.current.push('removeNode')
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('removeNode'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       }
                     }
                     }
@@ -295,10 +236,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     onClick={() => {
                       if (!data_var_to_update.current.includes('addFlux')) {
                         data_var_to_update.current.push('addFlux')
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('addFlux'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       }
                     }
                     }>{t('Menu.Transformation.addFlux')}</Button>
@@ -307,10 +248,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     onClick={() => {
                       if (!data_var_to_update.current.includes('removeFlux')) {
                         data_var_to_update.current.push('removeFlux')
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('removeFlux'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       }
                     }
                     }>{t('Menu.Transformation.removeFlux')}</Button>
@@ -327,10 +268,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   onClick={() => {
                     if (!data_var_to_update.current.includes('posNode')) {
                       data_var_to_update.current.push('posNode')
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     } else {
                       data_var_to_update.current.splice(data_var_to_update.current.indexOf('posNode'), 1)
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     }
                   }
                   }>{t('Menu.Transformation.PosNoeud')}</Button>
@@ -339,10 +280,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   onClick={() => {
                     if (!data_var_to_update.current.includes('posFlux')) {
                       data_var_to_update.current.push('posFlux')
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     } else {
                       data_var_to_update.current.splice(data_var_to_update.current.indexOf('posFlux'), 1)
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     }
                   }
                   }> {t('Menu.Transformation.posFlux')}</Button>
@@ -367,10 +308,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                         if (!data_var_to_update.current.includes('tagData')) {
                           data_var_to_update.current.push('tagData')
                         }
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('Values'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       }
                     }
                     }
@@ -386,11 +327,11 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   onClick={() => {
                     if (!data_var_to_update.current.includes('attrNode')) {
                       data_var_to_update.current.push('attrNode')
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
 
                     } else {
                       data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrNode'), 1)
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     }
                   }
                   }
@@ -400,10 +341,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   onClick={() => {
                     if (!data_var_to_update.current.includes('attrFlux')) {
                       data_var_to_update.current.push('attrFlux')
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     } else {
                       data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrFlux'), 1)
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     }
                   }
                   }
@@ -422,10 +363,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     onClick={() => {
                       if (!data_var_to_update.current.includes('tagNode')) {
                         data_var_to_update.current.push('tagNode')
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagNode'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
 
                       }
                     }
@@ -436,10 +377,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     onClick={() => {
                       if (!data_var_to_update.current.includes('tagFlux')) {
                         data_var_to_update.current.push('tagFlux')
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagFlux'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       }
                     }
                     }
@@ -449,10 +390,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     onClick={() => {
                       if (!data_var_to_update.current.includes('tagData')) {
                         data_var_to_update.current.push('tagData')
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else if (!data_var_to_update.current.includes('Values')) {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagData'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       }
                     }
                     }
@@ -471,10 +412,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     onClick={() => {
                       if (!data_var_to_update.current.includes('tagLevel')) {
                         data_var_to_update.current.push('tagLevel')
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       } else {
                         data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagLevel'), 1)
-                        setForceUpdate(!forceUpdate)
+                        menu_configuration.updateComponentApplyLayout()
                       }
                     }
                     }
@@ -491,10 +432,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   onClick={() => {
                     if (!data_var_to_update.current.includes('attrDrawingArea')) {
                       data_var_to_update.current.push('attrDrawingArea')
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     } else {
                       data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrDrawingArea'), 1)
-                      setForceUpdate(!forceUpdate)
+                      menu_configuration.updateComponentApplyLayout()
                     }
                   }
                   }
@@ -523,7 +464,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 value={applicationData.drawing_area.horizontal_spacing}
                 onChange={evt => {
                   applicationData.drawing_area.horizontal_spacing = +evt
-                  setForceUpdate(!forceUpdate)
+                  menu_configuration.updateComponentApplyLayout()
                 }}>
                 <NumberInputField />
                 <NumberInputStepper>
@@ -557,7 +498,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   // value={new_data.drawing_area.vertical_spacing}
                   // onChange={evt => {
                   //   new_data.drawing_area.vertical_spacing = +evt
-                  //   setForceUpdate(!forceUpdate)
+                  //   menu_configuration.updateComponentApplyLayout()
                   //}
                 }}>
                 <NumberInputField />
