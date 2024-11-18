@@ -187,6 +187,8 @@ export class Class_MenuConfig {
   // Update component ToolbarBuilder
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
 
+  // Update component ApplyLayoutDialog
+  private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
 
   /* ========================================
     Updater of filtering components
@@ -301,6 +303,11 @@ export class Class_MenuConfig {
     // Init save diagram JSON components updater ------------------------------------------------
 
     this._ref_to_save_diagram_updater = useRef(() => null)
+
+
+    // Init ApplyLayoutDialog components updater ------------------------------------------------
+
+    this._ref_to_updater_modal_apply_layout=useRef(()=>null)
 
     // Init dict of setter show dialog -------------------------------------------------
 
@@ -846,6 +853,16 @@ export class Class_MenuConfig {
     d3.select('.sideToolBar').transition().duration(300).style('right', ((this._ref_menu_opened.current ? menu_config_width : 0)) + 'px')
   }
 
+  /**
+   * Function to update ApplyLayoutDialog component,
+   * can be overrided in submodule if we add subcomponent to ApplyLayoutDialog
+   *
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentApplyLayout(){
+    this._ref_to_updater_modal_apply_layout.current()
+  }
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -1095,6 +1112,12 @@ export class Class_MenuConfig {
   // Get ref updater of save diagram JSON
   public get ref_to_save_diagram_updater(): MutableRefObject<() => void> {
     return this._ref_to_save_diagram_updater
+  }
+
+
+  // Getter ref updater ApplyLayoutDialog OS component
+  public get ref_to_updater_modal_apply_layout(): MutableRefObject<() => void> {
+    return this._ref_to_updater_modal_apply_layout
   }
 }
 
