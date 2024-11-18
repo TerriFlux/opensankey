@@ -154,7 +154,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
             new_data.drawing_area.computeAutoSankey(false)
             indicateSankeyToSaveInCache()
           }
-          new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Layout Updated' })
+          new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Nodes positions computed', loading: 'Computing nodes position' })
 
         }}>
         {t('MEP.PA_action')}
