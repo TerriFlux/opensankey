@@ -842,8 +842,12 @@ export abstract class Class_Sankey
           'NodeExportStyle': DefaultNodeExportStyle
         })
           .forEach(([style_id, fn]) => draw_bypassed(() => {
+            if (this._node_styles[style_id]) {
+              // if style already exists do nothings
+              return
+            }
             const json_style = fn()
-            const new_style = this._node_styles[style_id] ?? this.createNewNodeStyle(style_id, json_style.name, true)
+            const new_style = this.createNewNodeStyle(style_id, json_style.name, true)
             // Set node style value to node from JSON
             new_style.fromJSON(json_style)
             // Add node style to sankey
@@ -854,8 +858,12 @@ export abstract class Class_Sankey
           'LinkExportStyle': DefaultLinkExportStyle
         })
           .forEach(([style_id, fn]) => draw_bypassed(() => {
+            if (this._link_styles[style_id]) {
+              // if style already exists do nothing
+              return
+            }
             const json_style = fn()
-            const new_style = this._link_styles[style_id] ?? this.createNewLinkStyle(style_id, json_style.name, true)
+            const new_style = this.createNewLinkStyle(style_id, json_style.name, true)
             // Set node style value to node from JSON
             new_style.fromJSON(fn())
             // Add node style to sankey
@@ -932,6 +940,7 @@ export abstract class Class_Sankey
             'matching_taggs_id': { ...matching_taggs_id['nodeTags'], ...matching_taggs_id['levelTags'] },
             'matching_tags_id': { ...matching_tags_id['nodeTags'], ...matching_tags_id['levelTags'] }
           })
+          this.drawing_area.bypass_redraws = true // Security
         // Order links io position in each nodes
         node.linksFromJSON(
           getJSONFromJSON(json_node_object, node.id, {}),
@@ -944,6 +953,7 @@ export abstract class Class_Sankey
           matching_taggs_id['levelTags'] ?? {},
           matching_tags_id['levelTags'] ?? {}
         )
+        this.drawing_area.bypass_redraws = false // Security
       }))
   }
 
