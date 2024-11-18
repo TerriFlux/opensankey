@@ -602,6 +602,7 @@ export abstract class Class_NodeElement
     json_node_object: Type_JSON,
     matching_links_id: { [_: string]: string } = {}
   ) {
+    this.drawing_area.bypass_redraws = true
     // Input links
     getStringListFromJSON(json_node_object, 'inputLinksId', [])
       .forEach(l_id => {
@@ -627,6 +628,7 @@ export abstract class Class_NodeElement
           return this.sankey.links_dict[link_id]
         }) as Type_GenericLinkElement[]
     }
+    this.drawing_area.bypass_redraws = false
   }
 
   /**
@@ -641,6 +643,7 @@ export abstract class Class_NodeElement
     matching_taggs_id: { [_: string]: string } = {},
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
+    this.drawing_area.bypass_redraws = true
     let local_aggregation: boolean | undefined
     if (json_node_object.local) {
       local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
@@ -717,6 +720,7 @@ export abstract class Class_NodeElement
           }
         })
     }
+    this.drawing_area.bypass_redraws = false // Security
   }
 
   // PUBLIC METHODS =====================================================================

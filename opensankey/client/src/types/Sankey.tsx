@@ -842,8 +842,12 @@ export abstract class Class_Sankey
           'NodeExportStyle': DefaultNodeExportStyle
         })
           .forEach(([style_id, fn]) => draw_bypassed(() => {
+            if (this._node_styles[style_id]) {
+              // if style already exists do nothings
+              return
+            }
             const json_style = fn()
-            const new_style = this._node_styles[style_id] ?? this.createNewNodeStyle(style_id, json_style.name, true)
+            const new_style = this.createNewNodeStyle(style_id, json_style.name, true)
             // Set node style value to node from JSON
             new_style.fromJSON(json_style)
             // Add node style to sankey
@@ -854,8 +858,12 @@ export abstract class Class_Sankey
           'LinkExportStyle': DefaultLinkExportStyle
         })
           .forEach(([style_id, fn]) => draw_bypassed(() => {
+            if (this._link_styles[style_id]) {
+              // if style already exists do nothing
+              return
+            }
             const json_style = fn()
-            const new_style = this._link_styles[style_id] ?? this.createNewLinkStyle(style_id, json_style.name, true)
+            const new_style = this.createNewLinkStyle(style_id, json_style.name, true)
             // Set node style value to node from JSON
             new_style.fromJSON(fn())
             // Add node style to sankey
@@ -1045,7 +1053,7 @@ export abstract class Class_Sankey
           .filter(link => {
             let source_id = getStringFromJSON(link_json, 'idSource', '')
             source_id = matching_nodes_id[source_id] ?? source_id
-            let target_id = getStringFromJSON(link_json, 'idSource', '')
+            let target_id = getStringFromJSON(link_json, 'idTarget', '')
             target_id = matching_nodes_id[target_id] ?? target_id
             return (
               (link.source.id === source_id) &&
