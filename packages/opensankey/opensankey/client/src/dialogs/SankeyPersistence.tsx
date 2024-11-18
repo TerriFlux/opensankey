@@ -363,25 +363,20 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   new_data.fromJSON(data_as_json)
   // Apply extracted layout if present
   if (data_as_json['layout']) {
-    // const layout = data_as_json['layout'] as Type_JSON
-    // const tmp_DA = new_data.createNewDrawingArea()
-    // tmp_DA.fromJSON(layout)
-    // new_data.menu_configuration.function_on_wait.current = () => {
-    //   new_data.drawing_area.updateFrom(
-    //     tmp_DA,
-    //     ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
-    //   )
-    //   new_data.drawing_area.areaAutoFit()
-    // }
+    const layout = data_as_json['layout'] as Type_JSON
+    const tmp_DA = new_data.createNewDrawingArea()
+    tmp_DA.fromJSON(layout)
     new_data.menu_configuration.function_on_wait.current = () => {
-      new_data.drawing_area.fromJSON(
-        data_as_json['layout'] as Type_JSON
+      new_data.drawing_area.updateFrom(
+        tmp_DA,
+        ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
       )
       new_data.drawing_area.draw()
     }
     new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
   } else {
     new_data.menu_configuration.function_on_wait.current = () => {
+      new_data.drawing_area.bypass_redraws = true
       // First compute position of nodes which are not trade
       new_data.drawing_area.computeAutoSankey(true)
       // Initially there is only one node per type of exchanges.
@@ -401,7 +396,8 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
           l.shape_ending_tangeant=0.01
         }
       })
-
+      new_data.drawing_area.bypass_redraws = false
+      new_data.drawing_area.draw()
       new_data.drawing_area.areaAutoFit()
     }
     new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
