@@ -54,6 +54,7 @@ export const MenuPreferenceLabelsOSP: FunctionComponent<FCType_MenuPreferenceLab
 }) => {
   const [, setCount] = useState(0)
   return <Checkbox
+    ref={new_data_plus.checkbox_refs['LL']}
     variant='menuconfigpanel_option_checkbox'
     defaultChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('LL')} onChange={() => {
       new_data_plus.menu_configuration.toggleGivenAccordion('LL')
@@ -385,8 +386,8 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
       className='quill_editor'
       value={selected_zdt.length > 0 ? selected_zdt[0].content : ''}
       ref={r_editor_ZDT}
-      onChange={(evt,_,src) => {
-        if(src=='user'){
+      onChange={(evt, _, src) => {
+        if (src == 'user') {
           selected_zdt.forEach(n => n.content = evt)
           redrawAndRefresh()
         }
@@ -662,8 +663,12 @@ export const ZDTMenuAsAccordeonItemOSP: FunctionComponent<FCType_ZDTMenuAsAccord
   content_menu_zdt
 }) => {
   const { t } = new_data_plus
-  return <AccordionItem
-  // style={{ 'display': (new_data_plus.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
+  const  [,setCount]=useState(0)
+  const refreshThis = () => setCount(a => a + 1)
+  new_data_plus.menu_configuration.ref_to_accordion_containers_updater.current = refreshThis
+
+    return <AccordionItem
+  style={{ 'display': (new_data_plus.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
   >
     <AccordionButton
       ref={new_data_plus.menu_configuration.zdt_accordion_ref}

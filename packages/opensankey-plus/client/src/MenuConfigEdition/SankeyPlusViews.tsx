@@ -830,6 +830,7 @@ export const MenuPreferenceViewOSP: FunctionComponent<FCType_MenuPreferenceViewO
   const { t } = new_data_plus
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
+    ref={new_data_plus.checkbox_refs['Vis']}
     defaultChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('Vis')}
     onChange={() => {
       new_data_plus.menu_configuration.toggleGivenAccordion('Vis')
