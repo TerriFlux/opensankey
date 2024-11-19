@@ -185,12 +185,16 @@ export abstract class Class_NodeElement
   // Ordering for related IO Links
   private _links_order: Type_GenericLinkElement[] = []
 
+  // Position of related IO links
+  private _input_links_ending_point: { [id: string]: { x: number, y: number } } = {}
+  private _output_links_starting_point: { [id: string]: { x: number, y: number } } = {}
+
   // Set to true when we are in a dragging process
   private _drag: boolean = false
 
   // Handles used to move related IO links relativly to eachother
-  private _handle_input_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
-  private _handle_output_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
+  private _input_links_handle: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
+  private _output_links_handle: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
 
   // Node tags
   private _tags: Class_Tag[] = []
@@ -261,8 +265,8 @@ export abstract class Class_NodeElement
     this._input_links = {}
     this._output_links = {}
     this._links_order = []
-    this._handle_input_links = {}
-    this._handle_output_links = {}
+    this._input_links_handle = {}
+    this._output_links_handle = {}
     // Remove reference of self in related tags
     this.tags_list.forEach(tag => tag.removeReference(this))
     this._tags = []
@@ -743,12 +747,9 @@ export abstract class Class_NodeElement
     this.d3_selection?.style('font-family', this.name_label_font_family)
     // Init <g> containing shape elements
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
-    // Draw shape
-    this._drawShape()
     // Draw label
     this._drawNameLabel()
     this._drawValueLabel()
-    this._drawLinks()
   }
 
   public drawAsSelected() {
@@ -1198,6 +1199,7 @@ export abstract class Class_NodeElement
   }
 
   // Get links
+
   public getFirstInputLink() {
     if (this.hasInputLinks()) return this.input_links_list[0] // TODO pas bon
     else return undefined
@@ -1235,6 +1237,30 @@ export abstract class Class_NodeElement
         (link.source === this && link.source_side === _))
     })
   }
+
+  // Get or update links positions
+
+  public getInputLinkEndingPoint(link: Type_GenericLinkElement) {
+    if (this._input_links[link.id] !== undefined) {
+      if (!this._input_links_ending_point[link.id]) {
+        this.updateLinksPositions()
+      }
+      return this._input_links_ending_point[link.id]
+    }
+    return undefined
+  }
+
+  public getOutputLinkStartingPoint(link: Type_GenericLinkElement) {
+    if (this._output_links[link.id] !== undefined) {
+      if (!this._output_links_starting_point[link.id]) {
+        this.updateLinksPositions()
+      }
+      return this._output_links_starting_point[link.id]
+    }
+    return undefined
+  }
+
+  // Ordering links
 
   /**
    * Function to reorganize links_order depending of source/target position
@@ -1333,6 +1359,7 @@ export abstract class Class_NodeElement
   ) {
     this._display.position.y += shift
   }
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -1343,90 +1370,99 @@ export abstract class Class_NodeElement
    */
   protected _applyPosition() {
     if (this.d3_selection !== null) {
-      // Default positions
-      const x = this.position_x
-      const y = this.position_y
       // Deal with import / export nodes
-      if (this.position_type === 'relative' && !this._drag) {
-        if (this.hasInputLinks()) {
-          // Node is export
-          const input_link = this.getFirstInputLink()
-          // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
-          const source_node = input_link!.source
-          if (!source_node.shape_visible) {
-            this.d3_selection.attr('transform', 'translate(0,0)')
-            return
+      if (
+        (
+          (this.position_type === 'relative') ||
+          (this.position_type === 'parametric')
+        ) &&
+        (!this._drag)
+      ) {
+        // Default positions
+        const x = this.position_x
+        const y = this.position_y
+        // Apply relative position
+        if (this.position_type === 'relative') {
+          if (this.hasInputLinks()) {
+            // Node is export
+            const input_link = this.getFirstInputLink()
+            // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
+            const source_node = input_link!.source
+            if (!source_node.shape_visible) {
+              this.d3_selection.attr('transform', 'translate(0,0)')
+              return
+            }
+            this._display.position.x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
+            this._display.position.y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
           }
-          this._display.position.x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
-          this._display.position.y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
+          else if (this.hasOutputLinks()) {
+            // Node is import
+            const output_link = this.getFirstOutputLink()
+            // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
+            const target_node = output_link!.target
+            if (!target_node.shape_visible) {
+              this.d3_selection.attr('transform', 'translate(0,0)')
+              return
+            }
+            this._display.position.x = target_node.position_x + this.position_relative_dx
+            this._display.position.y = target_node.position_y + this.position_relative_dy
+          }
         }
-        else if (this.hasOutputLinks()) {
-          // Node is import
-          const output_link = this.getFirstOutputLink()
-          // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
-          const target_node = output_link!.target
-          if (!target_node.shape_visible) {
-            this.d3_selection.attr('transform', 'translate(0,0)')
-            return
+        // Apply parametric position
+        else { // if (this.position_type === 'parametric')
+          const process_nodes = this.sankey.visible_nodes_list
+          let same_u = process_nodes.filter(n => n.position_u === this.position_u)
+          const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
+          if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
+            // Importations
+            const firstNonEchangeNodeBelow = process_nodes.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
+            same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
+            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            if (nodeAbove) {
+              this._display.position.y = nodeAbove.position_y
+                + nodeAbove.getShapeHeightToUse()
+                + this.position_dy
+            }
+            else {
+              this._display.position.y = 200
+            }
+            if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
+              const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
+              this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
+              this.drawing_area.draw()
+            }
           }
-          this._display.position.x = target_node.position_x + this.position_relative_dx
-          this._display.position.y = target_node.position_y + this.position_relative_dy
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
+          else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
+            // Exportations
+            same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
+            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            if (nodeAbove) {
+              this._display.position.y = nodeAbove.position_y
+                + nodeAbove.getShapeHeightToUse()
+                + this.position_dy
+            } else {
+              let max_vertical_offset = 0
+              this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
+                max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
+              })
+              this._display.position.y = max_vertical_offset + 200
+            }
+          }
+          else {
+            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            if (nodeAbove) {
+              this._display.position.y = nodeAbove.position_y
+                + nodeAbove.getShapeHeightToUse()
+                + this.position_dy
+            }
+          }
         }
-      } else if (this.position_type === 'parametric' && !this._drag) {
-        const process_nodes = this.sankey.visible_nodes_list
-        let same_u = process_nodes.filter(n => n.position_u === this.position_u)
-        const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-        if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
-          // Importations
-          const firstNonEchangeNodeBelow = process_nodes.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
-          same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
-          const nodeAbove = same_u[same_u.indexOf(this) - 1]
-          if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y
-              + nodeAbove.getShapeHeightToUse()
-              + this.position_dy
-          } else {
-            this._display.position.y = 200
-          }
-          if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
-            const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
-            this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
-            this.drawing_area.draw()
-          }
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
-        } else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
-          // Exportations
-          same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
-          const nodeAbove = same_u[same_u.indexOf(this) - 1]
-          if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y
-              + nodeAbove.getShapeHeightToUse()
-              + this.position_dy
-          } else {
-            let max_vertical_offset = 0
-            this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
-              max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
-            })
-            this._display.position.y = max_vertical_offset + 200
-          }
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
-        } else {
-          const nodeAbove = same_u[same_u.indexOf(this) - 1]
-          if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y
-              + nodeAbove.getShapeHeightToUse()
-              + this.position_dy
-          }
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
-        }
-      } else {
-        this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
       }
+      // Apply selected coordinates
+      super._applyPosition()
     }
     // Update also position for links
-    this.drawLinks()
+    this._drawLinks()
   }
 
   /**
@@ -1793,8 +1829,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public removeInputLink(link: Type_GenericLinkElement) {
-    this._handle_input_links[link.id]?.delete()
-    delete this._handle_input_links[link.id]
+    this._input_links_handle[link.id]?.delete()
+    delete this._input_links_handle[link.id]
+    delete this._input_links_ending_point[link.id]
     delete this._input_links[link.id]
     this.removeLinkFromOrderingLinksList(link)
   }
@@ -1806,8 +1843,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public removeOutputLink(link: Type_GenericLinkElement) {
-    this._handle_output_links[link.id]?.delete()
-    delete this._handle_output_links[link.id]
+    this._output_links_handle[link.id]?.delete()
+    delete this._output_links_handle[link.id]
+    delete this._output_links_starting_point[link.id]
     delete this._output_links[link.id]
     this.removeLinkFromOrderingLinksList(link)
   }
@@ -2132,16 +2170,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private _drawLinks() {
-    Object.values(this._input_links).forEach(link => {
-      link.draw()
-      this._handle_input_links[link.id].draw()
-    })
-    Object.values(this._output_links).forEach(link => {
-      link.draw()
-      this._handle_output_links[link.id].draw()
-    })
-    this.drawShape()  // Node shape can be modified by link's changes
-    this.applyPositionOnLinks()  // Links positions can be modified by link's changes
+    this.updateLinksPositions()  // Links positions can be modified by link's changes
+    this._drawLinksArrow()
+    this._drawShape()  // Node shape can be modified by link's changes
   }
 
   /**
@@ -2175,7 +2206,6 @@ export abstract class Class_NodeElement
     const sumLinkRight = this.getSumOfLinksThickness('right')
     const sumLinkTop = this.getSumOfLinksThickness('top')
     const sumLinkBottom = this.getSumOfLinksThickness('bottom')
-
 
     list_link_to_add_arrow.forEach(link => {
 
@@ -2306,7 +2336,6 @@ export abstract class Class_NodeElement
 
   }
 
-
   private getArrowPath() {
     // Compute height & width
     const width = this.getShapeWidthToUse()
@@ -2365,7 +2394,9 @@ export abstract class Class_NodeElement
    * @private
    * @memberof Class_NodeElement
    */
-  private applyPositionOnLinks() {
+  private updateLinksPositions(
+    draw_links: boolean = false
+  ) {
     // Reference position
     const x0 = this.position_x
     const y0 = this.position_y
@@ -2383,76 +2414,91 @@ export abstract class Class_NodeElement
       const handle_position_shift = 5
       // Current node is link's source
       if (link.source === this) {
+        let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
+        let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
         if (link.source_side === 'right') {
-          link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          if (this._handle_output_links[link.id] !== undefined) {
-            this._handle_output_links[link.id].setPosXY(link.position_x_start + handle_position_shift, link.position_y_start)
-            dy_right = dy_right + thickness
-          }
+          link_starting_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+          link_starting_handle_point = { x: (link_starting_point.x + handle_position_shift), y: link_starting_point.y }
+          dy_right = dy_right + thickness
         }
         else if (link.source_side === 'left') {
-          link.setPosXYStartingPoint(x0, y0 + dy_left + thickness / 2)
-          if (this._handle_output_links[link.id] !== undefined) {
-            this._handle_output_links[link.id].setPosXY(link.position_x_start - handle_position_shift, link.position_y_start)
-            dy_left = dy_left + thickness
-          }
+          link_starting_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+          link_starting_handle_point = { x: (link_starting_point.x - handle_position_shift), y: link_starting_point.y }
+          dy_left = dy_left + thickness
         }
         else if (link.source_side === 'top') {
-          link.setPosXYStartingPoint(x0 + dx_top + thickness / 2, y0)
-          if (this._handle_output_links[link.id] !== undefined) {
-            this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start - handle_position_shift)
-            dx_top = dx_top + thickness
-          }
+          link_starting_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+          link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y - handle_position_shift }
+          dx_top = dx_top + thickness
         }
         else {  // link.source_side === 'bottom'
-          link.setPosXYStartingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          if (this._handle_output_links[link.id] !== undefined) {
-            this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
-            dx_bottom = dx_bottom + thickness
-          }
+          link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+          link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
+          dx_bottom = dx_bottom + thickness
         }
-        if (this._handle_output_links[link.id] !== undefined)
-          this._handle_output_links[link.id].d3_selection?.attr('class', 'node_io ' + link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor
-
-        link.target.drawLinksArrow() //redraw arrow of node target of output links visible
+        // Save position
+        this._output_links_starting_point[link.id] = link_starting_point
+        // If we asked for redraw
+        // Here to optimise computation time (avoiding double loops on link)
+        if (draw_links) {
+          link.draw()
+        }
+        // Update handle
+        if (this._output_links_handle[link.id] !== undefined) {
+          if (draw_links) this._output_links_handle[link.id].draw()
+          this._output_links_handle[link.id]
+            .setPosXY(
+              link_starting_handle_point.x,
+              link_starting_handle_point.y)
+          // Set a class to the handler corresponding to the source side of link, it is use for css cursor
+          this._output_links_handle[link.id]
+            .d3_selection?.attr('class', 'node_io ' + link.source_side)
+        }
       }
       // Or current node is link's target
       if (link.target === this) {
-
+        let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
+        let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
         if (link.target_side === 'right') {
-          link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          if (this._handle_input_links[link.id] !== undefined) {
-            this._handle_input_links[link.id].setPosXY(link.position_x_end + handle_position_shift, link.position_y_end)
-            dy_right = dy_right + thickness
-          }
+          link_ending_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+          link_ending_handle_point = { x: (link_ending_point.x + handle_position_shift), y: link_ending_point.y }
+          dy_right = dy_right + thickness
         }
         else if (link.target_side === 'left') {
-          link.setPosXYEndingPoint(x0, y0 + dy_left + thickness / 2)
-          if (this._handle_input_links[link.id] !== undefined) {
-            this._handle_input_links[link.id].setPosXY(link.position_x_end - handle_position_shift, link.position_y_end)
-            dy_left = dy_left + thickness
-          }
+          link_ending_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+          link_ending_handle_point = { x: (link_ending_point.x - handle_position_shift), y: link_ending_point.y }
+          dy_left = dy_left + thickness
         }
         else if (link.target_side === 'top') {
-          link.setPosXYEndingPoint(x0 + dx_top + thickness / 2, y0)
-          if (this._handle_input_links[link.id] !== undefined) {
-            this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end - handle_position_shift)
-            dx_top = dx_top + thickness
-          }
+          link_ending_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+          link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y - handle_position_shift) }
+          dx_top = dx_top + thickness
         }
         else {  // link.target_side === 'bottom'
-          link.setPosXYEndingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          if (this._handle_input_links[link.id] !== undefined) {
-            this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
-            dx_bottom = dx_bottom + thickness
-          }
+          link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+          link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
+          dx_bottom = dx_bottom + thickness
         }
-        if (this._handle_input_links[link.id] !== undefined)
-          this._handle_input_links[link.id].d3_selection?.attr('class', 'node_io ' + link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor
+        // Save position
+        this._input_links_ending_point[link.id] = link_ending_point
+        // If we asked for redraw
+        // Here to optimise computation time (avoiding double loops on link)
+        if (draw_links) {
+          link.draw()
+        }
+        // Update handle
+        if (this._input_links_handle[link.id] !== undefined) {
+          if (draw_links) this._input_links_handle[link.id].draw()
+          this._input_links_handle[link.id]
+            .setPosXY(
+              link_ending_handle_point.x,
+              link_ending_handle_point.y)
+          // Set a class to the handler corresponding to the target side of link, it is use for css cursor
+          this._input_links_handle[link.id]
+            .d3_selection?.attr('class', 'node_io ' + link.target_side)
+        }
       }
     })
-    this.drawLinksArrow()
-
   }
 
   /**
@@ -2563,9 +2609,9 @@ export abstract class Class_NodeElement
       link
     )
     if (type === 'input')
-      this._handle_input_links[link.id] = handle
+      this._input_links_handle[link.id] = handle
     else // type === 'output'
-      this._handle_output_links[link.id] = handle
+      this._output_links_handle[link.id] = handle
   }
 
   /**
@@ -2660,7 +2706,6 @@ export abstract class Class_NodeElement
   private getLinkFromHandler(handler: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
     return handler.ref_element_optional
   }
-
 
   /**
    * Add tag to dict of tag sorted by group
@@ -3574,9 +3619,6 @@ export abstract class Class_NodeElement
     this.drawNameLabel()
   }
 
-
-
-
   /**
    * TODO Description
    * @memberof Class_NodeElement
@@ -3686,6 +3728,7 @@ export abstract class Class_NodeElement
     this._display.attributes.value_label_horiz_shift = _
     this.drawValueLabel()
   }
+
   /**
    * TODO Description
    * @memberof Class_NodeElement
@@ -3872,28 +3915,31 @@ export abstract class Class_NodeElement
     )
       return true
 
-    if (this._show) {
-      return true
-    } else if (this._show == false) {
-      return false
-    }
+    // if (this._show) {
+    //   return true
+    // } else if (this._show == false) {
+    //   return false
+    // }
     // First check if activated tag group is in antitaggs
     const activated_antitaggs = this._leveltaggs_as_antitagged
       .filter(tagg => tagg.activated)
     if (activated_antitaggs.length > 0)
       return false
-    // TODO revoir l'algo ci dessous
     // If there is any dimension - check them
     let ok_dimension: boolean = true
     // Check dimensions where node is tagged as a child
     Object.values(this._dimensions_as_child)
-      .filter(dim => dim.children_level_tagg.activated)
-      .forEach(dim => ok_dimension = (ok_dimension && dim.show_children))
+      .forEach(dim => {
+        if (dim.children_level_tagg.activated)
+          ok_dimension = (ok_dimension && dim.show_children)
+      })
     // Check dimensions where node is tagged as a parent
     if (ok_dimension) {
       Object.values(this._dimensions_as_parent)
-        .filter(dim => dim.parent_level_tag.group.activated)
-        .forEach(dim => ok_dimension = (ok_dimension && dim.show_parent))
+        .forEach(dim => {
+          if (dim.parent_level_tag.group.activated)
+            ok_dimension = (ok_dimension && dim.show_parent)
+        })
     }
     return ok_dimension
   }

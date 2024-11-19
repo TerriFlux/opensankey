@@ -281,7 +281,11 @@ export abstract class Class_ProtoElement
    * @memberof Class_Element
    */
   public draw() {
-    this._process_or_bypass(() => this._draw())
+    this._process_or_bypass(() => {
+      this.unDraw()
+      if (this.is_visible && !this._is_currently_deleted)
+        this._draw()
+    })
   }
 
   /**
@@ -373,22 +377,15 @@ export abstract class Class_ProtoElement
   }
 
   protected _draw() {
-    if (!this._is_currently_deleted) {
-      const d3_drawing_area = this.drawing_area.d3_selection
-      if (d3_drawing_area !== null) {
-        // Undraw all
-        this.unDraw()
-        // Draw only if visible
-        if (this.is_visible) {
-          // Set d3 selection
-          this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
-            // .datum(this)
-            .append('g')
-            .attr('id', 'gg_' + this._id)
-          // Add events listeners
-          this.setEventsListeners()
-        }
-      }
+    const d3_drawing_area = this.drawing_area.d3_selection
+    if (d3_drawing_area !== null) {
+      // Set d3 selection
+      this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+        // .datum(this)
+        .append('g')
+        .attr('id', 'gg_' + this._id)
+      // Add events listeners
+      this.setEventsListeners()
     }
   }
 
@@ -711,9 +708,7 @@ export abstract class Class_Element
     // Draw element on D3
     super._draw()
     // Add apply position
-    if (this.is_visible) {
-      this._applyPosition()
-    }
+    this._applyPosition()
   }
 
   /**
@@ -737,11 +732,9 @@ export abstract class Class_Element
    * @memberof Class_Node
    */
   protected _applyPosition() {
-    if (this.d3_selection !== null) {
-      this.d3_selection.attr(
-        'transform',
-        'translate(' + this.position_x + ', ' + this.position_y + ')')
-    }
+    this.d3_selection?.attr(
+      'transform',
+      'translate(' + this.position_x + ', ' + this.position_y + ')')
   }
 
 

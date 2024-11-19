@@ -606,6 +606,18 @@ export abstract class Class_LinkElement
     super._draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links').datum(this)
+    // Get starting point
+    const starting_point = this.source.getOutputLinkStartingPoint(this)
+    if (starting_point) {
+      this._display.position_starting.x = starting_point.x
+      this._display.position_starting.y = starting_point.y
+    }
+    // Get ending point
+    const ending_point = this.target.getInputLinkEndingPoint(this)
+    if (ending_point) {
+      this._display.position_ending.x = ending_point.x
+      this._display.position_ending.x = ending_point.y
+    }
     // Setup order
     //this.drawing_area.orderElements()
     // Draw elements
@@ -647,7 +659,6 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public inverse() {
-
     const tmp_target = this._target
     tmp_target.removeInputLink(this) // remove link from curr IO dict
 
@@ -660,18 +671,6 @@ export abstract class Class_LinkElement
     this._target.addInputLink(this) // add link to corresponding IO
 
     this.drawElements()
-  }
-
-  public setPosXYStartingPoint(x: number, y: number) {
-    this._display.position_starting.x = x
-    this._display.position_starting.y = y
-    this.draw()
-  }
-
-  public setPosXYEndingPoint(x: number, y: number) {
-    this._display.position_ending.x = x
-    this._display.position_ending.y = y
-    this.draw()
   }
 
   public increaseDisplayOrder() {
@@ -1098,7 +1097,11 @@ export abstract class Class_LinkElement
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
-    if (this.drawing_area.show_structure !== 'structure' && this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
+    if (
+      (this.drawing_area.show_structure !== 'structure') &&
+      (this.value_label_is_visible) &&
+      ((this.data_value ?? 0) >= this.drawing_area.filter_label)
+    ) {
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
@@ -1120,8 +1123,6 @@ export abstract class Class_LinkElement
               (this.value_label_color === 'color') ?
                 this.shape_color :
                 this.value_label_color)
-
-
 
           // Compute text position
           if (this.value_label_on_path) {
@@ -1151,14 +1152,12 @@ export abstract class Class_LinkElement
                 .on('end', ev => this.dragTextPathEnd(ev))
               )
             }
-          } else {
-
+          }
+          else {
             this.updateTextXYPosition()
-
             d3_text_selection?.text(label_to_display)
               .attr('spacing', 'exact')
               .attr('method', 'align')
-
             if (!this.drawing_area.static) {
               d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
                 .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
@@ -1168,7 +1167,6 @@ export abstract class Class_LinkElement
               )
             }
           }
-
         }
       }
     }
@@ -2448,7 +2446,7 @@ export abstract class Class_LinkElement
   * @memberof Class_Node
   */
   public set style(_: Class_LinkStyle) {
-    if(!_) return
+    if (!_) return
     this._display.style.removeReference(this)
     this._display.style = _
     _.addReference(this)
@@ -3730,7 +3728,6 @@ export class Class_LinkStyle extends Class_LinkAttribute {
         ref.setDomainLocalScale(ref.local_link_scale)
         ref.source.draw()
         ref.target.draw()
-
       })
   }
 

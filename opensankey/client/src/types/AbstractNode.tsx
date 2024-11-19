@@ -54,6 +54,8 @@ export abstract class Class_AbstractNodeElement
   public abstract addOutputLink(_: Type_AbstractLinkElement): void
   public abstract deleteInputLink(_: Type_AbstractLinkElement): void
   public abstract deleteOutputLink(_: Type_AbstractLinkElement): void
+  public abstract getOutputLinkStartingPoint(_: Type_AbstractLinkElement): {x: number, y: number} | undefined
+  public abstract getInputLinkEndingPoint(_: Type_AbstractLinkElement): {x: number, y: number} | undefined
   public abstract swapInputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
   public abstract swapOutputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
   public abstract addNewDimensionAsParent(_: Class_AbstractNodeDimension): void
