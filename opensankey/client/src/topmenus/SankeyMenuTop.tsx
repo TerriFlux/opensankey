@@ -463,6 +463,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                     // Clear datas & apply read datas
                     new_data.fromJSON(JSON_data as Type_JSON)
                     new_data.drawing_area.areaAutoFit()
+                    new_data.drawing_area.setToModeEdition(false) // Go to mode selection after opening a file
                   }
                 })()
                 reader.readAsText(files[0])
