@@ -570,10 +570,10 @@ export const UploadExemple: FType_UploadExemple = (
         // Clear datas & apply read datas
         new_data.fromJSON(JSON_data as Type_JSON)
         new_data.drawing_area.ArrangeTrade(false)
+        new_data.drawing_area.setToModeEdition(false)
       }
     })
   })
-  new_data.drawing_area.setToModeEdition(false)
 }
 
 
