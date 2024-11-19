@@ -25,12 +25,11 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
 ) => {
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t,preference_menu_all_item,checkbox_refs } = new_data
 
   // Component updater ------------------------------------------------------------------
   const [, setUpdate] = useState(0)
-  const menus = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
-  const checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
+  const menus = preference_menu_all_item
   menus.forEach(menu => checkbox_refs[menu] = useRef<HTMLInputElement>(null))
 
   const update_checkboxes = (menu_to_show: string[]) => {
@@ -131,7 +130,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
           <Button variant='menuconfigpanel_option_button_right'
             onClick={() => {
               sessionStorage.setItem('modepref', 'expert')
-              update_checkboxes(['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis'])
+              update_checkboxes(preference_menu_all_item)
             }}
           >
             Mode Expert
