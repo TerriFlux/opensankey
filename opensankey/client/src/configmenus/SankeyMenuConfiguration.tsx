@@ -276,6 +276,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
       }}
       onKeyDown={e => {
         if (e.key === 'Enter') {
+          e.preventDefault()
           ref_input.current?.blur()
         }
       }}
