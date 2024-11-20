@@ -5,7 +5,7 @@
 // ==================================================================================================
 
 // External imports
-import { Dispatch, MutableRefObject, SetStateAction, useRef } from 'react'
+import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -101,6 +101,18 @@ export abstract class Class_ApplicationData
    */
   protected _logo: string // path to logo
 
+  /**
+   * All possible attr to update in copyFrom  
+   *
+   * @protected
+   * @type {string[]}
+   * @memberof Class_ApplicationData
+   */
+  protected _transform_layout_all_attr: string[] = ['addNode', 'addFlux', 'removeNode', 'removeFlux', 'posNode', 'Values', 'attrNode', 'attrFlux', 'tagNode', 'tagFlux', 'tagData', 'tagLevel', 'attrDrawingArea']
+
+  // All item selectable in SankeyMenuPreference 
+  protected _preference_menu_all_item: string[] = ['MEP', 'EN', 'EF', 'ED']
+
   // PRIVATE ATTRIBUTES =================================================================
 
   // General attributes for the application
@@ -116,14 +128,8 @@ export abstract class Class_ApplicationData
   private _node_label_separator = '-'
   private _node_label_separator_part: 'before' | 'after' = 'before'
 
-  /**
-   * All possible attr to update in copyFrom  
-   *
-   * @protected
-   * @type {string[]}
-   * @memberof Class_ApplicationData
-   */
-  protected _transform_layout_all_attr: string[] = ['addNode','addFlux','removeNode','removeFlux','posNode','Values','attrNode','attrFlux','tagNode','tagFlux','tagData','tagLevel','attrDrawingArea']
+  // Ref to checkbox of displayed menu in SankeyMenuPreference
+  private _checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -264,8 +270,8 @@ export abstract class Class_ApplicationData
     // Reset everything
     this.reset()
     // Set node label separator attribute from json
-    this._node_label_separator = getStringFromJSON(json_object,'node_label_separator',this._node_label_separator)
-    this._node_label_separator_part = getStringFromJSON(json_object,'node_label_separator_part',this._node_label_separator_part) as 'before'|'after'
+    this._node_label_separator = getStringFromJSON(json_object, 'node_label_separator', this._node_label_separator)
+    this._node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', this._node_label_separator_part) as 'before' | 'after'
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
   }
@@ -477,6 +483,8 @@ export abstract class Class_ApplicationData
 
   public get processFunction(): FType_ProcessFunctions { return this._processFunction }
 
-  public get transform_layout_all_attr(): string[] {return this._transform_layout_all_attr}
+  public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
+  public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
+  public get preference_menu_all_item() { return this._preference_menu_all_item }
 }
 

@@ -500,11 +500,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   if (node_styles_dict['NodeProductStyle']) {
                     node_styles_dict['NodeProductStyle'].position.dy = +evt
                   }
-                  // value={new_data.drawing_area.vertical_spacing}
-                  // onChange={evt => {
-                  //   new_data.drawing_area.vertical_spacing = +evt
-                  //   menu_configuration.updateComponentApplyLayout()
-                  //}
+                  menu_configuration.updateComponentApplyLayout()
                 }}>
                 <NumberInputField />
                 <NumberInputStepper>
@@ -533,7 +529,6 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
                     .forEach(style => style.position.type = 'absolute')
                 }
-                //applicationData.set_data(JSON.parse(JSON.stringify(data)))
               }}
             >
               <OSTooltip label={t('MEP.tooltips.parametricMode')}>
@@ -555,7 +550,6 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
                     .forEach(style => style.position.type = 'absolute')
                 }
-                //applicationData.set_data(JSON.parse(JSON.stringify(data)))
               }}
             >
               <OSTooltip label={t('MEP.tooltips.absoluteMode')}>

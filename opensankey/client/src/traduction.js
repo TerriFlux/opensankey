@@ -778,6 +778,12 @@ export const open_resources = {
       Avancé: 'Advanced',
       separator_interval: ',',
       sep_decimal: '.',
+      toast_loading_waiting:'Processing',
+      toast_loading_waiting_desc:'Please wait',
+      toast_loading_success:'Finished',
+      toast_loading_success_desc:'',
+      toast_loading_failed:'Failed',
+      toast_loading_failed_desc:'',
 
 
     }
@@ -1568,6 +1574,12 @@ export const open_resources = {
       Avancé: 'Avancé',
       separator_interval: ';',
       sep_decimal: ',',
+      toast_loading_waiting: 'Traitement en cours',
+      toast_loading_waiting_desc: 'Veuillez patienter',
+      toast_loading_success: 'Terminé',
+      toast_loading_success_desc: '',
+      toast_loading_failed: 'Échec',
+      toast_loading_failed_desc: '',
     }
   }
 }

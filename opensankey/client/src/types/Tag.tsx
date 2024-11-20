@@ -1890,6 +1890,46 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     }
   }
 
+  /**
+   * Function to add sibling to current group and referenced group, 
+   * because they mutually interact at some mechanic 
+   *
+   * @param {Class_LevelTagGroup} _
+   * @memberof Class_LevelTagGroup
+   */
+  public addSibling(_: Class_LevelTagGroup) {
+    // Add antagonist grp id to sibling
+    if (!this._siblings.includes(_.id)) {
+      this._siblings.push(_.id)
+    }
+
+    // Add this grp id to sibling antagonist list
+    if (!_._siblings.includes(this.id)) {
+      _._siblings.push(this.id)
+    }
+  }
+
+  /**
+   * Function to remove sibling to current group and referenced group, 
+   * because they mutually interact at some mechanic 
+   *
+   * @param {Class_LevelTagGroup} _
+   * @memberof Class_LevelTagGroup
+   */
+  public removeSibling(_: Class_LevelTagGroup) {
+    // remove antagonist grp id from sibling
+    if (this._siblings.includes(_.id)) {
+      const idx = this._siblings.indexOf(_.id)
+      this._siblings.splice(idx, 1)
+    }
+
+    // remove this grp id from sibling antagonist list
+    if (_._siblings.includes(this.id)) {
+      const idx = _._siblings.indexOf(this.id)
+      _._siblings.splice(idx, 1)
+    }
+  }
+
   // PROTECTED METHODS ==================================================================
 
   protected createTag(
