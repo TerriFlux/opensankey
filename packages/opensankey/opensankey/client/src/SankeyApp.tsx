@@ -248,30 +248,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
           menus={sankey_menus}
           cardsTemplate={additionalMenus.cards_template}
           external_modal={[
-            <React.Fragment key={'modale_style_link'}>
-              <SankeyModalStyleLink
-                new_data={new_data}
-                additionalMenus={additionalMenus}
-              />
-            </React.Fragment>,
-            <React.Fragment key={'modale_style_node'}>
-              <SankeyModalStyleNode
-                new_data={new_data}
-                node_attribute_tab={
-                  <OpenSankeyConfigurationNodesAttributes
-                    new_data={new_data}
-                    menu_for_style={true}
-                    additional_menus={additionalMenus}
-                  />
-                }
-              />
-            </React.Fragment>,
-            <React.Fragment key={'modale_preference'}>
-              <ModalPreference
-                new_data={new_data}
-                additionalMenus={additionalMenus}
-              />
-            </React.Fragment>,
             <></>
           ]}
           reinitialization={reinitialization}
@@ -306,6 +282,30 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     <AggregationModal
       new_data={new_data}
     />
+    <React.Fragment key={'modale_style_link'}>
+      <SankeyModalStyleLink
+        new_data={new_data}
+        additionalMenus={additionalMenus}
+      />
+    </React.Fragment>
+    <React.Fragment key={'modale_style_node'}>
+      <SankeyModalStyleNode
+        new_data={new_data}
+        node_attribute_tab={
+          <OpenSankeyConfigurationNodesAttributes
+            new_data={new_data}
+            menu_for_style={true}
+            additional_menus={additionalMenus}
+          />
+        }
+      />
+    </React.Fragment>
+    <React.Fragment key={'modale_preference'}>
+      <ModalPreference
+        new_data={new_data}
+        additionalMenus={additionalMenus}
+      />
+    </React.Fragment>
   </div>
 
 }
