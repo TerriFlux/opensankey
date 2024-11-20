@@ -1434,9 +1434,9 @@ export abstract class Class_NodeElement
             this.d3_selection.attr('transform', 'translate(0,0)')
             return
           }
-          this._display.position.x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
-          this._display.position.y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
+          const x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
+          const y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
+          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
         }
         else if (this.hasOutputLinks()) {
           // Node is import
@@ -1447,9 +1447,9 @@ export abstract class Class_NodeElement
             this.d3_selection.attr('transform', 'translate(0,0)')
             return
           }
-          this._display.position.x = target_node.position_x + this.position_relative_dx
-          this._display.position.y = target_node.position_y + this.position_relative_dy
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
+          const x = target_node.position_x + this.position_relative_dx
+          const y = target_node.position_y + this.position_relative_dy
+          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
         }
       } else if (this.position_type === 'parametric' && !this._drag) {
         const process_nodes = this.sankey.visible_nodes_list
@@ -1462,15 +1462,15 @@ export abstract class Class_NodeElement
           const nodeAbove = same_u[same_u.indexOf(this) - 1]
           if (nodeAbove) {
             this._display.position.y = nodeAbove.position_y
-              + nodeAbove.getShapeHeightToUse()
-              + this.position_dy
-          } else {
-            this._display.position.y = 200
-          }
-          if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
-            const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
-            this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
-            this.drawing_area.draw()
+            + nodeAbove.getShapeHeightToUse()
+            + this.position_dy
+          } /*else {
+            this._display.position.y = 50
+          }*/
+          if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y+200) {
+            const shift = 100 +this.position_y - firstNonEchangeNodeBelow.position_y
+            this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag) ).forEach(n=>n.shiftVertically(shift))
+            //this.drawing_area.draw()
           }
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         } else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
@@ -1486,7 +1486,7 @@ export abstract class Class_NodeElement
             this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
               max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
             })
-            this._display.position.y = max_vertical_offset + 200
+            this._display.position.y = max_vertical_offset+100
           }
           this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
         } else {

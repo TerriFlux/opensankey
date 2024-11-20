@@ -181,9 +181,9 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
   const position_type = menu_for_style ?
     ((elements[0] as  Class_NodeStyle)?.position.type ?? default_position_type) :
     ((elements[0] as Type_GenericNodeElementOS)?.position_type ?? default_position_type)
-  const position_dx = menu_for_style ?
-    ((elements[0] as  Class_NodeStyle)?.position.dx ?? default_dx) :
-    ((elements[0] as  Type_GenericNodeElementOS)?.display.position.dx ?? default_dx)
+  const position_u = menu_for_style ?
+    ((elements[0] as  Class_NodeStyle)?.position.dx ?? 0) :
+    ((elements[0] as  Type_GenericNodeElementOS)?.display.position.u ?? 0)
   const position_dy = menu_for_style ?
     ((elements[0] as  Class_NodeStyle)?.position.dy ?? default_dy) :
     ((elements[0] as  Type_GenericNodeElementOS)?.display.position.dy ?? default_dy)
@@ -256,7 +256,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
   ref_set_number_inputs[4].current(String(name_label_box_width))
   ref_set_number_inputs[5].current(String(name_label_horiz_shift))
   ref_set_number_inputs[6].current(String(name_label_vert_shift))
-  ref_set_number_inputs[7].current(String(position_dx))
+  ref_set_number_inputs[7].current(String(position_u))
   ref_set_number_inputs[8].current(String(position_dy))
   ref_set_number_inputs[9].current(String(position_relative_dx))
   ref_set_number_inputs[10].current(String(position_relative_dy))
@@ -650,7 +650,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         </Box>
 
         <ConfigMenuNumberInput
-          default_value={position_dx}
+          default_value={position_u}
           ref_to_set_value={ref_set_number_inputs[7]}
           menu_for_style={menu_for_style}
           function_on_blur={() => {
