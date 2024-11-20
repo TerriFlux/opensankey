@@ -55,6 +55,9 @@ export abstract class Class_ApplicationDataPlus
   // Static path
   public override static_path: string = 'static/sankeyanimation'
 
+  // Override all item selectable in SankeyMenuPreference 
+  protected _preference_menu_all_item: string[] = [...this.preference_menu_all_item, 'LL', 'Vis']
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   /**
