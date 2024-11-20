@@ -459,23 +459,23 @@ export abstract class Class_LinkElement
   protected _copyFrom(_: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
     super._copyFrom(_)
     // Source relations
-    if (this._source.id !== _._source.id) {
-      let source = this._display.sankey.nodes_dict[_._source.id] as Type_GenericNodeElement
-      if (source === undefined) {
-        source = this._display.sankey.addNewNode(_._source.id, _._source.name) as Type_GenericNodeElement
-        // source.copyFrom(_._source)
-      }
-      this.source = source
-    }
-    // target relations
-    if (this._target.id !== _._target.id) {
-      let target = this._display.sankey.nodes_dict[_._target.id] as Type_GenericNodeElement
-      if (target === undefined) {
-        target = this._display.sankey.addNewNode(_._target.id, _._target.name) as Type_GenericNodeElement
-        // target.copyFrom(_._target)
-      }
-      this.target = target
-    }
+    // if (this._source.id !== _._source.id) {
+    //   let source = this._display.sankey.nodes_dict[_._source.id] as Type_GenericNodeElement
+    //   if (source === undefined) {
+    //     source = this._display.sankey.addNewNode(_._source.id, _._source.name) as Type_GenericNodeElement
+    //     // source.copyFrom(_._source)
+    //   }
+    //   this.source = source
+    // }
+    // // target relations
+    // if (this._target.id !== _._target.id) {
+    //   let target = this._display.sankey.nodes_dict[_._target.id] as Type_GenericNodeElement
+    //   if (target === undefined) {
+    //     target = this._display.sankey.addNewNode(_._target.id, _._target.name) as Type_GenericNodeElement
+    //     // target.copyFrom(_._target)
+    //   }
+    //   this.target = target
+    // }
     // Update style
     if (this._display.style.id !== _._display.style.id) {
       let style = this._display.sankey.link_styles_dict[_._display.style.id] as Class_LinkStyle
