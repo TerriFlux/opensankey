@@ -469,7 +469,6 @@ export abstract class Class_DrawingArea
     this.sankey.fromJSON(json_object, match_and_update)
   }
 
-
   // ABSTRACT METHODS ==================================================================
 
   protected abstract createNewSankey(id?: string): Type_GenericSankey
