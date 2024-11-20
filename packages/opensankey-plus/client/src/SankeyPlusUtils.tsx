@@ -1,5 +1,5 @@
 // External libs
-import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
+import React, { ChangeEvent, FunctionComponent, MutableRefObject, RefObject, useRef, useState } from 'react'
 import { FaFileImport } from 'react-icons/fa'
 import { Box, Checkbox, Button, Input, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, PopoverContent, NumberInput, NumberInputField, Popover, PopoverBody, PopoverCloseButton, PopoverHeader, PopoverTrigger, Slider, SliderFilledTrack, SliderThumb, SliderTrack, Text, Accordion, PopoverArrow, Select } from '@chakra-ui/react'
 
@@ -28,6 +28,7 @@ import { AddAllDropDownFlux, AddAllDropDownNode, DataTagSelector } from './deps/
 import { default_container_content } from './types/FreeLabel'
 import { OSPData, ViewType } from './types/LegacyTypes'
 import { GetOldDataFromView } from './SankeyPlusConvert'
+import { ConfigMenuNumberInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
 
 export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
@@ -242,9 +243,20 @@ export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag
 export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisualFilter> = ({ new_data_plus }) => {
   const { t } = new_data_plus
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  const max_link_value = Math.max(0, ...new_data_plus.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue())/(l.local_link_scale??1))) + 1
+  const max_link_value = Math.max(0, ...new_data_plus.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.local_link_scale ?? 1))) + 1
   const [, setCount] = useState(0)
   new_data_plus.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
+
+  // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
+  const ref: RefObject<HTMLButtonElement> = useRef(null)
+
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
+  for (let i = 0; i < 2; i++)
+    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
+
+  ref_set_number_inputs[0].current(String(new_data_plus.drawing_area.filter_link_value))
+  ref_set_number_inputs[1].current(String(new_data_plus.drawing_area.filter_label))
+
   {/* Popover to display the link-filter */ }
   // ===================Create the popover diplayed near the buttons========================
   // Checkbox that adjust the label position according to the link stroke width
@@ -261,6 +273,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
       <Button
         variant='toolbar_button_3'
         id='btn_open_popover_link_value_filter'
+        ref={ref}
       >
         <FontAwesomeIcon icon={faSliders} />
       </Button>
@@ -288,11 +301,11 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
             <Slider
               min={0}
               max={max_link_value}
-              defaultValue={new_data_plus.drawing_area.filter_link_value}
+              value={new_data_plus.drawing_area.filter_link_value}
               onChange={evt => {
                 new_data_plus.drawing_area.filter_link_value = +evt
                 setCount(a => a + 1)
-                new_data_plus.drawing_area.sankey.visible_links_list.forEach(link=>{
+                new_data_plus.drawing_area.sankey.visible_links_list.forEach(link => {
                   link.draw()
                   link.target.drawLinksArrow()
                 })
@@ -304,29 +317,26 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
               <SliderThumb />
             </Slider>
 
-            <NumberInput
-              allowMouseWheel
-              min={0}
-              max={max_link_value}
-              value={new_data_plus.drawing_area.filter_link_value}
-              onChange={(evt) => {
-                let tmp = +evt
-                if (tmp > max_link_value) {
-                  tmp = max_link_value
+            <ConfigMenuNumberInput
+              ref_to_set_value={ref_set_number_inputs[0]}
+              default_value={new_data_plus.drawing_area.filter_link_value}
+              function_on_blur={(value) => {
+                if (value && value > max_link_value) {
+                  value = max_link_value
                 }
-                new_data_plus.drawing_area.filter_link_value = tmp
+                if (value) {
+                  new_data_plus.drawing_area.filter_link_value = value
                 setCount(a => a + 1)
-
-              }}
-              onBlur={() => {
-                // new_data_plus.drawing_area.sankey.links_list.forEach(link => link.draw()) // go through all link to undraw those who don't pass filter
-                // new_data_plus.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 new_data_plus.drawing_area.sankey.draw()
+                }
 
+                ref.current?.focus() //avoid closure of popover 
               }}
-            >
-              <NumberInputField />
-            </NumberInput>
+              minimum_value={0}
+              maximum_value={max_link_value}
+              stepper={false}
+            />
+
           </Box>
 
           <Box
@@ -350,24 +360,26 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
               </SliderTrack>
               <SliderThumb />
             </Slider>
-
-            <NumberInput
-              allowMouseWheel
-              min={0}
-              max={max_link_value}
-              value={new_data_plus.drawing_area.filter_label}
-              onChange={(evt) => {
-                let tmp = +evt
-                if (tmp > max_link_value) {
-                  tmp = max_link_value
+            <ConfigMenuNumberInput
+              ref_to_set_value={ref_set_number_inputs[1]}
+              default_value={new_data_plus.drawing_area.filter_label}
+              function_on_blur={(value) => {
+                
+                if (value) {
+                  if (value > max_link_value) {
+                    value = max_link_value
                 }
-                new_data_plus.drawing_area.filter_label = tmp
+                  new_data_plus.drawing_area.filter_label = value
                 setCount(a => a + 1)
                 new_data_plus.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
+                }
+
+                ref.current?.focus() //avoid closure of popover 
               }}
-            >
-              <NumberInputField />
-            </NumberInput>
+              minimum_value={0}
+              maximum_value={max_link_value}
+              stepper={false}
+            />
           </Box>
           {/* {additional_link_visual_filter_content} */}
         </Box>
