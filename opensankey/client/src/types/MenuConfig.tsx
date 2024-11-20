@@ -87,6 +87,7 @@ export class Class_MenuConfig {
 
   // Update component Menu
   private _ref_to_menu_updater: MutableRefObject<() => void>
+  private _ref_to_submenu_updater: MutableRefObject<() => void>
 
   // Ref to state if configuration is opened
   private _ref_menu_opened: MutableRefObject<boolean>
@@ -195,7 +196,7 @@ export class Class_MenuConfig {
   =========================================== */
 
   // Update AddSimpleLevelDropDown
-  private _ref_to_leveltag_filter_updater: MutableRefObject<() => void>
+  private _ref_to_toolbar_leveltag_filter_updater: MutableRefObject<() => void>
 
   // Update AddAllDropDownNode
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
@@ -251,6 +252,7 @@ export class Class_MenuConfig {
     // Init menu component updater ------------------------------------------------------
 
     this._ref_to_menu_updater = useRef(() => null)
+    this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
     this._ref_menu_opened = useRef(false)
     this._ref_lauchToast = useRef<() => void>(() => null)
@@ -295,7 +297,7 @@ export class Class_MenuConfig {
 
     // Init filtering components updater ------------------------------------------------
 
-    this._ref_to_leveltag_filter_updater = useRef(() => null)
+    this._ref_to_toolbar_leveltag_filter_updater = useRef(() => null)
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
@@ -696,6 +698,10 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllMenuComponents() {
+    this._ref_to_menu_updater.current()
+    // TDODO : to have an updater in OpenSankeyMenus so if we cahnge language it update language of submenus,
+    //  for now OpenSankeyMenus is a function so the updater crash the app because the re-render is out of the correct scope 
+    // this._ref_to_submenu_updater.current()
     this.updateMenuConfigComponent()
     this.updateComponentRelatedToLayoutApparence()
     this.updateAllComponentsRelatedToNodes()
@@ -789,12 +795,13 @@ export class Class_MenuConfig {
   }
 
   public updateAllComponentsRelatedToLevelTags() {
-    this._ref_to_leveltag_filter_updater.current()
+    this._ref_to_toolbar_leveltag_filter_updater.current()
+    this._ref_to_menu_config_tags_updater['level_taggs'].current()
   }
 
   public updateAllComponentsRelatedToNodeTags() {
     this._ref_to_nodetag_filter_updater.current()
-    this._ref_to_leveltag_filter_updater.current()
+    this._ref_to_toolbar_leveltag_filter_updater.current()
     this.updateComponentRelatedToNodesTags()
     this._ref_to_menu_config_tags_updater['node_taggs'].current()
   }
@@ -819,6 +826,8 @@ export class Class_MenuConfig {
       this.updateAllComponentsRelatedToFluxTags()
     else if (type === 'node_taggs')
       this.updateAllComponentsRelatedToNodeTags()
+    else if (type === 'level_taggs')
+      this.updateAllComponentsRelatedToLevelTags()
     else
       this.updateAllComponentsRelatedToLevelTags()
   }
@@ -911,6 +920,10 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_updater
+  }
+
+  public get ref_to_submenu_updater(): MutableRefObject<() => void> {
+    return this._ref_to_submenu_updater
   }
 
   public get ref_menu_opened(): MutableRefObject<boolean> {
@@ -1068,8 +1081,8 @@ export class Class_MenuConfig {
 
   // Filtering components ---------------------------------------------------------------
 
-  public get ref_to_leveltag_filter_updater(): MutableRefObject<() => void> {
-    return this._ref_to_leveltag_filter_updater
+  public get ref_to_toolbar_leveltag_filter_updater(): MutableRefObject<() => void> {
+    return this._ref_to_toolbar_leveltag_filter_updater
   }
 
   public get ref_to_nodetag_filter_updater(): MutableRefObject<() => void> {

@@ -365,7 +365,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]] ?? id)
+          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]?? id] )
         })
     }
 
