@@ -590,7 +590,7 @@ export const ToolBarDataTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
 
 export const ToolBarLevelFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
   const [, setCount] = useState(0)
-  new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
+  //new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
 
   const level_filter = Object.entries(new_data_plus.drawing_area.sankey.level_taggs_dict).length > 0
   const only_primary = new_data_plus.drawing_area.sankey.level_taggs_list.length == 1 && new_data_plus.drawing_area.sankey.level_taggs_list[0].name == 'Primaire'
