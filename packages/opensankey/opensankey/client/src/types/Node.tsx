@@ -740,6 +740,13 @@ export abstract class Class_NodeElement
   protected _draw() {
     // Heritance of draw function
     super._draw()
+    // Draw label
+    this._drawNameLabel()
+    this._drawValueLabel()
+  }
+
+  protected _initDraw() {
+    super._initDraw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_nodes')
     // Apply styles
@@ -747,13 +754,26 @@ export abstract class Class_NodeElement
     this.d3_selection?.style('font-family', this.name_label_font_family)
     // Init <g> containing shape elements
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
-    // Draw label
-    this._drawNameLabel()
-    this._drawValueLabel()
+  }
+
+  public unDraw() {
+    super.unDraw()
+    this._links_order
+      .forEach(link => {
+        if (link.source === this) this._output_links_handle[link.id].draw()
+        if (link.target === this) this._input_links_handle[link.id].draw()
+      })
   }
 
   public drawAsSelected() {
-    this.draw()
+    // Redraw shape
+    this.drawShape()
+    // Redraw handles
+    this.links_order_visible
+      .forEach(link => {
+        if (link.source === this) this._output_links_handle[link.id].draw()
+        if (link.target === this) this._input_links_handle[link.id].draw()
+      })
   }
 
   // Styles / attributes related methods ------------------------------------------------
@@ -1243,9 +1263,12 @@ export abstract class Class_NodeElement
   public getInputLinkEndingPoint(link: Type_GenericLinkElement) {
     if (this._input_links[link.id] !== undefined) {
       if (!this._input_links_ending_point[link.id]) {
-        this.updateLinksPositions()
+        this.drawLinks()
+        return undefined
       }
-      return this._input_links_ending_point[link.id]
+      else {
+        return this._input_links_ending_point[link.id]
+      }
     }
     return undefined
   }
@@ -1253,9 +1276,12 @@ export abstract class Class_NodeElement
   public getOutputLinkStartingPoint(link: Type_GenericLinkElement) {
     if (this._output_links[link.id] !== undefined) {
       if (!this._output_links_starting_point[link.id]) {
-        this.updateLinksPositions()
+        this.drawLinks()
+        return undefined
       }
-      return this._output_links_starting_point[link.id]
+      else {
+        return this._output_links_starting_point[link.id]
+      }
     }
     return undefined
   }
@@ -1378,9 +1404,6 @@ export abstract class Class_NodeElement
         ) &&
         (!this._drag)
       ) {
-        // Default positions
-        const x = this.position_x
-        const y = this.position_y
         // Apply relative position
         if (this.position_type === 'relative') {
           if (this.hasInputLinks()) {
@@ -1461,7 +1484,10 @@ export abstract class Class_NodeElement
       // Apply selected coordinates
       super._applyPosition()
     }
-    // Update also position for links
+    // // Reset all saved positions for links
+    // this._input_links_ending_point = {}
+    // this._output_links_starting_point = {}
+    // Redraw links
     this._drawLinks()
   }
 
@@ -2170,9 +2196,12 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private _drawLinks() {
-    this.updateLinksPositions()  // Links positions can be modified by link's changes
+    // Links positions are modified by nodes's position changes
+    this.updateLinksPositions()
+    // Redraw arrows -> affected if links are added or removed
     this._drawLinksArrow()
-    this._drawShape()  // Node shape can be modified by link's changes
+    // Node shape -> affected if links are added or removed, or if links values change
+    this._drawShape()
   }
 
   /**
@@ -2183,14 +2212,13 @@ export abstract class Class_NodeElement
    */
   private _drawLinksArrow() {
 
-    const list_link_to_add_arrow = this.input_links_list.map(link => {
-      link.d3_selection?.select('.link_arrow').remove()
-      return link
-    }).filter(link => {
-      return link.is_visible
-        && link.shape_is_arrow
-        && link.d3_selection !== undefined
-    })
+    this.d3_selection?.selectAll('.link_arrow').remove()
+    const list_link_to_add_arrow = this.input_links_list
+      .filter(link => {
+        return link.is_visible
+          && link.shape_is_arrow
+          && link.d3_selection !== undefined
+      })
       .sort((l1, l2) => this._links_order.indexOf(l1) - this._links_order.indexOf(l2)) //sort list so output array follow node linksOrder
 
     let cum_v_left = 0
@@ -2207,132 +2235,135 @@ export abstract class Class_NodeElement
     const sumLinkTop = this.getSumOfLinksThickness('top')
     const sumLinkBottom = this.getSumOfLinksThickness('bottom')
 
-    list_link_to_add_arrow.forEach(link => {
+    list_link_to_add_arrow
+      .forEach(link => {
+        // Some variable parameters for arrow
+        const arrow_length = link.shape_arrow_size
+        const link_color = link.getPathColorToUse()
+        let node_arrow_shift = 0
+        let arrows_adjustment = 0
 
-      // Some variable parameters for arrow
-      const arrow_length = link.shape_arrow_size
-      const link_color = link.getPathColorToUse()
-      let node_arrow_shift = 0
-      let arrows_adjustment = 0
+        // Get side of target node from which arrow as to be drawn
+        const link_arrow_side_right = link.target_side == 'right'
+        const link_arrow_side_left = link.target_side == 'left'
+        const link_arrow_side_top = link.target_side == 'top'
+        const link_arrow_side_bottom = link.target_side == 'bottom'
 
-      // Get side of target node from which arrow as to be drawn
-      const link_arrow_side_right = link.target_side == 'right'
-      const link_arrow_side_left = link.target_side == 'left'
-      const link_arrow_side_top = link.target_side == 'top'
-      const link_arrow_side_bottom = link.target_side == 'bottom'
+        const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
 
-      const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
+        // Thicknen of the link influence arrow size
+        const link_value = link.thickness
 
-      // Thicknen of the link influence arrow size
-      const link_value = link.thickness
+        // If the node target is in arrow shape then we have to modify some variable beforehand
+        if (node_shape === 'arrow') {
+          const node_angle_direction = this.shape_arrow_angle_direction
+          const node_angle_factor = this.shape_arrow_angle_factor
+          if (link_direction_same_as_node_arrow) {
+            // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
+            let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+            switch (node_angle_direction) {
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
+            }
+            node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
-      // If the node target is in arrow shape then we have to modify some variable beforehand
-      if (node_shape === 'arrow') {
-        const node_angle_direction = this.shape_arrow_angle_direction
-        const node_angle_factor = this.shape_arrow_angle_factor
-        if (link_direction_same_as_node_arrow) {
-          // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
-          let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-          switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+            let node_face_size2 = sumLinkLeft
+            switch (node_angle_direction) {
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
+            }
+            arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
+            arrows_adjustment = node_arrow_shift - arrows_adjustment
           }
-          node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
-
-          let node_face_size2 = sumLinkLeft
-          switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
-          }
-          arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
-          arrows_adjustment = node_arrow_shift - arrows_adjustment
         }
-      }
 
-      link.d3_selection?.append('path')
-        .attr('class', 'link_arrow')
-        .attr('d', () => {
+        this.d3_selection?.append('path')
+          .attr('class', 'link_arrow')
+          .attr('d', () => {
 
-          let xt: number = 0 // x coord where link path end
-          let yt: number = 0 // y coord where link path end
-          let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
-          let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
+            let xt: number = 0 // x coord where link path end
+            let yt: number = 0 // y coord where link path end
+            let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
+            let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
 
-          if (link_arrow_side_left) {
-            xt = +this.position_x
-            yt = +this.position_y + node_height / 2
-            current_cumul_of_side = cum_v_left
-            total_cumul_of_side = sumLinkLeft
+            if (link_arrow_side_left) {
+              xt = +0
+              yt = +0 + node_height / 2
+              current_cumul_of_side = cum_v_left
+              total_cumul_of_side = sumLinkLeft
+            }
+            else if (link_arrow_side_right) {
+              xt = +0 + node_width
+              yt = +0 + node_height / 2
+              current_cumul_of_side = cum_v_right
+              total_cumul_of_side = sumLinkRight
+            }
+            else if (link_arrow_side_top) {
+              xt = +0 + node_width / 2
+              yt = +0
+              current_cumul_of_side = cum_h_top
+              total_cumul_of_side = sumLinkTop
 
-          } else if (link_arrow_side_right) {
-            xt = +this.position_x + node_width
-            yt = +this.position_y + node_height / 2
-            current_cumul_of_side = cum_v_right
-            total_cumul_of_side = sumLinkRight
+            }
+            else if (link_arrow_side_bottom) {
+              xt = +0 + node_width / 2
+              yt = +0 + node_height
+              current_cumul_of_side = cum_h_bottom
+              total_cumul_of_side = sumLinkBottom
+            }
 
-          } else if (link_arrow_side_top) {
-            xt = +this.position_x + node_width / 2
-            yt = +this.position_y
-            current_cumul_of_side = cum_h_top
-            total_cumul_of_side = sumLinkTop
+            const p5 = [xt, yt] // Starting point of arrow
 
-          } else if (link_arrow_side_bottom) {
-            xt = +this.position_x + node_width / 2
-            yt = +this.position_y + node_height
-            current_cumul_of_side = cum_h_bottom
-            total_cumul_of_side = sumLinkBottom
-          }
+            // Some variables parameters influencing arrow shape processing
+            const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
+            const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-          const p5 = [xt, yt] // Starting point of arrow
+            return SankeyShapes.draw_arrow_part(
+              total_cumul_of_side / 2,
+              p5,
+              +link_value,
+              current_cumul_of_side,
+              is_horizontal_at_target,
+              is_revert,
+              arrow_length,
+              node_arrow_shift,
+              arrows_adjustment,
+              node_shape === 'arrow'
+            )
+          })
+          .attr('fill', link_color)
+          .attr('fill-opacity', link.shape_opacity)
+          .attr('stroke', link_color)
+          .attr('stroke-width', 0.1)
 
-          // Some variables parameters influencing arrow shape processing
-          const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
-          const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
-
-          return SankeyShapes.draw_arrow_part(
-            total_cumul_of_side / 2,
-            p5,
-            +link_value,
-            current_cumul_of_side,
-            is_horizontal_at_target,
-            is_revert,
-            arrow_length,
-            node_arrow_shift,
-            arrows_adjustment,
-            node_shape === 'arrow'
-          )
-
-        })
-        .attr('fill', link_color)
-        .attr('fill-opacity', link.shape_opacity)
-        .attr('stroke', link_color)
-        .attr('stroke-width', 0.1)
-
-      // Increment side cumul of drawn arrow to influence next arrow starting position
-      if (link_arrow_side_left) {
-        cum_v_left += link_value
-      } else if (link_arrow_side_right) {
-        cum_v_right += link_value
-      } else if (link_arrow_side_top) {
-        cum_h_top += link_value
-      } else if (link_arrow_side_bottom) {
-        cum_h_bottom += link_value
-      }
-    })
+        // Increment side cumul of drawn arrow to influence next arrow starting position
+        if (link_arrow_side_left) {
+          cum_v_left += link_value
+        }
+        else if (link_arrow_side_right) {
+          cum_v_right += link_value
+        }
+        else if (link_arrow_side_top) {
+          cum_h_top += link_value
+        }
+        else if (link_arrow_side_bottom) {
+          cum_h_bottom += link_value
+        }
+      })
 
   }
 
@@ -2394,9 +2425,7 @@ export abstract class Class_NodeElement
    * @private
    * @memberof Class_NodeElement
    */
-  private updateLinksPositions(
-    draw_links: boolean = false
-  ) {
+  private updateLinksPositions() {
     // Reference position
     const x0 = this.position_x
     const y0 = this.position_y
@@ -2408,97 +2437,144 @@ export abstract class Class_NodeElement
     let dy_left = this.getLinksStartingPositionOffSet('left')
     let dx_top = this.getLinksStartingPositionOffSet('top')
     let dx_bottom = this.getLinksStartingPositionOffSet('bottom')
-    // Loop on all links
-    this.links_order_visible.forEach(link => {
-      const thickness = link.thickness
-      const handle_position_shift = 5
-      // Current node is link's source
-      if (link.source === this) {
-        let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
-        let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
-        if (link.source_side === 'right') {
-          link_starting_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
-          link_starting_handle_point = { x: (link_starting_point.x + handle_position_shift), y: link_starting_point.y }
-          dy_right = dy_right + thickness
+    // List of links to redraw
+    const link_to_redraw: Type_GenericLinkElement[] = [] // avoid recomputation
+    // Loop on all links to compute starting / ending position
+    this._links_order
+      .forEach(link => {
+        // Filter out and undraw unvisible links
+        if (!link.is_visible) {
+          link.unDraw()
+          if (link.source === this) {
+            delete this._output_links_starting_point[link.id]
+            this._output_links_handle[link.id].unDraw()
+          }
+          if (link.target === this) {
+            delete this._input_links_ending_point[link.id]
+            this._input_links_handle[link.id].unDraw()
+          }
+          return
         }
-        else if (link.source_side === 'left') {
-          link_starting_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
-          link_starting_handle_point = { x: (link_starting_point.x - handle_position_shift), y: link_starting_point.y }
-          dy_left = dy_left + thickness
+        // Get positioning parameters
+        const thickness = link.thickness
+        const handle_position_shift = 5
+        // Current node is link's source
+        if (link.source === this) {
+          let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
+          let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
+          if (link.source_side === 'right') {
+            link_starting_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+            link_starting_handle_point = { x: (link_starting_point.x + handle_position_shift), y: link_starting_point.y }
+            dy_right = dy_right + thickness
+          }
+          else if (link.source_side === 'left') {
+            link_starting_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+            link_starting_handle_point = { x: (link_starting_point.x - handle_position_shift), y: link_starting_point.y }
+            dy_left = dy_left + thickness
+          }
+          else if (link.source_side === 'top') {
+            link_starting_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+            link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y - handle_position_shift }
+            dx_top = dx_top + thickness
+          }
+          else {  // link.source_side === 'bottom'
+            link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+            link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
+            dx_bottom = dx_bottom + thickness
+          }
+          // Draw link if position has not been set before
+          let need_to_draw = (
+            (this._output_links_starting_point[link.id] === undefined) ||
+            (!link.d3_selection?.node())
+          )
+          if (!need_to_draw) {
+            // Or if diff is at least one pixel
+            const dx = this._output_links_starting_point[link.id].x - link_starting_point.x
+            const dy = this._output_links_starting_point[link.id].y - link_starting_point.y
+            need_to_draw = ((Math.abs(dx) >= 1) || (Math.abs(dy) >= 1))
+          }
+          // If one of these two conditions match, add link to redraw list
+          if (need_to_draw) {
+            // Wil redraw if it's the case
+            link_to_redraw.push(link)
+            // Save position
+            this._output_links_starting_point[link.id] = link_starting_point
+            // Update handle
+            if (this._output_links_handle[link.id] !== undefined) {
+              this._output_links_handle[link.id]
+                .setPosXY(
+                  link_starting_handle_point.x,
+                  link_starting_handle_point.y)
+              // Set a class to the handler corresponding to the source side of link, it is use for css cursor
+              this._output_links_handle[link.id]
+                .d3_selection?.attr('class', 'node_io ' + link.source_side)
+            }
+          }
         }
-        else if (link.source_side === 'top') {
-          link_starting_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
-          link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y - handle_position_shift }
-          dx_top = dx_top + thickness
+        // Or current node is link's target
+        if (link.target === this) {
+          let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
+          let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
+          if (link.target_side === 'right') {
+            link_ending_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+            link_ending_handle_point = { x: (link_ending_point.x + handle_position_shift), y: link_ending_point.y }
+            dy_right = dy_right + thickness
+          }
+          else if (link.target_side === 'left') {
+            link_ending_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+            link_ending_handle_point = { x: (link_ending_point.x - handle_position_shift), y: link_ending_point.y }
+            dy_left = dy_left + thickness
+          }
+          else if (link.target_side === 'top') {
+            link_ending_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+            link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y - handle_position_shift) }
+            dx_top = dx_top + thickness
+          }
+          else {  // link.target_side === 'bottom'
+            link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+            link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
+            dx_bottom = dx_bottom + thickness
+          }
+          // Draw link if position has not been set before
+          let need_to_draw = (
+            (this._input_links_ending_point[link.id] === undefined) ||
+            (!link.d3_selection?.node())
+          )
+          if (!need_to_draw) {
+            // Or if diff is at least one pixel
+            const dx = this._input_links_ending_point[link.id].x - link_ending_point.x
+            const dy = this._input_links_ending_point[link.id].y - link_ending_point.y
+            need_to_draw = ((Math.abs(dx) >= 1) || (Math.abs(dy) >= 1))
+          }
+          // If one of these two conditions match, add link to redraw list
+          if (need_to_draw) {
+            link_to_redraw.push(link)
+            // Save position
+            this._input_links_ending_point[link.id] = link_ending_point
+            // Update handle
+            if (this._input_links_handle[link.id] !== undefined) {
+              this._input_links_handle[link.id]
+                .setPosXY(
+                  link_ending_handle_point.x,
+                  link_ending_handle_point.y)
+              // Set a class to the handler corresponding to the target side of link, it is use for css cursor
+              this._input_links_handle[link.id]
+                .d3_selection?.attr('class', 'node_io ' + link.target_side)
+            }
+          }
         }
-        else {  // link.source_side === 'bottom'
-          link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
-          link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
-          dx_bottom = dx_bottom + thickness
-        }
-        // Save position
-        this._output_links_starting_point[link.id] = link_starting_point
-        // If we asked for redraw
-        // Here to optimise computation time (avoiding double loops on link)
-        if (draw_links) {
-          link.draw()
-        }
-        // Update handle
-        if (this._output_links_handle[link.id] !== undefined) {
-          if (draw_links) this._output_links_handle[link.id].draw()
-          this._output_links_handle[link.id]
-            .setPosXY(
-              link_starting_handle_point.x,
-              link_starting_handle_point.y)
-          // Set a class to the handler corresponding to the source side of link, it is use for css cursor
-          this._output_links_handle[link.id]
-            .d3_selection?.attr('class', 'node_io ' + link.source_side)
-        }
-      }
-      // Or current node is link's target
-      if (link.target === this) {
-        let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
-        let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
-        if (link.target_side === 'right') {
-          link_ending_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
-          link_ending_handle_point = { x: (link_ending_point.x + handle_position_shift), y: link_ending_point.y }
-          dy_right = dy_right + thickness
-        }
-        else if (link.target_side === 'left') {
-          link_ending_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
-          link_ending_handle_point = { x: (link_ending_point.x - handle_position_shift), y: link_ending_point.y }
-          dy_left = dy_left + thickness
-        }
-        else if (link.target_side === 'top') {
-          link_ending_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
-          link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y - handle_position_shift) }
-          dx_top = dx_top + thickness
-        }
-        else {  // link.target_side === 'bottom'
-          link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
-          link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
-          dx_bottom = dx_bottom + thickness
-        }
-        // Save position
-        this._input_links_ending_point[link.id] = link_ending_point
-        // If we asked for redraw
-        // Here to optimise computation time (avoiding double loops on link)
-        if (draw_links) {
-          link.draw()
-        }
-        // Update handle
-        if (this._input_links_handle[link.id] !== undefined) {
-          if (draw_links) this._input_links_handle[link.id].draw()
-          this._input_links_handle[link.id]
-            .setPosXY(
-              link_ending_handle_point.x,
-              link_ending_handle_point.y)
-          // Set a class to the handler corresponding to the target side of link, it is use for css cursor
-          this._input_links_handle[link.id]
-            .d3_selection?.attr('class', 'node_io ' + link.target_side)
-        }
-      }
-    })
+      })
+
+    // Loop on all visible link to draw
+    // Note : Two loops is best because link drawing can trigger other nodes drawLink() methode
+    // -> So to avoid mutual blocking between node, it's best to compute first all links positions and then loop
+    //    again on links to draw them
+    link_to_redraw
+      .forEach(link => {
+        link.draw()
+        if (link.source === this) this._output_links_handle[link.id].draw()
+        if (link.target === this) this._input_links_handle[link.id].draw()
+      })
   }
 
   /**
