@@ -25,12 +25,13 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
 ) => {
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t,preference_menu_all_item,checkbox_refs } = new_data
 
   // Component updater ------------------------------------------------------------------
   const [, setUpdate] = useState(0)
-  const menus = ['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis']
-  const checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
+  //const menus = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
+  //const checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
+  const menus = preference_menu_all_item
   menus.forEach(menu => checkbox_refs[menu] = useRef<HTMLInputElement>(null))
 
   const update_checkboxes = (menu_to_show: string[]) => {
@@ -103,6 +104,8 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         value={i18next.language}
         onChange={evt => {
           i18next.changeLanguage((evt.target.value))
+          setUpdate(a => a + 1)
+          new_data.menu_configuration.updateAllMenuComponents()
         }}
       >
         <option key={'francais'} value={'fr'}>Français</option>
@@ -129,7 +132,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
           <Button variant='menuconfigpanel_option_button_right'
             onClick={() => {
               sessionStorage.setItem('modepref', 'expert')
-              update_checkboxes(['MEP', 'EN', 'EF', 'ED', 'LL', 'Vis'])
+              update_checkboxes(preference_menu_all_item)
             }}
           >
             Mode Expert
@@ -199,6 +202,16 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         }}>
         {t('Menu.ED')}
       </Checkbox>,
+      <Checkbox
+      key={9}
+      ref={checkbox_refs['EL']}
+      variant='menuconfigpanel_option_checkbox'
+      defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EL')}
+      onChange={() => {
+        new_data.menu_configuration.toggleGivenAccordion('EL')
+      }}>
+      {t('Menu.level')}
+    </Checkbox>,
       additionalMenus.additional_preferences
 
     ],
