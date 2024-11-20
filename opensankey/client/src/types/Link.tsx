@@ -604,8 +604,6 @@ export abstract class Class_LinkElement
   protected _draw() {
     // Heritance
     super._draw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_links').datum(this)
     // Get starting point
     const starting_point = this.source.getOutputLinkStartingPoint(this)
     if (starting_point) {
@@ -616,12 +614,21 @@ export abstract class Class_LinkElement
     const ending_point = this.target.getInputLinkEndingPoint(this)
     if (ending_point) {
       this._display.position_ending.x = ending_point.x
-      this._display.position_ending.x = ending_point.y
+      this._display.position_ending.y = ending_point.y
     }
-    // Setup order
-    //this.drawing_area.orderElements()
-    // Draw elements
-    this._drawElements()
+    // Draw only if we have starting & ending points
+    if (starting_point && ending_point) {
+      // Setup order
+      //this.drawing_area.orderElements()
+      // Draw elements
+      this._drawElements()
+    }
+  }
+
+  protected _initDraw(): void {
+    super._initDraw()
+    // Update class attributes
+    this.d3_selection?.attr('class', 'gg_links').datum(this)
   }
 
   public drawWithNodes() {
