@@ -369,7 +369,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     new_data.menu_configuration.function_on_wait.current = () => {
       new_data.drawing_area.updateFrom(
         tmp_DA,
-        ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
+        ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
       )
       new_data.drawing_area.draw()
     }
