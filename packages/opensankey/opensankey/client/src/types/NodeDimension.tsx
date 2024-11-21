@@ -47,6 +47,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
    * @memberof Class_Element
    */
   private _is_currently_deleted = false
+  private _is_currently_in_unsetting_recursion = false
 
   // CONSTRUCTOR ========================================================================
   /**
@@ -233,11 +234,11 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     }
   }
 
-  public unsetForcingToShow() {
+  public showAccordingToLevelTags() {
     // Unset booleans
     const nodes_to_redraw = this._unsetForcingToShow()
     // Redraw
-    Object.values(nodes_to_redraw)
+    nodes_to_redraw
       .forEach(node => node.draw())
   }
 
@@ -246,26 +247,33 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
    * @memberof Class_NodeDimension
    */
   public setForceToShowParent() {
-    // Set booleans accordingly
-    this._force_show_children = false
-    this._force_show_parent = true
-    // Unset all other children node's dimensions
-    let nodes_to_redraw = new Set([
-      this._parent,
-      ...this._children
-    ])
-    this._children
-      .forEach(child => {
-        child.dimensions_as_child
-          .forEach(dim => {
-            if (dim !== this) {
-              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
-            }
-          })
-      })
-    // Redraw
-    nodes_to_redraw
-      .forEach(node => node.draw())
+    // Protection against infinite recursion
+    if (!this._is_currently_in_unsetting_recursion) {
+      // Set protection
+      this._is_currently_in_unsetting_recursion = true
+      // Set booleans accordingly
+      this._force_show_children = false
+      this._force_show_parent = true
+      // Unset all other children node's dimensions
+      let nodes_to_redraw = new Set([
+        this._parent,
+        ...this._children
+      ])
+      this._children
+        .forEach(child => {
+          child.dimensions_as_child
+            .forEach(dim => {
+              if (dim !== this) {
+                nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
+              }
+            })
+        })
+      // Redraw
+      nodes_to_redraw
+        .forEach(node => node.draw())
+      // Unset protection
+      this._is_currently_in_unsetting_recursion = false
+    }
   }
 
   /**
@@ -273,48 +281,66 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
    * @memberof Class_NodeDimension
    */
   public setForceToShowChildren() {
-    // Set booleans accordingly
-    this._force_show_children = true
-    this._force_show_parent = false
-    // Unset other dimensions
-    let nodes_to_redraw = new Set([
-      this._parent,
-      ...this._children
-    ])
-    // Unset forcing to show children on all other parent node's dimensions where he is parent
-    this.parent.dimensions_as_parent
-      .forEach(dim => {
-        if (dim !== this) {
-          nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
-        }
-      })
-    // Redraw
-    nodes_to_redraw
-      .forEach(node => node.draw())
+    // Protection against infinite recursion
+    if (!this._is_currently_in_unsetting_recursion) {
+      // Set protection
+      this._is_currently_in_unsetting_recursion = true
+      // Set booleans accordingly
+      this._force_show_children = true
+      this._force_show_parent = false
+      // Unset other dimensions
+      let nodes_to_redraw = new Set([
+        this._parent,
+        ...this._children
+      ])
+      // Unset forcing to show children on all other parent node's dimensions where he is parent
+      this.parent.dimensions_as_parent
+        .forEach(dim => {
+          if (dim !== this) {
+            nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
+          }
+        })
+      // Redraw
+      nodes_to_redraw
+        .forEach(node => node.draw())
+      // Unset protection
+      this._is_currently_in_unsetting_recursion = false
+    }
   }
 
   // PROTECTED METHODS ==================================================================
 
   protected _unsetForcingToShow() {
-    // Set booleans accordingly
-    this._force_show_children = false
-    this._force_show_parent = false
-    // Unsetting boolean are propagated through childrens
-    let nodes_to_redraw = new Set([
-      this._parent,
-      ...this._children
-    ])
-    this._children
-      .forEach(child => {
-        child.dimensions_as_child
-          .forEach(dim => {
-            if (dim !== this) {
-              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
-            }
-          })
-      })
-    // Return set of all nodes that need to be redrawn
-    return nodes_to_redraw
+    // Protection against infinite recursion
+    if (!this._is_currently_in_unsetting_recursion) {
+      // Set protection
+      this._is_currently_in_unsetting_recursion = true
+      // Set booleans accordingly
+      this._force_show_children = false
+      this._force_show_parent = false
+      // Unsetting boolean are propagated through childrens
+      let nodes_to_redraw = new Set([
+        this._parent,
+        ...this._children
+      ])
+      this._children
+        .forEach(child => {
+          child.dimensions_as_child
+            .forEach(dim => {
+              if (dim !== this) {
+                nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
+              }
+            })
+        })
+      // Unset protection
+      this._is_currently_in_unsetting_recursion = false
+      // Return set of all nodes that need to be redrawn
+      return nodes_to_redraw
+    }
+    // Break infinite recursion - return empty set
+    else {
+      return new Set([])
+    }
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -378,7 +404,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     // Otherwise, check if related children level tags are all selected
     let ok_children_level_tags = false
     this.children_level_tags
-      .forEach(tag => ok_children_level_tags = (ok_children_level_tags || tag.is_selected))
+      .forEach(tag => ok_children_level_tags = (ok_children_level_tags || (tag.is_selected)))
     return ok_children_level_tags
   }
 }
