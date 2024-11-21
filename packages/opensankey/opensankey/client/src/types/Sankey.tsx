@@ -566,7 +566,7 @@ export abstract class Class_Sankey
             const sp = structuredClone(link.source.display.position)
             const tp = structuredClone(link.target.display.position)
             // Copy all attributes
-            link.copyFrom(other_sankey._links[matching_links_id[id] ?? id])
+            link.copyAttrFrom(other_sankey._links[matching_links_id[id] ?? id])
             // Keep positions
             link.source.display.position = sp
             link.target.display.position = tp
