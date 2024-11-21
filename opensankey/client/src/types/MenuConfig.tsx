@@ -194,6 +194,8 @@ export class Class_MenuConfig {
   /* ========================================
     Updater of filtering components
   =========================================== */
+  // Update AddSimpleLevelDropDown
+  private _ref_to_leveltag_filter_updater: MutableRefObject<() => void>
 
   // Update AddAllDropDownNode
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
@@ -294,7 +296,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_context_drawing_area_updater = useRef(() => null)
 
     // Init filtering components updater ------------------------------------------------
-
+    this._ref_to_leveltag_filter_updater = useRef(() => null)
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
@@ -797,6 +799,7 @@ export class Class_MenuConfig {
 
   public updateAllComponentsRelatedToNodeTags() {
     this._ref_to_nodetag_filter_updater.current()
+    this._ref_to_leveltag_filter_updater.current()
     this.updateComponentRelatedToNodesTags()
     this._ref_to_menu_config_tags_updater['node_taggs'].current()
   }
@@ -1075,6 +1078,9 @@ export class Class_MenuConfig {
 
 
   // Filtering components ---------------------------------------------------------------
+  public get ref_to_leveltag_filter_updater(): MutableRefObject<() => void> {
+    return this._ref_to_leveltag_filter_updater
+  }
 
   public get ref_to_nodetag_filter_updater(): MutableRefObject<() => void> {
     return this._ref_to_nodetag_filter_updater
