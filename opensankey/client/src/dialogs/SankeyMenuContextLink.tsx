@@ -276,7 +276,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       layerStyle='context_menu'
       id="context_link_pop_over"
       className={'context_popover ' + (is_top ? '' : 'at_bot')}
-      style={{ maxWidth: '100%', position: 'absolute', inset: style_c_l }}
+      style={{ maxWidth: '100%', position: 'absolute', zIndex: '1', inset: style_c_l }}
     >
       <ButtonGroup orientation='vertical' isAttached>
         {additionalMenus.context_link_order.map((key, id) => {

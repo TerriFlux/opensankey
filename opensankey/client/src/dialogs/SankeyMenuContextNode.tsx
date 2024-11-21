@@ -561,10 +561,6 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     }
   </Button>
 
-
-
-
-
   const btn_delete = <Button
     variant='contextmenu_button'
     onClick={() => {
@@ -610,6 +606,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       style={{
         maxWidth: '100%',
         position: 'absolute',
+        zIndex: '1',
         inset: style_c_n
       }}
     >
