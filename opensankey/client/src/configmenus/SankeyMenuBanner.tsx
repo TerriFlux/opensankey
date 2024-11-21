@@ -185,20 +185,6 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
-            const first_antagonist_level_tagg = level_taggs[level_tagg.siblings[0]]
-            // Respectively activate and desactivate in the two antagonist tags  group
-            // Same as of current tag group
-            first_antagonist_level_tagg.siblings
-              .forEach(sibling => level_taggs[sibling].activated = level_tagg.activated)
-            // Opposed to current tag group
-            level_tagg.siblings
-              .forEach(sibling => level_taggs[sibling].activated = !level_tagg.activated)
-
-
-            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
-            // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
-            new_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
-
             // Refresh this & related component
             new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
           }}
@@ -573,7 +559,7 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
                     // Met à jour l'indicateur de legende pour tous les tags
                     Object.values(data_taggs_with_banner)
                       .forEach(tagg => tagg.show_legend = false)
-                    tagg.show_legend = evt.target.checked 
+                    tagg.show_legend = evt.target.checked
                     new_data.drawing_area.legend.draw()
                     new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
                   }}

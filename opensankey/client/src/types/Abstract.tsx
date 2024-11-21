@@ -21,7 +21,7 @@ export abstract class Class_AbstractApplicationData {
   // Mandatory attributes
   public abstract version: string
   // Mandatory methods
-  public abstract isLabelSeparatorPartBefore():boolean
+  public abstract isLabelSeparatorPartBefore(): boolean
   // Mandatory getters
   public abstract get t(): TFunction
   public abstract get menu_configuration(): Class_MenuConfig
@@ -33,7 +33,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract application_data: Class_AbstractApplicationData
   public abstract d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
   public abstract static: boolean
-  public abstract bypass_redraws:boolean
+  public abstract bypass_redraws: boolean
   // Mandatory methods
   public abstract isInSelectionMode(): boolean
   public abstract isInEditionMode(): boolean
@@ -50,12 +50,11 @@ export abstract class Class_AbstractDrawingArea {
   public abstract closeAllMenus(): void
   public abstract updateFrom(other_drawing_area: Class_AbstractDrawingArea, mode: string[]): void
   public abstract draw(): void
-  public abstract orderElements():void
-
-  public abstract computeParametricV():void
+  public abstract orderElements(): void
+  public abstract computeParametricV(): void
   // Mandatory getters
   public abstract get sankey(): Class_AbstractSankey
-  public abstract get legend(): Class_Legend<Type_GenericDrawingArea,Type_GenericSankeyOS>
+  public abstract get legend(): Class_Legend<Type_GenericDrawingArea, Type_GenericSankeyOS>
   public abstract get scale(): number
   public abstract get scaleValueToPx(): (_: number) => number
   public abstract get minimum_flux(): number | undefined
@@ -73,7 +72,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract set pointer_pos(_: [number, number])
   public abstract get filter_label(): number
   public abstract set filter_label(_: number)
-  public abstract get show_structure():string
+  public abstract get show_structure(): string
 }
 
 export abstract class Class_AbstractSankey {
@@ -113,8 +112,8 @@ export abstract class Class_AbstractSankey {
   // Mandatory methods
   public abstract addNewDefaultNode(): Type_AbstractNodeElement
   public abstract addNewNode(id: string, name: string): Type_AbstractNodeElement
-  public abstract addNewLink(s: Type_AbstractNodeElement, t: Type_AbstractNodeElement) : Type_AbstractLinkElement
-  public abstract addNewLinkWithId(i: string, s: Type_AbstractNodeElement, t: Type_AbstractNodeElement) : Type_AbstractLinkElement
+  public abstract addNewLink(s: Type_AbstractNodeElement, t: Type_AbstractNodeElement): Type_AbstractLinkElement
+  public abstract addNewLinkWithId(i: string, s: Type_AbstractNodeElement, t: Type_AbstractNodeElement): Type_AbstractLinkElement
   public abstract addNewNodeStyle(id: string, name: string): Class_AbstractNodeStyle
   public abstract addNewLinkStyle(id: string, name: string): Class_AbstractLinkStyle
 }
@@ -129,14 +128,14 @@ export abstract class Class_AbstractTagGroup {
 }
 
 export abstract class Class_AbstractLevelTagGroup {
-  public abstract sibling_activated():Class_AbstractLevelTagGroup[]
-
+  public abstract sibling_activated(): Class_AbstractLevelTagGroup[]
   public abstract get id(): string
   public abstract get name(): string
   public abstract get tags_dict(): { [id: string]: Class_AbstractLevelTag }
   public abstract get tags_list(): Class_AbstractLevelTag[]
   public abstract get selected_tags_list(): Class_AbstractLevelTag[]
   public abstract get activated(): boolean
+  public abstract set activated(boolean)
 }
 
 export abstract class Class_AbstractTag {
