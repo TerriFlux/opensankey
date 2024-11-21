@@ -500,6 +500,7 @@ export abstract class Class_Sankey
 
     const add_flux = mode.includes('addFlux')
     const remove_flux = mode.includes('removeFlux')
+    const pos_flux = mode.includes('posFlux')    
     const sync_flux_tags = mode.includes('tagFlux')
     const sync_flux_values = mode.includes('Values')
     const sync_flux_attr = mode.includes('attrFlux')
@@ -541,6 +542,21 @@ export abstract class Class_Sankey
           })
       }
 
+      if (pos_flux || all) {
+        to_update
+          .forEach(id => {
+            const link = this._links[id]
+            // Source node
+            const source = this._nodes[link.source.id]
+            const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].source.id]
+            source.copyLinkOrderingFrom(other_source,revert_matching_links_id)
+            // Target node
+            const target = this._nodes[link.target.id]
+            const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
+            target.copyLinkOrderingFrom(other_target,revert_matching_links_id)
+          })        
+      }
+
       // With attrFlux we transfer link attr
       if (sync_flux_attr || all) {
         to_update
@@ -554,14 +570,6 @@ export abstract class Class_Sankey
             // Keep positions
             link.source.display.position = sp
             link.target.display.position = tp
-            // Source node
-            const source = this._nodes[this._links[id].source.id]
-            const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].source.id]
-            source.copyLinkOrderingFrom(other_source,revert_matching_links_id)
-            // Target node
-            const target = this._nodes[this._links[id].target.id]
-            const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
-            target.copyLinkOrderingFrom(other_target,revert_matching_links_id)
           })
       }
 
