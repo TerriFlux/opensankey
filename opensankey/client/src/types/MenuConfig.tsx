@@ -195,9 +195,6 @@ export class Class_MenuConfig {
     Updater of filtering components
   =========================================== */
 
-  // Update AddSimpleLevelDropDown
-  private _ref_to_toolbar_leveltag_filter_updater: MutableRefObject<() => void>
-
   // Update AddAllDropDownNode
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
 
@@ -229,7 +226,7 @@ export class Class_MenuConfig {
   // Ref to updater show modal multi aggregate/disaggregate
   private _ref_to_updater_node_disagregate: MutableRefObject<(b: boolean) => void> = useRef(()=>null)
   private _ref_to_updater_node_agregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
- 
+
 
   // Var to hide welcome menu when we relaucnh application
   private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAggainWelcome') === '1'))
@@ -280,6 +277,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_links_tooltips_updater = useRef(() => null)
 
     // Tags
+    this._ref_to_menu_config_tags_updater['level_taggs'] = useRef(() => null)
     this._ref_to_menu_config_tags_updater['node_taggs'] = useRef(() => null)
     this._ref_to_menu_config_tags_updater['flux_taggs'] = useRef(() => null)
     this._ref_to_menu_config_tags_updater['data_taggs'] = useRef(() => null)
@@ -297,7 +295,6 @@ export class Class_MenuConfig {
 
     // Init filtering components updater ------------------------------------------------
 
-    this._ref_to_toolbar_leveltag_filter_updater = useRef(() => null)
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
@@ -700,7 +697,7 @@ export class Class_MenuConfig {
   public updateAllMenuComponents() {
     this._ref_to_menu_updater.current()
     // TDODO : to have an updater in OpenSankeyMenus so if we cahnge language it update language of submenus,
-    //  for now OpenSankeyMenus is a function so the updater crash the app because the re-render is out of the correct scope 
+    //  for now OpenSankeyMenus is a function so the updater crash the app because the re-render is out of the correct scope
     // this._ref_to_submenu_updater.current()
     this.updateMenuConfigComponent()
     this.updateComponentRelatedToLayoutApparence()
@@ -795,13 +792,11 @@ export class Class_MenuConfig {
   }
 
   public updateAllComponentsRelatedToLevelTags() {
-    this._ref_to_toolbar_leveltag_filter_updater.current()
     this._ref_to_menu_config_tags_updater['level_taggs'].current()
   }
 
   public updateAllComponentsRelatedToNodeTags() {
     this._ref_to_nodetag_filter_updater.current()
-    this._ref_to_toolbar_leveltag_filter_updater.current()
     this.updateComponentRelatedToNodesTags()
     this._ref_to_menu_config_tags_updater['node_taggs'].current()
   }
@@ -1080,10 +1075,6 @@ export class Class_MenuConfig {
 
 
   // Filtering components ---------------------------------------------------------------
-
-  public get ref_to_toolbar_leveltag_filter_updater(): MutableRefObject<() => void> {
-    return this._ref_to_toolbar_leveltag_filter_updater
-  }
 
   public get ref_to_nodetag_filter_updater(): MutableRefObject<() => void> {
     return this._ref_to_nodetag_filter_updater
