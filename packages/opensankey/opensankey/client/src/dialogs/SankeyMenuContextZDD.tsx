@@ -210,10 +210,12 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     {t('Menu.MEP')} {icon_open_modal}
   </Button>
 
-  return new_data.drawing_area.is_drawing_area_contextualised ? <Box id="context_zdd_pop_over" layerStyle='context_menu'
+  return new_data.drawing_area.is_drawing_area_contextualised ? <Box
+    id="context_zdd_pop_over"
+    layerStyle='context_menu'
     className={'context_popover ' + (is_top ? '' : 'at_bot')}
 
-    style={{ maxWidth: '100%', position: 'absolute', inset: style_c_zdd }}>
+    style={{ maxWidth: '100%', position: 'absolute', zIndex: '1', inset: style_c_zdd }}>
     <ButtonGroup isAttached orientation='vertical'>
       {button_pa}
       {button_an}
