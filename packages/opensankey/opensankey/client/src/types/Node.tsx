@@ -1498,13 +1498,13 @@ export abstract class Class_NodeElement
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
             }
-            else {
-              this._display.position.y = 200
-            }
+            // else {
+            //   this._display.position.y = 200
+            // }
             if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
               const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
               this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
-              this.drawing_area.draw()
+              // this.drawing_area.draw()
             }
           }
           else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
@@ -1520,7 +1520,7 @@ export abstract class Class_NodeElement
               this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
                 max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
               })
-              this._display.position.y = max_vertical_offset + 200
+              this._display.position.y = max_vertical_offset + 100
             }
           }
           else {
