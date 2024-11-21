@@ -55,6 +55,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   private _ref_to_banner_views_updater: MutableRefObject<() => void>
   private _ref_to_accordion_views_updater: MutableRefObject<() => void>
+  private _ref_to_accordion_containers_updater: MutableRefObject<() => void>
   private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_: boolean) => void>
   private _ref_to_save_diagram_only_view_updater: MutableRefObject<(() => void)>
 
@@ -91,6 +92,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_menu_config_container_updater = useRef(() => null)
     this._ref_to_banner_views_updater = useRef(() => null)
     this._ref_to_accordion_views_updater = useRef(() => null)
+    this._ref_to_accordion_containers_updater=useRef(()=>null)
     this._ref_to_save_diagram_only_view_updater = useRef(() => null)
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
@@ -156,7 +158,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this.ref_to_toolbar_node_tag_updater.current()
     this.ref_to_toolbar_link_tag_updater.current()
     this.ref_to_toolbar_data_tag_updater.current()
-    this.ref_to_leveltag_filter_updater.current()
+    //this.ref_to_leveltag_filter_updater.current()
   }
 
 
@@ -169,6 +171,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
       'updateComponentRelatedToContainers',
       (_this: Class_MenuConfigPlus) => {
         _this._ref_to_menu_config_container_updater.current()
+        _this._ref_to_accordion_containers_updater.current()
       }
     )
   }
@@ -299,6 +302,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public get ref_to_banner_views_updater(): MutableRefObject<() => void> { return this._ref_to_banner_views_updater }
   public get ref_to_accordion_views_updater(): MutableRefObject<() => void> { return this._ref_to_accordion_views_updater }
   public get ref_to_modal_view_attributes_switcher(): MutableRefObject<(_: boolean) => void> { return this._ref_to_modal_view_attributes_switcher }
+  public get ref_to_accordion_containers_updater() {return this._ref_to_accordion_containers_updater}
 
   public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_save_diagram_only_view_updater }
 

@@ -239,6 +239,8 @@ export class Class_ContainerElement
     json_object['image_src'] = this._image_src
     json_object['label_width'] = this._label_width
     json_object['label_height'] = this._label_height
+    json_object['x'] = this.position_x
+    json_object['y'] = this.position_y
   }
 
   /**
