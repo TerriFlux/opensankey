@@ -219,7 +219,7 @@ export class Class_ContainerElement
   // SAVING METHODS =====================================================================
 
   /**
-   * Setting value of container from JSON
+   * Save value of container to JSON
    *
    * @return {*}
    * @memberof Class_ContainerElement
@@ -228,7 +228,7 @@ export class Class_ContainerElement
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    super._fromJSON(json_object, kwargs)
+    super._toJSON(json_object, kwargs)
     json_object['title'] = this._title
     json_object['content'] = this._content
     json_object['opacity'] = this._opacity
@@ -239,8 +239,6 @@ export class Class_ContainerElement
     json_object['image_src'] = this._image_src
     json_object['label_width'] = this._label_width
     json_object['label_height'] = this._label_height
-    json_object['x'] = this.position_x
-    json_object['y'] = this.position_y
   }
 
   /**
