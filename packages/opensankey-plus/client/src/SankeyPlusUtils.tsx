@@ -330,7 +330,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
                 new_data_plus.drawing_area.sankey.draw()
                 }
 
-                ref.current?.focus() //avoid closure of popover 
+                ref.current?.focus() //avoid closure of popover
               }}
               minimum_value={0}
               maximum_value={max_link_value}
@@ -364,7 +364,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
               ref_to_set_value={ref_set_number_inputs[1]}
               default_value={new_data_plus.drawing_area.filter_label}
               function_on_blur={(value) => {
-                
+
                 if (value) {
                   if (value > max_link_value) {
                     value = max_link_value
@@ -374,7 +374,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
                 new_data_plus.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
                 }
 
-                ref.current?.focus() //avoid closure of popover 
+                ref.current?.focus() //avoid closure of popover
               }}
               minimum_value={0}
               maximum_value={max_link_value}
@@ -590,7 +590,7 @@ export const ToolBarDataTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
 
 export const ToolBarLevelFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
   const [, setCount] = useState(0)
-  //new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
+  new_data_plus.menu_configuration.ref_to_toolbar_level_tag_filter_updater.current = () => setCount(a => a + 1)
 
   const level_filter = Object.entries(new_data_plus.drawing_area.sankey.level_taggs_dict).length > 0
   const only_primary = new_data_plus.drawing_area.sankey.level_taggs_list.length == 1 && new_data_plus.drawing_area.sankey.level_taggs_list[0].name == 'Primaire'
