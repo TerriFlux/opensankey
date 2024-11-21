@@ -4004,40 +4004,44 @@ export abstract class Class_NodeElement
 
   private get is_related_level_selected() {
     // Draw by default if there is no dimensions
+    // that relates to this node
     if (
       !this.is_child &&
       !this.is_parent &&
       (this._leveltaggs_as_antitagged.length === 0)
     )
       return true
-
-    // if (this._show) {
-    //   return true
-    // } else if (this._show == false) {
-    //   return false
-    // }
     // First check if activated tag group is in antitaggs
     const activated_antitaggs = this._leveltaggs_as_antitagged
       .filter(tagg => tagg.activated)
     if (activated_antitaggs.length > 0)
       return false
     // If there is any dimension - check them
-    let ok_dimension: boolean = true
+    let has_activated_dimensions: boolean = false
+    let ok_activated_dimensions: boolean = true
     // Check dimensions where node is tagged as a child
     Object.values(this._dimensions_as_child)
       .forEach(dim => {
-        if (dim.children_level_tagg.activated)
-          ok_dimension = (ok_dimension && dim.show_children)
+        if (dim.related_level_tagg.activated) {
+          ok_activated_dimensions = ok_activated_dimensions && dim.show_children
+          has_activated_dimensions = true
+        }
       })
     // Check dimensions where node is tagged as a parent
-    if (ok_dimension) {
-      Object.values(this._dimensions_as_parent)
-        .forEach(dim => {
-          if (dim.parent_level_tag.group.activated)
-            ok_dimension = (ok_dimension && dim.show_parent)
-        })
-    }
-    return ok_dimension
+    Object.values(this._dimensions_as_parent)
+      .forEach(dim => {
+        if (dim.related_level_tagg.activated){
+          ok_activated_dimensions = ok_activated_dimensions && dim.show_parent
+          has_activated_dimensions = true
+        }
+      })
+    // If no related level tag group is activated &&
+    // this node is not set as antittagged for activated level tagg group
+    // Then it ok to show
+    if (!has_activated_dimensions)
+      return true
+    else
+      return ok_activated_dimensions
   }
 
   /**
