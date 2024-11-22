@@ -1039,7 +1039,7 @@ export abstract class Class_NodeElement
       if ((id !== undefined) && (this._dimensions_as_child[id]))
         this._dimensions_as_child[id].setForceToShowChildren()
       else
-        Object.values(this._dimensions_as_child)[0].setForceToShowParent()
+        Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
 
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
@@ -1078,7 +1078,7 @@ export abstract class Class_NodeElement
       if ((id !== undefined) && (this._dimensions_as_parent[id]))
         this._dimensions_as_parent[id].setForceToShowChildren()
       else
-        Object.values(this._dimensions_as_parent)[0].setForceToShowChildren()
+        Object.values(this._dimensions_as_parent)[Object.values(this._dimensions_as_parent).length-1].setForceToShowChildren()
 
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
@@ -4015,16 +4015,21 @@ export abstract class Class_NodeElement
     )
       return true
     // First check if activated tag group is in antitaggs
-    const activated_antitaggs = this._leveltaggs_as_antitagged
+    const is_antitagged = (this._leveltaggs_as_antitagged
       .filter(tagg => tagg.activated)
-    if (activated_antitaggs.length > 0)
-      return false
+      .length > 0)
     // If there is any dimension - check them
     let has_activated_dimensions: boolean = false
     let ok_activated_dimensions: boolean = true
+    let has_forced_dimensions: boolean = false
+    let ok_forced_dimensions: boolean = true
     // Check dimensions where node is tagged as a child
     Object.values(this._dimensions_as_child)
       .forEach(dim => {
+        if (dim.force_show_parent || dim.force_show_children) {
+          has_forced_dimensions = true
+          ok_forced_dimensions = ok_forced_dimensions && dim.force_show_children
+        }
         if (dim.related_level_tagg.activated) {
           ok_activated_dimensions = ok_activated_dimensions && dim.show_children
           has_activated_dimensions = true
@@ -4033,18 +4038,37 @@ export abstract class Class_NodeElement
     // Check dimensions where node is tagged as a parent
     Object.values(this._dimensions_as_parent)
       .forEach(dim => {
+        if (dim.force_show_parent || dim.force_show_children) {
+          has_forced_dimensions = true
+          ok_forced_dimensions = ok_forced_dimensions && dim.force_show_parent
+        }
         if (dim.related_level_tagg.activated){
           ok_activated_dimensions = ok_activated_dimensions && dim.show_parent
           has_activated_dimensions = true
         }
       })
-    // If no related level tag group is activated &&
-    // this node is not set as antittagged for activated level tagg group
-    // Then it ok to show
-    if (!has_activated_dimensions)
-      return true
-    else
-      return ok_activated_dimensions
+
+    // First check if dimension is not forced
+    if (has_forced_dimensions) {
+      return ok_forced_dimensions
+    }
+    // Otherwise use defaut leveltag filtering logic
+    else {
+      // Cannot show if node's dimensions are not forced and node is antitagged
+      // on currently activated leveltaggroup
+      if (is_antitagged) {
+        return false
+      }
+      else {
+        // If no related level tag group is activated &&
+        // this node is not set as antittagged for activated level tagg group
+        // Then it ok to show
+        if (!has_activated_dimensions)
+          return true
+        else
+          return ok_activated_dimensions
+      }
+    }
   }
 
   /**
