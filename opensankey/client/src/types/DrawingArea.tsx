@@ -1650,7 +1650,6 @@ export abstract class Class_DrawingArea
         node.position_y = max_vertical_offset
       }
     })
-    this.sankey.sortNodes()
   }
 
   /**
@@ -1716,7 +1715,6 @@ export abstract class Class_DrawingArea
       let current_v = 0
       column.forEach(n => current_v = this.apply_v(n, current_v))
     })
-    this.sankey.sortNodes()
   }
 
   /**
