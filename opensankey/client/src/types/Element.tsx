@@ -397,9 +397,10 @@ export abstract class Class_ProtoElement
   protected _initDraw() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
-      this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
-        .append('g')
-        .attr('id', 'gg_' + this._id)
+      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+      if (d3_drawing_area_selection.nodes().length > 0)
+        this.d3_selection = d3_drawing_area_selection.append('g')
+          .attr('id', 'gg_' + this._id)
     }
   }
 

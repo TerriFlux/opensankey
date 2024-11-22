@@ -1901,12 +1901,19 @@ export abstract class Class_NodeElement
 
   // PRIVATE METHODS ====================================================================
 
+  private drawShape() {
+    this._process_or_bypass(() => this._drawShape())
+  }
+
   /**
    * Draw node shape on d3 svg
    * @private
    * @memberof Class_NodeElement
    */
   private _drawShape() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.node_shape').remove()
     // Do the rest only if shape is visible
@@ -1948,8 +1955,8 @@ export abstract class Class_NodeElement
     }
   }
 
-  private drawShape() {
-    this._process_or_bypass(() => this._drawShape())
+  private drawNameLabel() {
+    this._process_or_bypass(() => this._drawNameLabel())
   }
 
   /**
@@ -1958,6 +1965,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   protected _drawNameLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous label
     this.d3_selection?.selectAll('.name_label').remove()
     // Add name label
@@ -2043,10 +2053,6 @@ export abstract class Class_NodeElement
     }
   }
 
-  private drawNameLabel() {
-    this._process_or_bypass(() => this._drawNameLabel())
-  }
-
   /**
    * Function triggered when we start dragging node name label, it initialise relative position if undefined
    *
@@ -2082,7 +2088,6 @@ export abstract class Class_NodeElement
 
     this.name_label_horiz = 'dragged'
     this.name_label_vert = 'dragged'
-
   }
 
   /**
@@ -2130,7 +2135,19 @@ export abstract class Class_NodeElement
    * @private
    * @memberof Class_NodeElement
    */
+  private drawValueLabel() {
+    this._process_or_bypass(() => this._drawValueLabel)
+  }
+
+  /**
+   * Draw node label on D3 svg
+   * @private
+   * @memberof Class_NodeElement
+   */
   private _drawValueLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous label
     this.d3_selection?.selectAll('.value_label').remove()
     // Add name label
@@ -2209,10 +2226,6 @@ export abstract class Class_NodeElement
     }
   }
 
-  private drawValueLabel() {
-    this._process_or_bypass(() => this._drawValueLabel)
-  }
-
   /**
    * Call what is necessary each time a link is modified
    * @private
@@ -2234,6 +2247,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private _drawLinksArrow() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
 
     this.d3_selection?.selectAll('.link_arrow').remove()
     const list_link_to_add_arrow = this.input_links_list
@@ -2262,7 +2278,7 @@ export abstract class Class_NodeElement
       .forEach(link => {
         // Some variable parameters for arrow
         const arrow_length = link.shape_arrow_size
-        const link_color = link.getPathColorToUse()
+        const arrow_color = link.getArrowColorToUse()
         let node_arrow_shift = 0
         let arrows_adjustment = 0
 
@@ -2368,9 +2384,9 @@ export abstract class Class_NodeElement
               node_shape === 'arrow'
             )
           })
-          .attr('fill', link_color)
+          .attr('fill', arrow_color)
           .attr('fill-opacity', link.shape_opacity)
-          .attr('stroke', link_color)
+          .attr('stroke', arrow_color)
           .attr('stroke-width', 0.1)
 
         // Increment side cumul of drawn arrow to influence next arrow starting position
@@ -2387,7 +2403,6 @@ export abstract class Class_NodeElement
           cum_h_bottom += link_value
         }
       })
-
   }
 
   private getArrowPath() {
@@ -2508,6 +2523,7 @@ export abstract class Class_NodeElement
           // Draw link if position has not been set before
           let need_to_draw = (
             (this._output_links_starting_point[link.id] === undefined) ||
+            (!link.d3_selection) ||
             (!link.d3_selection?.node())
           )
           if (!need_to_draw) {
