@@ -157,7 +157,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this.ref_to_toolbar_node_tag_updater.current()
     this.ref_to_toolbar_link_tag_updater.current()
     this.ref_to_toolbar_data_tag_updater.current()
-    this.ref_to_toolbar_level_tag_filter_updater.current()
+    this.ref_to_leveltag_filter_updater.current()
   }
 
 
