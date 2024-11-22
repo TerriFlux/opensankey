@@ -615,10 +615,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
               <Button
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
-                  applicationData.menu_configuration.function_on_wait.current = () => {
+                  applicationData.function_on_wait.current = () => {
                     applicationData.drawing_area.computeAutoSankey(false)
                   }
-                  applicationData.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Nodes positions computed', loading: 'Computing nodes position' })
+                  applicationData.launch_waiting_function.current({ success: 'Nodes positions computed', loading: 'Computing nodes position' })
 
                 }}>
                 {t('MEP.PA')}
