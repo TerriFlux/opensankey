@@ -517,6 +517,9 @@ export abstract class Class_DrawingArea
     // Draw background
     this.drawBackground()
 
+    // for parametric mode nodes need to be draw in a certain order
+    // so that the nodes at the top of the columns are drawn first
+    this.sankey.sortNodes()
     // Draw Everything
     this.drawElements()
 
