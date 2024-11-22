@@ -943,10 +943,10 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
     <Button
       disabled={!valid_input}
       onClick={() => {
-        new_data.menu_configuration.function_on_wait.current = () => {
+        new_data.function_on_wait.current = () => {
           clickSavePNG(h, v, new_data)
         }
-        new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current()
+        new_data.launch_waiting_function.current()
       }}
     >
       Save
@@ -1674,7 +1674,7 @@ export const launchToastConstructor: FType_LaunchToastConstructor = (
   }
   const tmp = new Promise((resole) => {
     setTimeout(() => {
-      new_data.menu_configuration.function_on_wait.current()
+      new_data.function_on_wait.current()
       resole(200)
     }, 50)
   })

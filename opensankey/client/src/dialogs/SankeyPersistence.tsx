@@ -366,16 +366,16 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     const layout = data_as_json['layout'] as Type_JSON
     const tmp_DA = new_data.createNewDrawingArea()
     tmp_DA.fromJSON(layout)
-    new_data.menu_configuration.function_on_wait.current = () => {
+    new_data.function_on_wait.current = () => {
       new_data.drawing_area.updateFrom(
         tmp_DA,
         ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
       )
       new_data.drawing_area.draw()
     }
-    new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
+    new_data.launch_waiting_function.current({success:'Layout updated',loading:'Setting layout'})
   } else {
-    new_data.menu_configuration.function_on_wait.current = () => {
+    new_data.function_on_wait.current = () => {
       new_data.drawing_area.bypass_redraws = true
       // First compute position of nodes which are not trade
       new_data.drawing_area.computeAutoSankey(true)
@@ -400,7 +400,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
       new_data.drawing_area.draw()
       new_data.drawing_area.areaAutoFit()
     }
-    new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
+    new_data.launch_waiting_function.current({success:'Layout updated',loading:'Setting layout'})
   }
   new_data.drawing_area.setToModeEdition(false)
 }
