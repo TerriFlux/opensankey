@@ -48,8 +48,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   ModalWelcome,
   ClickSaveDiagram,
 }) => {
-  // Init loading toast
-  const toast = useToast()
 
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
@@ -66,10 +64,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     initial_data
   )
 
-  // Link loading toast ref for remote trigger from ApplicatioData
-  new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current = (intake) => {
-    launchToastConstructor(new_data, toast, intake)
-  }
 
 
   /*************************************************************************************************/

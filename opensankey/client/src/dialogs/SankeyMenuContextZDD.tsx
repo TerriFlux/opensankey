@@ -150,11 +150,11 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
       <Button variant='contextmenu_button'
         onClick={() => {
-          new_data.menu_configuration.function_on_wait.current = () => {
+          new_data.function_on_wait.current = () => {
             new_data.drawing_area.computeAutoSankey(false)
             indicateSankeyToSaveInCache()
           }
-          new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({ success: 'Nodes positions computed', loading: 'Computing nodes position' })
+          new_data.launch_waiting_function.current({ success: 'Nodes positions computed', loading: 'Computing nodes position' })
 
         }}>
         {t('MEP.PA_action')}
