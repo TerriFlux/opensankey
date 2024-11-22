@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 // Local imports
 import { Type_SaveDiagramOptions } from '../dialogs/types/SankeyPersistenceTypes'
 import { ClickSaveDiagram, ClickSaveExcel, retrieveExcelResults } from '../dialogs/SankeyPersistence'
-import { Class_MenuConfig } from './MenuConfig'
+import { Class_MenuConfig, Type_TextForToastPromise } from './MenuConfig'
 import { Class_AbstractApplicationData } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
 import { getStringFromJSON, Type_JSON } from './Utils'
@@ -21,6 +21,8 @@ import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
 import { FType_ProcessFunctions } from './FunctionTypes'
+import { useToast } from '@chakra-ui/react'
+import { launchToastConstructor } from '../topmenus/SankeyMenuTop'
 
 // SPECIFIC CONSTANTS ******************************************************************/
 
@@ -65,7 +67,6 @@ export abstract class Class_ApplicationData
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
 
-  private _processFunction: FType_ProcessFunctions
 
   // Save JSON options
   public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
@@ -130,6 +131,19 @@ export abstract class Class_ApplicationData
 
   // Ref to checkbox of displayed menu in SankeyMenuPreference
   private _checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
+
+
+  // Variable to stock a function (that can take some time to process) for it to be used while a loading spinner appear
+  private _function_on_wait: MutableRefObject<() => void>
+
+  // Ref to launch _function_on_wait & create a toast with a spinner to show we have to wait
+  // Optional arguments to show custom message while loading & when finished
+  private _launch_waiting_function: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
+  private toast = useToast()
+    
+
+  private _processFunction: FType_ProcessFunctions
+
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -206,6 +220,12 @@ export abstract class Class_ApplicationData
         this._processFunction.ref_result.current('')
       }
     }
+    this._function_on_wait = useRef(() => null)
+
+
+    this._launch_waiting_function= useRef((intake?: Type_TextForToastPromise) => {
+      launchToastConstructor(this, this.toast, intake)
+    } )
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -252,12 +272,16 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   public fromJSON(json_object: Type_JSON) {
-    // Read json file
+    this.function_on_wait.current = () => {
+      // Read json file
     this._fromJSON(json_object)
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
     // Draw drawing area
     this._drawing_area.draw()
+    }
+    
+    this._launch_waiting_function.current({ success: 'Loaded', loading: 'Loading' })
   }
 
   /**
@@ -421,7 +445,11 @@ export abstract class Class_ApplicationData
       // Prevent default event on ctrl + s
       evt.preventDefault()
       // Save in cache
+      app_ref.function_on_wait.current = () => {
       localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
+      }
+      app_ref._launch_waiting_function.current({ success: 'Success', loading: 'Saving' })
+
       localStorage.setItem('last_save', 'true')
       // Update logo save in cache
       app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
@@ -486,5 +514,9 @@ export abstract class Class_ApplicationData
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
   public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
   public get preference_menu_all_item() { return this._preference_menu_all_item }
+
+  public get function_on_wait(): MutableRefObject<() => void> {return this._function_on_wait}
+
+  public get launch_waiting_function(): MutableRefObject<(intake?: Type_TextForToastPromise) => void> {return this._launch_waiting_function}
 }
 

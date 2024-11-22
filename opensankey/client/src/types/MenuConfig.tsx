@@ -50,8 +50,6 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  // Trigger Waiting spinner
-  ref_trigger_waiting_spinner_toast: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
 }
 
 // CLASS MENU CONFIG *******************************************************************/
@@ -92,12 +90,7 @@ export class Class_MenuConfig {
   // Ref to state if configuration is opened
   private _ref_menu_opened: MutableRefObject<boolean>
 
-  // Variable to stock a function (that can take some time to process) for it to be used while a loading spinner appear
-  private _function_on_wait: MutableRefObject<() => void>
 
-  // Ref to launch _function_on_wait & create a toast with a spinner to show we have to wait
-  // Optional arguments to show custom message while loading & when finished
-  private _ref_lauchToast: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
 
   /* ========================================
    Ref to button on the configuration menu in the app
@@ -254,8 +247,6 @@ export class Class_MenuConfig {
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
     this._ref_menu_opened = useRef(false)
-    this._ref_lauchToast = useRef<() => void>(() => null)
-    this._function_on_wait = useRef(() => null)
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
@@ -344,8 +335,6 @@ export class Class_MenuConfig {
       // Other modals
       ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_templates_lib: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      // Trigger Waiting spinner
-      ref_trigger_waiting_spinner_toast: useRef<() => void>(() => null),
     }
   }
 
@@ -926,14 +915,6 @@ export class Class_MenuConfig {
 
   public get ref_menu_opened(): MutableRefObject<boolean> {
     return this._ref_menu_opened
-  }
-
-  public get ref_trigger_waiting_spinner_toast(): MutableRefObject<(intake?: Type_TextForToastPromise) => void> {
-    return this._ref_lauchToast
-  }
-
-  public get function_on_wait(): MutableRefObject<() => void> {
-    return this._function_on_wait
   }
 
   // Accordion menu openers -------------------------------------------------------------
