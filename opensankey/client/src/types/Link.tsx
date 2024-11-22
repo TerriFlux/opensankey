@@ -456,7 +456,7 @@ export abstract class Class_LinkElement
 
   // COPY METHODS =======================================================================
   /**
-   * Copy attributes from a given link 
+   * Copy attributes from a given link
    *
    * @param {Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>} link_to_copy
    * @memberof Class_LinkElement
@@ -897,7 +897,8 @@ export abstract class Class_LinkElement
       // Do we apply colors of data tags ?
       dataTagColorActivated
         .forEach(tag => shape_color = tag.color)
-    } else {
+    }
+    else {
       // Do we apply colors of node source/target tags ?
       const src_taggs_activated = this._source.taggs_list
         .filter(tagg => tagg.show_legend).filter(grp => {
@@ -914,9 +915,11 @@ export abstract class Class_LinkElement
       // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt
       if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {
         shape_color = this._source.getShapeColorToUse()
-      } else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
+      }
+      else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
         shape_color = this._target.getShapeColorToUse()
-      } else {
+      }
+      else {
         if (trgt_taggs_activated) {
           // If target has a tag from a group of which we display the palette
           shape_color = this._target.getShapeColorToUse()
@@ -927,6 +930,10 @@ export abstract class Class_LinkElement
       }
     }
     return shape_color
+  }
+
+  public getArrowColorToUse() {
+    return this.getPathColorToUse()
   }
 
   /**
@@ -1109,6 +1116,9 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   private _drawPath() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous shape
     this.d3_selection?.selectAll('.link_path').remove()
     // Failsafe
@@ -1130,6 +1140,9 @@ export abstract class Class_LinkElement
   }
 
   private _drawLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
@@ -1208,7 +1221,6 @@ export abstract class Class_LinkElement
     }
   }
 
-
   //================= Functions for link label if it is a TextPath  =================
 
   /**
@@ -1218,9 +1230,7 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   private updateTextPathOffset() {
-
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getTextPathOffset()
-
     this.d3_selection?.select('.link_label_textpath').attr('text-anchor', label_anchor)
     this.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position + '%')
     this.d3_selection?.select('.link_label_text').attr('dy', label_ortho_position)
@@ -1326,9 +1336,7 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   private updateTextXYPosition() {
-
     const [label_pos, label_ortho_pos, label_anchor] = this.getTextXYPos()
-
     this.d3_selection?.select('.link_label_text').attr('y', label_ortho_pos)
     this.d3_selection?.select('.link_label_text').attr('x', label_pos)
     this.d3_selection?.select('.link_label_text').attr('text-anchor', label_anchor)
@@ -1462,6 +1470,9 @@ export abstract class Class_LinkElement
   }
 
   private drawControlPoint() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Draw control handler
     this._control_points.starting_curve_point.draw()
     this._control_points.ending_curve_point.draw()
@@ -3169,7 +3180,6 @@ export abstract class Class_LinkElement
       'middle_recycling': [this._control_points.middle_recycling_point.display.position.x, this._control_points.middle_recycling_point.display.position.y],
     }
   }
-
 
   // PRIVATE GETTER / SETTER =============================================================
 
