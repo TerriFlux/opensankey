@@ -246,7 +246,7 @@ export abstract class Class_Sankey
       .forEach(([idx, node_to_copy]) => {
         const node = (this._nodes[idx] ?? this.addNewNode(idx, node_to_copy.name))
         node.copyFrom(node_to_copy)
-        node.copyLinkOrderingFrom(node_to_copy) // Same ordering
+        node.copyLinkOrderingFrom(node_to_copy,{}) // Same ordering
       })
   }
 
@@ -277,6 +277,8 @@ export abstract class Class_Sankey
       matching_nodes_id,
       matching_links_id
     )
+    const revert_matching_links_id: { [id: string]: string } = {}
+    Object.entries(matching_links_id).forEach(([k, v]) => revert_matching_links_id[v] = k)
     // Local variables to avoid recomputations ------------------------------------------
 
     const all = mode.includes('*')
@@ -498,6 +500,7 @@ export abstract class Class_Sankey
 
     const add_flux = mode.includes('addFlux')
     const remove_flux = mode.includes('removeFlux')
+    const pos_flux = mode.includes('posFlux')    
     const sync_flux_tags = mode.includes('tagFlux')
     const sync_flux_values = mode.includes('Values')
     const sync_flux_attr = mode.includes('attrFlux')
@@ -539,6 +542,21 @@ export abstract class Class_Sankey
           })
       }
 
+      if (pos_flux || all) {
+        to_update
+          .forEach(id => {
+            const link = this._links[id]
+            // Source node
+            const source = this._nodes[link.source.id]
+            const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].source.id]
+            source.copyLinkOrderingFrom(other_source,revert_matching_links_id)
+            // Target node
+            const target = this._nodes[link.target.id]
+            const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
+            target.copyLinkOrderingFrom(other_target,revert_matching_links_id)
+          })        
+      }
+
       // With attrFlux we transfer link attr
       if (sync_flux_attr || all) {
         to_update
@@ -548,7 +566,7 @@ export abstract class Class_Sankey
             const sp = structuredClone(link.source.display.position)
             const tp = structuredClone(link.target.display.position)
             // Copy all attributes
-            link.copyFrom(other_sankey._links[matching_links_id[id] ?? id])
+            link.copyAttrFrom(other_sankey._links[matching_links_id[id] ?? id])
             // Keep positions
             link.source.display.position = sp
             link.target.display.position = tp
@@ -564,11 +582,11 @@ export abstract class Class_Sankey
             // Source node
             const source = this._nodes[this._links[id].source.id]
             const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].source.id]
-            source.copyLinkOrderingFrom(other_source)
+            source.copyLinkOrderingFrom(other_source,revert_matching_links_id)
             // Target node
             const target = this._nodes[this._links[id].target.id]
             const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
-            target.copyLinkOrderingFrom(other_target)
+            target.copyLinkOrderingFrom(other_target,revert_matching_links_id)
           })
 
       }

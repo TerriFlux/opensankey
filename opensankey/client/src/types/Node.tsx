@@ -323,13 +323,16 @@ export abstract class Class_NodeElement
     this._display.position_y_label = _._display.position_y_label
   }
 
-  public copyLinkOrderingFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public copyLinkOrderingFrom(
+    node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    matching_link_id : {[_: string]: string;}
+  ) {
     // Copy links orders ----------------------------------------------------------------
     this._links_order = []  // Empty current link order list
     // Fill with link that exist in current sankey and avoid duplicates in link order list
     node_to_copy._links_order
       .forEach(link_to_copy => {
-        const link = this.drawing_area.sankey.links_dict[link_to_copy.id] as Type_GenericLinkElement
+        const link = this.drawing_area.sankey.links_dict[matching_link_id[link_to_copy.id]??link_to_copy.id] as Type_GenericLinkElement
         if ((link !== undefined) && (!this._links_order.includes(link)))
           this._links_order.push(link)
       })

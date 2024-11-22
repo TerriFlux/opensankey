@@ -455,6 +455,35 @@ export abstract class Class_LinkElement
   }
 
   // COPY METHODS =======================================================================
+  /**
+   * Copy attributes from a given link 
+   *
+   * @param {Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>} link_to_copy
+   * @memberof Class_LinkElement
+   */
+  public copyAttrFrom(_: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+    super._copyFrom(_)
+    // Update style
+    if (this._display.style.id !== _._display.style.id) {
+      let style = this._display.sankey.link_styles_dict[_._display.style.id] as Class_LinkStyle
+      if (style === undefined) {
+        style = this.sankey.addNewLinkStyle(_._display.style.id, _._display.style.name) as Class_LinkStyle
+        style.copyFrom(_._display.style)
+      }
+      this.style = style
+    }
+    // Local attributes
+    this._display.attributes.copyFrom(_._display.attributes)
+    // Display
+    this._display.displaying_order = _._display.displaying_order
+    this._display.position_starting = structuredClone(_._display.position_starting)
+    this._display.position_ending = structuredClone(_._display.position_ending)
+    this._display.position_x_label = _._display.position_x_label
+    this._display.position_y_label = _._display.position_y_label
+    this._display.position_offset_label = _._display.position_offset_label
+    // Tooltips
+    this._tooltip_text = _._tooltip_text
+  }
 
   protected _copyFrom(_: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
     super._copyFrom(_)
