@@ -126,10 +126,12 @@ export abstract class Class_LinkElementPlus
   }
 
   public getPathColorToUse() {
-    const l_grad = this.shape_is_gradient
+
+    // CLean gradient
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
-    if (l_grad) {
+    // Apply gradient if needed
+    if (this.shape_is_gradient) {
 
       const defGradient = this.drawing_area.d3_selection_def_gradient
       const n_source = this.source
@@ -144,7 +146,8 @@ export abstract class Class_LinkElementPlus
       const height_src = n_target.getShapeHeightToUse()
       const width_trgt = n_target.getShapeWidthToUse()
       // Create a gradient
-      const gradient = defGradient?.append('defs').attr('id', 'def_gradient_' + n_source.id + '-' + n_target.id)
+      const gradient = defGradient?.append('defs')
+        .attr('id', 'def_gradient_' + n_source.id + '-' + n_target.id)
         .append('linearGradient')
         .attr('id', 'gradient-' + n_source.id + '-' + n_target.id)
         .attr('gradientUnits', 'userSpaceOnUse')
@@ -155,7 +158,8 @@ export abstract class Class_LinkElementPlus
         .attr('stop-color', () => {
           if (n_source.position_x <= n_target.position_x) {
             return n_source_color
-          } else {
+          }
+          else {
             return n_target_color
           }
         })
@@ -167,7 +171,8 @@ export abstract class Class_LinkElementPlus
         .attr('stop-color', () => {
           if (n_source.position_x <= n_target.position_x) {
             return n_target_color
-          } else {
+          }
+          else {
             return n_source_color
           }
         })
@@ -192,7 +197,8 @@ export abstract class Class_LinkElementPlus
           // Set starting gradient color & ending gradient color
           gradient?.select('#stop-start').attr('stop-color', n_source_color)
           gradient?.select('#stop-end').attr('stop-color', n_target_color)
-        } else {
+        }
+        else {
 
           // Position lienear gradient (it start & stop position )
           gradient
@@ -224,7 +230,8 @@ export abstract class Class_LinkElementPlus
           // Set starting gradient color & ending gradient color
           gradient?.select('#stop-start').attr('stop-color', n_source_color)
           gradient?.select('#stop-end').attr('stop-color', n_target_color)
-        } else {
+        }
+        else {
 
           // Position lienear gradient (it start & stop position )
           gradient?.attr('x1', 0)
@@ -267,8 +274,37 @@ export abstract class Class_LinkElementPlus
 
     }
 
+    // Otherwise use default
     return super.getPathColorToUse()
   }
+
+  public getArrowColorToUse() {
+    if (this.shape_is_gradient) {
+      const source_color = this.source.getShapeColorToUse()
+      const target_color = this.target.getShapeColorToUse()
+      const shape_orientation = this.shape_orientation  // save to avoid recomputings
+      const shape_is_recycling = this.shape_is_recycling  // save to avoid recomputings
+      if (shape_orientation === 'hh' || shape_orientation === 'hv') {
+        if (
+          (!shape_is_recycling && this.source.position_x < this.target.position_x) ||
+          (shape_is_recycling && this.source.position_x >= this.target.position_x)
+        )
+          return target_color
+        else
+          return source_color
+      }
+      else {
+        if (this.source.position_y < this.target.position_y)
+          return target_color
+        else
+          return source_color
+      }
+    }
+    else {
+      return super.getArrowColorToUse()
+    }
+  }
+
   //  GETTER & SETTER =============================================
 
   public get shape_is_gradient() {
