@@ -394,6 +394,8 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     return this.parent_level_tag.is_selected
   }
 
+  public get force_show_parent() { return this._force_show_parent }
+
   public get show_children() {
     // Forcing to show children
     if (this._force_show_children)
@@ -407,4 +409,6 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       .forEach(tag => ok_children_level_tags = (ok_children_level_tags || (tag.is_selected)))
     return ok_children_level_tags
   }
+
+  public get force_show_children() { return this._force_show_children }
 }

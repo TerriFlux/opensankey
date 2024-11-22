@@ -488,7 +488,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         }
         else {
           contextualised_node.drawParent()
-          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before aggregation
+          // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before aggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
           new_data.drawing_area.areaAutoFit()
@@ -514,7 +514,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.menu_configuration.ref_to_updater_node_disagregate.current(true)
         } else {
           contextualised_node.drawChildren()
-          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+          // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
           new_data.drawing_area.areaAutoFit()
