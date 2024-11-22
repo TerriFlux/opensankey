@@ -1539,6 +1539,17 @@ const convert_nodes: convert_nodesFuncType = (
     list_links
       .filter(l=>(l.idTarget==n.idNode || l.idSource==n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
       .forEach(l=>(n_tmp.links_order as string[]).push(l.idLink))
+
+    // Convert name of some local variables
+    if(n_tmp.local ){
+      const local_cast=(n_tmp.local as Type_JSON)
+      if((local_cast['label_vert_shift']!==undefined)){
+        local_cast['name_label_vert_shift']=local_cast['label_vert_shift']
+      }
+      if((local_cast['label_horiz_shift']!==undefined)){
+        local_cast['name_label_horiz_shift']=local_cast['label_horiz_shift']
+      }
+    }
   }
 
   )

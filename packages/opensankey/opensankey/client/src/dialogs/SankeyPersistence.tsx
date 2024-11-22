@@ -402,7 +402,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     }
     new_data.menu_configuration.ref_trigger_waiting_spinner_toast.current({success:'Layout updated',loading:'Setting layout'})
   }
-  // TODO adjust sankey zone
+  new_data.drawing_area.setToModeEdition(false)
 }
 
 
@@ -565,12 +565,10 @@ export const UploadExemple: FType_UploadExemple = (
         alert(error)
         return
       }
-
       if (!file_name.includes('.xlsx')) {
         // Clear datas & apply read datas
         new_data.fromJSON(JSON_data as Type_JSON)
         new_data.drawing_area.ArrangeTrade(false)
-        new_data.drawing_area.setToModeEdition(false)
       }
     })
   })

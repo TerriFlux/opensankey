@@ -587,6 +587,9 @@ export abstract class Class_DrawingArea
   public drawElements() {
     // Draw grid
     this.drawGrid()
+    // for parametric mode nodes need to be draw in a certain order
+    // so that the nodes at the top of the columns are drawn first
+    this._sankey.sortNodes()
     // Draw all nodes
     this._sankey.draw()
     // Draw legend
@@ -1656,7 +1659,6 @@ export abstract class Class_DrawingArea
         node.position_y = max_vertical_offset
       }
     })
-    this.sankey.sortNodes()
   }
 
   /**
@@ -1722,7 +1724,6 @@ export abstract class Class_DrawingArea
       let current_v = 0
       column.forEach(n => current_v = this.apply_v(n, current_v))
     })
-    this.sankey.sortNodes()
   }
 
   /**
