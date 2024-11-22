@@ -170,6 +170,16 @@ export function getBooleanFromJSON(
   return fallback_value
 }
 
+export function getBooleanOrUndefinedFromJSON(
+  json_object: Type_JSON,
+  key: string
+) {
+  if (json_object[key] !== undefined && typeof json_object[key] === 'boolean') { // test if not undefined because json_object[key] can be false thus not assiging correct value but fallback_value
+    return json_object[key] as boolean
+  }
+  return undefined
+}
+
 export function getNumberFromJSON(
   json_object: Type_JSON,
   key: string,
@@ -261,7 +271,7 @@ export function getJSONFromJSON(
   fallback_value: Type_JSON
 ) {
   if (
-    (json_object[key] !== undefined) && 
+    (json_object[key] !== undefined) &&
     (typeof json_object[key] === typeof fallback_value)
   ) {
     return json_object[key] as Type_JSON

@@ -50,6 +50,7 @@ import {
   default_font,
   default_style_id,
   getBooleanFromJSON,
+  getBooleanOrUndefinedFromJSON,
   getJSONOrUndefinedFromJSON,
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
@@ -651,17 +652,6 @@ export abstract class Class_NodeElement
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     this.drawing_area.bypass_redraws = true
-    let local_aggregation: boolean | undefined
-    if (json_node_object.local) {
-      local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
-    }
-    if (local_aggregation != undefined) {
-      if (local_aggregation) {
-        this.forceShow()
-      } else {
-        this.forceHide()
-      }
-    }
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
     // For each dimension in dimensions JSON Struct, create the parent / child relation
@@ -726,6 +716,22 @@ export abstract class Class_NodeElement
             }
           }
         })
+    }
+    // Setup saved local desagregation
+    const local_aggregation = getBooleanOrUndefinedFromJSON(
+      (json_node_object['local'] ?? {}) as Type_JSON,
+      'local_aggregation')
+    if (local_aggregation != undefined) {
+      if (local_aggregation) {
+        // Force to show this node
+        this.dimensions_as_child[0]?.setForceToShowChildren()
+        // this.dimensions_as_parent[0]?.setForceToShowParent()
+      }
+      else {
+        // Force to hide this node
+        this.dimensions_as_child[0]?.setForceToShowParent()
+        // this.dimensions_as_parent[0]?.setForceToShowChildren()
+      }
     }
     this.drawing_area.bypass_redraws = false // Security
   }
