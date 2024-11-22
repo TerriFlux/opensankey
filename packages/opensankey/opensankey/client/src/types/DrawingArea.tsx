@@ -485,6 +485,32 @@ export abstract class Class_DrawingArea
     // Clean drawing area
     this.unDraw()
 
+    // Reinit d3 selections
+    this._initDraw()
+
+    // Draw background
+    this.drawBackground()
+
+    // Draw Everything
+    this.drawElements()
+
+    // Fit area
+    this.checkAndUpdateAreaSize()
+    this.areaAutoFit()
+
+    // Added events listeners
+    this.setEventsListeners()
+
+    // Unset saving indicator
+    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+  }
+
+  /**
+   * Reinit d3 selections
+   * @protected
+   * @memberof Class_DrawingArea
+   */
+  protected _initDraw() {
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
@@ -512,22 +538,6 @@ export abstract class Class_DrawingArea
     this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
     this.d3_selection_handlers = this.d3_selection.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection.append('g').attr('id', 'g_select_zone')
-
-    // Draw background
-    this.drawBackground()
-
-    // Draw Everything
-    this.drawElements()
-
-    // Fit area
-    this.checkAndUpdateAreaSize()
-    this.areaAutoFit()
-
-    // Added events listeners
-    this.setEventsListeners()
-
-    // Unset saving indicator
-    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   /**
