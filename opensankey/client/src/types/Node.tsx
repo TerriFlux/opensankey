@@ -50,6 +50,7 @@ import {
   default_font,
   default_style_id,
   getBooleanFromJSON,
+  getBooleanOrUndefinedFromJSON,
   getJSONOrUndefinedFromJSON,
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
@@ -185,12 +186,16 @@ export abstract class Class_NodeElement
   // Ordering for related IO Links
   private _links_order: Type_GenericLinkElement[] = []
 
+  // Position of related IO links
+  private _input_links_ending_point: { [id: string]: { x: number, y: number } } = {}
+  private _output_links_starting_point: { [id: string]: { x: number, y: number } } = {}
+
   // Set to true when we are in a dragging process
   private _drag: boolean = false
 
   // Handles used to move related IO links relativly to eachother
-  private _handle_input_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
-  private _handle_output_links: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
+  private _input_links_handle: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
+  private _output_links_handle: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
 
   // Node tags
   private _tags: Class_Tag[] = []
@@ -261,8 +266,8 @@ export abstract class Class_NodeElement
     this._input_links = {}
     this._output_links = {}
     this._links_order = []
-    this._handle_input_links = {}
-    this._handle_output_links = {}
+    this._input_links_handle = {}
+    this._output_links_handle = {}
     // Remove reference of self in related tags
     this.tags_list.forEach(tag => tag.removeReference(this))
     this._tags = []
@@ -647,17 +652,6 @@ export abstract class Class_NodeElement
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
     this.drawing_area.bypass_redraws = true
-    let local_aggregation: boolean | undefined
-    if (json_node_object.local) {
-      local_aggregation = (json_node_object.local as Type_JSON).local_aggregation as boolean
-    }
-    if (local_aggregation != undefined) {
-      if (local_aggregation) {
-        this.forceShow()
-      } else {
-        this.forceHide()
-      }
-    }
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
     // For each dimension in dimensions JSON Struct, create the parent / child relation
@@ -723,6 +717,22 @@ export abstract class Class_NodeElement
           }
         })
     }
+    // Setup saved local desagregation
+    const local_aggregation = getBooleanOrUndefinedFromJSON(
+      (json_node_object['local'] ?? {}) as Type_JSON,
+      'local_aggregation')
+    if (local_aggregation != undefined) {
+      if (local_aggregation) {
+        // Force to show this node
+        this.dimensions_as_child[0]?.setForceToShowChildren()
+        // this.dimensions_as_parent[0]?.setForceToShowParent()
+      }
+      else {
+        // Force to hide this node
+        this.dimensions_as_child[0]?.setForceToShowParent()
+        // this.dimensions_as_parent[0]?.setForceToShowChildren()
+      }
+    }
     this.drawing_area.bypass_redraws = false // Security
   }
 
@@ -739,6 +749,13 @@ export abstract class Class_NodeElement
   protected _draw() {
     // Heritance of draw function
     super._draw()
+    // Draw label
+    this._drawNameLabel()
+    this._drawValueLabel()
+  }
+
+  protected _initDraw() {
+    super._initDraw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_nodes')
     // Apply styles
@@ -746,16 +763,26 @@ export abstract class Class_NodeElement
     this.d3_selection?.style('font-family', this.name_label_font_family)
     // Init <g> containing shape elements
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
-    // Draw shape
-    this._drawShape()
-    // Draw label
-    this._drawNameLabel()
-    this._drawValueLabel()
-    this._drawLinks()
+  }
+
+  public unDraw() {
+    super.unDraw()
+    this._links_order
+      .forEach(link => {
+        if (link.source === this) this._output_links_handle[link.id].draw()
+        if (link.target === this) this._input_links_handle[link.id].draw()
+      })
   }
 
   public drawAsSelected() {
-    this.draw()
+    // Redraw shape
+    this.drawShape()
+    // Redraw handles
+    this.links_order_visible
+      .forEach(link => {
+        if (link.source === this) this._output_links_handle[link.id].draw()
+        if (link.target === this) this._input_links_handle[link.id].draw()
+      })
   }
 
   // Styles / attributes related methods ------------------------------------------------
@@ -1007,109 +1034,85 @@ export abstract class Class_NodeElement
     this.draw() //Will hide node because we generally loop one visible node to draw them so this node won't be taking into account
   }
 
-  public forceLevelTag() {
-    delete this._show
-  }
-
-  public drawParent() {
+  /**
+   * Agregate node
+   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, agregate with 'Primaire'
+   * @memberof Class_NodeElement
+   */
+  public drawParent(id?: string) {
     if (this.is_child) {
-      Object.values(this._dimensions_as_child)[0].parent.forceShow()
-      Object.values(this._dimensions_as_child)[0].children.forEach(n => n.forceHide())
+      // Force to show parent
+      if ((id !== undefined) && (this._dimensions_as_child[id]))
+        this._dimensions_as_child[id].setForceToShowChildren()
+      else
+        Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
+
+      // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
       }
       const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-      const import_nodes = this.input_links_list.filter(lid => {
-        // if (!(lid.is_visible)) {
-        //   return false
-        // }
-        const inputNode = lid.source
-        if (inputNode.hasGivenTag(echangeTag)) {
-          return true
-        }
-        return false
-      }).map(lid => lid.source)
-      import_nodes.forEach(n => (n as Type_AnyNodeElement).drawParent())
 
-      const export_nodes = this.output_links_list.filter(lid => {
-        // if (!(lid.is_visible)) {
-        //   return false
-        // }
-        const outputNode = lid.target
-        if (outputNode.hasGivenTag(echangeTag)) {
-          return true
-        }
-        return false
-      }).map(lid => lid.target)
-      export_nodes.forEach(n => (n as Type_AnyNodeElement).drawParent())
+      // All input exchange must also be aggregated
+      this.input_links_list
+        .forEach(input_link => {
+          const input_node = input_link.source
+          if (input_node.hasGivenTag(echangeTag)) {
+            input_node.drawParent(id)
+          }
+        })
 
+      // All output exchange must also be aggregated
+      this.output_links_list
+        .forEach(output_link => {
+          const output_node = output_link.target
+          if (output_node.hasGivenTag(echangeTag)) {
+            output_node.drawParent(id)
+          }
+        })
     }
   }
 
-  public drawChildren() {
+  /**
+   * Disagregate node
+   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, disagregate with 'Primaire'
+   * @memberof Class_NodeElement
+   */
+  public drawChildren(id?: string) {
     if (this.is_parent) {
-      Object.values(this._dimensions_as_parent)[0].parent.forceHide()
-      Object.values(this._dimensions_as_parent)[0].children.forEach(n => {
-        n.forceShow()
-      })
+      // Force to show children
+      if ((id !== undefined) && (this._dimensions_as_parent[id]))
+        this._dimensions_as_parent[id].setForceToShowChildren()
+      else
+        Object.values(this._dimensions_as_parent)[Object.values(this._dimensions_as_parent).length-1].setForceToShowChildren()
+
+      // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
       }
       const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-      const import_nodes = this.input_links_list.filter(lid => {
-        // if (!(lid.is_visible)) {
-        //   return false
-        // }
-        const inputNode = lid.source
-        if (inputNode.hasGivenTag(echangeTag)) {
-          return true
-        }
-        return false
-      }).map(lid => lid.source)
-      import_nodes.forEach(n => (n as Type_AnyNodeElement).drawChildren())
 
-      const export_nodes = this.output_links_list.filter(lid => {
-        // if (!(lid.is_visible)) {
-        //   return false
-        // }
-        const outputNode = lid.target
-        if (outputNode.hasGivenTag(echangeTag)) {
-          return true
-        }
-        return false
-      }).map(lid => lid.target)
-      export_nodes.forEach(n => (n as Type_AnyNodeElement).drawChildren())
-    }
-  }
+      // All input exchange nodes must also be desaggregated
+      this.input_links_list
+        .forEach(input_link => {
+          const input_node = input_link.source
+          if (input_node.hasGivenTag(echangeTag)) {
+            input_node.drawChildren(id)
+          }
+        })
 
-  /**
-   *Choose wich node dimensions we have to disagregate
-   *
-   * @param {string} id
-   * @memberof Class_NodeElement
-   */
-  public drawChildrenOfGrp(id: string) {
-    if (this.is_parent && id in this._dimensions_as_parent) {
-      this._dimensions_as_parent[id].parent.forceHide()
-      this._dimensions_as_parent[id].children.forEach(n => n.forceShow())
-    }
-  }
-
-  /**
-   *Choose wich node dimensions we have to agregate
-   *
-   * @param {string} id
-   * @memberof Class_NodeElement
-   */
-  public drawParentOfGrp(id: string) {
-    if (this.is_child && id in this._dimensions_as_child) {
-      this._dimensions_as_child[id].parent.forceShow()
-      this._dimensions_as_child[id].children.forEach(n => n.forceHide())
+      // All output exchange nodes must also be desaggregated
+      this.output_links_list
+        .forEach(output_link => {
+          const output_node = output_link.target
+          if (output_node.hasGivenTag(echangeTag)) {
+            output_node.drawChildren(id)
+          }
+        })
     }
   }
 
   // Links related methods --------------------------------------------------------------
-
 
   public drawLinks() {
     this._process_or_bypass(() => this._drawLinks())
@@ -1225,6 +1228,7 @@ export abstract class Class_NodeElement
   }
 
   // Get links
+
   public getFirstInputLink() {
     if (this.hasInputLinks()) return this.input_links_list[0] // TODO pas bon
     else return undefined
@@ -1262,6 +1266,36 @@ export abstract class Class_NodeElement
         (link.source === this && link.source_side === _))
     })
   }
+
+  // Get or update links positions
+
+  public getInputLinkEndingPoint(link: Type_GenericLinkElement) {
+    if (this._input_links[link.id] !== undefined) {
+      if (!this._input_links_ending_point[link.id]) {
+        this.drawLinks()
+        return undefined
+      }
+      else {
+        return this._input_links_ending_point[link.id]
+      }
+    }
+    return undefined
+  }
+
+  public getOutputLinkStartingPoint(link: Type_GenericLinkElement) {
+    if (this._output_links[link.id] !== undefined) {
+      if (!this._output_links_starting_point[link.id]) {
+        this.drawLinks()
+        return undefined
+      }
+      else {
+        return this._output_links_starting_point[link.id]
+      }
+    }
+    return undefined
+  }
+
+  // Ordering links
 
   /**
    * Function to reorganize links_order depending of source/target position
@@ -1423,90 +1457,99 @@ export abstract class Class_NodeElement
    */
   protected _applyPosition() {
     if (this.d3_selection !== null) {
-      // Default positions
-      const x = this.position_x
-      const y = this.position_y
       // Deal with import / export nodes
-      if (this.position_type === 'relative' && !this._drag) {
-        if (this.hasInputLinks()) {
-          // Node is export
-          const input_link = this.getFirstInputLink()
-          // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
-          const source_node = input_link!.source
-          if (!source_node.shape_visible) {
-            this.d3_selection.attr('transform', 'translate(0,0)')
-            return
+      if (
+        (
+          (this.position_type === 'relative') ||
+          (this.position_type === 'parametric')
+        ) &&
+        (!this._drag)
+      ) {
+        // Apply relative position
+        if (this.position_type === 'relative') {
+          if (this.hasInputLinks()) {
+            // Node is export
+            const input_link = this.getFirstInputLink()
+            // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
+            const source_node = input_link!.source
+            if (!source_node.shape_visible) {
+              this.d3_selection.attr('transform', 'translate(0,0)')
+              return
+            }
+            this._display.position.x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
+            this._display.position.y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
           }
-          const x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
-          const y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
-          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
+          else if (this.hasOutputLinks()) {
+            // Node is import
+            const output_link = this.getFirstOutputLink()
+            // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
+            const target_node = output_link!.target
+            if (!target_node.shape_visible) {
+              this.d3_selection.attr('transform', 'translate(0,0)')
+              return
+            }
+            this._display.position.x = target_node.position_x + this.position_relative_dx
+            this._display.position.y = target_node.position_y + this.position_relative_dy
+          }
         }
-        else if (this.hasOutputLinks()) {
-          // Node is import
-          const output_link = this.getFirstOutputLink()
-          // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
-          const target_node = output_link!.target
-          if (!target_node.shape_visible) {
-            this.d3_selection.attr('transform', 'translate(0,0)')
-            return
+        // Apply parametric position
+        else { // if (this.position_type === 'parametric')
+          const process_nodes = this.sankey.visible_nodes_list
+          let same_u = process_nodes.filter(n => n.position_u === this.position_u)
+          const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
+          if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
+            // Importations
+            const firstNonEchangeNodeBelow = process_nodes.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
+            same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
+            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            if (nodeAbove) {
+              this._display.position.y = nodeAbove.position_y
+                + nodeAbove.getShapeHeightToUse()
+                + this.position_dy
+            }
+            // else {
+            //   this._display.position.y = 200
+            // }
+            if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
+              const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
+              this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
+              // this.drawing_area.draw()
+            }
           }
-          const x = target_node.position_x + this.position_relative_dx
-          const y = target_node.position_y + this.position_relative_dy
-          this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
+          else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
+            // Exportations
+            same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
+            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            if (nodeAbove) {
+              this._display.position.y = nodeAbove.position_y
+                + nodeAbove.getShapeHeightToUse()
+                + this.position_dy
+            } else {
+              let max_vertical_offset = 0
+              this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
+                max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
+              })
+              this._display.position.y = max_vertical_offset + 100
+            }
+          }
+          else {
+            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            if (nodeAbove) {
+              this._display.position.y = nodeAbove.position_y
+                + nodeAbove.getShapeHeightToUse()
+                + this.position_dy
+            }
+          }
         }
-      } else if (this.position_type === 'parametric' && !this._drag) {
-        const process_nodes = this.sankey.visible_nodes_list
-        let same_u = process_nodes.filter(n => n.position_u === this.position_u)
-        const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-        if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
-          // Importations
-          const firstNonEchangeNodeBelow = process_nodes.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
-          same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
-          const nodeAbove = same_u[same_u.indexOf(this) - 1]
-          if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y
-            + nodeAbove.getShapeHeightToUse()
-            + this.position_dy
-          } /*else {
-            this._display.position.y = 50
-          }*/
-          if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y+200) {
-            const shift = 100 +this.position_y - firstNonEchangeNodeBelow.position_y
-            this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag) ).forEach(n=>n.shiftVertically(shift))
-            //this.drawing_area.draw()
-          }
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
-        } else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
-          // Exportations
-          same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
-          const nodeAbove = same_u[same_u.indexOf(this) - 1]
-          if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y
-              + nodeAbove.getShapeHeightToUse()
-              + this.position_dy
-          } else {
-            let max_vertical_offset = 0
-            this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
-              max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
-            })
-            this._display.position.y = max_vertical_offset+100
-          }
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
-        } else {
-          const nodeAbove = same_u[same_u.indexOf(this) - 1]
-          if (nodeAbove) {
-            this._display.position.y = nodeAbove.position_y
-              + nodeAbove.getShapeHeightToUse()
-              + this.position_dy
-          }
-          this.d3_selection.attr('transform', 'translate(' + this.position_x + ', ' + this.position_y + ')')
-        }
-      } else {
-        this.d3_selection.attr('transform', 'translate(' + x + ', ' + y + ')')
       }
+      // Apply selected coordinates
+      super._applyPosition()
     }
-    // Update also position for links
-    this.drawLinks()
+    // // Reset all saved positions for links
+    // this._input_links_ending_point = {}
+    // this._output_links_starting_point = {}
+    // Redraw links
+    this._drawLinks()
   }
 
   /**
@@ -1841,8 +1884,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public removeInputLink(link: Type_GenericLinkElement) {
-    this._handle_input_links[link.id]?.delete()
-    delete this._handle_input_links[link.id]
+    this._input_links_handle[link.id]?.delete()
+    delete this._input_links_handle[link.id]
+    delete this._input_links_ending_point[link.id]
     delete this._input_links[link.id]
     this.removeLinkFromOrderingLinksList(link)
   }
@@ -1854,13 +1898,18 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public removeOutputLink(link: Type_GenericLinkElement) {
-    this._handle_output_links[link.id]?.delete()
-    delete this._handle_output_links[link.id]
+    this._output_links_handle[link.id]?.delete()
+    delete this._output_links_handle[link.id]
+    delete this._output_links_starting_point[link.id]
     delete this._output_links[link.id]
     this.removeLinkFromOrderingLinksList(link)
   }
 
   // PRIVATE METHODS ====================================================================
+
+  private drawShape() {
+    this._process_or_bypass(() => this._drawShape())
+  }
 
   /**
    * Draw node shape on d3 svg
@@ -1868,6 +1917,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private _drawShape() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.node_shape').remove()
     // Do the rest only if shape is visible
@@ -1909,8 +1961,8 @@ export abstract class Class_NodeElement
     }
   }
 
-  private drawShape() {
-    this._process_or_bypass(() => this._drawShape())
+  private drawNameLabel() {
+    this._process_or_bypass(() => this._drawNameLabel())
   }
 
   /**
@@ -1919,6 +1971,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   protected _drawNameLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous label
     this.d3_selection?.selectAll('.name_label').remove()
     // Add name label
@@ -2004,10 +2059,6 @@ export abstract class Class_NodeElement
     }
   }
 
-  private drawNameLabel() {
-    this._process_or_bypass(() => this._drawNameLabel())
-  }
-
   /**
    * Function triggered when we start dragging node name label, it initialise relative position if undefined
    *
@@ -2043,7 +2094,6 @@ export abstract class Class_NodeElement
 
     this.name_label_horiz = 'dragged'
     this.name_label_vert = 'dragged'
-
   }
 
   /**
@@ -2091,7 +2141,19 @@ export abstract class Class_NodeElement
    * @private
    * @memberof Class_NodeElement
    */
+  private drawValueLabel() {
+    this._process_or_bypass(() => this._drawValueLabel)
+  }
+
+  /**
+   * Draw node label on D3 svg
+   * @private
+   * @memberof Class_NodeElement
+   */
   private _drawValueLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous label
     this.d3_selection?.selectAll('.value_label').remove()
     // Add name label
@@ -2170,26 +2232,18 @@ export abstract class Class_NodeElement
     }
   }
 
-  private drawValueLabel() {
-    this._process_or_bypass(() => this._drawValueLabel)
-  }
-
   /**
    * Call what is necessary each time a link is modified
    * @private
    * @memberof Class_NodeElement
    */
   private _drawLinks() {
-    Object.values(this._input_links).forEach(link => {
-      link.draw()
-      this._handle_input_links[link.id].draw()
-    })
-    Object.values(this._output_links).forEach(link => {
-      link.draw()
-      this._handle_output_links[link.id].draw()
-    })
-    this.drawShape()  // Node shape can be modified by link's changes
-    this.applyPositionOnLinks()  // Links positions can be modified by link's changes
+    // Links positions are modified by nodes's position changes
+    this.updateLinksPositions()
+    // Redraw arrows -> affected if links are added or removed
+    this._drawLinksArrow()
+    // Node shape -> affected if links are added or removed, or if links values change
+    this._drawShape()
   }
 
   /**
@@ -2199,15 +2253,17 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private _drawLinksArrow() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
 
-    const list_link_to_add_arrow = this.input_links_list.map(link => {
-      link.d3_selection?.select('.link_arrow').remove()
-      return link
-    }).filter(link => {
-      return link.is_visible
-        && link.shape_is_arrow
-        && link.d3_selection !== undefined
-    })
+    this.d3_selection?.selectAll('.link_arrow').remove()
+    const list_link_to_add_arrow = this.input_links_list
+      .filter(link => {
+        return link.is_visible
+          && link.shape_is_arrow
+          && link.d3_selection !== undefined
+      })
       .sort((l1, l2) => this._links_order.indexOf(l1) - this._links_order.indexOf(l2)) //sort list so output array follow node linksOrder
 
     let cum_v_left = 0
@@ -2224,136 +2280,136 @@ export abstract class Class_NodeElement
     const sumLinkTop = this.getSumOfLinksThickness('top')
     const sumLinkBottom = this.getSumOfLinksThickness('bottom')
 
+    list_link_to_add_arrow
+      .forEach(link => {
+        // Some variable parameters for arrow
+        const arrow_length = link.shape_arrow_size
+        const arrow_color = link.getArrowColorToUse()
+        let node_arrow_shift = 0
+        let arrows_adjustment = 0
 
-    list_link_to_add_arrow.forEach(link => {
+        // Get side of target node from which arrow as to be drawn
+        const link_arrow_side_right = link.target_side == 'right'
+        const link_arrow_side_left = link.target_side == 'left'
+        const link_arrow_side_top = link.target_side == 'top'
+        const link_arrow_side_bottom = link.target_side == 'bottom'
 
-      // Some variable parameters for arrow
-      const arrow_length = link.shape_arrow_size
-      const link_color = link.getPathColorToUse()
-      let node_arrow_shift = 0
-      let arrows_adjustment = 0
+        const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
 
-      // Get side of target node from which arrow as to be drawn
-      const link_arrow_side_right = link.target_side == 'right'
-      const link_arrow_side_left = link.target_side == 'left'
-      const link_arrow_side_top = link.target_side == 'top'
-      const link_arrow_side_bottom = link.target_side == 'bottom'
+        // Thicknen of the link influence arrow size
+        const link_value = link.thickness
 
-      const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
+        // If the node target is in arrow shape then we have to modify some variable beforehand
+        if (node_shape === 'arrow') {
+          const node_angle_direction = this.shape_arrow_angle_direction
+          const node_angle_factor = this.shape_arrow_angle_factor
+          if (link_direction_same_as_node_arrow) {
+            // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
+            let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+            switch (node_angle_direction) {
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
+            }
+            node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
-      // Thicknen of the link influence arrow size
-      const link_value = link.thickness
-
-      // If the node target is in arrow shape then we have to modify some variable beforehand
-      if (node_shape === 'arrow') {
-        const node_angle_direction = this.shape_arrow_angle_direction
-        const node_angle_factor = this.shape_arrow_angle_factor
-        if (link_direction_same_as_node_arrow) {
-          // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
-          let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-          switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+            let node_face_size2 = sumLinkLeft
+            switch (node_angle_direction) {
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
+            }
+            arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
+            arrows_adjustment = node_arrow_shift - arrows_adjustment
           }
-          node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
-
-          let node_face_size2 = sumLinkLeft
-          switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
-          }
-          arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
-          arrows_adjustment = node_arrow_shift - arrows_adjustment
         }
-      }
 
-      link.d3_selection?.append('path')
-        .attr('class', 'link_arrow')
-        .attr('d', () => {
+        this.d3_selection?.append('path')
+          .attr('class', 'link_arrow')
+          .attr('d', () => {
 
-          let xt: number = 0 // x coord where link path end
-          let yt: number = 0 // y coord where link path end
-          let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
-          let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
+            let xt: number = 0 // x coord where link path end
+            let yt: number = 0 // y coord where link path end
+            let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
+            let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
 
-          if (link_arrow_side_left) {
-            xt = +this.position_x
-            yt = +this.position_y + node_height / 2
-            current_cumul_of_side = cum_v_left
-            total_cumul_of_side = sumLinkLeft
+            if (link_arrow_side_left) {
+              xt = +0
+              yt = +0 + node_height / 2
+              current_cumul_of_side = cum_v_left
+              total_cumul_of_side = sumLinkLeft
+            }
+            else if (link_arrow_side_right) {
+              xt = +0 + node_width
+              yt = +0 + node_height / 2
+              current_cumul_of_side = cum_v_right
+              total_cumul_of_side = sumLinkRight
+            }
+            else if (link_arrow_side_top) {
+              xt = +0 + node_width / 2
+              yt = +0
+              current_cumul_of_side = cum_h_top
+              total_cumul_of_side = sumLinkTop
 
-          } else if (link_arrow_side_right) {
-            xt = +this.position_x + node_width
-            yt = +this.position_y + node_height / 2
-            current_cumul_of_side = cum_v_right
-            total_cumul_of_side = sumLinkRight
+            }
+            else if (link_arrow_side_bottom) {
+              xt = +0 + node_width / 2
+              yt = +0 + node_height
+              current_cumul_of_side = cum_h_bottom
+              total_cumul_of_side = sumLinkBottom
+            }
 
-          } else if (link_arrow_side_top) {
-            xt = +this.position_x + node_width / 2
-            yt = +this.position_y
-            current_cumul_of_side = cum_h_top
-            total_cumul_of_side = sumLinkTop
+            const p5 = [xt, yt] // Starting point of arrow
 
-          } else if (link_arrow_side_bottom) {
-            xt = +this.position_x + node_width / 2
-            yt = +this.position_y + node_height
-            current_cumul_of_side = cum_h_bottom
-            total_cumul_of_side = sumLinkBottom
-          }
+            // Some variables parameters influencing arrow shape processing
+            const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
+            const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-          const p5 = [xt, yt] // Starting point of arrow
+            return SankeyShapes.draw_arrow_part(
+              total_cumul_of_side / 2,
+              p5,
+              +link_value,
+              current_cumul_of_side,
+              is_horizontal_at_target,
+              is_revert,
+              arrow_length,
+              node_arrow_shift,
+              arrows_adjustment,
+              node_shape === 'arrow'
+            )
+          })
+          .attr('fill', arrow_color)
+          .attr('fill-opacity', link.shape_opacity)
+          .attr('stroke', arrow_color)
+          .attr('stroke-width', 0.1)
 
-          // Some variables parameters influencing arrow shape processing
-          const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
-          const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
-
-          return SankeyShapes.draw_arrow_part(
-            total_cumul_of_side / 2,
-            p5,
-            +link_value,
-            current_cumul_of_side,
-            is_horizontal_at_target,
-            is_revert,
-            arrow_length,
-            node_arrow_shift,
-            arrows_adjustment,
-            node_shape === 'arrow'
-          )
-
-        })
-        .attr('fill', link_color)
-        .attr('fill-opacity', link.shape_opacity)
-        .attr('stroke', link_color)
-        .attr('stroke-width', 0.1)
-
-      // Increment side cumul of drawn arrow to influence next arrow starting position
-      if (link_arrow_side_left) {
-        cum_v_left += link_value
-      } else if (link_arrow_side_right) {
-        cum_v_right += link_value
-      } else if (link_arrow_side_top) {
-        cum_h_top += link_value
-      } else if (link_arrow_side_bottom) {
-        cum_h_bottom += link_value
-      }
-    })
-
+        // Increment side cumul of drawn arrow to influence next arrow starting position
+        if (link_arrow_side_left) {
+          cum_v_left += link_value
+        }
+        else if (link_arrow_side_right) {
+          cum_v_right += link_value
+        }
+        else if (link_arrow_side_top) {
+          cum_h_top += link_value
+        }
+        else if (link_arrow_side_bottom) {
+          cum_h_bottom += link_value
+        }
+      })
   }
-
 
   private getArrowPath() {
     // Compute height & width
@@ -2413,7 +2469,7 @@ export abstract class Class_NodeElement
    * @private
    * @memberof Class_NodeElement
    */
-  private applyPositionOnLinks() {
+  private updateLinksPositions() {
     // Reference position
     const x0 = this.position_x
     const y0 = this.position_y
@@ -2425,82 +2481,145 @@ export abstract class Class_NodeElement
     let dy_left = this.getLinksStartingPositionOffSet('left')
     let dx_top = this.getLinksStartingPositionOffSet('top')
     let dx_bottom = this.getLinksStartingPositionOffSet('bottom')
-    // Loop on all links
-    this.links_order_visible.forEach(link => {
-      const thickness = link.thickness
-      const handle_position_shift = 5
-      // Current node is link's source
-      if (link.source === this) {
-        if (link.source_side === 'right') {
-          link.setPosXYStartingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          if (this._handle_output_links[link.id] !== undefined) {
-            this._handle_output_links[link.id].setPosXY(link.position_x_start + handle_position_shift, link.position_y_start)
+    // List of links to redraw
+    const link_to_redraw: Type_GenericLinkElement[] = [] // avoid recomputation
+    // Loop on all links to compute starting / ending position
+    this._links_order
+      .forEach(link => {
+        // Filter out and undraw unvisible links
+        if (!link.is_visible) {
+          link.unDraw()
+          if (link.source === this) {
+            delete this._output_links_starting_point[link.id]
+            this._output_links_handle[link.id].unDraw()
+          }
+          if (link.target === this) {
+            delete this._input_links_ending_point[link.id]
+            this._input_links_handle[link.id].unDraw()
+          }
+          return
+        }
+        // Get positioning parameters
+        const thickness = link.thickness
+        const handle_position_shift = 5
+        // Current node is link's source
+        if (link.source === this) {
+          let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
+          let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
+          if (link.source_side === 'right') {
+            link_starting_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+            link_starting_handle_point = { x: (link_starting_point.x + handle_position_shift), y: link_starting_point.y }
             dy_right = dy_right + thickness
           }
-        }
-        else if (link.source_side === 'left') {
-          link.setPosXYStartingPoint(x0, y0 + dy_left + thickness / 2)
-          if (this._handle_output_links[link.id] !== undefined) {
-            this._handle_output_links[link.id].setPosXY(link.position_x_start - handle_position_shift, link.position_y_start)
+          else if (link.source_side === 'left') {
+            link_starting_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+            link_starting_handle_point = { x: (link_starting_point.x - handle_position_shift), y: link_starting_point.y }
             dy_left = dy_left + thickness
           }
-        }
-        else if (link.source_side === 'top') {
-          link.setPosXYStartingPoint(x0 + dx_top + thickness / 2, y0)
-          if (this._handle_output_links[link.id] !== undefined) {
-            this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start - handle_position_shift)
+          else if (link.source_side === 'top') {
+            link_starting_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+            link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y - handle_position_shift }
             dx_top = dx_top + thickness
           }
-        }
-        else {  // link.source_side === 'bottom'
-          link.setPosXYStartingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          if (this._handle_output_links[link.id] !== undefined) {
-            this._handle_output_links[link.id].setPosXY(link.position_x_start, link.position_y_start + handle_position_shift)
+          else {  // link.source_side === 'bottom'
+            link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+            link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
             dx_bottom = dx_bottom + thickness
           }
+          // Draw link if position has not been set before
+          let need_to_draw = (
+            (this._output_links_starting_point[link.id] === undefined) ||
+            (!link.d3_selection) ||
+            (!link.d3_selection?.node())
+          )
+          if (!need_to_draw) {
+            // Or if diff is at least one pixel
+            const dx = this._output_links_starting_point[link.id].x - link_starting_point.x
+            const dy = this._output_links_starting_point[link.id].y - link_starting_point.y
+            need_to_draw = ((Math.abs(dx) >= 1) || (Math.abs(dy) >= 1))
+          }
+          // If one of these two conditions match, add link to redraw list
+          if (need_to_draw) {
+            // Wil redraw if it's the case
+            link_to_redraw.push(link)
+            // Save position
+            this._output_links_starting_point[link.id] = link_starting_point
+            // Update handle
+            if (this._output_links_handle[link.id] !== undefined) {
+              this._output_links_handle[link.id]
+                .setPosXY(
+                  link_starting_handle_point.x,
+                  link_starting_handle_point.y)
+              // Set a class to the handler corresponding to the source side of link, it is use for css cursor
+              this._output_links_handle[link.id]
+                .d3_selection?.attr('class', 'node_io ' + link.source_side)
+            }
+          }
         }
-        if (this._handle_output_links[link.id] !== undefined)
-          this._handle_output_links[link.id].d3_selection?.attr('class', 'node_io ' + link.source_side) // Set a class to the handler corresponding to the source side of link, it is use for css cursor
-
-        link.target.drawLinksArrow() //redraw arrow of node target of output links visible
-      }
-      // Or current node is link's target
-      if (link.target === this) {
-
-        if (link.target_side === 'right') {
-          link.setPosXYEndingPoint(x0 + width, y0 + dy_right + thickness / 2)
-          if (this._handle_input_links[link.id] !== undefined) {
-            this._handle_input_links[link.id].setPosXY(link.position_x_end + handle_position_shift, link.position_y_end)
+        // Or current node is link's target
+        if (link.target === this) {
+          let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
+          let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
+          if (link.target_side === 'right') {
+            link_ending_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+            link_ending_handle_point = { x: (link_ending_point.x + handle_position_shift), y: link_ending_point.y }
             dy_right = dy_right + thickness
           }
-        }
-        else if (link.target_side === 'left') {
-          link.setPosXYEndingPoint(x0, y0 + dy_left + thickness / 2)
-          if (this._handle_input_links[link.id] !== undefined) {
-            this._handle_input_links[link.id].setPosXY(link.position_x_end - handle_position_shift, link.position_y_end)
+          else if (link.target_side === 'left') {
+            link_ending_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+            link_ending_handle_point = { x: (link_ending_point.x - handle_position_shift), y: link_ending_point.y }
             dy_left = dy_left + thickness
           }
-        }
-        else if (link.target_side === 'top') {
-          link.setPosXYEndingPoint(x0 + dx_top + thickness / 2, y0)
-          if (this._handle_input_links[link.id] !== undefined) {
-            this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end - handle_position_shift)
+          else if (link.target_side === 'top') {
+            link_ending_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+            link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y - handle_position_shift) }
             dx_top = dx_top + thickness
           }
-        }
-        else {  // link.target_side === 'bottom'
-          link.setPosXYEndingPoint(x0 + dx_bottom + thickness / 2, y0 + height)
-          if (this._handle_input_links[link.id] !== undefined) {
-            this._handle_input_links[link.id].setPosXY(link.position_x_end, link.position_y_end + handle_position_shift)
+          else {  // link.target_side === 'bottom'
+            link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+            link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
             dx_bottom = dx_bottom + thickness
           }
+          // Draw link if position has not been set before
+          let need_to_draw = (
+            (this._input_links_ending_point[link.id] === undefined) ||
+            (!link.d3_selection?.node())
+          )
+          if (!need_to_draw) {
+            // Or if diff is at least one pixel
+            const dx = this._input_links_ending_point[link.id].x - link_ending_point.x
+            const dy = this._input_links_ending_point[link.id].y - link_ending_point.y
+            need_to_draw = ((Math.abs(dx) >= 1) || (Math.abs(dy) >= 1))
+          }
+          // If one of these two conditions match, add link to redraw list
+          if (need_to_draw) {
+            link_to_redraw.push(link)
+            // Save position
+            this._input_links_ending_point[link.id] = link_ending_point
+            // Update handle
+            if (this._input_links_handle[link.id] !== undefined) {
+              this._input_links_handle[link.id]
+                .setPosXY(
+                  link_ending_handle_point.x,
+                  link_ending_handle_point.y)
+              // Set a class to the handler corresponding to the target side of link, it is use for css cursor
+              this._input_links_handle[link.id]
+                .d3_selection?.attr('class', 'node_io ' + link.target_side)
+            }
+          }
         }
-        if (this._handle_input_links[link.id] !== undefined)
-          this._handle_input_links[link.id].d3_selection?.attr('class', 'node_io ' + link.target_side) // Set a class to the handler corresponding to the target side of link, it is use for css cursor
-      }
-    })
-    this.drawLinksArrow()
+      })
 
+    // Loop on all visible link to draw
+    // Note : Two loops is best because link drawing can trigger other nodes drawLink() methode
+    // -> So to avoid mutual blocking between node, it's best to compute first all links positions and then loop
+    //    again on links to draw them
+    link_to_redraw
+      .forEach(link => {
+        link.draw()
+        if (link.source === this) this._output_links_handle[link.id].draw()
+        if (link.target === this) this._input_links_handle[link.id].draw()
+      })
   }
 
   /**
@@ -2611,9 +2730,9 @@ export abstract class Class_NodeElement
       link
     )
     if (type === 'input')
-      this._handle_input_links[link.id] = handle
+      this._input_links_handle[link.id] = handle
     else // type === 'output'
-      this._handle_output_links[link.id] = handle
+      this._output_links_handle[link.id] = handle
   }
 
   /**
@@ -2708,7 +2827,6 @@ export abstract class Class_NodeElement
   private getLinkFromHandler(handler: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
     return handler.ref_element_optional
   }
-
 
   /**
    * Add tag to dict of tag sorted by group
@@ -2918,7 +3036,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public get is_multi_parent() {
-    return (Object.values(this._dimensions_as_parent).filter(dim => dim.children_level_tagg.id != 'Primaire').length > 1)
+    return (Object.values(this._dimensions_as_parent).filter(dim => dim.related_level_tagg.id != 'Primaire').length > 1)
   }
 
   /**
@@ -2927,10 +3045,9 @@ export abstract class Class_NodeElement
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get get_children_dim() {
+  public get dimensions_as_parent() {
     return Object.values(this._dimensions_as_parent)
   }
-
 
   /**
    *Return ture if node is in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
@@ -2942,17 +3059,15 @@ export abstract class Class_NodeElement
     return (Object.values(this._dimensions_as_child).filter(dim => dim.parent_level_tag.group.id != 'Primaire').length > 1)
   }
 
-
   /**
    * Retun list of dimensions where this node is a child
    *
    * @readonly
    * @memberof Class_NodeElement
    */
-  public get get_parent_dim() {
+  public get dimensions_as_child() {
     return Object.values(this._dimensions_as_child)
   }
-
 
   // Links related ----------------------------------------------------------------------
 
@@ -3625,9 +3740,6 @@ export abstract class Class_NodeElement
     this.drawNameLabel()
   }
 
-
-
-
   /**
    * TODO Description
    * @memberof Class_NodeElement
@@ -3737,6 +3849,7 @@ export abstract class Class_NodeElement
     this._display.attributes.value_label_horiz_shift = _
     this.drawValueLabel()
   }
+
   /**
    * TODO Description
    * @memberof Class_NodeElement
@@ -3916,36 +4029,68 @@ export abstract class Class_NodeElement
 
   private get is_related_level_selected() {
     // Draw by default if there is no dimensions
+    // that relates to this node
     if (
       !this.is_child &&
       !this.is_parent &&
       (this._leveltaggs_as_antitagged.length === 0)
     )
       return true
-
-    if (this.show()) {
-      return true
-    } else if (this.show() == false) {
-      return false
-    }
     // First check if activated tag group is in antitaggs
-    const activated_antitaggs = this._leveltaggs_as_antitagged
+    const is_antitagged = (this._leveltaggs_as_antitagged
       .filter(tagg => tagg.activated)
-    if (activated_antitaggs.length > 0)
-      return false
+      .length > 0)
     // If there is any dimension - check them
-    let ok_dimension: boolean = true
+    let has_activated_dimensions: boolean = false
+    let ok_activated_dimensions: boolean = true
+    let has_forced_dimensions: boolean = false
+    let ok_forced_dimensions: boolean = true
     // Check dimensions where node is tagged as a child
     Object.values(this._dimensions_as_child)
-      .filter(dim => dim.children_level_tagg.activated)
-      .forEach(dim => ok_dimension = (ok_dimension && dim.show_children))
+      .forEach(dim => {
+        if (dim.force_show_parent || dim.force_show_children) {
+          has_forced_dimensions = true
+          ok_forced_dimensions = ok_forced_dimensions && dim.force_show_children
+        }
+        if (dim.related_level_tagg.activated) {
+          ok_activated_dimensions = ok_activated_dimensions && dim.show_children
+          has_activated_dimensions = true
+        }
+      })
     // Check dimensions where node is tagged as a parent
-    if (ok_dimension) {
-      Object.values(this._dimensions_as_parent)
-        .filter(dim => dim.parent_level_tag.group.activated)
-        .forEach(dim => ok_dimension = (ok_dimension && dim.show_parent))
+    Object.values(this._dimensions_as_parent)
+      .forEach(dim => {
+        if (dim.force_show_parent || dim.force_show_children) {
+          has_forced_dimensions = true
+          ok_forced_dimensions = ok_forced_dimensions && dim.force_show_parent
+        }
+        if (dim.related_level_tagg.activated){
+          ok_activated_dimensions = ok_activated_dimensions && dim.show_parent
+          has_activated_dimensions = true
+        }
+      })
+
+    // First check if dimension is not forced
+    if (has_forced_dimensions) {
+      return ok_forced_dimensions
     }
-    return ok_dimension
+    // Otherwise use defaut leveltag filtering logic
+    else {
+      // Cannot show if node's dimensions are not forced and node is antitagged
+      // on currently activated leveltaggroup
+      if (is_antitagged) {
+        return false
+      }
+      else {
+        // If no related level tag group is activated &&
+        // this node is not set as antittagged for activated level tagg group
+        // Then it ok to show
+        if (!has_activated_dimensions)
+          return true
+        else
+          return ok_activated_dimensions
+      }
+    }
   }
 
   /**

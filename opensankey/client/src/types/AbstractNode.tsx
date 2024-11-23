@@ -41,7 +41,9 @@ export abstract class Class_AbstractNodeElement
   public abstract get input_links_list(): Type_AbstractLinkElement[]
   public abstract get output_links_list(): Type_AbstractLinkElement[]
   public abstract get taggs_list(): Class_TagGroup[]
-  public abstract get grouped_taggs_dict():{[x:string]:Class_Tag[]}
+  public abstract get grouped_taggs_dict(): { [x: string]: Class_Tag[] }
+  public abstract get dimensions_as_parent(): Class_AbstractNodeDimension[]
+  public abstract get dimensions_as_child(): Class_AbstractNodeDimension[]
   // Mandatory methods
   public abstract addTag(_: Class_AbstractTag): void
   public abstract hasGivenTag(_: Class_AbstractTag): boolean
@@ -52,28 +54,31 @@ export abstract class Class_AbstractNodeElement
   public abstract addOutputLink(_: Type_AbstractLinkElement): void
   public abstract deleteInputLink(_: Type_AbstractLinkElement): void
   public abstract deleteOutputLink(_: Type_AbstractLinkElement): void
+  public abstract getOutputLinkStartingPoint(_: Type_AbstractLinkElement): {x: number, y: number} | undefined
+  public abstract getInputLinkEndingPoint(_: Type_AbstractLinkElement): {x: number, y: number} | undefined
   public abstract swapInputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
   public abstract swapOutputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
   public abstract addNewDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
   public abstract removeDimensionAsChild(_: Class_AbstractNodeDimension): void
-  public abstract nodeDimensionAsParent(tagGroup:Class_LevelTagGroup) : Class_NodeDimension | null
+  public abstract nodeDimensionAsParent(tagGroup: Class_LevelTagGroup): Class_NodeDimension | null
   public abstract addAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract removeAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract removeInputLink(_: Type_AbstractLinkElement): void
   public abstract removeOutputLink(_: Type_AbstractLinkElement): void
   public abstract getShapeColorToUse(): string
-  public abstract shiftVertically(shift:number):void
-  public abstract forceShow():void  
-  public abstract forceHide():void
-  public abstract forceLevelTag():void
+  public abstract shiftVertically(shift: number): void
+  public abstract forceShow(): void
+  public abstract forceHide(): void
 }
 
 export abstract class Class_AbstractNodeDimension {
   // Mandatory methods
   public abstract getLevel(): number
   public abstract removeTagFromChildrenLevelTag(_: Class_AbstractLevelTag): void
+  public abstract showAccordingToLevelTags(): void
+  protected abstract _unsetForcingToShow(): Set<Type_AbstractNodeElement>
   // Mandatory getters
   public abstract get id(): string
   public abstract get parent_level_tag(): Class_AbstractLevelTag

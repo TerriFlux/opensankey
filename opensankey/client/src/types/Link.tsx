@@ -456,7 +456,7 @@ export abstract class Class_LinkElement
 
   // COPY METHODS =======================================================================
   /**
-   * Copy attributes from a given link 
+   * Copy attributes from a given link
    *
    * @param {Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>} link_to_copy
    * @memberof Class_LinkElement
@@ -633,12 +633,31 @@ export abstract class Class_LinkElement
   protected _draw() {
     // Heritance
     super._draw()
+    // Get starting point
+    const starting_point = this.source.getOutputLinkStartingPoint(this)
+    if (starting_point) {
+      this._display.position_starting.x = starting_point.x
+      this._display.position_starting.y = starting_point.y
+    }
+    // Get ending point
+    const ending_point = this.target.getInputLinkEndingPoint(this)
+    if (ending_point) {
+      this._display.position_ending.x = ending_point.x
+      this._display.position_ending.y = ending_point.y
+    }
+    // Draw only if we have starting & ending points
+    if (starting_point && ending_point) {
+      // Setup order
+      //this.drawing_area.orderElements()
+      // Draw elements
+      this._drawElements()
+    }
+  }
+
+  protected _initDraw(): void {
+    super._initDraw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_links').datum(this)
-    // Setup order
-    //this.drawing_area.orderElements()
-    // Draw elements
-    this._drawElements()
   }
 
   public drawWithNodes() {
@@ -676,7 +695,6 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public inverse() {
-
     const tmp_target = this._target
     tmp_target.removeInputLink(this) // remove link from curr IO dict
 
@@ -689,18 +707,6 @@ export abstract class Class_LinkElement
     this._target.addInputLink(this) // add link to corresponding IO
 
     this.drawElements()
-  }
-
-  public setPosXYStartingPoint(x: number, y: number) {
-    this._display.position_starting.x = x
-    this._display.position_starting.y = y
-    this.draw()
-  }
-
-  public setPosXYEndingPoint(x: number, y: number) {
-    this._display.position_ending.x = x
-    this._display.position_ending.y = y
-    this.draw()
   }
 
   public increaseDisplayOrder() {
@@ -891,7 +897,8 @@ export abstract class Class_LinkElement
       // Do we apply colors of data tags ?
       dataTagColorActivated
         .forEach(tag => shape_color = tag.color)
-    } else {
+    }
+    else {
       // Do we apply colors of node source/target tags ?
       const src_taggs_activated = this._source.taggs_list
         .filter(tagg => tagg.show_legend).filter(grp => {
@@ -908,9 +915,11 @@ export abstract class Class_LinkElement
       // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt
       if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {
         shape_color = this._source.getShapeColorToUse()
-      } else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
+      }
+      else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
         shape_color = this._target.getShapeColorToUse()
-      } else {
+      }
+      else {
         if (trgt_taggs_activated) {
           // If target has a tag from a group of which we display the palette
           shape_color = this._target.getShapeColorToUse()
@@ -921,6 +930,10 @@ export abstract class Class_LinkElement
       }
     }
     return shape_color
+  }
+
+  public getArrowColorToUse() {
+    return this.getPathColorToUse()
   }
 
   /**
@@ -1103,6 +1116,9 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   private _drawPath() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous shape
     this.d3_selection?.selectAll('.link_path').remove()
     // Failsafe
@@ -1124,10 +1140,17 @@ export abstract class Class_LinkElement
   }
 
   private _drawLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Clean previous label
     this.d3_selection?.selectAll('.link_label').remove()
     // Add value label
-    if (this.drawing_area.show_structure !== 'structure' && this.value_label_is_visible && (this.data_value ?? 0) >= this.drawing_area.filter_label) {
+    if (
+      (this.drawing_area.show_structure !== 'structure') &&
+      (this.value_label_is_visible) &&
+      ((this.data_value ?? 0) >= this.drawing_area.filter_label)
+    ) {
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
@@ -1149,8 +1172,6 @@ export abstract class Class_LinkElement
               (this.value_label_color === 'color') ?
                 this.shape_color :
                 this.value_label_color)
-
-
 
           // Compute text position
           if (this.value_label_on_path) {
@@ -1180,14 +1201,12 @@ export abstract class Class_LinkElement
                 .on('end', ev => this.dragTextPathEnd(ev))
               )
             }
-          } else {
-
+          }
+          else {
             this.updateTextXYPosition()
-
             d3_text_selection?.text(label_to_display)
               .attr('spacing', 'exact')
               .attr('method', 'align')
-
             if (!this.drawing_area.static) {
               d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
                 .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
@@ -1197,12 +1216,10 @@ export abstract class Class_LinkElement
               )
             }
           }
-
         }
       }
     }
   }
-
 
   //================= Functions for link label if it is a TextPath  =================
 
@@ -1213,9 +1230,7 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   private updateTextPathOffset() {
-
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getTextPathOffset()
-
     this.d3_selection?.select('.link_label_textpath').attr('text-anchor', label_anchor)
     this.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position + '%')
     this.d3_selection?.select('.link_label_text').attr('dy', label_ortho_position)
@@ -1321,9 +1336,7 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   private updateTextXYPosition() {
-
     const [label_pos, label_ortho_pos, label_anchor] = this.getTextXYPos()
-
     this.d3_selection?.select('.link_label_text').attr('y', label_ortho_pos)
     this.d3_selection?.select('.link_label_text').attr('x', label_pos)
     this.d3_selection?.select('.link_label_text').attr('text-anchor', label_anchor)
@@ -1457,6 +1470,9 @@ export abstract class Class_LinkElement
   }
 
   private drawControlPoint() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
     // Draw control handler
     this._control_points.starting_curve_point.draw()
     this._control_points.ending_curve_point.draw()
@@ -2477,7 +2493,7 @@ export abstract class Class_LinkElement
   * @memberof Class_Node
   */
   public set style(_: Class_LinkStyle) {
-    if(!_) return
+    if (!_) return
     this._display.style.removeReference(this)
     this._display.style = _
     _.addReference(this)
@@ -3165,7 +3181,6 @@ export abstract class Class_LinkElement
     }
   }
 
-
   // PRIVATE GETTER / SETTER =============================================================
 
   /**
@@ -3759,7 +3774,6 @@ export class Class_LinkStyle extends Class_LinkAttribute {
         ref.setDomainLocalScale(ref.local_link_scale)
         ref.source.draw()
         ref.target.draw()
-
       })
   }
 
