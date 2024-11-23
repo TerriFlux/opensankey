@@ -1083,9 +1083,6 @@ const convert_tags: convert_tagsFuncType = (
             return
           }
           const target_node = data.nodes[link.idTarget]
-          Object.keys(target_node.dimensions).forEach(dim_key => {
-            n.dimensions[dim_key] = JSON.parse(JSON.stringify(target_node.dimensions[dim_key]))
-          })
 
           Object.keys(target_node.tags).forEach(tag_key => {
             if (tag_key === 'Type de noeud') {
@@ -1100,10 +1097,6 @@ const convert_tags: convert_tagsFuncType = (
           }
           link.idTarget = n.idNode
           const source_node = data.nodes[link.idSource]
-          Object.keys(source_node.dimensions).forEach(dim_key => {
-            n.dimensions[dim_key] = JSON.parse(JSON.stringify(source_node.dimensions[dim_key]))
-          })
-
           Object.keys(source_node.tags).forEach(tag_key => {
             if (tag_key === 'Type de noeud') {
               return
