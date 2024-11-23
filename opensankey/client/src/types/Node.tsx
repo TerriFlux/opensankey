@@ -725,11 +725,11 @@ export abstract class Class_NodeElement
       if (local_aggregation) {
         // Force to show this node
         this.dimensions_as_child[0]?.setForceToShowChildren()
-        // this.dimensions_as_parent[0]?.setForceToShowParent()
+        this.dimensions_as_parent[0]?.setForceToShowParent()
       }
       else {
         // Force to hide this node
-        this.dimensions_as_child[0]?.setForceToShowParent()
+        //this.dimensions_as_child[0]?.setForceToShowParent()
         // this.dimensions_as_parent[0]?.setForceToShowChildren()
       }
     }
