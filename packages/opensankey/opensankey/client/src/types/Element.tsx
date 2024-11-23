@@ -277,11 +277,25 @@ export abstract class Class_ProtoElement
 
   /**
    * Set up element on d3 svg area
-   * @protected
    * @memberof Class_Element
    */
   public draw() {
-    this._process_or_bypass(() => this._draw())
+    this._process_or_bypass(() => {
+      this.unDraw()
+      if (this.is_visible && !this._is_currently_deleted)
+        this._draw()
+    })
+  }
+
+  /**
+   * Unset element from d3 svg area
+   * @memberof Class_Element
+   */
+  public unDraw() {
+    if (this.d3_selection !== null) {
+      this.d3_selection.remove()
+      this.d3_selection = null
+    }
   }
 
   /**
@@ -342,8 +356,9 @@ export abstract class Class_ProtoElement
               (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
                 this.eventMouseDragEnd(event))
         )
-      } else if (this.drawing_area.isInEditionMode()) {
-        // In edition mode we don't use drag event on elements
+      }
+      // In edition mode we don't use drag event on elements
+      else if (this.drawing_area.isInEditionMode()) {
         this.d3_selection?.on('mousedown.drag', null) // Remove dag event
       }
     }
@@ -373,34 +388,19 @@ export abstract class Class_ProtoElement
   }
 
   protected _draw() {
-    if (!this._is_currently_deleted) {
-      const d3_drawing_area = this.drawing_area.d3_selection
-      if (d3_drawing_area !== null) {
-        // Undraw all
-        this.unDraw()
-        // Draw only if visible
-        if (this.is_visible) {
-          // Set d3 selection
-          this.d3_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
-            // .datum(this)
-            .append('g')
-            .attr('id', 'gg_' + this._id)
-          // Add events listeners
-          this.setEventsListeners()
-        }
-      }
-    }
+    // Set d3 selections
+    this._initDraw()
+    // Add events listeners
+    this.setEventsListeners()
   }
 
-  /**
-   * Unset element from d3 svg area
-   * @protected
-   * @memberof Class_Element
-   */
-  protected unDraw() {
-    if (this.d3_selection !== null) {
-      this.d3_selection.remove()
-      this.d3_selection = null
+  protected _initDraw() {
+    const d3_drawing_area = this.drawing_area.d3_selection
+    if (d3_drawing_area !== null) {
+      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+      if (d3_drawing_area_selection.nodes().length > 0)
+        this.d3_selection = d3_drawing_area_selection.append('g')
+          .attr('id', 'gg_' + this._id)
     }
   }
 
@@ -711,21 +711,7 @@ export abstract class Class_Element
     // Draw element on D3
     super._draw()
     // Add apply position
-    if (this.is_visible) {
-      this._applyPosition()
-    }
-  }
-
-  /**
-   * Unset element from d3 svg area
-   * @protected
-   * @memberof Class_Element
-   */
-  protected unDraw() {
-    if (this.d3_selection !== null) {
-      this.d3_selection.remove()
-      this.d3_selection = null
-    }
+    this._applyPosition()
   }
 
   protected drawAsSelected() { }
@@ -737,11 +723,9 @@ export abstract class Class_Element
    * @memberof Class_Node
    */
   protected _applyPosition() {
-    if (this.d3_selection !== null) {
-      this.d3_selection.attr(
-        'transform',
-        'translate(' + this.position_x + ', ' + this.position_y + ')')
-    }
+    this.d3_selection?.attr(
+      'transform',
+      'translate(' + this.position_x + ', ' + this.position_y + ')')
   }
 
 

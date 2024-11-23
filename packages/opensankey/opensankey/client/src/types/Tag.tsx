@@ -601,7 +601,12 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
 
   // Selection
   public get is_selected() { return this._is_selected }
-  public set is_selected(_: boolean) { this._is_selected = _ }
+  public set is_selected(_: boolean) {
+    // Only one level tag per group can be selected
+    if (_ == true)
+      this._group.tags_list.forEach(tag => tag.is_selected = false)
+    this._is_selected = _
+  }
 
   // Group
   public abstract get group(): Class_ProtoLevelTagGroup
@@ -821,11 +826,12 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   public update() {
     this.dimensions_list_as_tag_for_children
       .forEach(dim => {
-        dim.children
-          .forEach(child => child.draw())
+        dim.showAccordingToLevelTags()
       })
     this.dimensions_list_as_tag_for_parent
-      .forEach(dim => dim.parent.draw())
+      .forEach(dim => {
+        dim.showAccordingToLevelTags()
+      })
   }
 
   public getOrCreateLowerDimension(
@@ -1891,8 +1897,8 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   }
 
   /**
-   * Function to add sibling to current group and referenced group, 
-   * because they mutually interact at some mechanic 
+   * Function to add sibling to current group and referenced group,
+   * because they mutually interact at some mechanic
    *
    * @param {Class_LevelTagGroup} _
    * @memberof Class_LevelTagGroup
@@ -1910,8 +1916,8 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   }
 
   /**
-   * Function to remove sibling to current group and referenced group, 
-   * because they mutually interact at some mechanic 
+   * Function to remove sibling to current group and referenced group,
+   * because they mutually interact at some mechanic
    *
    * @param {Class_LevelTagGroup} _
    * @memberof Class_LevelTagGroup
@@ -1948,6 +1954,13 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     // Avoid useless updates
     if (this._activated !== value) {
       this._activated = value
+      if (this._activated === true) {
+        this._siblings
+          .forEach(sib_tagg_id => {
+            if (this._ref_sankey.level_taggs_dict[sib_tagg_id])
+              this._ref_sankey.level_taggs_dict[sib_tagg_id].activated = false
+          })
+      }
       this.updateTagsReferences()
     }
   }
