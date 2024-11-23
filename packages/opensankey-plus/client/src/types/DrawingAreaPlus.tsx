@@ -227,15 +227,14 @@ export abstract class Class_DrawingAreaPlus
   }
 
   /**
-   * Override Reset drawing area from OS
+   * Reinit d3 selections
+   * @protected
    * @memberof Class_DrawingArea
    */
-  public draw() {
-    super.draw()
-    // Add specific groups for free_labels, link and others
+  protected _initDraw() {
+    super._initDraw()
     this.d3_selection_free_label = this.d3_selection?.insert('g', '#g_links').attr('id', 'g_labels') ?? null
     this.d3_selection_def_gradient = this.d3_selection?.append('g').attr('id', 'def_gradient') ?? null
-    this.drawElements()
   }
 
   /**

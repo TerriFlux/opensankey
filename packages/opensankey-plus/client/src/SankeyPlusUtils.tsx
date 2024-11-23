@@ -330,7 +330,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
                 new_data_plus.drawing_area.sankey.draw()
                 }
 
-                ref.current?.focus() //avoid closure of popover 
+                ref.current?.focus() //avoid closure of popover
               }}
               minimum_value={0}
               maximum_value={max_link_value}
@@ -364,7 +364,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
               ref_to_set_value={ref_set_number_inputs[1]}
               default_value={new_data_plus.drawing_area.filter_label}
               function_on_blur={(value) => {
-                
+
                 if (value) {
                   if (value > max_link_value) {
                     value = max_link_value
@@ -374,7 +374,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
                 new_data_plus.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
                 }
 
-                ref.current?.focus() //avoid closure of popover 
+                ref.current?.focus() //avoid closure of popover
               }}
               minimum_value={0}
               maximum_value={max_link_value}

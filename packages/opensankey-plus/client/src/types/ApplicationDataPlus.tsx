@@ -55,7 +55,7 @@ export abstract class Class_ApplicationDataPlus
   // Static path
   public override static_path: string = 'static/sankeyanimation'
 
-  // Override all item selectable in SankeyMenuPreference 
+  // Override all item selectable in SankeyMenuPreference
   protected _preference_menu_all_item: string[] = [...this.preference_menu_all_item, 'LL', 'Vis']
 
   // PROTECTED ATTRIBUTES ===============================================================
@@ -77,7 +77,7 @@ export abstract class Class_ApplicationDataPlus
   protected _original_current_view: Type_GenericDrawingArea | undefined
 
   /**
-   * Override all possible attr to update in copyFrom  
+   * Override all possible attr to update in copyFrom
    *
    * @protected
    * @type {string[]}
@@ -419,6 +419,7 @@ export abstract class Class_ApplicationDataPlus
             this.options_save_json = default_save_JSON_options
             // Create a clone of current view's DA
             const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
+            clone_drawing_area.bypass_redraws = true
             clone_drawing_area.copyFrom(this._drawing_area)
             // Save clone
             this.deleteCurrentOriginalView()

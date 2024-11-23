@@ -638,8 +638,10 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
 
   }} variant='contextmenu_button'>{t('Menu.LL')} {icon_open_modal}</Button>
 
-  return zdt_to_contextualise ? <Box layerStyle='context_menu' id="context_zdd_pop_over"
-    style={{ maxWidth: '100%', position: 'absolute', inset: style_c_zdd, zIndex: 4 }}>
+  return zdt_to_contextualise ? <Box
+    layerStyle='context_menu'
+    id="context_zdd_pop_over"
+    style={{ maxWidth: '100%', inset: style_c_zdd, zIndex: 4 }}>
     <ButtonGroup orientation='vertical' isAttached>
       {btn_mask_border}
       {btn_change_color}
@@ -663,12 +665,12 @@ export const ZDTMenuAsAccordeonItemOSP: FunctionComponent<FCType_ZDTMenuAsAccord
   content_menu_zdt
 }) => {
   const { t } = new_data_plus
-  const  [,setCount]=useState(0)
+  const [, setCount] = useState(0)
   const refreshThis = () => setCount(a => a + 1)
   new_data_plus.menu_configuration.ref_to_accordion_containers_updater.current = refreshThis
 
-    return <AccordionItem
-  style={{ 'display': (new_data_plus.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
+  return <AccordionItem
+    style={{ 'display': (new_data_plus.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
   >
     <AccordionButton
       ref={new_data_plus.menu_configuration.zdt_accordion_ref}
