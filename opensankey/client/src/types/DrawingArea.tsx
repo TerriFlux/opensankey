@@ -469,7 +469,6 @@ export abstract class Class_DrawingArea
     this.sankey.fromJSON(json_object, match_and_update)
   }
 
-
   // ABSTRACT METHODS ==================================================================
 
   protected abstract createNewSankey(id?: string): Type_GenericSankey
@@ -486,6 +485,32 @@ export abstract class Class_DrawingArea
     // Clean drawing area
     this.unDraw()
 
+    // Reinit d3 selections
+    this._initDraw()
+
+    // Draw background
+    this.drawBackground()
+
+    // Draw Everything
+    this.drawElements()
+
+    // Fit area
+    this.checkAndUpdateAreaSize()
+    this.areaAutoFit()
+
+    // Added events listeners
+    this.setEventsListeners()
+
+    // Unset saving indicator
+    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+  }
+
+  /**
+   * Reinit d3 selections
+   * @protected
+   * @memberof Class_DrawingArea
+   */
+  protected _initDraw() {
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
@@ -513,25 +538,6 @@ export abstract class Class_DrawingArea
     this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
     this.d3_selection_handlers = this.d3_selection.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection.append('g').attr('id', 'g_select_zone')
-
-    // Draw background
-    this.drawBackground()
-
-    // for parametric mode nodes need to be draw in a certain order
-    // so that the nodes at the top of the columns are drawn first
-    this.sankey.sortNodes()
-    // Draw Everything
-    this.drawElements()
-
-    // Fit area
-    this.checkAndUpdateAreaSize()
-    this.areaAutoFit()
-
-    // Added events listeners
-    this.setEventsListeners()
-
-    // Unset saving indicator
-    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   /**
@@ -581,6 +587,9 @@ export abstract class Class_DrawingArea
   public drawElements() {
     // Draw grid
     this.drawGrid()
+    // for parametric mode nodes need to be draw in a certain order
+    // so that the nodes at the top of the columns are drawn first
+    this._sankey.sortNodes()
     // Draw all nodes
     this._sankey.draw()
     // Draw legend

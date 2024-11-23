@@ -176,8 +176,6 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     {icon_open_modal}
   </Button>
 
-
-
   // Menu to change some pararmeter concerning the style of the node
   const dropdown_c_n_style_select = <Menu placement='end'>
     <MenuButton
@@ -487,9 +485,10 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       onClick={() => {
         if (contextualised_node.is_multi_children) {
           new_data.menu_configuration.ref_to_updater_node_agregate.current(true)
-        } else {
+        }
+        else {
           contextualised_node.drawParent()
-          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before aggregation
+          // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before aggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
           new_data.drawing_area.areaAutoFit()
@@ -515,7 +514,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.menu_configuration.ref_to_updater_node_disagregate.current(true)
         } else {
           contextualised_node.drawChildren()
-          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+          // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
           new_data.drawing_area.areaAutoFit()
@@ -640,7 +639,7 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
   }
   new_data.menu_configuration.ref_to_updater_node_disagregate.current = (b: boolean) => set_show_agregation(b)
   if (new_data.drawing_area.node_contextualised) {
-    const list_child_dim = new_data.drawing_area.node_contextualised.get_children_dim.filter(dim => dim.children_level_tagg.id != 'Primaire')
+    const list_child_dim = new_data.drawing_area.node_contextualised.dimensions_as_parent.filter(dim => dim.children_level_tagg.id != 'Primaire')
     if (selected_grp.current == null || selected_grp.current == undefined) {
       selected_grp.current = list_child_dim[0]
       setForce(a => a + 1)
@@ -680,8 +679,8 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
             <Button
               variant="menuconfigpanel_option_button_secondary"
               onClick={() => {
-                new_data.drawing_area.node_contextualised?.drawChildrenOfGrp((selected_grp.current?.id ?? ''))
-                new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+                new_data.drawing_area.node_contextualised?.drawChildren((selected_grp.current?.id ?? ''))
+                // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
                 closeModal()
               }}
             >{new_data.t('Noeud.desaggreg')}</Button>
@@ -711,7 +710,7 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
   }
   new_data.menu_configuration.ref_to_updater_node_agregate.current = (b: boolean) => set_show_agregation(b)
   if (new_data.drawing_area.node_contextualised) {
-    const list_parent_dim = new_data.drawing_area.node_contextualised.get_parent_dim.filter(dim => dim.parent_level_tag.group.id != 'Primaire')
+    const list_parent_dim = new_data.drawing_area.node_contextualised.dimensions_as_child.filter(dim => dim.parent_level_tag.group.id != 'Primaire')
     if (selected_grp.current == null || selected_grp.current == undefined) {
       selected_grp.current = list_parent_dim[0]
       setForce(a => a + 1)
@@ -751,8 +750,8 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
             <Button
               variant="menuconfigpanel_option_button_secondary"
               onClick={() => {
-                new_data.drawing_area.node_contextualised?.drawParentOfGrp((selected_grp.current?.id ?? ''))
-                new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+                new_data.drawing_area.node_contextualised?.drawParent((selected_grp.current?.id ?? ''))
+                // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
                 closeModal()
               }}
             >{new_data.t('Noeud.aggreg')}</Button>

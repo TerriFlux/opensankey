@@ -852,6 +852,7 @@ export abstract class Class_Sankey
             matching_tags_id[json_entry][_] ?? {}
           )
         }))
+      // Create default style for 'Type de noeud' if they don't exist
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
         Object.entries({
           'NodeProductStyle': DefaultNodeProductStyle,

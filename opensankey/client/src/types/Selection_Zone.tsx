@@ -81,9 +81,6 @@ export abstract class Class_ZoneSelection
 
   // PUBLIC METHODS =====================================================================
 
-  public override draw() {
-    this._draw()
-  }
   /**
    * Set the width & height of the selection zone
    *
@@ -137,7 +134,7 @@ export abstract class Class_ZoneSelection
     this.starting_x_point = 0
     this.starting_y_point = 0
     this._is_visible = false
-    this._draw()
+    this.draw()
   }
 
   // PROTECTED METHOD ==================================================================
