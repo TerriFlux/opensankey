@@ -3358,6 +3358,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (this._shape_starting_tangeant !== undefined) json_object['starting_tangeant'] = this._shape_starting_tangeant
     if (this._shape_ending_tangeant !== undefined) json_object['ending_tangeant'] = this._shape_ending_tangeant
     if (this._shape_ending_curve !== undefined) json_object['right_horiz_shift'] = this._shape_ending_curve
+    if (this._shape_middle_recycling !== undefined) json_object['vert_shift'] = this._shape_middle_recycling
     if (this._shape_curvature !== undefined) json_object['curvature'] = this._shape_curvature
     if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
     if (this._shape_is_recycling !== undefined) json_object['recycling'] = this._shape_is_recycling
@@ -3398,6 +3399,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (json_local_object['starting_tangeant'] !== undefined) this._shape_starting_tangeant = getNumberFromJSON(json_local_object, 'starting_tangeant', default_shape_starting_tangeant)
     if (json_local_object['ending_tangeant'] !== undefined) this._shape_ending_tangeant = getNumberFromJSON(json_local_object, 'ending_tangeant', default_shape_ending_tangeant)
     if (json_local_object['right_horiz_shift'] !== undefined) this._shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve)
+    if (json_local_object['vert_shift'] !== undefined) this._shape_middle_recycling = getNumberFromJSON(json_local_object, 'vert_shift', default_shape_middle_recyling)
     if (json_local_object['curvature'] !== undefined) this._shape_curvature = getNumberFromJSON(json_local_object, 'curvature', default_shape_curvature)
     if (json_local_object['curved'] !== undefined) this._shape_is_curved = getBooleanFromJSON(json_local_object, 'curved', default_shape_is_curved)
     if (json_local_object['recycling'] !== undefined) this._shape_is_recycling = getBooleanFromJSON(json_local_object, 'recycling', default_shape_is_recycling)
