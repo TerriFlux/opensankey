@@ -1598,9 +1598,11 @@ const convert_links: convert_linksFuncType = (
     data_to_convert.links = Object.assign({}, ...((data.links as unknown) as SankeyLink[]).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
     data_to_convert.nodes = Object.assign({}, ...((data.nodes as unknown) as SankeyNode[]).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
   }
+
   if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {
     Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
   }
+
   const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
   const convert_display = (
     dataTags: TagsGroup[],
@@ -1617,15 +1619,20 @@ const convert_links: convert_linksFuncType = (
         let tmp
         if ((v.display_value as string).includes('-')) {
           tmp = (v.display_value as string).split('-')
-        } else if ((v.display_value as string).includes(',')) {
+        }
+        else if ((v.display_value as string).includes(',')) {
           tmp = (v.display_value as string).split(',')
-        } else if ((v.display_value as string).includes(';')) {
+        }
+        else if ((v.display_value as string).includes(';')) {
           tmp = (v.display_value as string).split(';')
-        } else if ((v.display_value as string).includes('...')) {
+        }
+        else if ((v.display_value as string).includes('...')) {
           tmp = (v.display_value as string).split('...')
-        } else if ((v.display_value as string).includes('  ')) {
+        }
+        else if ((v.display_value as string).includes('  ')) {
           tmp = (v.display_value as string).split('  ')
-        } else {
+        }
+        else {
           tmp = (v.display_value as string).split(' ')
         }
         const free_mini = Number(tmp[0].substring(1))
@@ -1706,6 +1713,7 @@ const convert_links: convert_linksFuncType = (
     }
 
     const l_depreciated = (l as Type_JSON)
+
     // CONVERSION D'ATTRIBUT OBLIGATOIRE DES NOEUDS EN VARIABLES LOCAL
     l.local = (l.local != undefined && l.local !== null) ? l.local : {} as SankeyLinkStyle
     Object.entries(defaultLinkStyle).filter(ent => ent[0] != 'idLink').forEach(ent => {
@@ -1713,21 +1721,6 @@ const convert_links: convert_linksFuncType = (
         AssignLinkLocalAttribute(l, (ent[0] as keyof SankeyLinkAttrLocal), ent[1])//either take value link attr directly from link to put it in local attr
       }
     })
-
-    // Rename orientation mode
-    if (l && l.local && !('orientation' in l.local)) {
-      AssignLinkLocalAttribute(l, 'orientation', 'hh')
-      if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
-        AssignLinkLocalAttribute(l, 'orientation', 'vh')
-      } else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
-        AssignLinkLocalAttribute(l, 'orientation', 'hv')
-      }
-    }
-
-    // Delete link reverse entry
-    if ('link_reverse' in l) {
-      delete l_convert.link_reverse
-    }
 
     // Deletet display unit entry
     if ('display_unit' in l_convert) {
@@ -1739,6 +1732,27 @@ const convert_links: convert_linksFuncType = (
     if (('agregated_data_value' in l_convert)) {
       l_convert.data_value = l_convert.agregated_data_value
       delete l_convert.agregated_data_value
+    }
+
+    // Rename orientation mode
+    if (l && l.local && !('orientation' in l.local)) {
+      if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
+        AssignLinkLocalAttribute(l, 'orientation', 'vh')
+      }
+      else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
+        AssignLinkLocalAttribute(l, 'orientation', 'hv')
+      }
+      else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
+        AssignLinkLocalAttribute(l, 'orientation', 'vv')
+      }
+      else {
+        AssignLinkLocalAttribute(l, 'orientation', 'hh')
+      }
+    }
+
+    // Delete link reverse entry
+    if ('link_reverse' in l) {
+      delete l_convert.link_reverse
     }
 
     // Convert old shape attributes
@@ -1803,7 +1817,6 @@ const convert_links: convert_linksFuncType = (
       }
     }
 
-
     // Convert text color old attributes -> new attribute
     if (l_convert.text_same_color === false) {
       AssignLinkLocalAttribute(l, 'text_color', 'black')
@@ -1838,7 +1851,7 @@ const convert_links: convert_linksFuncType = (
       left_horiz_shift: 0,
       right_horiz_shift: 0,
       vert_shift: 0,
-      curvature: 0,
+      curvature: 0.5,
       curved: true,
       recycling: true,
       arrow_size: 0,
@@ -1868,7 +1881,7 @@ const convert_links: convert_linksFuncType = (
       label_unit: ''
     }
 
-    // Assign missing variable
+    // Move link attr to local sub strcut
     Object.keys(tmp).forEach((k) => {
       const kl = k as keyof SankeyLinkAttrLocal
       if (Object.keys(l).includes(k)) {
@@ -1879,13 +1892,60 @@ const convert_links: convert_linksFuncType = (
     })
 
     // Convert legacy recycling position -> new positions
-    if (l.local && l.local.recycling) {
-
-      l.local.left_horiz_shift = 0.05
-      l.local.right_horiz_shift = 0.95;
-      // Add variable in legacy JSOn
-      (l.local as Type_JSON).starting_tangeant = 0.01; // special assignement for attr not present in legacy but usefull in current Class_link
-      (l.local as Type_JSON).ending_tangeant = 0.01 // special assignement for attr not present in legacy but usefull in current Class_link
+    if (l.local) {
+      if (!l.local.recycling) {
+        if (l.local.curvature) {
+          if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
+            // I made an approx. here because we can't have a direct transform from old behavior (Cubic / Bezier) to new (Quadratic) for path drawing
+            AssignLinkLocalAttribute(l, 'starting_tangeant', 0.75*l.local.curvature)
+            AssignLinkLocalAttribute(l, 'ending_tangeant', 0.75*l.local.curvature)
+          }
+          else {
+            AssignLinkLocalAttribute(l, 'starting_tangeant', l.local.curvature/2)
+            AssignLinkLocalAttribute(l, 'ending_tangeant', l.local.curvature/2)
+          }
+        }
+      }
+      else {
+        if ((l.local.orientation && l.local.orientation == 'vv')) {
+          // In old file, for recycling only, shift are not relative but are absolute distances from nodes
+          const dist_y = target_node.y - source_node.y
+          if (l.local.left_horiz_shift) {
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', Math.abs(l.local.left_horiz_shift / dist_y)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+          }
+          if (l.local.right_horiz_shift) {
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', Math.abs(l.local.right_horiz_shift / dist_y)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', 0)// Put Zero to have something as close as possible of old behavior
+          }
+        }
+        else if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
+          // In old file, for recycling only, shift are not relative but are absolute distances from nodes
+          const dist = Math.sqrt(
+            (target_node.x - source_node.x) * (target_node.x - source_node.x) +
+            (target_node.y - source_node.y) * (target_node.y - source_node.y))
+          if (l.local.left_horiz_shift) {
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', Math.abs(l.local.left_horiz_shift / dist)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+          }
+          if (l.local.right_horiz_shift) {
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', Math.abs(l.local.right_horiz_shift / dist)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+          }
+        }
+        else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
+          // In old file, for recycling only, shift are not relative but are absolute distances from nodes
+          const dist_x = target_node.x - source_node.x
+          if (l.local.left_horiz_shift) {
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', Math.abs(l.local.left_horiz_shift / dist_x)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+          }
+          if (l.local.right_horiz_shift) {
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', Math.abs(l.local.right_horiz_shift / dist_x)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+          }
+        }
+      }
     }
 
     // Delete color attribute if unecessary
@@ -1961,7 +2021,8 @@ const convert_links: convert_linksFuncType = (
           }
         )
       })
-    } else {
+    }
+    else {
       Object.values(links_no_type).forEach(
         (link) => {
           const editable_link = links_no_type[link.idLink]
