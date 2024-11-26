@@ -12,7 +12,6 @@ import {
   SankeyData,
   ConvertSankeyData,
   SankeyLinkStyle,
-  //complete_sankey_dataFunctType,
   convert_linksFuncType,
   convert_nodesFuncType,
   convert_tagsFuncType,
@@ -30,19 +29,23 @@ import {
   ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType,
   ReturnValueLinkFuncType,
-  //SetNodeStyleToTypeNodeFuncType,
   ConvertSankeyLink,
   ConvertSankeyNode,
   ConvertSankeyValue,
   TagsCatalog
 } from './LegacyType'
-import { default_dy, default_relative_dx, default_relative_dy } from './Node'
+import {
+  default_dy,
+  default_relative_dx,
+  default_relative_dy
+} from './Node'
 
 const default_element_color = '#a9a9a9'
 
+// NODES *******************************************************************************************
+
 /**
  * Return a Sankey Node, used at the creation of a new node
- *
  * @param {SankeyData} data
  * @returns {SankeyNode}
  */
@@ -69,7 +72,10 @@ export const DefaultNode: DefaultNodeFuncType = (
   return defaultNode
 }
 
-// Return default style configuration for node
+/**
+ * Return default style configuration for node
+ * @return {*}
+ */
 const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
   return {
     idNode: 'default',
@@ -109,6 +115,10 @@ const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
   }
 }
 
+/**
+ * Return default style configuration for sector node
+ * @return {*}
+ */
 export const DefaultNodeSectorStyle: DefaultNodeSectorStyleFuncStyle = () => {
   const node_style = DefaultNodeStyle()
   node_style.idNode = 'NodeSectorStyle'
@@ -116,7 +126,10 @@ export const DefaultNodeSectorStyle: DefaultNodeSectorStyleFuncStyle = () => {
   return node_style
 }
 
-
+/**
+ * Return default style configuration for product node
+ * @return {*}  {SankeyNodeStyle}
+ */
 export const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): SankeyNodeStyle => {
   const node_style = DefaultNodeStyle()
   node_style.shape = 'ellipse'
@@ -125,6 +138,10 @@ export const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): San
   return node_style
 }
 
+/**
+ * Return default style configuration for exchange import node
+ * @return {*}
+ */
 export const DefaultNodeImportStyle: DefaultNodeSectorStyleFuncStyle = () => {
   const node_style = JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
   node_style.idNode = 'NodeImportStyle'
@@ -146,6 +163,10 @@ export const DefaultNodeImportStyle: DefaultNodeSectorStyleFuncStyle = () => {
   return node_style
 }
 
+/**
+ * Return default style configuration for exchange export node
+ * @return {*}
+ */
 export const DefaultNodeExportStyle: DefaultNodeSectorStyleFuncStyle = () => {
   const node_style = JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
   node_style.idNode = 'NodeExportStyle'
@@ -168,31 +189,12 @@ export const DefaultNodeExportStyle: DefaultNodeSectorStyleFuncStyle = () => {
   return node_style
 }
 
-export const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
-  const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
-  link_style.orientation = 'hv'
-  link_style.label_visible = true
-  link_style.label_position = 'end'
-  link_style.label_on_path = true
-  link_style.label_visible = true
-  link_style.idLink = 'LinkExportStyle'
-  link_style.name = 'Flux de type exportations'
-  return link_style
-}
+// LINKS ******************************************************************************************
 
-export const DefaultLinkImportStyle: DefaultLinkStyleFuncType = () => {
-  const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
-  link_style.orientation = 'vh'
-  link_style.label_visible = true
-  link_style.label_position = 'beginning'
-  link_style.label_on_path = true
-  link_style.label_visible = true
-  link_style.idLink = 'LinkImportStyle'
-  link_style.name = 'Flux de type importations'
-  return link_style
-}
-
-// Return default style configuration for link
+/**
+ * Return default style configuration for link
+ * @return {*}
+ */
 const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
   return {
     idLink: 'default',
@@ -227,6 +229,40 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
 }
 
 /**
+ * Return default style configuration for link to export node
+ * @return {*}
+ */
+export const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
+  const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
+  link_style.orientation = 'hv'
+  link_style.label_visible = true
+  link_style.label_position = 'end'
+  link_style.label_on_path = true
+  link_style.label_visible = true
+  link_style.idLink = 'LinkExportStyle'
+  link_style.name = 'Flux de type exportations'
+  return link_style
+}
+/**
+ * Return default style configuration for link from import node
+ *
+ * @return {*}
+ */
+export const DefaultLinkImportStyle: DefaultLinkStyleFuncType = () => {
+  const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
+  link_style.orientation = 'vh'
+  link_style.label_visible = true
+  link_style.label_position = 'beginning'
+  link_style.label_on_path = true
+  link_style.label_visible = true
+  link_style.idLink = 'LinkImportStyle'
+  link_style.name = 'Flux de type importations'
+  return link_style
+}
+
+// CONVERSIONS ************************************************************************************
+
+/**
  * Permet de convertir les fichier de sauvegarde JSON pré-classes vers un standard attendu.
  *
  * (Code repris de convert_data du fichier SankeyConvert.tsx)
@@ -239,13 +275,63 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   const data_to_convert = json_object as unknown as SankeyData & ConvertSankeyData
   const { display_style, units_names } = data_to_convert
   if (display_style !== undefined) {
-
-    display_style.font_family = ['Arial,sans-serif', 'Helvetica,sans-serif', 'Verdana,sans-serif', 'Calibri,sans-serif', 'Noto,sans-serif', 'Lucida Sans,sans-serif', 'Gill Sans,sans-serif', 'Century Gothic,sans-serif', 'Candara,sans-serif', 'Futara,sans-serif', 'Franklin Gothic Medium,sans-serif', 'Trebuchet MS,sans-serif', 'Geneva,sans-serif', 'Segoe UI,sans-serif', 'Optima,sans-serif', 'Avanta Garde,sans-serif',
-      'Times New Roman,serif', 'Big Caslon,serif', 'Bodoni MT,serif', 'Book Antiqua,serif', 'Bookman,serif', 'New Century Schoolbook,serif', 'Calisto MT,serif', 'Cambria,serif', 'Didot,serif', 'Garamond,serif', 'Georgia,serif', 'Goudy Old Style,serif', 'Hoefler Text,serif', 'Lucida Bright,serif', 'Palatino,serif', 'Perpetua,serif', 'Rockwell,serif', 'Rockwell Extra Bold,serif', 'Baskerville,serif',
-      'Consolas,monospace', 'Courier,monospace', 'Courier New,monospace', 'Lucida Console,monospace', 'Lucidatypewriter,monospace', 'Lucida Sans Typewriter,monospace', 'Monaco,monospace', 'Andale Mono,monospace',
-      'Comic Sans,cursive', 'Comic Sans MS,cursive', 'Apple Chancery,cursive', 'Zapf Chancery,cursive', 'Bradley Hand,cursive', 'Brush Script MT,cursive', 'Brush Script Std,cursive', 'Snell Roundhan,cursive', 'URW Chancery,cursive', 'Coronet script,cursive', 'Florence,cursive', 'Parkavenue,cursive'
+    display_style.font_family = [
+      'Arial,sans-serif',
+      'Helvetica,sans-serif',
+      'Verdana,sans-serif',
+      'Calibri,sans-serif',
+      'Noto,sans-serif',
+      'Lucida Sans,sans-serif',
+      'Gill Sans,sans-serif',
+      'Century Gothic,sans-serif',
+      'Candara,sans-serif',
+      'Futara,sans-serif',
+      'Franklin Gothic Medium,sans-serif',
+      'Trebuchet MS,sans-serif',
+      'Geneva,sans-serif',
+      'Segoe UI,sans-serif',
+      'Optima,sans-serif',
+      'Avanta Garde,sans-serif',
+      'Times New Roman,serif',
+      'Big Caslon,serif',
+      'Bodoni MT,serif',
+      'Book Antiqua,serif',
+      'Bookman,serif',
+      'New Century Schoolbook,serif',
+      'Calisto MT,serif',
+      'Cambria,serif',
+      'Didot,serif',
+      'Garamond,serif',
+      'Georgia,serif',
+      'Goudy Old Style,serif',
+      'Hoefler Text,serif',
+      'Lucida Bright,serif',
+      'Palatino,serif',
+      'Perpetua,serif',
+      'Rockwell,serif',
+      'Rockwell Extra Bold,serif',
+      'Baskerville,serif',
+      'Consolas,monospace',
+      'Courier,monospace',
+      'Courier New,monospace',
+      'Lucida Console,monospace',
+      'Lucidatypewriter,monospace',
+      'Lucida Sans Typewriter,monospace',
+      'Monaco,monospace',
+      'Andale Mono,monospace',
+      'Comic Sans,cursive',
+      'Comic Sans MS,cursive',
+      'Apple Chancery,cursive',
+      'Zapf Chancery,cursive',
+      'Bradley Hand,cursive',
+      'Brush Script MT,cursive',
+      'Brush Script Std,cursive',
+      'Snell Roundhan,cursive',
+      'URW Chancery,cursive',
+      'Coronet script,cursive',
+      'Florence,cursive',
+      'Parkavenue,cursive'
     ]
-
     if (display_style.trade_close === undefined && (data_to_convert.version === '0.2' || data_to_convert.version === '0.3')) {
       display_style.trade_close = true
     }
@@ -279,7 +365,21 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     }
   })
 
-  const attributes_to_remove = ['agregated_level', 'show_data', 'trade_close', 'sankey_type', 'previous_filter', 'filtered_links', 'filtered_nodes_names', 'filtered_nodes', 'nodes_names', 'max_vertical_offset', 'error', 'nodes2units_conv', 'nodes2tooltips']
+  const attributes_to_remove = [
+    'agregated_level',
+    'show_data',
+    'trade_close',
+    'sankey_type',
+    'previous_filter',
+    'filtered_links',
+    'filtered_nodes_names',
+    'filtered_nodes',
+    'nodes_names',
+    'max_vertical_offset',
+    'error',
+    'nodes2units_conv',
+    'nodes2tooltips'
+  ]
   for (const attr in attributes_to_remove) {
     if (attributes_to_remove[attr] in data_to_convert) {
       delete ((data_to_convert as unknown) as { [key: string]: unknown })[attributes_to_remove[attr]]
@@ -291,7 +391,6 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.version === '0.1') {
     units_names.splice(1, 0, 'natural')
   }
-
 
   convert_tags(data_to_convert)
   convert_nodes(data_to_convert)
@@ -330,8 +429,12 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   clean_data_local(data_to_convert)
 }
 
-// Function to clean local variable of nodes and links by deleting local variable if they have the same value as the style
-// they're associated with
+/**
+ * Function to clean local variable of nodes and links by
+ * deleting local variable if they have the same value as the style
+ * they're associated with
+ * @param {SankeyData} data
+ */
 const clean_data_local = (data: SankeyData) => {
   // Clean nodes local
   Object.values(data.nodes).forEach(n => {
@@ -346,7 +449,6 @@ const clean_data_local = (data: SankeyData) => {
       })
     }
   })
-
   // Clean links local
   Object.values(data.links).forEach(l => {
     if (l.local !== undefined && l.local !== null && l.style !== undefined) {
@@ -361,161 +463,12 @@ const clean_data_local = (data: SankeyData) => {
   })
 }
 
-// export const complete_sankey_data: complete_sankey_dataFunctType = (
-//   data: SankeyData,
-//   DefaultSankeyData: DefaultSankeyDataFuncType,
-//   DefaultNode: (data: SankeyData) => SankeyNode,
-//   DefaultLink: (data: SankeyData) => SankeyLink
-// ): void => {
-//   const { nodes, links } = data
-//   const the_data = DefaultSankeyData()
-//   Object.assign(the_data, data)
-//   Object.assign(data, the_data)
-//   Object.values(nodes).forEach(
-//     n => {
-//       const nn = DefaultNode(data);
-//       (nn as unknown as { x: undefined }).x = undefined;
-//       (nn as unknown as { y: undefined }).y = undefined
-//       Object.assign(nn, n)
-//       Object.assign(n, nn)
-//     }
-//   )
-
-//   Object.values(links).forEach(
-//     l => {
-//       const ll = DefaultLink(data)
-//       Object.assign(ll, l)
-//       Object.assign(l, ll)
-//     }
-//   )
-
-//   Object.values(data.nodeTags).forEach(
-//     tags_group => {
-//       if (tags_group.activated == undefined) {
-//         tags_group.activated = true
-//       }
-//       if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
-//       if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
-//     }
-//   )
-
-//   Object.values(data.fluxTags).forEach(
-//     tags_group => {
-//       if (tags_group.activated == undefined) {
-//         tags_group.activated = true
-//       }
-//       if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
-//       if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
-//     }
-//   )
-//   Object.values(data.dataTags).forEach(
-//     tags_group => {
-//       if (tags_group.activated == undefined) {
-//         tags_group.activated = true
-//       }
-//       if (tags_group.show_legend === undefined) { tags_group.show_legend = false }
-//       if (tags_group.color_map === undefined) { tags_group.color_map = 'jet' }
-//     }
-//   )
-//   if (data.nodeTags['Type de noeud']) {
-//     data.nodeTags['Type de noeud'].banner = 'none'
-//     if (data.nodeTags['Type de noeud'].tags.produit && !data.nodeTags['Type de noeud'].tags.produit.shape) {
-//       data.nodeTags['Type de noeud'].tags.produit.shape = 'ellipse'
-//     }
-//     if (data.nodeTags['Type de noeud'].tags.secteur && !data.nodeTags['Type de noeud'].tags.secteur.shape) {
-//       data.nodeTags['Type de noeud'].tags.secteur.shape = 'rect'
-//     }
-//     if ('echange' in data.nodeTags['Type de noeud'].tags && !data.nodeTags['Type de noeud'].tags['echange'].shape) {
-//       data.nodeTags['Type de noeud'].tags['echange'].shape = 'rect'
-//     }
-//     if ('échange' in data.nodeTags['Type de noeud'].tags) {
-//       data.nodeTags['Type de noeud'].tags['echange'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud'].tags['échange']))
-//       delete data.nodeTags['Type de noeud'].tags['échange']
-//     }
-//   }
-//   compute_initial_colors(data)
-//   convert_boolean(data)
-//   compute_flux_max(data)
-
-//   if ((data as unknown as ConvertSankeyData).show_structure == 'free') {
-//     data.show_structure = 'free_interval'
-//   }
-// }
-
-export const GetLinkValue: GetLinkValueFuncType = (
-  data: SankeyData,
-  idLink: string,
-  up = false
-): SankeyLinkValue => {
-  const { links, dataTags } = data
-  // Split the id and search for value after the original link id
-  //  each value represent wich dataTag to choose among those where selected is at true in link.value
-  // If there no dataTag (or no multiple dataTag selected then it take the first selected)
-  let idDt: string[] = []
-  if (Object.values(dataTags).filter(tagGroup => tagGroup.banner === 'multi').length > 0) {
-    idDt = idLink.split('_')
-    idDt.splice(0, 1)
-  }
-
-  const defaultInd = Object.values(data.dataTags)
-    .map(d => {
-      return Object.values((d as { tags: Record<string, unknown> }).tags).filter(t => (t as { selected: boolean }).selected).map((dd, i) => i)[0]
-    })
-
-  const index_dataTag = (idDt.length == 0) ? defaultInd : idDt.map(d => Number(d))
-
-  if (!(idLink in links)) {
-
-    return {
-      value: 0,
-      display_value: '',
-      tags: {},
-      extension: {}
-    }
-  }
-  let val = links[idLink].value
-  const listKey = [] as string[]
-  let missing_key = false
-  Object.values(dataTags).filter(dataTag => (Object.keys(dataTag.tags).length != 0)).forEach((dataTag, i) => {
-    const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
-    if (selected_tags.length == 0 || missing_key) {
-      missing_key = true
-      return
-    }
-    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[index_dataTag[i]][0])
-  })
-  if (missing_key) {
-    return {
-      value: 0,
-      display_value: '',
-      tags: {},
-
-      extension: {}
-    }
-  }
-
-  for (const i in listKey) {
-    if (up && +i === (listKey.length - 1)) {
-      break
-    }
-    val = (val as SankeyLinkValueDict)[listKey[i]]
-    if (val === undefined) {
-      return {
-        value: 0,
-        display_value: '',
-        tags: {},
-        extension: {}
-      }
-    }
-  }
-  return (val as unknown) as SankeyLinkValue
-}
 
 /**
-   * return a default sankey_data, use at the initialisation or re-initialisation of the application
-   *
-   * @returns {SankeyData}
-   */
+ * return a default sankey_data, use at the initialisation or re-initialisation of the application
+ *
+ * @returns {SankeyData}
+ */
 export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
   const data: Omit<SankeyData, 'style_node' | 'style_link'> = {
     version: '0.8',
@@ -585,11 +538,11 @@ export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
 }
 
 /**
-   *
-   * @param {SankeyData} data
-   * @param {string[]} l
-   * @returns {*}
-   */
+ *
+ * @param {SankeyData} data
+ * @param {string[]} l
+ * @returns {*}
+ */
 const CreateObject: CreateObjectFuncType = (data: SankeyData, l: string[]): SankeyLinkValueDict | SankeyLinkValue => {
   const { dataTags, fluxTags } = data
   if (l.length == 0) {
@@ -619,11 +572,11 @@ const CreateObject: CreateObjectFuncType = (data: SankeyData, l: string[]): Sank
 }
 
 /**
-   * Return a default link, used at the creation of a new link
-   *
-   * @param {SankeyData} data
-   * @returns {SankeyLink}
-   */
+ * Return a default link, used at the creation of a new link
+ *
+ * @param {SankeyData} data
+ * @returns {SankeyLink}
+ */
 export const DefaultLink: DefaultLinkFuncType = (data: SankeyData): SankeyLink => {
   const { dataTags } = data
   let nObjet = Object.create({})
@@ -644,24 +597,15 @@ export const DefaultLink: DefaultLinkFuncType = (data: SankeyData): SankeyLink =
   }
 }
 
-// export const SetNodeStyleToTypeNode: SetNodeStyleToTypeNodeFuncType = (data: SankeyData): void => {
-//   if (Object.keys(data.nodeTags).includes('Type de noeud')) {
-//     Object.values(data.nodes).forEach(node => {
-//       if (node.tags['Type de noeud']) {
-//         if (node.tags['Type de noeud'].includes('secteur')) {
-//           node.style = 'NodeSectorStyle'
-//         } else if (node.tags['Type de noeud'].includes('produit')) {
-//           node.style = 'NodeProductStyle'
-//         }
-//       }
-//     })
-//   }
-// }
 
 // Return the value of an attribute from node :
 // - If the node has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
 // - Else it return the attribute from the style the node has (a node always has a style )
-export const ReturnValueNode: ReturnValueNodeFuncType = (data: SankeyData, n: SankeyNode, k: keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle): string | number | boolean => {
+export const ReturnValueNode: ReturnValueNodeFuncType = (
+  data: SankeyData,
+  n: SankeyNode,
+  k: keyof SankeyNodeAttrLocal | keyof SankeyNodeStyle
+): string | number | boolean => {
   let value = ReturnLocalNodeValue(n, k as keyof SankeyNodeAttrLocal)
   if (value === undefined || value === null) {
     const ks = k as keyof SankeyNodeStyle
@@ -1551,17 +1495,24 @@ const convert_nodes: convert_nodesFuncType = (
       }
     }
   }
-
   )
-
-
 }
 
+/**
+ * Conversion oldest JSON to new JSON format for links
+ * @param {SankeyData} data
+ */
 const convert_links: convert_linksFuncType = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
-  if (!Array.isArray(data.links) && data.version !== '0.5' && data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {
+  if (
+    !Array.isArray(data.links) &&
+    (data.version !== '0.5') &&
+    (data.version !== '0.6') &&
+    (data.version !== '0.7') &&
+    (data.version !== '0.8')
+  ) {
     const key_names = Object.keys(data.links)
     const new_links = JSON.parse(JSON.stringify(data.links[key_names[0]])) as SankeyLink[]
     new_links.forEach(
@@ -1726,8 +1677,8 @@ const convert_links: convert_linksFuncType = (
 
   Object.values(data.links).forEach(l => {
     if (((l as unknown) as { source_name: string }).source_name) {
-      const source_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name(((l as unknown) as { source_name: string }).source_name))[0]
-      const target_node = Object.values(data.nodes).filter(n => normalize_name(n.name) === normalize_name(((l as unknown) as { target_name: string }).target_name))[0]
+      const source_node = Object.values(data.nodes).filter(n => normalizeName(n.name) === normalizeName(((l as unknown) as { source_name: string }).source_name))[0]
+      const target_node = Object.values(data.nodes).filter(n => normalizeName(n.name) === normalizeName(((l as unknown) as { target_name: string }).target_name))[0]
       l.idSource = source_node.idNode
       l.idTarget = target_node.idNode
       delete ((l as unknown) as { source_name?: string }).source_name
@@ -1746,8 +1697,6 @@ const convert_links: convert_linksFuncType = (
       return
     }
 
-
-
     const l_depreciated = (l as Type_JSON)
     // CONVERSION D'ATTRIBUT OBLIGATOIRE DES NOEUDS EN VARIABLES LOCAL
     l.local = (l.local != undefined && l.local !== null) ? l.local : {} as SankeyLinkStyle
@@ -1757,7 +1706,7 @@ const convert_links: convert_linksFuncType = (
       }
     })
 
-
+    // Rename orientation mode
     if (l && l.local && !('orientation' in l.local)) {
       AssignLinkLocalAttribute(l, 'orientation', 'hh')
       if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
@@ -1766,34 +1715,36 @@ const convert_links: convert_linksFuncType = (
         AssignLinkLocalAttribute(l, 'orientation', 'hv')
       }
     }
+
+    // Delete link reverse entry
     if ('link_reverse' in l) {
       delete l_convert.link_reverse
     }
 
+    // Deletet display unit entry
     if ('display_unit' in l_convert) {
       l_convert.natural_unit = l_convert.display_unit
       delete l_convert.display_unit
     }
+
+    // Delete agregated data value entry
     if (('agregated_data_value' in l_convert)) {
       l_convert.data_value = l_convert.agregated_data_value
       delete l_convert.agregated_data_value
     }
 
+    // Convert old shape attributes
     if (l_convert.type === 'short_link_arrow') {
       AssignLinkLocalAttribute(l, 'curved', false)
       AssignLinkLocalAttribute(l, 'arrow', true)
-    } else if (l_convert.type === 'bezier_link_arrow') {
+    }
+    else if (l_convert.type === 'bezier_link_arrow') {
       AssignLinkLocalAttribute(l, 'curved', true)
       AssignLinkLocalAttribute(l, 'arrow', true)
-    } else if (l_convert.type === 'bezier_link_classic') {
+    }
+    else if (l_convert.type === 'bezier_link_classic') {
       AssignLinkLocalAttribute(l, 'curved', true)
       AssignLinkLocalAttribute(l, 'arrow', false)
-    }
-    const attributes_to_remove = ['source', 'target', 'id', 'classif', 'title_length', 'raw_value', 'old_display_value', 'old_color', 'y_sd_label', 'x_sd_label', 'type']
-    for (const attr in attributes_to_remove) {
-      if (attributes_to_remove[attr] in l) {
-        delete ((l as unknown) as { [key: string]: unknown })[attributes_to_remove[attr]]
-      }
     }
 
     if (data.version === '0.1') {
@@ -1811,13 +1762,13 @@ const convert_links: convert_linksFuncType = (
         AssignLinkLocalAttribute(l, 'text_color', 'white')
       }
       delete l_convert.text_same_color
+
       if (target_node.x < source_node.x) {
         AssignLinkLocalAttribute(l, 'recycling', true)
-
       }
-    } else if (!('curvature' in l)) {
+    }
+    else if (!('curvature' in l)) {
       AssignLinkLocalAttribute(l, 'curvature', 0.5)
-
     }
     if (data.version === '0.2') {
       if (target_node.x < source_node.x) {
@@ -1835,24 +1786,41 @@ const convert_links: convert_linksFuncType = (
       }
       delete l.tooltip_text
     }
+
+    // Remove no more necessayr attributes
+    const attributes_to_remove = ['source', 'target', 'id', 'classif', 'title_length', 'raw_value', 'old_display_value', 'old_color', 'y_sd_label', 'x_sd_label', 'type']
+    for (const attr in attributes_to_remove) {
+      if (attributes_to_remove[attr] in l) {
+        delete ((l as unknown) as { [key: string]: unknown })[attributes_to_remove[attr]]
+      }
+    }
+
+
+    // Convert text color old attributes -> new attribute
     if (l_convert.text_same_color === false) {
       AssignLinkLocalAttribute(l, 'text_color', 'black')
-    } else if (l_convert.text_same_color === true) {
+    }
+    else if (l_convert.text_same_color === true) {
       AssignLinkLocalAttribute(l, 'text_color', ReturnValueLink(data, l, 'color'))
-    } else if (l_convert.text_same_color === 'same_color') {
+    }
+    else if (l_convert.text_same_color === 'same_color') {
       AssignLinkLocalAttribute(l, 'text_color', ReturnValueLink(data, l, 'color'))
     }
     delete l_convert.text_same_color
 
+    // Values ?
     convert_display(dataTagsArray, l.value as SankeyLinkValue, 0)
+
+    // Add opacity attribute
     if (!ReturnValueLink(data, l, 'opacity')) {
       AssignLinkLocalAttribute(l, 'opacity', 0.85)
-
     }
 
+    // Dashed attribute conversion int -> boolean
     if (l_convert.dashed === 0) {
       AssignLinkLocalAttribute(l, 'dashed', false)
-    } else if (l_convert.dashed == 1) {
+    }
+    else if (l_convert.dashed == 1) {
       AssignLinkLocalAttribute(l, 'dashed', true)
     }
 
@@ -1902,15 +1870,17 @@ const convert_links: convert_linksFuncType = (
       }
     })
 
+    // Convert legacy recycling position -> new positions
     if (l.local && l.local.recycling) {
+
       l.local.left_horiz_shift = 0.05
       l.local.right_horiz_shift = 0.95;
-
       // Add variable in legacy JSOn
       (l.local as Type_JSON).starting_tangeant = 0.01; // special assignement for attr not present in legacy but usefull in current Class_link
       (l.local as Type_JSON).ending_tangeant = 0.01 // special assignement for attr not present in legacy but usefull in current Class_link
-
     }
+
+    // Delete color attribute if unecessary
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color)) {
       delete l.local.color
     }
@@ -2067,19 +2037,18 @@ const convert_links: convert_linksFuncType = (
       }
     )
   }
-
-
 }
 
 const has_not_converted_nodeTags_as_levelTags = (data: SankeyData) => {
   return Object.values(data.nodeTags).filter(nt => nt.banner == 'level').length > 0
 }
 
-const normalize_name = (name: string) => {
+/**
+ * Return name without EOL
+ * @param {string} name
+ * @return {*}
+ */
+const normalizeName = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
   return new_name
 }
-
-
-
-
