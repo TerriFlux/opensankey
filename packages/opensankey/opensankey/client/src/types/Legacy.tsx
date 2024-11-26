@@ -939,6 +939,10 @@ const convert_tags: convert_tagsFuncType = (
 
   if (data.nodeTags.Dimensions) {
     Object.keys(data.nodeTags.Dimensions.tags).forEach(tag => {
+      // Protection
+      if (data.levelTags === undefined)
+        data.levelTags = {} as TagsCatalog
+      // Creating leveltag
       data.levelTags[tag] = {
         group_name: data.nodeTags.Dimensions.tags[tag].name,
         color_map: 'jet',
@@ -953,6 +957,7 @@ const convert_tags: convert_tagsFuncType = (
           n.tags[tag] = [String((n.dimensions[tag].level ?? 0))]
         }
         if ('Dimensions' in n.tags) {
+
           delete n.tags.Dimensions
         }
       })
@@ -1166,19 +1171,21 @@ const convert_tags: convert_tagsFuncType = (
     data.nodeTags['type de noeud'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud']))
     delete data.nodeTags['Type de noeud']
     Object.values(data.nodes).forEach(n => {
-      n.tags['type de noeud'] = n.tags['Type de noeud']
-      delete n.tags['Type de noeud']
-      if (n.tags['type de noeud'][0] == 'echange') {
-        if (n.style == 'default') {
-          if (n.inputLinksId.length === 0) {
-            n.style = 'NodeImportStyle'
-          } else if (n.outputLinksId.length === 0) {
-            n.style = 'NodeExportStyle'
+      if (n.tags['Type de noeud'] !== undefined) {
+        n.tags['type de noeud'] = JSON.parse(JSON.stringify(n.tags['Type de noeud']))
+        delete n.tags['Type de noeud']
+        if (n.tags['type de noeud'][0] == 'echange') {
+          if (n.style == 'default') {
+            if (n.inputLinksId.length === 0) {
+              n.style = 'NodeImportStyle'
+            } else if (n.outputLinksId.length === 0) {
+              n.style = 'NodeExportStyle'
+            }
+            // if (has_relative && has_position) {
+            //   AssignNodeLocalAttribute(n,'relative_dx',n.x)
+            //   AssignNodeLocalAttribute(n,'relative_dy',n.y)
+            // }
           }
-          // if (has_relative && has_position) {
-          //   AssignNodeLocalAttribute(n,'relative_dx',n.x)
-          //   AssignNodeLocalAttribute(n,'relative_dy',n.y)
-          // }
         }
       }
     })
@@ -1506,6 +1513,7 @@ const convert_links: convert_linksFuncType = (
   data: SankeyData
 ) => {
   const data_to_convert = data as SankeyData & ConvertSankeyData
+
   if (
     !Array.isArray(data.links) &&
     (data.version !== '0.5') &&
