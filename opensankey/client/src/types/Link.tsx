@@ -73,7 +73,7 @@ export const default_shape_is_recycling = false
 export const default_shape_opacity = 0.85
 export const default_shape_orientation = 'hh'
 export const default_shape_starting_curve = 0.05
-export const default_shape_ending_curve = 0.95
+export const default_shape_ending_curve = 0.05
 export const default_shape_starting_tangeant = 0.25
 export const default_shape_ending_tangeant = 0.25
 export const default_shape_middle_recyling = 100
@@ -1781,7 +1781,6 @@ export abstract class Class_LinkElement
     const x6 = this.position_x_end
     const y6 = this.position_y_end
     // Shifts
-    const ending_shift = (1 - this.shape_ending_curve)
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
@@ -1789,23 +1788,23 @@ export abstract class Class_LinkElement
     // Normal mode
     if (!this.shape_is_recycling) {
       if (this.is_horizontal || this.is_vertical_horizontal) {
-        x5 = x6 - horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * ending_shift
+        x5 = x6 - horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * this.shape_ending_curve
         y5 = y6
       }
       else {
         x5 = x6
-        y5 = y6 - vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * ending_shift
+        y5 = y6 - vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * this.shape_ending_curve
       }
     }
     // Recycling mode
     else {
       if (this.is_horizontal || this.is_vertical_horizontal) {
-        x5 = x6 + horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * ending_shift
+        x5 = x6 + horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * this.shape_ending_curve
         y5 = y6
       }
       else {
         x5 = x6
-        y5 = y6 + vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * ending_shift
+        y5 = y6 + vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * this.shape_ending_curve
       }
     }
     this._control_points.ending_curve_point.setPosXY(x5, y5)
@@ -2008,7 +2007,7 @@ export abstract class Class_LinkElement
         // Compute ending curve point coef based on new handle pos
         const dx6x0 = Math.abs(x6 - x0)
         if (dx6x0 > 0) // Avoid NaN
-          this.shape_ending_curve = Math.abs(handle_new_pos_x - x0) / dx6x0
+          this.shape_ending_curve = Math.abs(handle_new_pos_x - x6) / dx6x0
       }
       else {
         // Compute new handle position
@@ -2018,7 +2017,7 @@ export abstract class Class_LinkElement
         // Compute ending curve point coef based on new handle pos
         const dy6y0 = Math.abs(y6 - y0)
         if (dy6y0 > 0) // Avoid NaN
-          this.shape_ending_curve = Math.abs(handle_new_pos_y - y0) / dy6y0
+          this.shape_ending_curve = Math.abs(handle_new_pos_y - y6) / dy6y0
       }
       this._control_points.is_dragged = false
     }
@@ -2604,7 +2603,7 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_starting_curve(_: number) {
-    if (_ >= 0 && _ < this.shape_ending_curve) {
+    if ((_ >= 0) && ((_ + this.shape_ending_curve) <= 1.0)) {
       this._display.attributes.shape_starting_curve = _
       this.drawElements()
       this.drawControlPoint()
@@ -2629,7 +2628,7 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_ending_curve(_: number) {
-    if (_ <= 1 && _ > this.shape_starting_curve) {
+    if ((_ >= 0) && ((_ + this.shape_starting_curve) <= 1.0)) {
       this._display.attributes.shape_ending_curve = _
       this.drawElements()
       this.drawControlPoint()
@@ -3559,7 +3558,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (_ !== undefined) {
       if (
         (_ >= 0) &&
-        (_ < (this.shape_ending_curve ?? default_shape_ending_curve))
+        ((_ + (this.shape_ending_curve ?? default_shape_ending_curve)) <= 1.0)
       ) {
         this._shape_starting_curve = _
       }
@@ -3572,8 +3571,8 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   public set shape_ending_curve(_: number | undefined) {
     if (_ !== undefined) {
       if (
-        (_ <= 1) &&
-        (_ > (this.shape_starting_curve ?? default_shape_starting_curve))
+        (_ >= 0) &&
+        ((_ + (this.shape_starting_curve ?? default_shape_starting_curve)) <= 1.0)
       ) {
         this._shape_ending_curve = _
       }
