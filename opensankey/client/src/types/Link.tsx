@@ -949,9 +949,11 @@ export abstract class Class_LinkElement
   public getAllValues() {
     return this._values.getAllValues()
   }
+
   public drawPath() {
     this._process_or_bypass(() => this._drawPath())
   }
+
   public drawLabel() {
     this._process_or_bypass(() => this._drawLabel())
   }
@@ -1737,7 +1739,7 @@ export abstract class Class_LinkElement
     const x6 = this.position_x_end
     const y6 = this.position_y_end
 
-    const starting_shift = this.lenght * this.shape_starting_curve
+    const starting_shift = this.shape_starting_curve
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
@@ -1745,23 +1747,23 @@ export abstract class Class_LinkElement
     // Normal mode
     if (!this.shape_is_recycling) {
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        x1 = x0 + horizontal_direction * starting_shift
+        x1 = x0 + horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * starting_shift
         y1 = y0
       }
       else {
         x1 = x0
-        y1 = y0 + vertical_direction * starting_shift
+        y1 = y0 + vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * starting_shift
       }
     }
     // Recycling mode
     else {
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        x1 = x0 - horizontal_direction * starting_shift
+        x1 = x0 - horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * starting_shift
         y1 = y0
       }
       else {
         x1 = x0
-        y1 = y0 - vertical_direction * starting_shift
+        y1 = y0 - vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * starting_shift
       }
     }
     this._control_points.starting_curve_point.setPosXY(x1, y1)
@@ -1779,7 +1781,7 @@ export abstract class Class_LinkElement
     const x6 = this.position_x_end
     const y6 = this.position_y_end
     // Shifts
-    const ending_shift = this.lenght * (1 - this.shape_ending_curve)
+    const ending_shift = (1 - this.shape_ending_curve)
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
@@ -1787,23 +1789,23 @@ export abstract class Class_LinkElement
     // Normal mode
     if (!this.shape_is_recycling) {
       if (this.is_horizontal || this.is_vertical_horizontal) {
-        x5 = x6 - horizontal_direction * ending_shift
+        x5 = x6 - horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * ending_shift
         y5 = y6
       }
       else {
         x5 = x6
-        y5 = y6 - vertical_direction * ending_shift
+        y5 = y6 - vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * ending_shift
       }
     }
     // Recycling mode
     else {
       if (this.is_horizontal || this.is_vertical_horizontal) {
-        x5 = x6 + horizontal_direction * ending_shift
+        x5 = x6 + horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * ending_shift
         y5 = y6
       }
       else {
         x5 = x6
-        y5 = y6 + vertical_direction * ending_shift
+        y5 = y6 + vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * ending_shift
       }
     }
     this._control_points.ending_curve_point.setPosXY(x5, y5)
@@ -3182,25 +3184,6 @@ export abstract class Class_LinkElement
   }
 
   // PRIVATE GETTER / SETTER =============================================================
-
-  /**
-   * Compute lenght of link
-   * @memberof Class_LinkElement
-   */
-  private get lenght() {
-    if (this.is_vertical) {
-      return Math.abs(this.position_y_start - this.position_y_end)
-    }
-    else if (this.is_horizontal) {
-      return Math.abs(this.position_x_start - this.position_x_end)
-    }
-    else {
-      return (
-        Math.abs(this.position_x_start - this.position_x_end) +
-        Math.abs(this.position_y_start - this.position_y_end)
-      )
-    }
-  }
 
   /**
    * If link has tags :
