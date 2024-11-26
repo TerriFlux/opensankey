@@ -740,31 +740,6 @@ export abstract class Class_NodeElement
 
   // Drawing methods --------------------------------------------------------------------
 
-  /**
-   * Draw given node on drawing area
-   *
-   * @protected
-   * @memberof Class_NodeElement
-   */
-  protected _draw() {
-    // Heritance of draw function
-    super._draw()
-    // Draw label
-    this._drawNameLabel()
-    this._drawValueLabel()
-  }
-
-  protected _initDraw() {
-    super._initDraw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_nodes')
-    // Apply styles
-    this.d3_selection?.style('display', 'inline')
-    this.d3_selection?.style('font-family', this.name_label_font_family)
-    // Init <g> containing shape elements
-    this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
-  }
-
   public unDraw() {
     super.unDraw()
     this._links_order
@@ -785,6 +760,127 @@ export abstract class Class_NodeElement
       })
   }
 
+  public drawShape() {
+    this._process_or_bypass(() => this._drawShape())
+  }
+
+  public drawNameLabel() {
+    this._process_or_bypass(() => this._drawNameLabel())
+  }
+
+  /**
+   * Draw node label on D3 svg
+   * @private
+   * @memberof Class_NodeElement
+   */
+  public drawValueLabel() {
+    this._process_or_bypass(() => this._drawValueLabel)
+  }
+
+  public drawLinks() {
+    this._process_or_bypass(() => this._drawLinks())
+  }
+
+  public drawLinksArrow() {
+    this._process_or_bypass(() => this._drawLinksArrow())
+  }
+
+  /**
+   * Agregate node
+   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, agregate with 'Primaire'
+   * @memberof Class_NodeElement
+   */
+  public drawParent(id?: string) {
+    if (this.is_child) {
+      // Force to show parent
+      if ((id !== undefined) && (this._dimensions_as_child[id]))
+        this._dimensions_as_child[id].setForceToShowChildren()
+      else
+        Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
+
+      // Check if there are possible Exchange nodes
+      if (!this.sankey.node_taggs_dict['type de noeud']) {
+        return
+      }
+      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
+
+      // All input exchange must also be aggregated
+      this.input_links_list
+        .forEach(input_link => {
+          const input_node = input_link.source
+          if (input_node.hasGivenTag(echangeTag)) {
+            input_node.drawParent(id)
+          }
+        })
+
+      // All output exchange must also be aggregated
+      this.output_links_list
+        .forEach(output_link => {
+          const output_node = output_link.target
+          if (output_node.hasGivenTag(echangeTag)) {
+            output_node.drawParent(id)
+          }
+        })
+    }
+  }
+
+  /**
+   * Disagregate node
+   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, disagregate with 'Primaire'
+   * @memberof Class_NodeElement
+   */
+  public drawChildren(id?: string) {
+    if (this.is_parent) {
+      // Force to show children
+      if ((id !== undefined) && (this._dimensions_as_parent[id]))
+        this._dimensions_as_parent[id].setForceToShowChildren()
+      else
+        Object.values(this._dimensions_as_parent)[Object.values(this._dimensions_as_parent).length-1].setForceToShowChildren()
+
+      // Check if there are possible Exchange nodes
+      if (!this.sankey.node_taggs_dict['type de noeud']) {
+        return
+      }
+      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
+
+      // All input exchange nodes must also be desaggregated
+      this.input_links_list
+        .forEach(input_link => {
+          const input_node = input_link.source
+          if (input_node.hasGivenTag(echangeTag)) {
+            input_node.drawChildren(id)
+          }
+        })
+
+      // All output exchange nodes must also be desaggregated
+      this.output_links_list
+        .forEach(output_link => {
+          const output_node = output_link.target
+          if (output_node.hasGivenTag(echangeTag)) {
+            output_node.drawChildren(id)
+          }
+        })
+    }
+  }
+
+  /**
+   * Display the tooltip on drawing area
+   *
+   * @private
+   * @memberof Class_NodeElement
+   */
+  public drawTooltip() {
+    // Clean previous label
+    d3.selectAll('.sankey-tooltip').remove()
+    d3.select('body')
+      .append('div')
+      .attr('class', 'sankey-tooltip')
+      .style('opacity', 1)
+      .style('top', this.position_y + 'px')
+      .style('left', this.position_x + 'px')
+      .html(this.tooltip_html)
+  }
+
   // Styles / attributes related methods ------------------------------------------------
 
   public useDefaultStyle() {
@@ -803,6 +899,7 @@ export abstract class Class_NodeElement
   public isPositionOverloaded(attr: keyof Type_ElementPosition) {
     return this._display.position[attr] !== undefined
   }
+
   public resetPositionAttribute(attr: keyof Type_ElementPosition) {
     delete this._display.position[attr]
   }
@@ -889,6 +986,38 @@ export abstract class Class_NodeElement
       return false
     }
     return true
+  }
+
+  /**
+   * Select the right color to use for this node (attribute / style / tags / ...)
+   *
+   * If node tag color palette is activated then search if the node has 1 tag of the group displayed and apply tag color
+   *  if the node has more than 1 tag associated then return default color
+   * @public
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  public getShapeColorToUse() {
+    // Default color
+    let shape_color = this.shape_color
+    // Is the color defined by tags
+    const taggs_activated = this.taggs_list
+      .filter(tagg => tagg.show_legend)
+    if (
+      (!this.shape_color_sustainable) &&
+      (taggs_activated.length > 0)
+    ) {
+      const tagg_for_colormap = taggs_activated[0]
+      const tags_for_colormap = this.tags_list
+        .filter(tag => (tag.group === tagg_for_colormap))
+        .filter(tag => tag.is_selected)
+      if (tags_for_colormap.length == 1) {
+        shape_color = tags_for_colormap[0].color
+      } else {
+        shape_color = default_element_color
+      }
+    }
+    return shape_color
   }
 
   /**
@@ -1019,108 +1148,7 @@ export abstract class Class_NodeElement
     }
   }
 
-  private _show: boolean | undefined
-
-  public show() {
-    return this._show
-  }
-
-  public forceShow() {
-    this._show = true
-  }
-
-  public forceHide() {
-    this._show = false
-    this.draw() //Will hide node because we generally loop one visible node to draw them so this node won't be taking into account
-  }
-
-  /**
-   * Agregate node
-   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, agregate with 'Primaire'
-   * @memberof Class_NodeElement
-   */
-  public drawParent(id?: string) {
-    if (this.is_child) {
-      // Force to show parent
-      if ((id !== undefined) && (this._dimensions_as_child[id]))
-        this._dimensions_as_child[id].setForceToShowChildren()
-      else
-        Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
-
-      // Check if there are possible Exchange nodes
-      if (!this.sankey.node_taggs_dict['type de noeud']) {
-        return
-      }
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-
-      // All input exchange must also be aggregated
-      this.input_links_list
-        .forEach(input_link => {
-          const input_node = input_link.source
-          if (input_node.hasGivenTag(echangeTag)) {
-            input_node.drawParent(id)
-          }
-        })
-
-      // All output exchange must also be aggregated
-      this.output_links_list
-        .forEach(output_link => {
-          const output_node = output_link.target
-          if (output_node.hasGivenTag(echangeTag)) {
-            output_node.drawParent(id)
-          }
-        })
-    }
-  }
-
-  /**
-   * Disagregate node
-   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, disagregate with 'Primaire'
-   * @memberof Class_NodeElement
-   */
-  public drawChildren(id?: string) {
-    if (this.is_parent) {
-      // Force to show children
-      if ((id !== undefined) && (this._dimensions_as_parent[id]))
-        this._dimensions_as_parent[id].setForceToShowChildren()
-      else
-        Object.values(this._dimensions_as_parent)[Object.values(this._dimensions_as_parent).length-1].setForceToShowChildren()
-
-      // Check if there are possible Exchange nodes
-      if (!this.sankey.node_taggs_dict['type de noeud']) {
-        return
-      }
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-
-      // All input exchange nodes must also be desaggregated
-      this.input_links_list
-        .forEach(input_link => {
-          const input_node = input_link.source
-          if (input_node.hasGivenTag(echangeTag)) {
-            input_node.drawChildren(id)
-          }
-        })
-
-      // All output exchange nodes must also be desaggregated
-      this.output_links_list
-        .forEach(output_link => {
-          const output_node = output_link.target
-          if (output_node.hasGivenTag(echangeTag)) {
-            output_node.drawChildren(id)
-          }
-        })
-    }
-  }
-
   // Links related methods --------------------------------------------------------------
-
-  public drawLinks() {
-    this._process_or_bypass(() => this._drawLinks())
-  }
-
-  public drawLinksArrow() {
-    this._process_or_bypass(() => this._drawLinksArrow())
-  }
 
   /**
    * Return true if this node hase at least one input link
@@ -1192,6 +1220,35 @@ export abstract class Class_NodeElement
       link.delete()
       this.draw()
     }
+  }
+
+  /**
+   * Remove link reference from all related attributes it this node.
+   * /!\ Keep as private method. This can create dangling ref for links
+   *
+   * @param {Type_GenericLinkElement} link
+   * @memberof Class_NodeElement
+   */
+  public removeInputLink(link: Type_GenericLinkElement) {
+    this._input_links_handle[link.id]?.delete()
+    delete this._input_links_handle[link.id]
+    delete this._input_links_ending_point[link.id]
+    delete this._input_links[link.id]
+    this.removeLinkFromOrderingLinksList(link)
+  }
+
+  /**
+   * Remove link reference from all related attributes it this node.
+   * /!\ Keep as private method. This can create dangling ref for links
+   * @param {Type_GenericLinkElement} link
+   * @memberof Class_NodeElement
+   */
+  public removeOutputLink(link: Type_GenericLinkElement) {
+    this._output_links_handle[link.id]?.delete()
+    delete this._output_links_handle[link.id]
+    delete this._output_links_starting_point[link.id]
+    delete this._output_links[link.id]
+    this.removeLinkFromOrderingLinksList(link)
   }
 
   /**
@@ -1395,7 +1452,6 @@ export abstract class Class_NodeElement
     this._display.position.y += shift
   }
 
-
   /**
    * function to use at in eventMouseDragEnd
    *
@@ -1448,6 +1504,33 @@ export abstract class Class_NodeElement
   }
 
   // PROTECTED METHODS ==================================================================
+
+  // Drawing methods --------------------------------------------------------------------
+
+  /**
+   * Draw given node on drawing area
+   *
+   * @protected
+   * @memberof Class_NodeElement
+   */
+  protected _draw() {
+    // Heritance of draw function
+    super._draw()
+    // Draw label
+    this._drawNameLabel()
+    this._drawValueLabel()
+  }
+
+  protected _initDraw() {
+    super._initDraw()
+    // Update class attributes
+    this.d3_selection?.attr('class', 'gg_nodes')
+    // Apply styles
+    this.d3_selection?.style('display', 'inline')
+    this.d3_selection?.style('font-family', this.name_label_font_family)
+    // Init <g> containing shape elements
+    this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
+  }
 
   /**
    * Apply node position to it shape in d3
@@ -1553,6 +1636,431 @@ export abstract class Class_NodeElement
   }
 
   /**
+   * Draw node shape on d3 svg
+   * @private
+   * @memberof Class_NodeElement
+   */
+  protected _drawShape() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
+    // Clean previous shape
+    this.d3_selection_g_shape?.selectAll('.node_shape').remove()
+    // Do the rest only if shape is visible
+    if (this.shape_visible) {
+      // Compute shape attributes
+      const width = this.getShapeWidthToUse()
+      const height = this.getShapeHeightToUse()
+      const color = this.getShapeColorToUse()
+      // Apply shape value
+      if (this.shape_type === 'rect') {
+        this.d3_selection_g_shape?.append('rect')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('width', width)
+          .attr('height', height)
+      }
+      else if (this.shape_type === 'ellipse') {
+        this.d3_selection_g_shape?.append('ellipse')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('cx', width / 2)
+          .attr('cy', height / 2)
+          .attr('rx', width / 2)
+          .attr('ry', height / 2)
+      }
+      else if (this.shape_type === 'arrow') {
+        this.d3_selection_g_shape?.append('path')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('d', this.getArrowPath())
+      }
+      // Apply common properties
+      this.d3_selection_g_shape?.selectAll('.node_shape')
+        .attr('id', this.id)
+        .attr('fill-opacity', this.shape_visible ? '1' : '0')
+        .attr('fill', color)
+        .style('stroke', 'black')
+        .style('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
+    }
+  }
+
+  /**
+   * Draw node label on D3 svg
+   * @private
+   * @memberof Class_NodeElement
+   */
+  protected _drawNameLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
+    // Clean previous label
+    this.d3_selection?.selectAll('.name_label').remove()
+    // Add name label
+    if (this.name_label_visible) {
+      const label_to_display = this.name_label
+      // Box position is set by label position. For text / shape ref point is not the same
+      // - Text : ref point is bottom of text + right/middle/left depending on anchor
+      // - Shape : ref point if top-left corner
+      const box_width = Math.min(
+        label_to_display.length * this.name_label_font_size,
+        this.name_label_box_width)
+      const box_height = this.name_label_font_size
+
+      // CReate label wrapper
+      const wrapper = textwrap()
+        .bounds({ height: 100, width: this.name_label_box_width })
+        .method('tspans')
+
+      // Add name label text
+      const label_text = this.d3_selection?.append('text')
+        .classed('name_label', true)
+        .classed('name_label_text', true)
+        .attr('fill', this.name_label_color ? 'white' : 'black')
+        .attr('id', 'name_label_text_' + this.id)
+        .style('font-weight', this.name_label_bold ? 'bold' : 'normal')
+        .style('font-style', this.name_label_italic ? 'italic' : 'normal')
+        .style('font-size', String(this.name_label_font_size) + 'px')
+        .style('font-family', this.name_label_font_family)
+        .style('stroke', 'none')
+        .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
+        .text(label_to_display)
+        .filter(() => label_to_display.split(' ').length > 1)//only call wrapper if text displayed has space to be splitted by wrapper (sometime 1 word label can have some wrap problem with label bg)
+        .call(wrapper)
+
+      // Position label & return it coord_x, coord_y & it text anchor for use in other element (label bg, label fo)
+      const [label_pos_x, label_pos_y, label_anchor] = this.updateNameLabelPos()
+      let box_pos_x = label_pos_x
+      let box_pos_y = label_pos_y
+      if (this.name_label_vert == 'top') {
+        box_pos_y -= (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size)
+        label_text?.attr('y', label_pos_y-(((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size))
+      } else if (this.name_label_vert == 'middle') {
+        box_pos_y -= this.name_label_font_size / 2
+        label_text?.attr('y', label_pos_y - (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size / 2))
+      }
+      if (label_anchor === 'end') {
+        box_pos_x = box_pos_x - box_width
+      }
+      else if (label_anchor === 'middle') {
+        box_pos_x = box_pos_x - box_width / 2
+      }
+
+      // Add an input to change the name of the node
+      // The input appear when we double click on the label
+      if (!this.drawing_area.static) {
+        this.d3_selection?.append('foreignObject')
+          .classed('name_label', true)
+          .classed('name_label_fo_input', true)
+          .attr('x', box_pos_x)
+          .attr('y', box_pos_y)
+          .attr('width', box_width)
+          .attr('height', box_height + 2)
+          .style('display', 'none')
+          .append('xhtml:div')
+          .append('input')
+          .classed('name_label', true)
+          .classed('name_label_input', true)
+          .attr('id', 'name_label_input_' + this.id)
+          .attr('type', 'text')
+          .attr('value', this._name)
+          .style('font-size', String(this.name_label_font_size) + 'px')
+          .on('input', (evt) => { this._name = evt.target.value })
+          .on('blur', () => this.setInputLabelInvisible())
+
+        label_text?.call(d3.drag<SVGTextElement, unknown>()
+          .filter(evt => (evt.which == 1) && evt.altKey && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+          .on('start', ev => this.dragTextStart(ev))
+          .on('drag', ev => this.dragTextMove(ev))
+          .on('end', ev => this.dragTextend(ev))
+        )
+      }
+    }
+  }
+
+  /**
+   * Draw node label on D3 svg
+   * @private
+   * @memberof Class_NodeElement
+   */
+  protected _drawValueLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
+    // Clean previous label
+    this.d3_selection?.selectAll('.value_label').remove()
+    // Add name label
+    if (this.value_label_visible) {
+      // Get variable property for node label
+      const shape_width = this.getShapeWidthToUse()
+      const shape_height = this.getShapeHeightToUse()
+      // Label X position is set by text relative position / shape + text anchor
+      let label_pos_x = shape_width + this.value_label_horiz_shift
+      let label_anchor = 'start'
+      let label_align = 'start'
+      if (this.value_label_horiz === 'left') {
+        label_pos_x = 0 + this.value_label_horiz_shift
+        label_anchor = 'end'
+        label_align = 'end'
+      }
+      else if (this.value_label_horiz === 'middle') {
+        label_pos_x = shape_width / 2 + this.value_label_horiz_shift
+        label_anchor = 'middle'
+        label_align = 'center'
+      }
+      // Label Y position is only set by text relative position / shape
+      const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
+      let label_pos_y = label_pos_dy + shape_height + this.value_label_font_size + this.value_label_vert_shift
+      if (this.value_label_vert === 'top') {
+        label_pos_y = -label_pos_dy + this.value_label_vert_shift
+      }
+      else if (this.value_label_vert === 'middle') {
+        label_pos_y = (shape_height / 2) + (this.value_label_font_size / 2) + this.value_label_vert_shift
+      }
+      // Box position is set by label position. For text / shape ref point is not the same
+      // - Text : ref point is bottom of text + right/middle/left depending on anchor
+      // - Shape : ref point if top-left corner
+      const box_width = this.value_label.length * this.value_label_font_size
+      const box_height = this.value_label_font_size
+      const box_pos_y = label_pos_y - this.value_label_font_size
+      let box_pos_x = label_pos_x
+      if (label_anchor === 'end') {
+        box_pos_x = box_pos_x - box_width
+      }
+      else if (label_anchor === 'middle') {
+        box_pos_x = box_pos_x - box_width / 2
+      }
+      // Add name label background
+      if (this.value_label_background) {
+        this.d3_selection?.append('rect')
+          .classed('value_label', true)
+          .classed('value_label_background', true)
+          .attr('id', 'value_label_background_' + this.id)
+          .attr('x', box_pos_x)
+          .attr('y', box_pos_y)
+          .attr('width', box_width)
+          .attr('height', box_height)
+          .attr('fill', 'white')
+          .attr('fill-opacity', 0.55)
+          .attr('rx', 4)
+          .style('stroke', 'none')
+      }
+      // Add name label text
+      this.d3_selection?.append('text')
+        .classed('value_label', true)
+        .classed('value_label_text', true)
+        .attr('fill', this.value_label_color ? 'white' : 'black')
+        .attr('id', 'value_label_text_' + this.id)
+        .attr('x', label_pos_x)
+        .attr('y', label_pos_y)
+        .attr('text-anchor', label_anchor)
+        .style('text-align', label_align)
+        .style('font-weight', this.value_label_bold ? 'bold' : 'normal')
+        .style('font-style', this.value_label_italic ? 'italic' : 'normal')
+        .style('font-size', String(this.value_label_font_size) + 'px')
+        .style('font-family', this.value_label_font_family)
+        .style('stroke', 'none')
+        .style('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
+        .text(this.value_label)
+    }
+  }
+
+  /**
+   * Call what is necessary each time a link is modified
+   * @private
+   * @memberof Class_NodeElement
+   */
+  protected _drawLinks() {
+    // Links positions are modified by nodes's position changes
+    this.updateLinksPositions()
+    // Redraw arrows -> affected if links are added or removed
+    this._drawLinksArrow()
+    // Node shape -> affected if links are added or removed, or if links values change
+    this._drawShape()
+  }
+
+  /**
+   * Function that draw all the arrow of link visible linked to this node (if the link have shape_is_arrow at true)
+   * @private
+   * @memberof Class_NodeElement
+   */
+  protected _drawLinksArrow() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
+
+    this.d3_selection?.selectAll('.link_arrow').remove()
+    const list_link_to_add_arrow = this.input_links_list
+      .filter(link => {
+        return link.is_visible
+          && link.shape_is_arrow
+          && link.d3_selection !== undefined
+      })
+      .sort((l1, l2) => this._links_order.indexOf(l1) - this._links_order.indexOf(l2)) //sort list so output array follow node linksOrder
+
+    let cum_v_left = 0
+    let cum_h_top = 0
+    let cum_v_right = 0
+    let cum_h_bottom = 0
+    const node_height = this.getShapeHeightToUse() // height of node taking into account link size in/out
+    const node_width = this.getShapeWidthToUse() // width of node taking into account link size in/out
+    const node_shape = this.shape_type
+    // const is_exportation_node = false // TODO Maybe useful when MFA will be implemented
+
+    const sumLinkLeft = this.getSumOfLinksThickness('left')
+    const sumLinkRight = this.getSumOfLinksThickness('right')
+    const sumLinkTop = this.getSumOfLinksThickness('top')
+    const sumLinkBottom = this.getSumOfLinksThickness('bottom')
+
+    list_link_to_add_arrow
+      .forEach(link => {
+        // Some variable parameters for arrow
+        const arrow_length = link.shape_arrow_size
+        const arrow_color = link.getArrowColorToUse()
+        let node_arrow_shift = 0
+        let arrows_adjustment = 0
+
+        // Get side of target node from which arrow as to be drawn
+        const link_arrow_side_right = link.target_side == 'right'
+        const link_arrow_side_left = link.target_side == 'left'
+        const link_arrow_side_top = link.target_side == 'top'
+        const link_arrow_side_bottom = link.target_side == 'bottom'
+
+        const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
+
+        // Thicknen of the link influence arrow size
+        const link_value = link.thickness
+
+        // If the node target is in arrow shape then we have to modify some variable beforehand
+        if (node_shape === 'arrow') {
+          const node_angle_direction = this.shape_arrow_angle_direction
+          const node_angle_factor = this.shape_arrow_angle_factor
+          if (link_direction_same_as_node_arrow) {
+            // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
+            let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+            switch (node_angle_direction) {
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
+            }
+            node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
+
+            let node_face_size2 = sumLinkLeft
+            switch (node_angle_direction) {
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
+            }
+            arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
+            arrows_adjustment = node_arrow_shift - arrows_adjustment
+          }
+        }
+
+        this.d3_selection?.append('path')
+          .attr('class', 'link_arrow')
+          .attr('d', () => {
+
+            let xt: number = 0 // x coord where link path end
+            let yt: number = 0 // y coord where link path end
+            let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
+            let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
+
+            if (link_arrow_side_left) {
+              xt = +0
+              yt = +0 + node_height / 2
+              current_cumul_of_side = cum_v_left
+              total_cumul_of_side = sumLinkLeft
+            }
+            else if (link_arrow_side_right) {
+              xt = +0 + node_width
+              yt = +0 + node_height / 2
+              current_cumul_of_side = cum_v_right
+              total_cumul_of_side = sumLinkRight
+            }
+            else if (link_arrow_side_top) {
+              xt = +0 + node_width / 2
+              yt = +0
+              current_cumul_of_side = cum_h_top
+              total_cumul_of_side = sumLinkTop
+
+            }
+            else if (link_arrow_side_bottom) {
+              xt = +0 + node_width / 2
+              yt = +0 + node_height
+              current_cumul_of_side = cum_h_bottom
+              total_cumul_of_side = sumLinkBottom
+            }
+
+            const p5 = [xt, yt] // Starting point of arrow
+
+            // Some variables parameters influencing arrow shape processing
+            const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
+            const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
+
+            return SankeyShapes.draw_arrow_part(
+              total_cumul_of_side / 2,
+              p5,
+              +link_value,
+              current_cumul_of_side,
+              is_horizontal_at_target,
+              is_revert,
+              arrow_length,
+              node_arrow_shift,
+              arrows_adjustment,
+              node_shape === 'arrow'
+            )
+          })
+          .attr('fill', arrow_color)
+          .attr('fill-opacity', link.shape_opacity)
+          .attr('stroke', arrow_color)
+          .attr('stroke-width', 0.1)
+
+        // Increment side cumul of drawn arrow to influence next arrow starting position
+        if (link_arrow_side_left) {
+          cum_v_left += link_value
+        }
+        else if (link_arrow_side_right) {
+          cum_v_right += link_value
+        }
+        else if (link_arrow_side_top) {
+          cum_h_top += link_value
+        }
+        else if (link_arrow_side_bottom) {
+          cum_h_bottom += link_value
+        }
+      })
+  }
+
+  /**
+   * TODO
+   * @protected
+   * @memberof Class_NodeElement
+   */
+  protected addOrRemoveNodeFromSelection() {
+    if (this.drawing_area.selected_nodes_list.includes(this)) {
+      // Remove node from selection
+      this.drawing_area.removeNodeFromSelection(this)
+    } else {
+      // Add node to selection
+      this.drawing_area.addNodeToSelection(this)
+    }
+  }
+
+  // Events methods ---------------------------------------------------------------------
+
+  /**
    * Deal with simple left Mouse Button (LMB) click on given element
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
@@ -1596,16 +2104,6 @@ export abstract class Class_NodeElement
         // Add node to selection
         drawing_area.addNodeToSelection(this)
       }
-    }
-  }
-
-  protected addOrRemoveNodeFromSelection() {
-    if (this.drawing_area.selected_nodes_list.includes(this)) {
-      // Remove node from selection
-      this.drawing_area.removeNodeFromSelection(this)
-    } else {
-      // Add node to selection
-      this.drawing_area.addNodeToSelection(this)
     }
   }
 
@@ -1844,220 +2342,7 @@ export abstract class Class_NodeElement
     return [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline]
   }
 
-  /**
-   * Select the right color to use for this node (attribute / style / tags / ...)
-   *
-   * If node tag color palette is activated then search if the node has 1 tag of the group displayed and apply tag color
-   *  if the node has more than 1 tag associated then return default color
-   * @public
-   * @return {*}
-   * @memberof Class_NodeElement
-   */
-  public getShapeColorToUse() {
-    // Default color
-    let shape_color = this.shape_color
-    // Is the color defined by tags
-    const taggs_activated = this.taggs_list
-      .filter(tagg => tagg.show_legend)
-    if (
-      (!this.shape_color_sustainable) &&
-      (taggs_activated.length > 0)
-    ) {
-      const tagg_for_colormap = taggs_activated[0]
-      const tags_for_colormap = this.tags_list
-        .filter(tag => (tag.group === tagg_for_colormap))
-        .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length == 1) {
-        shape_color = tags_for_colormap[0].color
-      } else {
-        shape_color = default_element_color
-      }
-    }
-    return shape_color
-  }
-
-  /**
-   * Remove link reference from all related attributes it this node.
-   * /!\ Keep as private method. This can create dangling ref for links
-   *
-   * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
-   */
-  public removeInputLink(link: Type_GenericLinkElement) {
-    this._input_links_handle[link.id]?.delete()
-    delete this._input_links_handle[link.id]
-    delete this._input_links_ending_point[link.id]
-    delete this._input_links[link.id]
-    this.removeLinkFromOrderingLinksList(link)
-  }
-
-  /**
-   * Remove link reference from all related attributes it this node.
-   * /!\ Keep as private method. This can create dangling ref for links
-   * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
-   */
-  public removeOutputLink(link: Type_GenericLinkElement) {
-    this._output_links_handle[link.id]?.delete()
-    delete this._output_links_handle[link.id]
-    delete this._output_links_starting_point[link.id]
-    delete this._output_links[link.id]
-    this.removeLinkFromOrderingLinksList(link)
-  }
-
   // PRIVATE METHODS ====================================================================
-
-  private drawShape() {
-    this._process_or_bypass(() => this._drawShape())
-  }
-
-  /**
-   * Draw node shape on d3 svg
-   * @private
-   * @memberof Class_NodeElement
-   */
-  private _drawShape() {
-    // Speed-up computing
-    if (!this.d3_selection)
-      return
-    // Clean previous shape
-    this.d3_selection_g_shape?.selectAll('.node_shape').remove()
-    // Do the rest only if shape is visible
-    if (this.shape_visible) {
-      // Compute shape attributes
-      const width = this.getShapeWidthToUse()
-      const height = this.getShapeHeightToUse()
-      const color = this.getShapeColorToUse()
-      // Apply shape value
-      if (this.shape_type === 'rect') {
-        this.d3_selection_g_shape?.append('rect')
-          .classed('node', true)
-          .classed('node_shape', true)
-          .attr('width', width)
-          .attr('height', height)
-      }
-      else if (this.shape_type === 'ellipse') {
-        this.d3_selection_g_shape?.append('ellipse')
-          .classed('node', true)
-          .classed('node_shape', true)
-          .attr('cx', width / 2)
-          .attr('cy', height / 2)
-          .attr('rx', width / 2)
-          .attr('ry', height / 2)
-      }
-      else if (this.shape_type === 'arrow') {
-        this.d3_selection_g_shape?.append('path')
-          .classed('node', true)
-          .classed('node_shape', true)
-          .attr('d', this.getArrowPath())
-      }
-      // Apply common properties
-      this.d3_selection_g_shape?.selectAll('.node_shape')
-        .attr('id', this.id)
-        .attr('fill-opacity', this.shape_visible ? '1' : '0')
-        .attr('fill', color)
-        .style('stroke', 'black')
-        .style('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
-    }
-  }
-
-  private drawNameLabel() {
-    this._process_or_bypass(() => this._drawNameLabel())
-  }
-
-  /**
-   * Draw node label on D3 svg
-   * @private
-   * @memberof Class_NodeElement
-   */
-  protected _drawNameLabel() {
-    // Speed-up computing
-    if (!this.d3_selection)
-      return
-    // Clean previous label
-    this.d3_selection?.selectAll('.name_label').remove()
-    // Add name label
-    if (this.name_label_visible) {
-      const label_to_display = this.name_label
-      // Box position is set by label position. For text / shape ref point is not the same
-      // - Text : ref point is bottom of text + right/middle/left depending on anchor
-      // - Shape : ref point if top-left corner
-      const box_width = Math.min(
-        label_to_display.length * this.name_label_font_size,
-        this.name_label_box_width)
-      const box_height = this.name_label_font_size
-
-      // Add name label text
-      const wrapper = textwrap()
-        .bounds({ height: 100, width: this.name_label_box_width })
-        .method('tspans')
-
-      const label_text = this.d3_selection?.append('text')
-        .classed('name_label', true)
-        .classed('name_label_text', true)
-        .attr('fill', this.name_label_color ? 'white' : 'black')
-        .attr('id', 'name_label_text_' + this.id)
-        .style('font-weight', this.name_label_bold ? 'bold' : 'normal')
-        .style('font-style', this.name_label_italic ? 'italic' : 'normal')
-        .style('font-size', String(this.name_label_font_size) + 'px')
-        .style('font-family', this.name_label_font_family)
-        .style('stroke', 'none')
-        .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
-        .text(label_to_display)
-        .filter(() => label_to_display.split(' ').length > 1)//only call wrapper if text displayed has space to be splitted by wrapper (sometime 1 word label can have some wrap problem with label bg)
-        .call(wrapper)
-
-      // Position label & return it coord_x, coord_y & it text anchor for use in other element (label bg, label fo)
-      const [label_pos_x, label_pos_y, label_anchor] = this.updateNameLabelPos()
-      let box_pos_x = label_pos_x
-      let box_pos_y = label_pos_y
-      if (this.name_label_vert == 'top') {
-        box_pos_y -= (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size)
-        label_text?.attr('y', label_pos_y-(((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size))
-      } else if (this.name_label_vert == 'middle') {
-        box_pos_y -= this.name_label_font_size / 2
-        label_text?.attr('y', label_pos_y - (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size / 2))
-      }
-      if (label_anchor === 'end') {
-        box_pos_x = box_pos_x - box_width
-      }
-      else if (label_anchor === 'middle') {
-        box_pos_x = box_pos_x - box_width / 2
-      }
-
-      // Add an input to change the name of the node
-      // The input appear when we double click on the label
-      if (!this.drawing_area.static) {
-        this.d3_selection?.append('foreignObject')
-          .classed('name_label', true)
-          .classed('name_label_fo_input', true)
-          .attr('x', box_pos_x)
-          .attr('y', box_pos_y)
-          .attr('width', box_width)
-          .attr('height', box_height + 2)
-          .style('display', 'none')
-          .append('xhtml:div')
-          .append('input')
-          .classed('name_label', true)
-          .classed('name_label_input', true)
-          .attr('id', 'name_label_input_' + this.id)
-          .attr('type', 'text')
-          .attr('value', this._name)
-          .style('font-size', String(this.name_label_font_size) + 'px')
-          .on('input', (evt) => { this._name = evt.target.value })
-          .on('blur', () => this.setInputLabelInvisible())
-
-
-        label_text?.call(d3.drag<SVGTextElement, unknown>()
-          .filter(evt => (evt.which == 1) && evt.altKey && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
-          .on('start', ev => this.dragTextStart(ev))
-          .on('drag', ev => this.dragTextMove(ev))
-          .on('end', ev => this.dragTextend(ev))
-        )
-
-      }
-    }
-  }
 
   /**
    * Function triggered when we start dragging node name label, it initialise relative position if undefined
@@ -2134,281 +2419,6 @@ export abstract class Class_NodeElement
       .style('text-align', label_align)
 
     return [label_pos_x, label_pos_y, label_anchor]
-  }
-
-  /**
-   * Draw node label on D3 svg
-   * @private
-   * @memberof Class_NodeElement
-   */
-  private drawValueLabel() {
-    this._process_or_bypass(() => this._drawValueLabel)
-  }
-
-  /**
-   * Draw node label on D3 svg
-   * @private
-   * @memberof Class_NodeElement
-   */
-  private _drawValueLabel() {
-    // Speed-up computing
-    if (!this.d3_selection)
-      return
-    // Clean previous label
-    this.d3_selection?.selectAll('.value_label').remove()
-    // Add name label
-    if (this.value_label_visible) {
-      // Get variable property for node label
-      const shape_width = this.getShapeWidthToUse()
-      const shape_height = this.getShapeHeightToUse()
-      // Label X position is set by text relative position / shape + text anchor
-      let label_pos_x = shape_width + this.value_label_horiz_shift
-      let label_anchor = 'start'
-      let label_align = 'start'
-      if (this.value_label_horiz === 'left') {
-        label_pos_x = 0 + this.value_label_horiz_shift
-        label_anchor = 'end'
-        label_align = 'end'
-      }
-      else if (this.value_label_horiz === 'middle') {
-        label_pos_x = shape_width / 2 + this.value_label_horiz_shift
-        label_anchor = 'middle'
-        label_align = 'center'
-      }
-      // Label Y position is only set by text relative position / shape
-      const label_pos_dy = this.is_selected ? default_selected_stroke_width : 0
-      let label_pos_y = label_pos_dy + shape_height + this.value_label_font_size + this.value_label_vert_shift
-      if (this.value_label_vert === 'top') {
-        label_pos_y = -label_pos_dy + this.value_label_vert_shift
-      }
-      else if (this.value_label_vert === 'middle') {
-        label_pos_y = (shape_height / 2) + (this.value_label_font_size / 2) + this.value_label_vert_shift
-      }
-      // Box position is set by label position. For text / shape ref point is not the same
-      // - Text : ref point is bottom of text + right/middle/left depending on anchor
-      // - Shape : ref point if top-left corner
-      const box_width = this.value_label.length * this.value_label_font_size
-      const box_height = this.value_label_font_size
-      const box_pos_y = label_pos_y - this.value_label_font_size
-      let box_pos_x = label_pos_x
-      if (label_anchor === 'end') {
-        box_pos_x = box_pos_x - box_width
-      }
-      else if (label_anchor === 'middle') {
-        box_pos_x = box_pos_x - box_width / 2
-      }
-      // Add name label background
-      if (this.value_label_background) {
-        this.d3_selection?.append('rect')
-          .classed('value_label', true)
-          .classed('value_label_background', true)
-          .attr('id', 'value_label_background_' + this.id)
-          .attr('x', box_pos_x)
-          .attr('y', box_pos_y)
-          .attr('width', box_width)
-          .attr('height', box_height)
-          .attr('fill', 'white')
-          .attr('fill-opacity', 0.55)
-          .attr('rx', 4)
-          .style('stroke', 'none')
-      }
-      // Add name label text
-      this.d3_selection?.append('text')
-        .classed('value_label', true)
-        .classed('value_label_text', true)
-        .attr('fill', this.value_label_color ? 'white' : 'black')
-        .attr('id', 'value_label_text_' + this.id)
-        .attr('x', label_pos_x)
-        .attr('y', label_pos_y)
-        .attr('text-anchor', label_anchor)
-        .style('text-align', label_align)
-        .style('font-weight', this.value_label_bold ? 'bold' : 'normal')
-        .style('font-style', this.value_label_italic ? 'italic' : 'normal')
-        .style('font-size', String(this.value_label_font_size) + 'px')
-        .style('font-family', this.value_label_font_family)
-        .style('stroke', 'none')
-        .style('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
-        .text(this.value_label)
-    }
-  }
-
-  /**
-   * Call what is necessary each time a link is modified
-   * @private
-   * @memberof Class_NodeElement
-   */
-  private _drawLinks() {
-    // Links positions are modified by nodes's position changes
-    this.updateLinksPositions()
-    // Redraw arrows -> affected if links are added or removed
-    this._drawLinksArrow()
-    // Node shape -> affected if links are added or removed, or if links values change
-    this._drawShape()
-  }
-
-  /**
-   * Function that draw all the arrow of link visible linked to this node (if the link have shape_is_arrow at true)
-   *
-   * @private
-   * @memberof Class_NodeElement
-   */
-  private _drawLinksArrow() {
-    // Speed-up computing
-    if (!this.d3_selection)
-      return
-
-    this.d3_selection?.selectAll('.link_arrow').remove()
-    const list_link_to_add_arrow = this.input_links_list
-      .filter(link => {
-        return link.is_visible
-          && link.shape_is_arrow
-          && link.d3_selection !== undefined
-      })
-      .sort((l1, l2) => this._links_order.indexOf(l1) - this._links_order.indexOf(l2)) //sort list so output array follow node linksOrder
-
-    let cum_v_left = 0
-    let cum_h_top = 0
-    let cum_v_right = 0
-    let cum_h_bottom = 0
-    const node_height = this.getShapeHeightToUse() // height of node taking into account link size in/out
-    const node_width = this.getShapeWidthToUse() // width of node taking into account link size in/out
-    const node_shape = this.shape_type
-    // const is_exportation_node = false // TODO Maybe useful when MFA will be implemented
-
-    const sumLinkLeft = this.getSumOfLinksThickness('left')
-    const sumLinkRight = this.getSumOfLinksThickness('right')
-    const sumLinkTop = this.getSumOfLinksThickness('top')
-    const sumLinkBottom = this.getSumOfLinksThickness('bottom')
-
-    list_link_to_add_arrow
-      .forEach(link => {
-        // Some variable parameters for arrow
-        const arrow_length = link.shape_arrow_size
-        const arrow_color = link.getArrowColorToUse()
-        let node_arrow_shift = 0
-        let arrows_adjustment = 0
-
-        // Get side of target node from which arrow as to be drawn
-        const link_arrow_side_right = link.target_side == 'right'
-        const link_arrow_side_left = link.target_side == 'left'
-        const link_arrow_side_top = link.target_side == 'top'
-        const link_arrow_side_bottom = link.target_side == 'bottom'
-
-        const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
-
-        // Thicknen of the link influence arrow size
-        const link_value = link.thickness
-
-        // If the node target is in arrow shape then we have to modify some variable beforehand
-        if (node_shape === 'arrow') {
-          const node_angle_direction = this.shape_arrow_angle_direction
-          const node_angle_factor = this.shape_arrow_angle_factor
-          if (link_direction_same_as_node_arrow) {
-            // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
-            let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-            switch (node_angle_direction) {
-              case 'left':
-                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-                break
-              case 'top':
-                node_face_size = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size = sumLinkTop
-                break
-            }
-            node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
-
-            let node_face_size2 = sumLinkLeft
-            switch (node_angle_direction) {
-              case 'left':
-                node_face_size2 = sumLinkRight
-                break
-              case 'top':
-                node_face_size2 = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size2 = sumLinkTop
-                break
-            }
-            arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
-            arrows_adjustment = node_arrow_shift - arrows_adjustment
-          }
-        }
-
-        this.d3_selection?.append('path')
-          .attr('class', 'link_arrow')
-          .attr('d', () => {
-
-            let xt: number = 0 // x coord where link path end
-            let yt: number = 0 // y coord where link path end
-            let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
-            let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
-
-            if (link_arrow_side_left) {
-              xt = +0
-              yt = +0 + node_height / 2
-              current_cumul_of_side = cum_v_left
-              total_cumul_of_side = sumLinkLeft
-            }
-            else if (link_arrow_side_right) {
-              xt = +0 + node_width
-              yt = +0 + node_height / 2
-              current_cumul_of_side = cum_v_right
-              total_cumul_of_side = sumLinkRight
-            }
-            else if (link_arrow_side_top) {
-              xt = +0 + node_width / 2
-              yt = +0
-              current_cumul_of_side = cum_h_top
-              total_cumul_of_side = sumLinkTop
-
-            }
-            else if (link_arrow_side_bottom) {
-              xt = +0 + node_width / 2
-              yt = +0 + node_height
-              current_cumul_of_side = cum_h_bottom
-              total_cumul_of_side = sumLinkBottom
-            }
-
-            const p5 = [xt, yt] // Starting point of arrow
-
-            // Some variables parameters influencing arrow shape processing
-            const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
-            const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
-
-            return SankeyShapes.draw_arrow_part(
-              total_cumul_of_side / 2,
-              p5,
-              +link_value,
-              current_cumul_of_side,
-              is_horizontal_at_target,
-              is_revert,
-              arrow_length,
-              node_arrow_shift,
-              arrows_adjustment,
-              node_shape === 'arrow'
-            )
-          })
-          .attr('fill', arrow_color)
-          .attr('fill-opacity', link.shape_opacity)
-          .attr('stroke', arrow_color)
-          .attr('stroke-width', 0.1)
-
-        // Increment side cumul of drawn arrow to influence next arrow starting position
-        if (link_arrow_side_left) {
-          cum_v_left += link_value
-        }
-        else if (link_arrow_side_right) {
-          cum_v_right += link_value
-        }
-        else if (link_arrow_side_top) {
-          cum_h_top += link_value
-        }
-        else if (link_arrow_side_bottom) {
-          cum_h_bottom += link_value
-        }
-      })
   }
 
   private getArrowPath() {
@@ -2620,24 +2630,6 @@ export abstract class Class_NodeElement
         if (link.source === this) this._output_links_handle[link.id].draw()
         if (link.target === this) this._input_links_handle[link.id].draw()
       })
-  }
-
-  /**
-   * Display the tooltip on drawing area
-   *
-   * @private
-   * @memberof Class_NodeElement
-   */
-  private drawTooltip() {
-    // Clean previous label
-    d3.selectAll('.sankey-tooltip').remove()
-    d3.select('body')
-      .append('div')
-      .attr('class', 'sankey-tooltip')
-      .style('opacity', 1)
-      .style('top', this.position_y + 'px')
-      .style('left', this.position_x + 'px')
-      .html(this.tooltip_html)
   }
 
   /**
@@ -3872,8 +3864,6 @@ export abstract class Class_NodeElement
     this.drawValueLabel()
   }
 
-
-
   /**
    * TODO Description
    * @memberof Class_NodeElement
@@ -4235,7 +4225,7 @@ export abstract class Class_NodeElement
 
       (new_node as Type_AnyNodeElement).style = importation ? new_node.sankey.node_styles_dict['NodeImportStyle'] as Class_NodeStyle : new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle
       input_or_output_link.style = importation ? new_node.sankey.link_styles_dict['LinkImportStyle'] as Class_LinkStyle : new_node.sankey.link_styles_dict['LinkExportStyle'] as Class_LinkStyle
-      (new_node as Type_AnyNodeElement).show = extremity_node.show
+      // (new_node as Type_AnyNodeElement).show = extremity_node.show // TODO replace with an other method
 
       input_or_output_link.shape_is_recycling = false
 
