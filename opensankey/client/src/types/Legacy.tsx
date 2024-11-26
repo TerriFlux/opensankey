@@ -213,7 +213,7 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     label_font_size: 20,
     orientation: 'hh',
     left_horiz_shift: 0.05,
-    right_horiz_shift: 0.95,
+    right_horiz_shift: 0.05,
     vert_shift: 0,
     opacity: 0.85,
     to_precision: false,
@@ -353,6 +353,8 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     if (s[1].idLink === 'par défaut') {
       s[1].idLink = 'default'
     }
+    // Change default behavior on right shift for link
+    s[1].right_horiz_shift = 1.0 - s[1].right_horiz_shift
   })
   if (data_to_convert.style_node === undefined) {
     data_to_convert.style_node = {}
@@ -1894,6 +1896,8 @@ const convert_links: convert_linksFuncType = (
     // Convert legacy recycling position -> new positions
     if (l.local) {
       if (!l.local.recycling) {
+        if (l.local.right_horiz_shift !== undefined)
+          AssignLinkLocalAttribute(l, 'right_horiz_shift', (1.0 - l.local.right_horiz_shift)) // We have inversed that
         if (l.local.curvature) {
           if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
             // I made an approx. here because we can't have a direct transform from old behavior (Cubic / Bezier) to new (Quadratic) for path drawing
@@ -1907,42 +1911,48 @@ const convert_links: convert_linksFuncType = (
         }
       }
       else {
-        if ((l.local.orientation && l.local.orientation == 'vv')) {
-          // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          const dist_y = target_node.y - source_node.y
-          if (l.local.left_horiz_shift) {
-            AssignLinkLocalAttribute(l, 'left_horiz_shift', Math.abs(l.local.left_horiz_shift / dist_y)) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'starting_tangeant', 0) // Put Zero to have something as close as possible of old behavior
-          }
-          if (l.local.right_horiz_shift) {
-            AssignLinkLocalAttribute(l, 'right_horiz_shift', Math.abs(l.local.right_horiz_shift / dist_y)) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'ending_tangeant', 0)// Put Zero to have something as close as possible of old behavior
-          }
-        }
-        else if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
+        if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
           const dist = Math.sqrt(
             (target_node.x - source_node.x) * (target_node.x - source_node.x) +
             (target_node.y - source_node.y) * (target_node.y - source_node.y))
           if (l.local.left_horiz_shift) {
-            AssignLinkLocalAttribute(l, 'left_horiz_shift', Math.abs(l.local.left_horiz_shift / dist)) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'starting_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+            const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist))
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio*(l.local.curvature ?? 0.5)/2) // Approx to keep general shape
           }
-          if (l.local.right_horiz_shift) {
-            AssignLinkLocalAttribute(l, 'right_horiz_shift', Math.abs(l.local.right_horiz_shift / dist)) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'ending_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+          if (l.local.right_horiz_shift !== undefined) {
+            const right_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.right_horiz_shift / dist))
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio*(l.local.curvature ?? 0.5)/2) // Approx to keep general shape
+          }
+        }
+        else if ((l.local.orientation && l.local.orientation == 'vv')) {
+          // In old file, for recycling only, shift are not relative but are absolute distances from nodes
+          const dist_y = target_node.y - source_node.y
+          if (l.local.left_horiz_shift !== undefined) {
+            const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist_y))
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio*(l.local.curvature ?? 0.5)) // Approx to keep general shape
+          }
+          if (l.local.right_horiz_shift !== undefined) {
+            const right_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.right_horiz_shift / dist_y))
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio*(l.local.curvature ?? 0.5)) // Approx to keep general shape
           }
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
           const dist_x = target_node.x - source_node.x
-          if (l.local.left_horiz_shift) {
-            AssignLinkLocalAttribute(l, 'left_horiz_shift', Math.abs(l.local.left_horiz_shift / dist_x)) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'starting_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+          if (l.local.left_horiz_shift !== undefined) {
+            const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist_x))
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio*(l.local.curvature ?? 0.5)) // Approx to keep general shape
           }
-          if (l.local.right_horiz_shift) {
-            AssignLinkLocalAttribute(l, 'right_horiz_shift', Math.abs(l.local.right_horiz_shift / dist_x)) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'ending_tangeant', 0) // Put Zero to have something as close as possible of old behavior
+          if (l.local.right_horiz_shift !== undefined) {
+            const right_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.right_horiz_shift / dist_x))
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio*(l.local.curvature ?? 0.5)) // Approx to keep general shape
           }
         }
       }
