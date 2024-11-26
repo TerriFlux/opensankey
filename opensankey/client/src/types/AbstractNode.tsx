@@ -69,8 +69,6 @@ export abstract class Class_AbstractNodeElement
   public abstract removeOutputLink(_: Type_AbstractLinkElement): void
   public abstract getShapeColorToUse(): string
   public abstract shiftVertically(shift: number): void
-  public abstract forceShow(): void
-  public abstract forceHide(): void
 }
 
 export abstract class Class_AbstractNodeDimension {
