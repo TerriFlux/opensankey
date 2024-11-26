@@ -36,7 +36,7 @@ import {
   ConvertSankeyValue,
   TagsCatalog
 } from './LegacyType'
-import { default_dy, default_relative_dx,  default_relative_dy} from './Node'
+import { default_dy, default_relative_dx, default_relative_dy } from './Node'
 
 const default_element_color = '#a9a9a9'
 
@@ -125,10 +125,10 @@ export const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): San
   return node_style
 }
 
-export const DefaultNodeImportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
-  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
-  node_style.idNode='NodeImportStyle'
-  node_style.name='Noeuds de type importations'
+export const DefaultNodeImportStyle: DefaultNodeSectorStyleFuncStyle = () => {
+  const node_style = JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
+  node_style.idNode = 'NodeImportStyle'
+  node_style.name = 'Noeuds de type importations'
   // relative
   node_style.position = 'relative'
   node_style.relative_dx = -100
@@ -146,10 +146,10 @@ export const DefaultNodeImportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
   return node_style
 }
 
-export const DefaultNodeExportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
-  const node_style=JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
-  node_style.idNode='NodeExportStyle'
-  node_style.name='Noeuds de type exportations'
+export const DefaultNodeExportStyle: DefaultNodeSectorStyleFuncStyle = () => {
+  const node_style = JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
+  node_style.idNode = 'NodeExportStyle'
+  node_style.name = 'Noeuds de type exportations'
   // relative
   node_style.position = 'relative'
   node_style.relative_dx = 100
@@ -168,27 +168,27 @@ export const DefaultNodeExportStyle:DefaultNodeSectorStyleFuncStyle=()=>{
   return node_style
 }
 
-export const DefaultLinkExportStyle:DefaultLinkStyleFuncType=()=>{
-  const link_style=JSON.parse(JSON.stringify(DefaultLinkStyle()))
+export const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
+  const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
   link_style.orientation = 'hv'
   link_style.label_visible = true
   link_style.label_position = 'end'
   link_style.label_on_path = true
   link_style.label_visible = true
-  link_style.idLink='LinkExportStyle'
-  link_style.name='Flux de type exportations'
+  link_style.idLink = 'LinkExportStyle'
+  link_style.name = 'Flux de type exportations'
   return link_style
 }
 
-export const DefaultLinkImportStyle:DefaultLinkStyleFuncType=()=>{
-  const link_style=JSON.parse(JSON.stringify(DefaultLinkStyle()))
+export const DefaultLinkImportStyle: DefaultLinkStyleFuncType = () => {
+  const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
   link_style.orientation = 'vh'
   link_style.label_visible = true
   link_style.label_position = 'beginning'
   link_style.label_on_path = true
   link_style.label_visible = true
-  link_style.idLink='LinkImportStyle'
-  link_style.name='Flux de type importations'
+  link_style.idLink = 'LinkImportStyle'
+  link_style.name = 'Flux de type importations'
   return link_style
 }
 
@@ -311,20 +311,20 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   data_to_convert.filter_label = data_to_convert.display_style.filter_label
 
   // If data doesn't have var mask legend but show color palette of some grp tag then show legend
-  if(data_to_convert.mask_legend===undefined){
-    const super_grp_tag={...data_to_convert.nodeTags, ...data_to_convert.fluxTags, ...data_to_convert.dataTags} as TagsCatalog
-    if(Object.values(super_grp_tag).filter(grp=>grp.show_legend).length>0){
-      data_to_convert.mask_legend=false
+  if (data_to_convert.mask_legend === undefined) {
+    const super_grp_tag = { ...data_to_convert.nodeTags, ...data_to_convert.fluxTags, ...data_to_convert.dataTags } as TagsCatalog
+    if (Object.values(super_grp_tag).filter(grp => grp.show_legend).length > 0) {
+      data_to_convert.mask_legend = false
     }
   } else {
     data_to_convert.mask_legend = !data_to_convert.mask_legend
   }
-  const data_cast=(data_to_convert as unknown as Type_JSON)
-  if(data_cast.legend_position_x==undefined){
-    data_cast.legend_position_x=data_to_convert.legend_position[0]
+  const data_cast = (data_to_convert as unknown as Type_JSON)
+  if (data_cast.legend_position_x == undefined) {
+    data_cast.legend_position_x = data_to_convert.legend_position[0]
   }
-  if(data_cast.legend_position_y==undefined){
-    data_cast.legend_position_y=data_to_convert.legend_position[1]
+  if (data_cast.legend_position_y == undefined) {
+    data_cast.legend_position_y = data_to_convert.legend_position[1]
   }
 
   clean_data_local(data_to_convert)
@@ -979,14 +979,14 @@ const convert_tags: convert_tagsFuncType = (
     if (!Object.keys(data.style_node).includes('NodeSectorStyle')) {
       data.style_node['NodeSectorStyle'] = DefaultNodeSectorStyle()
     }
-    if(!Object.keys(data.style_node).includes('NodeImportStyle')){
-      data.style_node['NodeImportStyle']=DefaultNodeImportStyle()
+    if (!Object.keys(data.style_node).includes('NodeImportStyle')) {
+      data.style_node['NodeImportStyle'] = DefaultNodeImportStyle()
       // if (!has_relative) {
       //   data.style_node['NodeImportStyle'].position = 'absolute'
       // }
     }
-    if(!Object.keys(data.style_node).includes('NodeExportStyle')){
-      data.style_node['NodeExportStyle']=DefaultNodeExportStyle()
+    if (!Object.keys(data.style_node).includes('NodeExportStyle')) {
+      data.style_node['NodeExportStyle'] = DefaultNodeExportStyle()
       // if (!has_relative) {
       //   data.style_node['NodeExportStyle'].position = 'absolute'
       // }
@@ -1221,10 +1221,10 @@ const convert_tags: convert_tagsFuncType = (
   if (data.nodeTags['Type de noeud'] != undefined) {
     data.nodeTags['type de noeud'] = JSON.parse(JSON.stringify(data.nodeTags['Type de noeud']))
     delete data.nodeTags['Type de noeud']
-    Object.values(data.nodes).forEach(n=>{
-      n.tags['type de noeud']=n.tags['Type de noeud']
+    Object.values(data.nodes).forEach(n => {
+      n.tags['type de noeud'] = n.tags['Type de noeud']
       delete n.tags['Type de noeud']
-      if (n.tags['type de noeud'][0]=='echange') {
+      if (n.tags['type de noeud'][0] == 'echange') {
         if (n.style == 'default') {
           if (n.inputLinksId.length === 0) {
             n.style = 'NodeImportStyle'
@@ -1254,7 +1254,7 @@ const convert_nodes: convert_nodesFuncType = (
 
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes = Object.values(data.nodes).map(n => n.idNode)
-  const list_links=Object.values(data.links)
+  const list_links = Object.values(data.links)
   Object.values(data.nodes).forEach(n => {
     const n_depreciated = (n as unknown) as ConvertSankeyNode
 
@@ -1501,7 +1501,7 @@ const convert_nodes: convert_nodesFuncType = (
         } else if (n.dimensions[leveltagg_id]) {
           const all_leveltagg_tags_ids = Object.keys(data_to_convert.levelTags[leveltagg_id].tags)
           if (all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) == -1) {
-            leveltagg_tags_ids[0] = String(+leveltagg_tags_ids[0]-1)
+            leveltagg_tags_ids[0] = String(+leveltagg_tags_ids[0] - 1)
           }
           // Dimension detection
           if (Object.keys(n.dimensions[leveltagg_id]).includes('parent_name')) {
@@ -1510,18 +1510,18 @@ const convert_nodes: convert_nodesFuncType = (
             possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
             n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
           } else if (Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && +n.tags[leveltagg_id][0] > 1 && n.dimensions['Primaire'].parent_name) {
-            let parent_tag : number | undefined
+            let parent_tag: number | undefined
             const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
-            if ( leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
+            if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
               parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
             } else if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].children_tags) {
               parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
             }
             if (parent_tag) {
               n.dimensions[leveltagg_id] = {
-                parent_tag : String(parent_tag),
-                parent_name : n.dimensions['Primaire'].parent_name,
-                children_tags: [String(+parent_tag+1)]//n.tags[parent_tag]
+                parent_tag: String(parent_tag),
+                parent_name: n.dimensions['Primaire'].parent_name,
+                children_tags: [String(+parent_tag + 1)]//n.tags[parent_tag]
               }
             }
           }
@@ -1532,22 +1532,22 @@ const convert_nodes: convert_nodesFuncType = (
 
 
     // Add links_order to node by combining input/outputs id (for version>=0.9)
-    const n_tmp=(n as Type_JSON)
+    const n_tmp = (n as Type_JSON)
     n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
 
     // Add in links_order links not in links_order but that reference this node
     list_links
-      .filter(l=>(l.idTarget==n.idNode || l.idSource==n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
-      .forEach(l=>(n_tmp.links_order as string[]).push(l.idLink))
+      .filter(l => (l.idTarget == n.idNode || l.idSource == n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
+      .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
 
     // Convert name of some local variables
-    if(n_tmp.local ){
-      const local_cast=(n_tmp.local as Type_JSON)
-      if((local_cast['label_vert_shift']!==undefined)){
-        local_cast['name_label_vert_shift']=local_cast['label_vert_shift']
+    if (n_tmp.local) {
+      const local_cast = (n_tmp.local as Type_JSON)
+      if ((local_cast['label_vert_shift'] !== undefined)) {
+        local_cast['name_label_vert_shift'] = local_cast['label_vert_shift']
       }
-      if((local_cast['label_horiz_shift']!==undefined)){
-        local_cast['name_label_horiz_shift']=local_cast['label_horiz_shift']
+      if ((local_cast['label_horiz_shift'] !== undefined)) {
+        local_cast['name_label_horiz_shift'] = local_cast['label_horiz_shift']
       }
     }
   }
