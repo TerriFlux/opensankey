@@ -7,14 +7,31 @@
 // All rights reserved for TerriFlux SARL
 // ==================================================================================================
 
+// External imports
+import * as d3 from 'd3'
+
 // Local imports
 import {
   Class_AbstractNodeElementPlus,
   type Class_AbstractDrawingAreaPlus,
   type Class_AbstractSankeyPlus
 } from './Abstract'
-import type { Class_MenuConfigPlus } from './MenuConfigPlus'
-import type { Class_LinkElementPlus } from './LinkPlus'
+import type {
+  Class_MenuConfigPlus
+} from './MenuConfigPlus'
+import type {
+  Class_LinkElementPlus
+} from './LinkPlus'
+import {
+  Type_GenericApplicationDataOSP,
+  Type_GenericLinkElementOSP,
+  Type_GenericNodeElementOSP
+} from './TypesOSP'
+import {
+  default_label_background
+} from '../MenuConfigEdition/SankeyPlusNodes'
+
+// OpenSankey imports
 import {
   Type_ElementPosition,
   type Type_JSON,
@@ -22,10 +39,12 @@ import {
   getStringFromJSON,
   getStringOrUndefinedFromJSON
 } from '../deps/OpenSankey/types/Utils'
-import { Class_NodeAttribute, Class_NodeStyle } from '../deps/OpenSankey/types/Node'
-import { default_label_background } from '../MenuConfigEdition/SankeyPlusNodes'
-import { Type_GenericApplicationDataOSP, Type_GenericLinkElementOSP, Type_GenericNodeElementOSP } from './TypesOSP'
-import * as d3 from 'd3'
+import {
+  Class_NodeAttribute,
+  Class_NodeStyle
+} from '../deps/OpenSankey/types/Node'
+
+// SPECIFIC FUNCTIONS *******************************************************************
 
 export function isAttributeOverloaded(
   nodes: Type_GenericNodeElementOSP[],
@@ -58,6 +77,7 @@ export abstract class Class_NodeElementPlus
   > {
 
   // PROTECTED ATTRIBUTE ================================================================
+
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
@@ -67,7 +87,6 @@ export abstract class Class_NodeElementPlus
     position_x_label?: number// Relative x position of label when dragged (optionnal)
     position_y_label?: number// Relative y position of label when dragged (optionnal)
   }
-
 
   /**
    * Config menu ref to html element & function to update it
@@ -215,18 +234,6 @@ export abstract class Class_NodeElementPlus
 
   // Overrides --------------------------------------------------------------------------
 
-  public override _draw() {
-    super._draw()
-    this._drawNodeLabelBg()
-    this._drawIllustration()
-    this._drawFO()
-  }
-
-  public override _drawNameLabel() {
-    super._drawNameLabel()
-    this._drawNodeLabelBg()
-  }
-
   public isAttributeOverloaded(attr: keyof Class_NodeAttributePlus) {
     return this._display.attributes[attr] !== undefined
   }
@@ -238,7 +245,6 @@ export abstract class Class_NodeElementPlus
     if (super_equal == false) {
       return false
     }
-
     if (this._iconName != _._iconName) {
       return false
     }
@@ -272,47 +278,182 @@ export abstract class Class_NodeElementPlus
     if (this._hyperlink != _._hyperlink) {
       return false
     }
-
     if (this.name_label_background !== _.name_label_background) {
       return false
     }
-
     return true
   }
 
   // New --------------------------------------------------------------------------------
 
+  /**
+   * Draw background on node name label
+   * @memberof Class_NodeElementPlus
+   */
+  public drawNodeLabelBg() {
+    this._process_or_bypass(() => this._drawNameLabelBackground())
+  }
 
   /**
-   * _drawIllustration wwith timeout
-   *
-   * @private
-   * @memberof Class_Legend
+   * Draw foreign object on node
+   * @memberof Class_NodeElementPlus
+   */
+  public drawFO() {
+    this._process_or_bypass(() => this._drawFO())
+  }
+
+  /**
+   * Draw illustration on node
+   * @memberof Class_NodeElementPlus
    */
   public drawIllustration() {
     this._process_or_bypass(() => this._drawIllustration())
   }
 
   /**
- * Override eventMouseDrag so when the DA is in selection mode we also drag selected containers when we drag nodes
- *
- * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
- * @memberof Class_NodeElementPlus
- */
-  eventMouseDrag(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+   * Draw image illustration on node
+   * @memberof Class_NodeElementPlus
+   */
+  public drawIllustrationImage() {
+    this._process_or_bypass(() => this.drawIllustrationImage())
+  }
+
+  /**
+   * Draw icon illustration on node
+   * @memberof Class_NodeElementPlus
+   */
+  public drawIllustrationIcon() {
+    this._process_or_bypass(() => this._drawIllustrationIcon())
+  }
+
+  /**
+   * Make some preparation before launching the animation,
+   * then launch animation from clicked node
+   *
+   * @memberof Class_NodeElementPlus
+   */
+  public launchAnimation() {
+
+    // Fill all node shape with light grey color (the original color will re-fill when an animated input link will end)
+    this.drawing_area.sankey.visible_nodes_list.filter(n => n !== this).forEach(node => {
+      node.d3_selection_g_shape?.selectAll('.node_shape').attr('fill', '#dddddd')
+    })
+
+    // 'Hide' link & related elements before animation, it will be re-displayed when said links end their animation
+    this.drawing_area.sankey.visible_links_list.forEach(link => {
+      link.d3_selection?.selectAll('.link_path').attr('stroke-opacity', 0)
+      link.d3_selection?.selectAll('.link_arrow').attr('opacity', 0)
+      link.d3_selection?.selectAll('.link_label').attr('display', 'none')
+    })
+
+    // Launch animation of output links from clicked node, the rest is done recursively from there
+    this.branchAnimate(this.drawing_area.application_data as Type_GenericApplicationDataOSP, [], this.drawing_area.sankey.visible_nodes_list as unknown as Type_GenericNodeElementOSP[])
+
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
+    const nodes_to_process = this.sankey.visible_nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
+
+    // Compute longest possible path from clicked node (number of link before we get to a node without output link)
+    // so we can determinate a timeout before reseting the sankey
+    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
+    this.drawing_area.computeHorizontalIndex(this,nodes_to_process,0, [], [], horizontal_indexes_per_nodes_ids)
+
+    // Compute time to animate the whole sankey from clicked node
+    let time_to_animate = 500
+    let nb_animation = Object.values(horizontal_indexes_per_nodes_ids).reduce((a, b) => Math.max(a, b), -Infinity)
+    nb_animation = (nb_animation !== undefined) ? nb_animation : 0
+    time_to_animate += nb_animation * 2000
+
+    // Launch a timeout that will activate at the end of the animation to reset drawing_area
+    setTimeout(
+      () => { this.drawing_area.draw() },
+      time_to_animate)
+
+  }
+
+  public direct_son_as_distant_sibling(
+    new_data: Type_GenericApplicationDataOSP,
+    nodeData: Type_GenericNodeElementOSP,
+    deep: number,
+    link_to_avoid: Type_GenericLinkElementOSP[],
+    display_nodes_id: Type_GenericNodeElementOSP[],
   ) {
-    // Apply parent behavior first
-    super.eventMouseDrag(event)
-    // Get related drawing area
-    const drawing_area = this.drawing_area
-    // SELECTION MODE =========================================================
-    if (drawing_area.isInSelectionMode()) {
-      this.drawing_area.moveSelectedContainerFromDragEvent(event)
+    //Cherche à savoir si un noeud qui recoit directement le flux de nodeData ai aussi un path inderectement vers ce meme noeud
+    //exemple : n0 -> n1  et n0 -> n2 -> n1
+    //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
+    const next_link = nodeData.output_links_list.filter(f => f.shape_is_recycling && !Object.values(link_to_avoid).includes(f) && display_nodes_id.includes(f.target))
+    let max = 0
+    const data_plus = new_data
+
+    if (nodeData.id === this.id) {
+      return deep - 1
+    } else if (next_link.length > 0) {
+      next_link.map(link => {
+        const next_node = link.target
+        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
+        const to_avoid = link_to_avoid.concat([link])
+        const tmp = this.direct_son_as_distant_sibling(data_plus, next_node, deep + 1, to_avoid, display_nodes_id)
+        max = (tmp > max) ? tmp : max
+      })
+    }
+    return max
+  }
+
+  // PROTECTED METHODS ====================================================================
+
+  protected _draw() {
+    super._draw()
+    this._drawIllustration()
+    this._drawFO()
+  }
+
+  protected _drawNameLabel() {
+    super._drawNameLabel()
+    this._drawNameLabelBackground()
+  }
+
+  /**
+   * Draw a background to the name label to highlight the name label
+   * @private
+   * @memberof Class_NodeElementPlus
+   */
+  protected _drawNameLabelBackground() {
+    // Preventively delete previous label bg
+    this.d3_selection?.select('.name_label_bg').remove()
+
+    // Draw label BG if attr is at true but also if we display label
+    if (this.name_label_visible && this.name_label_background) {
+
+      // Compute positions & dimensions
+      const DA_scale = this.drawing_area.getZoomScale()
+      const node_d3_ctm = this.d3_selection?.node()?.getCTM() ?? {e: 0, f: 0} // Positionning matrix for ref node
+      const name_label_bounding_box = (this.d3_selection?.selectAll('.name_label_text').node() as Element)?.getBoundingClientRect() ?? { x: 0, y: 0, height: 0, width: 0 }
+      const box_pos_x = name_label_bounding_box.x - node_d3_ctm.e
+      const box_pos_y = name_label_bounding_box.y - node_d3_ctm.f
+      const box_height = name_label_bounding_box.height / DA_scale
+      const box_width = name_label_bounding_box.width / DA_scale
+
+      // Create svg element
+      this.d3_selection?.insert('g', '.name_label_background')
+        .attr('class', 'name_label_bg')
+        .append('rect')
+        .classed('name_label', true)
+        .classed('name_label_background', true)
+        .attr('id', 'name_label_background_' + this.id)
+        .attr('x', box_pos_x)
+        .attr('y', box_pos_y)
+        .attr('width', box_width)
+        .attr('height', box_height)
+        .attr('fill', 'white')
+        .attr('fill-opacity', 0.55)
+        .attr('rx', 4)
+        .style('stroke', 'none')
+
+      // Raise up label to have it on background
+      this.d3_selection?.select('.name_label').raise()
     }
   }
 
-  private _drawFO() {
+  protected _drawFO() {
     this.d3_selection?.select('.node_fo').remove()
 
     this.d3_selection?.append('foreignObject')
@@ -325,14 +466,37 @@ export abstract class Class_NodeElementPlus
       .html(this._FO_content)
   }
 
-  /**
-   * _drawFO wwith timeout
-   *
-   * @private
-   * @memberof Class_Legend
-   */
-  public drawFO() {
-    this._process_or_bypass(() => this._drawFO())
+  protected _drawIllustration() {
+    this.d3_selection?.selectAll('.illustration').remove()
+    if (this._is_image) {
+      this._drawIllustrationImage()
+    }
+    if (this._iconVisible) {
+      this._drawIllustrationIcon()
+    }
+  }
+
+  protected _drawIllustrationImage() {
+    this.d3_selection?.append('image')
+      .attr('id', 'image_node_' + this.id)
+      .attr('class', 'illustration image')
+      .attr('href', this.image_src)
+      .attr('height', this.getShapeHeightToUse())
+      .attr('width', this.getShapeWidthToUse())
+  }
+
+  protected _drawIllustrationIcon() {
+    this.d3_selection?.append('svg')
+      .attr('id', 'icon_node_' + this.id)
+      .attr('class', 'illustration icon_node')
+      .attr('viewBox', this.iconViewBox ? this.iconViewBox : '0 0 1000 1000')
+      .attr('height', this.getShapeHeightToUse())
+      .attr('width', this.getShapeWidthToUse())
+      .attr('x', 0)
+      .append('g')
+      .append('path')
+      .style('fill', (this.shape_visible || this._iconColorSustainable) ? this.iconColor : this.getShapeColorToUse())
+      .attr('d', this.sankey.getIconFromCatalog(this.iconName))
   }
 
   /**
@@ -412,35 +576,24 @@ export abstract class Class_NodeElementPlus
       })
   }
 
-  public direct_son_as_distant_sibling(
-    new_data: Type_GenericApplicationDataOSP,
-    nodeData: Type_GenericNodeElementOSP,
-    deep: number,
-    link_to_avoid: Type_GenericLinkElementOSP[],
-    display_nodes_id: Type_GenericNodeElementOSP[],
+  /**
+   * Override eventMouseDrag so when the DA is in selection mode we also drag selected containers when we drag nodes
+   *
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_NodeElementPlus
+   */
+  protected eventMouseDrag(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
-    //Cherche à savoir si un noeud qui recoit directement le flux de nodeData ai aussi un path inderectement vers ce meme noeud
-    //exemple : n0 -> n1  et n0 -> n2 -> n1
-    //fonction utilisé pour que le noeud qui recoit le flux direct attend les chemin indirect avant de lancer les animations suivantes
-    const next_link = nodeData.output_links_list.filter(f => f.shape_is_recycling && !Object.values(link_to_avoid).includes(f) && display_nodes_id.includes(f.target))
-    let max = 0
-    const data_plus = new_data
-
-    if (nodeData.id === this.id) {
-      return deep - 1
-    } else if (next_link.length > 0) {
-      next_link.map(link => {
-        const next_node = link.target
-        //utilise array.concat pour ne pas modifier le tableau original (contrairement a .push)
-        const to_avoid = link_to_avoid.concat([link])
-        const tmp = this.direct_son_as_distant_sibling(data_plus, next_node, deep + 1, to_avoid, display_nodes_id)
-        max = (tmp > max) ? tmp : max
-      })
+    // Apply parent behavior first
+    super.eventMouseDrag(event)
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    // SELECTION MODE =========================================================
+    if (drawing_area.isInSelectionMode()) {
+      this.drawing_area.moveSelectedContainerFromDragEvent(event)
     }
-    return max
   }
-
-  // PROTECTED METHODS ====================================================================
 
   protected eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -452,159 +605,6 @@ export abstract class Class_NodeElementPlus
         window.open(this._hyperlink)
       }
     }
-  }
-  // PRIVATE METHODS ====================================================================
-
-  private _drawIllustration() {
-    this.d3_selection?.selectAll('.illustration').remove()
-    if (this._is_image) {
-      this._drawIllustrationImage()
-    }
-    if (this._iconVisible) {
-      this._drawIllustrationIcon()
-    }
-  }
-
-  private _drawIllustrationImage() {
-    this.d3_selection?.append('image')
-      .attr('id', 'image_node_' + this.id)
-      .attr('class', 'illustration image')
-      .attr('href', this.image_src)
-      .attr('height', this.getShapeHeightToUse())
-      .attr('width', this.getShapeWidthToUse())
-  }
-
-  public drawIllustrationImage() {
-    this._process_or_bypass(() => this.drawIllustrationImage())
-  }
-
-  private _drawIllustrationIcon() {
-    this.d3_selection?.append('svg')
-      .attr('id', 'icon_node_' + this.id)
-      .attr('class', 'illustration icon_node')
-      .attr('viewBox', this.iconViewBox ? this.iconViewBox : '0 0 1000 1000')
-      .attr('height', this.getShapeHeightToUse())
-      .attr('width', this.getShapeWidthToUse())
-      .attr('x', 0)
-      .append('g')
-      .append('path')
-      .style('fill', (this.shape_visible || this._iconColorSustainable) ? this.iconColor : this.getShapeColorToUse())
-      .attr('d', this.sankey.getIconFromCatalog(this.iconName))
-  }
-  /**
- * _drawIllustrationIcon with timeout
- *
- * @private
- * @memberof Class_Legend
- */
-  public drawIllustrationIcon() {
-    this._process_or_bypass(() => this._drawIllustrationIcon())
-  }
-
-  /**
-   * Draw a background to the name label to highlight the name label
-   *
-   * @private
-   * @memberof Class_NodeElementPlus
-   */
-  private _drawNodeLabelBg() {
-    // Preventively delete previous label bg
-    this.d3_selection?.select('.node_label_bg').remove()
-
-    // Draw label BG if attr is at true but also if we display label
-    if (this.name_label_visible && this.name_label_background) {
-
-      const [label_pos_x, label_pos_y] = this.getNameLabelPos()
-
-      let box_pos_x = label_pos_x
-      let box_pos_y = label_pos_y
-      if (this.name_label_vert == 'top') {
-        box_pos_y -= this.name_label_font_size -(((this.d3_selection?.select('name_label_text')?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size)
-      } else if (this.name_label_vert == 'middle') {
-        const label_text=this.d3_selection?.select('.name_label_text')
-        box_pos_y = Number(label_text?.attr('y'))-this.name_label_font_size/2
-      }
-      const DA_scale = this.drawing_area.getZoomScale()
-      const element_BBox = (this.d3_selection?.selectAll('.name_label_text').node() as Element)?.getBoundingClientRect() ?? { x: 0, y: 0, height: 0, width: 0 }
-      const box_height = element_BBox.height / DA_scale
-      const box_width = element_BBox.width / DA_scale
-
-      if (this.name_label_horiz == 'left') {
-        box_pos_x -= box_width
-      } else if (this.name_label_horiz == 'middle') {
-        box_pos_x -= box_width / 2
-      }
-
-      this.d3_selection?.insert('g', '.name_label_text')
-        .attr('class', 'node_label_bg')
-        .append('rect')
-        .classed('name_label', true)
-        .classed('name_label_background', true)
-        .attr('id', 'name_label_background_' + this.id)
-        .attr('width', box_width)
-        .attr('height', box_height)
-        .attr('fill', 'white')
-        .attr('fill-opacity', 0.55)
-        .attr('rx', 4)
-        .style('stroke', 'none')
-        .attr('x', box_pos_x)
-        .attr('y', box_pos_y)
-
-    }
-  }
-
-  /**
-   * _drawNodeLabelBg with timeout
-   *
-   * @private
-   * @memberof Class_Legend
-   */
-  public drawNodeLabelBg() {
-    this._process_or_bypass(() => this._drawNodeLabelBg())
-  }
-
-  /**
-   * Make some preparation before launching the animation,
-   * then launch animation from clicked node
-   *
-   * @memberof Class_NodeElementPlus
-   */
-  public launchAnimation() {
-
-    // Fill all node shape with light grey color (the original color will re-fill when an animated input link will end)
-    this.drawing_area.sankey.visible_nodes_list.filter(n => n !== this).forEach(node => {
-      node.d3_selection_g_shape?.selectAll('.node_shape').attr('fill', '#dddddd')
-    })
-
-    // 'Hide' link & related elements before animation, it will be re-displayed when said links end their animation
-    this.drawing_area.sankey.visible_links_list.forEach(link => {
-      link.d3_selection?.selectAll('.link_path').attr('stroke-opacity', 0)
-      link.d3_selection?.selectAll('.link_arrow').attr('opacity', 0)
-      link.d3_selection?.selectAll('.link_label').attr('display', 'none')
-    })
-
-    // Launch animation of output links from clicked node, the rest is done recursively from there
-    this.branchAnimate(this.drawing_area.application_data as Type_GenericApplicationDataOSP, [], this.drawing_area.sankey.visible_nodes_list as unknown as Type_GenericNodeElementOSP[])
-
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
-    const nodes_to_process = this.sankey.visible_nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
-
-    // Compute longest possible path from clicked node (number of link before we get to a node without output link)
-    // so we can determinate a timeout before reseting the sankey
-    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-    this.drawing_area.computeHorizontalIndex(this,nodes_to_process,0, [], [], horizontal_indexes_per_nodes_ids)
-
-    // Compute time to animate the whole sankey from clicked node
-    let time_to_animate = 500
-    let nb_animation = Object.values(horizontal_indexes_per_nodes_ids).reduce((a, b) => Math.max(a, b), -Infinity)
-    nb_animation = (nb_animation !== undefined) ? nb_animation : 0
-    time_to_animate += nb_animation * 2000
-
-    // Launch a timeout that will activate at the end of the animation to reset drawing_area
-    setTimeout(
-      () => { this.drawing_area.draw() },
-      time_to_animate)
-
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -649,7 +649,6 @@ export abstract class Class_NodeElementPlus
   public get FO_content(): string { return this._FO_content }
   public set FO_content(value: string) { this._FO_content = value }
 
-
   /**
    * Getter of attribute name_label_background, get it either from display attribute if it exist else use value from related node style
    * @memberof Class_NodeElement
@@ -664,22 +663,22 @@ export abstract class Class_NodeElementPlus
   }
 
   /**
- * Set name_label_background value to node display attribute
- * @memberof Class_NodeElement
- */
+   * Set name_label_background value to node display attribute
+   * @memberof Class_NodeElement
+   */
   public set name_label_background(_: boolean) {
     this._display.attributes.name_label_background = _
     this.drawNodeLabelBg()
   }
-
 }
 
+// CLASS NODE ATTRIBUTES ****************************************************************
 
 /**
- * Define all attributes that can be applyied to a link
- *
+ * Define all attributes that can be applyied to a noe plus element
  * @export
- * @class Class_LinkAttribute
+ * @class Class_NodeAttributePlus
+ * @extends {Class_NodeAttribute}
  */
 export class Class_NodeAttributePlus extends Class_NodeAttribute {
 
@@ -715,16 +714,25 @@ export class Class_NodeAttributePlus extends Class_NodeAttribute {
   // SETTERS ============================================================================
 
   public set name_label_background(_: boolean | undefined) { this._name_label_background = _; this.update() }
-
 }
 
+// CLASS NODE STYLE *********************************************************************
 
+/**
+ * Define node style for node plus
+ *
+ * @export
+ * @class Class_NodeStylePlus
+ * @extends {Class_NodeStyle}
+ */
 export class Class_NodeStylePlus extends Class_NodeStyle {
 
   // PRIVATE ATTRIBUTES =================================================================
+
   private _name_label_background: boolean
 
   // CONSTRUCTOR ========================================================================
+
   constructor(
     id: string,
     name: string,
@@ -736,8 +744,7 @@ export class Class_NodeStylePlus extends Class_NodeStyle {
     this._name_label_background = default_label_background
   }
 
-
-  // PUBLIC METHODS ==================================================================
+  // PUBLIC METHODS ======================================================================
 
   public toJSON() {
     const json_object = super.toJSON()
