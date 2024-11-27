@@ -45,7 +45,12 @@ export const initializeApplicationDataSA = (
 ) => {
   // Read data from cache if it exist
   if (initial_data !== undefined) {
-    new_data_app.fromJSON(initial_data)
+    new_data_app.function_on_wait.current = () => {
+      new_data_app.fromJSON(initial_data)
+    }
+
+    new_data_app.launch_waiting_function.current({ success: new_data_app.t('toast.loaded'), loading: new_data_app.t('toast.loading') })
+
   }
   return new_data_app
 }
