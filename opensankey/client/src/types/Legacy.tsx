@@ -1913,9 +1913,9 @@ const convert_links: convert_linksFuncType = (
       else {
         if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          const dist = Math.sqrt(
+          const dist = Math.max(1, Math.sqrt(
             (target_node.x - source_node.x) * (target_node.x - source_node.x) +
-            (target_node.y - source_node.y) * (target_node.y - source_node.y))
+            (target_node.y - source_node.y) * (target_node.y - source_node.y))) // Avoid div per 0
           if (l.local.left_horiz_shift) {
             const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist))
             AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
@@ -1929,7 +1929,7 @@ const convert_links: convert_linksFuncType = (
         }
         else if ((l.local.orientation && l.local.orientation == 'vv')) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          const dist_y = target_node.y - source_node.y
+          const dist_y = Math.max(1, target_node.y - source_node.y) // Avoid div per 0
           if (l.local.left_horiz_shift !== undefined) {
             const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist_y))
             AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
@@ -1943,7 +1943,7 @@ const convert_links: convert_linksFuncType = (
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          const dist_x = target_node.x - source_node.x
+          const dist_x = Math.max(1, target_node.x - source_node.x) // Avoid div per 0
           if (l.local.left_horiz_shift !== undefined) {
             const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist_x))
             AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
