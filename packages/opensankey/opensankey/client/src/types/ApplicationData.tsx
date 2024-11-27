@@ -272,16 +272,13 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   public fromJSON(json_object: Type_JSON) {
-    this.function_on_wait.current = () => {
       // Read json file
     this._fromJSON(json_object)
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
     // Draw drawing area
     this._drawing_area.draw()
-    }
     
-    this._launch_waiting_function.current({ success: 'Loaded', loading: 'Loading' })
   }
 
   /**
@@ -448,8 +445,8 @@ export abstract class Class_ApplicationData
       app_ref.function_on_wait.current = () => {
       localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
       }
-      app_ref._launch_waiting_function.current({ success: 'Success', loading: 'Saving' })
-
+      this.launch_waiting_function.current({ success: this.t('toast.success'), loading: this.t('toast.saving') })
+      
       localStorage.setItem('last_save', 'true')
       // Update logo save in cache
       app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
