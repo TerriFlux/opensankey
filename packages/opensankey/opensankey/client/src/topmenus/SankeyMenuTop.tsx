@@ -463,8 +463,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                     // Clear datas & apply read datas
                     new_data.function_on_wait.current = () => {
                       new_data.fromJSON(JSON_data as Type_JSON)
-                      new_data.drawing_area.areaAutoFit()
-                      new_data.drawing_area.setToModeEdition(false) // Go to mode selection after opening a file
                     }
                     new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
                   }
