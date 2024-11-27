@@ -233,6 +233,10 @@ export const resources = {
           choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher Choose links values to display'
         }
       },
+      toast:{
+        v_loaded:'View loaded',
+        v_loading:'Loadig new view'
+      },
       'useTemplate': 'Use this template',
       'dl': 'Download excel',
       'elements_sankey+_blocked': 'Blocked diagram elements (OpenSankey+)',
@@ -611,6 +615,10 @@ export const resources = {
           unit_from_excel: 'Générer une ou plusieurs vue(s) unitaire(s) à partir d\'un ou plusieurs fichier(s) Excel',
           choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher',
         }
+      },
+      toast:{
+        v_loaded:'Vue chargé',
+        v_loading:'Charment de la vue'
       },
       'useTemplate': 'Utiliser ce modèle',
       'dl': 'Télécharger (excel)',
