@@ -298,6 +298,19 @@ export abstract class Class_ProtoElement
     }
   }
 
+  public isRelatedD3SelectionPresentAndSynced() {
+    const d3_drawing_area = this.drawing_area.d3_selection
+    if (d3_drawing_area !== null) {
+      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+      if (d3_drawing_area_selection.nodes().length > 0) {
+        const d3_selection = d3_drawing_area_selection.selectAll(' #' + this._id)
+        if (d3_selection && d3_selection.nodes().length > 0)
+          return true
+      }
+    }
+    return false
+  }
+
   /**
    * Set up events related to element d3_element
    * @protected
@@ -398,9 +411,10 @@ export abstract class Class_ProtoElement
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
       const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
-      if (d3_drawing_area_selection.nodes().length > 0)
+      if (d3_drawing_area_selection.nodes().length > 0) {
         this.d3_selection = d3_drawing_area_selection.append('g')
-          .attr('id', 'gg_' + this._id)
+        this.d3_selection.attr('id', 'gg_' + this._id)
+      }
     }
   }
 
