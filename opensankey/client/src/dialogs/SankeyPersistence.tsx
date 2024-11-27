@@ -96,15 +96,13 @@ const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
     fetch(url, fetchData).then(response => {
       response.text()
         .then(text => {
-          // try {
-          retrieveExcelResults(
-            new_data,
-            text
-          )
-          // }
-          // catch(err) {
-          //   alert(err)
-          // }
+            new_data.function_on_wait.current = () => {
+              retrieveExcelResults(
+                new_data,
+                text
+              )
+            }
+            new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
         })
         .then(() => {
           set_is_computing(false)
@@ -366,16 +364,12 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     const layout = data_as_json['layout'] as Type_JSON
     const tmp_DA = new_data.createNewDrawingArea()
     tmp_DA.fromJSON(layout)
-    new_data.function_on_wait.current = () => {
-      new_data.drawing_area.updateFrom(
+    new_data.drawing_area.updateFrom(
         tmp_DA,
         ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
       )
       new_data.drawing_area.draw()
-    }
-    new_data.launch_waiting_function.current({success:'Layout updated',loading:'Setting layout'})
   } else {
-    new_data.function_on_wait.current = () => {
       new_data.drawing_area.bypass_redraws = true
       // First compute position of nodes which are not trade
       new_data.drawing_area.computeAutoSankey(true)
@@ -399,8 +393,6 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
       new_data.drawing_area.bypass_redraws = false
       new_data.drawing_area.draw()
       new_data.drawing_area.areaAutoFit()
-    }
-    new_data.launch_waiting_function.current({success:'Layout updated',loading:'Setting layout'})
   }
   new_data.drawing_area.setToModeEdition(false)
 }
@@ -559,17 +551,20 @@ export const UploadExemple: FType_UploadExemple = (
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
-      const JSON_data = JSON.parse(text)
-      const error = JSON_data['error']
-      if (error && error.length != 0) {
-        alert(error)
-        return
+      new_data.function_on_wait.current = () => {
+        const JSON_data = JSON.parse(text)
+        const error = JSON_data['error']
+        if (error && error.length != 0) {
+          alert(error)
+          return
+        }
+        if (!file_name.includes('.xlsx')) {
+          // Clear datas & apply read datas
+          new_data.fromJSON(JSON_data as Type_JSON)
+          new_data.drawing_area.ArrangeTrade(false)
+        }
       }
-      if (!file_name.includes('.xlsx')) {
-        // Clear datas & apply read datas
-        new_data.fromJSON(JSON_data as Type_JSON)
-        new_data.drawing_area.ArrangeTrade(false)
-      }
+      new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })     
     })
   })
 }

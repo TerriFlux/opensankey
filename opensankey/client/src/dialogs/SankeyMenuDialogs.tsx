@@ -618,7 +618,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   applicationData.function_on_wait.current = () => {
                     applicationData.drawing_area.computeAutoSankey(false)
                   }
-                  applicationData.launch_waiting_function.current({ success: 'Nodes positions computed', loading: 'Computing nodes position' })
+                  applicationData.launch_waiting_function.current({ success: applicationData.t('toast.comp_n_pos'), loading: applicationData.t('toast.node_pos_computed') })
 
                 }}>
                 {t('MEP.PA')}
