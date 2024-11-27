@@ -2539,8 +2539,7 @@ export abstract class Class_NodeElement
           // Draw link if position has not been set before
           let need_to_draw = (
             (this._output_links_starting_point[link.id] === undefined) ||
-            (!link.d3_selection) ||
-            (!link.d3_selection?.node())
+            (!link.isRelatedD3SelectionPresentAndSynced())
           )
           if (!need_to_draw) {
             // Or if diff is at least one pixel
@@ -2593,7 +2592,7 @@ export abstract class Class_NodeElement
           // Draw link if position has not been set before
           let need_to_draw = (
             (this._input_links_ending_point[link.id] === undefined) ||
-            (!link.d3_selection?.node())
+            (!link.isRelatedD3SelectionPresentAndSynced())
           )
           if (!need_to_draw) {
             // Or if diff is at least one pixel
