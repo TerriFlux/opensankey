@@ -2574,6 +2574,16 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_orientation(_: Type_Orientation) {
+    if (
+      ((this.is_vertical_horizontal) || (this.is_horizontal_vertical)) &&
+      ((_ === 'hh') || (_ === 'vv'))
+    ) {
+      // In 'hh' or 'vv' : ending + starting <= 1
+      // In 'hv' or 'vh' : ending <= 1 & starting <= 1
+      // So we need to divide these values per 2 here to avoid bricking link
+      this.shape_starting_curve = this.shape_starting_curve/2
+      this.shape_starting_curve = this.shape_ending_curve/2
+    }
     this._display.attributes.shape_orientation = _
     // Need to redraw from nodes
     this.drawWithNodes()
@@ -2604,10 +2614,23 @@ export abstract class Class_LinkElement
    */
   public set shape_starting_curve(_: number) {
     if (_ >= 0) {
-      if ((_ + this.shape_ending_curve) <= 1.0)
-        this._display.attributes.shape_starting_curve = _
-      else
-        this._display.attributes.shape_starting_curve = 1.0 - this.shape_ending_curve
+      // Specific case for horizontal-vertical links : starting = [0; 1]
+      if (
+        (this.is_horizontal_vertical) ||
+        (this.is_vertical_horizontal)
+      ) {
+        if (_ <= 1.0)
+          this._display.attributes.shape_starting_curve = _
+        else
+          this._display.attributes.shape_starting_curve = 1.0
+      }
+      // Otherwise for rectiligne links : starting = [0; 1 - ending]
+      else {
+        if ((_ + this.shape_ending_curve) <= 1.0)
+          this._display.attributes.shape_starting_curve = _
+        else
+          this._display.attributes.shape_starting_curve = 1.0 - this.shape_ending_curve
+      }
       this.drawElements()
       this.drawControlPoint()
     }
@@ -2632,10 +2655,23 @@ export abstract class Class_LinkElement
    */
   public set shape_ending_curve(_: number) {
     if (_ >= 0) {
-      if ((_ + this.shape_starting_curve) <= 1.0)
-        this._display.attributes.shape_ending_curve = _
-      else
-        this._display.attributes.shape_ending_curve = 1.0 - this.shape_starting_curve
+      // Specific case for horizontal-vertical links : ending = [0; 1]
+      if (
+        (this.is_horizontal_vertical) ||
+        (this.is_vertical_horizontal)
+      ) {
+        if (_ <= 1.0)
+          this._display.attributes.shape_ending_curve = _
+        else
+          this._display.attributes.shape_ending_curve = 1.0
+      }
+      // Otherwise for rectiligne links : ending = [0; 1 - starting]
+      else {
+        if ((_ + this.shape_starting_curve) <= 1.0)
+          this._display.attributes.shape_ending_curve = _
+        else
+          this._display.attributes.shape_ending_curve = 1.0 - this.shape_starting_curve
+      }
       this.drawElements()
       this.drawControlPoint()
     }
@@ -3557,16 +3593,39 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
 
   // Shape orientation
   public set shape_orientation(_: Type_Orientation | undefined) {
+    if (
+      ((this._shape_orientation === 'vh') || (this._shape_orientation === 'hv')) &&
+      ((_ === 'hh') || (_ === 'vv'))
+    ) {
+      // In 'hh' or 'vv' : ending + starting <= 1
+      // In 'hv' or 'vh' : ending <= 1 & starting <= 1
+      // So we need to divide these values per 2 here to avoid bricking link
+      if (this._shape_starting_curve !== undefined) this._shape_starting_curve = this._shape_starting_curve/2
+      if (this._shape_ending_curve !== undefined) this._shape_ending_curve = this._shape_ending_curve/2
+    }
     this._shape_orientation = _
     this.update()
   }
   public set shape_starting_curve(_: number | undefined) {
     if (_ !== undefined) {
       if (_ >= 0) {
-        if ((_ + (this._shape_ending_curve ?? default_shape_ending_curve)) <= 1.0)
-          this._shape_starting_curve = _
-        else
-          this._shape_starting_curve = 1.0 - (this._shape_ending_curve ?? default_shape_ending_curve)
+        // Specific case for horizontal-vertical links
+        if (
+          (this._shape_orientation === 'vh') ||
+          (this._shape_orientation === 'hv')
+        ) {
+          if (_ <= 1.0)
+            this._shape_starting_curve = _
+          else
+            this._shape_starting_curve = 1.0
+        }
+        // Otherwise for rectiligne links
+        else {
+          if ((_ + (this._shape_ending_curve ?? default_shape_ending_curve)) <= 1.0)
+            this._shape_starting_curve = _
+          else
+            this._shape_starting_curve = 1.0 - (this._shape_ending_curve ?? default_shape_ending_curve)
+        }
       }
     }
     else {
@@ -3577,10 +3636,23 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   public set shape_ending_curve(_: number | undefined) {
     if (_ !== undefined) {
       if (_ >= 0) {
-        if ((_ + (this._shape_starting_curve ?? default_shape_starting_curve)) <= 1.0)
-          this._shape_ending_curve = _
-        else
-          this._shape_ending_curve = 1 - (this._shape_starting_curve ?? default_shape_starting_curve)
+        // Specific case for horizontal-vertical links
+        if (
+          (this._shape_orientation === 'vh') ||
+          (this._shape_orientation === 'hv')
+        ) {
+          if (_ <= 1.0)
+            this._shape_ending_curve = _
+          else
+            this._shape_ending_curve = 1.0
+        }
+        // Otherwise for rectiligne links
+        else {
+          if ((_ + (this._shape_starting_curve ?? default_shape_starting_curve)) <= 1.0)
+            this._shape_ending_curve = _
+          else
+            this._shape_ending_curve = 1 - (this._shape_starting_curve ?? default_shape_starting_curve)
+        }
       }
     }
     else {
