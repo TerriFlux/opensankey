@@ -297,7 +297,6 @@ export const CardsTemplateBuilder = (
                 onClick={() => {
                   // Draw template
                   new_data.fromJSON(list_template_data[idx])
-                  new_data.drawing_area.setToModeEdition(false) // Go to mode selection after opening a file
                 }}>{t('useTemplate')}</Button>
 
               <Button variant='menuconfigpanel_option_button_secondary'
