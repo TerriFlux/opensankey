@@ -625,39 +625,12 @@ export abstract class Class_LinkElement
 
   // PUBLIC METHODS =====================================================================
 
-  /**
-   * Set up element on d3 svg area
-   * @private
-   * @memberof Class_LinkElement
-   */
-  protected _draw() {
-    // Heritance
-    super._draw()
-    // Get starting point
-    const starting_point = this.source.getOutputLinkStartingPoint(this)
-    if (starting_point) {
-      this._display.position_starting.x = starting_point.x
-      this._display.position_starting.y = starting_point.y
-    }
-    // Get ending point
-    const ending_point = this.target.getInputLinkEndingPoint(this)
-    if (ending_point) {
-      this._display.position_ending.x = ending_point.x
-      this._display.position_ending.y = ending_point.y
-    }
-    // Draw only if we have starting & ending points
-    if (starting_point && ending_point) {
-      // Setup order
-      //this.drawing_area.orderElements()
-      // Draw elements
-      this._drawElements()
-    }
+  public drawPath() {
+    this._process_or_bypass(() => {this._drawPath(); this._orderD3Elements()})
   }
 
-  protected _initDraw(): void {
-    super._initDraw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_links').datum(this)
+  public drawLabel() {
+    this._process_or_bypass(() => {this._drawLabel(); this._orderD3Elements()})
   }
 
   public drawWithNodes() {
@@ -669,11 +642,6 @@ export abstract class Class_LinkElement
 
   public drawAsSelected() {
     this.drawControlPoint()
-  }
-
-  protected _drawElements() {
-    this._drawPath()
-    this._drawLabel()
   }
 
   public drawElements() {
@@ -950,14 +918,6 @@ export abstract class Class_LinkElement
     return this._values.getAllValues()
   }
 
-  public drawPath() {
-    this._process_or_bypass(() => {this._drawPath(); this._orderD3Elements()})
-  }
-
-  public drawLabel() {
-    this._process_or_bypass(() => {this._drawLabel(); this._orderD3Elements()})
-  }
-
   public setDomainLocalScale(_: number | undefined) {
     if (_ !== undefined) {
       this._scaleValueToPx.domain([0, _])
@@ -965,6 +925,167 @@ export abstract class Class_LinkElement
   }
 
   // PROTECTED METHODS ==================================================================
+
+  /**
+   * Set up element on d3 svg area
+   * @private
+   * @memberof Class_LinkElement
+   */
+  protected _draw() {
+    // Heritance
+    super._draw()
+    // Get starting point
+    const starting_point = this.source.getOutputLinkStartingPoint(this)
+    if (starting_point) {
+      this._display.position_starting.x = starting_point.x
+      this._display.position_starting.y = starting_point.y
+    }
+    // Get ending point
+    const ending_point = this.target.getInputLinkEndingPoint(this)
+    if (ending_point) {
+      this._display.position_ending.x = ending_point.x
+      this._display.position_ending.y = ending_point.y
+    }
+    // Draw only if we have starting & ending points
+    if (starting_point && ending_point) {
+      // Setup order
+      //this.drawing_area.orderElements()
+      // Draw elements
+      this._drawElements()
+    }
+  }
+
+  protected _initDraw(): void {
+    super._initDraw()
+    // Update class attributes
+    this.d3_selection?.attr('class', 'gg_links').datum(this)
+  }
+
+  /**
+   * Draw link shape on d3 svg
+   * @protected
+   * @memberof Class_LinkElement
+   */
+  protected _drawPath() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
+    // Clean previous shape
+    this.d3_selection?.selectAll('.link_path').remove()
+    // Failsafe
+    if (this._source && this._target) {
+      // Add new path shape
+      this.d3_selection?.append('path')
+        .classed('link', true)
+        .classed('link_path', true)
+        .attr('d', () => this.getBezierPath())
+      // Apply properties
+      this.d3_selection?.selectAll('.link_path')
+        .attr('id', this.id)
+        .attr('fill', 'none')
+        .attr('stroke', () => this.getPathColorToUse())
+        .attr('stroke-opacity', this.shape_opacity)
+        .attr('stroke-width', this.thickness)
+        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null) ? '10,2' : '')
+    }
+  }
+
+  /**
+   * Draw link label on d3 svg
+   * @protected
+   * @memberof Class_LinkElement
+   */
+  protected _drawLabel() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
+    // Clean previous label
+    this.d3_selection?.selectAll('.link_label').remove()
+    // Add value label
+    if (
+      (this.drawing_area.show_structure !== 'structure') &&
+      (this.value_label_is_visible) &&
+      ((this.data_value ?? 0) >= this.drawing_area.filter_label)
+    ) {
+      // Failsafe
+      if (this._source && this._target) {
+        // Compute label to display
+        const label_to_display = this.getLabelToDisplay()
+        // If label is undefined or null, do nothing
+        if (label_to_display) {
+          // Create text object
+          const d3_text_selection = this.d3_selection?.append('text')
+            .classed('link', true)
+            .classed('link_label', true)
+            .classed('link_label_text', true)
+            .attr('id', 'label_text_' + this.id)
+
+          d3_text_selection?.style('font-weight', 'bold')
+            .style('font-style', 'normal')
+            .style('font-size', String(this.value_label_font_size) + 'px')
+            .style('font-family', this.value_label_font_family)
+            .attr('fill',
+              (this.value_label_color === 'color') ?
+                this.shape_color :
+                this.value_label_color)
+
+          // Compute text position
+          if (this.value_label_on_path) {
+
+            // Create text on path
+            const d3_textpath_selection = d3_text_selection?.append('textPath')
+              .classed('link', true)
+              .classed('link_label', true)
+              .classed('link_label_textpath', true)
+              .attr('id', 'label_textpath_' + this.id)
+              .attr('href', '#' + this.id)
+
+            // Add text directly on textpath object
+            d3_textpath_selection?.text(label_to_display)
+              .attr('spacing', 'exact')
+              .attr('method', 'align')
+
+            // Add styling text attributes directly on text object
+            // Relative position from starting point of path
+            this.updateTextPathOffset()
+
+            if (!this.drawing_area.static) {
+              d3_textpath_selection?.call(d3.drag<SVGTextPathElement, unknown>()
+                .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+                .on('start', ev => this.dragTextPathStart(ev))
+                .on('drag', ev => this.dragTextPathMove(ev))
+                .on('end', ev => this.dragTextPathEnd(ev))
+              )
+            }
+          }
+          else {
+            this.updateTextXYPosition()
+            d3_text_selection?.text(label_to_display)
+              .attr('spacing', 'exact')
+              .attr('method', 'align')
+            if (!this.drawing_area.static) {
+              d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
+                .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+                .on('start', ev => this.dragTextStart(ev))
+                .on('drag', ev => this.dragTextMove(ev))
+                .on('end', ev => this.dragTextEnd(ev))
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Draw all d3 elements on link d3 selection
+   * @protected
+   * @memberof Class_LinkElement
+   */
+  protected _drawElements() {
+    this._drawPath()
+    this._drawLabel()
+  }
 
   /**
    * Put d3 elements in correct display order
@@ -1122,117 +1243,6 @@ export abstract class Class_LinkElement
 
   // PRIVATE METHODS ====================================================================
 
-  /**
-   * Draw link shape on d3 svg
-   * @private
-   * @memberof Class_LinkElement
-   */
-  private _drawPath() {
-    // Speed-up computing
-    if (!this.d3_selection)
-      return
-    // Clean previous shape
-    this.d3_selection?.selectAll('.link_path').remove()
-    // Failsafe
-    if (this._source && this._target) {
-      // Add new path shape
-      this.d3_selection?.append('path')
-        .classed('link', true)
-        .classed('link_path', true)
-        .attr('d', () => this.getBezierPath())
-      // Apply properties
-      this.d3_selection?.selectAll('.link_path')
-        .attr('id', this.id)
-        .attr('fill', 'none')
-        .attr('stroke', () => this.getPathColorToUse())
-        .attr('stroke-opacity', this.shape_opacity)
-        .attr('stroke-width', this.thickness)
-        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null) ? '10,2' : '')
-    }
-  }
-
-  private _drawLabel() {
-    // Speed-up computing
-    if (!this.d3_selection)
-      return
-    // Clean previous label
-    this.d3_selection?.selectAll('.link_label').remove()
-    // Add value label
-    if (
-      (this.drawing_area.show_structure !== 'structure') &&
-      (this.value_label_is_visible) &&
-      ((this.data_value ?? 0) >= this.drawing_area.filter_label)
-    ) {
-      // Failsafe
-      if (this._source && this._target) {
-        // Compute label to display
-        const label_to_display = this.getLabelToDisplay()
-        // If label is undefined or null, do nothing
-        if (label_to_display) {
-          // Create text object
-          const d3_text_selection = this.d3_selection?.append('text')
-            .classed('link', true)
-            .classed('link_label', true)
-            .classed('link_label_text', true)
-            .attr('id', 'label_text_' + this.id)
-
-          d3_text_selection?.style('font-weight', 'bold')
-            .style('font-style', 'normal')
-            .style('font-size', String(this.value_label_font_size) + 'px')
-            .style('font-family', this.value_label_font_family)
-            .attr('fill',
-              (this.value_label_color === 'color') ?
-                this.shape_color :
-                this.value_label_color)
-
-          // Compute text position
-          if (this.value_label_on_path) {
-
-            // Create text on path
-            const d3_textpath_selection = d3_text_selection?.append('textPath')
-              .classed('link', true)
-              .classed('link_label', true)
-              .classed('link_label_textpath', true)
-              .attr('id', 'label_textpath_' + this.id)
-              .attr('href', '#' + this.id)
-
-            // Add text directly on textpath object
-            d3_textpath_selection?.text(label_to_display)
-              .attr('spacing', 'exact')
-              .attr('method', 'align')
-
-            // Add styling text attributes directly on text object
-            // Relative position from starting point of path
-            this.updateTextPathOffset()
-
-            if (!this.drawing_area.static) {
-              d3_textpath_selection?.call(d3.drag<SVGTextPathElement, unknown>()
-                .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
-                .on('start', ev => this.dragTextPathStart(ev))
-                .on('drag', ev => this.dragTextPathMove(ev))
-                .on('end', ev => this.dragTextPathEnd(ev))
-              )
-            }
-          }
-          else {
-            this.updateTextXYPosition()
-            d3_text_selection?.text(label_to_display)
-              .attr('spacing', 'exact')
-              .attr('method', 'align')
-            if (!this.drawing_area.static) {
-              d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
-                .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
-                .on('start', ev => this.dragTextStart(ev))
-                .on('drag', ev => this.dragTextMove(ev))
-                .on('end', ev => this.dragTextEnd(ev))
-              )
-            }
-          }
-        }
-      }
-    }
-  }
-
   //================= Functions for link label if it is a TextPath  =================
 
   /**
@@ -1300,8 +1310,6 @@ export abstract class Class_LinkElement
     }
     return [label_position, label_anchor, label_ortho_position, label_dominant_baseline]
   }
-
-
 
   /**
    * Function triggered when we start dragging node name label when it follow the link path, it initialise relative position if undefined
@@ -1448,7 +1456,6 @@ export abstract class Class_LinkElement
     this.menu_config.updateAllComponentsRelatedToLinks()
   }
 
-
   /**
    * Display the tooltip on drawing area
    *
@@ -1550,7 +1557,6 @@ export abstract class Class_LinkElement
         .attr('stroke-width', 1)
     }
   }
-
 
   /**
    * Return a svg path for link path drawing
