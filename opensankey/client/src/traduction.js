@@ -171,7 +171,7 @@ export const open_resources = {
         input_file_excel: 'Input file',
         no_input_file_detected: 'No file has been selected',
         waiting: 'Please wait',
-        old_app:'Old app.',
+        old_app: 'Old app.',
         Transformation: {
           amp_short: 'Layout',
           amp: 'Change the layout',
@@ -254,7 +254,7 @@ export const open_resources = {
           LegBgOpacity: 'Choose background color',
           LegBgBorder: 'Add a border to the legend area',
           LegBgColor: 'Choose background color opacity',
-          old_app:'Redirect to the old app',
+          old_app: 'Redirect to the old app',
 
         },
       },
@@ -267,7 +267,7 @@ export const open_resources = {
         leg_pos: 'size & position',
         leg_info: 'Informations',
         leg_show_dataTags: 'DataTags',
-        leg_show_info_link_void:'Show info concerning null link',
+        leg_show_info_link_void: 'Show info concerning null link',
 
         links_size: 'Links size',
         MaxFlux: 'Max',
@@ -396,12 +396,12 @@ export const open_resources = {
         position: 'Position',
         text: 'Text',
         selector: 'Select nodes',
-        title_desaggreg:'Dimension disagregation',
-        title_aggreg:'Dimension agregation',
-        text_agreg:'Will agregate in : ',
-        text_desagreg:'Will disagregate in : ',
-        desaggreg:'Disagregation',
-        aggreg:'Agregation',
+        title_desaggreg: 'Dimension disagregation',
+        title_aggreg: 'Dimension agregation',
+        text_agreg: 'Will agregate in : ',
+        text_desagreg: 'Will disagregate in : ',
+        desaggreg: 'Disagregation',
+        aggreg: 'Agregation',
         tooltips: {
           Nom: 'Change the name of the selected node. If several nodes are selected, this field is disabled',
           AS: 'Allow to apply a predefined style in the preference menu to the selected node(s)',
@@ -410,13 +410,13 @@ export const open_resources = {
           SlctInLink: 'Allow to select all incoming links to the node(s)',
           IB: 'Tooltip : text formatted in HTML and displayed with the tooltip of the node. This tooltip pops on graphic space with SHIFT + MOUSE on the node.',
         },
-        drawing_area_tooltip:{
-          outputs:'Outputs',
-          inputs:'Inputs',
-          dest:'Destination',
-          val:'Values',
-          rat:'Ratios',
-          prov:'Origin',
+        drawing_area_tooltip: {
+          outputs: 'Outputs',
+          inputs: 'Inputs',
+          dest: 'Destination',
+          val: 'Values',
+          rat: 'Ratios',
+          prov: 'Origin',
 
         },
         tabs: {
@@ -556,7 +556,7 @@ export const open_resources = {
         IS: 'Additional info.',
         ajust_label: 'Adjust labels position',
         FS: 'Link',
-        local_scale:'Local link scale',
+        local_scale: 'Local link scale',
         tooltips: {
           src: 'Choice of the departure node for the selected link(s)',
           trgt: 'Choice of the arrival node for the selected link(s)',
@@ -599,7 +599,7 @@ export const open_resources = {
           arrow_size: 'Size of arrow',
           display_link_lab: 'Display value',
           hide_link_lab: 'Hide value',
-          data_off_scale:'Scale',
+          data_off_scale: 'Scale',
           tooltips: {
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
@@ -616,7 +616,7 @@ export const open_resources = {
             starting_tangeant: 'Setting the radius of the starting curvature in case the selected link(s) are represented as Bezier curve(s)',
             ending_tangeant: 'Setting the radius of the ending curvature in case the selected link(s) are represented as Bezier curve(s)',
             arrow_size: 'Change the size of the arrow (from the end of the link to the node)',
-            data_off_scale:'Define a scale for this flow, wich can break the coherence of flow thickness proportionality of value '
+            data_off_scale: 'Define a scale for this flow, wich can break the coherence of flow thickness proportionality of value '
           }
         },
         label: {
@@ -639,7 +639,7 @@ export const open_resources = {
           NbDigit: 'Number of decimals',
           l_u_v: 'Unit',
           l_u: 'Unit\'s name',
-          unit_factor:'Unit factor',
+          unit_factor: 'Unit factor',
           tooltips: {
             label: 'Display or not the label (data / text) associated to the selected link(s)',
             len: 'Display the label in black, for the selected stream(s)',
@@ -659,7 +659,7 @@ export const open_resources = {
             NbDigit: 'Choose the number of decimals figures of the value',
             l_u_v: 'Display the unit of the links',
             l_u: 'Choose the name of the unit',
-            unit_factor:'Factor of conversion for link unity'
+            unit_factor: 'Factor of conversion for link unity'
           }
         },
         layout: 'Disposition',
@@ -763,6 +763,20 @@ export const open_resources = {
         10: 'Buttons to open the configuration menu to edit the elements of the sankey diagram',
         excel: 'Button download the data used for the sankey in Excel format'
       },
+      toast: {
+        toast_loading_waiting: 'Processing',
+        toast_loading_waiting_desc: 'Please wait',
+        toast_loading_success: 'Finished',
+        toast_loading_success_desc: '',
+        toast_loading_failed: 'Failed',
+        toast_loading_failed_desc: '',
+        loaded: 'Loaded',
+        loading: 'Loading',
+        success: 'Success',
+        saving: 'Saving',
+        comp_n_pos: 'Computing nodes position',
+        node_pos_computed: 'Nodes positions computed',
+      },
       DisplayWelcome: 'Welcome',
       dontSeeAgain: 'Don\'t show again',
       scale: 'Scale',
@@ -778,12 +792,7 @@ export const open_resources = {
       Avancé: 'Advanced',
       separator_interval: ',',
       sep_decimal: '.',
-      toast_loading_waiting:'Processing',
-      toast_loading_waiting_desc:'Please wait',
-      toast_loading_success:'Finished',
-      toast_loading_success_desc:'',
-      toast_loading_failed:'Failed',
-      toast_loading_failed_desc:'',
+
 
 
     }
@@ -955,7 +964,7 @@ export const open_resources = {
         input_file_excel: 'Fichier d\'entrée excel',
         no_input_file_detected: 'Aucun fichier n\'a été sélectionné',
         waiting: 'Veuillez patienter',
-        old_app:'Ancienne app.',
+        old_app: 'Ancienne app.',
 
         Transformation: {
           amp_short: 'M.E.P',
@@ -1038,7 +1047,7 @@ export const open_resources = {
           LegBgOpacity: 'Modifie l\'opacité de la couleur de fond de la légende',
           LegBgBorder: 'Ajoute une bordure à la légende',
           LegBgColor: 'Moddifie la couleur de fond de la légende',
-          old_app:'Redirige vers l\'ancienne version de l\'application',
+          old_app: 'Redirige vers l\'ancienne version de l\'application',
 
 
         },
@@ -1053,7 +1062,7 @@ export const open_resources = {
         leg_pos: 'Taille et position',
         leg_info: 'Informations',
         leg_show_dataTags: 'Etiquettes de données',
-        leg_show_info_link_void:'Affiche info concernant les flux null',
+        leg_show_info_link_void: 'Affiche info concernant les flux null',
 
         MaxFlux: 'Max',
         MinFlux: 'Min',
@@ -1180,12 +1189,12 @@ export const open_resources = {
         size: 'Taille',
         position: 'Position',
         text: 'Texte',
-        title_desaggreg:'Dimension desagrégation',
-        title_aggreg:'Dimension agrégation',
-        text_agreg:'Sera aggrégé en : ',
-        text_desagreg:'Sera désaggrégé en : ',
-        desaggreg:'Désagrégation',
-        aggreg:'Agrégation',
+        title_desaggreg: 'Dimension desagrégation',
+        title_aggreg: 'Dimension agrégation',
+        text_agreg: 'Sera aggrégé en : ',
+        text_desagreg: 'Sera désaggrégé en : ',
+        desaggreg: 'Désagrégation',
+        aggreg: 'Agrégation',
         tooltips: {
           Nom: 'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
           AS: 'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
@@ -1194,13 +1203,13 @@ export const open_resources = {
           SlctInLink: 'Permettre de sélectionner tous les flux entrants vers le/les noeud(s)',
           IB: 'Info bulle : texte formaté en HTML et affiché avec l\'info-bulle du noeud. Cet info-bulle apparait sur espace graphique avec SHIFT + SOURIS sur le noeud',
         },
-        drawing_area_tooltip:{
-          outputs:'Sorties',
-          inputs:'Entrées',
-          val:'Valeurs',
-          rat:'Ratios',
-          prov:'Provenance',
-          dest:'Destination',
+        drawing_area_tooltip: {
+          outputs: 'Sorties',
+          inputs: 'Entrées',
+          val: 'Valeurs',
+          rat: 'Ratios',
+          prov: 'Provenance',
+          dest: 'Destination',
         },
         tabs: {
           apparence: 'Apparence',
@@ -1349,7 +1358,7 @@ export const open_resources = {
         IB: 'Info-bulle',
         IS: 'Info sup.',
         ajust_label: 'Position vertical ajusté',
-        local_scale:'Échelle propre au flux',
+        local_scale: 'Échelle propre au flux',
         FS: 'Flux',
         tooltips: {
           src: 'Choix du noeud de départ pour le/les flux sélectionné(s)',
@@ -1393,7 +1402,7 @@ export const open_resources = {
           arrow_size: 'Taille de la flèche',
           display_link_lab: 'Afficher la valeur',
           hide_link_lab: 'Masquer la valeur',
-          data_off_scale:'Échelle',
+          data_off_scale: 'Échelle',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
@@ -1410,7 +1419,7 @@ export const open_resources = {
             starting_tangeant: 'Paramétrage de la courbure de départ dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
             ending_tangeant: 'Paramétrage de la courbure de fin dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
             arrow_size: 'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud',
-            data_off_scale:'Définie une échelle local pour l\'épaisseur du flux, cela peut casser la cohérence du diagramme au niveau de la proportionalité entre la valeur des flux et leur épaisseur '
+            data_off_scale: 'Définie une échelle local pour l\'épaisseur du flux, cela peut casser la cohérence du diagramme au niveau de la proportionalité entre la valeur des flux et leur épaisseur '
 
           }
         },
@@ -1434,7 +1443,7 @@ export const open_resources = {
           NbDigit: 'Nombre de décimale',
           l_u_v: 'Unité',
           l_u: 'Nom de l\'unité',
-          unit_factor:'Facteur d\'unité',
+          unit_factor: 'Facteur d\'unité',
           tooltips: {
             label: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)',
             len: 'Afficher le texte du label en noir, pour le(s) flux sélectionné(s)',
@@ -1455,7 +1464,7 @@ export const open_resources = {
 
             l_u_v: 'Permet d\'afficher ou non l\'unité du flux',
             l_u: 'Permet de choisir le nom de l\'unité',
-            unit_factor:'Facteur de conversions de l\'unité du flux',
+            unit_factor: 'Facteur de conversions de l\'unité du flux',
           }
         },
         layout: 'Organiser',
@@ -1559,6 +1568,20 @@ export const open_resources = {
         10: 'Bouton permettant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
         excel: 'Bouton permettant de télécharger les données au format Excel'
       },
+      toast: {
+        toast_loading_waiting: 'Traitement en cours',
+        toast_loading_waiting_desc: 'Veuillez patienter',
+        toast_loading_success: 'Terminé',
+        toast_loading_success_desc: '',
+        toast_loading_failed: 'Échec',
+        toast_loading_failed_desc: '',
+        loaded: 'Chargement terminé',
+        loading: 'Chargement',
+        success: 'Succès',
+        saving: 'Sauvegarde',
+        comp_n_pos: 'Calcul de position des noeud',
+        node_pos_computed: 'Noeuds positionnés',
+      },
       DisplayWelcome: 'Accueil',
       dontSeeAgain: 'Ne plus montrer',
       scale: 'Échelle',
@@ -1574,12 +1597,7 @@ export const open_resources = {
       Avancé: 'Avancé',
       separator_interval: ';',
       sep_decimal: ',',
-      toast_loading_waiting: 'Traitement en cours',
-      toast_loading_waiting_desc: 'Veuillez patienter',
-      toast_loading_success: 'Terminé',
-      toast_loading_success_desc: '',
-      toast_loading_failed: 'Échec',
-      toast_loading_failed_desc: '',
+
     }
   }
 }

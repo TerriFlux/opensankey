@@ -461,9 +461,12 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                     const file_content = String((e.target as FileReader).result)
                     const JSON_data = JSON.parse(file_content)
                     // Clear datas & apply read datas
-                    new_data.fromJSON(JSON_data as Type_JSON)
-                    new_data.drawing_area.areaAutoFit()
-                    new_data.drawing_area.setToModeEdition(false) // Go to mode selection after opening a file
+                    new_data.function_on_wait.current = () => {
+                      new_data.fromJSON(JSON_data as Type_JSON)
+                      new_data.drawing_area.areaAutoFit()
+                      new_data.drawing_area.setToModeEdition(false) // Go to mode selection after opening a file
+                    }
+                    new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
                   }
                 })()
                 reader.readAsText(files[0])
@@ -1668,15 +1671,15 @@ export const launchToastConstructor: FType_LaunchToastConstructor = (
 ) => {
   const {t}= new_data
   const defaultToastText = {
-    success: { title: intake?.success ?? t('toast_loading_success'), description: t('toast_loading_success_desc') },
-    error: { title: t('toast_loading_failed'), description: t('toast_loading_failed_desc')},
-    loading: { title: intake?.loading ?? t('toast_loading_waiting'), description: t('toast_loading_waiting_desc') },
+    success: { title: intake?.success ?? t('toast.toast_loading_success'), description: t('toast.toast_loading_success_desc') },
+    error: { title: t('toast.toast_loading_failed'), description: t('toast.toast_loading_failed_desc')},
+    loading: { title: intake?.loading ?? t('toast.toast_loading_waiting'), description: t('toast.toast_loading_waiting_desc') },
   }
   const tmp = new Promise((resole) => {
     setTimeout(() => {
       new_data.function_on_wait.current()
       resole(200)
-    }, 50)
+    }, 2)
   })
   toast.promise(tmp, defaultToastText)
 }
