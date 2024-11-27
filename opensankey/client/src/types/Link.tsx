@@ -73,7 +73,7 @@ export const default_shape_is_recycling = false
 export const default_shape_opacity = 0.85
 export const default_shape_orientation = 'hh'
 export const default_shape_starting_curve = 0.05
-export const default_shape_ending_curve = 0.95
+export const default_shape_ending_curve = 0.05
 export const default_shape_starting_tangeant = 0.25
 export const default_shape_ending_tangeant = 0.25
 export const default_shape_middle_recyling = 100
@@ -949,9 +949,11 @@ export abstract class Class_LinkElement
   public getAllValues() {
     return this._values.getAllValues()
   }
+
   public drawPath() {
     this._process_or_bypass(() => this._drawPath())
   }
+
   public drawLabel() {
     this._process_or_bypass(() => this._drawLabel())
   }
@@ -1737,7 +1739,7 @@ export abstract class Class_LinkElement
     const x6 = this.position_x_end
     const y6 = this.position_y_end
 
-    const starting_shift = this.lenght * this.shape_starting_curve
+    const starting_shift = this.shape_starting_curve
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
@@ -1745,23 +1747,23 @@ export abstract class Class_LinkElement
     // Normal mode
     if (!this.shape_is_recycling) {
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        x1 = x0 + horizontal_direction * starting_shift
+        x1 = x0 + horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * starting_shift
         y1 = y0
       }
       else {
         x1 = x0
-        y1 = y0 + vertical_direction * starting_shift
+        y1 = y0 + vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * starting_shift
       }
     }
     // Recycling mode
     else {
       if (this.is_horizontal || this.is_horizontal_vertical) {
-        x1 = x0 - horizontal_direction * starting_shift
+        x1 = x0 - horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * starting_shift
         y1 = y0
       }
       else {
         x1 = x0
-        y1 = y0 - vertical_direction * starting_shift
+        y1 = y0 - vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * starting_shift
       }
     }
     this._control_points.starting_curve_point.setPosXY(x1, y1)
@@ -1779,7 +1781,6 @@ export abstract class Class_LinkElement
     const x6 = this.position_x_end
     const y6 = this.position_y_end
     // Shifts
-    const ending_shift = this.lenght * (1 - this.shape_ending_curve)
     const horizontal_direction = Math.sign(x6 - x0) // +1 / -1
     const vertical_direction = Math.sign(y6 - y0) // +1 / -1
 
@@ -1787,23 +1788,23 @@ export abstract class Class_LinkElement
     // Normal mode
     if (!this.shape_is_recycling) {
       if (this.is_horizontal || this.is_vertical_horizontal) {
-        x5 = x6 - horizontal_direction * ending_shift
+        x5 = x6 - horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * this.shape_ending_curve
         y5 = y6
       }
       else {
         x5 = x6
-        y5 = y6 - vertical_direction * ending_shift
+        y5 = y6 - vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * this.shape_ending_curve
       }
     }
     // Recycling mode
     else {
       if (this.is_horizontal || this.is_vertical_horizontal) {
-        x5 = x6 + horizontal_direction * ending_shift
+        x5 = x6 + horizontal_direction * Math.abs(this.position_x_start - this.position_x_end) * this.shape_ending_curve
         y5 = y6
       }
       else {
         x5 = x6
-        y5 = y6 + vertical_direction * ending_shift
+        y5 = y6 + vertical_direction * Math.abs(this.position_y_start - this.position_y_end) * this.shape_ending_curve
       }
     }
     this._control_points.ending_curve_point.setPosXY(x5, y5)
@@ -2006,7 +2007,7 @@ export abstract class Class_LinkElement
         // Compute ending curve point coef based on new handle pos
         const dx6x0 = Math.abs(x6 - x0)
         if (dx6x0 > 0) // Avoid NaN
-          this.shape_ending_curve = Math.abs(handle_new_pos_x - x0) / dx6x0
+          this.shape_ending_curve = Math.abs(handle_new_pos_x - x6) / dx6x0
       }
       else {
         // Compute new handle position
@@ -2016,7 +2017,7 @@ export abstract class Class_LinkElement
         // Compute ending curve point coef based on new handle pos
         const dy6y0 = Math.abs(y6 - y0)
         if (dy6y0 > 0) // Avoid NaN
-          this.shape_ending_curve = Math.abs(handle_new_pos_y - y0) / dy6y0
+          this.shape_ending_curve = Math.abs(handle_new_pos_y - y6) / dy6y0
       }
       this._control_points.is_dragged = false
     }
@@ -2573,6 +2574,18 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_orientation(_: Type_Orientation) {
+    if (
+      (!this.shape_is_recycling) && (
+        ((this.is_vertical_horizontal) || (this.is_horizontal_vertical)) &&
+        ((_ === 'hh') || (_ === 'vv'))
+      )
+    ) {
+      // In 'hh' or 'vv' : ending + starting <= 1
+      // In 'hv' or 'vh' : ending <= 1 & starting <= 1
+      // So we need to divide these values per 2 here to avoid bricking link
+      this.shape_starting_curve = this.shape_starting_curve/2
+      this.shape_starting_curve = this.shape_ending_curve/2
+    }
     this._display.attributes.shape_orientation = _
     // Need to redraw from nodes
     this.drawWithNodes()
@@ -2602,8 +2615,31 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_starting_curve(_: number) {
-    if (_ >= 0 && _ < this.shape_ending_curve) {
-      this._display.attributes.shape_starting_curve = _
+    if (_ >= 0) {
+      // For non recycling shape we have upper bound on starting
+      if (!this.shape_is_recycling) {
+        // Specific case for horizontal-vertical links : starting = [0; 1]
+        if (
+          (this.is_horizontal_vertical) ||
+          (this.is_vertical_horizontal)
+        ) {
+          if (_ <= 1.0)
+            this._display.attributes.shape_starting_curve = _
+          else
+            this._display.attributes.shape_starting_curve = 1.0
+        }
+        // Otherwise for rectiligne links : starting = [0; 1 - ending]
+        else {
+          if ((_ + this.shape_ending_curve) <= 1.0)
+            this._display.attributes.shape_starting_curve = _
+          else
+            this._display.attributes.shape_starting_curve = 1.0 - this.shape_ending_curve
+        }
+      }
+      // For recycling shapes we don't have upper bounds on starting
+      else {
+        this._display.attributes.shape_starting_curve = _
+      }
       this.drawElements()
       this.drawControlPoint()
     }
@@ -2627,8 +2663,31 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_ending_curve(_: number) {
-    if (_ <= 1 && _ > this.shape_starting_curve) {
-      this._display.attributes.shape_ending_curve = _
+    if (_ >= 0) {
+      // For non recycling shape we have upper bound on ending
+      if (!this.shape_is_recycling) {
+        // Specific case for horizontal-vertical links : ending = [0; 1]
+        if (
+          (this.is_horizontal_vertical) ||
+          (this.is_vertical_horizontal)
+        ) {
+          if (_ <= 1.0)
+            this._display.attributes.shape_ending_curve = _
+          else
+            this._display.attributes.shape_ending_curve = 1.0
+        }
+        // Otherwise for rectiligne links : ending = [0; 1 - starting]
+        else {
+          if ((_ + this.shape_starting_curve) <= 1.0)
+            this._display.attributes.shape_ending_curve = _
+          else
+            this._display.attributes.shape_ending_curve = 1.0 - this.shape_starting_curve
+        }
+      }
+      // For recycling shapes we don't have upper bounds on ending
+      else {
+        this._display.attributes.shape_ending_curve = _
+      }
       this.drawElements()
       this.drawControlPoint()
     }
@@ -2763,6 +2822,13 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_is_recycling(_: boolean) {
+    // In recylcing mode we dont have upperbound for starting & ending
+    // But in normal mode we have upper bounds, so we need to add upper bound
+    // to avoid bricking link path
+    if (!_ && this._display.attributes.shape_is_recycling) {
+      this.shape_starting_curve = Math.min(this.shape_starting_curve, 0.25)
+      this.shape_ending_curve = Math.min(this.shape_ending_curve, 0.25)
+    }
     this._display.attributes.shape_is_recycling = _
     // Need to redraw from nodes
     this.drawWithNodes()
@@ -3184,25 +3250,6 @@ export abstract class Class_LinkElement
   // PRIVATE GETTER / SETTER =============================================================
 
   /**
-   * Compute lenght of link
-   * @memberof Class_LinkElement
-   */
-  private get lenght() {
-    if (this.is_vertical) {
-      return Math.abs(this.position_y_start - this.position_y_end)
-    }
-    else if (this.is_horizontal) {
-      return Math.abs(this.position_x_start - this.position_x_end)
-    }
-    else {
-      return (
-        Math.abs(this.position_x_start - this.position_x_end) +
-        Math.abs(this.position_y_start - this.position_y_end)
-      )
-    }
-  }
-
-  /**
    * If link has tags :
    * - check for each tag group if the flow has at least one selected tag that isn't filtered out
    * else if the link doesn't have tag it isn't filtered by them
@@ -3375,6 +3422,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (this._shape_starting_tangeant !== undefined) json_object['starting_tangeant'] = this._shape_starting_tangeant
     if (this._shape_ending_tangeant !== undefined) json_object['ending_tangeant'] = this._shape_ending_tangeant
     if (this._shape_ending_curve !== undefined) json_object['right_horiz_shift'] = this._shape_ending_curve
+    if (this._shape_middle_recycling !== undefined) json_object['vert_shift'] = this._shape_middle_recycling
     if (this._shape_curvature !== undefined) json_object['curvature'] = this._shape_curvature
     if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
     if (this._shape_is_recycling !== undefined) json_object['recycling'] = this._shape_is_recycling
@@ -3414,7 +3462,8 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (json_local_object['left_horiz_shift'] !== undefined) this._shape_starting_curve = getNumberFromJSON(json_local_object, 'left_horiz_shift', default_shape_starting_curve)
     if (json_local_object['starting_tangeant'] !== undefined) this._shape_starting_tangeant = getNumberFromJSON(json_local_object, 'starting_tangeant', default_shape_starting_tangeant)
     if (json_local_object['ending_tangeant'] !== undefined) this._shape_ending_tangeant = getNumberFromJSON(json_local_object, 'ending_tangeant', default_shape_ending_tangeant)
-    if (json_local_object['right_horiz_shift'] !== undefined) this._shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve)
+    if (json_local_object['right_horiz_shift'] !== undefined) this.shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve) // Need to use getter to insure coherence with starting curve
+    if (json_local_object['vert_shift'] !== undefined) this._shape_middle_recycling = getNumberFromJSON(json_local_object, 'vert_shift', default_shape_middle_recyling)
     if (json_local_object['curvature'] !== undefined) this._shape_curvature = getNumberFromJSON(json_local_object, 'curvature', default_shape_curvature)
     if (json_local_object['curved'] !== undefined) this._shape_is_curved = getBooleanFromJSON(json_local_object, 'curved', default_shape_is_curved)
     if (json_local_object['recycling'] !== undefined) this._shape_is_recycling = getBooleanFromJSON(json_local_object, 'recycling', default_shape_is_recycling)
@@ -3567,16 +3616,48 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
 
   // Shape orientation
   public set shape_orientation(_: Type_Orientation | undefined) {
+    if (
+      (!this.shape_is_recycling) && (
+        ((this._shape_orientation === 'vh') || (this._shape_orientation === 'hv')) &&
+        ((_ === 'hh') || (_ === 'vv'))
+      )
+    ) {
+      // In 'hh' or 'vv' : ending + starting <= 1
+      // In 'hv' or 'vh' : ending <= 1 & starting <= 1
+      // So we need to divide these values per 2 here to avoid bricking link
+      if (this._shape_starting_curve !== undefined) this._shape_starting_curve = this._shape_starting_curve/2
+      if (this._shape_ending_curve !== undefined) this._shape_ending_curve = this._shape_ending_curve/2
+    }
     this._shape_orientation = _
     this.update()
   }
   public set shape_starting_curve(_: number | undefined) {
     if (_ !== undefined) {
-      if (
-        (_ >= 0) &&
-        (_ < (this.shape_ending_curve ?? default_shape_ending_curve))
-      ) {
-        this._shape_starting_curve = _
+      if (_ >= 0) {
+        // For non recycling shape we have upper bound on starting
+        if (!this.shape_is_recycling) {
+          // Specific case for horizontal-vertical links : staring in [0, 1]
+          if (
+            (this._shape_orientation === 'vh') ||
+            (this._shape_orientation === 'hv')
+          ) {
+            if (_ <= 1.0)
+              this._shape_starting_curve = _
+            else
+              this._shape_starting_curve = 1.0
+          }
+          // Otherwise for rectiligne link : sstaring in [0, 1 - ending]
+          else {
+            if ((_ + (this._shape_ending_curve ?? default_shape_ending_curve)) <= 1.0)
+              this._shape_starting_curve = _
+            else
+              this._shape_starting_curve = 1.0 - (this._shape_ending_curve ?? default_shape_ending_curve)
+          }
+        }
+        // For recycling shapes we don't have upper bounds on starting
+        else {
+          this._shape_starting_curve = _
+        }
       }
     }
     else {
@@ -3586,11 +3667,31 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   }
   public set shape_ending_curve(_: number | undefined) {
     if (_ !== undefined) {
-      if (
-        (_ <= 1) &&
-        (_ > (this.shape_starting_curve ?? default_shape_starting_curve))
-      ) {
-        this._shape_ending_curve = _
+      if (_ >= 0) {
+        // For non recycling shape we have upper bound on ending
+        if (!this.shape_is_recycling) {
+          // Specific case for horizontal-vertical links : endign in [0, 1]
+          if (
+            (this._shape_orientation === 'vh') ||
+            (this._shape_orientation === 'hv')
+          ) {
+            if (_ <= 1.0)
+              this._shape_ending_curve = _
+            else
+              this._shape_ending_curve = 1.0
+          }
+          // Otherwise for rectiligne links : ending in [0; 1 - starting]
+          else {
+            if ((_ + (this._shape_starting_curve ?? default_shape_starting_curve)) <= 1.0)
+              this._shape_ending_curve = _
+            else
+              this._shape_ending_curve = 1 - (this._shape_starting_curve ?? default_shape_starting_curve)
+          }
+        }
+        // For recycling shapes we don't have upper bounds on ending
+        else {
+          this._shape_ending_curve = _
+        }
       }
     }
     else {
