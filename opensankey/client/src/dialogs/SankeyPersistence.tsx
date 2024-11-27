@@ -369,7 +369,8 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
         ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
       )
       new_data.drawing_area.draw()
-  } else {
+  }
+  else {
       new_data.drawing_area.bypass_redraws = true
       // First compute position of nodes which are not trade
       new_data.drawing_area.computeAutoSankey(true)
@@ -394,7 +395,6 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
       new_data.drawing_area.draw()
       new_data.drawing_area.areaAutoFit()
   }
-  new_data.drawing_area.setToModeEdition(false)
 }
 
 
@@ -564,7 +564,7 @@ export const UploadExemple: FType_UploadExemple = (
           new_data.drawing_area.ArrangeTrade(false)
         }
       }
-      new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })     
+      new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
     })
   })
 }
