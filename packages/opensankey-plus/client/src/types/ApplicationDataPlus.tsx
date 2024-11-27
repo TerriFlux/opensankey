@@ -438,7 +438,8 @@ export abstract class Class_ApplicationDataPlus
       }
     }
 
-    this.launch_waiting_function.current({ success: 'View loaded', loading: 'Loadig new view' })
+    this.launch_waiting_function.current({ success: this.t('toast.v_loaded'), loading: this.t('toast.v_loading') })
+
 
   }
 
