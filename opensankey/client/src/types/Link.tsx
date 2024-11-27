@@ -2603,8 +2603,11 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_starting_curve(_: number) {
-    if ((_ >= 0) && ((_ + this.shape_ending_curve) <= 1.0)) {
-      this._display.attributes.shape_starting_curve = _
+    if (_ >= 0) {
+      if ((_ + this.shape_ending_curve) <= 1.0)
+        this._display.attributes.shape_starting_curve = _
+      else
+        this._display.attributes.shape_starting_curve = 1.0 - this.shape_ending_curve
       this.drawElements()
       this.drawControlPoint()
     }
@@ -2628,8 +2631,11 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_ending_curve(_: number) {
-    if ((_ >= 0) && ((_ + this.shape_starting_curve) <= 1.0)) {
-      this._display.attributes.shape_ending_curve = _
+    if (_ >= 0) {
+      if ((_ + this.shape_starting_curve) <= 1.0)
+        this._display.attributes.shape_ending_curve = _
+      else
+        this._display.attributes.shape_ending_curve = 1.0 - this.shape_starting_curve
       this.drawElements()
       this.drawControlPoint()
     }
@@ -3397,7 +3403,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (json_local_object['left_horiz_shift'] !== undefined) this._shape_starting_curve = getNumberFromJSON(json_local_object, 'left_horiz_shift', default_shape_starting_curve)
     if (json_local_object['starting_tangeant'] !== undefined) this._shape_starting_tangeant = getNumberFromJSON(json_local_object, 'starting_tangeant', default_shape_starting_tangeant)
     if (json_local_object['ending_tangeant'] !== undefined) this._shape_ending_tangeant = getNumberFromJSON(json_local_object, 'ending_tangeant', default_shape_ending_tangeant)
-    if (json_local_object['right_horiz_shift'] !== undefined) this._shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve)
+    if (json_local_object['right_horiz_shift'] !== undefined) this.shape_ending_curve = getNumberFromJSON(json_local_object, 'right_horiz_shift', default_shape_ending_curve) // Need to use getter to insure coherence with starting curve
     if (json_local_object['vert_shift'] !== undefined) this._shape_middle_recycling = getNumberFromJSON(json_local_object, 'vert_shift', default_shape_middle_recyling)
     if (json_local_object['curvature'] !== undefined) this._shape_curvature = getNumberFromJSON(json_local_object, 'curvature', default_shape_curvature)
     if (json_local_object['curved'] !== undefined) this._shape_is_curved = getBooleanFromJSON(json_local_object, 'curved', default_shape_is_curved)
@@ -3556,11 +3562,11 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   }
   public set shape_starting_curve(_: number | undefined) {
     if (_ !== undefined) {
-      if (
-        (_ >= 0) &&
-        ((_ + (this.shape_ending_curve ?? default_shape_ending_curve)) <= 1.0)
-      ) {
-        this._shape_starting_curve = _
+      if (_ >= 0) {
+        if ((_ + (this._shape_ending_curve ?? default_shape_ending_curve)) <= 1.0)
+          this._shape_starting_curve = _
+        else
+          this._shape_starting_curve = 1.0 - (this._shape_ending_curve ?? default_shape_ending_curve)
       }
     }
     else {
@@ -3570,11 +3576,11 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   }
   public set shape_ending_curve(_: number | undefined) {
     if (_ !== undefined) {
-      if (
-        (_ >= 0) &&
-        ((_ + (this.shape_starting_curve ?? default_shape_starting_curve)) <= 1.0)
-      ) {
-        this._shape_ending_curve = _
+      if (_ >= 0) {
+        if ((_ + (this._shape_starting_curve ?? default_shape_starting_curve)) <= 1.0)
+          this._shape_ending_curve = _
+        else
+          this._shape_ending_curve = 1 - (this._shape_starting_curve ?? default_shape_starting_curve)
       }
     }
     else {
