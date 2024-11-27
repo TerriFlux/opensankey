@@ -103,7 +103,7 @@ export abstract class Class_ApplicationData
   protected _logo: string // path to logo
 
   /**
-   * All possible attr to update in copyFrom  
+   * All possible attr to update in copyFrom
    *
    * @protected
    * @type {string[]}
@@ -111,7 +111,7 @@ export abstract class Class_ApplicationData
    */
   protected _transform_layout_all_attr: string[] = ['addNode', 'addFlux', 'removeNode', 'removeFlux', 'posNode', 'Values', 'attrNode', 'posFlux', 'attrFlux', 'tagNode', 'tagFlux', 'tagData', 'tagLevel', 'attrDrawingArea']
 
-  // All item selectable in SankeyMenuPreference 
+  // All item selectable in SankeyMenuPreference
   protected _preference_menu_all_item: string[] = ['MEP', 'EN', 'EF', 'ED']
 
   // PRIVATE ATTRIBUTES =================================================================
@@ -140,7 +140,7 @@ export abstract class Class_ApplicationData
   // Optional arguments to show custom message while loading & when finished
   private _launch_waiting_function: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
   private toast = useToast()
-    
+
 
   private _processFunction: FType_ProcessFunctions
 
@@ -272,13 +272,10 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   public fromJSON(json_object: Type_JSON) {
-      // Read json file
+    // Read json file
     this._fromJSON(json_object)
-    // Update menus
-    this.menu_configuration.updateAllMenuComponents()
-    // Draw drawing area
-    this._drawing_area.draw()
-    
+    // Update drawing area and menus
+    this._afterFromJSON()
   }
 
   /**
@@ -295,6 +292,12 @@ export abstract class Class_ApplicationData
     this._node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', this._node_label_separator_part) as 'before' | 'after'
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
+  }
+
+  protected _afterFromJSON() {
+    this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
+    this._drawing_area.draw()
+    this.menu_configuration.updateAllMenuComponents()
   }
 
   // PUBLIC METHODS =====================================================================
@@ -337,13 +340,6 @@ export abstract class Class_ApplicationData
     app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
   ) {
     return (evt: KeyboardEvent) => { this.keyboardEventProcessing(evt, app_ref) }
-  }
-
-  protected functionAfterFromJSON() {
-    this._drawing_area.drawElements()
-    this._drawing_area.checkAndUpdateAreaSize()
-    this._drawing_area.areaAutoFit()
-    this._drawing_area.setToModeEdition(false)
   }
 
   // PROTECTED METHODS ==================================================================
@@ -446,7 +442,7 @@ export abstract class Class_ApplicationData
       localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
       }
       this.launch_waiting_function.current({ success: this.t('toast.success'), loading: this.t('toast.saving') })
-      
+
       localStorage.setItem('last_save', 'true')
       // Update logo save in cache
       app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
