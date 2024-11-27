@@ -760,21 +760,28 @@ export abstract class Class_NodeElement
       })
   }
 
+  /**
+   * Draw node shape on D3 svg
+   * @memberof Class_NodeElement
+   */
   public drawShape() {
-    this._process_or_bypass(() => this._drawShape())
-  }
-
-  public drawNameLabel() {
-    this._process_or_bypass(() => this._drawNameLabel())
+    this._process_or_bypass(() => {this._drawShape(); this._orderD3Elements()})
   }
 
   /**
-   * Draw node label on D3 svg
-   * @private
+   * Draw node name label on D3 svg
+   * @memberof Class_NodeElement
+   */
+  public drawNameLabel() {
+    this._process_or_bypass(() => {this._drawNameLabel(); this._orderD3Elements()})
+  }
+
+  /**
+   * Draw node value label on D3 svg
    * @memberof Class_NodeElement
    */
   public drawValueLabel() {
-    this._process_or_bypass(() => this._drawValueLabel)
+    this._process_or_bypass(() => {this._drawValueLabel; this._orderD3Elements()})
   }
 
   public drawLinks() {
@@ -782,7 +789,7 @@ export abstract class Class_NodeElement
   }
 
   public drawLinksArrow() {
-    this._process_or_bypass(() => this._drawLinksArrow())
+    this._process_or_bypass(() => {this._drawLinksArrow(); this._orderD3Elements()})
   }
 
   /**
@@ -1533,6 +1540,18 @@ export abstract class Class_NodeElement
   }
 
   /**
+   * Put d3 elements in correct display order
+   * @protected
+   * @memberof Class_NodeElement
+   */
+  protected _orderD3Elements() {
+    this.d3_selection?.selectAll('.link_arrow').raise()
+    this.d3_selection_g_shape?.raise()
+    this.d3_selection?.selectAll('.name_label').raise()
+    this.d3_selection?.selectAll('.value_label').raise()
+  }
+
+  /**
    * Apply node position to it shape in d3
    * @public
    * @return {*}
@@ -1628,9 +1647,6 @@ export abstract class Class_NodeElement
       // Apply selected coordinates
       super._applyPosition()
     }
-    // // Reset all saved positions for links
-    // this._input_links_ending_point = {}
-    // this._output_links_starting_point = {}
     // Redraw links
     this._drawLinks()
   }
