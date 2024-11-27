@@ -70,7 +70,7 @@ export type SankeyNodeStyle = {
   relative_dx: number
   relative_dy: number
   position: 'absolute' | 'relative',
-  dy: number 
+  dy: number
 }
 
 export type SankeyNode = {
@@ -118,6 +118,8 @@ export type SankeyLinkAttrLocal = {
   orientation?: string,
   left_horiz_shift?: number,
   right_horiz_shift?: number,
+  starting_tangeant?: number,
+  ending_tangeant?: number,
   vert_shift?: number,
   curvature?: number,
   curved?: boolean,
