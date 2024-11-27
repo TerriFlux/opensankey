@@ -951,11 +951,11 @@ export abstract class Class_LinkElement
   }
 
   public drawPath() {
-    this._process_or_bypass(() => this._drawPath())
+    this._process_or_bypass(() => {this._drawPath(); this._orderD3Elements()})
   }
 
   public drawLabel() {
-    this._process_or_bypass(() => this._drawLabel())
+    this._process_or_bypass(() => {this._drawLabel(); this._orderD3Elements()})
   }
 
   public setDomainLocalScale(_: number | undefined) {
@@ -965,6 +965,16 @@ export abstract class Class_LinkElement
   }
 
   // PROTECTED METHODS ==================================================================
+
+  /**
+   * Put d3 elements in correct display order
+   * @protected
+   * @memberof Class_NodeElement
+   */
+  protected _orderD3Elements() {
+    this.d3_selection?.selectAll('.link_path').raise()
+    this.d3_selection?.selectAll('.link_label').raise()
+  }
 
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
