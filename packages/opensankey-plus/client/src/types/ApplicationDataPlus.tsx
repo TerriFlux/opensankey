@@ -425,10 +425,10 @@ export abstract class Class_ApplicationDataPlus
             this.deleteCurrentOriginalView()
             this._original_current_view = clone_drawing_area
           }
+          // Reset to Edition mode
+          this._drawing_area.setToModeEdition(false)
           // Draw new-sankey
           this._drawing_area.draw()
-          // Set view mode_edition to previous value
-          this._drawing_area.setToModeEdition(false)
           // Update components related to viewss
           this._menu_configuration.updateAllMenuComponents()
           this._menu_configuration.updateComponentRelatedToViews()
