@@ -395,11 +395,31 @@ export class Class_DataTag extends Class_ProtoTag {
   // PUBLIC METHODS =====================================================================
 
   public update() {
+    // List of nodes affected by the update of tag variable
+    const nodes_to_redraw:Type_AbstractNodeElement[]=[]
     Object.values(this._references)
       .forEach(element => {
-        element.drawWithNodes()
-      })
+        nodes_to_redraw.push(element.source)
+        nodes_to_redraw.push(element.target)
+      });
+    [...new Set(nodes_to_redraw)] //remove duplicate to avoid draw multiple time the same node
+      .forEach(n => n.draw())
     this._ref_sankey.drawing_area.legend.draw()
+  }
+
+  public override setSelected(): void {
+    // Avoid useless update
+    if (this.is_selected === false) {
+      // Set attributes
+      this.is_selected = true
+    }
+  }
+  public override setUnSelected(): void {
+    // Avoid useless update
+    if (this.is_selected === true) {
+      // Set attributes
+      this.is_selected = false
+    }
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1437,6 +1457,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     id: string
   ) {
     super.selectTagsFromId(id)
+    this.first_selected_tags?.update()
     this.checkSelectionCoherence()
   }
 
@@ -1444,6 +1465,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     ids: string[]
   ) {
     super.selectTagsFromIds(ids)
+    this.first_selected_tags?.update()
     this.checkSelectionCoherence()
   }
 

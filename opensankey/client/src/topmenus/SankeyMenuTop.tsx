@@ -1296,7 +1296,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
-            width='min-content'
+            width='max-content'
           >
             {DDDT}
           </Box>
