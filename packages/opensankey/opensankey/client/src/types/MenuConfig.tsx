@@ -198,6 +198,7 @@ export class Class_MenuConfig {
 
   // Update AddAllDropDownFlux
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
+  private _ref_to_datatag_filter_navbar_updater: MutableRefObject<() => void>
 
   /* ========================================
     Dict of ref of setter of dialogs menu
@@ -291,6 +292,7 @@ export class Class_MenuConfig {
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
+    this._ref_to_datatag_filter_navbar_updater = useRef(() => null)
 
     // Init save diagram JSON components updater ------------------------------------------------
 
@@ -801,6 +803,7 @@ export class Class_MenuConfig {
 
   public updateAllComponentsRelatedToDataTags() {
     this._ref_to_datatag_filter_updater.current()
+    this._ref_to_datatag_filter_navbar_updater.current()
     this.updateComponentRelatedToLinksData()
     this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['data_taggs'].current()
@@ -1073,6 +1076,10 @@ export class Class_MenuConfig {
 
   public get ref_to_datatag_filter_updater(): MutableRefObject<() => void> {
     return this._ref_to_datatag_filter_updater
+  }
+
+  public get ref_to_datatag_filter_navbar_updater(): MutableRefObject<() => void> {
+    return this._ref_to_datatag_filter_navbar_updater
   }
 
   // Nodes / links selectors ------------------------------------------------------------
