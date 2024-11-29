@@ -275,7 +275,7 @@ export abstract class Class_ApplicationData
     // Read json file
     this._fromJSON(json_object)
     // Update drawing area and menus
-    this._afterFromJSON()
+    //this._afterFromJSON()
   }
 
   /**
