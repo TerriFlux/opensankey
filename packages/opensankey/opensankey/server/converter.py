@@ -944,59 +944,63 @@ class SankeyToJson(object):
             node_json['dimensions']['Primaire']['children_tags'] = [str(node.level)]
             node_json['dimensions']['Primaire']['level'] = int(node.level)
             node_json['dimensions']['Primaire']['antitag'] = False
-        # Level tag parent relations
-        for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values():
-            # Check all current node level tags groups
-            if tagg in node.taggs:
-                node_json['dimensions'][tagg.name] = {}
-                # For each node level tag group, get associated tags
-                tags = node.get_tags_from_taggroup(tagg)
-                if tags is not None:
-                    # Levels taggs are applied instead of primary
-                    node_json['dimensions']['Primaire'] = {}
-                    # Get the upper level tag if it exists :
-                    # ie if tag = 2, upper_tag = 1
-                    # ie if tags = 3:4, upper_tag = 2
-                    # Levels tags can be something different than pure numbers, ie level1:level2:level3
-                    upper_tag = None
-                    for tag in tags:
-                        upper_tag = tagg.get_previous_tag(tag)
-                        # Verify that if we are in multiple level tags config (such as tag=2:3)
-                        # the tag "2" can not be the upper tag, it must be the tag "1"
-                        if upper_tag not in tags:
-                            break
-                        else:
-                            upper_tag = None
-                    tags_names = [tag.name for tag in tags]
-
-                    if ANTI_TAGS_NAME in tags_names:
-                        dimension = {}
-                        dimension['antitag'] = ANTI_TAGS_NAME in tags_names
-                        node_json['dimensions'][tagg.name] = dimension
-                        continue
-                    # We found an upper tag
-                    if upper_tag is not None:
-                        # Try to find parent nodes that have given upper tag
-                        parenthood_search_limit = 0
-                        while (parenthood_search_limit < 10):
-                            node_parents = node.get_all_parents(limit=parenthood_search_limit)
-                            parent_nodes_for_leveltagg = list(set(upper_tag.references) & set(node_parents))
-                            if len(parent_nodes_for_leveltagg) > 0:
-                                # We found matching nodes
-                                # TODO : if more than 1 parent_node_for_leveltagg -> we have a problem in input file
-                                # I do a sort here to be sure that we always have the same id
-                                # if multiple parent nodes are found
-                                dimension = {}
-
-                                parent_nodes_ids_for_leveltagg = sorted([_.id for _ in parent_nodes_for_leveltagg])
-                                dimension['parent_name'] = parent_nodes_ids_for_leveltagg[0]
-                                dimension['children_tags'] = tags_names
-                                dimension['parent_tag'] = upper_tag.name
-                                node_json['dimensions'][tagg.name] = dimension
-                                # Break the loop
+            # Level tag parent relations
+            for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values():
+                # Check all current node level tags groups
+                if tagg in node.taggs:
+                    node_json['dimensions'][tagg.name] = {}
+                    # For each node level tag group, get associated tags
+                    tags = node.get_tags_from_taggroup(tagg)
+                    if tags is not None:
+                        # Levels taggs are applied instead of primary
+                        node_json['dimensions']['Primaire'] = {}
+                        # Get the upper level tag if it exists :
+                        # ie if tag = 2, upper_tag = 1
+                        # ie if tags = 3:4, upper_tag = 2
+                        # Levels tags can be something different than pure numbers, ie level1:level2:level3
+                        upper_tag = None
+                        for tag in tags:
+                            upper_tag = tagg.get_previous_tag(tag)
+                            # Verify that if we are in multiple level tags config (such as tag=2:3)
+                            # the tag "2" can not be the upper tag, it must be the tag "1"
+                            if upper_tag not in tags:
                                 break
                             else:
-                                parenthood_search_limit += 1
+                                upper_tag = None
+                        tags_names = [tag.name for tag in tags]
+
+                        if ANTI_TAGS_NAME in tags_names:
+                            dimension = {}
+                            dimension['antitag'] = ANTI_TAGS_NAME in tags_names
+                            node_json['dimensions'][tagg.name] = dimension
+                            continue
+                        # We found an upper tag
+                        if upper_tag is not None:
+                            # Try to find parent nodes that have given upper tag
+                            parenthood_search_limit = 0
+                            while (parenthood_search_limit < 10):
+                                node_parents = node.get_all_parents(limit=parenthood_search_limit)
+                                parent_nodes_for_leveltagg = list(set(upper_tag.references) & set(node_parents))
+                                if len(parent_nodes_for_leveltagg) > 0:
+                                    # We found matching nodes
+                                    # TODO : if more than 1 parent_node_for_leveltagg -> we have a problem in input file
+                                    # I do a sort here to be sure that we always have the same id
+                                    # if multiple parent nodes are found
+                                    dimension = {}
+
+                                    parent_nodes_ids_for_leveltagg = sorted([_.id for _ in parent_nodes_for_leveltagg])
+                                    for parent in node.parents:
+                                        # we are looking for a "real" parent
+                                        if parent_nodes_ids_for_leveltagg[0] == parent.id:
+                                            dimension['parent_name'] = parent_nodes_ids_for_leveltagg[0]
+                                            dimension['children_tags'] = tags_names
+                                            dimension['parent_tag'] = upper_tag.name
+                                            node_json['dimensions'][tagg.name] = dimension
+                                            break
+                                    # Break the loop
+                                    break
+                                else:
+                                    parenthood_search_limit += 1
         return node_json
 
 
