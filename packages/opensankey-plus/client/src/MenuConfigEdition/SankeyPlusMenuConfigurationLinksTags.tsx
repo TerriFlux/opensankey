@@ -147,13 +147,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
                     value={data_tagg.first_selected_tags?.id ?? '-'}
                     onChange={
                       (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                        data_tagg.tags_list
-                          .forEach(data_tag => {
-                            if (data_tag.id === evt.target.value)
-                              data_tag.setSelected()
-                            else
-                              data_tag.setUnSelected()
-                          })
+                        data_tagg.selectTagsFromId(evt.target.value)
                         // Update only this menu
                         new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
                       }
