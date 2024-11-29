@@ -116,12 +116,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
               }
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 // Update selected attributes for tags
-                data_tagg.tags_list.forEach(tag => {
-                  if (tag.id === evt.target.value)
-                    tag.setSelected()
-                  else
-                    tag.setUnSelected()
-                })
+                data_tagg.selectTagsFromId(evt.target.value)
                 // Update this menu
                 refreshThisAndUpdateRelatedComponents()
               }}

@@ -481,7 +481,11 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
 
   // Component updater ------------------------------------------------------------------
   const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_datatag_filter_updater.current = () => setCount(a => a + 1)
+  if(in_popover){
+    new_data.menu_configuration.ref_to_datatag_filter_updater.current = () => setCount(a => a + 1)
+  }else{
+    new_data.menu_configuration.ref_to_datatag_filter_navbar_updater.current = () => setCount(a => a + 1)
+  }
 
   // JSX Components --------------------------------------------------------------------
   const allDD = data_taggs_with_banner
