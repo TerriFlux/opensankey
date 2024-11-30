@@ -1471,6 +1471,9 @@ const convert_nodes: convert_nodesFuncType = (
       delete n.local?.local_aggregation
     }
         
+
+
+    
     // ================================================
     // Convert dimension for application version >= 0.9
     Object.entries(n.tags)
@@ -1491,10 +1494,15 @@ const convert_nodes: convert_nodesFuncType = (
             leveltagg_tags_ids[0] = String(+leveltagg_tags_ids[0] - 1)
           }
           // Dimension detection
-          if (Object.keys(n.dimensions[leveltagg_id]).includes('parent_name')) {
-            n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
+          const parent_id = n.dimensions[leveltagg_id]['parent_name']
+          if (parent_id) {
+            if (!(leveltagg_id in data.nodes[parent_id].dimensions)) {
+              // the condition above allows to correct bad parentship relation in legacy files
+              return
+            }            
             let possible_parent_tag = ''
             possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
+            n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
             n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
           } else if (Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && +n.tags[leveltagg_id][0] > 1 && n.dimensions['Primaire'].parent_name) {
             let parent_tag: number | undefined
@@ -1515,6 +1523,27 @@ const convert_nodes: convert_nodesFuncType = (
         }
         // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
         delete n.tags[leveltagg_id]
+
+        // Code below is to correct bad parentship relation coming from legacy 
+        // Get lists of parents
+        const node_parents_id = (node:SankeyNode) => {
+          return Object.values(node.dimensions).filter(dim=>dim.parent_name).map(dim=>dim.parent_name)
+        }
+        // for a given parent retrives the corresponding dim
+        const parent_dim = (node:SankeyNode,parent_id:string) => {
+          return Object.entries(node.dimensions).filter(dim=>dim[1].parent_name == parent_id).map(dim=>dim[0])
+        }
+        const parents_id = node_parents_id(n)
+        parents_id.forEach(parent_id=>{
+          const grand_parents_id = node_parents_id(data.nodes[parent_id!])
+          const intersection = new Set(grand_parents_id).intersection(new Set(parents_id))
+          if (intersection.size>0) {
+            // if a grand parent is the same as a parent we caught a bad parentship relation
+            // and we delete it
+            const parent_node = [...intersection][0]
+            delete n.dimensions[parent_dim(n,parent_node!)[0]]
+          }
+        })
       })
 
 
