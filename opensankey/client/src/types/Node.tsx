@@ -520,7 +520,9 @@ export abstract class Class_NodeElement
               'parent_name': dimension.parent.id,
               'parent_tag': dimension.parent_level_tag.id,
               'children_tags': dimension.children_level_tags.map(_ => _.id),
-              'antitag': false
+              'antitag': false,
+              'force_show_children':dimension.force_show_children,
+              'force_show_parent':dimension.force_show_parent
             }
           ])
       )
@@ -700,6 +702,10 @@ export abstract class Class_NodeElement
                     // create a new dimension OR add parent & child relation to an existing dimension
                     if (children_tags && parent_tag) {
                       parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
+                      if (dimension_as_json.force_show_children) {
+                        const nodeDimParent = parent.nodeDimensionAsParent(parent_tag.group)!
+                        nodeDimParent.setForceToShowChildren()
+                      }
                     }
                   }
                 }
@@ -718,21 +724,21 @@ export abstract class Class_NodeElement
         })
     }
     // Setup saved local desagregation
-    const local_aggregation = getBooleanOrUndefinedFromJSON(
-      (json_node_object['local'] ?? {}) as Type_JSON,
-      'local_aggregation')
-    if (local_aggregation != undefined) {
-      if (local_aggregation) {
-        // Force to show this node
-        this.dimensions_as_child[0]?.setForceToShowChildren()
-        // this.dimensions_as_parent[0]?.setForceToShowParent()
-      }
-      else {
-        // Force to hide this node
-        this.dimensions_as_child[0]?.setForceToShowParent()
-        // this.dimensions_as_parent[0]?.setForceToShowChildren()
-      }
-    }
+    // const local_aggregation = getBooleanOrUndefinedFromJSON(
+    //   (json_node_object['local'] ?? {}) as Type_JSON,
+    //   'local_aggregation')
+    // if (local_aggregation != undefined) {
+    //   if (local_aggregation) {
+    //     // Force to show this node
+    //     this.dimensions_as_child[0]?.setForceToShowChildren()
+    //     this.dimensions_as_parent[0]?.setForceToShowParent()
+    //   }
+    //   else {
+    //     // Force to hide this node
+    //     //this.dimensions_as_child[0]?.setForceToShowParent()
+    //     // this.dimensions_as_parent[0]?.setForceToShowChildren()
+    //   }
+    // }
     this.drawing_area.bypass_redraws = false // Security
   }
 
@@ -801,7 +807,7 @@ export abstract class Class_NodeElement
     if (this.is_child) {
       // Force to show parent
       if ((id !== undefined) && (this._dimensions_as_child[id]))
-        this._dimensions_as_child[id].setForceToShowChildren()
+        this._dimensions_as_child[id].setForceToShowParent()
       else
         Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
 
