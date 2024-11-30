@@ -287,9 +287,7 @@ export abstract class Class_ApplicationData
   protected _fromJSON(json_object: Type_JSON) {
     // Reset everything
     this.reset()
-    // Set node label separator attribute from json
-    this._node_label_separator = getStringFromJSON(json_object, 'node_label_separator', this._node_label_separator)
-    this._node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', this._node_label_separator_part) as 'before' | 'after'
+
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
   }
@@ -298,30 +296,6 @@ export abstract class Class_ApplicationData
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.draw()
     this.menu_configuration.updateAllMenuComponents()
-  }
-
-  // PUBLIC METHODS =====================================================================
-
-  public isLabelSeparatorPartBefore() {
-    return this._node_label_separator_part == 'before'
-  }
-
-  /**
-   *Set node name label separator part to before
-   *
-   * @memberof Class_ApplicationData
-   */
-  public setLabelSeparatorPartBefore() {
-    this._node_label_separator_part = 'before'
-  }
-
-  /**
-   *Set node name label separator part to after
-   *
-   * @memberof Class_ApplicationData
-   */
-  public setLabelSeparatorPartAfter() {
-    this._node_label_separator_part = 'after'
   }
 
   // PRIVATE METHODS ====================================================================
@@ -501,6 +475,9 @@ export abstract class Class_ApplicationData
 
   public get node_label_separator() { return this._node_label_separator }
   public set node_label_separator(_: string) { this._node_label_separator = _ }
+
+  public get node_label_separator_part() { return this._node_label_separator_part }
+  public set node_label_separator_part(_: 'before' | 'after') { this._node_label_separator_part = _ }
 
   public get processFunction(): FType_ProcessFunctions { return this._processFunction }
 

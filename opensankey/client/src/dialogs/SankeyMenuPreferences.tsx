@@ -72,9 +72,9 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
     <Box layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
       <Box layerStyle='options_2cols'>
-        <Button variant={new_data.isLabelSeparatorPartBefore() ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+        <Button variant={new_data.node_label_separator_part ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
           onClick={() => {
-            new_data.setLabelSeparatorPartBefore()
+            new_data.node_label_separator_part = 'before'
             new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
             setUpdate(a => a + 1)
           }
@@ -82,9 +82,9 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         >
           {t('Menu.before')}
         </Button>
-        <Button variant={!new_data.isLabelSeparatorPartBefore() ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+        <Button variant={!new_data.node_label_separator_part ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
           onClick={() => {
-            new_data.setLabelSeparatorPartAfter()
+            new_data.node_label_separator_part = 'after'
             new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
             setUpdate(a => a + 1)
           }

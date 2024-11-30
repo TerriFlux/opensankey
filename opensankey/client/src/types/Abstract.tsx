@@ -20,12 +20,13 @@ type Type_GenericDrawingArea = Class_AbstractDrawingArea
 export abstract class Class_AbstractApplicationData {
   // Mandatory attributes
   public abstract version: string
-  // Mandatory methods
-  public abstract isLabelSeparatorPartBefore(): boolean
   // Mandatory getters
   public abstract get t(): TFunction
   public abstract get menu_configuration(): Class_MenuConfig
   public abstract get node_label_separator(): string
+  public abstract set node_label_separator(_:string)
+  public abstract get node_label_separator_part() : 'before' | 'after'
+  public abstract set node_label_separator_part(_:'before' | 'after')
 }
 
 export abstract class Class_AbstractDrawingArea {
