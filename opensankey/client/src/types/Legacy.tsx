@@ -1034,9 +1034,6 @@ const convert_tags: convert_tagsFuncType = (
             return
           }
           const target_node = data.nodes[link.idTarget]
-          Object.keys(target_node.dimensions).forEach(dim_key => {
-            n.dimensions[dim_key] = JSON.parse(JSON.stringify(target_node.dimensions[dim_key]))
-          })
 
           Object.keys(target_node.tags).forEach(tag_key => {
             if (tag_key === 'Type de noeud') {
@@ -1051,10 +1048,6 @@ const convert_tags: convert_tagsFuncType = (
           }
           link.idTarget = n.idNode
           const source_node = data.nodes[link.idSource]
-          Object.keys(source_node.dimensions).forEach(dim_key => {
-            n.dimensions[dim_key] = JSON.parse(JSON.stringify(source_node.dimensions[dim_key]))
-          })
-
           Object.keys(source_node.tags).forEach(tag_key => {
             if (tag_key === 'Type de noeud') {
               return
@@ -1192,6 +1185,41 @@ const convert_tags: convert_tagsFuncType = (
       }
     })
   }
+}
+
+export const NodeHasDisplayedLevel=(
+  data:SankeyData,
+  n:SankeyNode
+)=>{
+  let to_display=true
+  // Check if there is other aggregation tags than 'Primaire',
+  //const multi_level=Object.entries(data.levelTags).filter(nt=> nt[0]!=='Primaire').map(nt=>nt[0]).length>0
+
+  //const only_one_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).length==1
+  //const only_primaire_activated= Object.entries(data.levelTags).filter(nt=> nt[1].activated).map(nt=>nt[0])[0]=='Primaire'
+
+  //onst multy_but_only_primaire=multi_level && only_one_activated && only_primaire_activated
+
+  // To display a node according to level tag we search if:
+  // - The node grp tag banner is 'level'
+  // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
+  // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
+  // - The node has the grp tag name in his tags
+  Object.entries(data.levelTags).filter(nt=>
+    nt[1].activated && Object.keys(n.tags).includes(nt[0])
+  ).forEach(nt=>{
+    // Check tags from the group attribued to the node
+    // If the node don't have tag attribued from the group then it is not affected by filter and we display it
+    const node_tags_attr=n.tags[nt[0]]
+    if(node_tags_attr != undefined && node_tags_attr.length!=0){
+      // If the node has at least 1 tag from the selected tag of the group then we display it
+      // If the node has tag from the group attribued to it but are not selected then we don't display it
+      const tags_from_grp_to_display=Object.values(nt[1].tags).filter(t=>t.selected).map(t=>t.name)
+      to_display=(node_tags_attr.filter(t=>tags_from_grp_to_display.includes(t)).length>0)?to_display:false
+
+    }
+  })
+  return to_display
 }
 
 const convert_nodes: convert_nodesFuncType = (
@@ -1437,6 +1465,12 @@ const convert_nodes: convert_nodesFuncType = (
 
     data.nodes[n.idNode] = n
 
+    if (n.local?.local_aggregation == false && !NodeHasDisplayedLevel(data,n)){
+      delete n.local?.local_aggregation
+    } else if (n.local?.local_aggregation == true && NodeHasDisplayedLevel(data,n)){
+      delete n.local?.local_aggregation
+    }
+        
     // ================================================
     // Convert dimension for application version >= 0.9
     Object.entries(n.tags)
@@ -1503,6 +1537,7 @@ const convert_nodes: convert_nodesFuncType = (
         local_cast['name_label_horiz_shift'] = local_cast['label_horiz_shift']
       }
     }
+
   }
   )
 }
