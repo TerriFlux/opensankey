@@ -2911,7 +2911,7 @@ export abstract class Class_NodeElement
     if (this.drawing_area.application_data.node_label_separator !== '') {
       // If separator affect name label & the separator part is after then return label after separator else return first part
       const splitted_label = this._name.split(this.drawing_area.application_data.node_label_separator)
-      return (splitted_label.length > 1 && !this.drawing_area.application_data.isLabelSeparatorPartBefore()) ? splitted_label[1] : splitted_label[0]
+      return (splitted_label.length > 1 && this.drawing_area.application_data.node_label_separator_part == 'after') ? splitted_label[splitted_label.length-1] : splitted_label[0]
     }
     return this._name
   }

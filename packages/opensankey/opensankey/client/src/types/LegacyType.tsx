@@ -268,7 +268,8 @@ export type SankeyData = {
   nodesColorMap: string,
   linksColorMap: string,
   legend_width: number,
-  node_label_separator: string
+  node_label_separator: string,
+  node_label_separator_part: string
 }
 
 export interface treeFolderType {
@@ -426,7 +427,8 @@ export interface ConvertSankeyData {
   show_data?: boolean
   view: { id: string, view_data: object, nom: string, details: string }[]
   filter_link_value: number,
-  filter_label: number
+  filter_label: number,
+  node_label_separator_first: boolean
 }
 
 export type ConvertDataLegacyFuncType = (
