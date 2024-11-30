@@ -273,9 +273,11 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
             }
           })
       })
+    // TODO something to optimize here, redraws all the nodes of the columns.
+    // For now all nodes are redrawn (called in outside calling function)
     // Redraw
-    nodes_to_redraw
-      .forEach(node => node.draw())
+    // nodes_to_redraw
+    //   .forEach(node => node.draw())
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
   }
@@ -310,8 +312,8 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
         }
       })
     // Redraw
-    nodes_to_redraw
-      .forEach(node => node.draw())
+    // TODO something to optimize here, redraws all the nodes of the columns.
+    // For now all nodes are redrawn (called in outside calling function)
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
   }
