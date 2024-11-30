@@ -1470,10 +1470,23 @@ const convert_nodes: convert_nodesFuncType = (
     } else if (n.local?.local_aggregation == true && NodeHasDisplayedLevel(data,n)){
       delete n.local?.local_aggregation
     }
-        
+    const local_aggregation = n.local?.local_aggregation
+    if (local_aggregation != undefined) {
+      Object.entries(n.dimensions).forEach(dim=>{
+        const node_tags_attr=n.tags[dim[0]]
+        if(node_tags_attr != undefined && node_tags_attr.length!=0){
+          // If the node has at least 1 tag from the selected tag of the group then we display it
+          // If the node has tag from the group attribued to it but are not selected then we don't display it
+          const tags_from_grp_to_display=Object.values(data.levelTags[dim[0]].tags).filter(t=>t.selected).map(t=>t.name)
+          const tag_visible = node_tags_attr.filter(t=>tags_from_grp_to_display.includes(t)).length > 1
+          if (!tag_visible && local_aggregation) {
+            // Force to show this node
+            dim[1].force_show_children = true
+          }
+        }
+      })
+    }
 
-
-    
     // ================================================
     // Convert dimension for application version >= 0.9
     Object.entries(n.tags)
