@@ -84,7 +84,9 @@ export type SankeyNode = {
       level?: number,
       children_tags?: string[],
       parent_tag?: string,
-      antitag?: boolean
+      antitag?: boolean,
+      force_show_children?: boolean,
+      force_show_parent?:boolean
     }
   }, local?: SankeyNodeAttrLocal, colorParameter: string,
   colorTag: string,
