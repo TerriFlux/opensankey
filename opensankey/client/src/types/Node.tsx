@@ -1017,7 +1017,11 @@ export abstract class Class_NodeElement
       const tags_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
         .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length == 1) {
+      if (tags_for_colormap.length > 0) {
+        // if a node has several tags we take the first one. The logic is given
+        // by the following example. Meuble en hêtre has two tags hêtre and feuillu
+        // we put hêtre first as it is the most desagregated. This way we can display
+        // the nodes with different colors depending of thye level of detail selected.
         shape_color = tags_for_colormap[0].color
       } else {
         shape_color = default_element_color
