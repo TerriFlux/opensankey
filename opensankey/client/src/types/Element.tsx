@@ -691,10 +691,6 @@ export abstract class Class_Element
     this._display.position.y = getNumberFromJSON(json_object, 'y', this._display.position.y)
     this._display.position.u = getNumberFromJSON(json_object, 'u', this._display.position.u)
     this._display.position.v = getNumberFromJSON(json_object, 'v', this._display.position.v)
-    this._display.position.dx = getNumberOrUndefinedFromJSON(json_object, 'dx')
-    this._display.position.relative_dx = getNumberOrUndefinedFromJSON(json_object, 'relative_dx')
-    this._display.position.dy = getNumberOrUndefinedFromJSON(json_object, 'dy')
-    this._display.position.relative_dy = getNumberOrUndefinedFromJSON(json_object, 'relative_dy')
   }
 
   // PUBLIC METHODS =====================================================================

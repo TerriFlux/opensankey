@@ -579,6 +579,10 @@ export abstract class Class_NodeElement
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
+      this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
+      this._display.position.relative_dx = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dx')
+      this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
+      this._display.position.relative_dy = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dy')
     }
     // Tooltip
     this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
@@ -4694,6 +4698,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
     this._position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
     this._position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
+    this._position.dx = getNumberOrUndefinedFromJSON(json_node_object, 'dx')
+    this._position.dy = getNumberOrUndefinedFromJSON(json_node_object, 'dy')
   }
 
   // CLEANING ===========================================================================
