@@ -701,10 +701,12 @@ export abstract class Class_NodeElement
                     // If tags has been found,
                     // create a new dimension OR add parent & child relation to an existing dimension
                     if (children_tags && parent_tag) {
-                      parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
+                      const childDim = parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
                       if (dimension_as_json.force_show_children) {
                         const nodeDimParent = parent.nodeDimensionAsParent(parent_tag.group)!
                         nodeDimParent.setForceToShowChildren()
+                      } else if (dimension_as_json.force_show_parent) {
+                        childDim?.setForceToShowParent()
                       }
                     }
                   }
