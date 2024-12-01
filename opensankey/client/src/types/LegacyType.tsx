@@ -31,6 +31,15 @@ export type SankeyNodeAttrLocal = {
   label_vert_valeur?: string,
   label_horiz_valeur?: string,
   value_font_size?: number,
+  label_horiz_shift?: number,
+  name_label_horiz_shift?: number,  
+
+  value_label_horiz_shift?: number,
+  label_horiz_valeur_shift?: number,
+  value_label_vert_shift?: number,
+  label_vert_valeur_shift?:number,
+  label_vert_shift?: number,
+  name_label_vert_shift?: number,
 
   position?: 'absolute' | 'relative' | 'parametric',
   relative_dy?:number,
@@ -66,6 +75,16 @@ export type SankeyNodeStyle = {
   label_vert_valeur: string,
   label_horiz_valeur: string,
   value_font_size: number,
+  
+  value_label_horiz_shift: number,
+  label_horiz_valeur_shift: number,
+  value_label_vert_shift: number,
+  label_vert_valeur_shift:number,
+
+  label_vert_shift: number,
+  name_label_vert_shift : number,
+  label_horiz_shift: number,
+  name_label_horiz_shift: number, 
 
   relative_dx: number
   relative_dy: number
