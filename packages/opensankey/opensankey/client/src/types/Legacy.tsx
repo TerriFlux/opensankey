@@ -111,7 +111,17 @@ const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
     position: 'absolute',
     relative_dx: default_relative_dx,
     relative_dy: default_relative_dy,
-    dy: default_dy
+    dy: default_dy,
+
+    value_label_horiz_shift: 0,
+    label_horiz_valeur_shift: 0,
+    value_label_vert_shift: 0,
+    label_vert_valeur_shift: 0,
+
+    label_vert_shift: 0,
+    name_label_vert_shift: 0,
+    label_horiz_shift: 0,
+    name_label_horiz_shift: 0
   }
 }
 
@@ -364,6 +374,18 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     data_to_convert.style_node[s[0]] = s[1]
     if (s[1].idNode === 'par défaut') {
       s[1].idNode = 'default'
+    }
+    if (s[1].label_horiz_valeur_shift) {
+      s[1].value_label_horiz_shift = s[1].label_horiz_valeur_shift
+    }
+    if (s[1].label_vert_valeur_shift) {
+      s[1].value_label_vert_shift = s[1].label_vert_valeur_shift
+    }
+    if (s[1].label_vert_shift) {
+      s[1].name_label_vert_shift = s[1].label_vert_shift
+    }
+    if (s[1].label_horiz_shift) {
+      s[1].name_label_horiz_shift = s[1].label_horiz_shift
     }
   })
 
@@ -1582,13 +1604,18 @@ const convert_nodes: convert_nodesFuncType = (
       .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
 
     // Convert name of some local variables
-    if (n_tmp.local) {
-      const local_cast = (n_tmp.local as Type_JSON)
-      if ((local_cast['label_vert_shift'] !== undefined)) {
-        local_cast['name_label_vert_shift'] = local_cast['label_vert_shift']
+    if (n.local) {
+      if (n.local.label_vert_shift !== undefined) {
+        n.local.name_label_vert_shift = n.local.label_vert_shift
       }
-      if ((local_cast['label_horiz_shift'] !== undefined)) {
-        local_cast['name_label_horiz_shift'] = local_cast['label_horiz_shift']
+      if (n.local.label_horiz_valeur_shift) {
+        n.local.value_label_horiz_shift = n.local?.label_horiz_valeur_shift
+      }
+      if (n.local.label_vert_valeur_shift) {
+        n.local.value_label_vert_shift = n.local.label_vert_valeur_shift
+      }       
+      if (n.local.label_horiz_shift !== undefined) {
+        n.local.name_label_horiz_shift = n.local.label_horiz_shift
       }
     }
 
