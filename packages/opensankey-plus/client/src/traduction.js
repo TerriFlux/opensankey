@@ -617,8 +617,8 @@ export const resources = {
         }
       },
       toast:{
-        v_loaded:'Vue chargé',
-        v_loading:'Charment de la vue'
+        v_loaded:'Vue chargée',
+        v_loading:'Chargement de la vue'
       },
       'useTemplate': 'Utiliser ce modèle',
       'dl': 'Télécharger (excel)',
