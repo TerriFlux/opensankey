@@ -576,7 +576,7 @@ export abstract class Class_Sankey
       if (add_flux || remove_flux || all) {
         const list_link_post_update = this.links_list.map(l => l.id)
         // Update links ordering
-        let to_update_reorder = Object.assign([], to_update)
+        let to_update_reorder = Object.assign([] as string[], to_update)
         if (add_flux || all) to_update_reorder.concat(to_add)
         to_update_reorder
           .filter(id => list_link_post_update.includes(id)) // only keep link really added
@@ -590,12 +590,11 @@ export abstract class Class_Sankey
             const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
             target.copyLinkOrderingFrom(other_target,revert_matching_links_id)
           })
-
       }
 
       // Values  ------------------------------------------------------------------------
 
-      let to_update_for_values = to_update
+      let to_update_for_values = Object.assign([] as string[], to_update)
       if (all || add_flux) to_update_for_values = to_update_for_values.concat(to_add)
       // /!\ other sankey must but an ancient version of the current sankey because each link value has an unique id
       if (((sync_flux_tags || sync_flux_values)) || all) {
