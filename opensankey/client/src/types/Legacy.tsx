@@ -1490,7 +1490,7 @@ const convert_nodes: convert_nodesFuncType = (
     if (local_aggregation != undefined) {
       Object.entries(n.dimensions).forEach(dim=>{
         if (!data.levelTags[dim[0]].activated) {
-          return 
+          return
         }
         const node_tags_attr=n.tags[dim[0]]
         if(node_tags_attr != undefined && node_tags_attr.length!=0){
@@ -1505,7 +1505,7 @@ const convert_nodes: convert_nodesFuncType = (
             } else {
               let children = Object.values(data.nodes).filter(nn=>dim[0] in nn.dimensions)
               children = children.filter(nn=>nn.dimensions[dim[0]].parent_name==n.idNode)
-              children.forEach(child=>child.dimensions[dim[0]].force_show_parent = true)              
+              children.forEach(child=>child.dimensions[dim[0]].force_show_parent = true)
             }
           }
         }
@@ -1537,7 +1537,7 @@ const convert_nodes: convert_nodesFuncType = (
             if (!(leveltagg_id in data.nodes[parent_id].dimensions)) {
               // the condition above allows to correct bad parentship relation in legacy files
               return
-            }            
+            }
             let possible_parent_tag = ''
             possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
             n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
@@ -1562,7 +1562,7 @@ const convert_nodes: convert_nodesFuncType = (
         // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
         delete n.tags[leveltagg_id]
 
-        // Code below is to correct bad parentship relation coming from legacy 
+        // Code below is to correct bad parentship relation coming from legacy
         // Get lists of parents
         const node_parents_id = (node:SankeyNode) => {
           return Object.values(node.dimensions).filter(dim=>dim.parent_name).map(dim=>dim.parent_name)
@@ -1604,7 +1604,7 @@ const convert_nodes: convert_nodesFuncType = (
       }
       if (n.local.label_vert_valeur_shift) {
         n.local.value_label_vert_shift = n.local.label_vert_valeur_shift
-      }       
+      }
       if (n.local.label_horiz_shift !== undefined) {
         n.local.name_label_horiz_shift = n.local.label_horiz_shift
       }
@@ -2020,7 +2020,7 @@ const convert_links: convert_linksFuncType = (
       else {
         if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          const dist = Math.max(1, Math.sqrt(
+          const dist = Math.max(0.1, Math.sqrt(
             (target_node.x - source_node.x) * (target_node.x - source_node.x) +
             (target_node.y - source_node.y) * (target_node.y - source_node.y))) // Avoid div per 0
           if (l.local.left_horiz_shift) {
@@ -2036,7 +2036,9 @@ const convert_links: convert_linksFuncType = (
         }
         else if ((l.local.orientation && l.local.orientation == 'vv')) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          const dist_y = Math.max(1, target_node.y - source_node.y) // Avoid div per 0
+          let dist_y = target_node.y - source_node.y
+          const dist_y_abs = Math.abs(dist_y)
+          if (dist_y_abs < 0.1) dist_y = 0.1*Math.sign(dist_y) // Avoid div per 0
           if (l.local.left_horiz_shift !== undefined) {
             const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist_y))
             AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
@@ -2050,7 +2052,9 @@ const convert_links: convert_linksFuncType = (
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          const dist_x = Math.max(1, target_node.x - source_node.x) // Avoid div per 0
+          let dist_x = target_node.x - source_node.x
+          const dist_x_abs = Math.abs(dist_x)
+          if (dist_x_abs < 0.1) dist_x = 0.1*Math.sign(dist_x) // Avoid div per 0
           if (l.local.left_horiz_shift !== undefined) {
             const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist_x))
             AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
