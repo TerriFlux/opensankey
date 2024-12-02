@@ -741,8 +741,9 @@ export abstract class Class_NodeElement
     super.unDraw()
     this._links_order
       .forEach(link => {
-        if (link.source === this) this._output_links_handle[link.id].draw()
-        if (link.target === this) this._input_links_handle[link.id].draw()
+        link.unDraw()
+        if (link.source === this) this._output_links_handle[link.id].unDraw()
+        if (link.target === this) this._input_links_handle[link.id].unDraw()
       })
   }
 
@@ -1913,7 +1914,7 @@ export abstract class Class_NodeElement
       .filter(link => {
         return link.is_visible
           && link.shape_is_arrow
-          && link.d3_selection !== undefined
+          && link.isRelatedD3SelectionPresentAndSynced
       })
       .sort((l1, l2) => this._links_order.indexOf(l1) - this._links_order.indexOf(l2)) //sort list so output array follow node linksOrder
 
