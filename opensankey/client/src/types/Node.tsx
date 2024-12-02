@@ -741,8 +741,9 @@ export abstract class Class_NodeElement
     super.unDraw()
     this._links_order
       .forEach(link => {
-        if (link.source === this) this._output_links_handle[link.id].draw()
-        if (link.target === this) this._input_links_handle[link.id].draw()
+        link.unDraw()
+        if (link.source === this) this._output_links_handle[link.id].unDraw()
+        if (link.target === this) this._input_links_handle[link.id].unDraw()
       })
   }
 
@@ -1017,7 +1018,11 @@ export abstract class Class_NodeElement
       const tags_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
         .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length == 1) {
+      if (tags_for_colormap.length > 0) {
+        // if a node has several tags we take the first one. The logic is given
+        // by the following example. Meuble en hêtre has two tags hêtre and feuillu
+        // we put hêtre first as it is the most desagregated. This way we can display
+        // the nodes with different colors depending of thye level of detail selected.
         shape_color = tags_for_colormap[0].color
       } else {
         shape_color = default_element_color
@@ -1909,7 +1914,7 @@ export abstract class Class_NodeElement
       .filter(link => {
         return link.is_visible
           && link.shape_is_arrow
-          && link.d3_selection !== undefined
+          && link.isRelatedD3SelectionPresentAndSynced
       })
       .sort((l1, l2) => this._links_order.indexOf(l1) - this._links_order.indexOf(l2)) //sort list so output array follow node linksOrder
 
