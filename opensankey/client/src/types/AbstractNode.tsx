@@ -8,7 +8,7 @@
 
 
 import {
-  Class_AbstractLinkElement
+  Class_AbstractLinkElement,
 } from './AbstractLink'
 import {
   Class_AbstractSankey,
@@ -50,14 +50,18 @@ export abstract class Class_AbstractNodeElement
   public abstract removeTag(_: Class_AbstractTag): void
   public abstract getShapeWidthToUse(): number
   public abstract getShapeHeightToUse(): number
+  public abstract getShapeColorToUse(): string
   public abstract addInputLink(_: Type_AbstractLinkElement): void
   public abstract addOutputLink(_: Type_AbstractLinkElement): void
   public abstract deleteInputLink(_: Type_AbstractLinkElement): void
   public abstract deleteOutputLink(_: Type_AbstractLinkElement): void
+  public abstract removeInputLink(_: Type_AbstractLinkElement): void
+  public abstract removeOutputLink(_: Type_AbstractLinkElement): void
   public abstract getOutputLinkStartingPoint(_: Type_AbstractLinkElement): {x: number, y: number} | undefined
   public abstract getInputLinkEndingPoint(_: Type_AbstractLinkElement): {x: number, y: number} | undefined
   public abstract swapInputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
   public abstract swapOutputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
+  public abstract drawLinksArrow(): void
   public abstract addNewDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void
   public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
@@ -65,9 +69,6 @@ export abstract class Class_AbstractNodeElement
   public abstract nodeDimensionAsParent(tagGroup: Class_LevelTagGroup): Class_NodeDimension | null
   public abstract addAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract removeAsAntiTagged(_: Class_AbstractLevelTagGroup): void
-  public abstract removeInputLink(_: Type_AbstractLinkElement): void
-  public abstract removeOutputLink(_: Type_AbstractLinkElement): void
-  public abstract getShapeColorToUse(): string
   public abstract shiftVertically(shift: number): void
 }
 
@@ -89,3 +90,4 @@ export abstract class Class_AbstractNodeStyle {
   // Mandatory getters
   public abstract get id(): string
 }
+
