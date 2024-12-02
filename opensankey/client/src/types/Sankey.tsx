@@ -500,7 +500,7 @@ export abstract class Class_Sankey
 
     const add_flux = mode.includes('addFlux')
     const remove_flux = mode.includes('removeFlux')
-    const pos_flux = mode.includes('posFlux')    
+    const pos_flux = mode.includes('posFlux')
     const sync_flux_tags = mode.includes('tagFlux')
     const sync_flux_values = mode.includes('Values')
     const sync_flux_attr = mode.includes('attrFlux')
@@ -554,7 +554,7 @@ export abstract class Class_Sankey
             const target = this._nodes[link.target.id]
             const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
             target.copyLinkOrderingFrom(other_target,revert_matching_links_id)
-          })        
+          })
       }
 
       // With attrFlux we transfer link attr
@@ -576,7 +576,9 @@ export abstract class Class_Sankey
       if (add_flux || remove_flux || all) {
         const list_link_post_update = this.links_list.map(l => l.id)
         // Update links ordering
-        to_update.concat(to_add)
+        let to_update_reorder = Object.assign([], to_update)
+        if (add_flux || all) to_update_reorder.concat(to_add)
+        to_update_reorder
           .filter(id => list_link_post_update.includes(id)) // only keep link really added
           .forEach(id => {
             // Source node
@@ -592,12 +594,15 @@ export abstract class Class_Sankey
       }
 
       // Values  ------------------------------------------------------------------------
+
+      let to_update_for_values = to_update
+      if (all || add_flux) to_update_for_values = to_update_for_values.concat(to_add)
       // /!\ other sankey must but an ancient version of the current sankey because each link value has an unique id
       if (((sync_flux_tags || sync_flux_values)) || all) {
         // To speed up matching process between values ids (that are random)
         // We compute corresp value ids for sync_flux_tags & sync_flux_values
         const values_corresp_ids: { [id_flux: string]: { [id_value: string]: string } } = {}
-        to_update//.concat(to_add)
+        to_update_for_values
           .forEach(id_flux => {
             // avoid recomputation
             const values = this._links[id_flux].getAllValues()
@@ -637,7 +642,7 @@ export abstract class Class_Sankey
 
         // Update refs between values and flux_tags
         if ((sync_flux_tags && (add_flux || remove_flux)) || all) {
-          to_update//.concat(to_add)
+          to_update_for_values
             .forEach(id_flux => {
               // Avid recomputation
               const link = this._links[id_flux]
@@ -668,7 +673,7 @@ export abstract class Class_Sankey
 
         // Apply links values from other sankey to current links
         if (sync_flux_values || all) {
-          to_update//.concat(to_add)
+          to_update_for_values
             .forEach(id_flux => {
               // Avid recomputation
               const link = this._links[id_flux]
