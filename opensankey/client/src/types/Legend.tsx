@@ -30,6 +30,7 @@ import {
   getNumberFromJSON,
   getStringFromJSON,
   Type_JSON,
+  getStringListFromJSON,
 } from './Utils'
 import {
   Type_GenericLinkElementOS,
@@ -169,7 +170,9 @@ export class Class_Legend
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ): void {
+    // we need to create an entry legend to do this
     super._toJSON(json_object, kwargs)
+    json_object['legend_position'] = [String(this.position_x), String(this.position_y)]
     json_object['mask_legend'] = this._masked
     json_object['legend_dx'] = this._dx
     json_object['legend_dy'] = this._dy
@@ -190,6 +193,9 @@ export class Class_Legend
     kwargs?: Type_JSON
   ): void {
     super._fromJSON(json_object, kwargs)
+    const legend_position = getStringListFromJSON(json_object,'legend_position',['0','0'])
+    this._display.position.x = +legend_position[0]
+    this._display.position.y = +legend_position[1]
     this._masked = getBooleanFromJSON(json_object, 'mask_legend', this._masked)
     this._dx = getNumberFromJSON(json_object, 'legend_dx', this._dx)
     this._dy = getNumberFromJSON(json_object, 'legend_dy', this._dy)
