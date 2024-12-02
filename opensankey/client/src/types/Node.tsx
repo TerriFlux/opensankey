@@ -50,7 +50,6 @@ import {
   default_font,
   default_style_id,
   getBooleanFromJSON,
-  getBooleanOrUndefinedFromJSON,
   getJSONOrUndefinedFromJSON,
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
@@ -326,14 +325,14 @@ export abstract class Class_NodeElement
 
   public copyLinkOrderingFrom(
     node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
-    matching_link_id : {[_: string]: string;}
+    matching_link_id: { [_: string]: string; }
   ) {
     // Copy links orders ----------------------------------------------------------------
     this._links_order = []  // Empty current link order list
     // Fill with link that exist in current sankey and avoid duplicates in link order list
     node_to_copy._links_order
       .forEach(link_to_copy => {
-        const link = this.drawing_area.sankey.links_dict[matching_link_id[link_to_copy.id]??link_to_copy.id] as Type_GenericLinkElement
+        const link = this.drawing_area.sankey.links_dict[matching_link_id[link_to_copy.id] ?? link_to_copy.id] as Type_GenericLinkElement
         if ((link !== undefined) && (!this._links_order.includes(link)))
           this._links_order.push(link)
       })
@@ -521,8 +520,8 @@ export abstract class Class_NodeElement
               'parent_tag': dimension.parent_level_tag.id,
               'children_tags': dimension.children_level_tags.map(_ => _.id),
               'antitag': false,
-              'force_show_children':dimension.force_show_children,
-              'force_show_parent':dimension.force_show_parent
+              'force_show_children': dimension.force_show_children,
+              'force_show_parent': dimension.force_show_parent
             }
           ])
       )
@@ -763,7 +762,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public drawShape() {
-    this._process_or_bypass(() => {this._drawShape(); this._orderD3Elements()})
+    this._process_or_bypass(() => { this._drawShape(); this._orderD3Elements() })
   }
 
   /**
@@ -771,7 +770,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public drawNameLabel() {
-    this._process_or_bypass(() => {this._drawNameLabel(); this._orderD3Elements()})
+    this._process_or_bypass(() => { this._drawNameLabel(); this._orderD3Elements() })
   }
 
   /**
@@ -779,7 +778,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public drawValueLabel() {
-    this._process_or_bypass(() => {this._drawValueLabel; this._orderD3Elements()})
+    this._process_or_bypass(() => { this._drawValueLabel; this._orderD3Elements() })
   }
 
   public drawLinks() {
@@ -787,7 +786,7 @@ export abstract class Class_NodeElement
   }
 
   public drawLinksArrow() {
-    this._process_or_bypass(() => {this._drawLinksArrow(); this._orderD3Elements()})
+    this._process_or_bypass(() => { this._drawLinksArrow(); this._orderD3Elements() })
   }
 
   /**
@@ -841,7 +840,7 @@ export abstract class Class_NodeElement
       if ((id !== undefined) && (this._dimensions_as_parent[id]))
         this._dimensions_as_parent[id].setForceToShowChildren()
       else
-        Object.values(this._dimensions_as_parent)[Object.values(this._dimensions_as_parent).length-1].setForceToShowChildren()
+        Object.values(this._dimensions_as_parent)[Object.values(this._dimensions_as_parent).length - 1].setForceToShowChildren()
 
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
@@ -866,7 +865,7 @@ export abstract class Class_NodeElement
             output_node.drawChildren(id)
           }
         })
-        this.sankey.drawing_area.draw()
+      this.sankey.drawing_area.draw()
     }
   }
 
@@ -1549,7 +1548,6 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   protected _orderD3Elements() {
-    this.d3_selection?.selectAll('.link_arrow').raise()
     this.d3_selection_g_shape?.raise()
     this.d3_selection?.selectAll('.name_label').raise()
     this.d3_selection?.selectAll('.value_label').raise()
@@ -1754,7 +1752,7 @@ export abstract class Class_NodeElement
       let box_pos_y = label_pos_y
       if (this.name_label_vert == 'top') {
         box_pos_y -= (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size)
-        label_text?.attr('y', label_pos_y-(((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size))
+        label_text?.attr('y', label_pos_y - (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size))
       } else if (this.name_label_vert == 'middle') {
         box_pos_y -= this.name_label_font_size / 2
         label_text?.attr('y', label_pos_y - (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this.name_label_font_size / 2))
@@ -1893,8 +1891,6 @@ export abstract class Class_NodeElement
   protected _drawLinks() {
     // Links positions are modified by nodes's position changes
     this.updateLinksPositions()
-    // Redraw arrows -> affected if links are added or removed
-    this._drawLinksArrow()
     // Node shape -> affected if links are added or removed, or if links values change
     this._drawShape()
   }
@@ -1905,11 +1901,6 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   protected _drawLinksArrow() {
-    // Speed-up computing
-    if (!this.d3_selection)
-      return
-
-    this.d3_selection?.selectAll('.link_arrow').remove()
     const list_link_to_add_arrow = this.input_links_list
       .filter(link => {
         return link.is_visible
@@ -1925,18 +1916,20 @@ export abstract class Class_NodeElement
     const node_height = this.getShapeHeightToUse() // height of node taking into account link size in/out
     const node_width = this.getShapeWidthToUse() // width of node taking into account link size in/out
     const node_shape = this.shape_type
+
     // const is_exportation_node = false // TODO Maybe useful when MFA will be implemented
 
+    // Vars to keep track of sum of stacking links
     const sumLinkLeft = this.getSumOfLinksThickness('left')
     const sumLinkRight = this.getSumOfLinksThickness('right')
     const sumLinkTop = this.getSumOfLinksThickness('top')
     const sumLinkBottom = this.getSumOfLinksThickness('bottom')
 
+    // Loop on all visible input links
     list_link_to_add_arrow
       .forEach(link => {
         // Some variable parameters for arrow
         const arrow_length = link.shape_arrow_size
-        const arrow_color = link.getArrowColorToUse()
         let node_arrow_shift = 0
         let arrows_adjustment = 0
 
@@ -1945,7 +1938,6 @@ export abstract class Class_NodeElement
         const link_arrow_side_left = link.target_side == 'left'
         const link_arrow_side_top = link.target_side == 'top'
         const link_arrow_side_bottom = link.target_side == 'bottom'
-
         const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
 
         // Thicknen of the link influence arrow size
@@ -1988,64 +1980,56 @@ export abstract class Class_NodeElement
           }
         }
 
-        this.d3_selection?.append('path')
-          .attr('class', 'link_arrow')
-          .attr('d', () => {
+        let xt: number
+        let yt: number
+        let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
+        let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
 
-            let xt: number = 0 // x coord where link path end
-            let yt: number = 0 // y coord where link path end
-            let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
-            let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
+        if (link_arrow_side_left) {
+          xt = + this.position_x
+          yt = + this.position_y + node_height / 2
+          current_cumul_of_side = cum_v_left
+          total_cumul_of_side = sumLinkLeft
+        }
+        else if (link_arrow_side_right) {
+          xt = + this.position_x + node_width
+          yt = + this.position_y + node_height / 2
+          current_cumul_of_side = cum_v_right
+          total_cumul_of_side = sumLinkRight
+        }
+        else if (link_arrow_side_top) {
+          xt = + this.position_x + node_width / 2
+          yt = + this.position_y
+          current_cumul_of_side = cum_h_top
+          total_cumul_of_side = sumLinkTop
 
-            if (link_arrow_side_left) {
-              xt = +0
-              yt = +0 + node_height / 2
-              current_cumul_of_side = cum_v_left
-              total_cumul_of_side = sumLinkLeft
-            }
-            else if (link_arrow_side_right) {
-              xt = +0 + node_width
-              yt = +0 + node_height / 2
-              current_cumul_of_side = cum_v_right
-              total_cumul_of_side = sumLinkRight
-            }
-            else if (link_arrow_side_top) {
-              xt = +0 + node_width / 2
-              yt = +0
-              current_cumul_of_side = cum_h_top
-              total_cumul_of_side = sumLinkTop
+        }
+        else { // if (link_arrow_side_bottom)
+          xt = + this.position_x + node_width / 2
+          yt = + this.position_y + node_height
+          current_cumul_of_side = cum_h_bottom
+          total_cumul_of_side = sumLinkBottom
+        }
 
-            }
-            else if (link_arrow_side_bottom) {
-              xt = +0 + node_width / 2
-              yt = +0 + node_height
-              current_cumul_of_side = cum_h_bottom
-              total_cumul_of_side = sumLinkBottom
-            }
+        const p5 = [xt, yt] // Starting point of arrow
 
-            const p5 = [xt, yt] // Starting point of arrow
+        // Some variables parameters influencing arrow shape processing
+        const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
+        const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-            // Some variables parameters influencing arrow shape processing
-            const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
-            const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
-
-            return SankeyShapes.draw_arrow_part(
-              total_cumul_of_side / 2,
-              p5,
-              +link_value,
-              current_cumul_of_side,
-              is_horizontal_at_target,
-              is_revert,
-              arrow_length,
-              node_arrow_shift,
-              arrows_adjustment,
-              node_shape === 'arrow'
-            )
-          })
-          .attr('fill', arrow_color)
-          .attr('fill-opacity', link.shape_opacity)
-          .attr('stroke', arrow_color)
-          .attr('stroke-width', 0.1)
+        // Draw arrow on link
+        link.shape_arrow_path = SankeyShapes.draw_arrow_part(
+          total_cumul_of_side / 2,
+          p5,
+          +link_value,
+          current_cumul_of_side,
+          is_horizontal_at_target,
+          is_revert,
+          arrow_length,
+          node_arrow_shift,
+          arrows_adjustment,
+          node_shape === 'arrow'
+        )
 
         // Increment side cumul of drawn arrow to influence next arrow starting position
         if (link_arrow_side_left) {
@@ -2909,7 +2893,7 @@ export abstract class Class_NodeElement
     if (this.drawing_area.application_data.node_label_separator !== '') {
       // If separator affect name label & the separator part is after then return label after separator else return first part
       const splitted_label = this._name.split(this.drawing_area.application_data.node_label_separator)
-      return (splitted_label.length > 1 && this.drawing_area.application_data.node_label_separator_part == 'after') ? splitted_label[splitted_label.length-1] : splitted_label[0]
+      return (splitted_label.length > 1 && this.drawing_area.application_data.node_label_separator_part == 'after') ? splitted_label[splitted_label.length - 1] : splitted_label[0]
     }
     return this._name
   }
@@ -4073,7 +4057,7 @@ export abstract class Class_NodeElement
           has_forced_dimensions = true
           ok_forced_dimensions = ok_forced_dimensions && dim.force_show_parent
         }
-        if (dim.related_level_tagg.activated){
+        if (dim.related_level_tagg.activated) {
           ok_activated_dimensions = ok_activated_dimensions && dim.show_parent
           has_activated_dimensions = true
         }

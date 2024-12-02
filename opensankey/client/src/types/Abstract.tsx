@@ -17,6 +17,7 @@ import { Type_GenericSankeyOS } from './TypesOS'
 type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 type Type_GenericDrawingArea = Class_AbstractDrawingArea
+
 export abstract class Class_AbstractApplicationData {
   // Mandatory attributes
   public abstract version: string
