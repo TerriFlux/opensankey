@@ -486,7 +486,6 @@ export abstract class Class_LinkElement
   }
 
   protected _copyFrom(_: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
-    super._copyFrom(_)
     // Source relations
     if (this._source.id !== _._source.id) {
       let source = this._display.sankey.nodes_dict[_._source.id] as Type_GenericNodeElement
@@ -515,16 +514,7 @@ export abstract class Class_LinkElement
       this.style = style
     }
     // Local attributes
-    this._display.attributes.copyFrom(_._display.attributes)
-    // Display
-    this._display.displaying_order = _._display.displaying_order
-    this._display.position_starting = structuredClone(_._display.position_starting)
-    this._display.position_ending = structuredClone(_._display.position_ending)
-    this._display.position_x_label = _._display.position_x_label
-    this._display.position_y_label = _._display.position_y_label
-    this._display.position_offset_label = _._display.position_offset_label
-    // Tooltips
-    this._tooltip_text = _._tooltip_text
+    this.copyAttrFrom(_)
     // Values
     if (_._values instanceof Class_LinkValue) {
       this._values = new Class_LinkValue(this)
@@ -537,16 +527,6 @@ export abstract class Class_LinkElement
         this._values.copyFrom(_._values)
       }
     }
-    // // Control points
-    // this._control_points = this.initControlPoints(this.drawing_area)
-    // this._control_points.starting_curve_point.copyFrom(_._control_points.starting_curve_point)
-    // this._control_points.ending_curve_point.copyFrom(_._control_points.ending_curve_point)
-    // this._control_points.starting_bezier_point.copyFrom(_._control_points.starting_bezier_point)
-    // this._control_points.ending_bezier_point.copyFrom(_._control_points.ending_bezier_point)
-    // this._control_points.middle_recycling_point.copyFrom(_._control_points.middle_recycling_point)
-    // this._control_points.is_dragged = _._control_points.is_dragged
-    // Others
-    // this._scaleValueToPx = _.scaleValueToPx
   }
 
   protected _toJSON(
