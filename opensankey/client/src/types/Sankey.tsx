@@ -597,7 +597,7 @@ export abstract class Class_Sankey
         // To speed up matching process between values ids (that are random)
         // We compute corresp value ids for sync_flux_tags & sync_flux_values
         const values_corresp_ids: { [id_flux: string]: { [id_value: string]: string } } = {}
-        to_update.concat(to_add)
+        to_update//.concat(to_add)
           .forEach(id_flux => {
             // avoid recomputation
             const values = this._links[id_flux].getAllValues()
@@ -637,7 +637,7 @@ export abstract class Class_Sankey
 
         // Update refs between values and flux_tags
         if ((sync_flux_tags && (add_flux || remove_flux)) || all) {
-          to_update.concat(to_add)
+          to_update//.concat(to_add)
             .forEach(id_flux => {
               // Avid recomputation
               const link = this._links[id_flux]
@@ -668,7 +668,7 @@ export abstract class Class_Sankey
 
         // Apply links values from other sankey to current links
         if (sync_flux_values || all) {
-          to_update.concat(to_add)
+          to_update//.concat(to_add)
             .forEach(id_flux => {
               // Avid recomputation
               const link = this._links[id_flux]
