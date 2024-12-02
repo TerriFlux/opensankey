@@ -675,10 +675,12 @@ export abstract class Class_Element
     json_object['y'] = this._display.position.y
     json_object['u'] = this._display.position.u
     json_object['v'] = this._display.position.v
-    if (this._display.position.dx) json_object['dx'] = this._display.position.dx
-    if (this._display.position.dy) json_object['dy'] = this._display.position.dy
-    if (this._display.position.relative_dx) json_object['relative_dx'] = this._display.position.relative_dx
-    if (this._display.position.relative_dy) json_object['relative_dy'] = this._display.position.relative_dy
+    // We can not handle this field here for now. They are stored in local or in the style
+    // and we have not generalised this mechanism to other elements than nodes or links
+    // if (this._display.position.dx) json_object['dx'] = this._display.position.dx
+    // if (this._display.position.dy) json_object['dy'] = this._display.position.dy
+    // if (this._display.position.relative_dx) json_object['relative_dx'] = this._display.position.relative_dx
+    // if (this._display.position.relative_dy) json_object['relative_dy'] = this._display.position.relative_dy
   }
 
   protected _fromJSON(
@@ -691,6 +693,12 @@ export abstract class Class_Element
     this._display.position.y = getNumberFromJSON(json_object, 'y', this._display.position.y)
     this._display.position.u = getNumberFromJSON(json_object, 'u', this._display.position.u)
     this._display.position.v = getNumberFromJSON(json_object, 'v', this._display.position.v)
+    // We can not handle this field here for now. They are stored in local or in the style
+    // and we have not generalised this mechanism to other elements than nodes or links
+    // this._display.position.dx = getNumberOrUndefinedFromJSON(json_object, 'dx')
+    // this._display.position.relative_dx = getNumberOrUndefinedFromJSON(json_object, 'relative_dx')
+    // this._display.position.dy = getNumberOrUndefinedFromJSON(json_object, 'dy')
+    // this._display.position.relative_dy = getNumberOrUndefinedFromJSON(json_object, 'relative_dy')
   }
 
   // PUBLIC METHODS =====================================================================
