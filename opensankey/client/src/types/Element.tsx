@@ -197,9 +197,6 @@ export abstract class Class_ProtoElement
   public copyFrom(element_to_copy: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
     // Remove from drawing area
     this.unDraw()
-    // // Clean relations between elements
-    // this.cleanForDeletion()
-    // this._is_currently_deleted = false // Might pass to true on some elements
     // Copy intrasect values
     this._display.drawing_area.bypass_redraws = true // Security
     this._copyFrom(element_to_copy)
