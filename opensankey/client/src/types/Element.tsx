@@ -76,7 +76,7 @@ export abstract class Class_ProtoElement
    * @type {string}
    * @memberof Class_Element
    */
-  protected _svg_group: string
+  protected _svg_parent_group: string
 
   /**
    * Config menu ref to html element & function to update it
@@ -142,17 +142,17 @@ export abstract class Class_ProtoElement
    * Creates an instance of Class_Element.
    * @param {string} id
    * @param {Type_GenericDrawingArea} drawing_area
-   * @param {string} svg_group
+   * @param {string} svg_parent_group
    * @memberof Class_Element
    */
   constructor(
     id: string,
     menu_config: Class_MenuConfig,
-    svg_group: string,
+    svg_parent_group: string,
   ) {
     // Set values
     this._id = id
-    this._svg_group = svg_group
+    this._svg_parent_group = svg_parent_group
     this._menu_config = menu_config
     // Element created -> set save indicator
     this._menu_config.ref_to_save_in_cache_indicator.current(false)
@@ -212,7 +212,7 @@ export abstract class Class_ProtoElement
   protected _copyFrom(element_to_copy: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
     this._is_visible = element_to_copy._is_visible
     this._is_selected = element_to_copy._is_selected
-    this._svg_group = element_to_copy._svg_group
+    this._svg_parent_group = element_to_copy._svg_parent_group
   }
 
   // SAVING METHODS =====================================================================
@@ -240,7 +240,7 @@ export abstract class Class_ProtoElement
     json_object['id'] = this._id
     json_object['is_visible'] = this._is_visible
     json_object['is_selected'] = this._is_selected
-    json_object['svg_group'] = this._svg_group
+    json_object['svg_parent_group'] = this._svg_parent_group
   }
 
   /**
@@ -267,7 +267,7 @@ export abstract class Class_ProtoElement
     this._id = getStringFromJSON(json_object, 'id', this._id)
     this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
     this._is_selected = getBooleanFromJSON(json_object, 'is_selected', this._is_selected)
-    this._svg_group = getStringFromJSON(json_object, 'svg_group', this._svg_group)
+    this._svg_parent_group = getStringFromJSON(json_object, 'svg_parent_group', this._svg_parent_group)
   }
 
   // PUBLIC METHODS ====================================================================
@@ -298,9 +298,9 @@ export abstract class Class_ProtoElement
   public isRelatedD3SelectionPresentAndSynced() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
-      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
       if (d3_drawing_area_selection.nodes().length > 0) {
-        const d3_selection = d3_drawing_area_selection.selectAll(' #' + this._id)
+        const d3_selection = d3_drawing_area_selection.selectAll(' #' + this.svg_group)
         if (d3_selection && d3_selection.nodes().length > 0)
           return true
       }
@@ -407,10 +407,10 @@ export abstract class Class_ProtoElement
   protected _initDraw() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
-      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_group)
+      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
       if (d3_drawing_area_selection.nodes().length > 0) {
         this.d3_selection = d3_drawing_area_selection.append('g')
-        this.d3_selection.attr('id', 'gg_' + this._id)
+        this.d3_selection.attr('id', this.svg_group)
       }
     }
   }
@@ -563,7 +563,8 @@ export abstract class Class_ProtoElement
   public get drawing_area() { return this._display.drawing_area }
 
   // Svg Group
-  public get svg_group() { return this._svg_group }
+  public get svg_parent_group() { return this._svg_parent_group }
+  public get svg_group() { return 'gg_' + this._id.replaceAll(' ', '') }
 
   // Selection
   public setSelected() { this._is_selected = true; this.drawAsSelected() }
@@ -628,15 +629,15 @@ export abstract class Class_Element
    * Creates an instance of Class_Element.
    * @param {string} id
    * @param {Type_GenericDrawingArea} drawing_area
-   * @param {string} svg_group
+   * @param {string} svg_parent_group
    * @memberof Class_Element
    */
   constructor(
     id: string,
     menu_config: Class_MenuConfig,
-    svg_group: string,
+    svg_parent_group: string,
   ) {
-    super(id, menu_config, svg_group)
+    super(id, menu_config, svg_parent_group)
   }
 
   // COPY METHODS =======================================================================
