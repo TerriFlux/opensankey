@@ -306,6 +306,14 @@ export abstract class Class_LinkElement
   private _values: Class_LinkValueTree | Class_LinkValue
 
   /**
+   * d3 shape for this link arrow
+   * @private
+   * @type {(string | undefined)}
+   * @memberof Class_LinkElement
+   */
+  private _arrow_shape: string | undefined
+
+  /**
    * Value of tooltip text associated to link
    * @private
    * @type {string}
@@ -605,8 +613,17 @@ export abstract class Class_LinkElement
 
   // PUBLIC METHODS =====================================================================
 
+  public unDraw() {
+    super.unDraw()
+    this._arrow_shape = undefined // reset shape also
+  }
+
   public drawPath() {
     this._process_or_bypass(() => {this._drawPath(); this._orderD3Elements()})
+  }
+
+  public drawArrow() {
+    this._process_or_bypass(() => {this._drawArrow(); this._orderD3Elements()})
   }
 
   public drawLabel() {
@@ -971,6 +988,35 @@ export abstract class Class_LinkElement
   }
 
   /**
+   * Draw arrow shape on d3
+   * @protected
+   * @memberof Class_LinkElement
+   */
+  protected _drawArrow() {
+    // Speed-up computing
+    if (!this.d3_selection)
+      return
+    // Clean previous shape
+    this.d3_selection?.selectAll('.link_arrow').remove()
+    // draw arrow if needed
+    if (this.shape_is_arrow && this.is_visible) {
+      if (this._arrow_shape === undefined) {
+        this.target.drawLinksArrow()
+      }
+      else {
+        const arrow_color = this.getArrowColorToUse() // Avoid recomputing
+        this.d3_selection?.append('path')
+          .attr('class', 'link_arrow')
+          .attr('d', this._arrow_shape)
+          .attr('fill', arrow_color)
+          .attr('fill-opacity', this.shape_opacity)
+          .attr('stroke', arrow_color)
+          .attr('stroke-width', 0.1)
+      }
+    }
+  }
+
+  /**
    * Draw link label on d3 svg
    * @protected
    * @memberof Class_LinkElement
@@ -1064,6 +1110,7 @@ export abstract class Class_LinkElement
    */
   protected _drawElements() {
     this._drawPath()
+    this._drawArrow()
     this._drawLabel()
   }
 
@@ -1074,6 +1121,7 @@ export abstract class Class_LinkElement
    */
   protected _orderD3Elements() {
     this.d3_selection?.selectAll('.link_path').raise()
+    this.d3_selection?.selectAll('.link_arrow').raise()
     this.d3_selection?.selectAll('.link_label').raise()
   }
 
@@ -2849,6 +2897,15 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawElements() }
+
+  /**
+   * Set and redraw d3 path for link arrow
+   * @memberof Class_LinkElement
+   */
+  public set shape_arrow_path(_: string) {
+    this._arrow_shape = _
+    this.drawArrow()
+  }
 
   /**
    * TODO Description
