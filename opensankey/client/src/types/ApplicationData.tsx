@@ -287,7 +287,6 @@ export abstract class Class_ApplicationData
   protected _fromJSON(json_object: Type_JSON) {
     // Reset everything
     this.reset()
-
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
   }
