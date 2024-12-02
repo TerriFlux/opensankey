@@ -2018,6 +2018,7 @@ const convert_links: convert_linksFuncType = (
         }
       }
       else {
+        const curve_coef = (l.local.curvature ?? 0.5) / 10
         if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
           const dist = Math.max(0.1, Math.sqrt(
@@ -2025,13 +2026,13 @@ const convert_links: convert_linksFuncType = (
             (target_node.y - source_node.y) * (target_node.y - source_node.y))) // Avoid div per 0
           if (l.local.left_horiz_shift) {
             const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist))
-            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio*(l.local.curvature ?? 0.5)/2) // Approx to keep general shape
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio * (1 - curve_coef)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio * curve_coef ) // Approx to keep general shape
           }
           if (l.local.right_horiz_shift !== undefined) {
             const right_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.right_horiz_shift / dist))
-            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio*(l.local.curvature ?? 0.5)/2) // Approx to keep general shape
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio * (1 - curve_coef)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio * curve_coef) // Approx to keep general shape
           }
         }
         else if ((l.local.orientation && l.local.orientation == 'vv')) {
@@ -2041,13 +2042,13 @@ const convert_links: convert_linksFuncType = (
           if (dist_y_abs < 0.1) dist_y = 0.1*Math.sign(dist_y) // Avoid div per 0
           if (l.local.left_horiz_shift !== undefined) {
             const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist_y))
-            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio*(l.local.curvature ?? 0.5)) // Approx to keep general shape
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio * (1 - curve_coef)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio * curve_coef ) // Approx to keep general shape
           }
           if (l.local.right_horiz_shift !== undefined) {
             const right_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.right_horiz_shift / dist_y))
-            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio*(l.local.curvature ?? 0.5)) // Approx to keep general shape
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio * (1 - curve_coef)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio*curve_coef) // Approx to keep general shape
           }
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
@@ -2057,13 +2058,13 @@ const convert_links: convert_linksFuncType = (
           if (dist_x_abs < 0.1) dist_x = 0.1*Math.sign(dist_x) // Avoid div per 0
           if (l.local.left_horiz_shift !== undefined) {
             const left_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.left_horiz_shift / dist_x))
-            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio*(l.local.curvature ?? 0.5)) // Approx to keep general shape
+            AssignLinkLocalAttribute(l, 'left_horiz_shift', left_horiz_shift_ratio * (1 - curve_coef)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'starting_tangeant', left_horiz_shift_ratio * curve_coef) // Approx to keep general shape
           }
           if (l.local.right_horiz_shift !== undefined) {
             const right_horiz_shift_ratio = Math.max(0.05, Math.abs(l.local.right_horiz_shift / dist_x))
-            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio*(1 - (l.local.curvature ?? 0.5))) // value in [0; +oo]
-            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio*(l.local.curvature ?? 0.5)) // Approx to keep general shape
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', right_horiz_shift_ratio * (1 - curve_coef)) // value in [0; +oo]
+            AssignLinkLocalAttribute(l, 'ending_tangeant', right_horiz_shift_ratio * curve_coef) // Approx to keep general shape
           }
         }
       }
