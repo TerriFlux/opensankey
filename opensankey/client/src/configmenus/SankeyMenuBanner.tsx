@@ -161,7 +161,6 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           if (evt.target.checked) {
             tagg.show_legend = true
           }
-          new_data.drawing_area.legend.draw()
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
