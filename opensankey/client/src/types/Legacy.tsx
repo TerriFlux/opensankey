@@ -1481,13 +1481,67 @@ const convert_nodes: convert_nodesFuncType = (
 
     data.nodes[n.idNode] = n
 
-    if (n.local?.local_aggregation == false && !NodeHasDisplayedLevel(data,n)){
-      delete n.local?.local_aggregation
-    } else if (n.local?.local_aggregation == true && NodeHasDisplayedLevel(data,n)){
-      delete n.local?.local_aggregation
+    // if (n.local?.local_aggregation == false && !NodeHasDisplayedLevel(data,n)){
+    //   delete n.local?.local_aggregation
+    // } else if (n.local?.local_aggregation == true && NodeHasDisplayedLevel(data,n)){
+    //   delete n.local?.local_aggregation
+    // }
+  const forceShowParent = (
+    data:SankeyData,
+    node :SankeyNode,
+    dim:string
+  ) => {
+    let children = Object.values(data.nodes).filter(nn => dim in nn.dimensions)
+    children = children.filter(nn => nn.dimensions[dim].parent_name == node.idNode)
+    children.forEach(child => {
+      child.dimensions[dim].force_show_parent = true
+      treatExchangeNodes(data, child, dim, false)
+      if (!NodeHasDisplayedLevel(data,child)) {
+        forceShowParent(data,child,dim)
+      }
+    })
+  }
+
+  const treatExchangeNodes = (
+    data:SankeyData,
+    node :SankeyNode,
+    dim:string,
+    set_children: boolean
+  ) =>{
+      // Check if there are possible Exchange nodes
+      if (!data.nodeTags['type de noeud']) {
+        return
+      }
+
+      // All input exchange nodes must also be desaggregated
+      node.inputLinksId
+        .forEach(lid => {
+          const input_node = data.nodes[data.links[lid].idSource]
+          if (input_node.tags['type de noeud'][0]=='echange') {
+            if (set_children) {
+              input_node.dimensions[dim].force_show_children = true
+            } else {
+              input_node.dimensions[dim].force_show_parent = true
+            }
+          }
+        })
+
+      // All input exchange nodes must also be desaggregated
+      node.outputLinksId
+        .forEach(lid => {
+          const output_node = data.nodes[data.links[lid].idTarget]
+          if (output_node.tags['type de noeud'][0]=='echange') {
+            if (set_children) {
+              output_node.dimensions[dim].force_show_children = true
+            } else {
+              output_node.dimensions[dim].force_show_parent = true
+            }
+          }
+        })
     }
+    const is_exchange = data.nodeTags['type de noeud'] && n.tags['type de noeud'][0]=='echange'
     const local_aggregation = n.local?.local_aggregation
-    if (local_aggregation != undefined) {
+    if (local_aggregation != undefined && !is_exchange) {
       Object.entries(n.dimensions).forEach(dim=>{
         if (!data.levelTags[dim[0]].activated) {
           return
@@ -1500,15 +1554,24 @@ const convert_nodes: convert_nodesFuncType = (
           const tag_visible = node_tags_attr.filter(t=>tags_from_grp_to_display.includes(t)).length > 0
           if (!tag_visible && local_aggregation) {
             // Force to show this node
-            if (+node_tags_attr[0] > +tags_from_grp_to_display[0]) {
+            if (+node_tags_attr[0] > +tags_from_grp_to_display[0] &&
+                dim[1].parent_name &&
+                data.nodes[dim[1].parent_name!].local &&
+                data.nodes[dim[1].parent_name!].local!.local_aggregation == false
+            ) {
               dim[1].force_show_children = true
+              treatExchangeNodes(data,n,dim[0],true)
             } else {
-              let children = Object.values(data.nodes).filter(nn=>dim[0] in nn.dimensions)
-              children = children.filter(nn=>nn.dimensions[dim[0]].parent_name==n.idNode)
-              children.forEach(child=>child.dimensions[dim[0]].force_show_parent = true)
+              forceShowParent(data,n,dim[0])
             }
-          }
+          } /*else if (tag_visible && !local_aggregation) {
+            if (+node_tags_attr[0] <= +tags_from_grp_to_display[0]) {
+              dim[1].force_show_children = true
+            }
+          }*/
         }
+
+
       })
     }
 
