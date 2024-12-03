@@ -197,13 +197,29 @@ export abstract class Class_DrawingArea
   // Attributes that describe drawing area ----------------------------------------------
 
   /**
+   * Distance to keep between drawing area & external windows sides (up, down, left & right)
+   * when calling window fit
+   * @private
+   * @type {number}
+   * @memberof Class_DrawingArea
+   */
+  private _fit_margin: number = 10
+
+  /**
    * Scaling factor as value = scale * value in pixel
    * @private
    * @type {number}
    * @memberof Class_DrawingArea
    */
   private _scale: number = default_scale
-  private _fit_margin: number = 10
+
+  /**
+   * If true, recompute scale from first link.
+   * @private
+   * @type {boolean}
+   * @memberof Class_DrawingArea
+   */
+  private _scale_fitting: boolean = true
 
   /**
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
@@ -365,6 +381,7 @@ export abstract class Class_DrawingArea
     this._number_of_elements = drawing_area_to_copy._number_of_elements
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
+    this._scale_fitting = false
     this._show_structure = drawing_area_to_copy._show_structure
     this._vertical_spacing  = drawing_area_to_copy._vertical_spacing
     this._width = drawing_area_to_copy._width
@@ -448,7 +465,7 @@ export abstract class Class_DrawingArea
       convert_data_legacy(json_object) // FIXME
     }
 
-        // Set node label separator attribute from json
+    // Set node label separator attribute from json
     this.application_data.node_label_separator = getStringFromJSON(json_object, 'node_label_separator', ' - ')
     this.application_data.node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', 'before') as 'before' | 'after'
 
@@ -465,11 +482,14 @@ export abstract class Class_DrawingArea
     this._number_of_elements = getNumberFromJSON(json_object, 'number_of_elements', this._number_of_elements)
     this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._scaleValueToPx.domain([0, this._scale])
+    this._scale_fitting = false
     this._show_structure = getStringFromJSON(json_object, 'show_structure', this._show_structure) as Type_Structure
     this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
     this._width = getNumberFromJSON(json_object, 'width', this._width)
+
     // Update legend
     this._legend.fromJSON(json_object)
+
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
   }
@@ -2280,6 +2300,7 @@ export abstract class Class_DrawingArea
   public get legend(): Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._legend }
   public set legend(value: Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>) { this._legend = value }
 
+  // Ghost link
   public get ghost_link() { return this._ghost_link }
   public set ghost_link(value: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null) { this._ghost_link = value }
 
@@ -2331,6 +2352,7 @@ export abstract class Class_DrawingArea
   public set height(_: number) { this._height = _; this.drawBackground(); this.drawGrid() }
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
   public get window_fitting_width(): number { return window.innerWidth - this._fit_margin - this.getSideBarWidth() }
+  public get need_to_recompute_scale(): boolean { return this._scale_fitting }
 
   // Number of element
   public get number_of_element() { return this._number_of_elements }
@@ -2377,6 +2399,7 @@ export abstract class Class_DrawingArea
     if (value > 0) {
       this._scale = value
       this._scaleValueToPx.domain([0, value])
+      this._scale_fitting = false
       this.drawElements()
     }
   }
