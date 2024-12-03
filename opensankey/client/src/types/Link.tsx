@@ -2565,7 +2565,7 @@ export abstract class Class_LinkElement
     // Get link value for current dataTaggs selected
     const data_value = this.data_value
     // Scale this value for the drawing area
-    const linkValueInPx = this.scaleValueToPx((data_value !== null) ? data_value : 1)
+    const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
 
     // If link processed size is inferior to min. limit return min. limit
     if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
