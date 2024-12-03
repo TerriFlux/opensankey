@@ -1539,7 +1539,7 @@ const convert_nodes: convert_nodesFuncType = (
           }
         })
     }
-    const is_exchange = data.nodeTags['type de noeud'] && n.tags['type de noeud'][0]=='echange'
+    const is_exchange = data.nodeTags['type de noeud'] && n.tags['type de noeud'] && (n.tags['type de noeud'][0] == 'echange')
     const local_aggregation = n.local?.local_aggregation
     if (local_aggregation != undefined && !is_exchange) {
       Object.entries(n.dimensions).forEach(dim=>{
