@@ -107,7 +107,8 @@ import {
   table_base_style,
   table_edit_tag_link,
   table_edit_tag_data,
-  table_edit_grp_tag_node_link
+  table_edit_grp_tag_node_link,
+  table_edit_grp_tag_data
 } from './TableStyle'
 import {
   heading_base_style,
@@ -277,7 +278,8 @@ export const opensankey_theme = extendTheme({
         table_edit_tag_node,
         table_edit_tag_link,
         table_edit_tag_data,
-        table_edit_grp_tag_node_link
+        table_edit_grp_tag_node_link,
+        table_edit_grp_tag_data
       }
     },
     Tag: {
@@ -470,9 +472,6 @@ export const opensankey_theme = extendTheme({
       background: 'gray.50',
       bgColor: 'gray.50',
       width: '100%',
-      height: '2rem',
-      marginLeft: '0.5rem',
-      marginRight: '0.5rem'
     },
     menubottom_item_style: {
       display: 'flex',

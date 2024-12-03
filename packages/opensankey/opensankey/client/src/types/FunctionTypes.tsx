@@ -61,7 +61,7 @@ export type FCType_Menu = {
   cardsTemplate: JSX.Element,
   external_modal: JSX.Element[],
   apply_transformation_additional_elements: JSX.Element[],
-  additional_nav_item: JSX.Element[],
+  additionalMenus:Type_AdditionalMenus,
   formations_menu: object,
   // postProcessLoadExcel: postProcessLoadExcelFuncType,
 }
