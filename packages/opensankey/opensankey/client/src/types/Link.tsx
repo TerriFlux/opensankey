@@ -1966,6 +1966,12 @@ export abstract class Class_LinkElement
     this._control_points.middle_recycling_point.setPosXY(x_mid, y_mid)
   }
 
+  /**
+   * Compute position of these points :
+   * - Starting tangeant first & second point
+   * - Ending tangeant first & second point
+   * @memberof Class_LinkElement
+   */
   public computeControlPoints() {
     this.computeStartingCurvePoint()
     this.computeEndingCurvePoint()
@@ -1974,6 +1980,7 @@ export abstract class Class_LinkElement
     if (this.shape_is_recycling)
       this.computeMiddleRecyclingPoint()
   }
+
   /**
    * Activate the control points alignement guide
    *
