@@ -15,7 +15,18 @@ export const table_edit_grp_tag_node_link = definePartsStyle({
   th: basic_th,
   tr: {
     minHeight: minHeightTableRow,
-    gridTemplateColumns: '0.75fr 2fr 1.5fr 0.25fr',
+    gridTemplateColumns: '0.75fr 2fr 1.5fr',
+    display: 'grid',
+  },
+})
+
+// Style of table to edit node/link/data group tags
+export const table_edit_grp_tag_data= definePartsStyle({
+  td: basic_td,
+  th: basic_th,
+  tr: {
+    minHeight: minHeightTableRow,
+    gridTemplateColumns: '0.75fr 2fr 1.5fr 1.5fr',
     display: 'grid',
   },
 })

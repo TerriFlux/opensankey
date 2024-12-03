@@ -95,7 +95,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     external_file_export_item: [],
     externale_save_item: [],
     externale_navbar_item: {},
-
+    footer:[],
     // Mise en page
     extra_background_element: <></>,
     apply_transformation_additional_elements: [<></>],
@@ -246,8 +246,8 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
           ]}
           reinitialization={reinitialization}
           formations_menu={additionalMenus.formations_menu}
-          additional_nav_item={
-            additionalMenus.additional_nav_item
+          additionalMenus={
+            additionalMenus
           }
           apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
           diagramSelector={initializeDiagrammSelector(new_data)}

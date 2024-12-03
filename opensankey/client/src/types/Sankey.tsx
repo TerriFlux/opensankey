@@ -30,7 +30,8 @@ import {
   Class_DataTag,
   Class_DataTagGroup,
   Class_TagGroup,
-  Class_LevelTagGroup
+  Class_LevelTagGroup,
+  Class_ProtoTagGroup
 } from './Tag'
 import {
   Type_JSON,
@@ -1519,7 +1520,7 @@ export abstract class Class_Sankey
    * @memberof Class_Sankey
    */
   public getTagGroupsAsList(type_group: Type_MacroTagGroup) {
-    return Object.values(this.getTagGroupsAsDict(type_group))
+    return Object.values(this.getTagGroupsAsDict(type_group)) 
   }
 
   /**
