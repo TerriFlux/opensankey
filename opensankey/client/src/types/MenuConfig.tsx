@@ -697,8 +697,11 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToNodes()
     this.updateAllComponentsRelatedToLinks()
     this.updateAllComponentsRelatedToToolbar()
-    Object.values(this._ref_to_menu_config_tags_updater)
-      .forEach(ref => ref.current())
+    this.updateAllComponentsRelatedToDataTags()
+    this.updateAllComponentsRelatedToNodeTags()
+    this.updateAllComponentsRelatedToFluxTags()
+    this.updateAllComponentsRelatedToLevelTags()
+
   }
 
   public updateMenuConfigComponent(){
