@@ -13,9 +13,11 @@ import colormap from 'colormap'
 import {
   Box,
   Button,
+  Checkbox,
   Input,
   InputGroup,
   Select,
+  Switch,
   Table,
   TableContainer,
   Tbody,
@@ -523,7 +525,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     <Box layerStyle='menuconfigpanel_grid'>
       {/* Groupe d'étiquette  */}
       <TableContainer>
-        <Table variant='table_edit_grp_tag_node_link'>
+        <Table variant={elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'}>
           {/* Entete du tableau de grouep d'etiquette  */}
           <Thead>
             <Tr>
@@ -540,13 +542,35 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
               {/* Autre entetes  */}
               <Th>{t('Tags.Nom')}</Th>
               <Th>{t('Tags.Bannière')}</Th>
-              {/* {(elementTagNameProp != 'data_taggs') ? <Th>{t('Tags.Position')}</Th> : <></>} */}
+              {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.sequence')}</Th> : <></>}
             </Tr>
           </Thead>
           {/* Liste des groupes d'étiquettes  */}
           <Tbody>
             {
               tags_group_list.map(tag_group => {
+
+                let dataTagg_special_column = <></>
+                const tag_group_as_data_grp = tag_group as Class_DataTagGroup
+                if (elementTagNameProp == 'data_taggs') {
+                  dataTagg_special_column =
+                    <OSTooltip label={t('Tags.tooltips.sequence')}>
+                      <Td>
+                        <Switch
+                          justifySelf='end'
+                          alignSelf='center'
+                          height='1rem'
+                          isChecked={tag_group_as_data_grp.is_sequence}
+                          onChange={evt => {
+                            tag_group_as_data_grp.is_sequence = evt.target.checked
+                            new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater.current()
+                            // Update menus
+                            updateThisAndRelatedComponents()
+                          }}
+                        />
+                      </Td>
+                    </OSTooltip>
+                }
                 return (
                   <Tr
                     key={tag_group.id}
@@ -621,31 +645,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                         </Select>
                       </OSTooltip>
                     </Td>
-                    {/* Monter ou descendre groupe d'étiquette  */}
-                    {/*
-                      (elementTagNameProp != 'data_taggs') ?
-                        <Td>
-                          Monter le groupe d'étiquette *
-                          <OSTooltip label={t('Tags.tooltips.up')}>
-                            <Button
-                              variant='menuconfigpanel_option_button_in_table'
-                              borderRadius='6px 0px 0px 6px'
-                              onClick={() => handleUpGrpTag(tags_group_entry_id)}>
-                              <FaArrowAltCircleUp />
-                            </Button>
-                          </OSTooltip>
-                            Descendre le groupe d'étiquettes
-                          <OSTooltip label={t('Tags.tooltips.down')}>
-                            <Button
-                              variant='menuconfigpanel_option_button_in_table'
-                              borderRadius='0px 6px 6px 0px'
-                              onClick={() => handleDownGrpTag(tags_group_entry_id)}>
-                              <FaArrowAltCircleDown />
-                            </Button>
-                          </OSTooltip>
-                        </Td> :
-                        <></>
-                    */}
+                    {/* is Sequence  */}
+                    {dataTagg_special_column}
                   </Tr>
                 )
               })

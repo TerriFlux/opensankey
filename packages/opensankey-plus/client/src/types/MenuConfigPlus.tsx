@@ -16,6 +16,7 @@ import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 
 // Local imports
 import { OSPShowMenuComponentsVarType } from './LegacyTypes'
+import { Class_DataTag, Class_DataTagGroup } from '../deps/OpenSankey/types/Tag'
 
 // CLASS MENU CONFIG PLUS ***************************************************************
 
@@ -33,6 +34,10 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
 
   private _ref_to_toolbar_link_visual_filter_updater: MutableRefObject<(() => void)>
+  //Var used for the dataTagg sequence component
+  private _is_playing_sequence: boolean = false
+  private _is_sequence_loop: boolean = false
+
 
   /* ========================================
     Updater of component for containers related menus
@@ -60,6 +65,9 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_: boolean) => void>
   private _ref_to_save_diagram_only_view_updater: MutableRefObject<(() => void)>
 
+  private _ref_to_drawer_sequence_data_tag_updater: MutableRefObject<(() => void)>
+
+
   /* ========================================
   Updater of component for node plus related menus
   ========================================*/
@@ -77,6 +85,10 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   private _ref_to_updater_modal_apply_layout_plus: MutableRefObject<(() => void)>
 
+  // Timeout between steps in sequence (in ms)
+  private _timeout_sequence: number = 2000
+
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -92,6 +104,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_accordion_views_updater = useRef(() => null)
     this._ref_to_accordion_containers_updater=useRef(()=>null)
     this._ref_to_save_diagram_only_view_updater = useRef(() => null)
+    this._ref_to_drawer_sequence_data_tag_updater = useRef(() => null)
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
     this._r_setter_editor_content_fo_node = useRef(() => null)
@@ -251,11 +264,13 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public override updateAllComponentsRelatedToDataTags(){
     super.updateAllComponentsRelatedToDataTags()
     this._ref_to_toolbar_data_tag_updater.current()
+    this._ref_to_drawer_sequence_data_tag_updater.current()
   }
 
   public override updateAllComponentsRelatedToLevelTags() {
     super.updateAllComponentsRelatedToLevelTags()
     this._ref_to_toolbar_level_tag_filter_updater.current()
+    this._ref_to_drawer_sequence_data_tag_updater.current()
   }
 
   /**
@@ -281,6 +296,50 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   public override updateComponentApplyLayout(){
     super.updateComponentApplyLayout()
     this._ref_to_updater_modal_apply_layout_plus.current()
+  }
+
+  /**
+   * Launch datatagg sequence, it go through each tag of a group and draw sankey
+   *
+   * @param {Class_DataTagGroup} tagg
+   * @memberof Class_MenuConfigPlus
+   */
+  public launchDataSequence(tagg: Class_DataTagGroup) {
+    const curr_tag = tagg.first_selected_tags as Class_DataTag | undefined
+    const tagg_list = tagg.tags_list
+
+    if (curr_tag && this._is_playing_sequence && tagg_list.length>1) {
+      const idx_curr_tag = tagg_list.indexOf(curr_tag)
+
+      if (idx_curr_tag < tagg_list.length - 1) {
+        // Draw sankey with next tag selected
+        const next_tag = tagg_list[idx_curr_tag + 1]
+        tagg.selectTagsFromId(next_tag.id)
+        // Lauch timeout to recursively call launchDataSequence
+        setTimeout(() => {
+          this.updateAllComponentsRelatedToDataTags()
+          this.launchDataSequence(tagg)
+        }, this._timeout_sequence)
+
+      } 
+      //If we are at the last tag of the group & loop sequence is at true then select first tag of the group 
+      else if( this._is_sequence_loop && idx_curr_tag == tagg_list.length - 1){
+        // Draw sankey with first tag of the group
+        const first_tag = tagg_list[0]
+        tagg.selectTagsFromId(first_tag.id)
+        // Lauch timeout to recursively call launchDataSequence
+        setTimeout(() => {
+          this.updateAllComponentsRelatedToDataTags()
+          this.launchDataSequence(tagg)
+        }, this._timeout_sequence)
+      }else {//get here when there is no next tag
+        this._is_playing_sequence = false
+        this.updateAllComponentsRelatedToDataTags()
+      }
+    } else {//get here when there curr_tag is undefined wich can be an error or we stop the sequence
+      this._is_playing_sequence = false
+      this.updateAllComponentsRelatedToDataTags()
+    }
   }
 
   // PROTECTED METHODS ==================================================================
@@ -328,5 +387,16 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get ref_to_menu_config_node_icon_updater(){return this._ref_to_menu_config_node_icon_updater}
 
-  public get ref_to_updater_modal_apply_layout_plus(): MutableRefObject<(() => void)> {return this._ref_to_updater_modal_apply_layout_plus}
+  public get ref_to_updater_modal_apply_layout_plus(): MutableRefObject<(() => void)> { return this._ref_to_updater_modal_apply_layout_plus }
+  public get ref_to_drawer_sequence_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_drawer_sequence_data_tag_updater }
+  
+  public get is_playing_sequence(): boolean { return this._is_playing_sequence }
+  public set is_playing_sequence(b: boolean) { this._is_playing_sequence = b }
+
+  public get is_sequence_loop(): boolean {return this._is_sequence_loop}
+  public set is_sequence_loop(value: boolean) {this._is_sequence_loop = value}
+
+  public get timeout_sequence(): number { return this._timeout_sequence }
+  public set timeout_sequence(value: number) { this._timeout_sequence = value }
+
 }

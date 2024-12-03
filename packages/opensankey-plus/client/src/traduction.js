@@ -243,7 +243,13 @@ export const resources = {
       'mfa_blocked': 'Blocked diagram elements (MFASankey)',
       'elements_sankey+_blocked_long': 'Some Sankey elements are not visible because they come from OpenSankey+ and your account does not have this module',
       'elements_mfa_blocked_long': 'Some Sankey elements are not visible because they come from MFASankey and your account does not have this module',
-
+      Tags:{
+        sequence:'Sequence',
+        sequence_timeout:'Timeout between steps',
+        tooltips:{
+          sequence:'Activate mode sequence for the datatag group, it make appear a sequential stepper to play tag after of the group'
+        }
+      },
       // Trad for icons
       'import':{'import':'Imported icon'},
       agricol:{
@@ -626,7 +632,13 @@ export const resources = {
       'elements_mfa_blocked': 'Elements du diagrame bloqués (MFASankey+)',
       'elements_sankey+_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de OpenSankey+ et votre compte ne possède pas ce module',
       'elements_mfa_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de MFASankey et votre compte ne possède pas ce module',
-
+      Tags:{
+        sequence:'Séquence',
+        sequence_timeout:'Délai entre étapes',
+        tooltips:{
+          sequence:'Active le mode séquence pour le groupe d\'étiquette de données, cela fait apparaitre un stepper pour afficher les tag du groupe à la suite'
+        }
+      },
       // Traduction pour le nom des icons
       'import':{'import':'Icônes importées'},
       agricol:{

@@ -1,7 +1,7 @@
 // External libs
 import React, { ChangeEvent, FunctionComponent, MutableRefObject, RefObject, useRef, useState } from 'react'
-import { FaFileImport } from 'react-icons/fa'
-import { Box, Checkbox, Button, Input, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, PopoverContent, NumberInput, NumberInputField, Popover, PopoverBody, PopoverCloseButton, PopoverHeader, PopoverTrigger, Slider, SliderFilledTrack, SliderThumb, SliderTrack, Text, Accordion, PopoverArrow, Select } from '@chakra-ui/react'
+import { FaCheck, FaFileImport, FaPause, FaPlay } from 'react-icons/fa'
+import { Box, Checkbox, Button, Input, AccordionButton, AccordionIcon, AccordionItem, AccordionPanel, PopoverContent, Popover, PopoverBody, PopoverCloseButton, PopoverHeader, PopoverTrigger, Slider, SliderFilledTrack, SliderThumb, SliderTrack, Text, Accordion, PopoverArrow, Select, Stepper, useSteps, Step, StepIndicator, StepSeparator, StepStatus, StepTitle, Menu, MenuButton, MenuItem, MenuList, ButtonGroup, MenuDivider } from '@chakra-ui/react'
 
 // Internal imports
 import {
@@ -22,13 +22,16 @@ import {
   Type_JSON
 } from './deps/OpenSankey/types/Utils'
 import { SankeySettingsEditionElementTags } from './MenuConfigEdition/SankeyPlusMenuConfigurationTags'
-import { faDatabase, faFolderTree, faSliders } from '@fortawesome/free-solid-svg-icons'
+import { faDatabase, faFolderTree, faRepeat, faSliders } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { AddAllDropDownFlux, AddAllDropDownNode, DataTagSelector } from './deps/OpenSankey/configmenus/SankeyMenuBanner'
 import { default_container_content } from './types/FreeLabel'
 import { OSPData, ViewType } from './types/LegacyTypes'
 import { GetOldDataFromView } from './SankeyPlusConvert'
 import { ConfigMenuNumberInput } from './deps/OpenSankey/configmenus/SankeyMenuConfiguration'
+import { Type_GenericApplicationDataOSP } from './types/TypesOSP'
+import { Class_DataTagGroup } from './deps/OpenSankey/types/Tag'
+import { ChevronRightIcon } from '@chakra-ui/icons'
 
 export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
@@ -102,7 +105,7 @@ export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag
   new_data_plus
 }) => {
 
-  const [,setUpdate]=useState(0)
+  const [, setUpdate] = useState(0)
   const { t } = new_data_plus
   const show_menu_config_tag = (
     new_data_plus.menu_configuration.isGivenAccordionShowed('EN') ||
@@ -110,7 +113,7 @@ export const MenuConfEditionTag: FunctionComponent<FCType_MenuConfEditionDataTag
     new_data_plus.menu_configuration.isGivenAccordionShowed('ED')
   )
 
-  new_data_plus.menu_configuration.ref_to_accordion_edition_tag_updater.current=()=>setUpdate(a=>a+1)
+  new_data_plus.menu_configuration.ref_to_accordion_edition_tag_updater.current = () => setUpdate(a => a + 1)
   return show_menu_config_tag ?
     <AccordionItem>
       {
@@ -326,8 +329,8 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
                 }
                 if (value) {
                   new_data_plus.drawing_area.filter_link_value = value
-                setCount(a => a + 1)
-                new_data_plus.drawing_area.sankey.draw()
+                  setCount(a => a + 1)
+                  new_data_plus.drawing_area.sankey.draw()
                 }
 
                 ref.current?.focus() //avoid closure of popover
@@ -368,10 +371,10 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
                 if (value) {
                   if (value > max_link_value) {
                     value = max_link_value
-                }
+                  }
                   new_data_plus.drawing_area.filter_label = value
-                setCount(a => a + 1)
-                new_data_plus.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
+                  setCount(a => a + 1)
+                  new_data_plus.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
                 }
 
                 ref.current?.focus() //avoid closure of popover
@@ -602,7 +605,7 @@ export const ToolBarLevelFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({
       new_data={new_data_plus}
     />
   } else if (mutli_level) { // has other level group tag than 'Primaire'
-    content_popover=<AddAllDropDownNode
+    content_popover = <AddAllDropDownNode
       new_data={new_data_plus}
       level={true} />
   }
@@ -755,24 +758,24 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
     Object.values(containers).forEach(el => {
       const cont = el as Type_JSON
 
-      if(cont.name!==undefined){
-        cont.content=cont.name as string
+      if (cont.name !== undefined) {
+        cont.content = cont.name as string
         if (!cont.content.includes('<p')) {
           if (cont.font_uppercase && !cont.content.includes('ql-align-center')) {
             cont.content = cont.content.toUpperCase()
           }
 
           if (cont.font_weight) {
-            cont.content=cont.content?'<strong>'+cont.content+'</strong>':''
+            cont.content = cont.content ? '<strong>' + cont.content + '</strong>' : ''
           }
-          if (cont.position_horiz === 'gauche' ) {
-            cont.content=cont.content?'<p class="ql-align-left">'+cont.content+'</p>':''
+          if (cont.position_horiz === 'gauche') {
+            cont.content = cont.content ? '<p class="ql-align-left">' + cont.content + '</p>' : ''
           }
-          if (cont.position_horiz === 'centre' ) {
-            cont.content=cont.content?'<p class="ql-align-center">'+cont.content+'</p>':''
+          if (cont.position_horiz === 'centre') {
+            cont.content = cont.content ? '<p class="ql-align-center">' + cont.content + '</p>' : ''
           }
-          if (cont.position_horiz === 'droite' ) {
-            cont.content=cont.content?'<p class="ql-align-right">'+cont.content+'</p>':''
+          if (cont.position_horiz === 'droite') {
+            cont.content = cont.content ? '<p class="ql-align-right">' + cont.content + '</p>' : ''
           }
         }
       }
@@ -780,9 +783,9 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       const container_content = getStringFromJSON(cont, 'content', default_container_content)
       const container_opacity = getBooleanFromJSON(cont, 'transparent', false)
       const container_opacity_int = getNumberOrUndefinedFromJSON(cont, 'opacity')
-      if(container_opacity_int!==undefined){
+      if (container_opacity_int !== undefined) {
         cont['opacity'] = container_opacity_int
-      }else if (container_opacity) {
+      } else if (container_opacity) {
         cont['opacity'] = 0
       } else {
         cont['opacity'] = 100
@@ -837,4 +840,205 @@ export function getOldViewsFromJSON(
       return _
   }
   return undefined
+}
+
+type FCType_DrawerSequenceDataTagg = { new_data: Type_GenericApplicationDataOSP }
+
+export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceDataTagg> = ({ new_data }) => {
+  const [, setUpdate] = useState(0)
+  new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater.current = () => setUpdate(a => a + 1)
+  const [active_grp, setActiveGrp] = useState('')
+
+  const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).is_sequence)
+  const dict_data_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+  const list_grp_seq_id = list_grp_seq.map(grp => grp.id)
+  const has_sequence = list_grp_seq.length > 0
+
+  if (has_sequence && !list_grp_seq_id.includes(active_grp)) {
+    setActiveGrp(list_grp_seq_id[0])
+  }
+  const ref_set_number_input = useRef((_: string | null | undefined) => null)
+  ref_set_number_input.current(String(new_data.menu_configuration.timeout_sequence))
+
+  // Create stepper of active groupe
+  const stepper_sequence: JSX.Element = <StepperDataTagg new_data={new_data} DataGroup={dict_data_grp[active_grp] as Class_DataTagGroup} />
+
+  // Logo of the button to start/pause the sequence
+  const logo_btn = !new_data.menu_configuration.is_playing_sequence ? <FaPlay /> : <FaPause />
+  const setter_timeout = <Box layerStyle='config_timeout_sequence' >
+    <Box layerStyle='menuconfigpanel_option_name'>
+      {new_data.t('Tags.sequence_timeout')}
+    </Box>
+
+    <ConfigMenuNumberInput
+      default_value={new_data.menu_configuration.timeout_sequence}
+      ref_to_set_value={ref_set_number_input}
+      minimum_value={1}
+      function_on_blur={(value) => {
+        if (value) {
+          if (value > 0) {
+            new_data.menu_configuration.timeout_sequence = value
+          }
+        }
+      }}
+      unit_text='ms'
+    />
+  </Box>
+
+  // If multiple dataTagg are a sequence we can add a Menu to choose which one we want to launch
+  const select_active_grp = list_grp_seq.length > 1 ? <>
+    {list_grp_seq.map(el => {
+      return <MenuItem
+        onClick={() => setActiveGrp(el.id)}
+        icon={active_grp === el.id ? <FaCheck /> : <></>}
+        style={{ display: 'block' }}
+      >
+        {el.name}
+      </MenuItem>
+    })}
+    <MenuDivider />
+  </> : <></>
+
+  // Menu with option like selective active sequence & timeout between steps
+  const option_btn = <Menu>
+    <MenuButton
+      as={Button}
+      isDisabled={new_data.menu_configuration.is_playing_sequence}
+      variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_menu_play' : 'button_dataTagg_sequence_menu_pause'}
+    >
+      <ChevronRightIcon />
+    </MenuButton>
+    <MenuList>
+      {select_active_grp}
+      {setter_timeout}
+    </MenuList>
+  </Menu>
+
+  return has_sequence ? (
+    <Box
+      layerStyle='box_sequence'
+    >
+      <ButtonGroup isAttached>
+        <Button
+          variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
+          onClick={() => {
+            // Either launch or stop data sequence
+            if (new_data.menu_configuration.is_playing_sequence) {
+              // Stop sequence
+              new_data.menu_configuration.is_playing_sequence = false
+            } else {
+              // Start sequence
+              new_data.menu_configuration.is_playing_sequence = true
+              const curr_active_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')[active_grp] as Class_DataTagGroup
+              new_data.menu_configuration.launchDataSequence(curr_active_grp)
+            }
+            setUpdate(a => a + 1)
+          }}
+        >
+          {logo_btn}
+        </Button>
+        <Button
+          variant={new_data.menu_configuration.is_sequence_loop ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
+          onClick={() => {
+            // Switch 'is sequence loop' value 
+            new_data.menu_configuration.is_sequence_loop = !new_data.menu_configuration.is_sequence_loop
+            setUpdate(a => a + 1)
+          }}>
+          <FontAwesomeIcon icon={faRepeat} />
+        </Button>
+        {option_btn}
+      </ButtonGroup>
+      {stepper_sequence}
+    </Box>
+  ) : <></>
+}
+type FCType_StepperDataTagg = { new_data: Type_GenericApplicationDataOSP, DataGroup: Class_DataTagGroup }
+
+// Compoenent returing a stepper of a dataTagg where each step is a tag of the group with visual indication to which tag is selected
+const StepperDataTagg: FunctionComponent<FCType_StepperDataTagg> = ({ new_data, DataGroup }) => {
+  const stepper_sequence = DataGroup.tags_list.map((tag, idx) => { return { id_tag: tag.id, title: tag.name, selected: tag.is_selected, id: idx } })
+  const selected_id = stepper_sequence.find(el => el.selected)?.id ?? -1
+  const { activeStep, setActiveStep } = useSteps({
+    index: selected_id,
+    count: stepper_sequence.length,
+  })
+
+  if (activeStep !== -1 && activeStep !== selected_id) {
+    setActiveStep(selected_id)
+  }
+  // Fucntion used when we click on a step to manually switch to clicked tag
+  const switchCurrTag = (idx: number) => {
+    DataGroup.selectTagsFromId(stepper_sequence[idx].id_tag)
+    new_data.drawing_area.checkAndUpdateAreaSize()
+    new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+
+  }
+
+  return <Box layerStyle='box_stepper'>
+    {/* First stepper that have progression bar of the sequence with steps */}
+    <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
+      {stepper_sequence.map((step, index) => (
+        <Step key={index} onClick={() => switchCurrTag(index)}>
+          <>
+            <Box width='100%'>
+              <Box display='flex' alignItems='center'>
+                <StepIndicator
+                  sx={{
+                    '[data-status=complete] &': {
+                      background: 'white',
+                      borderWidth: '2px',
+                      borderColor: 'secondaire.3',
+                    },
+                    '[data-status=active] &': {
+                      background: 'primaire.3',
+                      borderColor: 'secondaire.3',
+                    },
+                    '[data-status=incomplete] &': {
+                      background: 'white',
+                      borderColor: 'secondaire.3',
+                    },
+                  }}
+                >
+                  <StepStatus />
+
+                </StepIndicator>
+
+                <StepSeparator sx={{
+                  '[data-status=complete] &': {
+                    background: 'lightgrey',
+                  },
+                  '[data-status=active] &': {
+                    background: 'lightgrey',
+                  },
+                  '[data-status=incomplete] &': {
+                    background: 'lightgrey',
+                  },
+                }} />
+              </Box>
+
+            </Box>
+          </>
+        </Step>
+      ))}
+    </Stepper>
+    
+    {/* Second stepper just to have text well aligned with indicator */}
+    <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
+      {stepper_sequence.map((step, index) => (
+        <Step key={index} onClick={() => switchCurrTag(index)}>
+          <>
+            <Box width='100%'>
+              <Box display='flex' alignItems='center'>
+
+                <StepTitle >{step.title}</StepTitle>
+              </Box>
+
+            </Box>
+          </>
+
+        </Step>
+
+      ))}
+    </Stepper>
+  </Box>
 }
