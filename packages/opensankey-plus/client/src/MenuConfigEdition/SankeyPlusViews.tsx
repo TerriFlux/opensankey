@@ -606,12 +606,6 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
     }
     value={cur_view.id}
   >
-    <option
-      hidden
-      value={default_main_sankey_id}
-    >
-      {t('view.actual')}
-    </option>
     {
       new_data_plus.views
         .map(view => {
@@ -619,7 +613,7 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
             key={view.id}
             value={view.id}
           >
-            {view.name}
+            {view.id === default_main_sankey_id ? t('view.actual') : view.name}
           </option>
         })
     }
