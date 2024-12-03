@@ -1203,11 +1203,11 @@ const convert_tags: convert_tagsFuncType = (
   }
 }
 
-export const NodeHasDisplayedLevel=(
-  data:SankeyData,
-  n:SankeyNode
-)=>{
-  let to_display=true
+export const NodeHasDisplayedLevel = (
+  data: SankeyData,
+  n: SankeyNode
+) => {
+  let to_display = true
   // Check if there is other aggregation tags than 'Primaire',
   //const multi_level=Object.entries(data.levelTags).filter(nt=> nt[0]!=='Primaire').map(nt=>nt[0]).length>0
 
@@ -1221,17 +1221,17 @@ export const NodeHasDisplayedLevel=(
   // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
   // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
   // - The node has the grp tag name in his tags
-  Object.entries(data.levelTags).filter(nt=>
+  Object.entries(data.levelTags).filter(nt =>
     nt[1].activated && Object.keys(n.tags).includes(nt[0])
-  ).forEach(nt=>{
+  ).forEach(nt => {
     // Check tags from the group attribued to the node
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
-    const node_tags_attr=n.tags[nt[0]]
-    if(node_tags_attr != undefined && node_tags_attr.length!=0){
+    const node_tags_attr = n.tags[nt[0]]
+    if (node_tags_attr != undefined && node_tags_attr.length != 0) {
       // If the node has at least 1 tag from the selected tag of the group then we display it
       // If the node has tag from the group attribued to it but are not selected then we don't display it
-      const tags_from_grp_to_display=Object.values(nt[1].tags).filter(t=>t.selected).map(t=>t.name)
-      to_display=(node_tags_attr.filter(t=>tags_from_grp_to_display.includes(t)).length>0)?to_display:false
+      const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t.name)
+      to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
 
     }
   })
@@ -1486,28 +1486,28 @@ const convert_nodes: convert_nodesFuncType = (
     // } else if (n.local?.local_aggregation == true && NodeHasDisplayedLevel(data,n)){
     //   delete n.local?.local_aggregation
     // }
-  const forceShowParent = (
-    data:SankeyData,
-    node :SankeyNode,
-    dim:string
-  ) => {
-    let children = Object.values(data.nodes).filter(nn => dim in nn.dimensions)
-    children = children.filter(nn => nn.dimensions[dim].parent_name == node.idNode)
-    children.forEach(child => {
-      child.dimensions[dim].force_show_parent = true
-      treatExchangeNodes(data, child, dim, false)
-      if (!NodeHasDisplayedLevel(data,child)) {
-        forceShowParent(data,child,dim)
-      }
-    })
-  }
+    const forceShowParent = (
+      data: SankeyData,
+      node: SankeyNode,
+      dim: string
+    ) => {
+      let children = Object.values(data.nodes).filter(nn => dim in nn.dimensions)
+      children = children.filter(nn => nn.dimensions[dim].parent_name == node.idNode)
+      children.forEach(child => {
+        child.dimensions[dim].force_show_parent = true
+        treatExchangeNodes(data, child, dim, false)
+        if (!NodeHasDisplayedLevel(data, child)) {
+          forceShowParent(data, child, dim)
+        }
+      })
+    }
 
-  const treatExchangeNodes = (
-    data:SankeyData,
-    node :SankeyNode,
-    dim:string,
-    set_children: boolean
-  ) =>{
+    const treatExchangeNodes = (
+      data: SankeyData,
+      node: SankeyNode,
+      dim: string,
+      set_children: boolean
+    ) => {
       // Check if there are possible Exchange nodes
       if (!data.nodeTags['type de noeud']) {
         return
@@ -1517,7 +1517,7 @@ const convert_nodes: convert_nodesFuncType = (
       node.inputLinksId
         .forEach(lid => {
           const input_node = data.nodes[data.links[lid].idSource]
-          if (input_node.tags['type de noeud'][0]=='echange') {
+          if (input_node.tags['type de noeud'][0] == 'echange') {
             if (set_children) {
               input_node.dimensions[dim].force_show_children = true
             } else {
@@ -1530,7 +1530,7 @@ const convert_nodes: convert_nodesFuncType = (
       node.outputLinksId
         .forEach(lid => {
           const output_node = data.nodes[data.links[lid].idTarget]
-          if (output_node.tags['type de noeud'][0]=='echange') {
+          if (output_node.tags['type de noeud'][0] == 'echange') {
             if (set_children) {
               output_node.dimensions[dim].force_show_children = true
             } else {
@@ -1539,30 +1539,31 @@ const convert_nodes: convert_nodesFuncType = (
           }
         })
     }
+
     const is_exchange = data.nodeTags['type de noeud'] && n.tags['type de noeud'] && (n.tags['type de noeud'][0] == 'echange')
     const local_aggregation = n.local?.local_aggregation
     if (local_aggregation != undefined && !is_exchange) {
-      Object.entries(n.dimensions).forEach(dim=>{
+      Object.entries(n.dimensions).forEach(dim => {
         if (!data.levelTags[dim[0]].activated) {
           return
         }
-        const node_tags_attr=n.tags[dim[0]]
-        if(node_tags_attr != undefined && node_tags_attr.length!=0){
+        const node_tags_attr = n.tags[dim[0]]
+        if (node_tags_attr != undefined && node_tags_attr.length != 0) {
           // If the node has at least 1 tag from the selected tag of the group then we display it
           // If the node has tag from the group attribued to it but are not selected then we don't display it
-          const tags_from_grp_to_display=Object.values(data.levelTags[dim[0]].tags).filter(t=>t.selected).map(t=>t.name)
-          const tag_visible = node_tags_attr.filter(t=>tags_from_grp_to_display.includes(t)).length > 0
+          const tags_from_grp_to_display = Object.values(data.levelTags[dim[0]].tags).filter(t => t.selected).map(t => t.name)
+          const tag_visible = node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0
           if (!tag_visible && local_aggregation) {
             // Force to show this node
             if (+node_tags_attr[0] > +tags_from_grp_to_display[0] &&
-                dim[1].parent_name &&
-                data.nodes[dim[1].parent_name!].local &&
-                data.nodes[dim[1].parent_name!].local!.local_aggregation == false
+              dim[1].parent_name &&
+              data.nodes[dim[1].parent_name!].local &&
+              data.nodes[dim[1].parent_name!].local!.local_aggregation == false
             ) {
               dim[1].force_show_children = true
-              treatExchangeNodes(data,n,dim[0],true)
+              treatExchangeNodes(data, n, dim[0], true)
             } else {
-              forceShowParent(data,n,dim[0])
+              forceShowParent(data, n, dim[0])
             }
           } /*else if (tag_visible && !local_aggregation) {
             if (+node_tags_attr[0] <= +tags_from_grp_to_display[0]) {
@@ -1570,8 +1571,6 @@ const convert_nodes: convert_nodesFuncType = (
             }
           }*/
         }
-
-
       })
     }
 
@@ -1627,22 +1626,22 @@ const convert_nodes: convert_nodesFuncType = (
 
         // Code below is to correct bad parentship relation coming from legacy
         // Get lists of parents
-        const node_parents_id = (node:SankeyNode) => {
-          return Object.values(node.dimensions).filter(dim=>dim.parent_name).map(dim=>dim.parent_name)
+        const node_parents_id = (node: SankeyNode) => {
+          return Object.values(node.dimensions).filter(dim => dim.parent_name).map(dim => dim.parent_name)
         }
         // for a given parent retrives the corresponding dim
-        const parent_dim = (node:SankeyNode,parent_id:string) => {
-          return Object.entries(node.dimensions).filter(dim=>dim[1].parent_name == parent_id).map(dim=>dim[0])
+        const parent_dim = (node: SankeyNode, parent_id: string) => {
+          return Object.entries(node.dimensions).filter(dim => dim[1].parent_name == parent_id).map(dim => dim[0])
         }
         const parents_id = node_parents_id(n)
-        parents_id.forEach(parent_id=>{
+        parents_id.forEach(parent_id => {
           const grand_parents_id = node_parents_id(data.nodes[parent_id!])
           const intersection = new Set(grand_parents_id).intersection(new Set(parents_id))
-          if (intersection.size>0) {
+          if (intersection.size > 0) {
             // if a grand parent is the same as a parent we caught a bad parentship relation
             // and we delete it
             const parent_node = [...intersection][0]
-            delete n.dimensions[parent_dim(n,parent_node!)[0]]
+            delete n.dimensions[parent_dim(n, parent_node!)[0]]
           }
         })
       })
