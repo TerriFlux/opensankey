@@ -29,6 +29,8 @@ export type Type_AdditionalMenus = {
   externale_save_item: JSX.Element[],
   externale_navbar_item: { [_: string]: JSX.Element }
 
+  footer:JSX.Element[]
+
   // Mise en page
   extra_background_element: JSX.Element
   apply_transformation_additional_elements: JSX.Element[]
