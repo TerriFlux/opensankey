@@ -1399,6 +1399,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // Display attributes
   private _show_legend: boolean = false
 
+  private _is_sequence: boolean = false
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   protected _tags: { [_: string]: Class_DataTag } = {}
@@ -1441,6 +1443,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   ) {
     super._toJSON(json_object, kwargs)
     json_object['show_legend'] = this._show_legend
+    json_object['is_sequence']=this._is_sequence
   }
 
   protected _fromJSON(
@@ -1449,6 +1452,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   ) {
     super._fromJSON(json_object, kwargs)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
+    this._is_sequence = getBooleanFromJSON(json_object, 'is_sequence', this._is_sequence)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -1459,6 +1463,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     super.selectTagsFromId(id)
     this.first_selected_tags?.update()
     this.checkSelectionCoherence()
+    this._ref_sankey.drawing_area.checkAndUpdateAreaSize()
   }
 
   public selectTagsFromIds(
@@ -1515,6 +1520,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
 
   public get show_legend(): boolean { return this._show_legend }
+  public get is_sequence(): boolean {return this._is_sequence}
 
   // SETTER ==============================================================================
 
@@ -1525,6 +1531,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       this.updateTagsReferences()
     }
   }
+  public set is_sequence(value: boolean) {this._is_sequence = value}
 }
 
 // CLASS PROTO TAGGROUP *****************************************************************
