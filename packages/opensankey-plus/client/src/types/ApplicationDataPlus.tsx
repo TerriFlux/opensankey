@@ -375,7 +375,9 @@ export abstract class Class_ApplicationDataPlus
     // Create the new sankey
     const new_drawing_area = this.createNewDrawingArea(makeId('view'))
     // Copy current sankey
-    new_drawing_area.copyFrom(base_drawing_area)
+    const name = new_drawing_area.name
+    new_drawing_area.copyFrom(base_drawing_area) // /!\ CopyFrom overwrites drawing area's name
+    new_drawing_area.name = name
     // Add new sankey to views
     this._views[new_drawing_area.id] = new_drawing_area
     this.pushViewIdInViewOrder(new_drawing_area.id)
