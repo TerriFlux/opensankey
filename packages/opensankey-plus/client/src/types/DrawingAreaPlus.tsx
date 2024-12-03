@@ -403,7 +403,6 @@ export abstract class Class_DrawingAreaPlus
   }
 
   // GETTERS / SETTERS ==================================================================
-
   public get id() { return this._sankey.id }
   public get name() { return this._sankey.name }
   public set name(name: string) { this._sankey.name = name }

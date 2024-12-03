@@ -41,6 +41,7 @@ import {
 } from './MenuConfigEdition/SankeyPlusMenuConfigurationLabels'
 import { ButtonNodeContextMaskValue, ButtonNodeContextShowTagMenu, ButtonNodeContextShowTooltipMenu, ButtonNodeContextStartAnimation, NodeBgLabel, NodeHyperLinkOSP, NodeIconOSP, NodeValue } from './MenuConfigEdition/SankeyPlusNodes'
 import {
+  DrawerSequenceDataTagg,
   ImportImageAsSvgBg,
   MenuConfEditionTag,
   ToolBarDataTagFilter,
@@ -306,6 +307,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       new_data_plus={new_data_plus}
     />
   )
+  
+  //Add data sequence in footer
+  additionalMenus.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus}/>)
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
@@ -387,7 +391,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
         menu_for_modal={true}
       />}
       title={new_data_plus.t('Menu.flux') + ' ' + new_data_plus.t('Flux.IB')}
-    />
+    />,
   ]
 
   return [
