@@ -803,8 +803,6 @@ export abstract class Class_NodeElement
         Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
-        //TODO optimise this global draw here
-        this.sankey.drawing_area.draw()
         return
       }
       const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
@@ -826,8 +824,6 @@ export abstract class Class_NodeElement
             output_node.drawParent(id)
           }
         })
-      //TODO optimise this global draw here
-      this.sankey.drawing_area.draw()
     }
   }
 
@@ -845,8 +841,6 @@ export abstract class Class_NodeElement
         Object.values(this._dimensions_as_parent)[Object.values(this._dimensions_as_parent).length - 1].setForceToShowChildren()
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
-        //TODO optimise this global draw here
-        this.sankey.drawing_area.draw()
         return
       }
       const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
@@ -868,8 +862,6 @@ export abstract class Class_NodeElement
             output_node.drawChildren(id)
           }
         })
-      //TODO optimise this global draw here
-      this.sankey.drawing_area.draw()
     }
   }
 
