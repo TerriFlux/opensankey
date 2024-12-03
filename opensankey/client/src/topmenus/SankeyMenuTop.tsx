@@ -1022,7 +1022,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     cardsTemplate,
     external_modal,
     reinitialization,
-    additional_nav_item,
+    additionalMenus,
     apply_transformation_additional_elements,
     diagramSelector,
     formations_menu,
@@ -1086,7 +1086,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
   const constent_additional_nav_item = <>
     {
-      additional_nav_item.map((el, i) => {
+      additionalMenus.additional_nav_item.map((el, i) => {
         return <React.Fragment key={'add_menu' + i}>{el}</React.Fragment>
       })
     }
@@ -1336,9 +1336,11 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             bottom='0'
             layerStyle='menubottom_layout_style'
           >
+            {additionalMenus.footer}
             <Box
               display='grid'
-              gridTemplateColumns='1fr 1fr 1fr 1fr 30rem'
+              gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
+              margin='0.2rem'
             >
               <Box
                 layerStyle='menubottom_item_style'
