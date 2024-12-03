@@ -1486,6 +1486,22 @@ const convert_nodes: convert_nodesFuncType = (
     // } else if (n.local?.local_aggregation == true && NodeHasDisplayedLevel(data,n)){
     //   delete n.local?.local_aggregation
     // }
+  const forceShowParent = (
+    data:SankeyData, 
+    node :SankeyNode,
+    dim:string
+  ) => {
+    let children = Object.values(data.nodes).filter(nn => dim in nn.dimensions)
+    children = children.filter(nn => nn.dimensions[dim].parent_name == node.idNode)
+    children.forEach(child => {
+      child.dimensions[dim].force_show_parent = true
+      treatExchangeNodes(data, child, dim, false)
+      if (!NodeHasDisplayedLevel(data,child)) {
+        forceShowParent(data,child,dim)
+      }
+    })
+  }
+
   const treatExchangeNodes = (
     data:SankeyData, 
     node :SankeyNode,
@@ -1546,12 +1562,7 @@ const convert_nodes: convert_nodesFuncType = (
               dim[1].force_show_children = true
               treatExchangeNodes(data,n,dim[0],true)
             } else {
-              let children = Object.values(data.nodes).filter(nn=>dim[0] in nn.dimensions)
-              children = children.filter(nn=>nn.dimensions[dim[0]].parent_name==n.idNode)
-              children.forEach(child=>{
-                child.dimensions[dim[0]].force_show_parent = true
-                treatExchangeNodes(data,child,dim[0],false)
-              })              
+              forceShowParent(data,n,dim[0])              
             }
           } /*else if (tag_visible && !local_aggregation) {
             if (+node_tags_attr[0] <= +tags_from_grp_to_display[0]) {
@@ -1559,6 +1570,8 @@ const convert_nodes: convert_nodesFuncType = (
             }            
           }*/
         }
+
+
       })
     }
 
