@@ -139,10 +139,6 @@ export abstract class Class_ZoneSelection
 
   // PROTECTED METHOD ==================================================================
 
-  public override applyPosition(): void {
-    this._applyPosition()
-  }
-
   /**
    * Draw the element if visible
    * @memberof Class_ZoneSelection
