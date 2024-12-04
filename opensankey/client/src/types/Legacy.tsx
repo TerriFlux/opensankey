@@ -1633,20 +1633,17 @@ const convert_nodes: convert_nodesFuncType = (
         const parent_dim = (node: SankeyNode, parent_id: string) => {
           return Object.entries(node.dimensions).filter(dim => dim[1].parent_name == parent_id).map(dim => dim[0])
         }
-        const parents_id = node_parents_id(n) as string[]
-        parents_id
-          .filter(pid=>data.nodes[pid].tags[leveltagg_id] && data.nodes[pid].tags[leveltagg_id][0]!='0')
-          //the problem is here if parents are visible (see an example in paille for grains de sarrasins)
-          .forEach(parent_id => {
-            const grand_parents_id = node_parents_id(data.nodes[parent_id!])
-            const intersection = new Set(grand_parents_id).intersection(new Set(parents_id))
-            if (intersection.size > 0) {
-              // if a grand parent is the same as a parent we caught a bad parentship relation
-              // and we delete it
-              const parent_node = [...intersection][0]
-              delete n.dimensions[parent_dim(n, parent_node!)[0]]
-            }
-          })
+        const parents_id = node_parents_id(n)
+        parents_id.forEach(parent_id => {
+          const grand_parents_id = node_parents_id(data.nodes[parent_id!])
+          const intersection = new Set(grand_parents_id).intersection(new Set(parents_id))
+          if (intersection.size > 0) {
+            // if a grand parent is the same as a parent we caught a bad parentship relation
+            // and we delete it
+            const parent_node = [...intersection][0]
+            delete n.dimensions[parent_dim(n, parent_node!)[0]]
+          }
+        })
       })
 
 
