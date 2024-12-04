@@ -251,6 +251,7 @@ export const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
   link_style.label_visible = true
   link_style.idLink = 'LinkExportStyle'
   link_style.name = 'Flux de type exportations'
+  link_style.starting_tangeant = 1
   return link_style
 }
 /**
@@ -267,6 +268,7 @@ export const DefaultLinkImportStyle: DefaultLinkStyleFuncType = () => {
   link_style.label_visible = true
   link_style.idLink = 'LinkImportStyle'
   link_style.name = 'Flux de type importations'
+  link_style.ending_tangeant = 1
   return link_style
 }
 
