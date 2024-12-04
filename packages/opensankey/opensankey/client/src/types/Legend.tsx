@@ -364,7 +364,6 @@ export class Class_Legend
       .attr('stroke-width', this._legend_bg_border ? 1 : 0)
       .attr('fill', this._legend_bg_color)
       .attr('fill-opacity', this._legend_bg_opacity / 100)
-
   }
 
   /**
@@ -626,7 +625,7 @@ export class Class_Legend
   }
 
   public get masked(): boolean { return this._masked }
-  public set masked(value: boolean) { this._masked = value; this.draw() }
+  public set masked(value: boolean) { this._masked = value; this.draw(); this.drawing_area.checkAndUpdateAreaSize()}
 
   public get display_legend_scale(): boolean { return this._display_legend_scale }
   public set display_legend_scale(value: boolean) { this._display_legend_scale = value; this.draw() }
