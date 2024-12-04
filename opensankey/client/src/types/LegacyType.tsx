@@ -165,6 +165,7 @@ export type SankeyLinkAttrLocal = {
   font_family?: string,
   label_unit_visible?: boolean,
   label_unit?: string,
+  label_unit_factor?: number,
   custom_digit?: boolean,
   nb_digit?: number
 }
