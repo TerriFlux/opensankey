@@ -233,8 +233,8 @@ export abstract class Class_DrawingAreaPlus
    */
   protected _initDraw() {
     super._initDraw()
-    this.d3_selection_free_label = this.d3_selection?.insert('g', '#g_links').attr('id', 'g_labels') ?? null
-    this.d3_selection_def_gradient = this.d3_selection?.append('g').attr('id', 'def_gradient') ?? null
+    this.d3_selection_free_label = this.d3_selection_elements_group?.insert('g', '#g_links').attr('id', 'g_labels') ?? null
+    this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
   }
 
   /**
@@ -272,28 +272,6 @@ export abstract class Class_DrawingAreaPlus
         .style('background-size', 'contain')
         .style('background-repeat', 'no-repeat')
     }
-  }
-
-  /**
-   * Override getElementsPosInDA so it take into account container
-   *
-   * @memberof Class_DrawingAreaPlus
-   */
-  protected getElementsPosInDA() {
-    const [max_x_node, max_y_node] = super.getElementsPosInDA()
-    let max_free_label_pos_x = 0
-    let max_free_label_pos_y = 0
-    this.sankey.visible_containers_list.map(free_label => {
-      const free_label_rightest_pos = free_label.position_x + free_label.label_width
-      const free_label_bottomest_pos = free_label.position_y + free_label.label_height
-      max_free_label_pos_x = Math.max(max_free_label_pos_x, free_label_rightest_pos)
-      max_free_label_pos_y = Math.max(max_free_label_pos_y, free_label_bottomest_pos)
-    })
-
-    const max_x = Math.max(max_free_label_pos_x, max_x_node)
-    const max_y = Math.max(max_free_label_pos_y, max_y_node)
-
-    return [max_x, max_y]
   }
 
   /**
