@@ -34,6 +34,7 @@ export abstract class Class_AbstractDrawingArea {
   // Mandatory attributes
   public abstract application_data: Class_AbstractApplicationData
   public abstract d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
+  public abstract d3_selection_zoom_area: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null
   public abstract static: boolean
   public abstract bypass_redraws: boolean
   // Mandatory methods
@@ -54,6 +55,7 @@ export abstract class Class_AbstractDrawingArea {
   public abstract draw(): void
   public abstract orderElements(): void
   public abstract computeParametricV(): void
+  public abstract getNavBarHeight():number
   // Mandatory getters
   public abstract get sankey(): Class_AbstractSankey
   public abstract get legend(): Class_Legend<Type_GenericDrawingArea, Type_GenericSankeyOS>

@@ -217,8 +217,8 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
 ) => {
   const { t } = new_data
   const _load_json = useRef<HTMLInputElement>(null)
-  const [,setUpdate]=useState(0)
-  new_data.menu_configuration.ref_to_submenu_updater.current=()=>setUpdate(b=>b+1)
+  const [, setUpdate] = useState(0)
+  new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
   const {
     ref_setter_show_modal_styles_nodes,
     ref_setter_show_modal_styles_links,
@@ -972,8 +972,10 @@ const clickSavePNG = (
   const form_data = new FormData()
   form_data.append('html', blob)
   let size_to_send = ''
+  const legend_w = !new_data.drawing_area.legend.masked ? new_data.drawing_area.legend.width : 0
+
   if (h !== undefined && v !== undefined) {
-    size_to_send = h + ' ' + v
+    size_to_send = parseInt(String(h + legend_w)) + ' ' + parseInt(String(v))
   }
 
   form_data.append('size', size_to_send)
@@ -1642,13 +1644,27 @@ const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
 
 export const pre_process_export_svg = (new_data: Type_GenericApplicationDataOS) => {
   new_data.drawing_area.purgeSelection()
-  const svg = new_data.drawing_area.d3_selection
+  new_data.drawing_area.areaAutoFit()
+
+  const svg = new_data.drawing_area.d3_selection_zoom_area
+  const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
+  const scale_da = new_data.drawing_area.getZoomScale()
+
+  // Legend width (if present)
+  const legend_w = !new_data.drawing_area.legend.masked ? new_data.drawing_area.legend.width : 0
+
+  svg_clone?.select('#g_drawing').attr('transform', 'translate(' + legend_w + ',0' + ') scale(' + scale_da + ')')
+  svg_clone?.select('#grp_legend .gg_legend').attr('transform', 'translate(0,0)')
+
   const svg_with_header = '<svg version="1.1" ' +
-    ' height=' + new_data.drawing_area.height.toString() +
-    ' width=' + new_data.drawing_area.width.toString() +
+    ' height=' + (new_data.drawing_area.height * scale_da + 5).toString() +
+    ' width=' + ((new_data.drawing_area.width * scale_da) + legend_w + 5).toString() +
     ' xmlns="http://www.w3.org/2000/svg">' +
-    (svg?.html() ?? '') +
+    (svg_clone?.node()?.innerHTML ?? '') +
     '</svg>'
+
+  svg_clone?.remove() // 
+
   return svg_with_header
 }
 
@@ -1669,10 +1685,10 @@ export const launchToastConstructor: FType_LaunchToastConstructor = (
   toast,
   intake?
 ) => {
-  const {t}= new_data
+  const { t } = new_data
   const defaultToastText = {
     success: { title: intake?.success ?? t('toast.toast_loading_success'), description: t('toast.toast_loading_success_desc') },
-    error: { title: t('toast.toast_loading_failed'), description: t('toast.toast_loading_failed_desc')},
+    error: { title: t('toast.toast_loading_failed'), description: t('toast.toast_loading_failed_desc') },
     loading: { title: intake?.loading ?? t('toast.toast_loading_waiting'), description: t('toast.toast_loading_waiting_desc') },
   }
   const tmp = new Promise((resole) => {

@@ -284,8 +284,10 @@ export class Class_Legend
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ): void {
     this._display.position.x += (event.sourceEvent.movementX)
+    if (this._display.position.x < 0) this._display.position.x = 0
     this._display.position.y += (event.sourceEvent.movementY)
-    // this.d3_selection?.attr('transform', 'translate(' + (this.position_x) + ',' + this.position_y + ')')
+    if (this._display.position.y < 0) this._display.position.y = 0
+
     this.setPosXY(this._display.position.x, this._display.position.y)
   }
 
@@ -295,13 +297,23 @@ export class Class_Legend
     this.draw()
   }
 
+  protected override _initDraw() {
+    const d3_svg = this.drawing_area.d3_selection_zoom_area
+    if (d3_svg !== null) {
+      const d3_drawing_area_selection = d3_svg.selectAll(' #' + this._svg_parent_group)
+      if (d3_drawing_area_selection.nodes().length > 0) {
+        this.d3_selection = d3_drawing_area_selection.append('g')
+        this.d3_selection.attr('id', this.svg_group)
+          .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
+      }
+    }
+  }
+
   protected _draw() {
     // Heritance of draw function
     super._draw()
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_legend')
-    // Apply styles
-    // this.d3_selection?.style('display', this._masked ? 'none' : '')
     // Draw Background
     this._drawLegendBg()
     // Reset content positionning
@@ -337,7 +349,7 @@ export class Class_Legend
     if (this.d3_selection !== null) {
       this.d3_selection.attr(
         'transform',
-        'translate(' + this.position_x + ', ' + this.position_y + ')' + ' scale(' + this._scale + ')')
+        'translate(' + this.position_x + ', ' + this.position_y + ')')
     }
   }
 
@@ -509,17 +521,13 @@ export class Class_Legend
     this._dy += this._legend_police
     const free_value = this.d3_selection?.append('g')
       .attr('id', 'gg_legend_free_value')
-      .style('transform', 'translate(0,' + (this._dy) + 'px)')
+      .attr('transform', 'translate(0,' + (this._dy) + ')')
       .attr('font-size', this._legend_police + 'px')
 
     free_value?.append('text')
       .text('*')
       .attr('x', '5')
 
-    // free_value?.append('text')
-    //   .attr('x', '35')
-    //   .text(t('MEP.show_legend_free_value'))
-    //   .call(this._wrapper)
 
     free_value?.append('text')
       .attr('x', '35')
@@ -540,7 +548,7 @@ export class Class_Legend
     // Create info zone
     const dashed_link = this.d3_selection?.append('g')
       .attr('id', 'gg_legend_dashed_links')
-      .style('transform', 'translate(0,' + (this._dy) + 'px)')
+      .attr('transform', 'translate(0,' + (this._dy) + ')')
       .attr('font-size', this._legend_police + 'px')
     // Create path as exemple
     dashed_link?.append('path')
@@ -573,7 +581,7 @@ export class Class_Legend
     // Create info zone for scale
     const g_scale = this.d3_selection?.append('g')
       .attr('class', 'g_scale')
-      .style('transform', 'translate(0,' + (this._dy) + 'px)')
+      .attr('transform', 'translate(0,' + (this._dy) + ')')
 
     // Add explanation text
     g_scale?.append('text')
@@ -583,14 +591,14 @@ export class Class_Legend
     const g_draggable = g_scale?.append('g')
       .attr('class', 'g_draggable_scale')
       .style('cursor', 'grab')
-      .style('transform', 'translate(' + (7 * (this._legend_police * 0.75)) + 'px, -30px)')
+      .attr('transform', 'translate(' + (7 * (this._legend_police * 0.75)) + ', -30)')
     g_draggable?.append('rect')
       .attr('width', '3px')
       .attr('height', '50px')
       .attr('fill', 'black')
     g_draggable?.append('text')
       .attr('class', 'measurment_scale')
-      .style('transform', 'translate(5px,25px)')
+      .attr('transform', 'translate(5,25)')
       .text(Math.round((this.drawing_area.scale / 2)))
 
 
@@ -598,7 +606,7 @@ export class Class_Legend
     g_draggable?.call(d3.drag<SVGGElement, unknown, unknown>()
       .subject(Object)
       .on('drag', function (event) {
-        g_draggable.style('transform', 'translate(' + (event.x) + 'px,' + (event.y) + 'px)')
+        g_draggable.attr('transform', 'translate(' + (event.x) + ',' + (event.y) + ')')
       }))
   }
 
@@ -655,10 +663,5 @@ export class Class_Legend
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(value: boolean) { this._info_link_value_void = value; this.draw() }
 
-  public get scale(): number { return this._scale }
-  public set scale(value: number) {
-    this._scale = value >= 1 ? value : 1 //only change legend scale if we de-zoom DA
-    this.applyPosition()
-  }
 
 }
