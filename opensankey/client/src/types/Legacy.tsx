@@ -1902,6 +1902,15 @@ const convert_links: convert_linksFuncType = (
       delete l_convert.display_unit
     }
 
+    if ('natural_unit' in l_convert) {
+      // natural unit is now stored in label_unit
+      // conversion factor is stored in label_unit_factor which is the invert of conv
+      l.local!.label_unit_visible = true
+      l.local!.label_unit = l_convert.natural_unit
+      delete l_convert.display_unit
+      l.local!.label_unit_factor = 1/l_convert.conv![1]
+    }
+
     // Delete agregated data value entry
     if (('agregated_data_value' in l_convert)) {
       l_convert.data_value = l_convert.agregated_data_value
