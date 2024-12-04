@@ -1613,10 +1613,18 @@ const convert_nodes: convert_nodesFuncType = (
               parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
             }
             if (parent_tag) {
+              const curLevelTag = n.tags[leveltagg_id]
+              let children_tags = [String(+parent_tag + 1)]
+              if (+curLevelTag[0] == +parent_tag + 2) {
+                // in old file the continuity between levels could be missing
+                // Exemple in Carbone 4 we were jumping from 2 to 4 so we correct
+                // by 3:4
+                children_tags = [...children_tags,...curLevelTag]
+              }
               n.dimensions[leveltagg_id] = {
                 parent_tag: String(parent_tag),
                 parent_name: n.dimensions['Primaire'].parent_name,
-                children_tags: [String(+parent_tag + 1)]//n.tags[parent_tag]
+                children_tags: children_tags
               }
             }
           }
