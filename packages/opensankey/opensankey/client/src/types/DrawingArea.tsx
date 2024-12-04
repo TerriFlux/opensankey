@@ -553,14 +553,15 @@ export abstract class Class_DrawingArea
       .attr('transform', 'translate(' + x + ',' + y + ')') // init drawing area zone with a margin for taking into account the navbar
 
 
+
+    // Since legend can't be affected by zoom, it outside g_drawing
+    this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
     // Add specific groups for nodes, link and others
     this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
-
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
     this.d3_selection_links = this.d3_selection.append('g').attr('id', 'g_links')
     this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
-    this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
     this.d3_selection_handlers = this.d3_selection.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection.append('g').attr('id', 'g_select_zone')
   }
@@ -2246,7 +2247,6 @@ export abstract class Class_DrawingArea
     event: d3.D3ZoomEvent<SVGSVGElement, unknown>
   ) {
     if (this.d3_selection) {
-      this._legend.scale = (1 / event.transform.k)
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
