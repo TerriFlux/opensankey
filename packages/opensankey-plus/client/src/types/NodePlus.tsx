@@ -417,39 +417,29 @@ export abstract class Class_NodeElementPlus
    * @memberof Class_NodeElementPlus
    */
   protected _drawNameLabelBackground() {
-    // Preventively delete previous label bg
-    this.d3_selection?.select('.name_label_bg').remove()
-
     // Draw label BG if attr is at true but also if we display label
-    if (this.name_label_visible && this.name_label_background) {
+    if (this.name_label_visible && this.name_label_background && this.d3_selection_g_name_label) {
 
-      // Compute positions & dimensions
-      const DA_scale = this.drawing_area.getZoomScale()
-      const node_d3_ctm = this.d3_selection?.node()?.getCTM() ?? {e: 0, f: 0} // Positionning matrix for ref node
-      const name_label_bounding_box = (this.d3_selection?.selectAll('.name_label_text').node() as Element)?.getBoundingClientRect() ?? { x: 0, y: 0, height: 0, width: 0 }
-      const box_pos_x = name_label_bounding_box.x - node_d3_ctm.e
-      const box_pos_y = name_label_bounding_box.y - node_d3_ctm.f
-      const box_height = name_label_bounding_box.height / DA_scale
-      const box_width = name_label_bounding_box.width / DA_scale
+      // Get bounding box
+      const name_label_bounding_box = (this.d3_selection_g_name_label.select('.name_label_text').node() as SVGGElement)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 }
 
       // Create svg element
-      this.d3_selection?.insert('g', '.name_label_background')
+      this.d3_selection_g_name_label?.append('rect')
         .attr('class', 'name_label_bg')
-        .append('rect')
         .classed('name_label', true)
         .classed('name_label_background', true)
         .attr('id', 'name_label_background_' + this.id)
-        .attr('x', box_pos_x)
-        .attr('y', box_pos_y)
-        .attr('width', box_width)
-        .attr('height', box_height)
+        .attr('x', name_label_bounding_box.x)
+        .attr('y', name_label_bounding_box.y)
+        .attr('width', name_label_bounding_box.width)
+        .attr('height', name_label_bounding_box.height)
         .attr('fill', 'white')
         .attr('fill-opacity', 0.55)
         .attr('rx', 4)
         .style('stroke', 'none')
 
-      // Raise up label to have it on background
-      this.d3_selection?.select('.name_label').raise()
+      // Lower label to have it on background
+      this.d3_selection_g_name_label?.select('.name_label_background').lower()
     }
   }
 
