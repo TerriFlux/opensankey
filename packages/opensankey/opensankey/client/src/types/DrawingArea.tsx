@@ -116,6 +116,13 @@ export abstract class Class_DrawingArea
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
+   * d3 selection of svg group that contains drawing area elements
+   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+   * @memberof Class_DrawingArea
+   */
+  public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  /**
    * d3 selection of svg group that contains drawing area nodes
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
    * @memberof Class_DrawingArea
@@ -234,6 +241,10 @@ export abstract class Class_DrawingArea
   // Positionning
   private _horizontal_spacing: number = default_horizontal_spacing
   private _vertical_spacing: number = default_vertical_spacing
+
+  // Shifting of d3 elements
+  private _elements_d3_groups_shift_x: number = 0
+  private _elements_d3_groups_shift_y: number = 0
 
   // Limitations of link thickness
   private _maximum_flux?: number
@@ -553,16 +564,18 @@ export abstract class Class_DrawingArea
       .attr('transform', 'translate(' + x + ',' + y + ')') // init drawing area zone with a margin for taking into account the navbar
 
 
-    // Add specific groups for nodes, link and others
+    // Add specific groups for drawing background
     this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
-
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
-    this.d3_selection_links = this.d3_selection.append('g').attr('id', 'g_links')
-    this.d3_selection_nodes = this.d3_selection.append('g').attr('id', 'g_nodes')
-    this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
-    this.d3_selection_handlers = this.d3_selection.append('g').attr('id', 'g_handlers')
-    this.d3_selection_zone_select = this.d3_selection.append('g').attr('id', 'g_select_zone')
+
+    // Add specific groups for nodes, link and others
+    this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
+    this.d3_selection_links = this.d3_selection_elements_group.append('g').attr('id', 'g_links')
+    this.d3_selection_nodes = this.d3_selection_elements_group.append('g').attr('id', 'g_nodes')
+    this.d3_selection_legend = this.d3_selection_elements_group.append('g').attr('id', 'grp_legend')
+    this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
+    this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
   }
 
   /**
@@ -946,69 +959,40 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public checkAndUpdateAreaSize() {
-    const [max_x,max_y]=this.getElementsPosInDA()
 
-    // If righest node is too close to right drawing area border then enlarege DA
-    // else reduce DA until window init witdh
-    // (init DA size is computed with a sankey at scale 1 )
+    const bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+    const fitting_width = this.window_fitting_width // acces speeding computation
+    const fitting_height = this.window_fitting_height // acces speeding computation
 
-    const new_width = Math.max((max_x + this._grid_size), this.window_fitting_width)
-    if (Math.abs(this.width - new_width) > 0.1 * this.grid_size) {
-      this.width = new_width
-    }
-
-    // If bottomiest node is too close to the bottom of drawing area border then enlarege DA
-    // else reduce DA until window init height
-    // (init DA size is computed with a sankey at scale 1 )
-    const new_height = Math.max((max_y + this._grid_size), this.window_fitting_height)
-    if (Math.abs(this.height - new_height) > 0.1 * this.grid_size) {
-      this.height = new_height
-    }
-
-  }
-
-  protected getElementsPosInDA(){
-    let max_element_pos_x = 0
-    let max_element_pos_y = 0
-    this.sankey.visible_nodes_list.forEach(node => {
-
-      let label_node_width = 0
-      let label_node_height = 0
-      const is_lab_r = node.name_label_horiz == 'right'
-      const is_lab_b = node.name_label_vert == 'bottom'
-      if (is_lab_r) {
-        const box_label = (node.d3_selection?.select('text').node() as SVGTextElement)?.getBoundingClientRect()
-        label_node_width = (box_label?.width ?? 0) / this.getZoomScale()
+    // Two condition to resize & reposition
+    if (
+      (  // Condition 1 : Elements take too much space -> need to resize & recentre elements
+        (bbox !== undefined) &&
+        (bbox.width > fitting_width) &&
+        (bbox.height > fitting_height) &&
+        (Math.abs(bbox.width- this.width) > 0.1) &&
+        (Math.abs(bbox.height- this.height) > 0.1)
+      ) ||
+      ( // Condition 2 : Elements are outsides drawing space -> need to reposition & resize
+        (bbox !== undefined) &&
+        (bbox.width > 0) &&
+        (bbox.height > 0) &&
+        ((bbox.x < 0) || (bbox.y < 0) || ((bbox.x + bbox.width) > this.width) || ((bbox.y + bbox.height) > this.height))
+      )
+    ) {
+        // New dimensions for drawing area
+        const width = Math.max(bbox.width + this.grid_size*2, fitting_width)
+        const height = Math.max(bbox.height + this.grid_size*2, fitting_height)
+        // Shifting svg group that contains elements
+        this._elements_d3_groups_shift_x = -(bbox.x + bbox.width/2) + width/2
+        this._elements_d3_groups_shift_y = -(bbox.y + bbox.height/2) + height/2
+        this.d3_selection_elements_group?.attr(
+            'transform',
+            'translate(' + this._elements_d3_groups_shift_x  + ', ' + this._elements_d3_groups_shift_y + ')')
+        // Apply new dimensions
+        this.width = width
+        this.height = height
       }
-
-      if(is_lab_b){
-        const box_label = (node.d3_selection?.select('text').node() as SVGTextElement)?.getBoundingClientRect()
-        label_node_height = (box_label?.height ?? 0) / this.getZoomScale()
-      }
-
-      const node_rightest_pos = node.position_x + node.getShapeWidthToUse()+label_node_width
-      const node_bottomest_pos = node.position_y + node.getShapeHeightToUse()+label_node_height
-
-      max_element_pos_x = Math.max(max_element_pos_x, node_rightest_pos)
-      max_element_pos_y = Math.max(max_element_pos_y, node_bottomest_pos)
-    })
-
-    this.sankey.visible_links_list.forEach(l=>{
-      // Only recyling link can have controle point over src/trt nodes, so we just check their control point
-      if(l.shape_is_recycling){
-        const cp_pos=l.control_points_position
-        // Depending on their orientation we either take x pos or y pos to search for max pos
-        if(l.is_horizontal){
-          max_element_pos_x = Math.max(max_element_pos_x,cp_pos.starting_bezier[0], cp_pos.ending_bezier[0])
-          max_element_pos_y = Math.max(max_element_pos_y, cp_pos.middle_recycling[1])
-        }else if(l.is_vertical){
-          max_element_pos_x = Math.max(max_element_pos_x, cp_pos.middle_recycling[0])
-          max_element_pos_y = Math.max(max_element_pos_y, cp_pos.starting_bezier[1],cp_pos.ending_bezier[1])
-        }
-      }
-    })
-
-    return [max_element_pos_x,max_element_pos_y]
   }
 
   /**
@@ -1059,43 +1043,43 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public recenterElements() {
-    let element_min_x: Type_GenericNodeElement | undefined = undefined
-    let element_min_y: Type_GenericNodeElement | undefined = undefined
+    // let element_min_x: Type_GenericNodeElement | undefined = undefined
+    // let element_min_y: Type_GenericNodeElement | undefined = undefined
 
-    // Get min x and min y elements
-    this.sankey.visible_nodes_list
-      .forEach(n => {
-        // Search for node with position x inf. to 0 and to element with minimum x position value
-        if ((n.position_x < 0) && (n.position_x < (element_min_x?.position_x ?? 0))) {
-          element_min_x = n
-        }
-        // Search for node with position y inf. to 0 and to element with minimum y position value
-        if ((n.position_y < 0) && (n.position_y < (element_min_x?.position_y ?? 0))) {
-          element_min_y = n
-        }
-      })
+    // // Get min x and min y elements
+    // this.sankey.visible_nodes_list
+    //   .forEach(n => {
+    //     // Search for node with position x inf. to 0 and to element with minimum x position value
+    //     if ((n.position_x < 0) && (n.position_x < (element_min_x?.position_x ?? 0))) {
+    //       element_min_x = n
+    //     }
+    //     // Search for node with position y inf. to 0 and to element with minimum y position value
+    //     if ((n.position_y < 0) && (n.position_y < (element_min_x?.position_y ?? 0))) {
+    //       element_min_y = n
+    //     }
+    //   })
 
-    // Shift from min x element
-    if (element_min_x !== undefined) {
-      const true_element: Type_GenericNodeElement = element_min_x
-      // If element is on the left of the DA move all elements to 'x' pixel to the right
-      // (x being the absolute value of element position x )
-      this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
-        node.position_x += Math.abs(true_element.position_x)
-      })
-      true_element.position_x = 0
-    }
+    // // Shift from min x element
+    // if (element_min_x !== undefined) {
+    //   const true_element: Type_GenericNodeElement = element_min_x
+    //   // If element is on the left of the DA move all elements to 'x' pixel to the right
+    //   // (x being the absolute value of element position x )
+    //   this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+    //     node.position_x += Math.abs(true_element.position_x)
+    //   })
+    //   true_element.position_x = 0
+    // }
 
-    // Shift from min y element
-    if (element_min_y !== undefined) {
-      const true_element: Type_GenericNodeElement = element_min_y
-      // If element is on top of the DA move all elements to 'y' pixel to the bottom
-      // (y being the absolute value of element position y )
-      this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
-        node.position_y += Math.abs(true_element.position_y)
-      })
-      true_element.position_y = 0
-    }
+    // // Shift from min y element
+    // if (element_min_y !== undefined) {
+    //   const true_element: Type_GenericNodeElement = element_min_y
+    //   // If element is on top of the DA move all elements to 'y' pixel to the bottom
+    //   // (y being the absolute value of element position y )
+    //   this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
+    //     node.position_y += Math.abs(true_element.position_y)
+    //   })
+    //   true_element.position_y = 0
+    // }
 
     // Redraw
     this.checkAndUpdateAreaSize()
@@ -2015,8 +1999,10 @@ export abstract class Class_DrawingArea
         this.purgeSelection()
         // Close all menus
         this.closeAllMenus()
-        // Get mouse position
+        // Get relative mouse position
         const mouse_position = d3.pointer(event)
+        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
         // Create default source node
         const source = this.sankey.addNewDefaultNode()
         // Position center of source node to pointer pos
@@ -2042,8 +2028,11 @@ export abstract class Class_DrawingArea
         if (event.button === 0) {
           // Close context menus
           this.closeAllContextMenus()
-          // Display the selection zone & set it starting position
+          // Get relative mouse position
           const mouse_position = d3.pointer(event)
+          mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
+          mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+          // Display the selection zone & set it starting position
           this._selection_zone.setVisible()
           this._selection_zone.starting_x_point = mouse_position[0]
           this._selection_zone.starting_y_point = mouse_position[1]
@@ -2093,7 +2082,6 @@ export abstract class Class_DrawingArea
         else {
           // Make ghost target visible
           this._ghost_link.target.setVisible()
-
 
           // Create new link
           this.sankey.addNewLink(
@@ -2159,8 +2147,11 @@ export abstract class Class_DrawingArea
     if (this.isInEditionMode()) {
       // When we are creating a link with LMB
       if (this._ghost_link !== null) {
-        // Move ghost target
+        // Get relative mouse position
         const mouse_position = d3.pointer(event)
+        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        // Move ghost target
         const target = this._ghost_link.target
         target.setPosXY(
           mouse_position[0] - (target.getShapeWidthToUse() / 2),
@@ -2168,10 +2159,10 @@ export abstract class Class_DrawingArea
       }
     } else if (this.isInSelectionMode()) {
       if (this._selection_zone.is_visible) {
-        // change the size of the selection zone
-
+        // Get relative mouse position
         const mouse_position = d3.pointer(event)
-
+        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
         // Variable that can be modifier if we move the selection zone above or at the left of it starting point
         let new_x = this.selection_zone.starting_x_point,
           new_y = this.selection_zone.starting_y_point
