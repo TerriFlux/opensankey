@@ -31,6 +31,7 @@ import {
   getStringFromJSON,
   Type_JSON,
   getStringListFromJSON,
+  getJSONFromJSON,
 } from './Utils'
 import {
   Type_GenericLinkElementOS,
@@ -172,20 +173,22 @@ export class Class_Legend
   ): void {
     // we need to create an entry legend to do this
     super._toJSON(json_object, kwargs)
-    json_object['legend_position'] = [String(this.position_x), String(this.position_y)]
-    json_object['mask_legend'] = this._masked
-    json_object['legend_dx'] = this._dx
-    json_object['legend_dy'] = this._dy
-    json_object['legend_scale'] = this._scale
-    json_object['legend_width'] = this._width
-    json_object['display_legend_scale'] = this._display_legend_scale
-    json_object['legend_police'] = this._legend_police
-    json_object['legend_bg_border'] = this._legend_bg_border
-    json_object['legend_bg_color'] = this._legend_bg_color
-    json_object['legend_bg_opacity'] = this._legend_bg_opacity
-    json_object['legend_show_dataTags'] = this._legend_show_dataTags
-    json_object['node_label_separator'] = this._node_label_separator
-    json_object['info_link_value_void'] = this._info_link_value_void
+    json_object['legend'] = {}
+    const json_legend = json_object['legend']
+    json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
+    json_legend['mask_legend'] = this._masked
+    json_legend['legend_dx'] = this._dx
+    json_legend['legend_dy'] = this._dy
+    json_legend['legend_scale'] = this._scale
+    json_legend['legend_width'] = this._width
+    json_legend['display_legend_scale'] = this._display_legend_scale
+    json_legend['legend_police'] = this._legend_police
+    json_legend['legend_bg_border'] = this._legend_bg_border
+    json_legend['legend_bg_color'] = this._legend_bg_color
+    json_legend['legend_bg_opacity'] = this._legend_bg_opacity
+    json_legend['legend_show_dataTags'] = this._legend_show_dataTags
+    json_legend['node_label_separator'] = this._node_label_separator
+    json_legend['info_link_value_void'] = this._info_link_value_void
   }
 
   protected _fromJSON(
@@ -193,22 +196,24 @@ export class Class_Legend
     kwargs?: Type_JSON
   ): void {
     super._fromJSON(json_object, kwargs)
-    const legend_position = getStringListFromJSON(json_object,'legend_position',['0','0'])
+    const json_legend = getJSONFromJSON(json_object, 'legend', {})
+
+    const legend_position = getStringListFromJSON(json_legend, 'legend_position', ['0', String(this.drawing_area.getNavBarHeight())])
     this._display.position.x = +legend_position[0]
     this._display.position.y = +legend_position[1]
-    this._masked = getBooleanFromJSON(json_object, 'mask_legend', this._masked)
-    this._dx = getNumberFromJSON(json_object, 'legend_dx', this._dx)
-    this._dy = getNumberFromJSON(json_object, 'legend_dy', this._dy)
-    this._scale = getNumberFromJSON(json_object, 'legend_scale', this._scale)
-    this._width = getNumberFromJSON(json_object, 'legend_width', this._width)
-    this._display_legend_scale = getBooleanFromJSON(json_object, 'display_legend_scale', this._display_legend_scale)
-    this._legend_police = getNumberFromJSON(json_object, 'legend_police', this._legend_police)
-    this._legend_bg_border = getBooleanFromJSON(json_object, 'legend_bg_border', this._legend_bg_border)
-    this._legend_bg_color = getStringFromJSON(json_object, 'legend_bg_color', this._legend_bg_color)
-    this._legend_bg_opacity = getNumberFromJSON(json_object, 'legend_bg_opacity', this._legend_bg_opacity)
-    this._legend_show_dataTags = getBooleanFromJSON(json_object, 'legend_show_dataTags', this._legend_show_dataTags)
-    this._node_label_separator = getStringFromJSON(json_object, 'node_label_separator', this._node_label_separator)
-    this._info_link_value_void = getBooleanFromJSON(json_object, 'info_link_value_void', this._info_link_value_void)
+    this._masked = getBooleanFromJSON(json_legend, 'mask_legend', this._masked)
+    this._dx = getNumberFromJSON(json_legend, 'legend_dx', this._dx)
+    this._dy = getNumberFromJSON(json_legend, 'legend_dy', this._dy)
+    this._scale = getNumberFromJSON(json_legend, 'legend_scale', this._scale)
+    this._width = getNumberFromJSON(json_legend, 'legend_width', this._width)
+    this._display_legend_scale = getBooleanFromJSON(json_legend, 'display_legend_scale', this._display_legend_scale)
+    this._legend_police = getNumberFromJSON(json_legend, 'legend_police', this._legend_police)
+    this._legend_bg_border = getBooleanFromJSON(json_legend, 'legend_bg_border', this._legend_bg_border)
+    this._legend_bg_color = getStringFromJSON(json_legend, 'legend_bg_color', this._legend_bg_color)
+    this._legend_bg_opacity = getNumberFromJSON(json_legend, 'legend_bg_opacity', this._legend_bg_opacity)
+    this._legend_show_dataTags = getBooleanFromJSON(json_legend, 'legend_show_dataTags', this._legend_show_dataTags)
+    this._node_label_separator = getStringFromJSON(json_legend, 'node_label_separator', this._node_label_separator)
+    this._info_link_value_void = getBooleanFromJSON(json_legend, 'info_link_value_void', this._info_link_value_void)
   }
 
   // PUBLIC METHODS =====================================================================
