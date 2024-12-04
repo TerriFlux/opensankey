@@ -876,9 +876,9 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
           // Check if children tag list contains the same tags as in dimensions children tag list
           let ok_children_level_tags = true
           dimension.children_level_tags
-            .forEach(tag => ok_children_level_tags = ok_children_level_tags || child_tags.includes(tag as Class_LevelTag))
+            .forEach(tag => ok_children_level_tags = ok_children_level_tags && child_tags.includes(tag as Class_LevelTag))
           child_tags
-            .forEach(tag => ok_children_level_tags = ok_children_level_tags || dimension.children_level_tags.includes(tag))
+            .forEach(tag => ok_children_level_tags = ok_children_level_tags && dimension.children_level_tags.includes(tag))
           // Match dimension if all these conditions are true
           // - Parent are the same
           // - Parent level tags are the same
