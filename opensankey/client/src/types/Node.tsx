@@ -162,6 +162,9 @@ export abstract class Class_NodeElement
   // PROTECTED ATTRIBUTE ================================================================
 
   protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+
   // Definition of abstract attribut from Class_Element
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
@@ -1435,8 +1438,8 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public setInputLabelVisible() {
-    this.d3_selection?.select('.name_label_text').style('display', 'none')
-    this.d3_selection?.select('.name_label_fo_input').style('display', 'inline-block')
+    this.d3_selection_g_name_label?.style('display', 'none')
+    this.d3_selection_g_name_label?.select('.name_label_fo_input').style('display', 'inline-block')
     document.getElementById('name_label_input_' + this.id)?.focus()
   }
 
@@ -1445,8 +1448,8 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public setInputLabelInvisible() {
-    this.d3_selection?.select('.name_label_fo_input').style('display', 'none')
-    this.d3_selection?.select('.name_label_text').style('display', 'inline-block')
+    this.d3_selection_g_name_label?.select('.name_label_fo_input').style('display', 'none')
+    this.d3_selection_g_name_label?.select('.name_label_text').style('display', 'inline-block')
     this.drawNameLabel()
     // Update selection menu for nodes
     this.menu_config.updateComponentRelatedToNodesSelection()
@@ -1545,8 +1548,8 @@ export abstract class Class_NodeElement
    */
   protected _orderD3Elements() {
     this.d3_selection_g_shape?.raise()
-    this.d3_selection?.selectAll('.name_label').raise()
-    this.d3_selection?.selectAll('.value_label').raise()
+    this.d3_selection_g_name_label?.raise()
+    this.d3_selection_g_value_label?.raise()
   }
 
   /**
@@ -1709,7 +1712,7 @@ export abstract class Class_NodeElement
     if (!this.d3_selection)
       return
     // Clean previous label
-    this.d3_selection?.selectAll('.name_label').remove()
+    this.d3_selection_g_name_label?.remove()
     // Add name label
     if (this.name_label_visible) {
       const label_to_display = this.name_label
@@ -1726,8 +1729,12 @@ export abstract class Class_NodeElement
         .bounds({ height: 100, width: this.name_label_box_width })
         .method('tspans')
 
+      // Create name label group
+      this.d3_selection_g_name_label = this.d3_selection?.append('g')
+        .attr('id', 'g_name_label')
+
       // Add name label text
-      const label_text = this.d3_selection?.append('text')
+      const label_text = this.d3_selection_g_name_label?.append('text')
         .classed('name_label', true)
         .classed('name_label_text', true)
         .attr('fill', this.name_label_color ? 'white' : 'black')
@@ -1763,7 +1770,7 @@ export abstract class Class_NodeElement
       // Add an input to change the name of the node
       // The input appear when we double click on the label
       if (!this.drawing_area.static) {
-        this.d3_selection?.append('foreignObject')
+        this.d3_selection_g_name_label?.append('foreignObject')
           .classed('name_label', true)
           .classed('name_label_fo_input', true)
           .attr('x', box_pos_x)
@@ -1802,9 +1809,12 @@ export abstract class Class_NodeElement
     if (!this.d3_selection)
       return
     // Clean previous label
-    this.d3_selection?.selectAll('.value_label').remove()
+    this.d3_selection_g_value_label?.remove()
     // Add name label
     if (this.value_label_visible) {
+      // Create group
+      this.d3_selection_g_value_label = this.d3_selection?.append('g')
+        .attr('id', 'g_value_label')
       // Get variable property for node label
       const shape_width = this.getShapeWidthToUse()
       const shape_height = this.getShapeHeightToUse()
@@ -1844,9 +1854,9 @@ export abstract class Class_NodeElement
       else if (label_anchor === 'middle') {
         box_pos_x = box_pos_x - box_width / 2
       }
-      // Add name label background
+      // Add value label background
       if (this.value_label_background) {
-        this.d3_selection?.append('rect')
+        this.d3_selection_g_value_label?.append('rect')
           .classed('value_label', true)
           .classed('value_label_background', true)
           .attr('id', 'value_label_background_' + this.id)
@@ -1860,7 +1870,7 @@ export abstract class Class_NodeElement
           .style('stroke', 'none')
       }
       // Add name label text
-      this.d3_selection?.append('text')
+      this.d3_selection_g_value_label?.append('text')
         .classed('value_label', true)
         .classed('value_label_text', true)
         .attr('fill', this.value_label_color ? 'white' : 'black')
@@ -2411,7 +2421,7 @@ export abstract class Class_NodeElement
   private updateNameLabelPos(): [number, number, string] {
     const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getNameLabelPos()
 
-    this.d3_selection?.select('.name_label_text')
+    this.d3_selection_g_name_label?.select('.name_label_text')
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
       .attr('dominant-baseline', label_baseline)
