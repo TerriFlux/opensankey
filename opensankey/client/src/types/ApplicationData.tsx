@@ -5,23 +5,26 @@
 // ==================================================================================================
 
 // External imports
-import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
+import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
+import { StepType } from '@reactour/tour'
+import { useToast } from '@chakra-ui/react'
+
 // Local imports
-import { Type_SaveDiagramOptions } from '../dialogs/types/SankeyPersistenceTypes'
-import { ClickSaveDiagram, ClickSaveExcel, retrieveExcelResults } from '../dialogs/SankeyPersistence'
 import { Class_MenuConfig, Type_TextForToastPromise } from './MenuConfig'
 import { Class_AbstractApplicationData } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
-import { getStringFromJSON, Type_JSON } from './Utils'
+import { Type_JSON } from './Utils'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
 import { FType_ProcessFunctions } from './FunctionTypes'
-import { useToast } from '@chakra-ui/react'
+
+import { Type_SaveDiagramOptions } from '../dialogs/types/SankeyPersistenceTypes'
+import { ClickSaveDiagram, ClickSaveExcel, retrieveExcelResults } from '../dialogs/SankeyPersistence'
 import { launchToastConstructor } from '../topmenus/SankeyMenuTop'
 
 // SPECIFIC CONSTANTS ******************************************************************/
@@ -72,7 +75,7 @@ export abstract class Class_ApplicationData
   public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
 
   // Attributes to transfer between sankeys
-  public data_var_to_update: MutableRefObject<string[]> = useRef([])
+  public data_var_to_update: MutableRefObject<string[]> = React.useRef([])
 
   // PROTECTED ATTRIBUTES ==============================================================
 
@@ -132,18 +135,18 @@ export abstract class Class_ApplicationData
   // Ref to checkbox of displayed menu in SankeyMenuPreference
   private _checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
 
+  // TODO ???
+  private _processFunction: FType_ProcessFunctions
 
   // Variable to stock a function (that can take some time to process) for it to be used while a loading spinner appear
   private _function_on_wait: MutableRefObject<() => void>
 
-  // Ref to launch _function_on_wait & create a toast with a spinner to show we have to wait
+  // Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
   // Optional arguments to show custom message while loading & when finished
   private _launch_waiting_function: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
-  private toast = useToast()
+  private _toast = useToast()
 
-
-  private _processFunction: FType_ProcessFunctions
-
+  private _steps: StepType[] = []
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -223,9 +226,9 @@ export abstract class Class_ApplicationData
     this._function_on_wait = useRef(() => null)
 
 
-    this._launch_waiting_function= useRef((intake?: Type_TextForToastPromise) => {
-      launchToastConstructor(this, this.toast, intake)
-    } )
+    this._launch_waiting_function = useRef((intake?: Type_TextForToastPromise) => {
+      launchToastConstructor(this, this._toast, intake)
+    })
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -412,9 +415,9 @@ export abstract class Class_ApplicationData
       evt.preventDefault()
       // Save in cache
       app_ref.function_on_wait.current = () => {
-      localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
+        localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
       }
-      this.launch_waiting_function.current({ success: this.t('toast.success'), loading: this.t('toast.saving') })
+      this.launch_waiting_function.current({ success: this.t('_toast.success'), loading: this.t('_toast.saving') })
 
       localStorage.setItem('last_save', 'true')
       // Update logo save in cache
@@ -449,10 +452,53 @@ export abstract class Class_ApplicationData
     }
   }
 
+  public setSteps() {
+    this._steps.splice(0, this._steps.length) // Reset list
+    const steps = [
+      {
+        selector: '#g_drawing',
+        content: this.t('guide.drawing_area'),
+      },
+      {
+        selector: '.sideToolBar',
+        content: this.t('guide.toolbar'),
+        actionAfter: () => {
+          this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+          setTimeout(()=> {}, 500)
+        }
+      },
+      {
+        selector: '.drawer_menu_config ',
+        content: this.t('guide.menu_config'),
+        actionAfter: () => this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+      },
+      {
+        selector: '.menutop_button_save_in_cache',
+        content: this.t('guide.save_in_cache'),
+      },
+      {
+        selector: '.TopMenuNav',
+        content: this.t('guide.nav_menu'),
+      },
+      {
+        selector: '.settings_button',
+        content: this.t('guide.settings_button'),
+        action: () => this.menu_configuration.refs_to_btn_toogle_top_menus['file'].current?.click(),
+      },
+      {
+        selector: '.tutorials_button',
+        content: this.t('guide.tutorials_button'),
+        action: () => this.menu_configuration.refs_to_btn_toogle_top_menus['aide'].current?.click(),
+      },
+    ]
+    steps.forEach(step => this._steps.push(step))
+  }
+
   // GETTERS / SETTERS ==================================================================
 
   public get t(): TFunction { return this._t }
   public get is_static(): boolean { return this._drawing_area.static }
+  public get steps(): StepType[] { return this._steps }
 
   public get drawing_area(): Type_GenericDrawingArea { return this._drawing_area }
   protected set drawing_area(value: Type_GenericDrawingArea) { this._drawing_area = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
@@ -484,8 +530,8 @@ export abstract class Class_ApplicationData
   public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
   public get preference_menu_all_item() { return this._preference_menu_all_item }
 
-  public get function_on_wait(): MutableRefObject<() => void> {return this._function_on_wait}
+  public get function_on_wait(): MutableRefObject<() => void> { return this._function_on_wait }
 
-  public get launch_waiting_function(): MutableRefObject<(intake?: Type_TextForToastPromise) => void> {return this._launch_waiting_function}
+  public get launch_waiting_function(): MutableRefObject<(intake?: Type_TextForToastPromise) => void> { return this._launch_waiting_function }
 }
 

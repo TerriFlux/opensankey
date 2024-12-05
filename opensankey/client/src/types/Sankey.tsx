@@ -31,7 +31,6 @@ import {
   Class_DataTagGroup,
   Class_TagGroup,
   Class_LevelTagGroup,
-  Class_ProtoTagGroup
 } from './Tag'
 import {
   Type_JSON,
@@ -577,7 +576,7 @@ export abstract class Class_Sankey
       if (add_flux || remove_flux || all) {
         const list_link_post_update = this.links_list.map(l => l.id)
         // Update links ordering
-        let to_update_reorder = Object.assign([] as string[], to_update)
+        const to_update_reorder = Object.assign([] as string[], to_update)
         if (add_flux || all) to_update_reorder.concat(to_add)
         to_update_reorder
           .filter(id => list_link_post_update.includes(id)) // only keep link really added
@@ -1524,7 +1523,7 @@ export abstract class Class_Sankey
    * @memberof Class_Sankey
    */
   public getTagGroupsAsList(type_group: Type_MacroTagGroup) {
-    return Object.values(this.getTagGroupsAsDict(type_group)) 
+    return Object.values(this.getTagGroupsAsDict(type_group))
   }
 
   /**
