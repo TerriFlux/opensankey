@@ -90,7 +90,11 @@ export class Class_MenuConfig {
   // Ref to state if configuration is opened
   private _ref_menu_opened: MutableRefObject<boolean>
 
+  /* ========================================
+   Ref to button on the top menu in the app
+   ========================================*/
 
+  private _refs_to_btn_toogle_top_menus: {[id: string]: RefObject<HTMLButtonElement>} = {}
 
   /* ========================================
    Ref to button on the configuration menu in the app
@@ -128,7 +132,6 @@ export class Class_MenuConfig {
   private _ref_to_menu_config_nodes_styles_updater: MutableRefObject<() => void>
   private _ref_to_menu_config_nodes_styles_editor_updater: MutableRefObject<() => void>
 
-
   // update SankeyMenuConfigurationNodesTags
   private _ref_to_menu_config_nodes_tags_updater: MutableRefObject<() => void>
 
@@ -150,7 +153,6 @@ export class Class_MenuConfig {
   // Update component OpenSankeyConfigurationLinksAttributes
   private _ref_to_menu_config_links_styles_updater: MutableRefObject<() => void>
   private _ref_to_menu_config_links_styles_editor_updater: MutableRefObject<() => void>
-
 
   // Update MenuConfigurationLinksTags
   private _ref_to_menu_config_links_tags_updater: MutableRefObject<() => void>
@@ -187,6 +189,7 @@ export class Class_MenuConfig {
   /* ========================================
     Updater of filtering components
   =========================================== */
+
   // Update AddSimpleLevelDropDown
   private _ref_to_leveltag_filter_updater: MutableRefObject<() => void>
 
@@ -297,7 +300,6 @@ export class Class_MenuConfig {
     // Init save diagram JSON components updater ------------------------------------------------
 
     this._ref_to_save_diagram_updater = useRef(() => null)
-
 
     // Init ApplyLayoutDialog components updater ------------------------------------------------
 
@@ -701,7 +703,6 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToNodeTags()
     this.updateAllComponentsRelatedToFluxTags()
     this.updateAllComponentsRelatedToLevelTags()
-
   }
 
   public updateMenuConfigComponent(){
@@ -923,6 +924,16 @@ export class Class_MenuConfig {
     return this._ref_menu_opened
   }
 
+  // Top menu components ----------------------------------------------------------------
+
+  public init_refs_to_btn_toogle_top_menus(id: string) {
+    this._refs_to_btn_toogle_top_menus[id] = useRef<HTMLButtonElement>(null)
+  }
+
+  public get refs_to_btn_toogle_top_menus(): {[id: string]: RefObject<HTMLButtonElement>}  {
+    return this._refs_to_btn_toogle_top_menus
+  }
+
   // Accordion menu openers -------------------------------------------------------------
 
   public get accordions_to_show() {
@@ -1065,6 +1076,7 @@ export class Class_MenuConfig {
 
 
   // Filtering components ---------------------------------------------------------------
+
   public get ref_to_leveltag_filter_updater(): MutableRefObject<() => void> {
     return this._ref_to_leveltag_filter_updater
   }

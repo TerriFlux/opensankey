@@ -980,19 +980,19 @@ export abstract class Class_DrawingArea
         ((bbox.x < 0) || (bbox.y < 0) || ((bbox.x + bbox.width) > this.width) || ((bbox.y + bbox.height) > this.height))
       )
     ) {
-        // New dimensions for drawing area
-        const width = Math.max(bbox.width + this.grid_size*2, fitting_width)
-        const height = Math.max(bbox.height + this.grid_size*2, fitting_height)
-        // Shifting svg group that contains elements
-        this._elements_d3_groups_shift_x = -(bbox.x + bbox.width/2) + width/2
-        this._elements_d3_groups_shift_y = -(bbox.y + bbox.height/2) + height/2
-        this.d3_selection_elements_group?.attr(
-            'transform',
-            'translate(' + this._elements_d3_groups_shift_x  + ', ' + this._elements_d3_groups_shift_y + ')')
-        // Apply new dimensions
-        this.width = width
-        this.height = height
-      }
+      // New dimensions for drawing area
+      const width = Math.max(bbox.width + this.grid_size*2, fitting_width)
+      const height = Math.max(bbox.height + this.grid_size*2, fitting_height)
+      // Shifting svg group that contains elements
+      this._elements_d3_groups_shift_x = -(bbox.x + bbox.width/2) + width/2
+      this._elements_d3_groups_shift_y = -(bbox.y + bbox.height/2) + height/2
+      this.d3_selection_elements_group?.attr(
+        'transform',
+        'translate(' + this._elements_d3_groups_shift_x  + ', ' + this._elements_d3_groups_shift_y + ')')
+      // Apply new dimensions
+      this.width = width
+      this.height = height
+    }
   }
 
   /**
