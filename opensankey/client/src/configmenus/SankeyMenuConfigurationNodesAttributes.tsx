@@ -64,7 +64,6 @@ import {
   default_shape_type,
   default_shape_visible,
   isAttributeOverloaded,
-  default_dx,
   default_dy,
   default_position_type,
   default_relative_dx,
