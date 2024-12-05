@@ -3,7 +3,6 @@ import React, {
   useEffect,
 } from 'react'
 import LZString from 'lz-string'
-import { useToast } from '@chakra-ui/react'
 import * as d3 from 'd3'
 /*************************************************************************************************/
 
@@ -19,15 +18,13 @@ import {
   ModalPreference,
 } from './dialogs/SankeyMenuPreferences'
 import {
-  OpenSankeyMenus, Menu,
-  launchToastConstructor
-} from './topmenus/SankeyMenuTop'
+  OpenSankeyMenus, Menu} from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { Type_JSON } from './types/Utils'
 
 import { FCType_SankeyApp } from './types/FunctionTypes'
 import { Type_AdditionalMenus } from './types/TypesOS'
-
+import { TourProvider } from '@reactour/tour'
 
 declare const window: Window &
   typeof globalThis & {
@@ -48,7 +45,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   ModalWelcome,
   ClickSaveDiagram,
 }) => {
-
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
   let initial_data: Type_JSON | undefined = undefined
@@ -63,7 +59,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   const new_data = initializeApplicationData(
     initial_data
   )
-
 
 
   /*************************************************************************************************/
@@ -215,93 +210,93 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     d3.select('#draw_zoom').remove()
     new_data.drawing_area?.draw()
     new_data.drawing_area.areaAutoFit()
-
   })
 
   /*************************************************************************************************/
-  return <div id='sankey_app' style={{ 'backgroundColor': 'WhiteSmoke' }}>
-    <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
-      {
-        moduleDialogs(
-          new_data,
-          additionalMenus,
-          menu_configuration_nodes_attributes,
-          new_data.processFunction
-        ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
-      }
-      {
-        <ModalWelcome
-          new_data={new_data}
-        />
-      }
-      <>
-        <Menu
-          new_data={new_data}
-          processFunctions={new_data.processFunction}
-          configurations_menus={menu_configuration}
-          menus={sankey_menus}
-          cardsTemplate={additionalMenus.cards_template}
-          external_modal={[
-            <></>
-          ]}
-          reinitialization={reinitialization}
-          formations_menu={additionalMenus.formations_menu}
-          additionalMenus={
-            additionalMenus
-          }
-          apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
-          diagramSelector={initializeDiagrammSelector(new_data)}
-        />
-      </>
-      <ApplySaveJSONDialog
-        new_data={new_data}
-        additional_file_save_json_option={additionalMenus.additional_file_save_json_option}
-        ClickSaveDiagram={ClickSaveDiagram}
-      />
-    </div>
-    <ContextMenuNode
-      new_data={new_data}
-      additionalMenu={additionalMenus}
-    />
-    <ContextMenuLink
-      new_data={new_data}
-      additionalMenus={additionalMenus}
-    />
-    <ContextMenuZdd
-      new_data={new_data}
-    />
-    <DisaggregationModal 
-      new_data={new_data}
-    />
-    <AggregationModal
-      new_data={new_data}
-    />
-    <React.Fragment key={'modale_style_link'}>
-      <SankeyModalStyleLink
-        new_data={new_data}
-        additionalMenus={additionalMenus}
-      />
-    </React.Fragment>
-    <React.Fragment key={'modale_style_node'}>
-      <SankeyModalStyleNode
-        new_data={new_data}
-        node_attribute_tab={
-          <OpenSankeyConfigurationNodesAttributes
+  return <TourProvider steps={new_data.steps}>
+    <div id='sankey_app' style={{ 'backgroundColor': 'WhiteSmoke' }}>
+      <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
+        {
+          moduleDialogs(
+            new_data,
+            additionalMenus,
+            menu_configuration_nodes_attributes,
+            new_data.processFunction
+          ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
+        }
+        {
+          <ModalWelcome
             new_data={new_data}
-            menu_for_style={true}
-            additional_menus={additionalMenus}
           />
         }
+        <>
+          <Menu
+            new_data={new_data}
+            processFunctions={new_data.processFunction}
+            configurations_menus={menu_configuration}
+            menus={sankey_menus}
+            cardsTemplate={additionalMenus.cards_template}
+            external_modal={[
+              <></>
+            ]}
+            reinitialization={reinitialization}
+            formations_menu={additionalMenus.formations_menu}
+            additionalMenus={
+              additionalMenus
+            }
+            apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
+            diagramSelector={initializeDiagrammSelector(new_data)}
+          />
+        </>
+        <ApplySaveJSONDialog
+          new_data={new_data}
+          additional_file_save_json_option={additionalMenus.additional_file_save_json_option}
+          ClickSaveDiagram={ClickSaveDiagram}
+        />
+      </div>
+      <ContextMenuNode
+        new_data={new_data}
+        additionalMenu={additionalMenus}
       />
-    </React.Fragment>
-    <React.Fragment key={'modale_preference'}>
-      <ModalPreference
+      <ContextMenuLink
         new_data={new_data}
         additionalMenus={additionalMenus}
       />
-    </React.Fragment>
-  </div>
-
+      <ContextMenuZdd
+        new_data={new_data}
+      />
+      <DisaggregationModal
+        new_data={new_data}
+      />
+      <AggregationModal
+        new_data={new_data}
+      />
+      <React.Fragment key={'modale_style_link'}>
+        <SankeyModalStyleLink
+          new_data={new_data}
+          additionalMenus={additionalMenus}
+        />
+      </React.Fragment>
+      <React.Fragment key={'modale_style_node'}>
+        <SankeyModalStyleNode
+          new_data={new_data}
+          node_attribute_tab={
+            <OpenSankeyConfigurationNodesAttributes
+              new_data={new_data}
+              menu_for_style={true}
+              additional_menus={additionalMenus}
+            />
+          }
+        />
+      </React.Fragment>
+      <React.Fragment key={'modale_preference'}>
+        <ModalPreference
+          new_data={new_data}
+          additionalMenus={additionalMenus}
+        />
+      </React.Fragment>
+    </div>
+  </TourProvider>
 }
 
 export default SankeyApp
