@@ -14,7 +14,7 @@ export const Theme_OSP={
         button_dataTagg_sequence_play,
         button_dataTagg_sequence_pause,
         button_dataTagg_sequence_menu_play,
-button_dataTagg_sequence_menu_pause,
+        button_dataTagg_sequence_menu_pause,
       }
     },
     Drawer:{

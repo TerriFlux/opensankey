@@ -21,7 +21,7 @@ import { createRoot } from 'react-dom/client'
 
 // Local imports ====================================================================================
 
-import './traduction'
+import './traductions/traduction'
 import { SankeyAppOSP } from './SankeyApp'
 
 // CONSTANTS =========================================================================================

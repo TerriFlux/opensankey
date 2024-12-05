@@ -431,6 +431,7 @@ export const ToolBarNodeTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
   const filter_color_node = <Popover
+    isLazy
     variant='toolbar_popover_window'
     placement='left'
     id='popover_node_tag_filter'
@@ -439,6 +440,7 @@ export const ToolBarNodeTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
       <Button
         variant='toolbar_button_4'
         id='btn_open_popover_node_tag_filter'
+        onClick={()=>setCount(a=>a+1)}
       >
         {logo_btn_node}
       </Button>
