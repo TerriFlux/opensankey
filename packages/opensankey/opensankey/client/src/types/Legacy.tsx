@@ -25,7 +25,6 @@ import {
   DefaultNodeSectorStyleFuncStyle,
   DefaultNodeStyleFuncType,
   DefaultSankeyDataFuncType,
-  GetLinkValueFuncType,
   ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType,
   ReturnValueLinkFuncType,

@@ -17,7 +17,8 @@ import { createRoot } from 'react-dom/client'
 
 // Local imports ====================================================================================
 
-import './traduction'
+import './traductions/traduction'
+
 import SankeyApp from './SankeyApp'
 import {
   initializeApplicationData,
