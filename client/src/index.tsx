@@ -19,29 +19,16 @@ import './deps/OpenSankey+/css/style_elements_sankey.css'
 import './deps/OpenSankey+/css/react-quill.css'
 import './css/Login.css'
 import './css/Register.css'
+
 // External imports ===============================================================================
 
 import React, { FunctionComponent } from 'react'
 import { createRoot } from 'react-dom/client'
-// import { BrowserRouter } from 'react-router-dom'
-// import { Routes } from 'react-router-dom'
-// import { Route } from 'react-router-dom'
-// import { Navigate } from 'react-router-dom'
-import './traduction'
-import i18next from './traduction'
-
-// import { ChakraProvider } from '@chakra-ui/react'
-
-// OpenSankey+ imports ===========================================================================
-
-// import { Class_ApplicationDataSA } from './deps/OpenSankey+/types/TypesOSP'
+import './traductions/traduction'
+import i18next from './traductions/traduction'
 
 // Local modules =================================================================================
 
-// import Register from './components/Register/Register'
-// import Login from './components/Login/Login'
-// import Account from './components/UserPages/Account'
-// import Dashboard from './components/UserPages/Dashboard'
 import { SankeyAppSA } from './SankeyAppSA'
 import { ExempleMenuTypes } from './ModulesSA'
 import { Class_ApplicationDataSA } from './ApplicationData'
