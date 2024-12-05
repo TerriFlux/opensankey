@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, useRef, RefObject, useState } from 'react'
+import React, { FunctionComponent, useRef, useState } from 'react'
 import { Box, Button, Checkbox, Select } from '@chakra-ui/react'
 import i18next from 'i18next'
 
@@ -203,15 +203,15 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         {t('Menu.ED')}
       </Checkbox>,
       <Checkbox
-      key={9}
-      ref={checkbox_refs['EL']}
-      variant='menuconfigpanel_option_checkbox'
-      defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EL')}
-      onChange={() => {
-        new_data.menu_configuration.toggleGivenAccordion('EL')
-      }}>
-      {t('Menu.level')}
-    </Checkbox>,
+        key={9}
+        ref={checkbox_refs['EL']}
+        variant='menuconfigpanel_option_checkbox'
+        defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EL')}
+        onChange={() => {
+          new_data.menu_configuration.toggleGivenAccordion('EL')
+        }}>
+        {t('Menu.level')}
+      </Checkbox>,
       additionalMenus.additional_preferences
 
     ],
