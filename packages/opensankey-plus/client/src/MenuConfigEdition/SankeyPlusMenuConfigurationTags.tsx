@@ -13,7 +13,6 @@ import colormap from 'colormap'
 import {
   Box,
   Button,
-  Checkbox,
   Input,
   InputGroup,
   Select,

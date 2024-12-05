@@ -1,12 +1,8 @@
-import i18next from 'i18next'
-import { initReactI18next } from 'react-i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
-import { open_resources } from './deps/OpenSankey/traduction.js'
 
 // THE TRANSLATIONS
 // (tip move them in a JSON file and import them,
 // or even better, manage them separated from your code: https://react.i18next.com/guides/multiple-translation-files)
-export const resources = {
+export const resources_app_elements = {
   //=======================================================
   //EN
   //=======================================================
@@ -803,38 +799,7 @@ export const resources = {
         'recycle-glass-bottle':'recyclage-bouteille-verre',
         'recycle-electronic-2':'recyclage-électronique-2',
         'recycle-fabric':'recyclage-tissue',
-
       }
     },
   }
 }
-
-const deep_assign = (s, t) => {
-  Object.entries(s).forEach(k => {
-    if (typeof (k[1]) == 'object') {
-      if (Object.keys(t).includes(k[0])) {
-        deep_assign(s[k[0]], t[k[0]])
-      } else {
-        t[k[0]] = s[k[0]]
-      }
-    } else if (typeof (k[1]) == 'string') {
-      t[k[0]] = s[k[0]]
-    }
-  })
-}
-
-deep_assign(open_resources, resources)
-// deep_assign(icon_resources, resources)
-i18next
-  .use(LanguageDetector)
-  .use(initReactI18next) // passes i18n down to react-i18next
-  .init({
-    resources,
-    ns: ['translation', 'terms_of_uses'],
-    defaultNS: 'translation',
-    interpolation: {
-      escapeValue: false // react already safes from xss
-    }
-  })
-
-export default i18next
