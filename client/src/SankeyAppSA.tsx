@@ -48,13 +48,12 @@ type SankeyAppSAType = {
   formations_menu: ExempleMenuTypes,
   new_data_app:Class_ApplicationDataSA
 }
+
 export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
   { example_menu, formations_menu,new_data_app }
 ) => {
 
   // Minimal app ------------------------------------------------------------------------------------
-
-  
 
   const reinit = initializeReinitializationOSP(new_data_app)
   const sankeyApp =
