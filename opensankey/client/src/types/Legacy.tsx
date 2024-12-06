@@ -1395,6 +1395,10 @@ const convert_nodes: convert_nodesFuncType = (
     if (n.y === undefined) {
       n.y = 0
     }
+    const has_position = 'position' in n
+    if (has_position) {
+      delete n.position
+    }
 
     delete n_depreciated.visible
 
