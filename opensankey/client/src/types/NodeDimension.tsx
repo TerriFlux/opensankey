@@ -34,7 +34,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
 
   // Tags relations
   private _parent_level_tag: Class_AbstractLevelTag
-  private _children_level_tags: Class_AbstractLevelTag[]
+  private _child_level_tag: Class_AbstractLevelTag
 
   // Forcing
   private _force_show_children: boolean = false
@@ -62,7 +62,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     parent: Type_AbstractNodeElement,
     children: Type_AbstractNodeElement[],
     parent_level_tag: Class_AbstractLevelTag,
-    children_level_tags: Class_AbstractLevelTag[],
+    child_level_tag: Class_AbstractLevelTag,
     id?: string
   ) {
     super()
@@ -78,9 +78,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
         '_' +
         parent_level_tag.id +
         '_' +
-        children_level_tags
-          .map(_ => _.id)
-          .join('-')
+        child_level_tag.id
       )
     // Set parenthood reference
     this._parent = parent
@@ -91,26 +89,17 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     // Set leveltags references
     this._parent_level_tag = parent_level_tag
     this._parent_level_tag.addAsParentLevel(this)
-    this._children_level_tags = children_level_tags
-    this._children_level_tags
-      .forEach(_ => _.addAsChildrenLevel(this))
+    this._child_level_tag = child_level_tag
+    this._child_level_tag.addAsChildrenLevel(this)
     // Sanity checks
     // Immediatly delete for any of this conditions :
     // - Parent is in children list
     // - Children tag are not of the same group
     // - Parent & children tags groups are not the same
     // - Children list is empty
-    let same_group: boolean = true
-    let prev_group: undefined | Class_AbstractLevelTagGroup = undefined
-    this._children_level_tags
-      .forEach(tag => {
-        if (prev_group)
-          same_group = (same_group && (tag.group === prev_group))
-        prev_group = tag.group
-      })
-    if ((children.includes(parent)) ||
-      (!same_group) ||
-      (parent_level_tag.group !== this.children_level_tagg) ||
+ 
+    if (
+      (parent_level_tag.group !== this.child_level_tag.group) ||
       (!this.has_children)) {
       this.delete()
     }
@@ -133,9 +122,8 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       this._children = []
       // Remove cross references with leveltags
       this._parent_level_tag.removeParentLevel(this)
-      this._children_level_tags
-        .forEach(_ => _.removeChildrenLevel(this))
-      this._children_level_tags = []
+      this._child_level_tag.removeChildrenLevel(this)
+      //this._child_level_tag = ''
       // Garbage collector will do the rest ...
     }
   }
@@ -168,16 +156,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     this._children // Remove all unnecessary children
       .filter(child => !(dim._children.map(_ => _.id).includes(child.id)))
       .forEach(child => this.removeNodeFromChildren(child))
-    // Sync reference with children tags
-    dim._children_level_tags // Append all missing children tags
-      .filter(tag => {
-        (tag.group.id in level_taggs_dict) &&
-          (tag.id in level_taggs_dict[tag.group.id].tags_dict)
-      })
-      .forEach(tag => this.addTagAsChildrenLevelTag(level_taggs_dict[tag.group.id].tags_dict[tag.id]))
-    this._children_level_tags
-      .filter(tag => !(dim._children_level_tags.map(_ => _.id).includes(tag.id)))
-      .forEach(tag => this.removeTagFromChildrenLevelTag(tag))
+
   }
 
   public removeNodeAsParent(_: Type_AbstractNodeElement) {
@@ -187,8 +166,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   }
 
   public addNodeAsChild(_: Type_AbstractNodeElement) {
-    if ((this._parent !== _) &&
-      !(this._children.includes(_))) {
+    if (!(this._children.includes(_))) {
       this._children.push(_)
       _.addNewDimensionAsChild(this)
     }
@@ -215,31 +193,9 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       return level
     }
   }
-
-  public addTagAsChildrenLevelTag(_: Class_AbstractLevelTag) {
-    if (!this._children_level_tags.includes(_) &&
-      _.group === this.children_level_tagg) {
-      this._children_level_tags.push(_)
-      _.addAsChildrenLevel(this)
-    }
-  }
-
-  public removeTagFromChildrenLevelTag(_: Class_AbstractLevelTag) {
-    const idx = this._children_level_tags.indexOf(_)
-    if (idx !== undefined) {
-      this._children_level_tags.splice(idx, 1)
-      // If all children level tags has been deleted, clear this
-      if (!(this._children_level_tags.length > 0))
-        this.delete()
-    }
-  }
-
   public showAccordingToLevelTags() {
     // Unset booleans
-    const nodes_to_redraw = this._unsetForcingToShow()
-    // Redraw
-    nodes_to_redraw
-      .forEach(node => node.draw())
+    this._unsetForcingToShow()
   }
 
   /**
@@ -363,7 +319,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   public set parent_level_tag(_: Class_AbstractLevelTag) {
     // Do modification only if there is a change & if parent/children tag group are matching
     if ((_ !== this._parent_level_tag) &&
-      (this.children_level_tagg === _.group)) {
+      (this.child_level_tagg === _.group)) {
       const old = this._parent_level_tag
       this._parent_level_tag = _
       _.addAsParentLevel(this)
@@ -371,8 +327,18 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     }
   }
 
-  public get children_level_tags() { return this._children_level_tags }
-  public get children_level_tagg() { return this._children_level_tags[0]?.group ?? undefined }
+  public get child_level_tag() { return this._child_level_tag }
+  public set child_level_tag(_: Class_AbstractLevelTag) {
+    // Do modification only if there is a change & if parent/children tag group are matching
+    if ((_ !== this._child_level_tag) &&
+      (this.child_level_tagg === _.group)) {
+      const old = this._child_level_tag
+      this._child_level_tag = _
+      _.addAsChildrenLevel(this)
+      old.removeParentLevel(this)
+    }
+  }
+  public get child_level_tagg() { return this._child_level_tag?.group ?? undefined }
 
   public get parent() { return this._parent }
   public set parent(_: Type_AbstractNodeElement) {
@@ -409,10 +375,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     if (this._force_show_parent)
       return false
     // Otherwise, check if related children level tags are all selected
-    let ok_children_level_tags = false
-    this.children_level_tags
-      .forEach(tag => ok_children_level_tags = (ok_children_level_tags || (tag.is_selected)))
-    return ok_children_level_tags
+    return this.child_level_tag.is_selected
   }
 
   public get force_show_children() { return this._force_show_children }

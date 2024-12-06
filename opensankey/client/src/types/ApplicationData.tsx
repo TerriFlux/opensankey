@@ -662,7 +662,7 @@ export abstract class Class_ApplicationData
         content: this.t('guide.toolbar'),
         actionAfter: () => {
           this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
-          setTimeout(() => { }, 500)
+          setTimeout(()=> {}, 500)
         }
       },
       {

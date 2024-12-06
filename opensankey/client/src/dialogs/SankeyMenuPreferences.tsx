@@ -213,19 +213,9 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         {t('Menu.level')}
       </Checkbox>,
       additionalMenus.additional_preferences
-
     ],
     'node_label_sep': <>{node_label_sep}{node_label_sep_pos}</>,
   }
-
-
-
-
-
-
-
-
-
 
   const content = <>
     {Object.values(ui).map((d, i) => {
