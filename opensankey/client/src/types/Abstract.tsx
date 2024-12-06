@@ -19,6 +19,11 @@ type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingA
 type Type_GenericDrawingArea = Class_AbstractDrawingArea
 
 export abstract class Class_AbstractApplicationData {
+  // MAndatory methods
+  public abstract sendWaitingToast(
+    funct: () => void,
+    intake?: Object
+  ): void
   // Mandatory attributes
   public abstract version: string
   // Mandatory getters

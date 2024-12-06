@@ -13,11 +13,6 @@ import { Type_MacroTagGroup } from './Utils'
 
 // SPECIFIC TYPES **********************************************************************/
 
-export type Type_TextForToastPromise = {
-  success?: string
-  loading?: string
-}
-
 export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Nodes
   ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>

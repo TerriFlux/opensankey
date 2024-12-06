@@ -83,10 +83,7 @@ export const setDiagram: FType_SetDiagram = (
       window.sankey[sous_filieres[the_diagram]]
     )
   )
-  new_data.function_on_wait.current = () => {
-    new_data.fromJSON(new_data_as_json)
-  }
-  new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
+  new_data.fromJSON(new_data_as_json)
 }
 
 

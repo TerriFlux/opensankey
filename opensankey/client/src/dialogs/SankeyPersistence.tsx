@@ -1,5 +1,8 @@
 import React, { FunctionComponent, useEffect, useState, } from 'react'
 import * as d3 from 'd3'
+
+import FileSaver from 'file-saver'
+
 import {
   Box,
   Button,
@@ -12,13 +15,8 @@ import {
   Spinner
 } from '@chakra-ui/react'
 
-import FileSaver from 'file-saver'
-
 /*************************************************************************************************/
 
-import type {
-  DataSuiteType
-} from '../types/LegacyType'
 import type {
   FType_ClickSaveDiagram,
   FType_ClickSaveExcel,
@@ -27,7 +25,8 @@ import type {
   FType_ProcessExample,
   FType_RetrieveExcelResults,
   FType_UploadExcelImpl,
-  FType_UploadExemple
+  FType_UploadExemple,
+  FType_JSONtoExcel
 } from './types/SankeyPersistenceTypes'
 
 import { GetRandomInt, list_palette_color, type Type_JSON } from '../types/Utils'
@@ -96,13 +95,10 @@ const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
     fetch(url, fetchData).then(response => {
       response.text()
         .then(text => {
-          new_data.function_on_wait.current = () => {
-            retrieveExcelResults(
-              new_data,
-              text
-            )
-          }
-          new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
+          retrieveExcelResults(
+            new_data,
+            text
+          )
         })
         .then(() => {
           set_is_computing(false)
@@ -275,17 +271,17 @@ export const Counter: FunctionComponent<FCType_Counter> = ({
 /* EXCEL FILE SAVING PROCESSES *********************************************************/
 
 /**
- * Triggers server side conversion JSON -> Excel
- * + launch download
- * @param {string} url_prefix
- * @param {Type_JSON} data
+ * Convert JSON data to Excel file on server side
+ * @param {*} data_as_json
+ * @param {*} url_prefix
  * @param {string} [file_name='sankey']
  */
-export const ClickSaveExcel: FType_ClickSaveExcel = (
+export const JSONtoExcel: FType_JSONtoExcel = (
+  data_as_json,
   url_prefix,
-  data_as_JSON,
   file_name = 'sankey'
 ) => {
+
   let root = window.location.origin
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
@@ -294,7 +290,7 @@ export const ClickSaveExcel: FType_ClickSaveExcel = (
 
   const fetchData = {
     method: 'POST',
-    body: JSON.stringify(data_as_JSON)
+    body: JSON.stringify(data_as_json)
   }
 
   const showFile = (blob: BlobPart) => {
@@ -313,7 +309,7 @@ export const ClickSaveExcel: FType_ClickSaveExcel = (
   fetch(url, fetchData)
     .then(r => r.blob())
     .then(showFile)
-    .then(cleanFile)
+  .then(cleanFile)
 }
 
 /**
@@ -410,25 +406,7 @@ export const ClickSaveDiagram: FType_ClickSaveDiagram = (
   new_data
 ): void => {
   // Convert all datas as JSON
-  const json_data = new_data.toJSON()
-  // Prepare JSON for saving
-  const json_data_str = JSON.stringify(json_data, null, 2)
-  const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
-  // Set name for file to download
-  const dataAsSuite = (json_data as DataSuiteType)
-  let name = 'Diagramme de Sankey'
-  if (
-    dataAsSuite.view &&
-    dataAsSuite.view.length > 0 &&
-    !dataAsSuite.is_catalog
-  ) {
-    name = 'Diagramme de Sankey avec vues'
-  }
-  else if (dataAsSuite.is_catalog === true) {
-    name = 'Catalogue de vues de diagrammes de Sankey'
-  }
-  // Trigger file download
-  FileSaver.saveAs(blob, name + '.json')
+  new_data.saveToJSON()
 }
 
 /* EXAMPLES PROCESSING *****************************************************************/
@@ -551,20 +529,17 @@ export const UploadExemple: FType_UploadExemple = (
 
   fetch(url, fetchData).then((response) => {
     response.text().then((text) => {
-      new_data.function_on_wait.current = () => {
-        const JSON_data = JSON.parse(text)
-        const error = JSON_data['error']
-        if (error && error.length != 0) {
-          alert(error)
-          return
-        }
-        if (!file_name.includes('.xlsx')) {
-          // Clear datas & apply read datas
-          new_data.fromJSON(JSON_data as Type_JSON)
-          new_data.drawing_area.ArrangeTrade(false)
-        }
+      const JSON_data = JSON.parse(text)
+      const error = JSON_data['error']
+      if (error && error.length != 0) {
+        alert(error)
+        return
       }
-      new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
+      if (!file_name.includes('.xlsx')) {
+        // Clear datas & apply read datas
+        new_data.fromJSON(JSON_data as Type_JSON)
+        new_data.drawing_area.ArrangeTrade(false)
+      }
     })
   })
 }
