@@ -607,11 +607,11 @@ def _html_to_image(
         html_as_str = html_as_str.replace(match_str, new_str)
     # Keep css style when exporting
     css = [
-        # 'client/node_modules/open-sankey/src/css/colors/red.css',
-        # 'client/node_modules/open-sankey/src/css/main.css',
-        # 'client/src/css/react-quill.css',
-        # 'client/node_modules/open-sankey/src/css/bootstrap.css'
-        ]
+    ]
+    #If find css file then add it before convert to image 
+    if os.path.exists(os.getcwd()+'/'+'client/src/css/react-quill.css'):
+        css.append('client/src/css/react-quill.css')
+  
     # Common options for conversions
     options = {
         'enable-local-file-access': ''}

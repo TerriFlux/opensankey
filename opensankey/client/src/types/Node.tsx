@@ -880,7 +880,7 @@ export abstract class Class_NodeElement
     d3.select('body')
       .append('div')
       .attr('class', 'sankey-tooltip')
-      .style('opacity', 1)
+      .attr('opacity', 1)
       .style('top', this.position_y + 'px')
       .style('left', this.position_x + 'px')
       .html(this.tooltip_html)
@@ -1536,7 +1536,7 @@ export abstract class Class_NodeElement
     this.d3_selection?.attr('class', 'gg_nodes')
     // Apply styles
     this.d3_selection?.style('display', 'inline')
-    this.d3_selection?.style('font-family', this.name_label_font_family)
+    this.d3_selection?.attr('font-family', this.name_label_font_family)
     // Init <g> containing shape elements
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
   }
@@ -1697,8 +1697,9 @@ export abstract class Class_NodeElement
         .attr('id', this.id)
         .attr('fill-opacity', this.shape_visible ? '1' : '0')
         .attr('fill', color)
-        .style('stroke', 'black')
-        .style('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
+        .attr('stroke', 'black')
+        .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
+        .attr('stroke-opacity', this.is_selected ? default_selected_stroke_width : 0)
     }
   }
 
@@ -1739,12 +1740,12 @@ export abstract class Class_NodeElement
         .classed('name_label_text', true)
         .attr('fill', this.name_label_color ? 'white' : 'black')
         .attr('id', 'name_label_text_' + this.id)
-        .style('font-weight', this.name_label_bold ? 'bold' : 'normal')
-        .style('font-style', this.name_label_italic ? 'italic' : 'normal')
-        .style('font-size', String(this.name_label_font_size) + 'px')
-        .style('font-family', this.name_label_font_family)
-        .style('stroke', 'none')
-        .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
+        .attr('font-weight', this.name_label_bold ? 'bold' : 'normal')
+        .attr('font-style', this.name_label_italic ? 'italic' : 'normal')
+        .attr('font-size', String(this.name_label_font_size) + 'px')
+        .attr('font-family', this.name_label_font_family)
+        .attr('stroke', 'none')
+        .attr('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .text(label_to_display)
         .filter(() => label_to_display.split(' ').length > 1)//only call wrapper if text displayed has space to be splitted by wrapper (sometime 1 word label can have some wrap problem with label bg)
         .call(wrapper)
@@ -1785,7 +1786,7 @@ export abstract class Class_NodeElement
           .attr('id', 'name_label_input_' + this.id)
           .attr('type', 'text')
           .attr('value', this._name)
-          .style('font-size', String(this.name_label_font_size) + 'px')
+          .attr('font-size', String(this.name_label_font_size) + 'px')
           .on('input', (evt) => { this._name = evt.target.value })
           .on('blur', () => this.setInputLabelInvisible())
 
@@ -1867,7 +1868,7 @@ export abstract class Class_NodeElement
           .attr('fill', 'white')
           .attr('fill-opacity', 0.55)
           .attr('rx', 4)
-          .style('stroke', 'none')
+          .attr('stroke', 'none')
       }
       // Add name label text
       this.d3_selection_g_value_label?.append('text')
@@ -1878,13 +1879,13 @@ export abstract class Class_NodeElement
         .attr('x', label_pos_x)
         .attr('y', label_pos_y)
         .attr('text-anchor', label_anchor)
-        .style('text-align', label_align)
-        .style('font-weight', this.value_label_bold ? 'bold' : 'normal')
-        .style('font-style', this.value_label_italic ? 'italic' : 'normal')
-        .style('font-size', String(this.value_label_font_size) + 'px')
-        .style('font-family', this.value_label_font_family)
-        .style('stroke', 'none')
-        .style('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
+        .attr('text-align', label_align)
+        .attr('font-weight', this.value_label_bold ? 'bold' : 'normal')
+        .attr('font-style', this.value_label_italic ? 'italic' : 'normal')
+        .attr('font-size', String(this.value_label_font_size) + 'px')
+        .attr('font-family', this.value_label_font_family)
+        .attr('stroke', 'none')
+        .attr('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
         .text(this.value_label)
     }
   }
@@ -2421,12 +2422,12 @@ export abstract class Class_NodeElement
   private updateNameLabelPos(): [number, number, string] {
     const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getNameLabelPos()
 
-    this.d3_selection_g_name_label?.select('.name_label_text')
+    this.d3_selection_g_name_label?.selectAll('.name_label_text, tspan') //also select tspn to add some attr that doesn't affect it dispaly but is usefull when we convert svg to image
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
       .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
-      .style('text-align', label_align)
+      .attr('text-align', label_align)
 
     return [label_pos_x, label_pos_y, label_anchor]
   }
@@ -4117,7 +4118,7 @@ export abstract class Class_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    tooltip_html += '<p class="title" style="margin-bottom: 5px;">' + 'u: ' + this.position_u + ' v: ' + this.position_v + ' y: ' + this.position_y + '</p>'
     // Input links
     if (this.hasInputLinks()) {
       tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.inputs') + '</p>'
