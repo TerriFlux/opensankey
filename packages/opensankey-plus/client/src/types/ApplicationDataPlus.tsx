@@ -136,10 +136,10 @@ export abstract class Class_ApplicationDataPlus
    *
    * @memberof Class_ApplicationDataPlus
    */
-  reset(): void {
+  protected _reset(): void {
     this._views = {}
     this._views_order = []
-    super.reset()
+    super._reset()
   }
 
   private deleteCurrentOriginalView() {
