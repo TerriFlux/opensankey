@@ -464,14 +464,14 @@ export abstract class Class_ApplicationData
    */
   protected _fromJSON(json_object: Type_JSON) {
     // Reset everything
-    this.reset()
+    this._reset()
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
   }
 
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
-    this._drawing_area.draw()
+    this._drawing_area.draw(false)
     this.menu_configuration.updateAllMenuComponents()
   }
 
@@ -483,8 +483,10 @@ export abstract class Class_ApplicationData
   ) {
     this._toast.promise(
       new Promise((resolve) => {
-        funct()
-        return resolve(200)
+        setTimeout(() => {
+          funct()
+          resolve(200)
+        }, 200)  // Leave enough time for spinner to show itself
       }),
       {
         success: {

@@ -513,18 +513,30 @@ export abstract class Class_DrawingArea
   // PUBLIC METHODS ====================================================================
 
   /**
-   * Reset drawing area
+   * Reset drawing area & add waiting toast
    * @memberof Class_DrawingArea
    */
-  public draw() {
-    this.application_data.sendWaitingToast(
-      () => {
-        this._draw()
-        this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-      }
-    )
+  public draw(
+    with_spinner: boolean = true
+  ) {
+    if (with_spinner) {
+      this.application_data.sendWaitingToast(
+        () => {
+          this._draw()
+          this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        }
+      )
+    }
+    else {
+      this._draw()
+    }
   }
 
+  /**
+   * Reset drawing area
+   * @protected
+   * @memberof Class_DrawingArea
+   */
   protected _draw() {
 
     // Clean drawing area
