@@ -34,6 +34,7 @@ import {
   TagsCatalog
 } from './LegacyType'
 import {
+  default_dx,
   default_dy,
   default_relative_dx,
   default_relative_dy
@@ -111,6 +112,7 @@ const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
     relative_dx: default_relative_dx,
     relative_dy: default_relative_dy,
     dy: default_dy,
+    dx: default_dx,
 
     value_label_horiz_shift: 0,
     label_horiz_valeur_shift: 0,
