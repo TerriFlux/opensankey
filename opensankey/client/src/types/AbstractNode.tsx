@@ -75,13 +75,13 @@ export abstract class Class_AbstractNodeElement
 export abstract class Class_AbstractNodeDimension {
   // Mandatory methods
   public abstract getLevel(): number
-  public abstract removeTagFromChildrenLevelTag(_: Class_AbstractLevelTag): void
+  //public abstract removeTagFromChildrenLevelTag(_: Class_AbstractLevelTag): void
   public abstract showAccordingToLevelTags(): void
   protected abstract _unsetForcingToShow(): Set<Type_AbstractNodeElement>
   // Mandatory getters
   public abstract get id(): string
   public abstract get parent_level_tag(): Class_AbstractLevelTag
-  public abstract get children_level_tags(): Class_AbstractLevelTag[]
+  public abstract get child_level_tag(): Class_AbstractLevelTag
   public abstract get parent(): Type_AbstractNodeElement
   public abstract get children(): Type_AbstractNodeElement[]
 }

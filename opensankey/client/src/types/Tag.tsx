@@ -676,7 +676,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   protected cleanForDeletion() {
     // Need to delete references
     this.dimensions_list_as_tag_for_children
-      .forEach(dim => dim.removeTagFromChildrenLevelTag(this))
+      .forEach(dim => dim.delete())
     this._dimensions_as_tag_for_children = {}
     this.dimensions_list_as_tag_for_parent
       .forEach(dim => dim.delete())
@@ -857,35 +857,23 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   public getOrCreateLowerDimension(
     parent: Type_AbstractNodeElement,
     child: Type_AbstractNodeElement,
-    child_tags: Class_LevelTag[]
+    child_tag: Class_LevelTag
   ) {
-    // First check if tags are from the same group
-    let same_group = true
-    child_tags
-      .forEach(_ => {
-        same_group = (same_group && this.group === _.group)
-      })
-    if (same_group) {
+
       // Try to find matching dimension with :
       // - this as parent tag
-      // - input child_tag as children tag
+      // - input child_tag as child tag
       // - parent node as parent
       let dimension_found: Class_NodeDimension | undefined
       this.dimensions_list_as_tag_for_parent
         .forEach(dimension => {
-          // Check if children tag list contains the same tags as in dimensions children tag list
-          let ok_children_level_tags = true
-          dimension.children_level_tags
-            .forEach(tag => ok_children_level_tags = ok_children_level_tags && child_tags.includes(tag as Class_LevelTag))
-          child_tags
-            .forEach(tag => ok_children_level_tags = ok_children_level_tags && dimension.children_level_tags.includes(tag))
           // Match dimension if all these conditions are true
           // - Parent are the same
           // - Parent level tags are the same
-          // - All children level tags are the same
+          // - child level tag is the same
           if (
             (dimension.parent_level_tag === this) &&
-            (ok_children_level_tags) &&
+            (dimension.child_level_tag == child_tag) &&
             (dimension.parent === parent)
           ) {
             dimension_found = dimension
@@ -901,13 +889,10 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
           parent,
           [child],
           this as Class_AbstractLevelTag,
-          child_tags
+          child_tag
         )
       }
-      // Return
       return dimension_found
-    }
-    return null
   }
 
   public isLevelForChildren(_: Class_NodeDimension) {
@@ -921,7 +906,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   public addAsChildrenLevel(_: Class_NodeDimension) {
     if (!this.isLevelForChildren(_)) {
       this._dimensions_as_tag_for_children[_.id] = _
-      _.addTagAsChildrenLevelTag(this)
+      _.child_level_tag = this
     }
   }
 
@@ -935,7 +920,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   public removeChildrenLevel(_: Class_NodeDimension) {
     if (this.isLevelForChildren(_)) {
       delete this._dimensions_as_tag_for_children[_.id]
-      _.removeTagFromChildrenLevelTag(this)
+      _.delete()
     }
   }
 
