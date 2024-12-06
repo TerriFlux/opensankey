@@ -96,6 +96,7 @@ export abstract class Class_NodeElementPlus
    */
   protected _menu_config: Class_MenuConfigPlus
 
+  protected d3_selection_g_FO_illustration:d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
   // PRIVATE ATTRIBUTES =================================================================
 
   private _iconName: string
@@ -444,14 +445,18 @@ export abstract class Class_NodeElementPlus
   }
 
   protected _drawFO() {
+    if(!this.d3_selection)
+      return
+
     this.d3_selection?.select('.node_fo').remove()
 
-    this.d3_selection?.append('foreignObject')
+    this.d3_selection_g_FO_illustration=this.d3_selection?.append('foreignObject')
       .attr('id', this.id + '_fo')
       .attr('class', 'node_fo')
       .attr('width', this.getShapeWidthToUse())
       .attr('height', this.getShapeHeightToUse())
-      .append('xhtml:div')
+
+      this.d3_selection_g_FO_illustration?.append('xhtml:div')
       .attr('class', 'ql-editor')
       .html(this._FO_content)
   }
@@ -595,6 +600,11 @@ export abstract class Class_NodeElementPlus
         window.open(this._hyperlink)
       }
     }
+  }
+
+  protected override _orderD3Elements(){
+    super._orderD3Elements()
+    this.d3_selection_g_FO_illustration?.raise()
   }
 
   // GETTERS / SETTERS ==================================================================
