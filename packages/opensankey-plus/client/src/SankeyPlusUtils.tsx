@@ -431,6 +431,7 @@ export const ToolBarNodeTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
   //Popover element to handle node tags
   // Its a list of dropdown for each groupNodeTag where we can choose wiche group to apply and wiche tag from these group to display when selected
   const filter_color_node = <Popover
+    isLazy
     variant='toolbar_popover_window'
     placement='left'
     id='popover_node_tag_filter'
@@ -439,6 +440,7 @@ export const ToolBarNodeTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = 
       <Button
         variant='toolbar_button_4'
         id='btn_open_popover_node_tag_filter'
+        onClick={()=>setCount(a=>a+1)}
       >
         {logo_btn_node}
       </Button>
@@ -701,7 +703,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
   const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
 
   // Component updater ------------------------------------------------------------------
-  // const [, setCount] = useState(0)
+  const [update, setUpdate] = useState(true)
 
 
   // JSX Component ----------------------------------------------------------------------
@@ -721,7 +723,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                 level_taggs['Primaire'].selectTagsFromId(evt.target.value)
                 new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
-                // setCount(a=>a+1)
+                setUpdate(!update)
                 // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
                 // (it isn't done for link not directly displayed after fromJSON)
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
