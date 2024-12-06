@@ -236,10 +236,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
 
   public showAccordingToLevelTags() {
     // Unset booleans
-    const nodes_to_redraw = this._unsetForcingToShow()
-    // Redraw
-    nodes_to_redraw
-      .forEach(node => node.draw())
+    this._unsetForcingToShow()
   }
 
   /**
