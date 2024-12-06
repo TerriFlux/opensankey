@@ -1503,6 +1503,24 @@ const convert_nodes: convert_nodesFuncType = (
       })
     }
 
+    const forceShowChildren = (
+      data: SankeyData,
+      node: SankeyNode,
+      dim: string
+    ) => {
+      // quand un neoud est à force_children il faut remonter tous ces ancêtres
+      // jusqu'à celui qui est normalement visible d'aprés les tags de niveaux
+      let parents = Object.entries(node.dimensions).filter(cur_dim => cur_dim[0] == dim && cur_dim[1].parent_name!=undefined)
+      if (parents.length == 0) {
+        return
+      }
+      const parent = parents[0][1].parent_name!
+      data.nodes[parent].dimensions[dim].force_show_children = true
+      if (!NodeHasDisplayedLevel(data, data.nodes[parent])) {
+        forceShowChildren(data, data.nodes[parent],dim)
+      }
+    }
+
     const treatExchangeNodes = (
       data: SankeyData,
       node: SankeyNode,
@@ -1562,6 +1580,7 @@ const convert_nodes: convert_nodesFuncType = (
               data.nodes[dim[1].parent_name!].local!.local_aggregation == false
             ) {
               dim[1].force_show_children = true
+              forceShowChildren(data,n,dim[0])
               treatExchangeNodes(data, n, dim[0], true)
             } else {
               forceShowParent(data, n, dim[0])

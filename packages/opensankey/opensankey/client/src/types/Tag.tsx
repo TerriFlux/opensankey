@@ -585,13 +585,12 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
   }
 
   public setUnSelected() {
-    // Avoid useless update
-    if (this._is_selected === true) {
-      // Set attributes
-      this._is_selected = false
-      // Redraw all related elements
-      this.update()
-    }
+    // run it even if this._is_selected is already false
+    // as update hides force node
+    // Set attributes
+    this._is_selected = false
+    // Redraw all related elements
+    this.update()
   }
 
   public toogleSelected() {
