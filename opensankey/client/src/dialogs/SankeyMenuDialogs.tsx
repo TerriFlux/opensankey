@@ -66,7 +66,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   const [trade_close, set_trade_close] = useState(true)
 
   ref_to_updater_modal_apply_layout.current=()=>setForceUpdate(b=>!b)
-  
+
   if (parametric !== (node_styles_dict['default'].position.type == 'parametric')) {
     set_parametric(node_styles_dict['default'].position.type == 'parametric')
   }
@@ -84,7 +84,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 
   const setTrade = (trade_close: boolean) => {
     if (trade_close) {
-      // nodes of type 
+      // nodes of type
       node_styles_dict['NodeImportStyle'].position.type = 'relative'
       node_styles_dict['NodeImportStyle'].shape_visible = false
       node_styles_dict['NodeImportStyle'].shape_min_height = 40
@@ -615,11 +615,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
               <Button
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
-                  applicationData.function_on_wait.current = () => {
-                    applicationData.drawing_area.computeAutoSankey(false)
-                  }
-                  applicationData.launch_waiting_function.current({ success: applicationData.t('toast.comp_n_pos'), loading: applicationData.t('toast.node_pos_computed') })
-
+                  applicationData.drawing_area.computeAutoSankey(false)
                 }}>
                 {t('MEP.PA')}
               </Button>

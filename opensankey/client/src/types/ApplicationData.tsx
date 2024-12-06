@@ -10,11 +10,13 @@ import LZString from 'lz-string'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
+import FileSaver from 'file-saver'
+
 import { StepType } from '@reactour/tour'
 import { useToast } from '@chakra-ui/react'
 
 // Local imports
-import { Class_MenuConfig, Type_TextForToastPromise } from './MenuConfig'
+import { Class_MenuConfig } from './MenuConfig'
 import { Class_AbstractApplicationData } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
 import { Type_JSON } from './Utils'
@@ -22,10 +24,27 @@ import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
 import { FType_ProcessFunctions } from './FunctionTypes'
+import { DataSuiteType } from './LegacyType'
 
 import { Type_SaveDiagramOptions } from '../dialogs/types/SankeyPersistenceTypes'
-import { ClickSaveDiagram, ClickSaveExcel, retrieveExcelResults } from '../dialogs/SankeyPersistence'
-import { launchToastConstructor } from '../topmenus/SankeyMenuTop'
+import { JSONtoExcel, retrieveExcelResults } from '../dialogs/SankeyPersistence'
+
+// SPECIFIC TYPES **********************************************************************/
+
+export type Type_TextForToastPromise = {
+  success?: {
+    title?: string,
+    desc?: string
+  }
+  error?: {
+    title?: string,
+    desc?: string
+  },
+  loading?: {
+    title?: string,
+    desc?: string
+  }
+}
 
 // SPECIFIC CONSTANTS ******************************************************************/
 
@@ -138,14 +157,10 @@ export abstract class Class_ApplicationData
   // TODO ???
   private _processFunction: FType_ProcessFunctions
 
-  // Variable to stock a function (that can take some time to process) for it to be used while a loading spinner appear
-  private _function_on_wait: MutableRefObject<() => void>
-
   // Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
-  // Optional arguments to show custom message while loading & when finished
-  private _launch_waiting_function: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
   private _toast = useToast()
 
+  // Guided visite steps to show app
   private _steps: StepType[] = []
 
   // OPTIONNAL ATTRIBUTES ===============================================================
@@ -206,6 +221,7 @@ export abstract class Class_ApplicationData
     // Default logo for app
     this._logo = logo_opensankey
 
+    // Excel processing function
     this._processFunction = {
       ref_processing: useRef(false),
       ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -223,12 +239,6 @@ export abstract class Class_ApplicationData
         this._processFunction.ref_result.current('')
       }
     }
-    this._function_on_wait = useRef(() => null)
-
-
-    this._launch_waiting_function = useRef((intake?: Type_TextForToastPromise) => {
-      launchToastConstructor(this, this._toast, intake)
-    })
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -239,6 +249,22 @@ export abstract class Class_ApplicationData
   // CLEANING METHODS ===================================================================
 
   public reset() {
+    this.sendWaitingToast(
+      () => {
+        // Reset
+        this._reset()
+      },
+      {
+        success: {
+          title: this.t('toast.loaded')
+        },
+        loading: {
+          title: this.t('toast.loading')
+        }
+      })
+  }
+
+  protected _reset() {
     // Reset drawing area
     // this._drawing_area.delete() // TODO : lent sur gros SANkey
     this._drawing_area.unDraw()
@@ -251,7 +277,145 @@ export abstract class Class_ApplicationData
 
   // SAVING METHODS =====================================================================
 
+  /**
+   * Save in JSON in browser cache & Create waiting spinner
+   * @memberof Class_ApplicationData
+   */
+  public saveInCache() {
+    this.sendWaitingToast(
+      () => {
+        // Read json file
+        this._saveInCache()
+      },
+      {
+        success: {
+          title: this.t('toast.loaded')
+        },
+        loading: {
+          title: this.t('toast.loading')
+        }
+      })
+  }
+
+  /**
+   * Save as JSON in browser cache
+   * @protected
+   * @memberof Class_ApplicationData
+   */
+  protected _saveInCache() {
+    localStorage.setItem('data', LZString.compress(JSON.stringify(this.toJSON())))
+    localStorage.setItem('last_save', 'true')
+  }
+
+  /**
+   * save to JSON format & create waiting spinner
+   * @memberof Class_ApplicationData
+   */
+  public saveToJSON() {
+    this.sendWaitingToast(
+      () => {
+        this._saveToJSON()
+      },
+      {
+        success: {
+          title: this.t('toast.loaded')
+        },
+        loading: {
+          title: this.t('toast.loading')
+        }
+      })
+  }
+
+  /**
+   * Save to JSON format
+   * @protected
+   * @memberof Class_ApplicationData
+   */
+  protected _saveToJSON() {
+    // Convert all datas as JSON
+    const json_data = this._toJSON()
+    // Prepare JSON for saving
+    const json_data_str = JSON.stringify(json_data, null, 2)
+    const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
+    // Set name for file to download
+    const dataAsSuite = (json_data as DataSuiteType)
+    let name = 'Diagramme de Sankey'
+    if (
+      dataAsSuite.view &&
+      dataAsSuite.view.length > 0 &&
+      !dataAsSuite.is_catalog
+    ) {
+      name = 'Diagramme de Sankey avec vues'
+    }
+    else if (dataAsSuite.is_catalog === true) {
+      name = 'Catalogue de vues de diagrammes de Sankey'
+    }
+    // Trigger file download
+    FileSaver.saveAs(blob, name + '.json')
+  }
+
+  /**
+   * Save as Excel format & Create waiting toast
+   * @param {string} url_prefix
+   * @param {string} [file_name='sankey']
+   * @memberof Class_ApplicationData
+   */
+  public saveToExcel(
+    url_prefix: string,
+    file_name = 'sankey'
+  ) {
+    this.sendWaitingToast(
+      () => {
+        this._saveToExcel(
+          url_prefix,
+          file_name
+        )
+      },
+      {
+        success: {
+          title: this.t('toast.loaded')
+        },
+        loading: {
+          title: this.t('toast.loading')
+        }
+      })
+  }
+
+  /**
+   * Save to Excel format
+   * @protected
+   * @param {string} url_prefix
+   * @param {string} [file_name='sankey']
+   * @memberof Class_ApplicationData
+   */
+  protected _saveToExcel(
+    url_prefix: string,
+    file_name = 'sankey'
+  ) {
+    JSONtoExcel(
+      this._toJSON(),
+      url_prefix,
+      file_name
+    )
+  }
+
   public toJSON() {
+    this.sendWaitingToast(
+      () => {
+        // Read json file
+        this._toJSON()
+      },
+      {
+        success: {
+          title: this.t('toast.loaded')
+        },
+        loading: {
+          title: this.t('toast.loading')
+        }
+      })
+  }
+
+  protected _toJSON() {
     // Create json struct
     const json_object = {} as Type_JSON
     // Node label separator attribute
@@ -275,10 +439,21 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   public fromJSON(json_object: Type_JSON) {
-    // Read json file
-    this._fromJSON(json_object)
-    // Update drawing area and menus
-    this._afterFromJSON()
+    this.sendWaitingToast(
+      () => {
+        // Read json file
+        this._fromJSON(json_object)
+        // Update drawing area and menus
+        this._afterFromJSON()
+      },
+      {
+        success: {
+          title: this.t('toast.loaded')
+        },
+        loading: {
+          title: this.t('toast.loading')
+        }
+      })
   }
 
   /**
@@ -298,6 +473,34 @@ export abstract class Class_ApplicationData
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.draw()
     this.menu_configuration.updateAllMenuComponents()
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  public sendWaitingToast(
+    funct: () => void,
+    intake?: Type_TextForToastPromise
+  ) {
+    this._toast.promise(
+      new Promise((resolve) => {
+        funct()
+        return resolve(200)
+      }),
+      {
+        success: {
+          title: intake?.success?.title ?? this.t('toast.toast_loading_success'),
+          description: intake?.success?.desc ?? this.t('toast.toast_loading_success_desc')
+        },
+        error: {
+          title: intake?.error?.title ?? this.t('toast.toast_loading_failed'),
+          description: intake?.error?.desc ?? this.t('toast.toast_loading_failed_desc')
+        },
+        loading: {
+          title: intake?.loading?.title ?? this.t('toast.toast_loading_waiting'),
+          description: intake?.loading?.desc ?? this.t('toast.toast_loading_waiting_desc')
+        },
+      }
+    )
   }
 
   // PRIVATE METHODS ====================================================================
@@ -414,12 +617,7 @@ export abstract class Class_ApplicationData
       // Prevent default event on ctrl + s
       evt.preventDefault()
       // Save in cache
-      app_ref.function_on_wait.current = () => {
-        localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
-      }
-      this.launch_waiting_function.current({ success: this.t('_toast.success'), loading: this.t('_toast.saving') })
-
-      localStorage.setItem('last_save', 'true')
+      app_ref.saveInCache()
       // Update logo save in cache
       app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     }
@@ -429,14 +627,14 @@ export abstract class Class_ApplicationData
       evt.preventDefault()
       // Trigger saving via JSON saving button
       app_ref.options_save_json = default_save_JSON_options
-      ClickSaveDiagram(app_ref)
+      app_ref.saveToJSON()
     }
     // event to download current sankey in Excel -------------------------------------
     else if (evtCtrlAltS) {
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via Excel saving button
-      ClickSaveExcel('/opensankey/', app_ref.toJSON())
+      this.saveToExcel('/opensankey/')
     }
     // Fullscreen --------------------------------------------------------------------
     else if (evtCtrlF) {
@@ -464,7 +662,7 @@ export abstract class Class_ApplicationData
         content: this.t('guide.toolbar'),
         actionAfter: () => {
           this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
-          setTimeout(()=> {}, 500)
+          setTimeout(() => { }, 500)
         }
       },
       {
@@ -529,9 +727,5 @@ export abstract class Class_ApplicationData
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
   public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
   public get preference_menu_all_item() { return this._preference_menu_all_item }
-
-  public get function_on_wait(): MutableRefObject<() => void> { return this._function_on_wait }
-
-  public get launch_waiting_function(): MutableRefObject<(intake?: Type_TextForToastPromise) => void> { return this._launch_waiting_function }
 }
 

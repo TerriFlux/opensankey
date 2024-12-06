@@ -106,10 +106,6 @@ import {
   ApplyLayoutDialog
 } from '../dialogs/SankeyMenuDialogs'
 import {
-  ClickSaveExcel
-} from '../dialogs/SankeyPersistence'
-
-import {
   uploadExcelImpl
 } from '../dialogs/SankeyPersistence'
 import {
@@ -120,7 +116,7 @@ import {
   DataTagSelector
 } from '../configmenus/SankeyMenuBanner'
 import { Type_GenericApplicationDataOS } from '../types/TypesOS'
-import { FCType_Menu, FType_LaunchToastConstructor } from '../types/FunctionTypes'
+import { FCType_Menu } from '../types/FunctionTypes'
 
 
 /*************************************************************************************************/
@@ -472,10 +468,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                     const file_content = String((e.target as FileReader).result)
                     const JSON_data = JSON.parse(file_content)
                     // Clear datas & apply read datas
-                    new_data.function_on_wait.current = () => {
-                      new_data.fromJSON(JSON_data as Type_JSON)
-                    }
-                    new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
+                    new_data.fromJSON(JSON_data as Type_JSON)
                   }
                 })()
                 reader.readAsText(files[0])
@@ -540,7 +533,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             {t('Menu.open_json')}
           </MenuItem>
           <MenuItem
-            onClick={() => ClickSaveExcel('/opensankey/', new_data.toJSON())}
+            onClick={() => new_data.saveToExcel('/opensankey/')}
           >
             <FontAwesomeIcon
               style={{ 'height': '1rem', 'width': '1rem' }}
@@ -989,10 +982,10 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
     <Button
       disabled={!valid_input}
       onClick={() => {
-        new_data.function_on_wait.current = () => {
-          clickSavePNG(h, v, new_data)
-        }
-        new_data.launch_waiting_function.current()
+        new_data.sendWaitingToast(
+          () => {
+            clickSavePNG(h, v, new_data)
+          })
       }}
     >
       Save
@@ -1706,32 +1699,6 @@ export const post_process_export_svg = () => {
   d3.select(' .opensankey#svg-container svg').style('border', '2px')
 }
 
-/**
- * Launch a process waiting pop-up window (toast) on the
- *
- * @param {} new_data
- * @param {} toast
- * @param {} [intake]
- */
-export const launchToastConstructor: FType_LaunchToastConstructor = (
-  new_data,
-  toast,
-  intake?
-) => {
-  const { t } = new_data
-  const defaultToastText = {
-    success: { title: intake?.success ?? t('toast.toast_loading_success'), description: t('toast.toast_loading_success_desc') },
-    error: { title: t('toast.toast_loading_failed'), description: t('toast.toast_loading_failed_desc') },
-    loading: { title: intake?.loading ?? t('toast.toast_loading_waiting'), description: t('toast.toast_loading_waiting_desc') },
-  }
-  const tmp = new Promise((resole) => {
-    setTimeout(() => {
-      new_data.function_on_wait.current()
-      resole(200)
-    }, 2)
-  })
-  toast.promise(tmp, defaultToastText)
-}
 
 export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
   new_data,

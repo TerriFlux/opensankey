@@ -517,6 +517,15 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public draw() {
+    this.application_data.sendWaitingToast(
+      () => {
+        this._draw()
+        this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      }
+    )
+  }
+
+  protected _draw() {
 
     // Clean drawing area
     this.unDraw()
@@ -1286,6 +1295,17 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public computeAutoSankey(
+    launched_from_process: boolean
+  ) {
+    this.application_data.sendWaitingToast(
+      () => {
+        this._computeAutoSankey(launched_from_process)
+        this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      }
+    )
+  }
+
+  protected _computeAutoSankey(
     launched_from_process: boolean
   ) {
     // Calcul de la valeur max des flux
