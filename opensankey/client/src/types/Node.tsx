@@ -406,22 +406,16 @@ export abstract class Class_NodeElement
           const parent = this.sankey.nodes_dict[dim_to_copy.parent.id]
           if (parent !== undefined) {
             // Get possible level tagg
-            const level_tagg = this.sankey.level_taggs_dict[dim_to_copy.children_level_tagg.id]
+            const level_tagg = this.sankey.level_taggs_dict[dim_to_copy.child_level_tagg.id]
             if (level_tagg !== undefined) {
               // Get possible parent tagg
               const parent_tag = level_tagg.tags_dict[dim_to_copy.parent_level_tag.id]
               if (parent_tag !== undefined) {
                 // Get possible children taggs
-                const children_tags: Class_LevelTag[] = []
-                dim_to_copy.children_level_tags
-                  .forEach(tag_to_copy => {
-                    const tag = level_tagg.tags_dict[tag_to_copy.id]
-                    if (tag !== undefined)
-                      children_tags.push(tag as Class_LevelTag)
-                  })
-                if (children_tags.length > 0) {
+                const tag_to_copy = level_tagg.tags_dict[dim_to_copy.child_level_tag.id]
+                if (tag_to_copy) {
                   // Create new dim if everything is ok
-                  const new_dim = new Class_NodeDimension(parent, [this], parent_tag, children_tags, dim_to_copy.id)
+                  const new_dim = new Class_NodeDimension(parent, [this], parent_tag, tag_to_copy, dim_to_copy.id)
                   all_existing_dim[dim_to_copy.id] = new_dim
                 }
               }
@@ -448,16 +442,11 @@ export abstract class Class_NodeElement
                     children.push(child as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>)
                 })
               // Get possible children tags
-              const children_tags: Class_LevelTag[] = []
-              dim_to_copy.children_level_tags
-                .forEach(tag_to_copy => {
-                  const tag = level_tagg.tags_dict[tag_to_copy.id]
-                  if (tag !== undefined)
-                    children_tags.push(tag as Class_LevelTag)
-                })
+              const tag = level_tagg.tags_dict[dim_to_copy.child_level_tag.id]
+
               // Create new dim if everything is ok
-              if ((children.length > 0) && (children_tags.length > 0)) {
-                const new_dim = new Class_NodeDimension(this, children, parent_tag, children_tags, dim_to_copy.id)
+              if ((children.length > 0) && tag != undefined ) {
+                const new_dim = new Class_NodeDimension(this, children, parent_tag, tag, dim_to_copy.id)
                 all_existing_dim[dim_to_copy.id] = new_dim
               }
             }
@@ -512,21 +501,30 @@ export abstract class Class_NodeElement
         ])
     )
     // Dimension - relations
-    let dimensions: { [_: string]: Type_JSON }
+    let dimensions: { [_: string]: Type_JSON } = {}
     if (this.is_child) {
-      dimensions = Object.fromEntries(
-        Object.values(this._dimensions_as_child)
-          .map(dimension => [
-            dimension.parent_level_tag.group.id,
-            {
-              'parent_name': dimension.parent.id,
-              'parent_tag': dimension.parent_level_tag.id,
-              'children_tags': dimension.children_level_tags.map(_ => _.id),
-              'antitag': false,
-              'force_show_children': dimension.force_show_children,
-              'force_show_parent': dimension.force_show_parent
+      //On parse les tags groupes et on écrit la dimension pour ce tag groupe. 
+      //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
+      const all_child_tags = [...new Set(Object.values(this._dimensions_as_child).map(dim=>dim.related_level_tagg.id))]
+      all_child_tags.forEach(tagg_id=>{
+          Object.values(this._dimensions_as_child).filter(dim=>dim.related_level_tagg.id == tagg_id)
+            .forEach(dimension => {
+              if (!(dimension.related_level_tagg.id in dimensions)) {
+                dimensions[dimension.related_level_tagg.id] ={
+                  'parent_name': dimension.parent.id,
+                  'parent_tag': dimension.parent_level_tag.id,
+                  'children_tags': [dimension.child_level_tag.id],
+                  'antitag': false,
+                  'force_show_children': dimension.force_show_children,
+                  'force_show_parent': dimension.force_show_parent
+                }
+              } else {
+                const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
+                dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
+              }
             }
-          ])
+          )
+        }
       )
     }
     else {
@@ -707,13 +705,19 @@ export abstract class Class_NodeElement
                     // If tags has been found,
                     // create a new dimension OR add parent & child relation to an existing dimension
                     if (children_tags && parent_tag) {
-                      const childDim = parent_tag.getOrCreateLowerDimension(parent, this, children_tags)
-                      if (dimension_as_json.force_show_children) {
-                        const nodeDimParent = parent.nodeDimensionAsParent(parent_tag.group)!
-                        nodeDimParent.setForceToShowChildren()
-                      } else if (dimension_as_json.force_show_parent) {
-                        childDim?.setForceToShowParent()
-                      }
+                      let cur_parent_tag = parent_tag
+                      let cur_parent = parent
+                      children_tags.forEach(child_tag=>{
+                        const childDim = cur_parent_tag.getOrCreateLowerDimension(cur_parent, this, child_tag)
+                        if (dimension_as_json.force_show_children) {
+                          const nodeDimParent = parent.nodeDimensionAsParent(cur_parent_tag.group)!
+                          nodeDimParent.setForceToShowChildren()
+                        } else if (dimension_as_json.force_show_parent) {
+                          childDim?.setForceToShowParent()
+                        }
+                        cur_parent_tag = child_tag
+                        cur_parent = this
+                      })
                     }
                   }
                 }
@@ -835,13 +839,11 @@ export abstract class Class_NodeElement
    * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, disagregate with 'Primaire'
    * @memberof Class_NodeElement
    */
-  public drawChildren(id?: string) {
+  public drawChildren(id: string) {
     if (this.is_parent) {
       // Force to show children
       if ((id !== undefined) && (this._dimensions_as_parent[id]))
         this._dimensions_as_parent[id].setForceToShowChildren()
-      else
-        Object.values(this._dimensions_as_parent)[Object.values(this._dimensions_as_parent).length - 1].setForceToShowChildren()
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
@@ -1121,7 +1123,6 @@ export abstract class Class_NodeElement
 
   public addNewDimensionAsChild(_: Class_NodeDimension) {
     if (
-      (_.parent !== this) &&
       (!this._dimensions_as_child[_.id])
     ) {
       this._dimensions_as_child[_.id] = _
@@ -2983,11 +2984,8 @@ export abstract class Class_NodeElement
       })
     Object.values(this._dimensions_as_child)
       .forEach(dimension => {
-        dimension.children_level_tags
-          .forEach(children_level_tag => {
-            level_tags_list.push(children_level_tag as Class_LevelTag)
+            level_tags_list.push(dimension.child_level_tag as Class_LevelTag)
           })
-      })
     return [...new Set(level_tags_list)]
   }
 
@@ -4045,16 +4043,33 @@ export abstract class Class_NodeElement
     let has_forced_dimensions: boolean = false
     let ok_forced_dimensions: boolean = true
     // Check dimensions where node is tagged as a child
-    Object.values(this._dimensions_as_child)
-      .forEach(dim => {
-        if (dim.force_show_parent || dim.force_show_children) {
-          has_forced_dimensions = true
-          ok_forced_dimensions = ok_forced_dimensions && dim.force_show_children
+    const group_to_children_dim : {[_:string] : Class_NodeDimension[]} = {}
+    const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child)
+      .filter(dim=>dim.related_level_tagg.activated)
+      .map(dim=>{
+        if (group_to_children_dim[dim.related_level_tagg.id] == undefined ) {
+          group_to_children_dim[dim.related_level_tagg.id] = [dim]
+        } else {
+          group_to_children_dim[dim.related_level_tagg.id].push(dim)
         }
-        if (dim.related_level_tagg.activated) {
-          ok_activated_dimensions = ok_activated_dimensions && dim.show_children
-          has_activated_dimensions = true
-        }
+        return dim.related_level_tagg.id
+      }))]
+    all_child_taggs.forEach(child_tagg=>{
+      let child_tag_activated_dimensions = false
+      let child_ok_forced_dimensions = true
+      group_to_children_dim[child_tagg]
+        .forEach(dim => {
+          if (dim.force_show_parent || dim.force_show_children) {
+            has_forced_dimensions = true
+            child_ok_forced_dimensions = child_ok_forced_dimensions && dim.force_show_children
+          }
+          if (dim.related_level_tagg.activated) {
+            child_tag_activated_dimensions = child_tag_activated_dimensions || dim.child_level_tag.is_selected
+            has_activated_dimensions = true
+          }
+        })
+        ok_activated_dimensions = ok_activated_dimensions && child_tag_activated_dimensions
+        ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
       })
     // Check dimensions where node is tagged as a parent
     Object.values(this._dimensions_as_parent)
@@ -4268,7 +4283,7 @@ export abstract class Class_NodeElement
           (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
             this.sankey.nodes_dict[extremity_node_parent.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')],
             this,
-            dim.children_level_tags as Class_LevelTag[]
+            dim.child_level_tag as Class_LevelTag
           )
         })
       Object.values(extremity_node._dimensions_as_parent)
@@ -4282,7 +4297,7 @@ export abstract class Class_NodeElement
             this,
             extremity_node_children,
             dim.parent_level_tag,
-            dim.children_level_tags
+            dim.child_level_tag
           )
         })
     })
