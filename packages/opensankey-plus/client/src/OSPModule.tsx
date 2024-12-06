@@ -86,10 +86,7 @@ export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = 
   const new_data_plus = new Class_ApplicationDataOSP(window.SankeyToolsStatic)
   // Read data from cache if it exist
   if (initial_data !== undefined) {
-    new_data_plus.function_on_wait.current = () => {
-      new_data_plus.fromJSON(initial_data)
-    }
-    new_data_plus.launch_waiting_function.current({ success: new_data_plus.t('toast.loaded'), loading: new_data_plus.t('toast.loading') })
+    new_data_plus.fromJSON(initial_data)
   }
   return new_data_plus
 }
@@ -307,7 +304,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       new_data_plus={new_data_plus}
     />
   )
-  
+
   //Add data sequence in footer
   additionalMenus.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus}/>)
 }
