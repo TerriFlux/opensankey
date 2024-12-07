@@ -1576,10 +1576,6 @@ export abstract class Class_NodeElement
             const input_link = this.getFirstInputLink()
             // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
             const source_node = input_link!.source
-            if (!source_node.shape_visible) {
-              this.d3_selection.attr('transform', 'translate(0,0)')
-              return
-            }
             this._display.position.x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
             this._display.position.y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
           }
@@ -1588,10 +1584,6 @@ export abstract class Class_NodeElement
             const output_link = this.getFirstOutputLink()
             // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
             const target_node = output_link!.target
-            if (!target_node.shape_visible) {
-              this.d3_selection.attr('transform', 'translate(0,0)')
-              return
-            }
             this._display.position.x = target_node.position_x + this.position_relative_dx
             this._display.position.y = target_node.position_y + this.position_relative_dy
           }
