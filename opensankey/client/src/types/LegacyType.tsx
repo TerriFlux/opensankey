@@ -218,7 +218,8 @@ export type SankeyLink = {
   // geometry
   x_label?: number,
   y_label?: number,
-  drag_label_offset?: number
+  drag_label_offset?: number,
+  position_offset_label?:number,
   //style
   style: string, local?: SankeyLinkAttrLocal
 }
