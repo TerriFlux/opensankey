@@ -1264,7 +1264,7 @@ const convert_nodes: convert_nodesFuncType = (
   if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {
     Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
-
+  const has_relative = Object.values(data.nodes).filter(n => ReturnValueNode(data,n,'position')==='relative' || n.position === 'relative' ).length > 0
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes = Object.values(data.nodes).map(n => n.idNode)
   const list_links = Object.values(data.links)
@@ -2175,6 +2175,9 @@ const convert_links: convert_linksFuncType = (
     // Delete color attribute if unecessary
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color)) {
       delete l.local.color
+    }
+    if (l.drag_label_offset) {
+      l.position_offset_label = l.drag_label_offset
     }
   })
 
