@@ -560,8 +560,11 @@ export const UploadExemple: FType_UploadExemple = (
         }
         if (!file_name.includes('.xlsx')) {
           // Clear datas & apply read datas
+          new_data.drawing_area.bypass_redraws = true
           new_data.fromJSON(JSON_data as Type_JSON)
           new_data.drawing_area.ArrangeTrade(false)
+          new_data.drawing_area.bypass_redraws = false
+          new_data.drawing_area.draw()
         }
       }
       new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
