@@ -235,7 +235,10 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     label_unit: '',
     custom_digit: false,
     nb_digit: 0,
-    dashed: false
+    dashed: false,
+
+    starting_tangeant: 0.25,
+    ending_tangeant: 0.25
   }
 }
 
@@ -946,16 +949,18 @@ const convert_tags: convert_tagsFuncType = (
     }
     if (!Object.keys(data.style_node).includes('NodeImportStyle')) {
       data.style_node['NodeImportStyle'] = DefaultNodeImportStyle()
-      // if (!has_relative) {
-      //   data.style_node['NodeImportStyle'].position = 'absolute'
-      // }
     }
     if (!Object.keys(data.style_node).includes('NodeExportStyle')) {
       data.style_node['NodeExportStyle'] = DefaultNodeExportStyle()
-      // if (!has_relative) {
-      //   data.style_node['NodeExportStyle'].position = 'absolute'
-      // }
     }
+    if(!Object.keys(data.style_link).includes('LinkImportStyle')){
+      data.style_link['LinkImportStyle']=DefaultLinkImportStyle()
+    }
+    data.style_link['LinkImportStyle'].ending_tangeant = 1
+    if(!Object.keys(data.style_link).includes('LinkExportStyle')){
+      data.style_link['LinkExportStyle']=DefaultLinkExportStyle()
+    }
+    data.style_link['LinkExportStyle'].starting_tangeant = 1
   }
 
   if (data.nodeTags.Dimensions) {
@@ -1189,17 +1194,23 @@ const convert_tags: convert_tagsFuncType = (
         n.tags['type de noeud'] = JSON.parse(JSON.stringify(n.tags['Type de noeud']))
         delete n.tags['Type de noeud']
         if (n.tags['type de noeud'][0] == 'echange') {
-          if (n.style == 'default') {
-            if (n.inputLinksId.length === 0) {
-              n.style = 'NodeImportStyle'
-            } else if (n.outputLinksId.length === 0) {
-              n.style = 'NodeExportStyle'
+          //if (n.style == 'default') {
+          if (n.inputLinksId.length === 0) {
+            n.style = 'NodeImportStyle'
+            if (n.outputLinksId.length !== 0) {
+              data.links[n.outputLinksId[0]].style = 'LinkImportStyle'
             }
+          } else if (n.outputLinksId.length === 0) {
+            n.style = 'NodeExportStyle'
+            if (n.inputLinksId.length !== 0) {            
+              data.links[n.inputLinksId[0]].style = 'LinkExportStyle'
+            }
+          }
             // if (has_relative && has_position) {
             //   AssignNodeLocalAttribute(n,'relative_dx',n.x)
             //   AssignNodeLocalAttribute(n,'relative_dy',n.y)
             // }
-          }
+          //}
         }
       }
     })
@@ -1469,14 +1480,6 @@ const convert_nodes: convert_nodesFuncType = (
       Object.entries(n.dimensions).filter(nd => !nd[1] || (nd[1].parent_name && !list_key_nodes.includes(nd[1].parent_name))).forEach(nd => {
         delete n.dimensions[nd[0]]
       })
-    }
-    // Change style if node has default style & 'Type de noeud' tags
-    if (n.tags['Type de noeud'] && n.style === 'default') {
-      if (n.tags['Type de noeud'].includes('produit')) {
-        n.style = 'NodeProductStyle'
-      } else if (n.tags['Type de noeud'].includes('secteur')) {
-        n.style = 'NodeSectorStyle'
-      }
     }
 
     //remove tags which are not in data.NodeTags
@@ -2115,8 +2118,8 @@ const convert_links: convert_linksFuncType = (
         if (l.local.curvature) {
           if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
             // I made an approx. here because we can't have a direct transform from old behavior (Cubic / Bezier) to new (Quadratic) for path drawing
-            AssignLinkLocalAttribute(l, 'starting_tangeant', 0.75 * l.local.curvature)
-            AssignLinkLocalAttribute(l, 'ending_tangeant', 0.75 * l.local.curvature)
+            //AssignLinkLocalAttribute(l, 'starting_tangeant', 0.75 * l.local.curvature)
+            //AssignLinkLocalAttribute(l, 'ending_tangeant', 0.75 * l.local.curvature)
           }
           else {
             AssignLinkLocalAttribute(l, 'starting_tangeant', l.local.curvature / 2)
