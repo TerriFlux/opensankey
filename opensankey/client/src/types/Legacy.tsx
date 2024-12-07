@@ -435,7 +435,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.node_label_separator === undefined || data_to_convert.node_label_separator === null) {
     data_to_convert.node_label_separator = ' - '
   }
-  if ( !data_to_convert.node_label_separator_part) {
+  if ( !data_to_convert.node_label_separator_first) {
     data_to_convert.node_label_separator_part = 'before'
   } else {
     data_to_convert.node_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
