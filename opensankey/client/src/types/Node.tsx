@@ -2312,7 +2312,7 @@ export abstract class Class_NodeElement
       const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
       label_pos_x = shape_width + label_pos_dx + this.name_label_horiz_shift
       if (this.name_label_horiz === 'left') {
-        label_pos_x = 0
+        label_pos_x = 0 + this.name_label_horiz_shift
         label_anchor = 'end'
         label_align = 'end'
       }

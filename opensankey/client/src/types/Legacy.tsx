@@ -435,7 +435,12 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.node_label_separator === undefined || data_to_convert.node_label_separator === null) {
     data_to_convert.node_label_separator = ' - '
   }
-  data_to_convert.node_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
+  if ( !data_to_convert.node_label_separator_part) {
+    data_to_convert.node_label_separator_part = 'before'
+  } else {
+    data_to_convert.node_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
+  }
+  
   // Convert name variable for data version>0.9
   data_to_convert.filter_link_value = data_to_convert.display_style.filter
   data_to_convert.filter_label = data_to_convert.display_style.filter_label
