@@ -1710,7 +1710,14 @@ const convert_nodes: convert_nodesFuncType = (
         n.local.name_label_horiz_shift = n.local.label_horiz_shift
       }
     }
-
+    // Change style if node has default style & 'Type de noeud' tags
+    if(n.tags['type de noeud'] && n.style==='default'){
+      if(n.tags['type de noeud'].includes('produit')){
+        n.style='NodeProductStyle'
+      }else if(n.tags['type de noeud'].includes('secteur')){
+        n.style='NodeSectorStyle'
+      }
+    }
   }
   )
 }
