@@ -4554,6 +4554,8 @@ export class Class_NodeAttribute {
   public get value_label_vert() { return this._value_label_vert }
   public get value_label_horiz() { return this._value_label_horiz }
   public get value_label_background() { return this._value_label_background }
+  public get value_label_vert_shift() { return this._value_label_vert_shift }
+  public get value_label_horiz_shift() { return this._value_label_horiz_shift }
 
   // SETTERS ============================================================================
 
