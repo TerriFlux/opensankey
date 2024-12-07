@@ -167,7 +167,9 @@ export type SankeyLinkAttrLocal = {
   label_unit?: string,
   label_unit_factor?: number,
   custom_digit?: boolean,
-  nb_digit?: number
+  nb_digit?: number,
+
+  gradient?:boolean
 }
 
 export type SankeyLinkStyle = {
