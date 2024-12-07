@@ -2097,7 +2097,9 @@ const convert_links: convert_linksFuncType = (
 
       font_family: '',
       label_unit_visible: true,
-      label_unit: ''
+      label_unit: '',
+      
+      gradient: false
     }
 
     // Move link attr to local sub strcut
