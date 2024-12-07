@@ -524,8 +524,7 @@ export abstract class Class_DrawingArea
     // Reinit d3 selections
     this._initDraw()
 
-    // Draw background
-    this.drawBackground()
+
 
     // Draw Everything
     this.drawElements()
@@ -993,6 +992,7 @@ export abstract class Class_DrawingArea
       this.width = width
       this.height = height
     }
+    this.drawBackground()
   }
 
   /**
