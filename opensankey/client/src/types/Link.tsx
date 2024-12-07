@@ -1308,8 +1308,7 @@ export abstract class Class_LinkElement
 
     if (this._display.position_offset_label !== undefined) {
       const offset = this._display.position_offset_label
-      // offset attributes when dragged
-      label_anchor = offset > 50 ? 'end' : 'start'
+
       label_position = offset
 
     } else {
