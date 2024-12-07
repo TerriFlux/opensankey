@@ -1066,7 +1066,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public hasGivenTag(tag: Class_Tag) {
-    return this._tags.includes(tag)
+    return this._tags.includes(tag) || this._taggs_dict[tag.group.id] == undefined
   }
 
   /**
@@ -1075,7 +1075,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public addTag(tag: Class_Tag) {
-    if (!this.hasGivenTag(tag)) {
+    if (!this._tags.includes(tag)) {
       this._tags.push(tag)
       this.addTagToGroupTagDict(tag)
       tag.addReference(this)
@@ -1090,7 +1090,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public removeTag(tag: Class_Tag) {
-    if (this.hasGivenTag(tag)) {
+    if (this._tags.includes(tag)) {
       const idx = this._tags.indexOf(tag)
       this._tags.splice(idx, 1)
       this.removeTagToGroupTagDict(tag)
@@ -4130,7 +4130,7 @@ export abstract class Class_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     // Input links
     if (this.hasInputLinks()) {
       tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.inputs') + '</p>'
