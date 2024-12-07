@@ -2312,7 +2312,7 @@ export abstract class Class_NodeElement
       const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
       label_pos_x = shape_width + label_pos_dx + this.name_label_horiz_shift
       if (this.name_label_horiz === 'left') {
-        label_pos_x = -label_pos_dx + this.name_label_horiz_shift
+        label_pos_x = 0
         label_anchor = 'end'
         label_align = 'end'
       }
@@ -2413,10 +2413,16 @@ export abstract class Class_NodeElement
    */
   private updateNameLabelPos(): [number, number, string] {
     const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getNameLabelPos()
-
     this.d3_selection_g_name_label?.select('.name_label_text')
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
+      .attr('dominant-baseline', label_baseline)
+      .attr('text-anchor', label_anchor)
+      .style('text-align', label_align)
+
+    this.d3_selection_g_name_label?.select('.name_label_text').selectAll('tspan')
+      .attr('x', label_pos_x)
+      .attr('dx', 0)
       .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
       .style('text-align', label_align)
