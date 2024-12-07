@@ -200,6 +200,9 @@ export type SankeyLinkStyle = {
   label_unit: string,
   custom_digit: boolean,
   nb_digit: number,
+
+  starting_tangeant: number,
+  ending_tangeant: number
 }
 
 export type SankeyLink = {
