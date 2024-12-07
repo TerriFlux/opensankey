@@ -435,7 +435,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.node_label_separator === undefined || data_to_convert.node_label_separator === null) {
     data_to_convert.node_label_separator = ' - '
   }
-  if ( !data_to_convert.node_label_separator_first) {
+  if ( data_to_convert.node_label_separator_first == undefined) {
     data_to_convert.node_label_separator_part = 'before'
   } else {
     data_to_convert.node_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
@@ -1950,7 +1950,7 @@ const convert_links: convert_linksFuncType = (
       delete l_convert.display_unit
     }
 
-    if ('natural_unit' in l_convert) {
+    if ('natural_unit' in l_convert && l_convert.natural_unit !== '') {
       // natural unit is now stored in label_unit
       // conversion factor is stored in label_unit_factor which is the invert of conv
       l.local!.label_unit_visible = true
@@ -1966,20 +1966,20 @@ const convert_links: convert_linksFuncType = (
     }
 
     // Rename orientation mode
-    if (l && l.local && !('orientation' in l.local)) {
-      if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
-        AssignLinkLocalAttribute(l, 'orientation', 'vh')
-      }
-      else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
-        AssignLinkLocalAttribute(l, 'orientation', 'hv')
-      }
-      else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
-        AssignLinkLocalAttribute(l, 'orientation', 'vv')
-      }
-      else {
-        AssignLinkLocalAttribute(l, 'orientation', 'hh')
-      }
-    }
+    // if (l && l.local && !('orientation' in l.local)) {
+    //   if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
+    //     AssignLinkLocalAttribute(l, 'orientation', 'vh')
+    //   }
+    //   else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
+    //     AssignLinkLocalAttribute(l, 'orientation', 'hv')
+    //   }
+    //   else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
+    //     AssignLinkLocalAttribute(l, 'orientation', 'vv')
+    //   }
+    //   else {
+    //     AssignLinkLocalAttribute(l, 'orientation', 'hh')
+    //   }
+    // }
 
     // Delete link reverse entry
     if ('link_reverse' in l) {
