@@ -530,7 +530,6 @@ export abstract class Class_DrawingArea
     this.drawElements()
 
     // Fit area
-    this.checkAndUpdateAreaSize()
     this.areaAutoFit()
 
     // Added events listeners
@@ -960,38 +959,25 @@ export abstract class Class_DrawingArea
   public checkAndUpdateAreaSize() {
 
     const bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+    if (bbox == undefined) {
+      return
+    }
     const fitting_width = this.window_fitting_width // acces speeding computation
     const fitting_height = this.window_fitting_height // acces speeding computation
 
-    // Two condition to resize & reposition
-    if (
-      (  // Condition 1 : Elements take too much space -> need to resize & recentre elements
-        (bbox !== undefined) &&
-        (bbox.width > fitting_width) &&
-        (bbox.height > fitting_height) &&
-        (Math.abs(bbox.width- this.width) > 0.1) &&
-        (Math.abs(bbox.height- this.height) > 0.1)
-      ) ||
-      ( // Condition 2 : Elements are outsides drawing space -> need to reposition & resize
-        (bbox !== undefined) &&
-        (bbox.width > 0) &&
-        (bbox.height > 0) &&
-        ((bbox.x < 0) || (bbox.y < 0) || ((bbox.x + bbox.width) > this.width) || ((bbox.y + bbox.height) > this.height))
-      )
-    ) {
-      // New dimensions for drawing area
-      const width = Math.max(bbox.width + this.grid_size*2, fitting_width)
-      const height = Math.max(bbox.height + this.grid_size*2, fitting_height)
-      // Shifting svg group that contains elements
-      this._elements_d3_groups_shift_x = -(bbox.x + bbox.width/2) + width/2
-      this._elements_d3_groups_shift_y = -(bbox.y + bbox.height/2) + height/2
-      this.d3_selection_elements_group?.attr(
-        'transform',
-        'translate(' + this._elements_d3_groups_shift_x  + ', ' + this._elements_d3_groups_shift_y + ')')
-      // Apply new dimensions
-      this.width = width
-      this.height = height
-    }
+
+    // New dimensions for drawing area
+    const width = Math.max(bbox.width + this.grid_size*2, fitting_width)
+    const height = Math.max(bbox.height + this.grid_size*2, fitting_height)
+    // Shifting svg group that contains elements
+    this._elements_d3_groups_shift_x = -(bbox.x + bbox.width/2) + width/2
+    this._elements_d3_groups_shift_y = -(bbox.y + bbox.height/2) + height/2
+    this.d3_selection_elements_group?.attr(
+      'transform',
+      'translate(' + this._elements_d3_groups_shift_x  + ', ' + this._elements_d3_groups_shift_y + ')')
+    // Apply new dimensions
+    this.width = width
+    this.height = height
     this.drawBackground()
   }
 
