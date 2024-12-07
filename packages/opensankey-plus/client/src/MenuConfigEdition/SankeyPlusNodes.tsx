@@ -638,7 +638,7 @@ export const NodeValue: FunctionComponent<FCType_NodeValueOSP> = ({ new_data, me
                       refreshThisAndUpdateRelatedComponents()
                     }}
                   >
-                    <FaAlignLeft />
+                    <FaAlignRight />
                   </Button>
                 </OSTooltip>
 
@@ -678,7 +678,7 @@ export const NodeValue: FunctionComponent<FCType_NodeValueOSP> = ({ new_data, me
                       refreshThisAndUpdateRelatedComponents()
                     }}
                   >
-                    <FaAlignRight />
+                    <FaAlignLeft />
                   </Button>
                 </OSTooltip>
               </Box>

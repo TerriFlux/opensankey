@@ -253,7 +253,7 @@ export class Class_ContainerElement
   ): void {
     super._fromJSON(json_object, kwargs)
     this._title = getStringFromJSON(json_object, 'title', this.title)
-    this._content = getStringFromJSON(json_object, 'content', this.content)
+    this._content = getStringFromJSON(json_object, 'content', '')
     this._opacity = getNumberFromJSON(json_object, 'opacity', this.opacity)
     this._color = getStringFromJSON(json_object, 'color', this.color)
     this._color_border = getStringFromJSON(json_object, 'color_border', this.color_border)
