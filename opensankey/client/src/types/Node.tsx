@@ -4048,7 +4048,7 @@ export abstract class Class_NodeElement
     // Check dimensions where node is tagged as a child
     const group_to_children_dim : {[_:string] : Class_NodeDimension[]} = {}
     const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child)
-      .filter(dim=>dim.related_level_tagg.activated)
+      .filter(dim=>dim.related_level_tagg.activated || dim.force_show_children)
       .map(dim=>{
         if (group_to_children_dim[dim.related_level_tagg.id] == undefined ) {
           group_to_children_dim[dim.related_level_tagg.id] = [dim]
