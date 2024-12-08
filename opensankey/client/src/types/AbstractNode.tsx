@@ -84,6 +84,7 @@ export abstract class Class_AbstractNodeDimension {
   public abstract get child_level_tag(): Class_AbstractLevelTag
   public abstract get parent(): Type_AbstractNodeElement
   public abstract get children(): Type_AbstractNodeElement[]
+  public abstract get related_level_tagg(): Class_AbstractLevelTagGroup
 }
 
 export abstract class Class_AbstractNodeStyle {
