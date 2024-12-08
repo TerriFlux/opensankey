@@ -1683,18 +1683,27 @@ const convert_nodes: convert_nodesFuncType = (
         if (!pid) {
           return
         }
-        if (data.nodes[pid].tags[leveltagg_id] && data.nodes[pid].tags[leveltagg_id][0]!='0' ) {
-          const grand_parent_id = data.nodes[pid].dimensions[leveltagg_id].parent_name
-          if (grand_parent_id == pid) {
-            delete n.dimensions[leveltagg_id]
+        Object.entries(data.nodes[pid].dimensions).forEach(([pk,pdim])=>{
+          if (!data.levelTags[pk].activated) {
+            return
           }
-        }
-        if (data.nodes[pid].dimensions[leveltagg_id] && !data.nodes[pid].dimensions[leveltagg_id].antitag) {
-          const grand_parent_id = data.nodes[pid].dimensions[leveltagg_id].parent_name
-          if (grand_parent_id == pid) {
-            delete n.dimensions[leveltagg_id]
+          if (pdim.antitag || (data.nodes[pid].tags[pk] && data.nodes[pid].tags[pk][0]=='0')) {
+            return
           }
-        }
+          const grand_parent_id = pdim.parent_name
+          if (grand_parent_id == undefined) {
+            return
+          }
+          Object.entries(n.dimensions).forEach(([k,dim])=>{
+            if (!data.levelTags[k].activated) {
+              return
+            }
+            if (grand_parent_id == dim.parent_name) {
+              delete n.dimensions[k]
+            }
+          })
+        })
+
       })
 
 
