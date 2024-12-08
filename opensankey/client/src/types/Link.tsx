@@ -3340,7 +3340,7 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public get is_not_null() {
-    return this.data_value !== 0 && this.data_value !== null
+    return this.data_value !== 0
   }
 
   /**
