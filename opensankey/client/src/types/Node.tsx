@@ -2640,8 +2640,8 @@ export abstract class Class_NodeElement
     link_to_redraw
       .forEach(link => {
         link.draw()
-        if (link.source === this) this._output_links_handle[link.id].draw()
-        if (link.target === this) this._input_links_handle[link.id].draw()
+        if (link.source === this && this._output_links_handle[link.id]) this._output_links_handle[link.id].draw()
+        if (link.target === this && this._input_links_handle[link.id]) this._input_links_handle[link.id].draw()
       })
   }
 
