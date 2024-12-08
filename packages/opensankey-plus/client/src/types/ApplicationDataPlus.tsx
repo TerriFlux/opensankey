@@ -431,7 +431,10 @@ export abstract class Class_ApplicationDataPlus
           this._drawing_area.setToModeEdition(false)
           // Draw new-sankey
           this._drawing_area.draw()
-          // Update components related to viewss
+          // TODO investigate why we need to do it twice(something with nodeHeight i think (JA), linked to import export probably)
+          // voir https://gitlab.com/su-model/sankeyanimation/-/issues/138
+          this._drawing_area.draw()
+          // Update components related to views
           this._menu_configuration.updateAllMenuComponents()
           this._menu_configuration.updateComponentRelatedToViews()
           // Update menu save diagram JSON
