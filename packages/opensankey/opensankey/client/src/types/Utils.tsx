@@ -216,7 +216,7 @@ export function getStringFromJSON(
   key: string,
   fallback_value: string
 ) {
-  if (json_object[key] && typeof json_object[key] === 'string') { // test if not undefined because json_object[key] can be '' (considered as false in javascript condition) thus not assiging correct value but fallback_value
+  if (json_object[key] !== undefined && typeof json_object[key] === 'string') { // test if not undefined because json_object[key] can be '' (considered as false in javascript condition) thus not assiging correct value but fallback_value
     return json_object[key] as string
   }
   return fallback_value
