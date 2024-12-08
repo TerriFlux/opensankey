@@ -4107,14 +4107,36 @@ export abstract class Class_NodeElement
 
   /**
    * Filter for node visibility, if node has IO links then check if at least one is visible
+   * the input (output) link is visible if 
+   * - the link is not null and has the visible tags (fluxTags ) //TODO check this
+   * - the source (target) has the visible tags (nodeTags Or levelTags )
    *
    * @readonly
    * @private
    * @memberof Class_NodeElement
    */
   private get no_zero_io_links() {
-    const io_links = this._links_order
-    return io_links.length == 0 || io_links.filter(link => link.is_not_null && link.are_related_tags_selected).length > 0
+    const input_links_visible = this.input_links_list.filter(link => 
+      link.is_not_null && 
+      link.are_related_tags_selected && 
+      link.source.are_related_tags_selected &&
+      link.source.is_related_level_selected
+
+    )
+    if (input_links_visible.length>0) {
+      return true
+    }
+    const output_links_visible = this.output_links_list.filter(link => 
+      link.is_not_null && 
+      link.are_related_tags_selected && 
+      link.target.are_related_tags_selected &&
+      link.target.is_related_level_selected
+
+    )
+    if (output_links_visible.length>0) {
+      return true
+    }
+    return false
   }
 
   private get tooltip_html() {
