@@ -1584,7 +1584,7 @@ export abstract class Class_NodeElement
             const output_link = this.getFirstOutputLink()
             // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
             const target_node = output_link!.target
-            this._display.position.x = target_node.position_x + this.position_relative_dx
+            this._display.position.x = target_node.position_x + this.position_relative_dx - this.getShapeWidthToUse()
             this._display.position.y = target_node.position_y + this.position_relative_dy
           }
         }
