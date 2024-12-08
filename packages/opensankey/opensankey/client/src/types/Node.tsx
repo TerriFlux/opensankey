@@ -4121,6 +4121,9 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private get no_zero_io_links() {
+    if (this.input_links_list.length + this.output_links_list.length == 0) {
+      return true
+    }
     const input_links_visible = this.input_links_list.filter(link => 
       link.is_not_null && 
       link.are_related_tags_selected && 
