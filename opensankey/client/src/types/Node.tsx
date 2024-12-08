@@ -1054,6 +1054,11 @@ export abstract class Class_NodeElement
     const sum_of_left_thickness = this.getSumOfLinksThickness('left')
     const sum_of_right_thickness = this.getSumOfLinksThickness('right')
     // Return max thickness
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
+    if (echangeTag && this.hasGivenTag(echangeTag) ) {
+      // TODO code to be rewritten when rearchitecturing code for Import Export
+      return Math.max(sum_of_left_thickness, sum_of_right_thickness,3)
+    }
     return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
   }
 
