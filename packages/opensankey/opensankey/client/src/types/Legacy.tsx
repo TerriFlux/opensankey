@@ -1627,7 +1627,9 @@ const convert_nodes: convert_nodesFuncType = (
       .forEach(nt => {
         const leveltagg_tags_ids = nt[1]
         const leveltagg_id = nt[0]
-
+        if (!n.dimensions[leveltagg_id] ) {
+          n.dimensions[leveltagg_id] = {}
+        }
         if (leveltagg_tags_ids.includes('0')) {
           // if level is 0 we craate the dimension with antitag set_to_true.
           // in old version the dimensions was not existing as the visibility was
@@ -1677,9 +1679,6 @@ const convert_nodes: convert_nodesFuncType = (
         }
 
         delete n.tags[leveltagg_id]
-        if (!n.dimensions[leveltagg_id]) {
-          return
-        }
         // Code below is to correct bad parentship relation coming from legacy
         // Get lists of parents
         // const node_parents_id = (node: SankeyNode) => {
