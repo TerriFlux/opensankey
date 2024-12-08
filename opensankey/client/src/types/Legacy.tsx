@@ -1665,29 +1665,36 @@ const convert_nodes: convert_nodesFuncType = (
             }
           }
         }
-        // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
-        delete n.tags[leveltagg_id]
 
+        delete n.tags[leveltagg_id]
+        if (!n.dimensions[leveltagg_id]) {
+          return
+        }
         // Code below is to correct bad parentship relation coming from legacy
         // Get lists of parents
-        const node_parents_id = (node: SankeyNode) => {
-          return Object.values(node.dimensions).filter(dim => dim.parent_name).map(dim => dim.parent_name)
-        }
+        // const node_parents_id = (node: SankeyNode) => {
+        //   return Object.values(node.dimensions).filter(dim => dim.parent_name).map(dim => dim.parent_name)
+        // }
         // for a given parent retrieves the corresponding dim
-        const parent_dim = (node: SankeyNode, parent_id: string) => {
-          return Object.entries(node.dimensions).filter(dim => dim[1].parent_name == parent_id).map(dim => dim[0])
+        // const parent_dim = (node: SankeyNode, parent_id: string) => {
+        //   return Object.entries(node.dimensions).filter(dim => data.levelTags[dim[0]].activated && dim[1].parent_name == parent_id).map(dim => dim[0])
+        // }
+        const pid = n.dimensions[leveltagg_id].parent_name
+        if (!pid) {
+          return
         }
-        const parents_id = node_parents_id(n)
-        parents_id.forEach(parent_id => {
-          const grand_parents_id = node_parents_id(data.nodes[parent_id!])
-          const intersection = new Set(grand_parents_id).intersection(new Set(parents_id))
-          if (intersection.size > 0) {
-            // if a grand parent is the same as a parent we caught a bad parentship relation
-            // and we delete it
-            const parent_node = [...intersection][0]
-            delete n.dimensions[parent_dim(n, parent_node!)[0]]
+        if (data.nodes[pid].tags[leveltagg_id] && data.nodes[pid].tags[leveltagg_id][0]!='0' ) {
+          const grand_parent_id = data.nodes[pid].dimensions[leveltagg_id].parent_name
+          if (grand_parent_id == pid) {
+            delete n.dimensions[leveltagg_id]
           }
-        })
+        }
+        if (data.nodes[pid].dimensions[leveltagg_id] && !data.nodes[pid].dimensions[leveltagg_id].antitag) {
+          const grand_parent_id = data.nodes[pid].dimensions[leveltagg_id].parent_name
+          if (grand_parent_id == pid) {
+            delete n.dimensions[leveltagg_id]
+          }
+        }
       })
 
 

@@ -433,68 +433,6 @@ export const ClickSaveDiagram: FType_ClickSaveDiagram = (
 
 /* EXAMPLES PROCESSING *****************************************************************/
 
-// TODO s'en occuper
-/* eslint-disable */
-export const ProcessExample: FType_ProcessExample = (
-  applicationData,
-  postProcessLoadExcel
-) => {
-  /* eslint-enable */
-  //   const {data}=applicationData
-  //   complete_sankey_data(data, DefaultSankeyData, DefaultNode, DefaultLink)
-  //   convert_data({data: data} as applicationDataType, DefaultSankeyData) // FIXME when new_data ready for it
-  //   if ((data as SankeyData & layout_type).layout === undefined) {
-  //     // Compute node position of all node according to their level tags
-  //     const lvl_tag_keys=Object.keys(data.levelTags)
-  //     // If data only have level Tag 'Primaire' then compute node position at each levle
-  //     if( (lvl_tag_keys.length == 1) && lvl_tag_keys[0]==='Primaire' ){
-  //       const prim=lvl_tag_keys[0]
-  //       Object.values(data.levelTags[prim].tags).reverse().forEach(tag_prim=>{
-  //       // Deselect all Primaire tags
-  //         Object.values(data.levelTags[prim].tags).forEach(t=>t.selected=false)
-  //         // Select current tag to compute position
-  //         tag_prim.selected=true
-  //         ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
-  //       })
-  //     }else if((lvl_tag_keys.length > 1)){
-  //     // If data have multiple level Tag
-  //     // then compute node position at each level of each level tag group
-  //     // except 'Primaire'
-
-  //       lvl_tag_keys.filter(kt=>kt!=='Primaire').forEach(kt=>{
-  //         Object.values(data.levelTags[kt].tags).reverse().forEach(tag_prim=>{
-  //         // Deselect all tags of the current grp tag
-  //           Object.values(data.levelTags[kt].tags).forEach(t=>t.selected=false)
-  //           // Select current tag to compute position
-  //           tag_prim.selected=true
-  //           ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
-  //         })
-  //       })
-
-  //     }
-  //     else{
-  //       ComputeAutoSankey(applicationData, data.h_space ? data.h_space : 200,true)
-
-  //     }
-  //     postProcessLoadExcel(data)
-  //     compute_default_input_outputLinksId(data.nodes, data.links)
-  //     // Set sector/product style to node only when it come from an excel file and without a layout
-  //     SetNodeStyleToTypeNode(data)
-  //   } else {
-  //     convert_data(
-  //       {data: (data as SankeyData & layout_type).layout} as applicationDataType, // FIXME when new_data ready for it
-  //       DefaultSankeyData
-  //     )
-  //     complete_sankey_data((data as SankeyData & layout_type).layout, DefaultSankeyData, DefaultNode, DefaultLink)// FIXME when new_data ready for it
-  //     compute_default_input_outputLinksId(data.nodes, data.links)
-  //     const data_layout = JSON.parse(JSON.stringify((data as SankeyData & { layout?: SankeyData} ).layout)) as SankeyData
-  //     delete (data as SankeyData & { layout?: SankeyData} ).layout
-  //     updateLayout(data, data_layout, ['posNode', 'attrNode', 'attrFlux', 'attrDrawingArea', 'freeLabels', 'Views','tagNode','tagFlux','icon_catalog'], true)
-  //     postProcessLoadExcel(data)
-  //   }
-  //   d3.select('.loading_auto_compute').remove()
-}
-
 /**
  * Download examples from server
  *
