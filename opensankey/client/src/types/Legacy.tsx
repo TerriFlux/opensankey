@@ -1180,6 +1180,16 @@ const convert_tags: convert_tagsFuncType = (
     Object.values(data.levelTags).forEach(tag => tag.banner = 'level')
     data.nodeTags = Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner !== 'level' && nt[0] !== 'Primaire'))
   }
+  Object.entries(data.nodeTags).forEach(tagg=>{
+    // happen for RefFlux volaille
+    if ('siblings' in tagg[1] && tagg[1].siblings.length > 0) {
+      data.levelTags[tagg[0]] = tagg[1]
+      delete data.nodeTags[tagg[0]]
+    } else if (Object.keys(data.nodeTags[tagg[0]].tags)[0]=='1') {
+      data.levelTags[tagg[0]] = tagg[1]
+      delete data.nodeTags[tagg[0]]      
+    }
+  })
 
   // Assign colorMap to either fluxTags or nodesTags since now we can display color palette of both at the same time
   const list_fluxTag = Object.entries(data.fluxTags).filter(ft => ft[1].show_legend)
