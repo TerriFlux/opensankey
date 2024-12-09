@@ -1,6 +1,5 @@
 
 import { Dispatch, MutableRefObject, SetStateAction, FunctionComponent } from 'react'
-import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import {
   Type_AdditionalMenus,

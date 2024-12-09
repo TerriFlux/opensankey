@@ -507,24 +507,24 @@ export abstract class Class_NodeElement
       //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
       const all_child_tags = [...new Set(Object.values(this._dimensions_as_child).map(dim=>dim.related_level_tagg.id))]
       all_child_tags.forEach(tagg_id=>{
-          Object.values(this._dimensions_as_child).filter(dim=>dim.related_level_tagg.id == tagg_id)
-            .forEach(dimension => {
-              if (!(dimension.related_level_tagg.id in dimensions)) {
-                dimensions[dimension.related_level_tagg.id] ={
-                  'parent_name': dimension.parent.id,
-                  'parent_tag': dimension.parent_level_tag.id,
-                  'children_tags': [dimension.child_level_tag.id],
-                  'antitag': false,
-                  'force_show_children': dimension.force_show_children,
-                  'force_show_parent': dimension.force_show_parent
-                }
-              } else {
-                const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
-                dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
+        Object.values(this._dimensions_as_child).filter(dim=>dim.related_level_tagg.id == tagg_id)
+          .forEach(dimension => {
+            if (!(dimension.related_level_tagg.id in dimensions)) {
+              dimensions[dimension.related_level_tagg.id] ={
+                'parent_name': dimension.parent.id,
+                'parent_tag': dimension.parent_level_tag.id,
+                'children_tags': [dimension.child_level_tag.id],
+                'antitag': false,
+                'force_show_children': dimension.force_show_children,
+                'force_show_parent': dimension.force_show_parent
               }
+            } else {
+              const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
+              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
             }
+          }
           )
-        }
+      }
       )
     }
     else {
@@ -716,6 +716,7 @@ export abstract class Class_NodeElement
                           childDim?.setForceToShowParent()
                         }
                         cur_parent_tag = child_tag
+                        // eslint-disable-next-line @typescript-eslint/no-this-alias
                         cur_parent = this
                       })
                     }
@@ -2984,8 +2985,8 @@ export abstract class Class_NodeElement
       })
     Object.values(this._dimensions_as_child)
       .forEach(dimension => {
-            level_tags_list.push(dimension.child_level_tag as Class_LevelTag)
-          })
+        level_tags_list.push(dimension.child_level_tag as Class_LevelTag)
+      })
     return [...new Set(level_tags_list)]
   }
 
@@ -4068,9 +4069,9 @@ export abstract class Class_NodeElement
             has_activated_dimensions = true
           }
         })
-        ok_activated_dimensions = ok_activated_dimensions && child_tag_activated_dimensions
-        ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
-      })
+      ok_activated_dimensions = ok_activated_dimensions && child_tag_activated_dimensions
+      ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
+    })
     // Check dimensions where node is tagged as a parent
     Object.values(this._dimensions_as_parent)
       .forEach(dim => {
