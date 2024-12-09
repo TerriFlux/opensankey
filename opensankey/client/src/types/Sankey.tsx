@@ -794,17 +794,13 @@ export abstract class Class_Sankey
         matching_links_id
       )
     }
-    // Internal drawbaypass function
-    const draw_bypassed = (f: () => void) => {
-      this.drawing_area.bypass_redraws = true
-      f()
-      this.drawing_area.bypass_redraws = false
-    }
+
+
     // First read styles
     if (json_object['style_node'] !== undefined) {
       // Set node styles from json data
       Object.entries(json_object['style_node'])
-        .forEach(([style_id, style_json]) => draw_bypassed(() => {
+        .forEach(([style_id, style_json]) => {
           // Create a node style
           const new_style = this._node_styles[style_id] ?? this.createNewNodeStyle(style_id, style_id, true)
           // Set node style value to node from JSON
@@ -812,12 +808,12 @@ export abstract class Class_Sankey
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
           // Add node style to sankey
           this._node_styles[style_id] = new_style
-        }))
+        })
     }
     if (json_object['style_link'] !== undefined) {
       // Set link styles from json data
       Object.entries(json_object['style_link'])
-        .forEach(([style_id, style_json]) => draw_bypassed(() => {
+        .forEach(([style_id, style_json]) => {
           // Create a link style
           const new_style = this._link_styles[style_id] ?? this.createNewLinkStyle(style_id, style_id, true)
           // Set link style value to link style from JSON
@@ -825,14 +821,14 @@ export abstract class Class_Sankey
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
           // Add link style to sankey
           this._link_styles[style_id] = new_style
-        }))
+        })
     }
     // Then read tag groups
     let json_entry: string = 'levelTags'
     if (json_object[json_entry] !== undefined) {
       // Set level tag & tag group from json data
       Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => draw_bypassed(() => {
+        .forEach(([_, tagg_json]) => {
           // Get or create a level tag group
           const tagg_id = matching_taggs_id[json_entry][_] ?? _
           const tagg = this._level_taggs[tagg_id] ?? this.addLevelTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
@@ -840,13 +836,13 @@ export abstract class Class_Sankey
           tagg.fromJSON(
             tagg_json as Type_JSON,
             matching_tags_id[json_entry][_] ?? {})
-        }))
+        })
     }
     json_entry = 'nodeTags'
     if (json_object[json_entry] !== undefined) {
       // Set node tag & tag group from json data
       Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => draw_bypassed(() => {
+        .forEach(([_, tagg_json]) => {
           // Get or Create a node tag group
           const tagg_id = matching_taggs_id[json_entry][_] ?? _
           const tagg = this._node_taggs[tagg_id] ?? this.addNodeTagGroup(tagg_id, tagg_id, false)  // Will be renamed in fromJSON()
@@ -855,7 +851,7 @@ export abstract class Class_Sankey
             tagg_json as Type_JSON,
             matching_tags_id[json_entry][_] ?? {}
           )
-        }))
+        })
       // Create default style for 'Type de noeud' if they don't exist
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
         Object.entries({
@@ -864,7 +860,7 @@ export abstract class Class_Sankey
           'NodeImportStyle': DefaultNodeImportStyle,
           'NodeExportStyle': DefaultNodeExportStyle
         })
-          .forEach(([style_id, fn]) => draw_bypassed(() => {
+          .forEach(([style_id, fn]) => {
             if (this._node_styles[style_id]) {
               // if style already exists do nothings
               return
@@ -875,12 +871,12 @@ export abstract class Class_Sankey
             new_style.fromJSON(json_style)
             // Add node style to sankey
             this._node_styles[style_id] = new_style
-          }))
+          })
         Object.entries({
           'LinkImportStyle': DefaultLinkImportStyle,
           'LinkExportStyle': DefaultLinkExportStyle
         })
-          .forEach(([style_id, fn]) => draw_bypassed(() => {
+          .forEach(([style_id, fn]) => {
             if (this._link_styles[style_id]) {
               // if style already exists do nothing
               return
@@ -891,14 +887,14 @@ export abstract class Class_Sankey
             new_style.fromJSON(fn())
             // Add node style to sankey
             this._link_styles[style_id] = new_style
-          }))
+          })
       }
     }
     json_entry = 'fluxTags'
     if (json_object[json_entry] !== undefined) {
       // Set flux tag & tag group from json data
       Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => draw_bypassed(() => {
+        .forEach(([_, tagg_json]) => {
           // Get or Create a flux tag group
           const tagg_id = matching_taggs_id[json_entry][_] ?? _
           const tagg = this._flux_taggs[tagg_id] ?? this.addFluxTagGroup(tagg_id, tagg_id, false)  // Will be renamed in fromJSON()
@@ -906,13 +902,13 @@ export abstract class Class_Sankey
           tagg.fromJSON(
             tagg_json as Type_JSON,
             matching_tags_id[json_entry][_] ?? {})
-        }))
+        })
     }
     json_entry = 'dataTags'
     if (json_object[json_entry] !== undefined) {
       // Set data tag & tag group from json data
       Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => draw_bypassed(() => {
+        .forEach(([_, tagg_json]) => {
           // Get or Create a flux tag group
           const tagg_id = matching_taggs_id[json_entry][_] ?? _
           const tagg = this._data_taggs[tagg_id] ?? this.addDataTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
@@ -920,12 +916,12 @@ export abstract class Class_Sankey
           tagg.fromJSON(
             tagg_json as Type_JSON,
             matching_tags_id[json_entry][_] ?? {})
-        }))
+        })
     }
 
     // Then read links
     Object.entries(json_object['links'])
-      .forEach(([_, link_json]) => draw_bypassed(() => {
+      .forEach(([_, link_json]) => {
         // Get related nodes id
         let source_node_id = getStringOrUndefinedFromJSON(link_json, 'idSource')
         let target_node_id = getStringOrUndefinedFromJSON(link_json, 'idTarget')
@@ -947,12 +943,12 @@ export abstract class Class_Sankey
             }
           )
         }
-      }))
+      })
 
     // Then read nodes
     const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
     Object.entries(json_node_object)
-      .forEach(([_, node_json]) => draw_bypassed(() => {
+      .forEach(([_, node_json]) => {
         // Get or Create a node
         const node_id = matching_nodes_id[_] ?? _
         const node = this._nodes[node_id] ?? this.addNewNode(node_id, node_id)
@@ -975,7 +971,7 @@ export abstract class Class_Sankey
           matching_taggs_id['levelTags'] ?? {},
           matching_tags_id['levelTags'] ?? {}
         )
-      }))
+      })
   }
 
   public matchAndModifyJSONIds(

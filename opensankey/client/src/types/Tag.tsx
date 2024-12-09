@@ -124,9 +124,7 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
    */
   public copyFrom(tag_to_copy: Class_ProtoTag) {
     // Get infos
-    this._ref_sankey.drawing_area.bypass_redraws = true // Security
     this._copyFrom(tag_to_copy)
-    this._ref_sankey.drawing_area.bypass_redraws = false // Security
   }
 
   /**
@@ -188,9 +186,7 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
     kwargs?: Type_JSON
   ): void {
     // Get infos
-    this._ref_sankey.drawing_area.bypass_redraws = true // Security
     this._fromJSON(json_object, kwargs)
-    this._ref_sankey.drawing_area.bypass_redraws = false // Security
   }
 
   /**
@@ -522,9 +518,7 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
 
   public copyFrom(tag_to_copy: Class_ProtoLevelTag) {
     // Get infos
-    this._ref_sankey.drawing_area.bypass_redraws = true // Security
     this._copyFrom(tag_to_copy)
-    this._ref_sankey.drawing_area.bypass_redraws = false // Security
   }
 
   protected _copyFrom(tag_to_copy: Class_ProtoLevelTag) {
@@ -556,9 +550,7 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
     kwargs?: Type_JSON
   ) {
     // Get infos
-    this._ref_sankey.drawing_area.bypass_redraws = true // Security
     this._fromJSON(json_object, kwargs)
-    this._ref_sankey.drawing_area.bypass_redraws = false // Security
   }
 
   protected _fromJSON(
@@ -1026,9 +1018,7 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
     tagg_to_copy: Class_ProtoTagGroup,
     tags_synchro = true
   ) {
-    this._ref_sankey.drawing_area.bypass_redraws = true
     this._copyFrom(tagg_to_copy, tags_synchro)
-    this._ref_sankey.drawing_area.bypass_redraws = false
   }
 
   protected _copyFrom(
@@ -1092,9 +1082,7 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    this._ref_sankey.drawing_area.bypass_redraws = true
     this._fromJSON(json_object, kwargs)
-    this._ref_sankey.drawing_area.bypass_redraws = false
   }
 
   protected _fromJSON(
@@ -1593,9 +1581,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
     tagg_to_copy: Class_ProtoLevelTagGroup,
     tags_synchro = true
   ) {
-    this._ref_sankey.drawing_area.bypass_redraws = true
     this._copyFrom(tagg_to_copy, tags_synchro)
-    this._ref_sankey.drawing_area.bypass_redraws = false
   }
 
   protected _copyFrom(
@@ -1656,9 +1642,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    this._ref_sankey.drawing_area.bypass_redraws = true
     this._fromJSON(json_object, kwargs)
-    this._ref_sankey.drawing_area.bypass_redraws = false
   }
 
   protected _fromJSON(

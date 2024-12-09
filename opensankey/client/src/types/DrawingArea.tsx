@@ -1801,6 +1801,27 @@ export abstract class Class_DrawingArea
   }
 
   /**
+   * Create a timed out process - Used to avoid multiple reloading of components
+   *
+   * The process_func is meant to be use by setTimeout(),
+   * and inside setTimeOut 'this' keyword has another meaning,
+   * so the current object must be passed directly as an argument.
+   * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
+   *
+   * @protected
+   * @param {string} process_id
+   * @param {(_: Class_ProtoElement) => void} process_func
+   * @memberof Class_ProtoElement
+   */
+  protected _process_or_bypass(
+    process_func: () => void
+  ) {
+    if (this.bypass_redraws)
+      return
+    process_func()
+  }
+
+  /**
    * Function that fit DA in screen, it determine if it have to fit it vertically or horizontally by processing ratio
    *
    * Function generally use at opening of file to automatically fit sankey on screen
@@ -1808,16 +1829,18 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public areaAutoFit() {
-    this.checkAndUpdateAreaSize()
+    this._process_or_bypass(() => {
+      this.checkAndUpdateAreaSize()
 
-    const ratio_v = this._height / this.window_fitting_height // get ration of sankey height / screen height
-    const ratio_h = this._width / this.window_fitting_width // get ration of sankey width / screen width
+      const ratio_v = this._height / this.window_fitting_height // get ration of sankey height / screen height
+      const ratio_h = this._width / this.window_fitting_width // get ration of sankey width / screen width
 
-    if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
-      this.areaFitHorizontally()
-    } else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
-      this.areaFitVertically()
-    }
+      if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
+        this.areaFitHorizontally()
+      } else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
+        this.areaFitVertically()
+      }
+    })
   }
 
 
