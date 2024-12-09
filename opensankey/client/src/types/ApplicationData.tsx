@@ -52,6 +52,8 @@ export const default_save_only_visible_elements = false
 export const default_save_with_values = true
 export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
 
+const default_toast_duration: number = 1000 // 1sec
+
 // SPECIFIC FUNCTIONS ******************************************************************/
 
 export function isDrawingAreaActive() {
@@ -530,15 +532,18 @@ export abstract class Class_ApplicationData
         {
           success: {
             title: intake?.success?.title ?? this.t('toast.default.success.title'),
-            description: intake?.success?.desc ?? this.t('toast.default.success.desc')
+            description: intake?.success?.desc ?? this.t('toast.default.success.desc'),
+            duration: default_toast_duration
           },
           loading: {
             title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
-            description: intake?.loading?.desc ?? this.t('toast.default.loading.desc')
+            description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
+            duration: default_toast_duration
           },
           error: {
             title: intake?.error?.title ?? this.t('toast.default.error.title'),
-            description: intake?.error?.desc ?? this.t('toast.default.error.desc')
+            description: intake?.error?.desc ?? this.t('toast.default.error.desc'),
+            duration: default_toast_duration
           },
         }
       )
