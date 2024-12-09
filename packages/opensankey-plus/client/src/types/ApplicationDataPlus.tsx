@@ -393,10 +393,13 @@ export abstract class Class_ApplicationDataPlus
       },
       {
         success: {
-          title: this.t('toast.v_loaded')
+          title: this.t('toast.set_view.success.title')
         },
         loading: {
-          title: this.t('toast.v_loading')
+          title: this.t('toast.set_view.loading.title')
+        },
+        error: {
+          title: this.t('toast.set_view.error.title')
         }
       }
     )
