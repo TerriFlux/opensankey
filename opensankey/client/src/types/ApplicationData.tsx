@@ -242,7 +242,9 @@ export abstract class Class_ApplicationData
     // Reset drawing area
     // this._drawing_area.delete() // TODO : lent sur gros SANkey
     this._drawing_area.unDraw()
+    const by_pass_redraw = this._drawing_area.bypass_redraws
     this._drawing_area = this.createNewDrawingArea()
+    this._drawing_area.bypass_redraws = by_pass_redraw
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
     // Update menus

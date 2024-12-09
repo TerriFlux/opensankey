@@ -358,6 +358,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   const data_as_json = JSON.parse(text) as Type_JSON
   data_as_json['version'] = '0.9' // Avoid converter process
   // Create & draw Sankey
+  new_data.drawing_area.bypass_redraws = true
   new_data.fromJSON(data_as_json)
   // Apply extracted layout if present
   if (data_as_json['layout']) {
@@ -368,6 +369,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
       tmp_DA,
       ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
     )
+    new_data.drawing_area.bypass_redraws = false
     new_data.drawing_area.draw()
   }
   else {
