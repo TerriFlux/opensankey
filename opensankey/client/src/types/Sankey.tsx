@@ -796,9 +796,10 @@ export abstract class Class_Sankey
     }
     // Internal drawbaypass function
     const draw_bypassed = (f: () => void) => {
+      const prev_bypass_redraws = this.drawing_area.bypass_redraws
       this.drawing_area.bypass_redraws = true
       f()
-      this.drawing_area.bypass_redraws = false
+      this.drawing_area.bypass_redraws = prev_bypass_redraws
     }
     // First read styles
     if (json_object['style_node'] !== undefined) {

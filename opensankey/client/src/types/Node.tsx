@@ -616,6 +616,7 @@ export abstract class Class_NodeElement
     json_node_object: Type_JSON,
     matching_links_id: { [_: string]: string } = {}
   ) {
+    const prev_bypass_redraws = this.sankey.drawing_area.bypass_redraws
     this.drawing_area.bypass_redraws = true
     // Input links
     getStringListFromJSON(json_node_object, 'inputLinksId', [])
@@ -642,7 +643,7 @@ export abstract class Class_NodeElement
           return this.sankey.links_dict[link_id]
         }) as Type_GenericLinkElement[]
     }
-    this.drawing_area.bypass_redraws = false
+    this.drawing_area.bypass_redraws = prev_bypass_redraws
   }
 
   /**
@@ -657,6 +658,7 @@ export abstract class Class_NodeElement
     matching_taggs_id: { [_: string]: string } = {},
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
+    const prev_bypass_redraws = this.sankey.drawing_area.bypass_redraws
     this.drawing_area.bypass_redraws = true
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
@@ -736,7 +738,7 @@ export abstract class Class_NodeElement
         })
     }
 
-    this.drawing_area.bypass_redraws = false // Security
+    this.drawing_area.bypass_redraws = prev_bypass_redraws // Security
   }
 
   // PUBLIC METHODS =====================================================================
@@ -803,6 +805,7 @@ export abstract class Class_NodeElement
    */
   public drawParent(id?: string) {
     if (this.is_child) {
+      this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
       // Force to show parent
       if ((id !== undefined) && (this._dimensions_as_child[id]))
         this._dimensions_as_child[id].setForceToShowParent()
@@ -843,6 +846,7 @@ export abstract class Class_NodeElement
     if (this.is_parent) {
       // Force to show children
       if ((id !== undefined) && (this._dimensions_as_parent[id]))
+        this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
         this._dimensions_as_parent[id].setForceToShowChildren()
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {

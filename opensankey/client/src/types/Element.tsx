@@ -197,9 +197,10 @@ export abstract class Class_ProtoElement
     // Remove from drawing area
     this.unDraw()
     // Copy intrasect values
+    const prev_bypass_redraws = this.sankey.drawing_area.bypass_redraws
     this._display.drawing_area.bypass_redraws = true // Security
     this._copyFrom(element_to_copy)
-    this._display.drawing_area.bypass_redraws = false
+    this._display.drawing_area.bypass_redraws = prev_bypass_redraws
   }
 
   /**
@@ -254,9 +255,10 @@ export abstract class Class_ProtoElement
     // Remove from drawing area
     this.unDraw()
     // Get infos
+    const prev_bypass_redraws = this.sankey.drawing_area.bypass_redraws
     this._display.drawing_area.bypass_redraws = true // Security
     this._fromJSON(json_object, kwargs)
-    this._display.drawing_area.bypass_redraws = false
+    this._display.drawing_area.bypass_redraws = prev_bypass_redraws
   }
 
   protected _fromJSON(
