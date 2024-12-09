@@ -821,6 +821,34 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 //     data.display_style.filter_label = flux_max / 10
 //   }
 // }
+const setTrade = (data:SankeyData) => {
+  data.style_node['NodeImportStyle'].position = 'absolute'
+  data.style_node['NodeImportStyle'].shape_visible = false
+  data.style_node['NodeImportStyle'].node_height = 1
+  data.style_node['NodeImportStyle'].label_visible = true
+  data.style_node['NodeImportStyle'].label_horiz = 'right'
+  // data.style_node['NodeImportStyle'].label_horiz_shift = -200
+  // data.style_node['NodeImportStyle'].value_label_visible = true
+  // data.style_node['NodeImportStyle'].value_label_horiz = 'left'
+  // data.style_node['NodeImportStyle'].value_label_vert = 'middle'
+  data.style_node['NodeImportStyle'].value_label_horiz_shift = -20
+
+  data.style_node['NodeExportStyle'].position = 'absolute'
+  data.style_node['NodeExportStyle'].shape_visible = false
+  data.style_node['NodeExportStyle'].node_height = 1
+  data.style_node['NodeExportStyle'].label_visible = true
+  data.style_node['NodeExportStyle'].label_horiz = 'left'
+  //data.style_node['NodeExportStyle'].name_label_horiz_shift = 200
+  // data.style_node['NodeExportStyle'].value_label_visible = true
+  // data.style_node['NodeExportStyle'].value_label_horiz = 'right'
+  // data.style_node['NodeExportStyle'].value_label_vert = 'middle'
+  data.style_node['NodeExportStyle'].value_label_horiz_shift = 20
+
+  data.style_link['LinkImportStyle'].orientation = 'hh'
+  //data.style_link['LinkImportStyle'].label_is_visible = false
+  data.style_link['LinkExportStyle'].orientation = 'hh'
+  //data.style_link['LinkExportStyle'].value_label_is_visible = false
+}
 
 const convert_tags: convert_tagsFuncType = (
   data: SankeyData
@@ -1221,11 +1249,6 @@ const convert_tags: convert_tagsFuncType = (
               data.links[n.inputLinksId[0]].style = 'LinkExportStyle'
             }
           }
-            // if (has_relative && has_position) {
-            //   AssignNodeLocalAttribute(n,'relative_dx',n.x)
-            //   AssignNodeLocalAttribute(n,'relative_dy',n.y)
-            // }
-          //}
         }
       }
     })
@@ -1279,10 +1302,11 @@ const convert_nodes: convert_nodesFuncType = (
   if (Object.keys(data.nodes).length > 0 && !Object.values(data.nodes)[0].idNode) {
     Object.values(data.nodes).forEach(n => n.idNode = 'node' + ((n as unknown) as ConvertSankeyNode).id)
   }
-  const has_relative = Object.values(data.nodes).filter(n => ReturnValueNode(data,n,'position')==='relative' || n.position === 'relative' ).length > 0
+
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes = Object.values(data.nodes).map(n => n.idNode)
   const list_links = Object.values(data.links)
+  let trade_set = false
   Object.values(data.nodes).forEach(n => {
     const n_depreciated = (n as unknown) as ConvertSankeyNode
 
@@ -1423,9 +1447,13 @@ const convert_nodes: convert_nodesFuncType = (
     if (n.y === undefined) {
       n.y = 0
     }
-    const has_position = 'position' in n
-    if (has_position) {
-      delete n.position
+    if ('position' in n) {
+      if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.position=='absolute' && !trade_set) {
+        trade_set = true
+        setTrade(data)
+      } else {
+        delete n.position
+      }
     }
 
     delete n_depreciated.visible
