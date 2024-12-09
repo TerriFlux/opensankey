@@ -865,32 +865,38 @@ export abstract class Class_LinkElement
     }
     else {
       // Do we apply colors of node source/target tags ?
-      const src_taggs_activated = this._source.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => {
-          return this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length > 0
-        }).length > 0
-      const trgt_taggs_activated = this._target.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => {
-          return (this._target.grouped_taggs_dict[grp.id] ?? []).filter(tag => tag.is_selected).length > 0
-        }).length > 0
+      const tagg_activated = this.sankey.node_taggs_list
+        .filter(tagg => tagg.show_legend)
 
       const trgt_node_type = this._target.grouped_taggs_dict['type de noeud']
       const src_node_type = this._source.grouped_taggs_dict['type de noeud']
 
+
+      if (tagg_activated.length>0 && this._source.grouped_taggs_dict[tagg_activated[0].id]) {
+        const group_id = tagg_activated[0].id
+        const common_tags = this._source.grouped_taggs_dict[group_id].filter(t=>this._target.grouped_taggs_dict[group_id] && this._target.grouped_taggs_dict[group_id].includes(t))
+        if (common_tags.length>0) {
+          shape_color = common_tags[0].color
+          return shape_color
+        }
+      }
       // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt
-      if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {
+      if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && tagg_activated.length>0) {
         shape_color = this._source.getShapeColorToUse()
       }
-      else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
+      else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && tagg_activated.length>0) {
         shape_color = this._target.getShapeColorToUse()
       }
       else {
-        if (trgt_taggs_activated) {
-          // If target has a tag from a group of which we display the palette
-          shape_color = this._target.getShapeColorToUse()
-        } else if (src_taggs_activated) {
-          // If source has a tag from a group of which we display the palette
-          shape_color = this._source.getShapeColorToUse()
+        if (tagg_activated.length>0) {
+          const group_id = tagg_activated[0].id
+          if (this._target.grouped_taggs_dict[group_id] && this._target.grouped_taggs_dict[group_id].length>0) {
+            // If target has a tag from a group of which we display the palette
+            shape_color = this._target.getShapeColorToUse()
+          } else if (this._source.grouped_taggs_dict[group_id] && this._source.grouped_taggs_dict[group_id].length>0) {
+            // If source has a tag from a group of which we display the palette
+            shape_color = this._source.getShapeColorToUse()
+          }
         }
       }
     }
