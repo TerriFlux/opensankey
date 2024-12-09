@@ -1313,6 +1313,14 @@ export abstract class Class_DrawingArea
       () => {
         this._computeAutoSankey(launched_from_process)
         this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      },
+      {
+        success: {
+          title: this.application_data.t('toast.compute_auto_sankey.success.title')
+        },
+        loading: {
+          title: this.application_data.t('toast.compute_auto_sankey.loading.title')
+        }
       }
     )
   }

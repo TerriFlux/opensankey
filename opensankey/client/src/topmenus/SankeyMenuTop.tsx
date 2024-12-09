@@ -985,6 +985,17 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
         new_data.sendWaitingToast(
           () => {
             clickSavePNG(h, v, new_data)
+          },
+          {
+            success: {
+              title: new_data.t('toast.save_as_png.success.title')
+            },
+            loading: {
+              title: new_data.t('toast.save_as_png.loading.title')
+            },
+            error: {
+              title: new_data.t('toast.save_as_png.error.title')
+            }
           })
       }}
     >

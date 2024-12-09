@@ -256,10 +256,12 @@ export abstract class Class_ApplicationData
       },
       {
         success: {
-          title: this.t('toast.loaded')
+          title: this.t('toast.reset.success.title'),
+          desc: this.t('toast.reset.success.desc')
         },
         loading: {
-          title: this.t('toast.loading')
+          title: this.t('toast.reset.loading.title'),
+          desc: this.t('toast.reset.loading.desc')
         }
       })
   }
@@ -289,10 +291,13 @@ export abstract class Class_ApplicationData
       },
       {
         success: {
-          title: this.t('toast.loaded')
+          title: this.t('toast.save_in_cache.success.title')
         },
         loading: {
-          title: this.t('toast.loading')
+          title: this.t('toast.save_in_cache.loading.title')
+        },
+        error: {
+          title: this.t('toast.save_in_cache.error.title')
         }
       })
   }
@@ -318,10 +323,13 @@ export abstract class Class_ApplicationData
       },
       {
         success: {
-          title: this.t('toast.loaded')
+          title: this.t('toast.save_as_json.success.title')
         },
         loading: {
-          title: this.t('toast.loading')
+          title: this.t('toast.save_as_json.loading.title')
+        },
+        error: {
+          title: this.t('toast.save_as_json.error.title')
         }
       })
   }
@@ -373,10 +381,13 @@ export abstract class Class_ApplicationData
       },
       {
         success: {
-          title: this.t('toast.loaded')
+          title: this.t('toast.save_as_excel.success.title')
         },
         loading: {
-          title: this.t('toast.loading')
+          title: this.t('toast.save_as_excel.loading.title')
+        },
+        error: {
+          title: this.t('toast.save_as_excel.error.title')
         }
       })
   }
@@ -404,14 +415,6 @@ export abstract class Class_ApplicationData
       () => {
         // Read json file
         this._toJSON()
-      },
-      {
-        success: {
-          title: this.t('toast.loaded')
-        },
-        loading: {
-          title: this.t('toast.loading')
-        }
       })
   }
 
@@ -445,14 +448,6 @@ export abstract class Class_ApplicationData
         this._fromJSON(json_object)
         // Update drawing area and menus
         this._afterFromJSON()
-      },
-      {
-        success: {
-          title: this.t('toast.loaded')
-        },
-        loading: {
-          title: this.t('toast.loading')
-        }
       })
   }
 
@@ -486,20 +481,20 @@ export abstract class Class_ApplicationData
         setTimeout(() => {
           funct()
           resolve(200)
-        }, 200)  // Leave enough time for spinner to show itself
+        }, 500)  // Leave enough time for spinner to show itself
       }),
       {
         success: {
-          title: intake?.success?.title ?? this.t('toast.toast_loading_success'),
-          description: intake?.success?.desc ?? this.t('toast.toast_loading_success_desc')
-        },
-        error: {
-          title: intake?.error?.title ?? this.t('toast.toast_loading_failed'),
-          description: intake?.error?.desc ?? this.t('toast.toast_loading_failed_desc')
+          title: intake?.success?.title ?? this.t('toast.default.success.title'),
+          description: intake?.success?.desc ?? this.t('toast.default.success.desc')
         },
         loading: {
-          title: intake?.loading?.title ?? this.t('toast.toast_loading_waiting'),
-          description: intake?.loading?.desc ?? this.t('toast.toast_loading_waiting_desc')
+          title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
+          description: intake?.loading?.desc ?? this.t('toast.default.loading.desc')
+        },
+        error: {
+          title: intake?.error?.title ?? this.t('toast.default.error.title'),
+          description: intake?.error?.desc ?? this.t('toast.default.error.desc')
         },
       }
     )
