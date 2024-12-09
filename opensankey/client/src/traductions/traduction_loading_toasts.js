@@ -21,11 +21,21 @@ export const resources_loading_toasts = {
         },
         reset: {
           success: {
-            title: 'Ready',
+            title: 'Drawing area cleaned',
             desc: ''
           },
           loading: {
-            title: 'Loading drawing area',
+            title: 'Deleting drawing area',
+            desc: ''
+          },
+        },
+        draw: {
+          success: {
+            title: 'Ready to draw',
+            desc: ''
+          },
+          loading: {
+            title: 'Initialisation of drawing area',
             desc: ''
           },
         },
@@ -117,11 +127,21 @@ export const resources_loading_toasts = {
         },
         reset: {
           success: {
-            title: 'Prêt à commencer',
+            title: 'Effacement terminé',
             desc: ''
           },
           loading: {
-            title: 'Chargement de la zone de dessing',
+            title: 'Effacement des données',
+            desc: ''
+          },
+        },
+        draw: {
+          success: {
+            title: 'La zone de dessin est prête',
+            desc: ''
+          },
+          loading: {
+            title: 'Initialisation de la zone de dessin',
             desc: ''
           },
         },

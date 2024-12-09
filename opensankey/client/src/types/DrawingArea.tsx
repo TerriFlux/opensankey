@@ -524,6 +524,16 @@ export abstract class Class_DrawingArea
         () => {
           this._draw()
           this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        },
+        {
+          success: {
+            title: this.application_data.t('toast.draw.success.title'),
+            desc: this.application_data.t('toast.draw.success.desc')
+          },
+          loading: {
+            title: this.application_data.t('toast.draw.loading.title'),
+            desc: this.application_data.t('toast.draw.loading.desc')
+          }
         }
       )
     }
@@ -982,6 +992,7 @@ export abstract class Class_DrawingArea
   public checkAndUpdateAreaSize() {
 
     const bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+
     const fitting_width = this.window_fitting_width // acces speeding computation
     const fitting_height = this.window_fitting_height // acces speeding computation
 

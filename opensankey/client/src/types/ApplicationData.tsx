@@ -19,7 +19,7 @@ import { useToast } from '@chakra-ui/react'
 import { Class_MenuConfig } from './MenuConfig'
 import { Class_AbstractApplicationData } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
-import { Type_JSON } from './Utils'
+import { randomId, Type_JSON } from './Utils'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
@@ -159,6 +159,7 @@ export abstract class Class_ApplicationData
 
   // Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
   private _toast = useToast()
+  private _toast_processes: string[] = []
 
   // Guided visite steps to show app
   private _steps: StepType[] = []
@@ -247,7 +248,11 @@ export abstract class Class_ApplicationData
   public abstract createNewMenuConfiguration(): Class_MenuConfig
 
   // CLEANING METHODS ===================================================================
-
+  /**
+   * Reset drawing area -> clean data & undraw
+   * Use a waiting spinner
+   * @memberof Class_ApplicationData
+   */
   public reset() {
     this.sendWaitingToast(
       () => {
@@ -266,11 +271,16 @@ export abstract class Class_ApplicationData
       })
   }
 
+  /**
+   * Reset drawing area -> clean data & undraw
+   * @protected
+   * @memberof Class_ApplicationData
+   */
   protected _reset() {
     // Reset drawing area
-    // this._drawing_area.delete() // TODO : lent sur gros SANkey
-    this._drawing_area.unDraw()
-    this._drawing_area = this.createNewDrawingArea()
+    // Node : To avoid loosing ref of drawing area & creating somehow memory leak,
+    //        we have to use copyFrom -> delete old values + reeaffectation of default values on the same object
+    this._drawing_area.copyFrom(this.createNewDrawingArea()) // TODO : lent sur gros SANkey -> fix da.delete() pour accelerer
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
     // Update menus
@@ -308,7 +318,7 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   protected _saveInCache() {
-    localStorage.setItem('data', LZString.compress(JSON.stringify(this.toJSON())))
+    localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
     localStorage.setItem('last_save', 'true')
   }
 
@@ -410,14 +420,10 @@ export abstract class Class_ApplicationData
     )
   }
 
-  public toJSON() {
-    this.sendWaitingToast(
-      () => {
-        // Read json file
-        this._toJSON()
-      })
-  }
-
+  /**
+   * Create json file that contains all application datas
+   * @memberof Class_ApplicationData
+   */
   protected _toJSON() {
     // Create json struct
     const json_object = {} as Type_JSON
@@ -472,32 +478,73 @@ export abstract class Class_ApplicationData
 
   // PUBLIC METHODS =====================================================================
 
+  /**
+   * Create a waiting toast for given function.
+   * @param {() => void} funct
+   * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
+   * @memberof Class_ApplicationData
+   */
   public sendWaitingToast(
     funct: () => void,
     intake?: Type_TextForToastPromise
   ) {
-    this._toast.promise(
-      new Promise((resolve) => {
-        setTimeout(() => {
-          funct()
-          resolve(200)
-        }, 500)  // Leave enough time for spinner to show itself
-      }),
-      {
-        success: {
-          title: intake?.success?.title ?? this.t('toast.default.success.title'),
-          description: intake?.success?.desc ?? this.t('toast.default.success.desc')
-        },
-        loading: {
-          title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
-          description: intake?.loading?.desc ?? this.t('toast.default.loading.desc')
-        },
-        error: {
-          title: intake?.error?.title ?? this.t('toast.default.error.title'),
-          description: intake?.error?.desc ?? this.t('toast.default.error.desc')
-        },
-      }
-    )
+    // Create and save process id
+    const funct_id = randomId()
+    this._toast_processes.push(funct_id)
+    // Add to the processing queue
+    this._sendWaitingToast(funct, funct_id, intake)
+  }
+
+  /**
+   * Allows to create a waiting toast for given function.
+   * Use a functions queue to ensure that all function that call always run in the calling order.
+   *
+   * @protected
+   * @param {() => void} funct
+   * @param {string} funct_id
+   * @param {Type_TextForToastPromise} [intake]
+   * @memberof Class_ApplicationData
+   */
+  protected _sendWaitingToast(
+    funct: () => void,
+    funct_id: string,
+    intake?: Type_TextForToastPromise
+  ) {
+    // Check if process has to wait
+    if (this._toast_processes[0] !== funct_id) {
+      // Create a recursive timeout as delaying method to ensure that
+      // all functions are called with respect to their creation order
+      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), 1000)
+    }
+    // Otherwise send
+    else {
+      this._toast.promise(
+        new Promise((resolve) => {
+          setTimeout(() => {
+            funct() // run
+            this._toast_processes.splice(0, 1) // pop process from processes list
+            resolve(200) // end
+          },
+          500) // Leave 500ms of delay in order to give enough time to load spinner component
+        }),
+        {
+          success: {
+            title: intake?.success?.title ?? this.t('toast.default.success.title'),
+            description: intake?.success?.desc ?? this.t('toast.default.success.desc')
+          },
+          loading: {
+            title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
+            description: intake?.loading?.desc ?? this.t('toast.default.loading.desc')
+          },
+          error: {
+            title: intake?.error?.title ?? this.t('toast.default.error.title'),
+            description: intake?.error?.desc ?? this.t('toast.default.error.desc')
+          },
+        }
+      )
+
+    }
+
   }
 
   // PRIVATE METHODS ====================================================================
