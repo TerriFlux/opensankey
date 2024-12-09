@@ -6,7 +6,6 @@
 
 // Internal imports
 import {
-  Class_AbstractLevelTagGroup,
   Class_AbstractLevelTag,
   Class_AbstractDrawingArea,
   Class_AbstractSankey
@@ -97,7 +96,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     // - Children tag are not of the same group
     // - Parent & children tags groups are not the same
     // - Children list is empty
- 
+
     if (
       (parent_level_tag.group !== this.child_level_tag.group) ||
       (!this.has_children)) {

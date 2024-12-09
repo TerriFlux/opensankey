@@ -859,39 +859,39 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
     child_tag: Class_LevelTag
   ) {
 
-      // Try to find matching dimension with :
-      // - this as parent tag
-      // - input child_tag as child tag
-      // - parent node as parent
-      let dimension_found: Class_NodeDimension | undefined
-      this.dimensions_list_as_tag_for_parent
-        .forEach(dimension => {
-          // Match dimension if all these conditions are true
-          // - Parent are the same
-          // - Parent level tags are the same
-          // - child level tag is the same
-          if (
-            (dimension.parent_level_tag === this) &&
+    // Try to find matching dimension with :
+    // - this as parent tag
+    // - input child_tag as child tag
+    // - parent node as parent
+    let dimension_found: Class_NodeDimension | undefined
+    this.dimensions_list_as_tag_for_parent
+      .forEach(dimension => {
+        // Match dimension if all these conditions are true
+        // - Parent are the same
+        // - Parent level tags are the same
+        // - child level tag is the same
+        if (
+          (dimension.parent_level_tag === this) &&
             (dimension.child_level_tag == child_tag) &&
             (dimension.parent === parent)
-          ) {
-            dimension_found = dimension
-          }
-        })
+        ) {
+          dimension_found = dimension
+        }
+      })
       // If found - just add child
-      if (dimension_found) {
-        dimension_found.addNodeAsChild(child)
-      }
-      // If no dimension has been found, create a new one
-      else {
-        dimension_found = new Class_NodeDimension(
-          parent,
-          [child],
+    if (dimension_found) {
+      dimension_found.addNodeAsChild(child)
+    }
+    // If no dimension has been found, create a new one
+    else {
+      dimension_found = new Class_NodeDimension(
+        parent,
+        [child],
           this as Class_AbstractLevelTag,
           child_tag
-        )
-      }
-      return dimension_found
+      )
+    }
+    return dimension_found
   }
 
   public isLevelForChildren(_: Class_NodeDimension) {

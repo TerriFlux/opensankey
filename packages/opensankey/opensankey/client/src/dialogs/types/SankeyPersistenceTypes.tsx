@@ -52,12 +52,6 @@ export type FType_UploadExemple = (
   applicationData: Type_GenericApplicationDataOS
 ) => void
 
-export type FType_ClickSaveExcel = (
-  new_data: Type_GenericApplicationDataOS,
-  url_prefix: string,
-  file_name?: string
-) => void
-
 export type FType_JSONtoExcel = (
   data_as_json: Type_JSON,
   url_prefix: string,
