@@ -513,7 +513,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         if (contextualised_node.is_multi_parent) {
           new_data.menu_configuration.ref_to_updater_node_disagregate.current(true)
         } else {
-          contextualised_node.drawChildren()
+          contextualised_node.drawChildren(
+            contextualised_node.dimensions_as_parent[contextualised_node.dimensions_as_parent.length-1].id
+          )
           // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
@@ -639,7 +641,7 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
   }
   new_data.menu_configuration.ref_to_updater_node_disagregate.current = (b: boolean) => set_show_agregation(b)
   if (new_data.drawing_area.node_contextualised) {
-    const list_child_dim = new_data.drawing_area.node_contextualised.dimensions_as_parent.filter(dim => dim.children_level_tagg.id != 'Primaire')
+    const list_child_dim = new_data.drawing_area.node_contextualised.dimensions_as_parent.filter(dim => dim.child_level_tagg.id != 'Primaire')
     if (selected_grp.current == null || selected_grp.current == undefined) {
       selected_grp.current = list_child_dim[0]
       setForce(a => a + 1)
@@ -668,7 +670,7 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
                 value={selected_grp.current?.id}
               >
                 {list_child_dim.map(
-                  (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.children_level_tagg.name}</option>
+                  (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.child_level_tagg.name}</option>
                 )}
               </Select>
               <Text>{new_data.t('Noeud.text_agreg')}</Text>
@@ -739,7 +741,7 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
                 value={selected_grp.current?.id}
               >
                 {list_parent_dim.map(
-                  (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.children_level_tagg.name}</option>
+                  (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.child_level_tagg.name}</option>
                 )}
               </Select>
               <Text>{new_data.t('Noeud.text_agreg')}</Text>

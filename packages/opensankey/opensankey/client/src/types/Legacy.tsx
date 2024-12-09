@@ -1222,9 +1222,7 @@ export const NodeHasDisplayedLevel = (
   // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
   // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
   // - The node has the grp tag name in his tags
-  Object.entries(data.levelTags).filter(nt =>
-    nt[1].activated && Object.keys(n.tags).includes(nt[0])
-  ).forEach(nt => {
+  Object.entries(data.levelTags).filter(nt =>nt[1].activated).forEach(nt => {
     // Check tags from the group attribued to the node
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr = n.tags[nt[0]]
@@ -1233,7 +1231,11 @@ export const NodeHasDisplayedLevel = (
       // If the node has tag from the group attribued to it but are not selected then we don't display it
       const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t.name)
       to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
-
+    } else if (n.dimensions[nt[0]] && n.dimensions[nt[0]].children_tags != undefined && n.dimensions[nt[0]].children_tags!.length !=0) {
+      const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t.name)
+      to_display = (n.dimensions[nt[0]].children_tags!.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false    
+    } else if (n.dimensions[nt[0]] && n.dimensions[nt[0]].force_show_children) {
+      to_display = false
     }
   })
   return to_display
@@ -1503,6 +1505,24 @@ const convert_nodes: convert_nodesFuncType = (
       })
     }
 
+    const forceShowChildren = (
+      data: SankeyData,
+      node: SankeyNode,
+      dim: string
+    ) => {
+      // quand un neoud est à force_children il faut remonter tous ces ancêtres
+      // jusqu'à celui qui est normalement visible d'aprés les tags de niveaux
+      let parents = Object.entries(node.dimensions).filter(cur_dim => cur_dim[0] == dim && cur_dim[1].parent_name!=undefined)
+      if (parents.length == 0) {
+        return
+      }
+      const parent = parents[0][1].parent_name!
+      data.nodes[parent].dimensions[dim].force_show_children = true
+      if (!NodeHasDisplayedLevel(data, data.nodes[parent])) {
+        forceShowChildren(data, data.nodes[parent],dim)
+      }
+    }
+
     const treatExchangeNodes = (
       data: SankeyData,
       node: SankeyNode,
@@ -1562,6 +1582,7 @@ const convert_nodes: convert_nodesFuncType = (
               data.nodes[dim[1].parent_name!].local!.local_aggregation == false
             ) {
               dim[1].force_show_children = true
+              forceShowChildren(data,n,dim[0])
               treatExchangeNodes(data, n, dim[0], true)
             } else {
               forceShowParent(data, n, dim[0])
