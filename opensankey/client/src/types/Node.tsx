@@ -505,8 +505,8 @@ export abstract class Class_NodeElement
     if (this.is_child) {
       //On parse les tags groupes et on écrit la dimension pour ce tag groupe. 
       //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
-      const all_child_tags = [...new Set(Object.values(this._dimensions_as_child).map(dim=>dim.related_level_tagg.id))]
-      all_child_tags.forEach(tagg_id=>{
+      const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim=>dim.related_level_tagg.id))]
+      all_child_taggs.forEach(tagg_id=>{
           Object.values(this._dimensions_as_child).filter(dim=>dim.related_level_tagg.id == tagg_id)
             .forEach(dimension => {
               if (!(dimension.related_level_tagg.id in dimensions)) {
@@ -616,8 +616,6 @@ export abstract class Class_NodeElement
     json_node_object: Type_JSON,
     matching_links_id: { [_: string]: string } = {}
   ) {
-    const prev_bypass_redraws = this.sankey.drawing_area.bypass_redraws
-    this.drawing_area.bypass_redraws = true
     // Input links
     getStringListFromJSON(json_node_object, 'inputLinksId', [])
       .forEach(l_id => {
@@ -643,7 +641,6 @@ export abstract class Class_NodeElement
           return this.sankey.links_dict[link_id]
         }) as Type_GenericLinkElement[]
     }
-    this.drawing_area.bypass_redraws = prev_bypass_redraws
   }
 
   /**
@@ -658,8 +655,6 @@ export abstract class Class_NodeElement
     matching_taggs_id: { [_: string]: string } = {},
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
-    const prev_bypass_redraws = this.sankey.drawing_area.bypass_redraws
-    this.drawing_area.bypass_redraws = true
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
     // For each dimension in dimensions JSON Struct, create the parent / child relation
@@ -737,8 +732,6 @@ export abstract class Class_NodeElement
           }
         })
     }
-
-    this.drawing_area.bypass_redraws = prev_bypass_redraws // Security
   }
 
   // PUBLIC METHODS =====================================================================
@@ -4165,6 +4158,7 @@ export abstract class Class_NodeElement
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {
       tooltip_html += '<p class="tab-title" style="margin-bottom: 5px;">' + this.drawing_area.application_data.t('Noeud.drawing_area_tooltip.inputs') + '</p>'
