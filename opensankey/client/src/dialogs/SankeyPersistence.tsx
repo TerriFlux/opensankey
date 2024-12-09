@@ -19,7 +19,6 @@ import {
 
 import type {
   FType_ClickSaveDiagram,
-  FType_ClickSaveExcel,
   FCType_Counter,
   FType_DownloadExamples,
   FType_ProcessExample,
@@ -309,7 +308,7 @@ export const JSONtoExcel: FType_JSONtoExcel = (
   fetch(url, fetchData)
     .then(r => r.blob())
     .then(showFile)
-  .then(cleanFile)
+    .then(cleanFile)
 }
 
 /**

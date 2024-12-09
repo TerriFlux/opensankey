@@ -22,7 +22,7 @@ export abstract class Class_AbstractApplicationData {
   // MAndatory methods
   public abstract sendWaitingToast(
     funct: () => void,
-    intake?: Object
+    intake?: object
   ): void
   // Mandatory attributes
   public abstract version: string
