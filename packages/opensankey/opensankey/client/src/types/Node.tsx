@@ -522,11 +522,7 @@ export abstract class Class_NodeElement
                 const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
                 dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
               }
-            } else {
-              const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
-              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
             }
-          }
           )
       }
       )
