@@ -430,7 +430,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 
           <OSTooltip label={t('Menu.Transformation.tooltips.attrDrawingArea')} >
             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrDrawingArea')}</Box>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
               <Box layerStyle='options_4cols' >
                 <Button
                   variant={data_var_to_update.current.includes('attrDrawingArea') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}

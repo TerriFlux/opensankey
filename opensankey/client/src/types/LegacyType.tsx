@@ -110,7 +110,7 @@ export type SankeyNode = {
   }, local?: SankeyNodeAttrLocal, colorParameter: string,
   colorTag: string,
 
-
+  position?: string,
   x: number,
   y: number,
   x_label?: number,
@@ -167,7 +167,9 @@ export type SankeyLinkAttrLocal = {
   label_unit?: string,
   label_unit_factor?: number,
   custom_digit?: boolean,
-  nb_digit?: number
+  nb_digit?: number,
+
+  gradient?:boolean
 }
 
 export type SankeyLinkStyle = {
@@ -200,6 +202,9 @@ export type SankeyLinkStyle = {
   label_unit: string,
   custom_digit: boolean,
   nb_digit: number,
+
+  starting_tangeant: number,
+  ending_tangeant: number
 }
 
 export type SankeyLink = {
@@ -213,7 +218,8 @@ export type SankeyLink = {
   // geometry
   x_label?: number,
   y_label?: number,
-  drag_label_offset?: number
+  drag_label_offset?: number,
+  position_offset_label?:number,
   //style
   style: string, local?: SankeyLinkAttrLocal
 }

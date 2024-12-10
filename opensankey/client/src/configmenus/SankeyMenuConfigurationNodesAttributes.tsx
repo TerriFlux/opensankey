@@ -970,7 +970,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                       refreshThisAndUpdateRelatedComponents()
                     }}
                   >
-                    <FaAlignLeft />
+                    <FaAlignRight />
                   </Button>
                 </OSTooltip>
 
@@ -1009,7 +1009,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                       elements.forEach(element => element.name_label_horiz = 'right')
                       refreshThisAndUpdateRelatedComponents()
                     }}>
-                    <FaAlignRight />
+                    <FaAlignLeft />
                   </Button>
                 </OSTooltip>
               </Box>
