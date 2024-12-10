@@ -798,7 +798,7 @@ export abstract class Class_NodeElement
    */
   public drawParent(id?: string) {
     if (this.is_child) {
-      this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
+      //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
       // Force to show parent
       if ((id !== undefined) && (this._dimensions_as_child[id]))
         this._dimensions_as_child[id].setForceToShowParent()
@@ -839,7 +839,7 @@ export abstract class Class_NodeElement
     if (this.is_parent) {
       // Force to show children
       if ((id !== undefined) && (this._dimensions_as_parent[id]))
-        this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
+        //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
         this._dimensions_as_parent[id].setForceToShowChildren()
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
