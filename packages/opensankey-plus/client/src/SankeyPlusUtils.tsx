@@ -727,7 +727,7 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
                 // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
                 // (it isn't done for link not directly displayed after fromJSON)
                 new_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
-                new_data.drawing_area.checkAndUpdateAreaSize()
+                new_data.drawing_area.areaAutoFit()
               }}
             >
               {
