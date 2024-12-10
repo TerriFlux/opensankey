@@ -864,19 +864,33 @@ export abstract class Class_LinkElement
         .forEach(tag => shape_color = tag.color)
     }
     else {
-      // Do we apply colors of node source/target tags ?
       const src_taggs_activated = this._source.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => {
-          return this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length > 0
-        }).length > 0
-      const trgt_taggs_activated = this._target.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => {
-          return (this._target.grouped_taggs_dict[grp.id] ?? []).filter(tag => tag.is_selected).length > 0
-        }).length > 0
+      .filter(tagg => tagg.show_legend).filter(grp => {
+        return this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length > 0
+      }).length > 0
+    const trgt_taggs_activated = this._target.taggs_list
+      .filter(tagg => tagg.show_legend).filter(grp => {
+        return (this._target.grouped_taggs_dict[grp.id] ?? []).filter(tag => tag.is_selected).length > 0
+      }).length > 0
+
+
+      // Do we apply colors of node source/target tags ?
+      const tagg_activated = this.sankey.node_taggs_list
+        .filter(tagg => tagg.show_legend)
 
       const trgt_node_type = this._target.grouped_taggs_dict['type de noeud']
       const src_node_type = this._source.grouped_taggs_dict['type de noeud']
 
+      // The first common tag is used to défine the color. The code after would take the first tag
+      // of one of the two nodes source or target which is not the same as the first of the common tag
+      if (tagg_activated.length>0 && this._source.grouped_taggs_dict[tagg_activated[0].id]) {
+        const group_id = tagg_activated[0].id
+        const common_tags = this._source.grouped_taggs_dict[group_id].filter(t=>this._target.grouped_taggs_dict[group_id] && this._target.grouped_taggs_dict[group_id].includes(t))
+        if (common_tags.length>0) {
+          shape_color = common_tags[0].color
+          return shape_color
+        }
+      }
       // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt
       if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {
         shape_color = this._source.getShapeColorToUse()
@@ -1308,8 +1322,7 @@ export abstract class Class_LinkElement
 
     if (this._display.position_offset_label !== undefined) {
       const offset = this._display.position_offset_label
-      // offset attributes when dragged
-      label_anchor = offset > 50 ? 'end' : 'start'
+
       label_position = offset
 
     } else {

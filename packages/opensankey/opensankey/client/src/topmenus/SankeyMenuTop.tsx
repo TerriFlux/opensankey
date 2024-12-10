@@ -473,7 +473,11 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                     const JSON_data = JSON.parse(file_content)
                     // Clear datas & apply read datas
                     new_data.function_on_wait.current = () => {
+                      new_data.drawing_area.bypass_redraws = true
                       new_data.fromJSON(JSON_data as Type_JSON)
+                      new_data.drawing_area.ArrangeTrade(false)
+                      new_data.drawing_area.bypass_redraws = false
+                      new_data.drawing_area.draw()
                     }
                     new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loading') })
                   }
