@@ -530,8 +530,8 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   protected _updateFromJSON(json_object: Type_JSON) {
-    if (json_object['json_layout'] !== undefined) {
-      const json_layout = json_object['json_layout'] as Type_JSON
+    if (json_object['layout'] !== undefined) {
+      const json_layout = json_object['layout'] as Type_JSON
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
       drawing_area_from_layout.fromJSON(json_layout)
