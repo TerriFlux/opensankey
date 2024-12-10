@@ -83,7 +83,7 @@ export abstract class Class_ApplicationDataPlus
    * @type {string[]}
    * @memberof Class_ApplicationDataPlus
    */
-  protected _transform_layout_all_attr:string[]=[...this.transform_layout_all_attr,'freeLabels','icon_catalog']
+  protected _transform_layout_all_attr: string[] = [...this.transform_layout_all_attr, 'freeLabels', 'icon_catalog']
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -136,10 +136,10 @@ export abstract class Class_ApplicationDataPlus
    *
    * @memberof Class_ApplicationDataPlus
    */
-  reset(): void {
+  protected _reset(): void {
     this._views = {}
     this._views_order = []
-    super.reset()
+    super._reset()
   }
 
   private deleteCurrentOriginalView() {
@@ -159,7 +159,7 @@ export abstract class Class_ApplicationDataPlus
    * @return {*}
    * @memberof Class_ApplicationDataPlus
    */
-  public toJSON() {
+  protected _toJSON() {
     let current_view = default_main_sankey_id
     let json_entry: Type_JSON = {}
 
@@ -169,7 +169,7 @@ export abstract class Class_ApplicationDataPlus
       !this.is_view_master
     ) {
       // If we are in a view & the option only_current_view is at true then we export to JSON only the current view
-      json_entry = super.toJSON()
+      json_entry = super._toJSON()
       json_entry.id = default_main_sankey_id
     }
     else {
@@ -193,7 +193,7 @@ export abstract class Class_ApplicationDataPlus
       }
 
       // Herited toJSON to save master data
-      json_entry = super.toJSON()
+      json_entry = super._toJSON()
 
       if (this.has_views) {
         // If application_data has views then we save them in the JSON
@@ -386,63 +386,77 @@ export abstract class Class_ApplicationDataPlus
   }
 
   public setCurrentView(id: string) {
-    this.function_on_wait.current = () => {
-      if (id in this._views) {
-        // Case 1 :
-        // Trigger saving view pop-up if changes have been made on a view
-        // that is not master view
-        if (
-          !this.is_view_master &&
-          (this._original_current_view !== undefined) &&
-          !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
-        ) {
-          // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
-          this._waiting_to_set_view = id
-          this.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
-        }
-        // Case 2 : Otherwise, just set new view
-        else {
-          // Hide previous diplayed sankey
-          this._drawing_area.sankey.setInvisible()
-          // Keep current mode in memory
-          //const was_mode_edition = this._drawing_area.isInEditionMode()
-          // Purge selections to avoid modifying unvisible view
-          this._drawing_area.purgeSelection()
-          // Undraw prev sankey
-          this._drawing_area.unDraw()
-          // Set-up new sankey
-          this._drawing_area = this._views[id]
-          this._drawing_area.sankey.setVisible()
-          // Set original view in temporary var so it can be used when
-          // we change view and don't want to save current modification
-          if (id !== default_main_sankey_id) {
-            // Update view with attr heredited from master
-            this._drawing_area.updateFrom(this._views[default_main_sankey_id], this._drawing_area.heredited_attr)
-            this.options_save_json = default_save_JSON_options
-            // Create a clone of current view's DA
-            const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
-            clone_drawing_area.bypass_redraws = true
-            clone_drawing_area.copyFrom(this._drawing_area)
-            // Save clone
-            this.deleteCurrentOriginalView()
-            this._original_current_view = clone_drawing_area
-          }
-          // Reset to Edition mode
-          this._drawing_area.setToModeEdition(false)
-          // Draw new-sankey
-          this._drawing_area.draw()
-          // Update components related to viewss
-          this._menu_configuration.updateAllMenuComponents()
-          this._menu_configuration.updateComponentRelatedToViews()
-          // Update menu save diagram JSON
-          this.menu_configuration.updateComponentSaveDiagramJSON()
+    // Embedded in waiting function
+    this.sendWaitingToast(
+      () => {
+        this._setCurrentView(id)
+      },
+      {
+        success: {
+          title: this.t('toast.set_view.success.title')
+        },
+        loading: {
+          title: this.t('toast.set_view.loading.title')
+        },
+        error: {
+          title: this.t('toast.set_view.error.title')
         }
       }
+    )
+  }
+
+  protected _setCurrentView(id: string) {
+    if (id in this._views) {
+      // Case 1 :
+      // Trigger saving view pop-up if changes have been made on a view
+      // that is not master view
+      if (
+        !this.is_view_master &&
+        (this._original_current_view !== undefined) &&
+        !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
+      ) {
+        // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
+        this._waiting_to_set_view = id
+        this.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
+      }
+      // Case 2 : Otherwise, just set new view
+      else {
+        // Hide previous diplayed sankey
+        this._drawing_area.sankey.setInvisible()
+        // Keep current mode in memory
+        //const was_mode_edition = this._drawing_area.isInEditionMode()
+        // Purge selections to avoid modifying unvisible view
+        this._drawing_area.purgeSelection()
+        // Undraw prev sankey
+        this._drawing_area.unDraw()
+        // Set-up new sankey
+        this._drawing_area = this._views[id]
+        this._drawing_area.sankey.setVisible()
+        // Set original view in temporary var so it can be used when
+        // we change view and don't want to save current modification
+        if (id !== default_main_sankey_id) {
+          // Update view with attr heredited from master
+          this._drawing_area.updateFrom(this._views[default_main_sankey_id], this._drawing_area.heredited_attr)
+          this.options_save_json = default_save_JSON_options
+          // Create a clone of current view's DA
+          const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
+          clone_drawing_area.bypass_redraws = true
+          clone_drawing_area.copyFrom(this._drawing_area)
+          // Save clone
+          this.deleteCurrentOriginalView()
+          this._original_current_view = clone_drawing_area
+        }
+        // Reset to Edition mode
+        this._drawing_area.setToModeEdition(false)
+        // Draw new-sankey
+        this._drawing_area.draw()
+        // Update components related to viewss
+        this._menu_configuration.updateAllMenuComponents()
+        this._menu_configuration.updateComponentRelatedToViews()
+        // Update menu save diagram JSON
+        this.menu_configuration.updateComponentSaveDiagramJSON()
+      }
     }
-
-    this.launch_waiting_function.current({ success: this.t('toast.v_loaded'), loading: this.t('toast.v_loading') })
-
-
   }
 
   public setCurrentViewToMaster() {
