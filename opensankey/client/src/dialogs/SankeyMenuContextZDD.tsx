@@ -35,7 +35,6 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
   const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
-
   let style_c_zdd = '0px 0px auto auto'
   let is_top = true
   let pos_x = new_data.drawing_area.pointer_pos[0] + 10
@@ -150,12 +149,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
       <Button variant='contextmenu_button'
         onClick={() => {
-          new_data.function_on_wait.current = () => {
-            new_data.drawing_area.computeAutoSankey(false)
-            indicateSankeyToSaveInCache()
-          }
-          new_data.launch_waiting_function.current({ success: new_data.t('toast.loaded'), loading: new_data.t('toast.loaded') })
-
+          new_data.drawing_area.computeAutoSankey(false)
         }}>
         {t('MEP.PA_action')}
       </Button>

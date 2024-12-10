@@ -10,28 +10,49 @@ import LZString from 'lz-string'
 import { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
+import FileSaver from 'file-saver'
+
 import { StepType } from '@reactour/tour'
 import { useToast } from '@chakra-ui/react'
 
 // Local imports
-import { Class_MenuConfig, Type_TextForToastPromise } from './MenuConfig'
+import { Class_MenuConfig } from './MenuConfig'
 import { Class_AbstractApplicationData } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
-import { Type_JSON } from './Utils'
+import { randomId, Type_JSON } from './Utils'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { Class_Sankey } from './Sankey'
 import { FType_ProcessFunctions } from './FunctionTypes'
+import { DataSuiteType } from './LegacyType'
 
 import { Type_SaveDiagramOptions } from '../dialogs/types/SankeyPersistenceTypes'
-import { ClickSaveDiagram, ClickSaveExcel, retrieveExcelResults } from '../dialogs/SankeyPersistence'
-import { launchToastConstructor } from '../topmenus/SankeyMenuTop'
+import { JSONtoExcel, retrieveExcelResults } from '../dialogs/SankeyPersistence'
+
+// SPECIFIC TYPES **********************************************************************/
+
+export type Type_TextForToastPromise = {
+  success?: {
+    title?: string,
+    desc?: string
+  }
+  error?: {
+    title?: string,
+    desc?: string
+  },
+  loading?: {
+    title?: string,
+    desc?: string
+  }
+}
 
 // SPECIFIC CONSTANTS ******************************************************************/
 
 export const default_save_only_visible_elements = false
 export const default_save_with_values = true
 export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
+
+const default_toast_duration: number = 1000 // 1sec
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
@@ -138,14 +159,11 @@ export abstract class Class_ApplicationData
   // TODO ???
   private _processFunction: FType_ProcessFunctions
 
-  // Variable to stock a function (that can take some time to process) for it to be used while a loading spinner appear
-  private _function_on_wait: MutableRefObject<() => void>
-
   // Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
-  // Optional arguments to show custom message while loading & when finished
-  private _launch_waiting_function: MutableRefObject<(intake?: Type_TextForToastPromise) => void>
   private _toast = useToast()
+  private _toast_processes: string[] = []
 
+  // Guided visite steps to show app
   private _steps: StepType[] = []
 
   // OPTIONNAL ATTRIBUTES ===============================================================
@@ -206,6 +224,7 @@ export abstract class Class_ApplicationData
     // Default logo for app
     this._logo = logo_opensankey
 
+    // Excel processing function
     this._processFunction = {
       ref_processing: useRef(false),
       ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -223,12 +242,6 @@ export abstract class Class_ApplicationData
         this._processFunction.ref_result.current('')
       }
     }
-    this._function_on_wait = useRef(() => null)
-
-
-    this._launch_waiting_function = useRef((intake?: Type_TextForToastPromise) => {
-      launchToastConstructor(this, this._toast, intake)
-    })
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -237,13 +250,41 @@ export abstract class Class_ApplicationData
   public abstract createNewMenuConfiguration(): Class_MenuConfig
 
   // CLEANING METHODS ===================================================================
-
+  /**
+   * Reset drawing area -> clean data & undraw
+   * Use a waiting spinner
+   * @memberof Class_ApplicationData
+   */
   public reset() {
+    this.sendWaitingToast(
+      () => {
+        // Reset
+        this._reset()
+      },
+      {
+        success: {
+          title: this.t('toast.reset.success.title'),
+          desc: this.t('toast.reset.success.desc')
+        },
+        loading: {
+          title: this.t('toast.reset.loading.title'),
+          desc: this.t('toast.reset.loading.desc')
+        }
+      })
+  }
+
+  /**
+   * Reset drawing area -> clean data & undraw
+   * @protected
+   * @memberof Class_ApplicationData
+   */
+  protected _reset() {
     // Reset drawing area
-    // this._drawing_area.delete() // TODO : lent sur gros SANkey
-    this._drawing_area.unDraw()
+
     const by_pass_redraw = this._drawing_area.bypass_redraws
-    this._drawing_area = this.createNewDrawingArea()
+    // Node : To avoid loosing ref of drawing area & creating somehow memory leak,
+    //        we have to use copyFrom -> delete old values + reeaffectation of default values on the same object
+    this._drawing_area.copyFrom(this.createNewDrawingArea()) // TODO : lent sur gros SANkey -> fix da.delete() pour accelerer
     this._drawing_area.bypass_redraws = by_pass_redraw
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
@@ -253,7 +294,142 @@ export abstract class Class_ApplicationData
 
   // SAVING METHODS =====================================================================
 
-  public toJSON() {
+  /**
+   * Save in JSON in browser cache & Create waiting spinner
+   * @memberof Class_ApplicationData
+   */
+  public saveInCache() {
+    this.sendWaitingToast(
+      () => {
+        // Read json file
+        this._saveInCache()
+      },
+      {
+        success: {
+          title: this.t('toast.save_in_cache.success.title')
+        },
+        loading: {
+          title: this.t('toast.save_in_cache.loading.title')
+        },
+        error: {
+          title: this.t('toast.save_in_cache.error.title')
+        }
+      })
+  }
+
+  /**
+   * Save as JSON in browser cache
+   * @protected
+   * @memberof Class_ApplicationData
+   */
+  protected _saveInCache() {
+    localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
+    localStorage.setItem('last_save', 'true')
+  }
+
+  /**
+   * save to JSON format & create waiting spinner
+   * @memberof Class_ApplicationData
+   */
+  public saveToJSON() {
+    this.sendWaitingToast(
+      () => {
+        this._saveToJSON()
+      },
+      {
+        success: {
+          title: this.t('toast.save_as_json.success.title')
+        },
+        loading: {
+          title: this.t('toast.save_as_json.loading.title')
+        },
+        error: {
+          title: this.t('toast.save_as_json.error.title')
+        }
+      })
+  }
+
+  /**
+   * Save to JSON format
+   * @protected
+   * @memberof Class_ApplicationData
+   */
+  protected _saveToJSON() {
+    // Convert all datas as JSON
+    const json_data = this._toJSON()
+    // Prepare JSON for saving
+    const json_data_str = JSON.stringify(json_data, null, 2)
+    const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
+    // Set name for file to download
+    const dataAsSuite = (json_data as DataSuiteType)
+    let name = 'Diagramme de Sankey'
+    if (
+      dataAsSuite.view &&
+      dataAsSuite.view.length > 0 &&
+      !dataAsSuite.is_catalog
+    ) {
+      name = 'Diagramme de Sankey avec vues'
+    }
+    else if (dataAsSuite.is_catalog === true) {
+      name = 'Catalogue de vues de diagrammes de Sankey'
+    }
+    // Trigger file download
+    FileSaver.saveAs(blob, name + '.json')
+  }
+
+  /**
+   * Save as Excel format & Create waiting toast
+   * @param {string} url_prefix
+   * @param {string} [file_name='sankey']
+   * @memberof Class_ApplicationData
+   */
+  public saveToExcel(
+    url_prefix: string,
+    file_name = 'sankey'
+  ) {
+    this.sendWaitingToast(
+      () => {
+        this._saveToExcel(
+          url_prefix,
+          file_name
+        )
+      },
+      {
+        success: {
+          title: this.t('toast.save_as_excel.success.title')
+        },
+        loading: {
+          title: this.t('toast.save_as_excel.loading.title')
+        },
+        error: {
+          title: this.t('toast.save_as_excel.error.title')
+        }
+      })
+  }
+
+  /**
+   * Save to Excel format
+   * @protected
+   * @param {string} url_prefix
+   * @param {string} [file_name='sankey']
+   * @memberof Class_ApplicationData
+   */
+  protected _saveToExcel(
+    url_prefix: string,
+    file_name = 'sankey'
+  ) {
+    JSONtoExcel(
+      this._toJSON(),
+      url_prefix,
+      file_name
+    )
+  }
+
+  /**
+   * Create json file that contains all application datas
+   * @memberof Class_ApplicationData
+   */
+  protected _toJSON() {
     // Create json struct
     const json_object = {} as Type_JSON
     // Node label separator attribute
@@ -277,10 +453,13 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   public fromJSON(json_object: Type_JSON) {
-    // Read json file
-    this._fromJSON(json_object)
-    // Update drawing area and menus
-    this._afterFromJSON()
+    this.sendWaitingToast(
+      () => {
+        // Read json file
+        this._fromJSON(json_object)
+        // Update drawing area and menus
+        this._afterFromJSON()
+      })
   }
 
   /**
@@ -291,15 +470,89 @@ export abstract class Class_ApplicationData
    */
   protected _fromJSON(json_object: Type_JSON) {
     // Reset everything
-    this.reset()
+    this._reset()
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
   }
 
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
-    this._drawing_area.draw()
+    this._drawing_area.draw(false)
     this.menu_configuration.updateAllMenuComponents()
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  /**
+   * Create a waiting toast for given function.
+   * @param {() => void} funct
+   * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
+   * @memberof Class_ApplicationData
+   */
+  public sendWaitingToast(
+    funct: () => void,
+    intake?: Type_TextForToastPromise
+  ) {
+    // Create and save process id
+    const funct_id = randomId()
+    this._toast_processes.push(funct_id)
+    // Add to the processing queue
+    this._sendWaitingToast(funct, funct_id, intake)
+  }
+
+  /**
+   * Allows to create a waiting toast for given function.
+   * Use a functions queue to ensure that all function that call always run in the calling order.
+   *
+   * @protected
+   * @param {() => void} funct
+   * @param {string} funct_id
+   * @param {Type_TextForToastPromise} [intake]
+   * @memberof Class_ApplicationData
+   */
+  protected _sendWaitingToast(
+    funct: () => void,
+    funct_id: string,
+    intake?: Type_TextForToastPromise
+  ) {
+    // Check if process has to wait
+    if (this._toast_processes[0] !== funct_id) {
+      // Create a recursive timeout as delaying method to ensure that
+      // all functions are called with respect to their creation order
+      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), 1000)
+    }
+    // Otherwise send
+    else {
+      this._toast.promise(
+        new Promise((resolve) => {
+          setTimeout(() => {
+            funct() // run
+            this._toast_processes.splice(0, 1) // pop process from processes list
+            resolve(200) // end
+          },
+          500) // Leave 500ms of delay in order to give enough time to load spinner component
+        }),
+        {
+          success: {
+            title: intake?.success?.title ?? this.t('toast.default.success.title'),
+            description: intake?.success?.desc ?? this.t('toast.default.success.desc'),
+            duration: default_toast_duration
+          },
+          loading: {
+            title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
+            description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
+            duration: default_toast_duration
+          },
+          error: {
+            title: intake?.error?.title ?? this.t('toast.default.error.title'),
+            description: intake?.error?.desc ?? this.t('toast.default.error.desc'),
+            duration: default_toast_duration
+          },
+        }
+      )
+
+    }
+
   }
 
   // PRIVATE METHODS ====================================================================
@@ -416,12 +669,7 @@ export abstract class Class_ApplicationData
       // Prevent default event on ctrl + s
       evt.preventDefault()
       // Save in cache
-      app_ref.function_on_wait.current = () => {
-        localStorage.setItem('data', LZString.compress(JSON.stringify(app_ref.toJSON())))
-      }
-      this.launch_waiting_function.current({ success: this.t('_toast.success'), loading: this.t('_toast.saving') })
-
-      localStorage.setItem('last_save', 'true')
+      app_ref.saveInCache()
       // Update logo save in cache
       app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     }
@@ -431,14 +679,14 @@ export abstract class Class_ApplicationData
       evt.preventDefault()
       // Trigger saving via JSON saving button
       app_ref.options_save_json = default_save_JSON_options
-      ClickSaveDiagram(app_ref)
+      app_ref.saveToJSON()
     }
     // event to download current sankey in Excel -------------------------------------
     else if (evtCtrlAltS) {
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via Excel saving button
-      ClickSaveExcel('/opensankey/', app_ref.toJSON())
+      this.saveToExcel('/opensankey/')
     }
     // Fullscreen --------------------------------------------------------------------
     else if (evtCtrlF) {
@@ -531,9 +779,5 @@ export abstract class Class_ApplicationData
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
   public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
   public get preference_menu_all_item() { return this._preference_menu_all_item }
-
-  public get function_on_wait(): MutableRefObject<() => void> { return this._function_on_wait }
-
-  public get launch_waiting_function(): MutableRefObject<(intake?: Type_TextForToastPromise) => void> { return this._launch_waiting_function }
 }
 

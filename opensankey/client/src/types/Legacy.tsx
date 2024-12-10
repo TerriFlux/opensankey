@@ -1564,7 +1564,7 @@ const convert_nodes: convert_nodesFuncType = (
     ) => {
       // quand un neoud est à force_children il faut remonter tous ces ancêtres
       // jusqu'à celui qui est normalement visible d'aprés les tags de niveaux
-      let parents = Object.entries(node.dimensions).filter(cur_dim => cur_dim[0] == dim && cur_dim[1].parent_name!=undefined)
+      const parents = Object.entries(node.dimensions).filter(cur_dim => cur_dim[0] == dim && cur_dim[1].parent_name!=undefined)
       if (parents.length == 0) {
         return
       }
