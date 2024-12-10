@@ -295,7 +295,10 @@ export abstract class Class_ApplicationData
   // SAVING METHODS =====================================================================
 
   /**
-   * Save in JSON in browser cache & Create waiting spinner
+   * Save in JSON in browser cache
+   *
+   * /!\ Add to waiting spinner queue
+   *
    * @memberof Class_ApplicationData
    */
   public saveInCache() {
@@ -328,7 +331,10 @@ export abstract class Class_ApplicationData
   }
 
   /**
-   * save to JSON format & create waiting spinner
+   * save to JSON format
+   *
+   * /!\ Add to waiting spinner queue
+   *
    * @memberof Class_ApplicationData
    */
   public saveToJSON() {
@@ -378,7 +384,10 @@ export abstract class Class_ApplicationData
   }
 
   /**
-   * Save as Excel format & Create waiting toast
+   * Save as Excel format
+   *
+   * /!\ Add to waiting spinner queue
+   *
    * @param {string} url_prefix
    * @param {string} [file_name='sankey']
    * @memberof Class_ApplicationData
@@ -449,6 +458,8 @@ export abstract class Class_ApplicationData
    * Reset value of drawing_area and substructur with data from JSON
    * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
    *
+   * /!\ Add to waiting spinner queue
+   *
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
@@ -475,16 +486,65 @@ export abstract class Class_ApplicationData
     this._drawing_area.fromJSON(json_object)
   }
 
+  /**
+   * Postprocessing drawing area after JSON affectation
+   * @protected
+   * @memberof Class_ApplicationData
+   */
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.draw(false)
     this.menu_configuration.updateAllMenuComponents()
   }
 
+  public initFromJSON(json_object: Type_JSON) {
+    this.sendWaitingToast(
+      () => {
+        // Read json file
+        this._fromJSON(json_object)
+        // Update drawing area and menus
+        this._afterFromJSON()
+      })
+  }
+
+  /**
+   * Update current drawing area data from a json_object
+   *
+   * /!\ Add to waiting spinner queue
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_ApplicationData
+   */
+  public updateFromJSON(json_object: Type_JSON) {
+    this.sendWaitingToast(
+      () => {
+        // Processing
+        this._updateFromJSON(json_object)
+      })
+  }
+
+  /**
+   * Update current drawing area data from a json_object
+   * @param {Type_JSON} json_object
+   * @memberof Class_ApplicationData
+   */
+  protected _updateFromJSON(json_object: Type_JSON) {
+    if (json_object['json_layout'] !== undefined) {
+      const json_layout = json_object['json_layout'] as Type_JSON
+      const drawing_area_from_layout = this.createNewDrawingArea()
+      drawing_area_from_layout.bypass_redraws = true
+      drawing_area_from_layout.fromJSON(json_layout)
+      this.drawing_area.updateFrom(
+        drawing_area_from_layout,
+        ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
+      )
+    }
+  }
+
   // PUBLIC METHODS =====================================================================
 
   /**
-   * Create a waiting toast for given function.
+   * Create a waiting toast and add function to waiting queue.
    * @param {() => void} funct
    * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
    * @memberof Class_ApplicationData

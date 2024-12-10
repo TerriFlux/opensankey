@@ -1,5 +1,4 @@
 import React, { FunctionComponent, useEffect, useState, } from 'react'
-import * as d3 from 'd3'
 
 import FileSaver from 'file-saver'
 
@@ -21,16 +20,14 @@ import type {
   FType_ClickSaveDiagram,
   FCType_Counter,
   FType_DownloadExamples,
-  FType_ProcessExample,
   FType_RetrieveExcelResults,
   FType_UploadExcelImpl,
   FType_UploadExemple,
   FType_JSONtoExcel
 } from './types/SankeyPersistenceTypes'
-
-import { GetRandomInt, list_palette_color, type Type_JSON } from '../types/Utils'
+import type { Type_JSON } from '../types/Utils'
 import type { Type_GenericApplicationDataOS } from '../types/TypesOS'
-import { FCType_SankeyLoad } from '../types/FunctionTypes'
+import type { FCType_SankeyLoad } from '../types/FunctionTypes'
 
 
 /* FILE LOADING COMPONENTS *************************************************************/
@@ -352,46 +349,20 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   // Extract JSON struct
   const data_as_json = JSON.parse(text) as Type_JSON
   data_as_json['version'] = '0.9' // Avoid converter process
-  // Create & draw Sankey
+  // Extract sankey datas from JSON
   new_data.drawing_area.bypass_redraws = true
   new_data.fromJSON(data_as_json)
-  // Apply extracted layout if present
+  // Case 1 : Apply extracted layout if present -> contains positions
   if (data_as_json['layout']) {
-    const layout = data_as_json['layout'] as Type_JSON
-    const tmp_DA = new_data.createNewDrawingArea()
-    tmp_DA.fromJSON(layout)
-    new_data.drawing_area.updateFrom(
-      tmp_DA,
-      ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
-    )
-    new_data.drawing_area.bypass_redraws = false
-    new_data.drawing_area.draw()
+    new_data.updateFromJSON(data_as_json)
   }
+  // Case 2 :: No layout -> compute default positions & characteristics
   else {
-    new_data.drawing_area.bypass_redraws = true
-    // First compute position of nodes which are not trade
-    new_data.drawing_area.computeAutoSankey(true)
-    // Initially there is only one node per type of exchanges.
-    // it must be splitted to have one import and one export per product
-    // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
-    new_data.drawing_area.SplitTrade()
-    // Computes u v,x and initial y for trade nodes
-    new_data.drawing_area.arrangeTrade(true)
-    const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-    new_data.drawing_area.sankey.visible_nodes_list.forEach((n,i,a)=> {
-      n.reorganizeIOLinks()
-      new_data.drawing_area.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
-    })
-    new_data.drawing_area.sankey.links_list.forEach(l=>{
-      if(l.shape_is_recycling){
-        l.shape_starting_tangeant=0.01
-        l.shape_ending_tangeant=0.01
-      }
-    })
-    new_data.drawing_area.bypass_redraws = false
-    new_data.drawing_area.draw()
-    new_data.drawing_area.areaAutoFit()
+    // Recompute all positions
+    new_data.drawing_area.computeAutoFullSankey()
   }
+  // Redraw
+  new_data.drawing_area.draw()
 }
 
 
@@ -479,7 +450,6 @@ export const UploadExemple: FType_UploadExemple = (
           new_data.drawing_area.bypass_redraws = true
           new_data.fromJSON(JSON_data as Type_JSON)
           new_data.drawing_area.arrangeTrade(false)
-          new_data.drawing_area.bypass_redraws = false
           new_data.drawing_area.draw()
       }
     })
