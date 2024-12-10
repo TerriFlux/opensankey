@@ -419,33 +419,28 @@ export class Class_Legend
 
                 const nodes_tied_to_link_with_tag_hovered = ([] as Type_GenericNodeElementOS[])
                 //Get nodes tied to links who have the tag we hovering & get the list of links that have the tag hovered
-                const flux_with_tag_overed = flux_list
-                  .filter(l => l.hasGivenTag(tag))
-                  .map(link => {
-                    nodes_tied_to_link_with_tag_hovered.push(link.source as Type_GenericNodeElementOS)
-                    nodes_tied_to_link_with_tag_hovered.push(link.target as Type_GenericNodeElementOS)
-                    return link
-                  })
-
-                let link_tied_to_node_with_tag_hovered = ([] as Type_GenericLinkElementOS[])
-                //Get IO links from node who have the tag we hovering & get the list of node that have the tag hovered
-                const node_with_tag_overed = node_list
-                  .filter(n => n.hasGivenTag(tag))
-                  .map(el => {
-                    link_tied_to_node_with_tag_hovered = link_tied_to_node_with_tag_hovered.concat(el.output_links_list as Type_GenericLinkElementOS[])
-                    link_tied_to_node_with_tag_hovered = link_tied_to_node_with_tag_hovered.concat(el.input_links_list as Type_GenericLinkElementOS[])
-                    return el
-                  })
-
-                //Reduce opacity of all link that doesn't have the tag hovered or aren't tied to a node that have the tag hovered
                 flux_list
-                  .filter(link => !flux_with_tag_overed.includes(link) && !link_tied_to_node_with_tag_hovered.includes(link as Type_GenericLinkElementOS))
-                  .forEach(el => el.d3_selection?.attr('opacity', 0.1))
+                  .filter(l => {
+                    if (l.hasGivenTag(tag)) {
+                      nodes_tied_to_link_with_tag_hovered.push(l.source as Type_GenericNodeElementOS)
+                      nodes_tied_to_link_with_tag_hovered.push(l.target as Type_GenericNodeElementOS)
+                      return true
+                    } else if (l.source.hasGivenTag(tag) && l.target.hasGivenTag(tag)) {
+                      nodes_tied_to_link_with_tag_hovered.push(l.source as Type_GenericNodeElementOS)
+                      nodes_tied_to_link_with_tag_hovered.push(l.target as Type_GenericNodeElementOS)
+                      return true
+                    }
+                    l.d3_selection?.attr('opacity', 0.1)
+                    return false
+                  })
 
                 //Reduce opacity of all node that doesn't have the tag hovered or aren't tied to a link that have the tag hovered
                 node_list
-                  .filter(n => !node_with_tag_overed.includes(n) && !nodes_tied_to_link_with_tag_hovered.includes(n as Type_GenericNodeElementOS))
-                  .forEach(el => el.d3_selection?.attr('opacity', 0.1))
+                  .forEach(n => {
+                    if (!nodes_tied_to_link_with_tag_hovered.includes(n as Type_GenericNodeElementOS)) {
+                      n.d3_selection?.attr('opacity', 0.1)
+                    }
+                  })
 
               })
               .on('mouseout', () => {

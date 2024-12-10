@@ -1051,6 +1051,11 @@ export abstract class Class_NodeElement
     const sum_of_left_thickness = this.getSumOfLinksThickness('left')
     const sum_of_right_thickness = this.getSumOfLinksThickness('right')
     // Return max thickness
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
+    if (echangeTag && this.hasGivenTag(echangeTag) ) {
+      // TODO code to be rewritten when rearchitecturing code for Import Export
+      return Math.max(sum_of_left_thickness, sum_of_right_thickness,3)
+    }
     return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
   }
 
@@ -1573,10 +1578,6 @@ export abstract class Class_NodeElement
             const input_link = this.getFirstInputLink()
             // use '!.source' because linter think it input_link can be undefined but we verified with hasInputLinks()
             const source_node = input_link!.source
-            if (!source_node.shape_visible) {
-              this.d3_selection.attr('transform', 'translate(0,0)')
-              return
-            }
             this._display.position.x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
             this._display.position.y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
           }
@@ -1585,11 +1586,7 @@ export abstract class Class_NodeElement
             const output_link = this.getFirstOutputLink()
             // use '!.target' because linter think it outputlink can be undefined but we verified with hasOutputLinks()
             const target_node = output_link!.target
-            if (!target_node.shape_visible) {
-              this.d3_selection.attr('transform', 'translate(0,0)')
-              return
-            }
-            this._display.position.x = target_node.position_x + this.position_relative_dx
+            this._display.position.x = target_node.position_x + this.position_relative_dx - this.getShapeWidthToUse()
             this._display.position.y = target_node.position_y + this.position_relative_dy
           }
         }
@@ -2317,7 +2314,7 @@ export abstract class Class_NodeElement
       const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
       label_pos_x = shape_width + label_pos_dx + this.name_label_horiz_shift
       if (this.name_label_horiz === 'left') {
-        label_pos_x = -label_pos_dx + this.name_label_horiz_shift
+        label_pos_x = 0 + this.name_label_horiz_shift
         label_anchor = 'end'
         label_align = 'end'
       }
@@ -2418,10 +2415,16 @@ export abstract class Class_NodeElement
    */
   private updateNameLabelPos(): [number, number, string] {
     const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getNameLabelPos()
-
     this.d3_selection_g_name_label?.select('.name_label_text')
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
+      .attr('dominant-baseline', label_baseline)
+      .attr('text-anchor', label_anchor)
+      .style('text-align', label_align)
+
+    this.d3_selection_g_name_label?.select('.name_label_text').selectAll('tspan')
+      .attr('x', label_pos_x)
+      .attr('dx', 0)
       .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
       .style('text-align', label_align)
@@ -2634,8 +2637,8 @@ export abstract class Class_NodeElement
     link_to_redraw
       .forEach(link => {
         link.draw()
-        if (link.source === this) this._output_links_handle[link.id].draw()
-        if (link.target === this) this._input_links_handle[link.id].draw()
+        if (link.source === this && this._output_links_handle[link.id]) this._output_links_handle[link.id].draw()
+        if (link.target === this && this._input_links_handle[link.id]) this._input_links_handle[link.id].draw()
       })
   }
 
@@ -4106,14 +4109,39 @@ export abstract class Class_NodeElement
 
   /**
    * Filter for node visibility, if node has IO links then check if at least one is visible
+   * the input (output) link is visible if 
+   * - the link is not null and has the visible tags (fluxTags ) //TODO check this
+   * - the source (target) has the visible tags (nodeTags Or levelTags )
    *
    * @readonly
    * @private
    * @memberof Class_NodeElement
    */
   private get no_zero_io_links() {
-    const io_links = this._links_order
-    return io_links.length == 0 || io_links.filter(link => link.is_not_null && link.are_related_tags_selected).length > 0
+    if (this.input_links_list.length + this.output_links_list.length == 0) {
+      return true
+    }
+    const input_links_visible = this.input_links_list.filter(link => 
+      link.is_not_null && 
+      link.are_related_tags_selected && 
+      link.source.are_related_tags_selected &&
+      link.source.is_related_level_selected
+
+    )
+    if (input_links_visible.length>0) {
+      return true
+    }
+    const output_links_visible = this.output_links_list.filter(link => 
+      link.is_not_null && 
+      link.are_related_tags_selected && 
+      link.target.are_related_tags_selected &&
+      link.target.is_related_level_selected
+
+    )
+    if (output_links_visible.length>0) {
+      return true
+    }
+    return false
   }
 
   private get tooltip_html() {
@@ -4554,6 +4582,8 @@ export class Class_NodeAttribute {
   public get value_label_vert() { return this._value_label_vert }
   public get value_label_horiz() { return this._value_label_horiz }
   public get value_label_background() { return this._value_label_background }
+  public get value_label_vert_shift() { return this._value_label_vert_shift }
+  public get value_label_horiz_shift() { return this._value_label_horiz_shift }
 
   // SETTERS ============================================================================
 

@@ -34,6 +34,7 @@ import {
   TagsCatalog
 } from './LegacyType'
 import {
+  default_dx,
   default_dy,
   default_relative_dx,
   default_relative_dy
@@ -111,6 +112,7 @@ const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
     relative_dx: default_relative_dx,
     relative_dy: default_relative_dy,
     dy: default_dy,
+    dx: default_dx,
 
     value_label_horiz_shift: 0,
     label_horiz_valeur_shift: 0,
@@ -233,7 +235,10 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     label_unit: '',
     custom_digit: false,
     nb_digit: 0,
-    dashed: false
+    dashed: false,
+
+    starting_tangeant: 0.25,
+    ending_tangeant: 0.25
   }
 }
 
@@ -430,7 +435,12 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.node_label_separator === undefined || data_to_convert.node_label_separator === null) {
     data_to_convert.node_label_separator = ' - '
   }
-  data_to_convert.node_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
+  if ( data_to_convert.node_label_separator_first == undefined) {
+    data_to_convert.node_label_separator_part = 'before'
+  } else {
+    data_to_convert.node_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
+  }
+  
   // Convert name variable for data version>0.9
   data_to_convert.filter_link_value = data_to_convert.display_style.filter
   data_to_convert.filter_label = data_to_convert.display_style.filter_label
@@ -811,6 +821,34 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 //     data.display_style.filter_label = flux_max / 10
 //   }
 // }
+const setTrade = (data:SankeyData) => {
+  data.style_node['NodeImportStyle'].position = 'absolute'
+  data.style_node['NodeImportStyle'].shape_visible = false
+  data.style_node['NodeImportStyle'].node_height = 1
+  data.style_node['NodeImportStyle'].label_visible = true
+  data.style_node['NodeImportStyle'].label_horiz = 'right'
+  // data.style_node['NodeImportStyle'].label_horiz_shift = -200
+  // data.style_node['NodeImportStyle'].value_label_visible = true
+  // data.style_node['NodeImportStyle'].value_label_horiz = 'left'
+  // data.style_node['NodeImportStyle'].value_label_vert = 'middle'
+  data.style_node['NodeImportStyle'].value_label_horiz_shift = -20
+
+  data.style_node['NodeExportStyle'].position = 'absolute'
+  data.style_node['NodeExportStyle'].shape_visible = false
+  data.style_node['NodeExportStyle'].node_height = 1
+  data.style_node['NodeExportStyle'].label_visible = true
+  data.style_node['NodeExportStyle'].label_horiz = 'left'
+  //data.style_node['NodeExportStyle'].name_label_horiz_shift = 200
+  // data.style_node['NodeExportStyle'].value_label_visible = true
+  // data.style_node['NodeExportStyle'].value_label_horiz = 'right'
+  // data.style_node['NodeExportStyle'].value_label_vert = 'middle'
+  data.style_node['NodeExportStyle'].value_label_horiz_shift = 20
+
+  data.style_link['LinkImportStyle'].orientation = 'hh'
+  //data.style_link['LinkImportStyle'].label_is_visible = false
+  data.style_link['LinkExportStyle'].orientation = 'hh'
+  //data.style_link['LinkExportStyle'].value_label_is_visible = false
+}
 
 const convert_tags: convert_tagsFuncType = (
   data: SankeyData
@@ -944,16 +982,18 @@ const convert_tags: convert_tagsFuncType = (
     }
     if (!Object.keys(data.style_node).includes('NodeImportStyle')) {
       data.style_node['NodeImportStyle'] = DefaultNodeImportStyle()
-      // if (!has_relative) {
-      //   data.style_node['NodeImportStyle'].position = 'absolute'
-      // }
     }
     if (!Object.keys(data.style_node).includes('NodeExportStyle')) {
       data.style_node['NodeExportStyle'] = DefaultNodeExportStyle()
-      // if (!has_relative) {
-      //   data.style_node['NodeExportStyle'].position = 'absolute'
-      // }
     }
+    if(!Object.keys(data.style_link).includes('LinkImportStyle')){
+      data.style_link['LinkImportStyle']=DefaultLinkImportStyle()
+    }
+    data.style_link['LinkImportStyle'].ending_tangeant = 1
+    if(!Object.keys(data.style_link).includes('LinkExportStyle')){
+      data.style_link['LinkExportStyle']=DefaultLinkExportStyle()
+    }
+    data.style_link['LinkExportStyle'].starting_tangeant = 1
   }
 
   if (data.nodeTags.Dimensions) {
@@ -1168,6 +1208,16 @@ const convert_tags: convert_tagsFuncType = (
     Object.values(data.levelTags).forEach(tag => tag.banner = 'level')
     data.nodeTags = Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner !== 'level' && nt[0] !== 'Primaire'))
   }
+  Object.entries(data.nodeTags).forEach(tagg=>{
+    // happen for RefFlux volaille
+    if ('siblings' in tagg[1] && tagg[1].siblings.length > 0) {
+      data.levelTags[tagg[0]] = tagg[1]
+      delete data.nodeTags[tagg[0]]
+    } else if (Object.keys(data.nodeTags[tagg[0]].tags)[0]=='1') {
+      data.levelTags[tagg[0]] = tagg[1]
+      delete data.nodeTags[tagg[0]]      
+    }
+  })
 
   // Assign colorMap to either fluxTags or nodesTags since now we can display color palette of both at the same time
   const list_fluxTag = Object.entries(data.fluxTags).filter(ft => ft[1].show_legend)
@@ -1187,16 +1237,17 @@ const convert_tags: convert_tagsFuncType = (
         n.tags['type de noeud'] = JSON.parse(JSON.stringify(n.tags['Type de noeud']))
         delete n.tags['Type de noeud']
         if (n.tags['type de noeud'][0] == 'echange') {
-          if (n.style == 'default') {
-            if (n.inputLinksId.length === 0) {
-              n.style = 'NodeImportStyle'
-            } else if (n.outputLinksId.length === 0) {
-              n.style = 'NodeExportStyle'
+          //if (n.style == 'default') {
+          if (n.inputLinksId.length === 0) {
+            n.style = 'NodeImportStyle'
+            if (n.outputLinksId.length !== 0) {
+              data.links[n.outputLinksId[0]].style = 'LinkImportStyle'
             }
-            // if (has_relative && has_position) {
-            //   AssignNodeLocalAttribute(n,'relative_dx',n.x)
-            //   AssignNodeLocalAttribute(n,'relative_dy',n.y)
-            // }
+          } else if (n.outputLinksId.length === 0) {
+            n.style = 'NodeExportStyle'
+            if (n.inputLinksId.length !== 0) {            
+              data.links[n.inputLinksId[0]].style = 'LinkExportStyle'
+            }
           }
         }
       }
@@ -1255,6 +1306,7 @@ const convert_nodes: convert_nodesFuncType = (
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes = Object.values(data.nodes).map(n => n.idNode)
   const list_links = Object.values(data.links)
+  let trade_set = false
   Object.values(data.nodes).forEach(n => {
     const n_depreciated = (n as unknown) as ConvertSankeyNode
 
@@ -1395,6 +1447,14 @@ const convert_nodes: convert_nodesFuncType = (
     if (n.y === undefined) {
       n.y = 0
     }
+    if ('position' in n) {
+      if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.position=='absolute' && !trade_set) {
+        trade_set = true
+        setTrade(data)
+      } else {
+        delete n.position
+      }
+    }
 
     delete n_depreciated.visible
 
@@ -1463,14 +1523,6 @@ const convert_nodes: convert_nodesFuncType = (
       Object.entries(n.dimensions).filter(nd => !nd[1] || (nd[1].parent_name && !list_key_nodes.includes(nd[1].parent_name))).forEach(nd => {
         delete n.dimensions[nd[0]]
       })
-    }
-    // Change style if node has default style & 'Type de noeud' tags
-    if (n.tags['Type de noeud'] && n.style === 'default') {
-      if (n.tags['Type de noeud'].includes('produit')) {
-        n.style = 'NodeProductStyle'
-      } else if (n.tags['Type de noeud'].includes('secteur')) {
-        n.style = 'NodeSectorStyle'
-      }
     }
 
     //remove tags which are not in data.NodeTags
@@ -1603,7 +1655,9 @@ const convert_nodes: convert_nodesFuncType = (
       .forEach(nt => {
         const leveltagg_tags_ids = nt[1]
         const leveltagg_id = nt[0]
-
+        if (!n.dimensions[leveltagg_id] ) {
+          n.dimensions[leveltagg_id] = {}
+        }
         if (leveltagg_tags_ids.includes('0')) {
           // if level is 0 we craate the dimension with antitag set_to_true.
           // in old version the dimensions was not existing as the visibility was
@@ -1651,29 +1705,42 @@ const convert_nodes: convert_nodesFuncType = (
             }
           }
         }
-        // TODO Gerer les noeud qui sont dans plusieurs dimensions du même groupe (exemple pour 'Primaire' : dimensions 2 & 3)
-        delete n.tags[leveltagg_id]
 
+        delete n.tags[leveltagg_id]
         // Code below is to correct bad parentship relation coming from legacy
         // Get lists of parents
-        const node_parents_id = (node: SankeyNode) => {
-          return Object.values(node.dimensions).filter(dim => dim.parent_name).map(dim => dim.parent_name)
-        }
+        // const node_parents_id = (node: SankeyNode) => {
+        //   return Object.values(node.dimensions).filter(dim => dim.parent_name).map(dim => dim.parent_name)
+        // }
         // for a given parent retrieves the corresponding dim
-        const parent_dim = (node: SankeyNode, parent_id: string) => {
-          return Object.entries(node.dimensions).filter(dim => dim[1].parent_name == parent_id).map(dim => dim[0])
+        // const parent_dim = (node: SankeyNode, parent_id: string) => {
+        //   return Object.entries(node.dimensions).filter(dim => data.levelTags[dim[0]].activated && dim[1].parent_name == parent_id).map(dim => dim[0])
+        // }
+        const pid = n.dimensions[leveltagg_id].parent_name
+        if (!pid) {
+          return
         }
-        const parents_id = node_parents_id(n)
-        parents_id.forEach(parent_id => {
-          const grand_parents_id = node_parents_id(data.nodes[parent_id!])
-          const intersection = new Set(grand_parents_id).intersection(new Set(parents_id))
-          if (intersection.size > 0) {
-            // if a grand parent is the same as a parent we caught a bad parentship relation
-            // and we delete it
-            const parent_node = [...intersection][0]
-            delete n.dimensions[parent_dim(n, parent_node!)[0]]
+        Object.entries(data.nodes[pid].dimensions).forEach(([pk,pdim])=>{
+          if (!data.levelTags[pk].activated) {
+            return
           }
+          if (pdim.antitag || (data.nodes[pid].tags[pk] && data.nodes[pid].tags[pk][0]=='0')) {
+            return
+          }
+          const grand_parent_id = pdim.parent_name
+          if (grand_parent_id == undefined) {
+            return
+          }
+          Object.entries(n.dimensions).forEach(([k,dim])=>{
+            if (!data.levelTags[k].activated) {
+              return
+            }
+            if (grand_parent_id == dim.parent_name) {
+              delete n.dimensions[k]
+            }
+          })
         })
+
       })
 
 
@@ -1701,7 +1768,14 @@ const convert_nodes: convert_nodesFuncType = (
         n.local.name_label_horiz_shift = n.local.label_horiz_shift
       }
     }
-
+    // Change style if node has default style & 'Type de noeud' tags
+    if(n.tags['type de noeud'] && n.style==='default'){
+      if(n.tags['type de noeud'].includes('produit')){
+        n.style='NodeProductStyle'
+      }else if(n.tags['type de noeud'].includes('secteur')){
+        n.style='NodeSectorStyle'
+      }
+    }
   }
   )
 }
@@ -1929,7 +2003,7 @@ const convert_links: convert_linksFuncType = (
       delete l_convert.display_unit
     }
 
-    if ('natural_unit' in l_convert) {
+    if ('natural_unit' in l_convert && l_convert.natural_unit !== '') {
       // natural unit is now stored in label_unit
       // conversion factor is stored in label_unit_factor which is the invert of conv
       l.local!.label_unit_visible = true
@@ -1945,20 +2019,20 @@ const convert_links: convert_linksFuncType = (
     }
 
     // Rename orientation mode
-    if (l && l.local && !('orientation' in l.local)) {
-      if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
-        AssignLinkLocalAttribute(l, 'orientation', 'vh')
-      }
-      else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
-        AssignLinkLocalAttribute(l, 'orientation', 'hv')
-      }
-      else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
-        AssignLinkLocalAttribute(l, 'orientation', 'vv')
-      }
-      else {
-        AssignLinkLocalAttribute(l, 'orientation', 'hh')
-      }
-    }
+    // if (l && l.local && !('orientation' in l.local)) {
+    //   if (((source_node as unknown) as ConvertSankeyNode).orientation === 'horizontal' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
+    //     AssignLinkLocalAttribute(l, 'orientation', 'vh')
+    //   }
+    //   else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'horizontal') {
+    //     AssignLinkLocalAttribute(l, 'orientation', 'hv')
+    //   }
+    //   else if (((source_node as unknown) as ConvertSankeyNode).orientation === 'vertical' && ((target_node as unknown) as ConvertSankeyNode).orientation === 'vertical') {
+    //     AssignLinkLocalAttribute(l, 'orientation', 'vv')
+    //   }
+    //   else {
+    //     AssignLinkLocalAttribute(l, 'orientation', 'hh')
+    //   }
+    // }
 
     // Delete link reverse entry
     if ('link_reverse' in l) {
@@ -2088,7 +2162,9 @@ const convert_links: convert_linksFuncType = (
 
       font_family: '',
       label_unit_visible: true,
-      label_unit: ''
+      label_unit: '',
+      
+      gradient: false
     }
 
     // Move link attr to local sub strcut
@@ -2164,6 +2240,9 @@ const convert_links: convert_linksFuncType = (
     // Delete color attribute if unecessary
     if (l.local && (l.local.color === '#808080' || l.local.color === 'grey' || l.local.color === DefaultLinkStyle().color)) {
       delete l.local.color
+    }
+    if (l.drag_label_offset) {
+      l.position_offset_label = l.drag_label_offset
     }
   })
 
