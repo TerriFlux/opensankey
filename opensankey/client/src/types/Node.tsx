@@ -713,7 +713,7 @@ export abstract class Class_NodeElement
                           childDim?.setForceToShowParent()
                         }
                         cur_parent_tag = child_tag
-                        // eslint-disable-next-line @typescript-eslint/no-this-alias
+                        // eslint-disable-next-line
                         cur_parent = this
                       })
                     }
