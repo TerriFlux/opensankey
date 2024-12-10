@@ -36,7 +36,7 @@ import {
   FCType_ApplyLayoutDialog,
   FType_DiagramSelector
 } from './types/SankeyMenuDialogsTypes'
-import { OSTooltip } from '../types/Utils'
+import { default_style_id, OSTooltip } from '../types/Utils'
 import {
   FCType_ApplySaveJSONDialog,
   FCType_ExcelModal
@@ -56,19 +56,19 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   diagramSelector,
   apply_transformation_additional_elements
 }: FCType_ApplyLayoutDialog) => {
-  const { data_var_to_update, t, menu_configuration} = applicationData
+  const { data_var_to_update, t, menu_configuration } = applicationData
   const { node_styles_dict, link_styles_dict } = applicationData.drawing_area.sankey
-  const {ref_to_updater_modal_apply_layout}=menu_configuration
+  const { ref_to_updater_modal_apply_layout } = menu_configuration
 
   const [, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
-  const [parametric, set_parametric] = useState(node_styles_dict['default'].position.type == 'parametric')
+  const [parametric, set_parametric] = useState(node_styles_dict[default_style_id].position.type == 'parametric')
   const [trade_close, set_trade_close] = useState(true)
 
-  ref_to_updater_modal_apply_layout.current=()=>setForceUpdate(b=>!b)
-  
-  if (parametric !== (node_styles_dict['default'].position.type == 'parametric')) {
-    set_parametric(node_styles_dict['default'].position.type == 'parametric')
+  ref_to_updater_modal_apply_layout.current = () => setForceUpdate(b => !b)
+
+  if (parametric !== (node_styles_dict[default_style_id].position.type == 'parametric')) {
+    set_parametric(node_styles_dict[default_style_id].position.type == 'parametric')
   }
 
   const simple_element_to_transform = [
@@ -84,7 +84,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 
   const setTrade = (trade_close: boolean) => {
     if (trade_close) {
-      // nodes of type 
+      // nodes of type
       node_styles_dict['NodeImportStyle'].position.type = 'relative'
       node_styles_dict['NodeImportStyle'].shape_visible = false
       node_styles_dict['NodeImportStyle'].shape_min_height = 40
@@ -133,9 +133,9 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
     }
     const process_nodes = applicationData.drawing_area.sankey.nodes_list
     const echangeTag = applicationData.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
-    const exchange_nodes = process_nodes.filter(n=>n.hasGivenTag(echangeTag))
+    const exchange_nodes = process_nodes.filter(n => n.hasGivenTag(echangeTag))
     // Position of trade nodes need to be recomputed
-    exchange_nodes.forEach(n=>n.applyPosition())
+    exchange_nodes.forEach(n => n.applyPosition())
     applicationData.drawing_area.draw()
   }
 
@@ -615,11 +615,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
               <Button
                 variant={'menuconfigpanel_option_button'}
                 onClick={() => {
-                  applicationData.function_on_wait.current = () => {
-                    applicationData.drawing_area.computeAutoSankey(false)
-                  }
-                  applicationData.launch_waiting_function.current({ success: applicationData.t('toast.comp_n_pos'), loading: applicationData.t('toast.node_pos_computed') })
-
+                  applicationData.drawing_area.computeAutoSankey(false)
                 }}>
                 {t('MEP.PA')}
               </Button>

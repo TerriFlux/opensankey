@@ -42,10 +42,7 @@ export const initializeApplicationData: FType_InitializeApplicationData = (
   const application_data = new Class_ApplicationDataOS(window.SankeyToolsStatic)
 
   if (initial_data !== undefined) {
-    application_data.function_on_wait.current = () => {
-      application_data.fromJSON(initial_data)
-    }
-    application_data.launch_waiting_function.current({ success: application_data.t('toast.loaded'), loading: application_data.t('toast.loading') })
+    application_data.fromJSON(initial_data)
   }
   return application_data
 }

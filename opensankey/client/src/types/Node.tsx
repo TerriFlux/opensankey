@@ -503,7 +503,7 @@ export abstract class Class_NodeElement
     // Dimension - relations
     let dimensions: { [_: string]: Type_JSON } = {}
     if (this.is_child) {
-      //On parse les tags groupes et on écrit la dimension pour ce tag groupe. 
+      //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
       //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
       const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim=>dim.related_level_tagg.id))]
       all_child_taggs.forEach(tagg_id=>{
@@ -522,9 +522,13 @@ export abstract class Class_NodeElement
                 const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
                 dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
               }
+            } else {
+              const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
+              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
             }
+          }
           )
-        }
+      }
       )
     }
     else {
@@ -713,6 +717,7 @@ export abstract class Class_NodeElement
                           childDim?.setForceToShowParent()
                         }
                         cur_parent_tag = child_tag
+                        // eslint-disable-next-line @typescript-eslint/no-this-alias
                         cur_parent = this
                       })
                     }
@@ -2984,8 +2989,8 @@ export abstract class Class_NodeElement
       })
     Object.values(this._dimensions_as_child)
       .forEach(dimension => {
-            level_tags_list.push(dimension.child_level_tag as Class_LevelTag)
-          })
+        level_tags_list.push(dimension.child_level_tag as Class_LevelTag)
+      })
     return [...new Set(level_tags_list)]
   }
 
@@ -4068,9 +4073,9 @@ export abstract class Class_NodeElement
             has_activated_dimensions = true
           }
         })
-        ok_activated_dimensions = ok_activated_dimensions && child_tag_activated_dimensions
-        ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
-      })
+      ok_activated_dimensions = ok_activated_dimensions && child_tag_activated_dimensions
+      ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
+    })
     // Check dimensions where node is tagged as a parent
     Object.values(this._dimensions_as_parent)
       .forEach(dim => {
