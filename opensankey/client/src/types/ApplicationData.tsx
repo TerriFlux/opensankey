@@ -327,8 +327,11 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   protected _saveInCache() {
+    // Push to storage
     localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
     localStorage.setItem('last_save', 'true')
+    // Update logo save in cache
+    this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   /**
@@ -734,8 +737,6 @@ export abstract class Class_ApplicationData
       evt.preventDefault()
       // Save in cache
       app_ref.saveInCache()
-      // Update logo save in cache
-      app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     }
     // event to download current sankey in JSON --------------------------------------
     else if (evtCtrlShiftS) {
