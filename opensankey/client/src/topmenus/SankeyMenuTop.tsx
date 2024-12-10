@@ -1729,33 +1729,6 @@ export const post_process_export_svg = () => {
   d3.select(' .opensankey#svg-container svg').style('border', '2px')
 }
 
-/**
- * Launch a process waiting pop-up window (toast) on the
- *
- * @param {} new_data
- * @param {} toast
- * @param {} [intake]
- */
-export const launchToastConstructor: FType_LaunchToastConstructor = (
-  new_data,
-  toast,
-  intake?
-) => {
-  const { t } = new_data
-  const defaultToastText = {
-    success: { title: intake?.success ?? t('toast.toast_loading_success'), description: t('toast.toast_loading_success_desc') },
-    error: { title: t('toast.toast_loading_failed'), description: t('toast.toast_loading_failed_desc') },
-    loading: { title: intake?.loading ?? t('toast.toast_loading_waiting'), description: t('toast.toast_loading_waiting_desc') },
-  }
-  const tmp = new Promise((resole) => {
-    setTimeout(() => {
-      new_data.function_on_wait.current()
-      resole(200)
-    }, 2)
-  })
-  toast.promise(tmp, defaultToastText)
-}
-
 export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
   new_data,
   processFunctions,
