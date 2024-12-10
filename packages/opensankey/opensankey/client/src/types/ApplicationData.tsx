@@ -53,6 +53,7 @@ export const default_save_with_values = true
 export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
 
 const default_toast_duration: number = 1000 // 1sec
+const toast_bypass: boolean = true
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
@@ -90,7 +91,6 @@ export abstract class Class_ApplicationData
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
-
 
   // Save JSON options
   public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
@@ -162,6 +162,7 @@ export abstract class Class_ApplicationData
   // Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
   private _toast = useToast()
   private _toast_processes: string[] = []
+  private _toast_bypass: boolean = toast_bypass
 
   // Guided visite steps to show app
   private _steps: StepType[] = []
@@ -557,7 +558,10 @@ export abstract class Class_ApplicationData
     const funct_id = randomId()
     this._toast_processes.push(funct_id)
     // Add to the processing queue
-    this._sendWaitingToast(funct, funct_id, intake)
+    if (this._toast_bypass)
+      funct()
+    else
+      this._sendWaitingToast(funct, funct_id, intake)
   }
 
   /**
