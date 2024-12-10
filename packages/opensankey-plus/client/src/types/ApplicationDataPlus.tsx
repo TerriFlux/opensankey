@@ -449,7 +449,7 @@ export abstract class Class_ApplicationDataPlus
         // Reset to Edition mode
         this._drawing_area.setToModeEdition(false)
         // Draw new-sankey
-        this._drawing_area.draw()
+        this._drawing_area.draw(false)
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
         this._menu_configuration.updateComponentRelatedToViews()
