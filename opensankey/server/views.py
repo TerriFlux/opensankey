@@ -608,14 +608,13 @@ def _html_to_image(
     # Keep css style when exporting
     css = [
     ]
-    #If find css file then add it before convert to image 
+    # If find css file then add it before convert to image
     if os.path.exists(os.getcwd()+'/'+'client/build/static'):
         tmp = (os.listdir('client/build/static/css'))
         for s in tmp:
-            if('main' in s ):
+            if ('main' in s ):
                 css.append('client/build/static/css/'+s)
-                
-    
+
     # Common options for conversions
     options = {
         'enable-local-file-access': ''}
