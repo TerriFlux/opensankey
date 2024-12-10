@@ -990,6 +990,9 @@ export abstract class Class_DrawingArea
   public checkAndUpdateAreaSize() {
 
     const bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+    if (bbox == undefined) {
+      return
+    }
     const fitting_width = this.window_fitting_width // acces speeding computation
     const fitting_height = this.window_fitting_height // acces speeding computation
 
