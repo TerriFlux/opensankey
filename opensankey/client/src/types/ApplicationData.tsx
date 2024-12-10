@@ -53,7 +53,8 @@ export const default_save_with_values = true
 export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
 
 const default_toast_duration: number = 1000 // 1sec
-const toast_bypass: boolean = true
+const default_toast_waiting_delay: number = 500 // 500ms
+const toast_bypass: boolean = false
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
@@ -586,7 +587,7 @@ export abstract class Class_ApplicationData
     if (this._toast_processes[0] !== funct_id) {
       // Create a recursive timeout as delaying method to ensure that
       // all functions are called with respect to their creation order
-      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), 1000)
+      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
     }
     // Otherwise send
     else {
