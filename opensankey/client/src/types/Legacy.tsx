@@ -455,6 +455,27 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     data_to_convert.mask_legend = !data_to_convert.mask_legend
   }
 
+  // Group legend attr in a var
+  const list_legacy_legend_var = [
+    'legend_width',
+    'legend_position',
+    'mask_legend',
+    'display_legend_scale',
+    'legend_police',
+    'legend_bg_border',
+    'legend_bg_color',
+    'legend_bg_opacity',
+    'legend_show_dataTags']
+
+
+  json_object.legend = {}
+  const legend_var = json_object.legend
+  for (const i in list_legacy_legend_var) {
+    if (json_object[list_legacy_legend_var[i]] !== undefined) {
+      legend_var[list_legacy_legend_var[i]] = json_object[list_legacy_legend_var[i]]
+    }
+  } 
+
   clean_data_local(data_to_convert)
 }
 
