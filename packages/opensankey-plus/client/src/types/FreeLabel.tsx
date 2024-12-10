@@ -295,8 +295,8 @@ export class Class_ContainerElement
       .attr('id', this.id)
       .attr('fill-opacity', this._opacity / 100)
       .attr('fill', this._color)
-      .style('stroke', this._color_border)
-      .style('stroke-width', this.is_selected ? default_selected_stroke_width : ((this._transparent_border) ? 0 : 1))
+      .attr('stroke', this._color_border)
+      .attr('stroke-width', this.is_selected ? default_selected_stroke_width : ((this._transparent_border) ? 0 : 1))
   }
 
   /**
@@ -357,8 +357,8 @@ export class Class_ContainerElement
   private drawContentText() {
     this.d3_selection?.append('foreignObject')
       .classed('content', true)
-      .style('width', this._label_width + 'px')
-      .style('height', this._label_height + 'px')
+      .attr('width', this._label_width + 'px')
+      .attr('height', this._label_height + 'px')
       .attr('id', this.id + '_text')
       .append('xhtml:div')
       .attr('class', 'ql-editor')
