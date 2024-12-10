@@ -2418,9 +2418,15 @@ export abstract class Class_NodeElement
   private updateNameLabelPos(): [number, number, string] {
     const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getNameLabelPos()
 
-    this.d3_selection_g_name_label?.selectAll('.name_label_text, tspan') //also select tspn to add some attr that doesn't affect it dispaly but is usefull when we convert svg to image
+    this.d3_selection_g_name_label?.selectAll('.name_label_text')
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
+      .attr('dominant-baseline', label_baseline)
+      .attr('text-anchor', label_anchor)
+      .attr('text-align', label_align)
+    this.d3_selection_g_name_label?.select('.name_label_text').selectAll('tspan')
+      .attr('x', label_pos_x)
+      .attr('dx', 0)
       .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
       .attr('text-align', label_align)
