@@ -1644,7 +1644,7 @@ export abstract class Class_DrawingArea
     this.height = (this.window_fitting_height < possible_height) ? possible_height : this.window_fitting_height
 
     this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
-    this.ComputeParametrization()
+    this.computeParametrization()
   }
 
   /**
@@ -1652,7 +1652,7 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public ArrangeTrade (
+  public arrangeTrade (
     compute_xy : boolean
   ) {
     if (!this.sankey.node_taggs_dict['type de noeud']) {
@@ -1711,7 +1711,7 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public ComputeParametrization() {
+  public computeParametrization() {
 
     let smaller_x : number
     this.sankey.visible_nodes_list.forEach(n=>{

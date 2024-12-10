@@ -376,7 +376,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
     new_data.drawing_area.SplitTrade()
     // Computes u v,x and initial y for trade nodes
-    new_data.drawing_area.ArrangeTrade(true)
+    new_data.drawing_area.arrangeTrade(true)
     const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
     new_data.drawing_area.sankey.visible_nodes_list.forEach((n,i,a)=> {
       n.reorganizeIOLinks()
@@ -478,7 +478,7 @@ export const UploadExemple: FType_UploadExemple = (
           // Clear datas & apply read datas
           new_data.drawing_area.bypass_redraws = true
           new_data.fromJSON(JSON_data as Type_JSON)
-          new_data.drawing_area.ArrangeTrade(false)
+          new_data.drawing_area.arrangeTrade(false)
           new_data.drawing_area.bypass_redraws = false
           new_data.drawing_area.draw()
       }
