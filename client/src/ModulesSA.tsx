@@ -26,7 +26,7 @@ import { initializeAdditionalMenusOSP } from './deps/OpenSankey+/OSPModule'
 
 import { Class_ApplicationDataSA } from './ApplicationData'
 import { LoginOutButton } from './components/Login/Login'
-import { ClickSaveExcel } from './deps/OpenSankey+/deps/OpenSankey/dialogs/SankeyPersistence'
+import { JSONtoExcel } from './deps/OpenSankey+/deps/OpenSankey/dialogs/SankeyPersistence'
 import { Type_GenericApplicationDataOS } from './deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
 
 
@@ -45,12 +45,7 @@ export const initializeApplicationDataSA = (
 ) => {
   // Read data from cache if it exist
   if (initial_data !== undefined) {
-    new_data_app.function_on_wait.current = () => {
-      new_data_app.fromJSON(initial_data)
-    }
-
-    new_data_app.launch_waiting_function.current({ success: new_data_app.t('toast.loaded'), loading: new_data_app.t('toast.loading') })
-
+    new_data_app.fromJSON(initial_data)
   }
   return new_data_app
 }
@@ -302,7 +297,7 @@ export const CardsTemplateBuilder = (
               <Button variant='menuconfigpanel_option_button_secondary'
                 onClick={() => {
                   // Dowload template to excel format
-                  ClickSaveExcel('/opensankey/', list_template_data[idx])
+                  JSONtoExcel(list_template_data[idx], '/opensankey/')
                 }}>{t('dl')}</Button>
             </ButtonGroup>
           </CardFooter>
