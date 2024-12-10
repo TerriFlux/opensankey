@@ -612,7 +612,7 @@ def _html_to_image(
     if os.path.exists(os.getcwd()+'/'+'client/build/static'):
         tmp = (os.listdir('client/build/static/css'))
         for s in tmp:
-            if ('main' in s ):
+            if ('main' in s):
                 css.append('client/build/static/css/'+s)
 
     # Common options for conversions
