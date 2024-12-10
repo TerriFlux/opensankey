@@ -525,7 +525,6 @@ export abstract class Class_DrawingArea
       this.application_data.sendWaitingToast(
         () => {
           this._draw()
-          this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
         },
         {
           success: {
