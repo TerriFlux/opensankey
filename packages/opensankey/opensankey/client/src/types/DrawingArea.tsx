@@ -513,10 +513,41 @@ export abstract class Class_DrawingArea
   // PUBLIC METHODS ====================================================================
 
   /**
-   * Reset drawing area
+   * Reset drawing area & add waiting toast
    * @memberof Class_DrawingArea
    */
-  public draw() {
+  public draw(
+    with_spinner: boolean = true
+  ) {
+    if (with_spinner) {
+      this.application_data.sendWaitingToast(
+        () => {
+          this._draw()
+          this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        },
+        {
+          success: {
+            title: this.application_data.t('toast.draw.success.title'),
+            desc: this.application_data.t('toast.draw.success.desc')
+          },
+          loading: {
+            title: this.application_data.t('toast.draw.loading.title'),
+            desc: this.application_data.t('toast.draw.loading.desc')
+          }
+        }
+      )
+    }
+    else {
+      this._draw()
+    }
+  }
+
+  /**
+   * Reset drawing area
+   * @protected
+   * @memberof Class_DrawingArea
+   */
+  protected _draw() {
 
     // Clean drawing area
     this.unDraw()
@@ -959,9 +990,6 @@ export abstract class Class_DrawingArea
   public checkAndUpdateAreaSize() {
 
     const bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-    if (bbox == undefined) {
-      return
-    }
     const fitting_width = this.window_fitting_width // acces speeding computation
     const fitting_height = this.window_fitting_height // acces speeding computation
 
@@ -1272,6 +1300,25 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public computeAutoSankey(
+    launched_from_process: boolean
+  ) {
+    this.application_data.sendWaitingToast(
+      () => {
+        this._computeAutoSankey(launched_from_process)
+        this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      },
+      {
+        success: {
+          title: this.application_data.t('toast.compute_auto_sankey.success.title')
+        },
+        loading: {
+          title: this.application_data.t('toast.compute_auto_sankey.loading.title')
+        }
+      }
+    )
+  }
+
+  protected _computeAutoSankey(
     launched_from_process: boolean
   ) {
     // Calcul de la valeur max des flux

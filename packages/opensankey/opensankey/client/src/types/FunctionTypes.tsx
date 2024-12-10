@@ -1,6 +1,5 @@
 
 import { Dispatch, MutableRefObject, SetStateAction, FunctionComponent } from 'react'
-import { CreateToastFnReturn } from '@chakra-ui/react'
 
 import {
   Type_AdditionalMenus,
@@ -9,9 +8,6 @@ import {
 import {
   Type_JSON
 } from './Utils'
-import {
-  Type_TextForToastPromise
-} from './MenuConfig'
 import {
   FType_ClickSaveDiagram,
   FType_RetrieveExcelResults,
@@ -81,12 +77,6 @@ export type FCType_ApplySaveJSONDialog = {
 export type FType_InitializeApplicationData = (
   initial_data: Type_JSON | undefined
 ) => Type_GenericApplicationDataOS
-
-export type FType_LaunchToastConstructor = (
-  new_data: Type_GenericApplicationDataOS,
-  toast: CreateToastFnReturn,
-  intake?: Type_TextForToastPromise
-) => void
 
 export type FType_InitializeReinitialization = (
   new_data: Type_GenericApplicationDataOS
