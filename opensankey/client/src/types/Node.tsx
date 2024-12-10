@@ -2203,8 +2203,6 @@ export abstract class Class_NodeElement
     // Move all elements so none of them are outside the DA
     this.drawing_area.recenterElements()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-
     this._drag = false
   }
 
@@ -4111,7 +4109,7 @@ export abstract class Class_NodeElement
 
   /**
    * Filter for node visibility, if node has IO links then check if at least one is visible
-   * the input (output) link is visible if 
+   * the input (output) link is visible if
    * - the link is not null and has the visible tags (fluxTags ) //TODO check this
    * - the source (target) has the visible tags (nodeTags Or levelTags )
    *
@@ -4123,9 +4121,9 @@ export abstract class Class_NodeElement
     if (this.input_links_list.length + this.output_links_list.length == 0) {
       return true
     }
-    const input_links_visible = this.input_links_list.filter(link => 
-      link.is_not_null && 
-      link.are_related_tags_selected && 
+    const input_links_visible = this.input_links_list.filter(link =>
+      link.is_not_null &&
+      link.are_related_tags_selected &&
       link.source.are_related_tags_selected &&
       link.source.is_related_level_selected
 
@@ -4133,9 +4131,9 @@ export abstract class Class_NodeElement
     if (input_links_visible.length>0) {
       return true
     }
-    const output_links_visible = this.output_links_list.filter(link => 
-      link.is_not_null && 
-      link.are_related_tags_selected && 
+    const output_links_visible = this.output_links_list.filter(link =>
+      link.is_not_null &&
+      link.are_related_tags_selected &&
       link.target.are_related_tags_selected &&
       link.target.is_related_level_selected
 
