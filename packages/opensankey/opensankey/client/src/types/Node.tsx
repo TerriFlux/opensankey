@@ -507,22 +507,22 @@ export abstract class Class_NodeElement
       //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
       const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim=>dim.related_level_tagg.id))]
       all_child_taggs.forEach(tagg_id=>{
-          Object.values(this._dimensions_as_child).filter(dim=>dim.related_level_tagg.id == tagg_id)
-            .forEach(dimension => {
-              if (!(dimension.related_level_tagg.id in dimensions)) {
-                dimensions[dimension.related_level_tagg.id] ={
-                  'parent_name': dimension.parent.id,
-                  'parent_tag': dimension.parent_level_tag.id,
-                  'children_tags': [dimension.child_level_tag.id],
-                  'antitag': false,
-                  'force_show_children': dimension.force_show_children,
-                  'force_show_parent': dimension.force_show_parent
-                }
-              } else {
-                const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
-                dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
+        Object.values(this._dimensions_as_child).filter(dim=>dim.related_level_tagg.id == tagg_id)
+          .forEach(dimension => {
+            if (!(dimension.related_level_tagg.id in dimensions)) {
+              dimensions[dimension.related_level_tagg.id] ={
+                'parent_name': dimension.parent.id,
+                'parent_tag': dimension.parent_level_tag.id,
+                'children_tags': [dimension.child_level_tag.id],
+                'antitag': false,
+                'force_show_children': dimension.force_show_children,
+                'force_show_parent': dimension.force_show_parent
               }
+            } else {
+              const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
+              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
             }
+          }
           )
       }
       )
