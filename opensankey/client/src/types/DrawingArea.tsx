@@ -2293,7 +2293,6 @@ export abstract class Class_DrawingArea
     event: d3.D3ZoomEvent<SVGSVGElement, unknown>
   ) {
     if (this.d3_selection) {
-      this._legend.scale = (1 / event.transform.k)
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())

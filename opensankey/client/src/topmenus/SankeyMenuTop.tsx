@@ -1024,8 +1024,10 @@ const clickSavePNG = (
   const form_data = new FormData()
   form_data.append('html', blob)
   let size_to_send = ''
+  const legend_w = !new_data.drawing_area.legend.masked ? new_data.drawing_area.legend.width : 0
+
   if (h !== undefined && v !== undefined) {
-    size_to_send = h + ' ' + v
+    size_to_send = parseInt(String(h + legend_w)) + ' ' + parseInt(String(v))
   }
 
   form_data.append('size', size_to_send)
@@ -1698,13 +1700,27 @@ const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
 
 export const pre_process_export_svg = (new_data: Type_GenericApplicationDataOS) => {
   new_data.drawing_area.purgeSelection()
-  const svg = new_data.drawing_area.d3_selection
+  new_data.drawing_area.areaAutoFit()
+
+  const svg = new_data.drawing_area.d3_selection_zoom_area
+  const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
+  const scale_da = new_data.drawing_area.getZoomScale()
+
+  // Legend width (if present)
+  const legend_w = !new_data.drawing_area.legend.masked ? new_data.drawing_area.legend.width : 0
+
+  svg_clone?.select('#g_drawing').attr('transform', 'translate(' + legend_w + ',0' + ') scale(' + scale_da + ')')
+  svg_clone?.select('#grp_legend .gg_legend').attr('transform', 'translate(0,0)')
+
   const svg_with_header = '<svg version="1.1" ' +
-    ' height=' + new_data.drawing_area.height.toString() +
-    ' width=' + new_data.drawing_area.width.toString() +
+    ' height=' + (new_data.drawing_area.height * scale_da + 5).toString() +
+    ' width=' + ((new_data.drawing_area.width * scale_da) + legend_w + 5).toString() +
     ' xmlns="http://www.w3.org/2000/svg">' +
-    (svg?.html() ?? '') +
+    (svg_clone?.node()?.innerHTML ?? '') +
     '</svg>'
+
+  svg_clone?.remove() // 
+
   return svg_with_header
 }
 
@@ -1713,6 +1729,32 @@ export const post_process_export_svg = () => {
   d3.select(' .opensankey#svg-container svg').style('border', '2px')
 }
 
+/**
+ * Launch a process waiting pop-up window (toast) on the
+ *
+ * @param {} new_data
+ * @param {} toast
+ * @param {} [intake]
+ */
+export const launchToastConstructor: FType_LaunchToastConstructor = (
+  new_data,
+  toast,
+  intake?
+) => {
+  const { t } = new_data
+  const defaultToastText = {
+    success: { title: intake?.success ?? t('toast.toast_loading_success'), description: t('toast.toast_loading_success_desc') },
+    error: { title: t('toast.toast_loading_failed'), description: t('toast.toast_loading_failed_desc') },
+    loading: { title: intake?.loading ?? t('toast.toast_loading_waiting'), description: t('toast.toast_loading_waiting_desc') },
+  }
+  const tmp = new Promise((resole) => {
+    setTimeout(() => {
+      new_data.function_on_wait.current()
+      resole(200)
+    }, 2)
+  })
+  toast.promise(tmp, defaultToastText)
+}
 
 export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
   new_data,
