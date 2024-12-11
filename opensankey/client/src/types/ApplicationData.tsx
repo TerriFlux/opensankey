@@ -53,6 +53,8 @@ export const default_save_with_values = true
 export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
 
 const default_toast_duration: number = 1000 // 1sec
+const default_toast_waiting_delay: number = 500 // 500ms
+const toast_bypass: boolean = false
 
 // SPECIFIC FUNCTIONS ******************************************************************/
 
@@ -90,7 +92,6 @@ export abstract class Class_ApplicationData
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
-
 
   // Save JSON options
   public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
@@ -162,6 +163,7 @@ export abstract class Class_ApplicationData
   // Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
   private _toast = useToast()
   private _toast_processes: string[] = []
+  private _toast_bypass: boolean = toast_bypass
 
   // Guided visite steps to show app
   private _steps: StepType[] = []
@@ -295,7 +297,10 @@ export abstract class Class_ApplicationData
   // SAVING METHODS =====================================================================
 
   /**
-   * Save in JSON in browser cache & Create waiting spinner
+   * Save in JSON in browser cache
+   *
+   * /!\ Add to waiting spinner queue
+   *
    * @memberof Class_ApplicationData
    */
   public saveInCache() {
@@ -323,12 +328,18 @@ export abstract class Class_ApplicationData
    * @memberof Class_ApplicationData
    */
   protected _saveInCache() {
+    // Push to storage
     localStorage.setItem('data', LZString.compress(JSON.stringify(this._toJSON())))
     localStorage.setItem('last_save', 'true')
+    // Update logo save in cache
+    this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   /**
-   * save to JSON format & create waiting spinner
+   * save to JSON format
+   *
+   * /!\ Add to waiting spinner queue
+   *
    * @memberof Class_ApplicationData
    */
   public saveToJSON() {
@@ -378,7 +389,10 @@ export abstract class Class_ApplicationData
   }
 
   /**
-   * Save as Excel format & Create waiting toast
+   * Save as Excel format
+   *
+   * /!\ Add to waiting spinner queue
+   *
    * @param {string} url_prefix
    * @param {string} [file_name='sankey']
    * @memberof Class_ApplicationData
@@ -449,6 +463,8 @@ export abstract class Class_ApplicationData
    * Reset value of drawing_area and substructur with data from JSON
    * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
    *
+   * /!\ Add to waiting spinner queue
+   *
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
@@ -475,16 +491,65 @@ export abstract class Class_ApplicationData
     this._drawing_area.fromJSON(json_object)
   }
 
+  /**
+   * Postprocessing drawing area after JSON affectation
+   * @protected
+   * @memberof Class_ApplicationData
+   */
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.draw(false)
     this.menu_configuration.updateAllMenuComponents()
   }
 
+  public initFromJSON(json_object: Type_JSON) {
+    this.sendWaitingToast(
+      () => {
+        // Read json file
+        this._fromJSON(json_object)
+        // Update drawing area and menus
+        this._afterFromJSON()
+      })
+  }
+
+  /**
+   * Update current drawing area data from a json_object
+   *
+   * /!\ Add to waiting spinner queue
+   *
+   * @param {Type_JSON} json_object
+   * @memberof Class_ApplicationData
+   */
+  public updateFromJSON(json_object: Type_JSON) {
+    this.sendWaitingToast(
+      () => {
+        // Processing
+        this._updateFromJSON(json_object)
+      })
+  }
+
+  /**
+   * Update current drawing area data from a json_object
+   * @param {Type_JSON} json_object
+   * @memberof Class_ApplicationData
+   */
+  protected _updateFromJSON(json_object: Type_JSON) {
+    if (json_object['layout'] !== undefined) {
+      const json_layout = json_object['layout'] as Type_JSON
+      const drawing_area_from_layout = this.createNewDrawingArea()
+      drawing_area_from_layout.bypass_redraws = true
+      drawing_area_from_layout.fromJSON(json_layout)
+      this.drawing_area.updateFrom(
+        drawing_area_from_layout,
+        ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
+      )
+    }
+  }
+
   // PUBLIC METHODS =====================================================================
 
   /**
-   * Create a waiting toast for given function.
+   * Create a waiting toast and add function to waiting queue.
    * @param {() => void} funct
    * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
    * @memberof Class_ApplicationData
@@ -497,7 +562,10 @@ export abstract class Class_ApplicationData
     const funct_id = randomId()
     this._toast_processes.push(funct_id)
     // Add to the processing queue
-    this._sendWaitingToast(funct, funct_id, intake)
+    if (this._toast_bypass)
+      funct()
+    else
+      this._sendWaitingToast(funct, funct_id, intake)
   }
 
   /**
@@ -519,7 +587,7 @@ export abstract class Class_ApplicationData
     if (this._toast_processes[0] !== funct_id) {
       // Create a recursive timeout as delaying method to ensure that
       // all functions are called with respect to their creation order
-      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), 1000)
+      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
     }
     // Otherwise send
     else {
@@ -670,8 +738,6 @@ export abstract class Class_ApplicationData
       evt.preventDefault()
       // Save in cache
       app_ref.saveInCache()
-      // Update logo save in cache
-      app_ref.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     }
     // event to download current sankey in JSON --------------------------------------
     else if (evtCtrlShiftS) {

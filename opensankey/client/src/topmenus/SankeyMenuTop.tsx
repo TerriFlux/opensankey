@@ -469,8 +469,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                     const JSON_data = JSON.parse(file_content)
                     new_data.drawing_area.bypass_redraws = true
                     new_data.fromJSON(JSON_data as Type_JSON)
-                    new_data.drawing_area.ArrangeTrade(false)
-                    new_data.drawing_area.bypass_redraws = false
+                    new_data.drawing_area.arrangeTrade(false)
                     new_data.drawing_area.draw()
                   }
                 })()
@@ -1719,7 +1718,7 @@ export const pre_process_export_svg = (new_data: Type_GenericApplicationDataOS) 
     (svg_clone?.node()?.innerHTML ?? '') +
     '</svg>'
 
-  svg_clone?.remove() // 
+  svg_clone?.remove() //
 
   return svg_with_header
 }
