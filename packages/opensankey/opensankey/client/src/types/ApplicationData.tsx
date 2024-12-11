@@ -473,6 +473,7 @@ export abstract class Class_ApplicationData
       () => {
         // Read json file
         this._fromJSON(json_object)
+        this.drawing_area.arrangeTrade(false)
         // Update drawing area and menus
         this._afterFromJSON()
       })

@@ -469,8 +469,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                     const JSON_data = JSON.parse(file_content)
                     new_data.drawing_area.bypass_redraws = true
                     new_data.fromJSON(JSON_data as Type_JSON)
-                    new_data.drawing_area.arrangeTrade(false)
-                    new_data.drawing_area.draw()
                   }
                 })()
                 reader.readAsText(files[0])
