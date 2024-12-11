@@ -60,6 +60,8 @@ export class Class_Legend
 
   // PRIVATE ATTRIBUTES =================================================================
 
+  private _pos_from_legacy = false
+
   // Legend Class attributes
   private _masked: boolean = true
   private _display_legend_scale: boolean = false
@@ -213,9 +215,35 @@ export class Class_Legend
     this._legend_show_dataTags = getBooleanFromJSON(json_legend, 'legend_show_dataTags', this._legend_show_dataTags)
     this._node_label_separator = getStringFromJSON(json_legend, 'node_label_separator', this._node_label_separator)
     this._info_link_value_void = getBooleanFromJSON(json_legend, 'info_link_value_void', this._info_link_value_void)
+
+    // Var only present if json is legacy
+    this._pos_from_legacy = getBooleanFromJSON(json_legend, 'legacy_legend', this._pos_from_legacy)
+
   }
 
   // PUBLIC METHODS =====================================================================
+
+  /**
+   * Function called in _afterFromJSON in ApplicationData,
+   * the function correctly place legend as if it was in legacy despite being not anymore relative to DA 
+   *
+   * @memberof Class_Legend
+   */
+  public posIfFromLegacy() {
+    if (this._pos_from_legacy) {
+      let x = 0, y = 0, k = 1
+      const tmp = this.drawing_area.d3_selection_zoom_area?.node()
+      if (tmp && tmp !== null) {
+        x = d3.zoomTransform(tmp).x
+        y = d3.zoomTransform(tmp).y
+        k = d3.zoomTransform(tmp).k
+      }
+      //Set pos of legend like it was in legacy (so we have to take into account old pos of legend & scale of DA)
+      this.setPosXY((this.display.position.x * k) + x, (this.display.position.y * k) + y)
+      this._pos_from_legacy = false
+    }
+
+  }
 
   /**
    * _drawLegendBg with timeout
@@ -632,7 +660,7 @@ export class Class_Legend
   }
 
   public get masked(): boolean { return this._masked }
-  public set masked(value: boolean) { this._masked = value; this.draw(); this.drawing_area.checkAndUpdateAreaSize()}
+  public set masked(value: boolean) { this._masked = value; this.draw(); this.drawing_area.checkAndUpdateAreaSize() }
 
   public get display_legend_scale(): boolean { return this._display_legend_scale }
   public set display_legend_scale(value: boolean) { this._display_legend_scale = value; this.draw() }
