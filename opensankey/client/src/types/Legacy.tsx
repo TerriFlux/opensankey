@@ -1498,7 +1498,15 @@ const convert_nodes: convert_nodesFuncType = (
       n.dimensions['Primaire'] = { level: 1, parent_name: undefined }
     }
     if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior') {
-      n.tags['Type de noeud'] = ['echange']
+      n.tags['type de noeud'] = ['echange']
+      if ( n.outputLinksId.length > 0 ) {
+        n.style = 'NodeImportStyle'
+        data.links[n.outputLinksId[0]].style = 'LinkImportStyle'
+      } else {
+        n.style = 'NodeExportStyle'
+        data.links[n.inputLinksId[0]].style = 'LinkExportStyle'
+      }
+
       if (!n.dimensions) {
         n.dimensions = {}
       }
@@ -2199,6 +2207,10 @@ const convert_links: convert_linksFuncType = (
       }
     })
 
+    const isEchange = (node:SankeyNode) => {
+      return node.tags['type de noeud'] != undefined && node.tags['type de noeud'][0] == 'echange'
+    }
+
     // Convert legacy recycling position -> new positions
     if (l.local) {
       if (!l.local.recycling) {
@@ -2207,8 +2219,10 @@ const convert_links: convert_linksFuncType = (
         if (l.local.curvature) {
           if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
             // I made an approx. here because we can't have a direct transform from old behavior (Cubic / Bezier) to new (Quadratic) for path drawing
-            AssignLinkLocalAttribute(l, 'starting_tangeant', 0.75 * l.local.curvature)
-            AssignLinkLocalAttribute(l, 'ending_tangeant', 0.75 * l.local.curvature)
+            if (!isEchange(data.nodes[l.idSource]) && !isEchange(data.nodes[l.idTarget]) ) {
+              AssignLinkLocalAttribute(l, 'starting_tangeant', 0.75 * l.local.curvature)
+              AssignLinkLocalAttribute(l, 'ending_tangeant', 0.75 * l.local.curvature)
+            }
           }
           else {
             AssignLinkLocalAttribute(l, 'starting_tangeant', l.local.curvature / 2)
