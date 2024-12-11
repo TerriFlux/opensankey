@@ -2281,7 +2281,7 @@ export abstract class Class_LinkElement
     }
     // Normal behavior
     if (!this.shape_is_recycling) {
-      if (this.is_horizontal || this.is_horizontal_vertical) {
+      if (!this.is_vertical) {
         if (this.source.position_x <= this.target.position_x)
           return 'right'
         else
@@ -2296,7 +2296,7 @@ export abstract class Class_LinkElement
     }
     // Recylcing mode
     else {
-      if (this.is_horizontal || this.is_horizontal_vertical) {
+      if (!this.is_vertical) {
         if (this.source.position_x <= this.target.position_x)
           return 'left'
         else
@@ -2349,7 +2349,7 @@ export abstract class Class_LinkElement
     }
     // Normal behavior
     if (!this.shape_is_recycling) {
-      if (this.is_horizontal || this.is_vertical_horizontal) {
+      if (!this.is_vertical) {
         if (this.source.position_x <= this.target.position_x)
           return 'left'
         else
