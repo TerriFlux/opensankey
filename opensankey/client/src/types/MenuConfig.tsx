@@ -67,7 +67,7 @@ export class Class_MenuConfig {
    * @type {string[]}
    * @memberof Class_MenuConfig
    */
-  protected _accordions_to_show: string[] = []
+  protected _accordions_to_show: string[] = ['MEP']
 
   /* ========================================
     Timeout dict

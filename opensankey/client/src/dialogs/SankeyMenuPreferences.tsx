@@ -202,16 +202,6 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         }}>
         {t('Menu.ED')}
       </Checkbox>,
-      <Checkbox
-        key={9}
-        ref={checkbox_refs['EL']}
-        variant='menuconfigpanel_option_checkbox'
-        defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EL')}
-        onChange={() => {
-          new_data.menu_configuration.toggleGivenAccordion('EL')
-        }}>
-        {t('Menu.level')}
-      </Checkbox>,
       additionalMenus.additional_preferences
     ],
     'node_label_sep': <>{node_label_sep}{node_label_sep_pos}</>,
