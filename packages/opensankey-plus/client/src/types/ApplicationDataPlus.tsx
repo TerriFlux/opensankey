@@ -247,6 +247,7 @@ export abstract class Class_ApplicationDataPlus
           if (view_id !== default_main_sankey_id) {
             // Create and populate drawing area
             const drawing_area_view = this.createNewDrawingArea(view_id)
+            drawing_area_view.bypass_redraws = this.drawing_area.bypass_redraws
             drawing_area_view.fromJSON(view_json as Type_JSON)
             // Add new drawing area to views
             this._views[view_id] = drawing_area_view
@@ -449,7 +450,7 @@ export abstract class Class_ApplicationDataPlus
         // Reset to Edition mode
         this._drawing_area.setToModeEdition(false)
         // Draw new-sankey
-        this._drawing_area.draw()
+        this._drawing_area.draw(false)
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
         this._menu_configuration.updateComponentRelatedToViews()
