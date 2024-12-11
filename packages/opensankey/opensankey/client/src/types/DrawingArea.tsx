@@ -1317,7 +1317,7 @@ export abstract class Class_DrawingArea
         // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
         this.splitTrade()
         // Computes u v,x and initial y for trade nodes
-        this._arrangeTrade(true)
+        this.arrangeTrade(true)
         // Defaut color + auto reorg of links
         const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
         this.sankey.visible_nodes_list.forEach((n,i,a)=> {
@@ -1715,17 +1715,7 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public arrangeTrade (
-    compute_xy : boolean
-  ) {
-    this.application_data.sendWaitingToast(
-      () => {
-        this._arrangeTrade(compute_xy)
-      }
-    )
-  }
-
-  protected _arrangeTrade(
+  public arrangeTrade(
     compute_xy : boolean
   ) {
     if (!this.sankey.node_taggs_dict['type de noeud']) {
