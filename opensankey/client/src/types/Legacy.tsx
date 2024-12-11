@@ -1497,7 +1497,15 @@ const convert_nodes: convert_nodesFuncType = (
       n.dimensions['Primaire'] = { level: 1, parent_name: undefined }
     }
     if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior') {
-      n.tags['Type de noeud'] = ['echange']
+      n.tags['type de noeud'] = ['echange']
+      if ( n.outputLinksId.length > 0 ) {
+        n.style = 'NodeImportStyle'
+        data.links[n.outputLinksId[0]].style = 'LinkImportStyle'
+      } else {
+        n.style = 'NodeExportStyle'
+        data.links[n.inputLinksId[0]].style = 'LinkExportStyle'
+      }
+
       if (!n.dimensions) {
         n.dimensions = {}
       }
