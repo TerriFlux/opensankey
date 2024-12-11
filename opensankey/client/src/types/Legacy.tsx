@@ -474,7 +474,8 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     if (json_object[list_legacy_legend_var[i]] !== undefined) {
       legend_var[list_legacy_legend_var[i]] = json_object[list_legacy_legend_var[i]]
     }
-  } 
+  }
+  json_object.legend['legacy_legend']=true
 
   clean_data_local(data_to_convert)
 }
