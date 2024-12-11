@@ -34,7 +34,6 @@ import {
   getJSONFromJSON,
 } from './Utils'
 import {
-  Type_GenericLinkElementOS,
   Type_GenericNodeElementOS
 } from './TypesOS'
 

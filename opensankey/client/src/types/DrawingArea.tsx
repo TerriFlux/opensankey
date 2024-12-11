@@ -10,6 +10,7 @@ import { MouseEvent } from 'react'
 
 // Local types
 import {
+  GetRandomInt,
   Type_JSON,
   Type_Structure,
   default_background_color,
@@ -20,7 +21,8 @@ import {
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
-  getStringOrUndefinedFromJSON
+  getStringOrUndefinedFromJSON,
+  list_palette_color
 } from './Utils'
 import {
   Class_Sankey
@@ -523,7 +525,6 @@ export abstract class Class_DrawingArea
       this.application_data.sendWaitingToast(
         () => {
           this._draw()
-          this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
         },
         {
           success: {
@@ -548,14 +549,14 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   protected _draw() {
+    // This function calls explictly for a redraw
+    this.bypass_redraws = false
 
     // Clean drawing area
     this.unDraw()
 
     // Reinit d3 selections
     this._initDraw()
-
-
 
     // Draw Everything
     this.drawElements()
@@ -1267,7 +1268,7 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public SplitTrade (
+  public splitTrade (
   ) {
     if (!this.sankey.node_taggs_dict['type de noeud']) {
       return
@@ -1297,17 +1298,40 @@ export abstract class Class_DrawingArea
   }
 
   /**
-   * Compute the position of the nodes which are not trade nodes
-   * TODO write more
+   * Compute the position of everything that define the sankey diagram
+   *
+   * /!\ Add to waiting spinner queue
    *
    * @memberof Class_DrawingArea
    */
-  public computeAutoSankey(
-    launched_from_process: boolean
-  ) {
+  public computeAutoFullSankey() {
     this.application_data.sendWaitingToast(
       () => {
-        this._computeAutoSankey(launched_from_process)
+        // First compute position of nodes which are not trade
+        this._computeAutoSankey(true)
+        this.computeParametrization()
+        // Initially there is only one node per type of exchanges.
+        // it must be splitted to have one import and one export per product
+        // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
+        this.splitTrade()
+        // Computes u v,x and initial y for trade nodes
+        this._arrangeTrade(true)
+        // Defaut color + auto reorg of links
+        const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
+        this.sankey.visible_nodes_list.forEach((n,i,a)=> {
+          n.reorganizeIOLinks()
+          this.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
+        })
+        // Update defaut data on recycling mode
+        this.sankey.links_list.forEach(l=>{
+          if(l.shape_is_recycling){
+            l.shape_starting_tangeant=0.01
+            l.shape_ending_tangeant=0.01
+          }
+        })
+        // Update area
+        this.areaAutoFit()
+        // Saving indicator
         this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
       },
       {
@@ -1321,6 +1345,45 @@ export abstract class Class_DrawingArea
     )
   }
 
+  /**
+   * Compute the position of the nodes which are not trade nodes
+   *
+   * /!\ Add to waiting spinner queue
+   *
+   * @memberof Class_DrawingArea
+   */
+  public computeAutoSankey(
+    launched_from_process: boolean
+  ) {
+    this.application_data.sendWaitingToast(
+      () => {
+        // Compute auto pos of nodes
+        this._computeAutoSankey(launched_from_process)
+        this.computeParametrization()
+        // Reorg pose of links
+        this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+        // Update area
+        this.areaAutoFit()
+        // Toggle saving indicator
+        this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      },
+      {
+        success: {
+          title: this.application_data.t('toast.compute_auto_sankey.success.title')
+        },
+        loading: {
+          title: this.application_data.t('toast.compute_auto_sankey.loading.title')
+        }
+      }
+    )
+  }
+
+  /**
+   * Compute the position of the nodes which are not trade nodes
+   * @protected
+   * @param {boolean} launched_from_process
+   * @memberof Class_DrawingArea
+   */
   protected _computeAutoSankey(
     launched_from_process: boolean
   ) {
@@ -1337,14 +1400,15 @@ export abstract class Class_DrawingArea
     })
     linksMaxValue += 1 // Protection if all values are at 0
 
-    // // Get scale from max value
+    // Get scale from max value
     if (launched_from_process) {
-      this.scale = this._maximum_flux ? Math.min(this._maximum_flux, linksMaxValue) : linksMaxValue
+      this.scale = this._maximum_flux ? Math.max(this._maximum_flux, linksMaxValue) : linksMaxValue
     }
+
     const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
     const nodes_to_process = this.sankey.visible_nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
 
-    // // Compute positionning indexes
+    // Compute positionning indexes
     const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
     const possible_recycling_links_ids: string[] = []
     nodes_to_process
@@ -1642,9 +1706,6 @@ export abstract class Class_DrawingArea
 
     this.width = (this.window_fitting_width < possible_witdh) ? possible_witdh : this.window_fitting_width
     this.height = (this.window_fitting_height < possible_height) ? possible_height : this.window_fitting_height
-
-    this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
-    this.ComputeParametrization()
   }
 
   /**
@@ -1652,7 +1713,17 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public ArrangeTrade (
+  public arrangeTrade (
+    compute_xy : boolean
+  ) {
+    this.application_data.sendWaitingToast(
+      () => {
+        this._arrangeTrade(compute_xy)
+      }
+    )
+  }
+
+  protected _arrangeTrade(
     compute_xy : boolean
   ) {
     if (!this.sankey.node_taggs_dict['type de noeud']) {
@@ -1711,7 +1782,7 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public ComputeParametrization() {
+  public computeParametrization() {
 
     let smaller_x : number
     this.sankey.visible_nodes_list.forEach(n=>{
@@ -1878,7 +1949,6 @@ export abstract class Class_DrawingArea
       }
     })
   }
-
 
   // PRIVATE METHODS ==================================================================
 
@@ -2450,6 +2520,7 @@ export abstract class Class_DrawingArea
       this._scaleValueToPx.domain([0, value])
       this._scale_fitting = false
       this.drawElements()
+      this.areaAutoFit()
     }
   }
 

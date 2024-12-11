@@ -865,13 +865,13 @@ export abstract class Class_LinkElement
     }
     else {
       const src_taggs_activated = this._source.taggs_list
-      .filter(tagg => tagg.show_legend).filter(grp => {
-        return this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length > 0
-      }).length > 0
-    const trgt_taggs_activated = this._target.taggs_list
-      .filter(tagg => tagg.show_legend).filter(grp => {
-        return (this._target.grouped_taggs_dict[grp.id] ?? []).filter(tag => tag.is_selected).length > 0
-      }).length > 0
+        .filter(tagg => tagg.show_legend).filter(grp => {
+          return this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length > 0
+        }).length > 0
+      const trgt_taggs_activated = this._target.taggs_list
+        .filter(tagg => tagg.show_legend).filter(grp => {
+          return (this._target.grouped_taggs_dict[grp.id] ?? []).filter(tag => tag.is_selected).length > 0
+        }).length > 0
 
 
       // Do we apply colors of node source/target tags ?
