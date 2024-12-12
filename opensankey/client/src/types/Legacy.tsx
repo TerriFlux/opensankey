@@ -1,3 +1,4 @@
+import * as d3 from 'd3'
 import { Type_JSON } from './Utils'
 import {
   SankeyNode,
@@ -70,6 +71,75 @@ export const DefaultNode: DefaultNodeFuncType = (
     defaultNode.tags[tag_group_key] = []
   }
   return defaultNode
+}
+
+export const GetLinkValue = (
+  data: SankeyData,
+  idLink: string,
+  up = false
+): SankeyLinkValue => {
+  const { links, dataTags } = data
+  // Split the id and search for value after the original link id
+  //  each value represent wich dataTag to choose among those where selected is at true in link.value
+  // If there no dataTag (or no multiple dataTag selected then it take the first selected)
+  let idDt : string[] = []
+  if ( Object.values(dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0) {
+    idDt = idLink.split('_')
+    idDt.splice(0,1)
+  }
+
+  const defaultInd=Object.values(data.dataTags)
+    .map(d=>{
+      return Object.values((d as {tags:Record<string,unknown>}).tags).filter(t=>(t  as {selected:boolean}).selected).map((dd,i)=>i)[0]
+    })
+
+  const index_dataTag=(idDt.length==0)?defaultInd:idDt.map(d=>Number(d))
+
+  if (!(idLink in links)) {
+
+    return {
+      value: 0,
+      display_value: '',
+      tags: {},
+      extension: {}
+    }
+  }
+  let val = links[idLink].value
+  const listKey = [] as string[]
+  let missing_key = false
+  Object.values(dataTags).filter(dataTag =>(Object.keys(dataTag.tags).length != 0)).forEach((dataTag,i) => {
+    const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
+    if (selected_tags.length == 0 || missing_key) {
+      missing_key = true
+      return
+    }
+    listKey.push(Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })[index_dataTag[i]][0])
+  })
+  if (missing_key) {
+    return {
+      value: 0,
+      display_value: '',
+      tags: {},
+
+      extension: {}
+    }
+  }
+
+  for (const i in listKey) {
+    if (up && +i === (listKey.length - 1)) {
+      break
+    }
+    val = (val as SankeyLinkValueDict)[listKey[i]]
+    if (val === undefined) {
+      return {
+        value: 0,
+        display_value: '',
+        tags: {},
+        extension: {}
+      }
+    }
+  }
+  return (val as unknown) as SankeyLinkValue
 }
 
 /**
@@ -2245,13 +2315,25 @@ const convert_links: convert_linksFuncType = (
           dist = Math.max(20, Math.abs(target_node.y - source_node.y)) // Avoid div per 0
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
-          dist = Math.max(20, Math.abs(target_node.x - source_node.x)) // Avoid div per 0
-        }
+          dist = Math.max(50, Math.abs(target_node.x - source_node.x)) // Avoid div per 0
+        }S
         // Recompute shift & tangeant
         const curve_coef = (l.local.curvature ?? 0.5)
         const curve_dist_min = 20 // px
         const curve_dist_max = 40 // px
         const shift_dist_min = 40 // px
+        if (l.local.vert_shift !== undefined) {
+          const scale = d3.scaleLinear()
+          .range([0, 100])
+          .domain([0, data.user_scale])
+
+          const source_y = data.nodes[l.idSource].y
+          const target_y = data.nodes[l.idTarget].y
+          const middle_y = (target_y+source_y)/2
+          const global_position_y = Math.max(source_y,target_y) + l.local.vert_shift + scale(2*+GetLinkValue(data,l.idLink).value)
+          const new_vert_shift = global_position_y - middle_y
+          AssignLinkLocalAttribute(l, 'vert_shift', new_vert_shift) // value in [0; +oo]
+        }
         if (l.local.left_horiz_shift !== undefined) {
           // Avoid having too big curbe
           const original_dist = Math.abs(l.local.left_horiz_shift)
@@ -2259,7 +2341,7 @@ const convert_links: convert_linksFuncType = (
           const shift_dist = Math.max(shift_dist_min, original_dist - curve_dist) // Approx to keep general shape
           // Assign new values
           AssignLinkLocalAttribute(l, 'left_horiz_shift', shift_dist / dist) // value in [0; +oo]
-          AssignLinkLocalAttribute(l, 'starting_tangeant', curve_dist / dist) // value in [0; +oo]
+          AssignLinkLocalAttribute(l, 'starting_tangeant',curve_dist / dist) // value in [0; +oo]
         }
         if (l.local.right_horiz_shift !== undefined) {
           // Avoid having too big curbe
