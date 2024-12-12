@@ -572,7 +572,7 @@ export abstract class Class_ProtoElement
 
   // Svg Group
   public get svg_parent_group() { return this._svg_parent_group }
-  public get svg_group() { return 'gg_' + this._id.replaceAll(' ', '') }
+  public get svg_group() { return 'gg_' + this._id.replaceAll(' ', '').replaceAll('\'', '') }
 
   // Selection
   public setSelected() { this._is_selected = true; this.drawAsSelected() }
