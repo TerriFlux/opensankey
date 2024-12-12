@@ -282,7 +282,6 @@ export abstract class Class_ApplicationData
    */
   protected _reset() {
     // Reset drawing area
-
     const by_pass_redraw = this._drawing_area.bypass_redraws
     // Node : To avoid loosing ref of drawing area & creating somehow memory leak,
     //        we have to use copyFrom -> delete old values + reeaffectation of default values on the same object
@@ -468,14 +467,22 @@ export abstract class Class_ApplicationData
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  public fromJSON(json_object: Type_JSON) {
+  public fromJSON(
+    json_object: Type_JSON,
+    draw: boolean = true
+  ) {
     this.sendWaitingToast(
       () => {
+        // Always bypass redrawings
+        this._drawing_area.bypass_redraws = true
+        // Reset everything
+        this._reset()
         // Read json file
         this._fromJSON(json_object)
-        this.drawing_area.arrangeTrade(true)
-        // Update drawing area and menus
+        // Post processing & menu updating
         this._afterFromJSON()
+        // Then draw if asked
+        if (draw) this._drawing_area.draw()
       })
   }
 
@@ -485,9 +492,9 @@ export abstract class Class_ApplicationData
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  protected _fromJSON(json_object: Type_JSON) {
-    // Reset everything
-    this._reset()
+  protected _fromJSON(
+    json_object: Type_JSON
+  ) {
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
   }
@@ -499,19 +506,9 @@ export abstract class Class_ApplicationData
    */
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
-    this._drawing_area.draw(false)
-    this._drawing_area.legend.posIfFromLegacy() //Function do something only if JSON was from legacy
+    this._drawing_area.arrangeTrade(true)
+    this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
     this.menu_configuration.updateAllMenuComponents()
-  }
-
-  public initFromJSON(json_object: Type_JSON) {
-    this.sendWaitingToast(
-      () => {
-        // Read json file
-        this._fromJSON(json_object)
-        // Update drawing area and menus
-        this._afterFromJSON()
-      })
   }
 
   /**
@@ -549,6 +546,24 @@ export abstract class Class_ApplicationData
   }
 
   // PUBLIC METHODS =====================================================================
+
+  public draw() {
+    this.sendWaitingToast(
+      () => {
+        this._drawing_area.draw()
+      },
+      {
+        success: {
+          title: this.t('toast.draw.success.title'),
+          desc: this.t('toast.draw.success.desc')
+        },
+        loading: {
+          title: this.t('toast.draw.loading.title'),
+          desc: this.t('toast.draw.loading.desc')
+        }
+      }
+    )
+  }
 
   /**
    * Create a waiting toast and add function to waiting queue.

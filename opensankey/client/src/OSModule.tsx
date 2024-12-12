@@ -63,7 +63,7 @@ export const initializeReinitialization: FType_InitializeReinitialization = (
 
     // Reset Class_ApplicationDataOS instance
     new_data.reset()
-    new_data.drawing_area.draw()
+    new_data.draw()
 
     sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
     sessionStorage.setItem('dismiss_warning_sankey_mfa', '0')
