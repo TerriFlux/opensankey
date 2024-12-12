@@ -1122,6 +1122,7 @@ export abstract class Class_LinkElement
               .classed('link_label_textpath', true)
               .attr('id', 'label_textpath_' + this.id)
               .attr('href', '#' + this.id)
+              .attr('side', this.getTextPathSide())
 
             // Add text directly on textpath object
             d3_textpath_selection?.text(label_to_display)
@@ -1393,6 +1394,15 @@ export abstract class Class_LinkElement
       label_dominant_baseline = 'text-top'
     }
     return [label_position, label_anchor, label_ortho_position, label_dominant_baseline]
+  }
+
+  private getTextPathSide() {
+    if (
+      (this.source.position_x > this.target.position_x)
+    ) {
+      return 'right'
+    }
+    return 'left'
   }
 
   /**
