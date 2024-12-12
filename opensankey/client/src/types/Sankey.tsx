@@ -27,9 +27,10 @@ import {
   sortNodesElements
 } from './Node'
 import {
+  Class_NodeTagGroup,
+  Class_FluxTagGroup,
   Class_DataTag,
   Class_DataTagGroup,
-  Class_TagGroup,
   Class_LevelTagGroup,
 } from './Tag'
 import {
@@ -39,7 +40,8 @@ import {
   getStringOrUndefinedFromJSON,
   default_main_sankey_id,
   default_style_id,
-  Type_MacroTagGroup
+  Type_MacroTagGroup,
+  randomId
 } from './Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
 import { DefaultLinkExportStyle, DefaultLinkImportStyle, DefaultNodeExportStyle, DefaultNodeImportStyle, DefaultNodeProductStyle, DefaultNodeSectorStyle } from './Legacy'
@@ -108,6 +110,16 @@ export abstract class Class_Sankey
    */
   protected _menu_config: Class_MenuConfig
 
+  /**
+   * Use a status key to indicated that something has change on datatags
+   * @protected
+   * @type {string}
+   * @memberof Class_Sankey
+   */
+  protected _node_tags_fingerprint: string
+  protected _flux_tags_fingerprint: string
+  protected _data_tags_fingerprint: string
+
   // PRIVATE ATTRIBUTES =================================================================
 
   /**
@@ -136,8 +148,8 @@ export abstract class Class_Sankey
   protected abstract _node_styles: { [_: string]: Class_NodeStyle }
 
   // Tags
-  private _node_taggs: { [_: string]: Class_TagGroup } = {}
-  private _flux_taggs: { [_: string]: Class_TagGroup } = {}
+  private _node_taggs: { [_: string]: Class_NodeTagGroup } = {}
+  private _flux_taggs: { [_: string]: Class_FluxTagGroup } = {}
   private _data_taggs: { [_: string]: Class_DataTagGroup } = {}
   private _level_taggs: { [_: string]: Class_LevelTagGroup } = {}
 
@@ -157,6 +169,10 @@ export abstract class Class_Sankey
     this.drawing_area = drawing_area
     this._menu_config = menu_config
     this._id = id
+    // Init updating keys
+    this._node_tags_fingerprint = randomId()
+    this._flux_tags_fingerprint = randomId()
+    this._data_tags_fingerprint = randomId()
   }
 
   // CLEANING METHODS ===================================================================
@@ -1397,10 +1413,10 @@ export abstract class Class_Sankey
     id: string,
     name: string,
     with_a_tag: boolean = true
-  ): Class_TagGroup {
+  ): Class_NodeTagGroup {
     if (!this._node_taggs[id]) {
       // Create
-      const tag_group = new Class_TagGroup(id, name, this, with_a_tag)
+      const tag_group = new Class_NodeTagGroup(id, name, this, with_a_tag)
       // Update
       this._node_taggs[id] = tag_group
       // Return
@@ -1416,10 +1432,10 @@ export abstract class Class_Sankey
     id: string,
     name: string,
     with_a_tag: boolean = true
-  ): Class_TagGroup {
+  ): Class_FluxTagGroup {
     if (!this._flux_taggs[id]) {
       // Create
-      const tag_group = new Class_TagGroup(id, name, this, with_a_tag)
+      const tag_group = new Class_FluxTagGroup(id, name, this, with_a_tag)
       // Update
       this._flux_taggs[id] = tag_group
       // Return
@@ -1502,12 +1518,12 @@ export abstract class Class_Sankey
   /**
    * Properly remove tag group
    * @param {Type_MacroTagGroup} type_group
-   * @param {Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup} tagg
+   * @param {Class_NodeTagGroup | Class_FluxTagGroup | Class_LevelTagGroup | Class_DataTagGroup} tagg
    * @memberof Class_Sankey
    */
   public removeTagGroup(
     type_group: Type_MacroTagGroup,
-    tagg: Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup
+    tagg: Class_NodeTagGroup | Class_FluxTagGroup | Class_LevelTagGroup | Class_DataTagGroup
   ) {
     this.removeTagGroupWithId(type_group, tagg.id)
   }
@@ -1541,6 +1557,30 @@ export abstract class Class_Sankey
     else {
       return this._level_taggs
     }
+  }
+
+  /**
+   * Update data tags random key to ensure that element's visibilty will be recalculated
+   * @memberof Class_Sankey
+   */
+  public nodeTagsUpdated() {
+    this._node_tags_fingerprint = randomId()
+  }
+
+  /**
+   * Update data tags random key to ensure that element's visibilty will be recalculated
+   * @memberof Class_Sankey
+   */
+  public fluxTagsUpdated() {
+    this._flux_tags_fingerprint = randomId()
+  }
+
+  /**
+   * Update data tags random key to ensure that element's visibilty will be recalculated
+   * @memberof Class_Sankey
+   */
+  public dataTagsUpdated() {
+    this._data_tags_fingerprint = randomId()
   }
 
   // PRIVATE METHODS ====================================================================
@@ -1793,12 +1833,20 @@ export abstract class Class_Sankey
     return Object.values(this._node_taggs)
   }
 
+  public get node_tags_fingerprint() {
+    return this._node_tags_fingerprint
+  }
+
   public get flux_taggs_dict() {
     return this._flux_taggs
   }
 
   public get flux_taggs_list() {
     return Object.values(this._flux_taggs)
+  }
+
+  public get flux_tags_fingerprint() {
+    return this._flux_tags_fingerprint
   }
 
   public get data_taggs_dict() {
@@ -1811,6 +1859,10 @@ export abstract class Class_Sankey
 
   public get data_taggs_entries() {
     return Object.entries(this._data_taggs)
+  }
+
+  public get data_tags_fingerprint() {
+    return this._data_tags_fingerprint
   }
 
   /**
