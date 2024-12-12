@@ -176,6 +176,17 @@ export abstract class Class_NodeElement
     position_y_label?: number // Relative y position of label when dragged (optionnal)
   }
 
+  // Visibility memorized - tags
+  protected _are_related_node_tags_selected: boolean | undefined = undefined
+  protected _node_tags_fingerprint: string = ''
+
+  // Visibility memorized - dimensions
+  protected _are_related_dimensions_selected: boolean | undefined = undefined
+
+  // Visibility memorized - links
+  protected _links_visibilities_fingerprint: string = ''
+  protected _are_links_visibilities_ok: boolean | undefined = undefined
+
   // PRIVATE ATTRIBUTES =================================================================
 
   // Name
@@ -803,8 +814,10 @@ export abstract class Class_NodeElement
       // Force to show parent
       if ((id !== undefined) && (this._dimensions_as_child[id]))
         this._dimensions_as_child[id].setForceToShowParent()
-      else
+      else {
+        //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
         Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
+      }
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
@@ -1055,7 +1068,7 @@ export abstract class Class_NodeElement
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
     if (echangeTag && this.hasGivenTag(echangeTag) ) {
       // TODO code to be rewritten when rearchitecturing code for Import Export
-      return Math.max(sum_of_left_thickness, sum_of_right_thickness,3)
+      return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
     }
     return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
   }
@@ -1069,7 +1082,11 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public hasGivenTag(tag: Class_Tag) {
-    return this._tags.includes(tag)
+    return this._tags.includes(tag) || this._taggs_dict[tag.group.id] == undefined
+  }
+
+  public tagsUpdated() {
+    this._are_related_node_tags_selected = undefined
   }
 
   /**
@@ -1078,7 +1095,8 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public addTag(tag: Class_Tag) {
-    if (!this.hasGivenTag(tag)) {
+    if (!this._tags.includes(tag)) {
+      this.tagsUpdated() // Reset visibility indicator
       this._tags.push(tag)
       this.addTagToGroupTagDict(tag)
       tag.addReference(this)
@@ -1093,7 +1111,8 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public removeTag(tag: Class_Tag) {
-    if (this.hasGivenTag(tag)) {
+    if (this._tags.includes(tag)) {
+      this.tagsUpdated() // Reset visibility indicator
       const idx = this._tags.indexOf(tag)
       this._tags.splice(idx, 1)
       this.removeTagToGroupTagDict(tag)
@@ -1114,11 +1133,17 @@ export abstract class Class_NodeElement
     return (this.level_tags_list.includes(tag))
   }
 
+  public dimensionsUpdated() {
+    this._are_related_dimensions_selected = undefined // Reset visibility indicator
+    this.updateVisibilityFingerprint()
+  }
+
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
       (!_.children.includes(this)) &&
       (!this._dimensions_as_parent[_.id])
     ) {
+      this.dimensionsUpdated() // Reset visibility indicator
       this._dimensions_as_parent[_.id] = _
       _.parent = this
     }
@@ -1128,6 +1153,7 @@ export abstract class Class_NodeElement
     if (
       (!this._dimensions_as_child[_.id])
     ) {
+      this.dimensionsUpdated() // Reset visibility indicator
       this._dimensions_as_child[_.id] = _
       _.addNodeAsChild(this)
     }
@@ -1135,6 +1161,7 @@ export abstract class Class_NodeElement
 
   public addAsAntiTagged(_: Class_LevelTagGroup) {
     if (!this._leveltaggs_as_antitagged.includes(_)) {
+      this.dimensionsUpdated() // Reset visibility indicator
       this._leveltaggs_as_antitagged.push(_)
       _.addAntiTaggedRef(this)
     }
@@ -1142,6 +1169,7 @@ export abstract class Class_NodeElement
 
   public removeDimensionAsParent(_: Class_NodeDimension) {
     if (this._dimensions_as_parent[_.id]) {
+      this.dimensionsUpdated() // Reset visibility indicator
       delete this._dimensions_as_parent[_.id]
       _.removeNodeAsParent(this)
     }
@@ -1149,12 +1177,14 @@ export abstract class Class_NodeElement
 
   public removeDimensionAsChild(_: Class_NodeDimension) {
     if (this._dimensions_as_child[_.id]) {
+      this.dimensionsUpdated() // Reset visibility indicator
       delete this._dimensions_as_child[_.id]
     }
   }
 
   public removeAsAntiTagged(_: Class_LevelTagGroup) {
     if (this._leveltaggs_as_antitagged.includes(_)) {
+      this.dimensionsUpdated() // Reset visibility indicator
       const idx = this._leveltaggs_as_antitagged.indexOf(_)
       this._leveltaggs_as_antitagged.splice(idx, 1)
       _.removeAntiTaggedRef(this)
@@ -2429,6 +2459,13 @@ export abstract class Class_NodeElement
       .attr('text-anchor', label_anchor)
       .attr('text-align', label_align)
 
+    this.d3_selection_g_name_label?.select('.name_label_text').selectAll('tspan')
+      .attr('x', label_pos_x)
+      .attr('dx', 0)
+      .attr('dominant-baseline', label_baseline)
+      .attr('text-anchor', label_anchor)
+      .attr('text-align', label_align)
+
     return [label_pos_x, label_pos_y, label_anchor]
   }
 
@@ -2838,12 +2875,13 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   private addTagToGroupTagDict(tag: Class_Tag) {
-    const grp_name = tag.group.name
-    if (grp_name in this._taggs_dict) {
-      if (!(this._taggs_dict[tag.group.name].includes(tag)))
-        this._taggs_dict[tag.group.name].push(tag)
-    } else {
-      this._taggs_dict[tag.group.id] = [tag]
+    const grp_id = tag.group.id
+    if (grp_id in this._taggs_dict) {
+      if (!(this._taggs_dict[grp_id].includes(tag)))
+        this._taggs_dict[grp_id].push(tag)
+    }
+    else {
+      this._taggs_dict[grp_id] = [tag]
     }
   }
 
@@ -2864,12 +2902,17 @@ export abstract class Class_NodeElement
 
   // GETTERS / SETTERS ==================================================================
 
+  /**
+   * Node visibility check
+   * @readonly
+   * @memberof Class_NodeElement
+   */
   public get is_visible() {
     return (
       super.is_visible &&
-      this.are_related_tags_selected &&
-      this.is_related_level_selected &&
-      this.no_zero_io_links
+        this.are_related_node_tags_selected &&
+        this.are_related_dimensions_selected &&
+        this.are_links_visibilities_ok
     )
   }
 
@@ -4010,29 +4053,77 @@ export abstract class Class_NodeElement
    * @return {*}
    * @memberof Class_NodeElement
    */
-  private get are_related_tags_selected() {
-    const list_tag = this.tags_list
-    if (list_tag.length > 0) {
-      let display = true
-      // Check if at least one node tag is selected in each group = ok to display
-      Object.values(this._taggs_dict).forEach(tag_list => {
-        display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
-      })
-      return display
-    } else {
-      return true // if no tag associated to node then ok to display
+  private get are_related_node_tags_selected(): boolean {
+    if (
+      (this._are_related_node_tags_selected === undefined) ||
+      (this.sankey.node_tags_fingerprint !== this._node_tags_fingerprint)
+    ) {
+      // Update value
+      let are_related_node_tags_selected: boolean
+      const list_tag = this.tags_list
+      if (list_tag.length > 0) {
+        let display = true
+        // Check if at least one node tag is selected in each group = ok to display
+        Object.values(this._taggs_dict).forEach(tag_list => {
+          display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
+        })
+        are_related_node_tags_selected = display
+      } else {
+        are_related_node_tags_selected = true // if no tag associated to node then ok to display
+      }
+      // Update  fingerprint if needed
+      // -> This condition allows to avoid unecessary visibility recomputing on related elements
+      //    that check this node's visibility fingerprint
+      if (are_related_node_tags_selected !== this._are_related_node_tags_selected) {
+        this.updateVisibilityFingerprint()
+      }
+      // Update memorized value
+      this._are_related_node_tags_selected = are_related_node_tags_selected
+      this._node_tags_fingerprint = this.sankey.node_tags_fingerprint
     }
+    return this._are_related_node_tags_selected
   }
 
-  private get is_related_level_selected() {
+  /**
+   * Check if, based on level tags or dimension, we must show or hide this node
+   * @readonly
+   * @private
+   * @type {boolean}
+   * @memberof Class_NodeElement
+   */
+  private get are_related_dimensions_selected(): boolean {
+    if ( this._are_related_dimensions_selected === undefined ) {
+      // Recompute value
+      const are_related_dimensions_selected = this.checkIfRelatedDimensionsAreSelected()
+      // Update  fingerprint if needed
+      // -> This condition allows to avoid unecessary visibility recomputing on related elements
+      //    that check this node's visibility fingerprint
+      if (are_related_dimensions_selected !== this._are_related_dimensions_selected) {
+        this.updateVisibilityFingerprint()
+      }
+      // Update memorized value
+      this._are_related_dimensions_selected = are_related_dimensions_selected
+    }
+    return this._are_related_dimensions_selected
+  }
+
+  /**
+   * Check if, based on level tags or dimension, we must show or hide this node
+   *
+   * @private
+   * @return {boolean}
+   * @memberof Class_NodeElement
+   */
+  private checkIfRelatedDimensionsAreSelected(): boolean {
     // Draw by default if there is no dimensions
     // that relates to this node
     if (
       !this.is_child &&
       !this.is_parent &&
       (this._leveltaggs_as_antitagged.length === 0)
-    )
+    ) {
       return true
+    }
     // First check if activated tag group is in antitaggs
     const is_antitagged = (this._leveltaggs_as_antitagged
       .filter(tagg => tagg.activated)
@@ -4099,10 +4190,11 @@ export abstract class Class_NodeElement
         // If no related level tag group is activated &&
         // this node is not set as antittagged for activated level tagg group
         // Then it ok to show
-        if (!has_activated_dimensions)
+        if (!has_activated_dimensions) {
           return true
-        else
+        } else {
           return ok_activated_dimensions
+        }
       }
     }
   }
@@ -4110,38 +4202,81 @@ export abstract class Class_NodeElement
   /**
    * Filter for node visibility, if node has IO links then check if at least one is visible
    * the input (output) link is visible if
-   * - the link is not null and has the visible tags (fluxTags ) //TODO check this
+   * - the link is not null and has the visible tags (fluxTags )
    * - the source (target) has the visible tags (nodeTags Or levelTags )
    *
    * @readonly
    * @private
    * @memberof Class_NodeElement
    */
-  private get no_zero_io_links() {
+  private get are_links_visibilities_ok() {
+    // Check if links visibilies have somehow changed
+    const links_visibilities_fingerprint = this.getLinksVisibilitiesFingerprint()
+    if (
+      (this._are_links_visibilities_ok === undefined) ||
+      (links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
+    ) {
+      // Recompute value
+      const are_links_visibilities_ok = this.checkIfLinksVisibilitiesAreOK()
+      // Update  fingerprint if needed
+      // -> This condition allows to avoid unecessary visibility recomputing on related elements
+      //    that check this node's visibility fingerprint
+      if (are_links_visibilities_ok !== this._are_links_visibilities_ok) {
+        this.updateVisibilityFingerprint()
+      }
+      // Update memorized value
+      this._are_links_visibilities_ok = are_links_visibilities_ok
+      this._links_visibilities_fingerprint = links_visibilities_fingerprint
+    }
+    return this._are_links_visibilities_ok
+  }
+
+  /**
+   * Checks if node has IO links and if at least one them is visible
+   * the input (output) link is visible if
+   * - the link is not null and has the visible tags (fluxTags )
+   * - the source (target) has the visible tags (nodeTags Or levelTags )
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  private checkIfLinksVisibilitiesAreOK() {
     if (this.input_links_list.length + this.output_links_list.length == 0) {
       return true
     }
     const input_links_visible = this.input_links_list.filter(link =>
       link.is_not_null &&
-      link.are_related_tags_selected &&
-      link.source.are_related_tags_selected &&
-      link.source.is_related_level_selected
-
+      link.are_related_flux_tags_selected &&
+      link.source.are_related_node_tags_selected &&
+      link.source.are_related_dimensions_selected
     )
     if (input_links_visible.length>0) {
       return true
     }
     const output_links_visible = this.output_links_list.filter(link =>
       link.is_not_null &&
-      link.are_related_tags_selected &&
-      link.target.are_related_tags_selected &&
-      link.target.is_related_level_selected
-
+      link.are_related_flux_tags_selected &&
+      link.target.are_related_node_tags_selected &&
+      link.target.are_related_dimensions_selected
     )
     if (output_links_visible.length>0) {
       return true
     }
     return false
+  }
+
+  /**
+   * Compute fingerprint of links visibilities
+   * @private
+   * @return {*}
+   * @memberof Class_NodeElement
+   */
+  private getLinksVisibilitiesFingerprint() {
+    let links_visibilities_fingerprint = ''
+    this._links_order
+      .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint)
+    return links_visibilities_fingerprint
   }
 
   private get tooltip_html() {

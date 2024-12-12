@@ -31,6 +31,7 @@ import {
   getStringListFromJSON,
   makeId
 } from './Utils'
+import { link } from 'fs'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -41,6 +42,7 @@ type Type_TagReference = Type_AbstractNodeElement | Class_AbstractLinkValue
 type Type_DataTagReference = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 
 // CLASS PROTO TAG ***********************************************************************
+
 /**
  * Class that define a Tag object
  * @class Class_Tag
@@ -207,25 +209,31 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
 
   // PUBLIC METHODES ==================================================================
 
-  public abstract update(): void
-
-  public setSelected() {
+  public setSelected(
+    update: boolean = true
+  ) {
     // Avoid useless update
     if (this._is_selected === false) {
       // Set attributes
       this._is_selected = true
+      // Update this fingerprint
+      this.updateFingerprint()
       // Redraw all related elements
-      this.update()
+      if (update) this.update()
     }
   }
 
-  public setUnSelected() {
+  public setUnSelected(
+    update: boolean = true
+  ) {
     // Avoid useless update
     if (this._is_selected === true) {
       // Set attributes
       this._is_selected = false
+      // Update this fingerprint
+      this.updateFingerprint()
       // Redraw all related elements
-      this.update()
+      if (update) this.update()
     }
   }
 
@@ -239,6 +247,8 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
   // PROTECTED METHODS ==================================================================
 
   protected abstract cleanForDeletion(): void
+  protected abstract update(): void
+  protected abstract updateFingerprint(): void
 
   // GETTERS / SETTERS ==================================================================
 
@@ -267,11 +277,12 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
 }
 
 // CLASS TAG ****************************************************************************
+
 /**
  * Class that define a Tag object
  * @class Class_Tag
  */
-export class Class_Tag extends Class_ProtoTag {
+export abstract class Class_Tag extends Class_ProtoTag {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -320,10 +331,12 @@ export class Class_Tag extends Class_ProtoTag {
   // PUBLIC METHODS =====================================================================
 
   public update() {
+    // Redraw elements
     Object.values(this._references)
       .forEach(element => {
         element.draw()
       })
+    // Update legend
     this._ref_sankey.drawing_area.legend.draw()
   }
 
@@ -345,9 +358,48 @@ export class Class_Tag extends Class_ProtoTag {
     }
   }
 
+  // PROTECTED METHODS ==================================================================
+
+  protected abstract updateFingerprint(): void
+
   // GETTERS ============================================================================
 
   public get group() { return this._group }
+
+  public get references() { return Object.values(this._references) }
+
+}
+
+// CLASS NODETAG ****************************************************************************
+
+/**
+ * Class that define a node tag object
+ * @class Class_Tag
+ */
+export class Class_NodeTag extends Class_Tag {
+
+  // PROTECTED METHODS ==================================================================
+
+  protected updateFingerprint() {
+    this._ref_sankey.nodeTagsUpdated()
+  }
+
+}
+
+// CLASS FLUXTAG ****************************************************************************
+
+/**
+ * Class that define a node tag object
+ * @class Class_Tag
+ */
+export class Class_FluxTag extends Class_Tag {
+
+  // PROTECTED METHODS ==================================================================
+
+  protected updateFingerprint() {
+    this._ref_sankey.fluxTagsUpdated()
+  }
+
 }
 
 // CLASS DATATAG ************************************************************************
@@ -383,6 +435,8 @@ export class Class_DataTag extends Class_ProtoTag {
     super(name, sankey, id)
     this._group = group
     this._references = sankey.links_dict
+    // Indicate that we will need to recompute visibility
+    this._ref_sankey.dataTagsUpdated()
     // Update all links
     Object.values(this._references)
       .forEach(ref => ref.addDataTag(this))
@@ -390,31 +444,25 @@ export class Class_DataTag extends Class_ProtoTag {
 
   // PUBLIC METHODS =====================================================================
 
-  public update() {
-    // List of nodes affected by the update of tag variable
-    const nodes_to_redraw:Type_AbstractNodeElement[]=[]
-    Object.values(this._references)
-      .forEach(element => {
-        nodes_to_redraw.push(element.source)
-        nodes_to_redraw.push(element.target)
-      });
-    [...new Set(nodes_to_redraw)] //remove duplicate to avoid draw multiple time the same node
-      .forEach(n => n.draw())
-    this._ref_sankey.drawing_area.legend.draw()
-  }
+  public update() {} // Does nothing - never called
 
   public override setSelected(): void {
     // Avoid useless update
     if (this.is_selected === false) {
       // Set attributes
       this.is_selected = true
+      // Indicate that we will need to recompute visibility
+      this.updateFingerprint()
     }
   }
+
   public override setUnSelected(): void {
     // Avoid useless update
     if (this.is_selected === true) {
       // Set attributes
       this.is_selected = false
+      // Indicate that we will need to recompute visibility
+      this.updateFingerprint()
     }
   }
 
@@ -428,8 +476,16 @@ export class Class_DataTag extends Class_ProtoTag {
     // Update all links
     Object.values(this._references)
       .forEach(link => link.removeDataTag(this))
+    // Indicate that we will need to recompute visibility
+    this._ref_sankey.dataTagsUpdated()
     // Unref references
     this._references = {}
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected updateFingerprint() {
+    this._ref_sankey.dataTagsUpdated()
   }
 
   // GETTERS ============================================================================
@@ -944,6 +1000,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
 }
 
 // CLASS PROTO TAGGROUP *****************************************************************
+
 /**
  * Class that define a TagGroup object
  * @export
@@ -1141,12 +1198,13 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
     this.tags_list
       .forEach(tag => {
         if (tag.id === id) {
-          tag.setSelected()
+          tag.setSelected(false)
         }
         else {
-          tag.setUnSelected()
+          tag.setUnSelected(false)
         }
       })
+    this.updateTagsReferences()
   }
 
   public selectTagsFromIds(
@@ -1155,18 +1213,16 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
     this.tags_list
       .forEach(tag => {
         if (ids.includes(tag.id)) {
-          tag.setSelected()
+          tag.setSelected(false)
         }
         else {
-          tag.setUnSelected()
+          tag.setUnSelected(false)
         }
       })
+    this.updateTagsReferences()
   }
 
-  public updateTagsReferences() {
-    Object.values(this._tags)
-      .forEach(tag => tag.update())
-  }
+  public abstract updateTagsReferences(): void
 
   // PROTECTED METHODS ==================================================================
 
@@ -1246,16 +1302,17 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
 }
 
 // CLASS TAGGROUP ***********************************************************************
+
 /**
  * Class that define a TagGroup object
  * @export
  * @class Class_TagGroup
  */
-export class Class_TagGroup extends Class_ProtoTagGroup {
+export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  protected _tags: { [_: string]: Class_Tag } = {}
+  protected abstract _tags: { [_: string]: Class_Tag }
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -1274,13 +1331,10 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     id: string,
     name: string,
     sankey: Class_AbstractSankey,
-    with_a_tag: boolean = true
   ) {
     super(id, name, sankey)
     // Default banner as multi
     this.banner = 'multi'
-    // Create a first default tag
-    if (with_a_tag) this.addTag('Etiquette 0')
   }
 
   // CLEANING METHODS ==================================================================
@@ -1311,16 +1365,29 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
     this._show_legend = tagg_to_copy.show_legend
   }
 
+  // PUBLIC METHODS =====================================================================
+
+  public updateTagsReferences(): void {
+    const ref_updated: Type_TagReference[] = []
+    Object.values(this._tags)
+      .forEach(tag => {
+        tag.references
+          .forEach(ref => {
+            if (ref_updated.indexOf(ref) < 0) {
+              ref.draw()
+              ref_updated.push(ref)
+            }
+          })
+      })
+    this._ref_sankey.drawing_area.checkAndUpdateAreaSize()
+  }
+
   // PROTECTED METHODS ==================================================================
 
-  protected createTag(
+  protected abstract createTag(
     name: string,
-    id: string | undefined = undefined
-  ) {
-    const tag = new Class_Tag(name, this, this._ref_sankey, id)
-    tag.setSelected()
-    return tag
-  }
+    id: string | undefined
+  ) : Class_Tag
 
   // GETTER =============================================================================
 
@@ -1347,7 +1414,7 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
 
   public get show_legend(): boolean { return this._show_legend }
 
-  // SETTER ==============================================================================
+  // SETTER =============================================================================
 
   public set show_legend(value: boolean) {
     // Avoid useless updates
@@ -1356,6 +1423,100 @@ export class Class_TagGroup extends Class_ProtoTagGroup {
       this.updateTagsReferences()
     }
   }
+}
+
+// CLASS NODETAGGROUP *******************************************************************
+
+/**
+ * Class that define a Node TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+export class Class_NodeTagGroup extends Class_TagGroup {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected _tags: { [_: string]: Class_NodeTag }
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_AbstractSankey,
+    with_a_tag: boolean = true
+  ) {
+    super(id, name, sankey)
+    // Init dict of tags
+    this._tags = {}
+    // Create a first default tag
+    if (with_a_tag) this.addTag('Etiquette 0')
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected createTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    const tag = new Class_NodeTag(name, this, this._ref_sankey, id)
+    tag.setSelected()
+    return tag
+  }
+
+}
+
+// CLASS FLUXTAGGROUP *******************************************************************
+
+/**
+ * Class that define a Flux TagGroup object
+ * @export
+ * @class Class_TagGroup
+ */
+export class Class_FluxTagGroup extends Class_TagGroup {
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  protected _tags: { [_: string]: Class_FluxTag }
+
+  // CONSTRUCTOR ========================================================================
+
+  /**
+   * Creates an instance of Class_TagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @memberof Class_TagGroup
+   */
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_AbstractSankey,
+    with_a_tag: boolean = true
+  ) {
+    super(id, name, sankey)
+    // Init dict of tags
+    this._tags = {}
+    // Create a first default tag
+    if (with_a_tag) this.addTag('Etiquette 0')
+  }
+
+  // PROTECTED METHODS ==================================================================
+
+  protected createTag(
+    name: string,
+    id: string | undefined = undefined
+  ) {
+    const tag = new Class_FluxTag(name, this, this._ref_sankey, id)
+    tag.setSelected()
+    return tag
+  }
+
 }
 
 // CLASS DATATAGGROUP *******************************************************************
@@ -1375,7 +1536,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  protected _tags: { [_: string]: Class_DataTag } = {}
+  protected _tags: { [_: string]: Class_DataTag }
 
   // CONSTRUCTOR ========================================================================
 
@@ -1392,6 +1553,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     with_a_tag: boolean = true
   ) {
     super(id, name, sankey)
+    // Init dict of tags
+    this._tags = {}
     // Create and select a first default tag
     if (with_a_tag) {
       const tag = this.addTag('Etiquette 0')
@@ -1432,18 +1595,38 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public selectTagsFromId(
     id: string
   ) {
-    super.selectTagsFromId(id)
-    this.first_selected_tags?.update()
+    this.tags_list
+      .forEach(tag => {
+        if (tag.id === id) {
+          tag.setSelected()
+        }
+        else {
+          tag.setUnSelected()
+        }
+      })
     this.checkSelectionCoherence()
-    this._ref_sankey.drawing_area.checkAndUpdateAreaSize()
+    this.updateTagsReferences()
   }
 
   public selectTagsFromIds(
     ids: string[]
   ) {
-    super.selectTagsFromIds(ids)
-    this.first_selected_tags?.update()
+    this.tags_list
+      .forEach(tag => {
+        if (ids.includes(tag.id)) {
+          tag.setSelected()
+        }
+        else {
+          tag.setUnSelected()
+        }
+      })
     this.checkSelectionCoherence()
+    this.updateTagsReferences()
+  }
+
+  public updateTagsReferences(): void {
+    // On datatags update everything is impacted
+    this._ref_sankey.drawing_area.draw()
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1492,7 +1675,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
 
   public get show_legend(): boolean { return this._show_legend }
-  public get is_sequence(): boolean {return this._is_sequence}
+  public get is_sequence(): boolean { return this._is_sequence }
 
   // SETTER ==============================================================================
 
@@ -1698,6 +1881,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
   public selectTagsFromId(
     id: string
   ) {
+    // Change selection but do not redraw
     this.tags_list
       .forEach(tag => {
         if (tag.id === id) {
@@ -1712,6 +1896,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
   public selectTagsFromIds(
     ids: string[]
   ) {
+    // Change selection but do not redraw
     this.tags_list
       .forEach(tag => {
         if (ids.includes(tag.id)) {
@@ -1721,11 +1906,6 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
           tag.setUnSelected()
         }
       })
-  }
-
-  public updateTagsReferences() {
-    Object.values(this._tags)
-      .forEach(tag => tag.update())
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1958,14 +2138,14 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
               this._ref_sankey.level_taggs_dict[sib_tagg_id].activated = false
           })
       }
-      this.updateTagsReferences()
+      this._ref_sankey.draw()
     }
   }
 
   public get siblings(): string[] { return this._siblings }
   public set siblings(value: string[]) {
     this._siblings = value
-    this.updateTagsReferences()
+    this._ref_sankey.draw()
   }
 
   /**
