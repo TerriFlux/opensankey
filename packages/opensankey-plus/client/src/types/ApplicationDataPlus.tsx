@@ -229,6 +229,7 @@ export abstract class Class_ApplicationDataPlus
       (active_view_id in this._views)
     ) {
       this._drawing_area = this._views[active_view_id]
+      this._drawing_area.draw()
     }
   }
 
@@ -450,7 +451,7 @@ export abstract class Class_ApplicationDataPlus
         // Reset to Edition mode
         this._drawing_area.setToModeEdition(false)
         // Draw new-sankey
-        this._drawing_area.draw(false)
+        this._drawing_area.draw()
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
         this._menu_configuration.updateComponentRelatedToViews()

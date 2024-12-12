@@ -456,7 +456,7 @@ export abstract class Class_NodeElementPlus
       .attr('width', this.getShapeWidthToUse())
       .attr('height', this.getShapeHeightToUse())
 
-      this.d3_selection_g_FO_illustration?.append('xhtml:div')
+    this.d3_selection_g_FO_illustration?.append('xhtml:div')
       .attr('class', 'ql-editor')
       .html(this._FO_content)
   }

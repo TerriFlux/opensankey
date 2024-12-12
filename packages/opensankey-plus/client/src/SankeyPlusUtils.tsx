@@ -942,7 +942,7 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
         <Button
           variant={new_data.menu_configuration.is_sequence_loop ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
           onClick={() => {
-            // Switch 'is sequence loop' value 
+            // Switch 'is sequence loop' value
             new_data.menu_configuration.is_sequence_loop = !new_data.menu_configuration.is_sequence_loop
             setUpdate(a => a + 1)
           }}>
@@ -1005,17 +1005,18 @@ const StepperDataTagg: FunctionComponent<FCType_StepperDataTagg> = ({ new_data, 
 
                 </StepIndicator>
 
-                <StepSeparator sx={{
-                  '[data-status=complete] &': {
-                    background: 'lightgrey',
-                  },
-                  '[data-status=active] &': {
-                    background: 'lightgrey',
-                  },
-                  '[data-status=incomplete] &': {
-                    background: 'lightgrey',
-                  },
-                }} />
+                <StepSeparator
+                  sx={{
+                    '[data-status=complete] &': {
+                      background: 'lightgrey',
+                    },
+                    '[data-status=active] &': {
+                      background: 'lightgrey',
+                    },
+                    '[data-status=incomplete] &': {
+                      background: 'lightgrey',
+                    },
+                  }} />
               </Box>
 
             </Box>
@@ -1023,7 +1024,7 @@ const StepperDataTagg: FunctionComponent<FCType_StepperDataTagg> = ({ new_data, 
         </Step>
       ))}
     </Stepper>
-    
+
     {/* Second stepper just to have text well aligned with indicator */}
     <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
       {stepper_sequence.map((step, index) => (
