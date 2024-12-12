@@ -74,7 +74,6 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
 
 
   const menu_items = [
-    config_object.isGivenAccordionShowed('MEP') ?
       <AccordionItem>
         {
           //MENU PARAMETRE GENERAUX
@@ -100,8 +99,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
             {menu_configuration_layout}
           </Box>
         </AccordionPanel>
-      </AccordionItem> :
-      <></>,
+      </AccordionItem> ,
 
     <AccordionItem>
       {

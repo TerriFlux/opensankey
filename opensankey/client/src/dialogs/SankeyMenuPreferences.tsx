@@ -25,7 +25,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
 ) => {
   // Data -------------------------------------------------------------------------------
 
-  const { t,preference_menu_all_item,checkbox_refs } = new_data
+  const { t, preference_menu_all_item, checkbox_refs } = new_data
 
   // Component updater ------------------------------------------------------------------
   const [, setUpdate] = useState(0)
@@ -47,11 +47,14 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
     })
   }
 
+  new_data.menu_configuration.ref_to_modal_pref_updater.current = () => {
+    setUpdate(a => a + 1)
+  }
+
+
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
   // Update input data value
   ref_set_text_value_input.current(new_data.node_label_separator)
-
-
   // JSX Component ----------------------------------------------------------------------
   const node_label_sep = <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
     <Box layerStyle='menuconfigpanel_row_2cols' >
@@ -82,7 +85,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         >
           {t('Menu.before')}
         </Button>
-        <Button variant={new_data.node_label_separator_part  == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+        <Button variant={new_data.node_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
           onClick={() => {
             new_data.node_label_separator_part = 'after'
             new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
@@ -124,7 +127,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
           <Button variant='menuconfigpanel_option_button_left'
             onClick={() => {
               sessionStorage.removeItem('modepref')
-              update_checkboxes(['MEP'])
+              update_checkboxes([])
             }}
           >
             Mode Simple
@@ -141,13 +144,9 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
       </Box>,
 
       <Checkbox
-        key={3}
-        ref={checkbox_refs['MEP']}
+        isDisabled
         variant='menuconfigpanel_option_checkbox'
-        defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('MEP')}
-        onChange={() => {
-          new_data.menu_configuration.toggleGivenAccordion('MEP')
-        }}
+        isChecked
       >
         {t('Menu.MEP')}
       </Checkbox>,
@@ -165,7 +164,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         key={5}
         ref={checkbox_refs['EN']}
         variant='menuconfigpanel_option_checkbox'
-        defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EN')}
+        isChecked={new_data.menu_configuration.isGivenAccordionShowed('EN')}
         onChange={() => {
           new_data.menu_configuration.toggleGivenAccordion('EN')
         }}>
@@ -185,7 +184,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         key={7}
         ref={checkbox_refs['EF']}
         variant='menuconfigpanel_option_checkbox'
-        defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('EF')}
+        isChecked={new_data.menu_configuration.isGivenAccordionShowed('EF')}
         onChange={() => {
           new_data.menu_configuration.toggleGivenAccordion('EF')
         }}>
@@ -196,7 +195,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         key={8}
         ref={checkbox_refs['ED']}
         variant='menuconfigpanel_option_checkbox'
-        defaultChecked={new_data.menu_configuration.isGivenAccordionShowed('ED')}
+        isChecked={new_data.menu_configuration.isGivenAccordionShowed('ED')}
         onChange={() => {
           new_data.menu_configuration.toggleGivenAccordion('ED')
         }}>
