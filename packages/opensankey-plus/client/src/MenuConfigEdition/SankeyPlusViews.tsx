@@ -1167,7 +1167,7 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
               const master_view = new_data_plus.master_view
               if (master_view) {
                 new_data_plus.drawing_area.updateFrom(master_view, new_data_plus.drawing_area.heredited_attr)
-                new_data_plus.drawing_area.draw()
+                new_data_plus.draw()
               }
             }}
           >

@@ -37,7 +37,9 @@ import type {
   Class_LevelTag,
   Class_DataTag,
   Class_LevelTagGroup,
-  Class_DataTagGroup
+  Class_DataTagGroup,
+  Class_NodeTagGroup,
+  Class_FluxTagGroup
 } from '../deps/OpenSankey/types/Tag'
 
 // Local functions / components
@@ -216,7 +218,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
    *
    * @param {Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup} tagg
    */
-  const handleDelGroupTag = (tagg: Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup) => {
+  const handleDelGroupTag = (tagg: Class_NodeTagGroup | Class_FluxTagGroup | Class_LevelTagGroup | Class_DataTagGroup) => {
     // Delete given tag group
     new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tagg)
     // Update menus
