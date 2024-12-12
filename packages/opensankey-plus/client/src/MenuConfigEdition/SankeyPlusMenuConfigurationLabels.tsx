@@ -53,10 +53,12 @@ export const MenuPreferenceLabelsOSP: FunctionComponent<FCType_MenuPreferenceLab
   new_data_plus
 }) => {
   const [, setCount] = useState(0)
+  new_data_plus.menu_configuration.ref_to_checkbox_pref_container_updater.current=()=>setCount(a=>a+1)
   return <Checkbox
     ref={new_data_plus.checkbox_refs['LL']}
     variant='menuconfigpanel_option_checkbox'
-    defaultChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('LL')} onChange={() => {
+    isChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('LL')} 
+    onChange={() => {
       new_data_plus.menu_configuration.toggleGivenAccordion('LL')
       setCount(a => a + 1)
     }}>

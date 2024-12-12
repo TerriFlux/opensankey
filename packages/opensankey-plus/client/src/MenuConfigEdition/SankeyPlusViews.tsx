@@ -821,11 +821,12 @@ export const MenuPreferenceViewOSP: FunctionComponent<FCType_MenuPreferenceViewO
   { new_data_plus }
 ) => {
   const [, setCount] = useState(0)
+  new_data_plus.menu_configuration.ref_to_checkbox_pref_view_updater.current=()=>setCount(a=>a+1)
   const { t } = new_data_plus
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
     ref={new_data_plus.checkbox_refs['Vis']}
-    defaultChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('Vis')}
+    isChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('Vis')}
     onChange={() => {
       new_data_plus.menu_configuration.toggleGivenAccordion('Vis')
       setCount(a => a + 1)
