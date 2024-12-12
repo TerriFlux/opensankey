@@ -229,7 +229,6 @@ export abstract class Class_ApplicationDataPlus
       (active_view_id in this._views)
     ) {
       this._drawing_area = this._views[active_view_id]
-      this._drawing_area.draw()
     }
   }
 
