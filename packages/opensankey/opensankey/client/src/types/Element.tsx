@@ -27,7 +27,8 @@ import {
   getStringFromJSON,
   getNumberFromJSON,
   Type_Position,
-  getStringOrUndefinedFromJSON
+  getStringOrUndefinedFromJSON,
+  randomId
 } from './Utils'
 
 
@@ -102,6 +103,14 @@ export abstract class Class_ProtoElement
   protected _is_visible: boolean = true
 
   /**
+   * Allows to know if element visibility must be recomputed
+   * @protected
+   * @type {boolean}
+   * @memberof Class_ProtoElement
+   */
+  protected _visibility_fingerprint: string
+
+  /**
    * Is mouse cursor over element d3 selection (default=false)
    * @protected
    * @type {boolean}
@@ -153,6 +162,10 @@ export abstract class Class_ProtoElement
     this._id = id
     this._svg_parent_group = svg_parent_group
     this._menu_config = menu_config
+    // Init visibility id
+    this._visibility_fingerprint = randomId()
+    // Element created -> set save indicator
+    this._menu_config.ref_to_save_in_cache_indicator.current(false)
   }
 
   // DELETION METHODS ===================================================================
@@ -194,6 +207,8 @@ export abstract class Class_ProtoElement
     this.unDraw()
     // Copy intrasect values
     this._copyFrom(element_to_copy)
+    // We will need to check all visibility tests after copy
+    this.updateVisibilityFingerprint()
   }
 
   /**
@@ -249,6 +264,8 @@ export abstract class Class_ProtoElement
     this.unDraw()
     // Get infos
     this._fromJSON(json_object, kwargs)
+    // We will need to check all visibility tests after loading
+    this.updateVisibilityFingerprint()
   }
 
   protected _fromJSON(
@@ -563,9 +580,13 @@ export abstract class Class_ProtoElement
   public get is_selected() { return this._is_selected }
 
   // Visible
-  public setVisible() { this._is_visible = true; this.draw() }
-  public setInvisible() { this._is_visible = false; this.draw() }
-  public get is_visible() { return (this.sankey.is_visible && this._is_visible) }
+  public setVisible() { this._is_visible = true; this.updateVisibilityFingerprint(); this.draw() }
+  public setInvisible() { this._is_visible = false; this.updateVisibilityFingerprint();  this.draw() }
+  public updateVisibilityFingerprint() { this._visibility_fingerprint = randomId() }
+  public get is_visible() {
+    return (this.sankey.is_visible && this._is_visible)
+  }
+  public get visibility_fingerprint() { return this._visibility_fingerprint }
 
   // Mouse is over element
   public isMouseOver() { return this._is_mouse_over }

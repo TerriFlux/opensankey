@@ -279,6 +279,19 @@ export abstract class Class_LinkElement
     position_offset_label?: number // optional var used when label is dragged (if label follow link path)
   }
 
+  // Visibility memorized - source & target
+  protected _source_visibility_fingerprint: string
+  protected _target_visibility_fingerprint: string
+  protected _are_source_and_target_displayed: boolean | undefined = undefined
+
+  // Visibility memorized - flux tags
+  protected _flux_tags_fingerprint: string = ''
+  protected _are_related_flux_tags_selected: boolean | undefined = undefined
+
+  // Visibility memorized - values
+  protected _datatags_fingerprint: string = ''
+  protected _is_not_null: boolean | undefined = undefined
+
   // PRIVATE ATTRIBUTES =================================================================
 
   /**
@@ -383,7 +396,9 @@ export abstract class Class_LinkElement
       })
     // Source
     this._source = source
+    this._source_visibility_fingerprint = source.visibility_fingerprint
     this._target = target
+    this._target_visibility_fingerprint = target.visibility_fingerprint
   }
 
   protected initControlPoints(
@@ -660,17 +675,20 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public inverse() {
+    // Save prev source & target + remove link/nodes relationships
     const tmp_target = this._target
     tmp_target.removeInputLink(this) // remove link from curr IO dict
-
     const tmp_source = this._source
     tmp_source.removeOutputLink(this) // remove link from curr IO dict
-
+    // Set source & target attributes
     this._source = tmp_target
     this._target = tmp_source
-    this._source.addOutputLink(this) // add link to corresponding IO
-    this._target.addInputLink(this) // add link to corresponding IO
-
+    // Set to recompute visibility from nodes after
+    this._are_source_and_target_displayed = undefined
+    // add link to corresponding IO
+    this._source.addOutputLink(this)
+    this._target.addInputLink(this)
+    // Draw
     this.drawElements()
   }
 
@@ -713,6 +731,10 @@ export abstract class Class_LinkElement
     return false
   }
 
+  public tagsUpdated() {
+    this._are_related_flux_tags_selected = undefined
+  }
+
   /**
    * Add and cross-reference a Tag with a link
    * @param {Class_Tag} tag
@@ -720,8 +742,11 @@ export abstract class Class_LinkElement
    */
   public addTag(tag: Class_Tag) {
     const value = this.value
-    if (value)
+    if (value) {
       value.addTag(tag)
+      // Set to recompute visibility from tags after
+      this.tagsUpdated()
+    }
   }
 
   /**
@@ -731,27 +756,45 @@ export abstract class Class_LinkElement
    */
   public removeTag(tag: Class_Tag) {
     const value = this.value
-    if (value)
+    if (value) {
       value.removeTag(tag)
+      // Set to recompute visibility from tags after
+      this.tagsUpdated()
+    }
   }
 
   public addDataTagGroup(tagg: Class_DataTagGroup) {
+    // Expand values tree
     this._values = this._values.expand(tagg)
+    // Set to recompute visibility from tags after -> new data tagg = new values = new flux tags
+    this.tagsUpdated()
   }
 
   public removeDataTagGroup(tagg: Class_DataTagGroup) {
-    if (this._values instanceof Class_LinkValueTree)
+    if (this._values instanceof Class_LinkValueTree) {
+      // Prune values tree
       this._values = this._values.prune(tagg)
+      // Set to recompute visibility from tags after -> less data tagg = differents values = different flux tags
+      this.tagsUpdated()
+    }
   }
 
   public addDataTag(tag: Class_DataTag) {
-    if (this._values instanceof Class_LinkValueTree)
+    if (this._values instanceof Class_LinkValueTree) {
+      // Extend current value tree branch
       this._values.extend(tag)
+      // Set to recompute visibility from tags after -> new data tag = new value = new flux tags
+      this.tagsUpdated()
+    }
   }
 
   public removeDataTag(tag: Class_DataTag) {
-    if (this._values instanceof Class_LinkValueTree)
+    if (this._values instanceof Class_LinkValueTree) {
+      // reduce current value tree branch
       this._values.reduce(tag)
+      // Set to recompute visibility from tags after -> less data tag = differente value = different flux tags
+      this.tagsUpdated()
+    }
   }
 
   public useDefaultStyle() {
@@ -960,7 +1003,7 @@ export abstract class Class_LinkElement
     // Draw only if we have starting & ending points
     if (starting_point && ending_point) {
       // Setup order
-      //this.drawing_area.orderElements()
+      this.drawing_area.orderElements()
       // Draw elements
       this._drawElements()
     }
@@ -2221,7 +2264,7 @@ export abstract class Class_LinkElement
     return (
       super.is_visible &&
       this.are_source_and_target_displayed &&
-      this.are_related_tags_selected &&
+      this.are_related_flux_tags_selected &&
       this.is_not_null
     )
   }
@@ -2256,8 +2299,12 @@ export abstract class Class_LinkElement
    */
   public set source(_: Type_GenericNodeElement) {
     if (this.source !== _) {
+      // Memorize old source
       const old_source = this._source
+      // Set source attr
       this._source = _
+      // Set to recompute visibility from nodes after
+      this._are_source_and_target_displayed = undefined
       // Clean old source
       old_source.swapOutputLink(this, _)
 
@@ -2325,8 +2372,12 @@ export abstract class Class_LinkElement
    */
   public set target(_: Type_GenericNodeElement) {
     if (this.target !== _) {
+      // Memorize old target for swapping
       const old_target = this._target
+      // Assign target attribute
       this._target = _
+      // Set to recompute visibility from nodes after
+      this._are_source_and_target_displayed = undefined
       // Clean old source
       old_target.swapInputLink(this, _)
       // If we set a target to himself then make the link a recycing one
@@ -3333,18 +3384,37 @@ export abstract class Class_LinkElement
    * @readonly
    * @memberof Class_LinkElement
    */
-  public get are_related_tags_selected() {
-    const list_tag = this.flux_taggs_list
-    if (list_tag.length > 0) {
-      let display = true
-      // Check if at least one flux tag is selected in each group = ok to display
-      Object.values(this.value?.taggs_dict ?? {}).forEach(tag_list => {
-        display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
-      })
-      return display
-    } else {
-      return true // if no tag associated to flux then ok to display
+  public get are_related_flux_tags_selected(): boolean {
+    if (
+      (this._are_related_flux_tags_selected === undefined) ||
+      (this.sankey.flux_tags_fingerprint !== this._flux_tags_fingerprint)
+    ) {
+      // Recompute visibility value
+      let are_related_flux_tags_selected: boolean
+      const list_tag = this.flux_taggs_list
+      if (list_tag.length > 0) {
+        let display = true
+        // Check if at least one flux tag is selected in each group = ok to display
+        Object.values(this.value?.taggs_dict ?? {})
+          .forEach(tag_list => {
+            display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
+          })
+        are_related_flux_tags_selected =  display
+      }
+      else {
+        are_related_flux_tags_selected = true // if no tag associated to flux then ok to display
+      }
+      // Update  fingerprint if needed
+      // -> This condition allows to avoid unecessary visibility recomputing on related elements
+      //    that check this link's visibility fingerprint
+      if (are_related_flux_tags_selected !== this._are_related_flux_tags_selected) {
+        this.updateVisibilityFingerprint()
+      }
+      // Update memorized values
+      this._are_related_flux_tags_selected = are_related_flux_tags_selected
+      this._flux_tags_fingerprint = this.sankey.flux_tags_fingerprint
     }
+    return this._are_related_flux_tags_selected
   }
 
   /**
@@ -3353,24 +3423,24 @@ export abstract class Class_LinkElement
    * @readonly
    * @memberof Class_LinkElement
    */
-  public get is_not_null() {
-    return this.data_value !== 0
-  }
-
-  /**
- * If drawing area has filter_link_value above 0:
- * - check if the link value is superior to the filter
- *   if not don't display the link
- * @readonly
- * @private
- * @memberof Class_LinkElement
- */
-  protected get is_value_above_threshold() {
-    if (this.drawing_area.filter_link_value == 0) {
-      return true
-    } else {
-      return Number(this.data_value) >= this.drawing_area.filter_link_value
+  public get is_not_null(): boolean {
+    if (
+      (this._is_not_null === undefined) ||
+      (this._datatags_fingerprint !== this.sankey.data_tags_fingerprint)
+    ) {
+      // Recompute visibility value
+      const is_not_null = (this.data_value !== 0)
+      // Update  fingerprint if needed
+      // -> This condition allows to avoid unecessary visibility recomputing on related elements
+      //    that check this link's visibility fingerprint
+      if (is_not_null !== this._is_not_null) {
+        this.updateVisibilityFingerprint()
+      }
+      // Update memorized values
+      this._is_not_null = is_not_null
+      this._datatags_fingerprint = this.sankey.data_tags_fingerprint
     }
+    return this._is_not_null
   }
 
   /**
@@ -3381,11 +3451,45 @@ export abstract class Class_LinkElement
    * @return {*}
    * @memberof Class_LinkElement
    */
-  private get are_source_and_target_displayed() {
-    return (
-      (this._source?.is_visible ?? false) &&
-      (this._target?.is_visible ?? false)
-    )
+  private get are_source_and_target_displayed(): boolean {
+    if (
+      (this._are_source_and_target_displayed === undefined) ||
+      (this._source.visibility_fingerprint !== this._source_visibility_fingerprint) ||
+      (this._target.visibility_fingerprint !== this._target_visibility_fingerprint)
+    ) {
+      // Recompute visibility value
+      const are_source_and_target_displayed = (
+        (this._source?.is_visible ?? false) &&
+        (this._target?.is_visible ?? false)
+      )
+      // Update  fingerprint if needed
+      // -> This condition allows to avoid unecessary visibility recomputing on related elements
+      //    that check this link's visibility fingerprint
+      if (are_source_and_target_displayed !== this._are_source_and_target_displayed) {
+        this.updateVisibilityFingerprint()
+      }
+      // Update memorized values
+      this._are_source_and_target_displayed = are_source_and_target_displayed
+      this._source_visibility_fingerprint = this._source.visibility_fingerprint
+      this._target_visibility_fingerprint = this._target.visibility_fingerprint
+    }
+    return this._are_source_and_target_displayed
+  }
+
+  /**
+   * If drawing area has filter_link_value above 0:
+   * - check if the link value is superior to the filter
+   *   if not don't display the link
+   * @readonly
+   * @private
+   * @memberof Class_LinkElement
+   */
+  protected get is_value_above_threshold(): boolean {
+    if (this.drawing_area.filter_link_value == 0) {
+      return true
+    } else {
+      return Number(this.data_value) >= this.drawing_area.filter_link_value
+    }
   }
 
   private get tooltip_html() {
@@ -4678,12 +4782,12 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    * @memberof Class_LinkValue
    */
   private addTagToGroupTagDict(tag: Class_Tag) {
-    const grp_name = tag.group.name
-    if (grp_name in this._taggs_dict) {
-      if (!(this._taggs_dict[tag.group.id].includes(tag)))
-        this._taggs_dict[tag.group.id].push(tag)
+    const grp_id = tag.group.id
+    if (grp_id in this._taggs_dict) {
+      if (!(this._taggs_dict[grp_id].includes(tag)))
+        this._taggs_dict[grp_id].push(tag)
     } else {
-      this._taggs_dict[tag.group.id] = [tag]
+      this._taggs_dict[grp_id] = [tag]
     }
   }
 

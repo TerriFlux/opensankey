@@ -519,36 +519,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public draw(
-    with_spinner: boolean = true
   ) {
-    if (with_spinner) {
-      this.application_data.sendWaitingToast(
-        () => {
-          this._draw()
-        },
-        {
-          success: {
-            title: this.application_data.t('toast.draw.success.title'),
-            desc: this.application_data.t('toast.draw.success.desc')
-          },
-          loading: {
-            title: this.application_data.t('toast.draw.loading.title'),
-            desc: this.application_data.t('toast.draw.loading.desc')
-          }
-        }
-      )
-    }
-    else {
-      this._draw()
-    }
-  }
-
-  /**
-   * Reset drawing area
-   * @protected
-   * @memberof Class_DrawingArea
-   */
-  protected _draw() {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
 

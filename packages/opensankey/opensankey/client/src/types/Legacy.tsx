@@ -440,7 +440,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   } else {
     data_to_convert.node_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
   }
-  
+
   // Convert name variable for data version>0.9
   data_to_convert.filter_link_value = data_to_convert.display_style.filter
   data_to_convert.filter_label = data_to_convert.display_style.filter_label
@@ -1237,7 +1237,7 @@ const convert_tags: convert_tagsFuncType = (
       delete data.nodeTags[tagg[0]]
     } else if (Object.keys(data.nodeTags[tagg[0]].tags)[0]=='1') {
       data.levelTags[tagg[0]] = tagg[1]
-      delete data.nodeTags[tagg[0]]      
+      delete data.nodeTags[tagg[0]]
     }
   })
 
@@ -1267,7 +1267,7 @@ const convert_tags: convert_tagsFuncType = (
             }
           } else if (n.outputLinksId.length === 0) {
             n.style = 'NodeExportStyle'
-            if (n.inputLinksId.length !== 0) {            
+            if (n.inputLinksId.length !== 0) {
               data.links[n.inputLinksId[0]].style = 'LinkExportStyle'
             }
           }
@@ -1306,7 +1306,7 @@ export const NodeHasDisplayedLevel = (
       to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
     } else if (n.dimensions[nt[0]] && n.dimensions[nt[0]].children_tags != undefined && n.dimensions[nt[0]].children_tags!.length !=0) {
       const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t.name)
-      to_display = (n.dimensions[nt[0]].children_tags!.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false    
+      to_display = (n.dimensions[nt[0]].children_tags!.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
     } else if (n.dimensions[nt[0]] && n.dimensions[nt[0]].force_show_children) {
       to_display = false
     }
@@ -2193,7 +2193,7 @@ const convert_links: convert_linksFuncType = (
       font_family: '',
       label_unit_visible: true,
       label_unit: '',
-      
+
       gradient: false
     }
 
@@ -2236,16 +2236,16 @@ const convert_links: convert_linksFuncType = (
         let dist: number
         if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          dist = Math.max(0.1, Math.sqrt(
+          dist = Math.max(20, Math.sqrt(
             (target_node.x - source_node.x) * (target_node.x - source_node.x) +
             (target_node.y - source_node.y) * (target_node.y - source_node.y))) // Avoid div per 0
         }
         else if ((l.local.orientation && l.local.orientation == 'vv')) {
           // In old file, for recycling only, shift are not relative but are absolute distances from nodes
-          dist = Math.max(0.1, Math.abs(target_node.y - source_node.y)) // Avoid div per 0
+          dist = Math.max(20, Math.abs(target_node.y - source_node.y)) // Avoid div per 0
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
-          dist = Math.max(0.1, Math.abs(target_node.x - source_node.x)) // Avoid div per 0
+          dist = Math.max(20, Math.abs(target_node.x - source_node.x)) // Avoid div per 0
         }
         // Recompute shift & tangeant
         const curve_coef = (l.local.curvature ?? 0.5)
