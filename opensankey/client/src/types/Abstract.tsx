@@ -111,23 +111,30 @@ export abstract class Class_AbstractSankey {
   public abstract get link_styles_list_sorted(): Class_AbstractLinkStyle[]
   public abstract get node_taggs_dict(): { [id: string]: Class_AbstractTagGroup }
   public abstract get node_taggs_list(): Class_AbstractTagGroup[]
+  public abstract get node_tags_fingerprint(): string
   public abstract get flux_taggs_dict(): { [id: string]: Class_AbstractTagGroup }
   public abstract get flux_taggs_list(): Class_AbstractTagGroup[]
+  public abstract get flux_tags_fingerprint(): string
   public abstract get data_taggs_dict(): { [id: string]: Class_AbstractTagGroup }
   public abstract get data_taggs_list(): Class_AbstractTagGroup[]
   public abstract get data_taggs_entries(): [string, Class_AbstractTagGroup][]
+  public abstract get data_tags_fingerprint(): string
   public abstract get selected_data_tags_list(): Class_AbstractTag[]
   public abstract get selected_data_tags_entries(): { [id: string]: Class_AbstractTag }
   public abstract get list_combinatorial_data_taggs_path(): string[][]
   public abstract get level_taggs_dict(): { [id: string]: Class_AbstractLevelTagGroup }
   public abstract get level_taggs_list(): Class_AbstractLevelTagGroup[]
   // Mandatory methods
+  public abstract draw(): void
   public abstract addNewDefaultNode(): Type_AbstractNodeElement
   public abstract addNewNode(id: string, name: string): Type_AbstractNodeElement
   public abstract addNewLink(s: Type_AbstractNodeElement, t: Type_AbstractNodeElement): Type_AbstractLinkElement
   public abstract addNewLinkWithId(i: string, s: Type_AbstractNodeElement, t: Type_AbstractNodeElement): Type_AbstractLinkElement
   public abstract addNewNodeStyle(id: string, name: string): Class_AbstractNodeStyle
   public abstract addNewLinkStyle(id: string, name: string): Class_AbstractLinkStyle
+  public abstract nodeTagsUpdated(): void
+  public abstract fluxTagsUpdated(): void
+  public abstract dataTagsUpdated(): void
 }
 
 export abstract class Class_AbstractTagGroup {

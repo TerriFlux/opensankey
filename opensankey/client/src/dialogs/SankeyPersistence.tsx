@@ -350,8 +350,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   const data_as_json = JSON.parse(text) as Type_JSON
   data_as_json['version'] = '0.9' // Avoid converter process
   // Extract sankey datas from JSON
-  new_data.drawing_area.bypass_redraws = true
-  new_data.fromJSON(data_as_json)
+  new_data.fromJSON(data_as_json, false)
   // Case 1 : Apply extracted layout if present -> contains positions
   if (data_as_json['layout']) {
     new_data.updateFromJSON(data_as_json)
@@ -362,7 +361,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     new_data.drawing_area.computeAutoFullSankey()
   }
   // Redraw
-  new_data.drawing_area.draw()
+  new_data.draw()
 }
 
 
@@ -447,8 +446,7 @@ export const UploadExemple: FType_UploadExemple = (
       }
       if (!file_name.includes('.xlsx')) {
         // Clear datas & apply read datas
-        new_data.drawing_area.bypass_redraws = true
-        new_data.fromJSON(JSON_data as Type_JSON)
+        new_data.fromJSON(JSON_data as Type_JSON, false)
       }
     })
   })

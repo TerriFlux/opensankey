@@ -183,7 +183,6 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
-            new_data.drawing_area.draw()
             // Refresh this & related component
             new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
           }}
@@ -200,7 +199,6 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // Set tag with given id as selected : other are unselected
           tagg.selectTagsFromId(evt.target.value)
-
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -233,12 +231,6 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // Set tag with given id as selected : other are unselected
           tagg.selectTagsFromId(evt.target.value)
-
-          // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
-          // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
-          // TODo optimize the redraw
-          new_data.drawing_area.draw()
-
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -281,11 +273,6 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         onChange={(curr_selected_tags_options: [{ label: string, value: string }]) => {
           // Set tags with given id as selected : other are unselected
           tagg.selectTagsFromIds(curr_selected_tags_options.map(_ => _.value))
-
-          // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
-          // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
-          new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -353,11 +340,6 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             // Set correct tag as selected
             flux_tagg.selectTagsFromId(evt.target.value)
-
-            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
-            // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
-            new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-
             // Update related components (includes this)
             new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
           }}
@@ -394,11 +376,6 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
           onChange={(options_selected: [{ label: string, value: string }]) => {
             // Set correct tags as selected
             flux_tagg.selectTagsFromIds(options_selected.map(_ => _.value))
-
-            // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
-            // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
-            new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-
             // Update related components (includes this)
             new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
           }}
@@ -564,7 +541,6 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
                     Object.values(data_taggs_with_banner)
                       .forEach(tagg => tagg.show_legend = false)
                     tagg.show_legend = evt.target.checked
-                    new_data.drawing_area.legend.draw()
                     new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
                   }}
                 /> :
