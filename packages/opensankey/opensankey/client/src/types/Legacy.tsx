@@ -2315,8 +2315,8 @@ const convert_links: convert_linksFuncType = (
           dist = Math.max(20, Math.abs(target_node.y - source_node.y)) // Avoid div per 0
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
-          dist = Math.max(50, Math.abs(target_node.x - source_node.x)) // Avoid div per 0
-        }S
+          dist = Math.max(20, Math.abs(target_node.x - source_node.x)) // Avoid div per 0
+        }
         // Recompute shift & tangeant
         const curve_coef = (l.local.curvature ?? 0.5)
         const curve_dist_min = 20 // px
