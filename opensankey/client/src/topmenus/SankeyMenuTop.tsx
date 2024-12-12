@@ -467,7 +467,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
                     // Get JSON Data
                     const file_content = String((e.target as FileReader).result)
                     const JSON_data = JSON.parse(file_content)
-                    new_data.drawing_area.bypass_redraws = true
                     new_data.fromJSON(JSON_data as Type_JSON)
                   }
                 })()

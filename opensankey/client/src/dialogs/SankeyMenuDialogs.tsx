@@ -136,7 +136,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
     const exchange_nodes = process_nodes.filter(n => n.hasGivenTag(echangeTag))
     // Position of trade nodes need to be recomputed
     exchange_nodes.forEach(n => n.applyPosition())
-    applicationData.drawing_area.draw()
+    applicationData.draw()
   }
 
   const content_modal_layout = <Tabs>
@@ -569,7 +569,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                       }
                     })
                 }
-                applicationData.drawing_area.draw()
+                applicationData.draw()
               }}>
               {t('MEP.reInitDY')}
             </Button> : <></>}

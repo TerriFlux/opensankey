@@ -192,9 +192,13 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       return level
     }
   }
+
   public showAccordingToLevelTags() {
     // Unset booleans
-    this._unsetForcingToShow()
+    const nodes_to_redraw = this._unsetForcingToShow()
+    // Redraw
+    nodes_to_redraw
+      .forEach(node => node.draw())
   }
 
   /**
@@ -214,6 +218,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     // Set booleans accordingly
     this._force_show_children = false
     this._force_show_parent = true
+    this._updated()
     // Unset all other children node's dimensions
     let nodes_to_redraw = new Set([
       this._parent,
@@ -252,6 +257,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     // Set booleans accordingly
     this._force_show_children = true
     this._force_show_parent = false
+    this._updated()
     // Unset other dimensions
     let nodes_to_redraw = new Set([
       this._parent,
@@ -273,6 +279,11 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
 
   // PROTECTED METHODS ==================================================================
 
+  protected _updated() {
+    this._parent.dimensionsUpdated()
+    this._children.forEach(child => child.dimensionsUpdated())
+  }
+
   protected _unsetForcingToShow() {
     // Protection against infinite recursion
     if (this._is_currently_in_unsetting_recursion)
@@ -283,6 +294,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     // Set booleans accordingly
     this._force_show_children = false
     this._force_show_parent = false
+    this._updated()
     // Unsetting boolean are propagated through childrens
     let nodes_to_redraw = new Set([
       this._parent,
