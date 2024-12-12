@@ -446,7 +446,7 @@ export const UploadExemple: FType_UploadExemple = (
       }
       if (!file_name.includes('.xlsx')) {
         // Clear datas & apply read datas
-        new_data.fromJSON(JSON_data as Type_JSON, false)
+        new_data.fromJSON(JSON_data as Type_JSON)
       }
     })
   })
