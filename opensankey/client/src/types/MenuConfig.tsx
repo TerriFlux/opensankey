@@ -67,7 +67,7 @@ export class Class_MenuConfig {
    * @type {string[]}
    * @memberof Class_MenuConfig
    */
-  protected _accordions_to_show: string[] = ['MEP']
+  protected _accordions_to_show: string[] = []
 
   /* ========================================
     Timeout dict
@@ -180,6 +180,9 @@ export class Class_MenuConfig {
 
   // Update component ApplyLayoutDialog
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
+
+  // Update component OpenSankeyConfigurationsMenus
+  private _ref_to_modal_pref_updater: MutableRefObject<() => void>
 
   /* ========================================
     Updater of filtering components
@@ -299,6 +302,10 @@ export class Class_MenuConfig {
     // Init ApplyLayoutDialog components updater ------------------------------------------------
 
     this._ref_to_updater_modal_apply_layout=useRef(()=>null)
+
+    // Init ModalPreference components updater ------------------------------------------------
+
+    this._ref_to_modal_pref_updater=useRef(()=>null)
 
     // Init dict of setter show dialog -------------------------------------------------
 
@@ -698,6 +705,12 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToNodeTags()
     this.updateAllComponentsRelatedToFluxTags()
     this.updateAllComponentsRelatedToLevelTags()
+    this.updateComponentPref()
+  }
+
+  public updateComponentPref(){
+    this._ref_to_modal_pref_updater.current()
+
   }
 
   public updateMenuConfigComponent(){
@@ -1126,6 +1139,10 @@ export class Class_MenuConfig {
   // Getter ref updater ApplyLayoutDialog OS component
   public get ref_to_updater_modal_apply_layout(): MutableRefObject<() => void> {
     return this._ref_to_updater_modal_apply_layout
+  }
+
+  public get ref_to_modal_pref_updater(){
+    return this._ref_to_modal_pref_updater
   }
 }
 
