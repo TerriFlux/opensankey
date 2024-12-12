@@ -451,6 +451,9 @@ export abstract class Class_ApplicationDataPlus
         this._drawing_area.setToModeEdition(false)
         // Draw new-sankey
         this._drawing_area.draw()
+
+        this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
+
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
         this._menu_configuration.updateComponentRelatedToViews()
