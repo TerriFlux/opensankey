@@ -230,6 +230,26 @@ export abstract class Class_ApplicationDataPlus
     ) {
       this._drawing_area = this._views[active_view_id]
     }
+
+    // Update displayed element in menu config
+    this.updateDisplayedConfigMenu()
+  }
+  /**
+   * Function that check elements in saneky and display sub config menu in menu configuration
+   *
+   * @memberof Class_ApplicationDataPlus
+   */
+  public updateDisplayedConfigMenu() {
+    if (this._drawing_area.sankey.node_taggs_list.length > 0)
+      this.menu_configuration.addToAccordionsToShow('EN')
+    if (this._drawing_area.sankey.flux_taggs_list.length > 0)
+      this.menu_configuration.addToAccordionsToShow('EF')
+    if (this._drawing_area.sankey.data_taggs_list.length > 0)
+      this.menu_configuration.addToAccordionsToShow('ED')
+    if (this._drawing_area.sankey.containers_list.length > 0)
+      this.menu_configuration.addToAccordionsToShow('LL')
+    if (this._views_order.length > 1)
+      this.menu_configuration.addToAccordionsToShow('Vis')
   }
 
   /**

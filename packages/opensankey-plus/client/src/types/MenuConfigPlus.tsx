@@ -68,6 +68,11 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _ref_to_drawer_sequence_data_tag_updater: MutableRefObject<(() => void)>
 
 
+  private _ref_to_checkbox_pref_view_updater: MutableRefObject<(() => void)>
+
+  private _ref_to_checkbox_pref_container_updater: MutableRefObject<(() => void)>
+
+
   /* ========================================
   Updater of component for node plus related menus
   ========================================*/
@@ -102,9 +107,11 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_menu_config_container_updater = useRef(() => null)
     this._ref_to_banner_views_updater = useRef(() => null)
     this._ref_to_accordion_views_updater = useRef(() => null)
-    this._ref_to_accordion_containers_updater=useRef(()=>null)
+    this._ref_to_accordion_containers_updater = useRef(() => null)
     this._ref_to_save_diagram_only_view_updater = useRef(() => null)
     this._ref_to_drawer_sequence_data_tag_updater = useRef(() => null)
+    this._ref_to_checkbox_pref_view_updater = useRef(() => null)
+    this._ref_to_checkbox_pref_container_updater = useRef(() => null)
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
     this._r_setter_editor_content_fo_node = useRef(() => null)
@@ -157,6 +164,13 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
         this._zdt_accordion_ref.current.click()
       }
     }, 200)
+  }
+
+  public override updateComponentPref(){
+    super.updateComponentPref()
+    this._ref_to_accordion_containers_updater.current()
+    this._ref_to_checkbox_pref_view_updater.current()
+    this._ref_to_checkbox_pref_container_updater.current()
   }
 
   public override updateComponentSaveDiagramJSON() {
@@ -398,5 +412,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get timeout_sequence(): number { return this._timeout_sequence }
   public set timeout_sequence(value: number) { this._timeout_sequence = value }
+
+  public get ref_to_checkbox_pref_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_checkbox_pref_view_updater }
+  public get ref_to_checkbox_pref_container_updater(): MutableRefObject<(() => void)> { return this._ref_to_checkbox_pref_container_updater }
 
 }
