@@ -60,69 +60,10 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   const myAccount = () => {
     navigate('/account')
   }
-
-   
-  // // @ts-ignore
-  // const list_template = require.context('../../css/easy_template', true)
-  // // @ts-ignore
-  // const list_template_data = list_template.keys().filter(k => k.includes('.json')).map(image => list_template(image))
-  // // @ts-ignore
-  // const names = list_template.keys().filter(k => k.includes('.json'))
-  // // @ts-ignore
-  // const image_preview = require.context('../../css/image_preview', true)
-  // // @ts-ignore
-  // const imageList = image_preview.keys().map(image => {
-  //   let img = image_preview(image)
-  //   const path = window.location.href
-  //   if (!path.includes('localhost')) {
-  //     img = img.replace('static/', 'static/sankeyapp/')
-  //   }
-  //   return img
-  // })
-   
-
-  // List of example of sankey
+ 
   // Displayed in card
   const modalTemplate = <></>
-  // <>
-  //   {(list_template_data as SankeyData[]).map((_, idx) => {
-  //     const title = names[idx].slice(2).split('.').splice(0, 1).join('')
-  //     suite_convert_data(_, SuiteDefaultData)
-  //     return (
-  //       <Card variant='cards_template'>
-  //         <CardBody>
-  //           <Stack>
-  //             <Heading variant='heading_template_dashboard'>{title.split('_').join(' ')}</Heading>
-  //             <Image className='img-card' src={imageList[idx]} style={{ 'objectFit': 'contain', 'maxHeight': '150px' }} />
-  //           </Stack>
-  //         </CardBody>
-  //         <Divider />
-  //         <CardFooter>
-  //           <ButtonGroup
-  //             //ButtonGroup don't have variants theming so we modify directly the style
-  //             style={{
-  //               margin:'auto'
-  //             }}>
-  //             <Button
-  //               variant='toolbar_button_2'
-  //               onClick={() => {
-  //                 navigate('/')
-  //                 localStorage.setItem('data', LZString.compress(JSON.stringify(_)))
-  //                 set_update(!update)
-  //               }}>{t('useTemplate')}
-  //             </Button>
-  //             <Button
-  //               variant='toolbar_button_3'
-  //               onClick={() => {
-  //                 ClickSaveExcel('/opensankey/', _)
-  //               }}>{t('dl')}</Button>
-
-  //           </ButtonGroup>
-  //         </CardFooter>
-  //       </Card>
-  //     )
-  //   })}
-  // </>
+  
 
   return (
     <div>
