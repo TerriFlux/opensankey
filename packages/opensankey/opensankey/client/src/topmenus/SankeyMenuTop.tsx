@@ -79,6 +79,9 @@ import {
   PopoverContent,
   PopoverHeader,
   PopoverArrow,
+  CardHeader,
+  ModalOverlay,
+  Divider,
 } from '@chakra-ui/react'
 
 import { useTour } from '@reactour/tour'
@@ -92,8 +95,10 @@ import {
   FType_ModalResolutionPNG,
   FType_OpenSankeyMenus,
   FCType_ButtonLaunchGuide,
+  FCtype_ModalTemplate,
 } from './types/SankeyMenuTopTypes'
 import {
+  Dict_templates_type,
   OSTooltip,
   Type_JSON
 } from '../types/Utils'
@@ -202,8 +207,8 @@ const logo_contact = <svg
 const logo_tour = <svg
   xmlns='http://www.w3.org/2000/svg'
   viewBox='0 0 135 135'
-  height='2.05rem'
-  width='2.05rem'
+  height='2.0rem'
+  width='2.0rem'
 >
   <path
     d='m 3.6387248,133.29711 c -0.469146,-0.52342 -0.487284,-1.19855 -0.487284,-18.13805 0,-15.987635 0.04112,-17.747655 0.450248,-19.272655 0.980112,-3.65327 3.261387,-7.23345 6.010647,-9.43298 2.7136142,-2.17101 4.3273232,-2.76468 14.1305242,-5.19848 8.507225,-2.11205 9.133187,-2.3066 9.912018,-3.08061 0.790864,-0.78596 0.831331,-0.92018 0.831331,-2.75742 v -1.93125 l -1.417588,-1.08033 c -5.548643,-4.22855 -9.068301,-10.7622 -9.500541,-17.63615 l -0.158295,-2.51738 h -0.938969 c -2.412964,0 -4.8803,-1.63152 -6.018483,-3.9797 -1.169907,-2.41363 -0.760113,-5.984749 0.891034,-7.764866 0.472296,-0.509187 0.471516,-0.550655 -0.03893,-2.06876 -1.058404,-3.14777 0.168767,-6.255966 3.049153,-7.722944 l 0.83133,-0.423395 v -7.943105 c 0,-6.264348 0.08226,-8.268339 0.389221,-9.48196 1.315818,-5.2023233 5.489092,-9.4615053 10.62152,-10.8401683 2.105106,-0.56547 28.104425,-0.556043 30.310205,0.01099 4.1299,1.061662 7.70054,4.010478 9.52988,7.870261 0.57208,1.2070523 1.16318,2.8840533 1.31355,3.7266693 0.15306,0.857715 0.2734,4.846618 0.2734,9.062708 v 7.530679 l 1.26093,0.791186 c 1.85251,1.162387 2.66762,2.551791 2.79111,4.757618 0.0704,1.257877 -0.0276,2.121827 -0.33184,2.926028 -0.42894,1.133687 -0.42749,1.146785 0.22115,2.005173 2.11505,2.798985 1.8351,6.964206 -0.6357,9.458176 -1.12337,1.1339 -3.15873,2.0797 -4.48237,2.08288 l -1.04882,0.003 -0.16424,2.25919 c -0.31297,4.30501 -1.83799,8.89124 -4.02193,12.09526 -1.23543,1.81247 -4.15139,4.82183 -5.74698,5.93106 -1.37045,0.95272 -1.39839,0.99725 -1.39839,2.22849 0,1.44027 0.4581,2.70342 1.23316,3.40027 0.4023,0.3617 2.17863,0.76293 7.10525,1.6049 3.61287,0.61744 7.15714,1.31694 7.87616,1.55443 3.13161,1.03437 5.96806,2.88567 8.3873,5.47425 1.95763,2.09465 2.13792,2.38567 6.10441,9.85349 1.62395,3.05745 3.06279,5.510215 3.19742,5.450585 0.13464,-0.0596 4.44622,-4.939465 9.581284,-10.844095 l 9.33648,-10.73576 0.1279,-28.84816 0.12789,-28.848158 0.78007,-0.787316 c 0.94234,-0.951104 2.31777,-1.24745 3.3543,-0.722706 0.39915,0.202068 3.78842,2.881942 7.53172,5.955276 7.10684,5.834874 7.50627,6.271029 7.50627,8.196397 0,1.940919 -0.37576,2.345272 -7.95479,8.560007 l -7.25276,5.9472 v 13.68052 13.68054 l 0.83133,-0.21416 c 0.45723,-0.11779 1.80974,-0.20344 3.00558,-0.19035 1.75452,0.0192 2.45464,0.15196 3.6267,0.68763 3.52245,1.60987 5.83768,5.28082 5.83768,9.25604 0,1.61894 -0.84771,4.30152 -1.7526,5.54608 -0.93899,1.29147 -17.51037,20.440855 -18.35838,21.214385 -1.33912,1.22151 -3.42207,0.36147 -3.42207,-1.41296 0,-0.67144 0.88128,-1.81573 5.52943,-7.17964 l 5.52944,-6.380895 -4.04169,-4.08557 c -2.22292,-2.24706 -4.13564,-4.02695 -4.25048,-3.95531 -0.11484,0.0716 -3.10243,3.46376 -6.63908,7.53805 -3.536664,4.074285 -6.845984,7.675505 -7.354064,8.002715 -0.7145,0.46015 -1.19163,0.57181 -2.10611,0.49291 -2.05858,-0.17762 -2.43823,-0.64949 -6.12284,-7.610125 -3.88979,-7.34826 -5.05732,-9.12782 -7.09015,-10.80693 -2.62122,-2.1651 -4.94661,-3.08484 -10.033,-3.96825 -2.46202,-0.42761 -4.54743,-0.77759 -4.63425,-0.77774 -0.0868,-1.5e-4 -0.48052,0.49352 -0.87489,1.09704 -1.89422,2.89887 -4.36857,5.15072 -7.54602,6.86748 -7.40645,4.00166 -16.794604,3.03502 -23.324422,-2.40159 -1.427445,-1.18847 -2.514841,-2.40428 -4.099378,-4.5835 -0.296588,-0.4079 -0.810432,-0.31691 -6.970835,1.23439 -3.657854,0.92111 -7.348702,2.00352 -8.201883,2.40536 -2.183973,1.02863 -4.6814402,3.46545 -5.8477522,5.70577 -1.656589,3.18206 -1.67231,3.38917 -1.677255,22.097525 l -0.0044,16.80208 -0.592023,0.56139 c -0.78595,0.74529 -2.225459,0.75414 -2.8855,0.0177 z M 123.14122,92.659695 c 2.70535,-3.12221 3.27261,-4.2739 3.12431,-6.34325 -0.22025,-3.07348 -2.67635,-5.41248 -5.66989,-5.39956 -2.10785,0.009 -3.15826,0.67169 -5.76442,3.63614 l -2.34188,2.66384 4.03353,4.07734 c 2.21844,2.24253 4.11188,4.04794 4.20764,4.01203 0.0958,-0.0359 1.18058,-1.22686 2.41071,-2.64654 z m -71.388914,-3.39274 c 2.60832,-0.67359 5.41528,-2.32787 7.54592,-4.44718 1.73944,-1.73018 1.87421,-1.93532 1.44431,-2.19837 -2.18344,-1.33602 -2.72695,-1.78925 -3.42951,-2.85986 -0.44122,-0.67238 -0.93141,-1.85063 -1.08931,-2.61835 -0.15789,-0.76771 -0.36525,-1.39434 -0.46079,-1.3925 -0.0955,0.002 -0.87584,0.22555 -1.734,0.49715 -4.00214,1.26666 -9.4006,1.23523 -13.499412,-0.0786 l -1.893267,-0.60686 -0.111,1.3189 c -0.195534,2.32331 -1.809824,4.73876 -3.744778,5.60329 -0.443217,0.19802 -0.805848,0.48055 -0.805848,0.62784 0,0.45351 2.862662,3.12073 4.348498,4.05161 2.318146,1.45233 4.009512,2.05294 7.418027,2.63418 1.06803,0.18212 4.38337,-0.11088 6.01116,-0.53125 z m 0.38369,-16.75429 c 0.91446,-0.2191 2.69863,-0.90908 3.96481,-1.5333 4.10936,-2.02588 7.11294,-5.09304 9.11062,-9.30352 1.74547,-3.67888 1.83875,-4.29007 1.95306,-12.79615 l 0.10257,-7.632289 -2.3857,-0.817245 c -5.58068,-1.911715 -9.7258,-2.651471 -15.83216,-2.825475 -7.002246,-0.199537 -11.935024,0.487197 -18.33578,2.552671 l -3.172423,1.023717 0.08898,7.923651 c 0.08883,7.91031 0.09019,7.92712 0.806163,9.98919 0.966457,2.78349 1.992421,4.66417 3.652982,6.69622 3.054723,3.73812 7.625841,6.34931 12.494948,7.13759 1.73367,0.28067 5.51566,0.0728 7.55193,-0.41506 z m -6.39858,-7.37596 c -1.812308,-0.25656 -3.660356,-1.05897 -4.187046,-1.81798 -0.808698,-1.1654 -0.379862,-2.53595 0.953602,-3.04769 0.540465,-0.20741 0.970048,-0.14717 2.025504,0.28405 0.84822,0.34654 1.90252,0.54729 2.87433,0.54729 0.97182,0 2.02612,-0.20075 2.87433,-0.54729 1.50852,-0.61632 2.29109,-0.48084 2.98312,0.51643 0.95398,1.37476 0.17768,2.63033 -2.16444,3.50074 -1.71504,0.63736 -3.50945,0.82635 -5.3594,0.56445 z m -9.912008,-13.66892 c -0.841611,-0.34128 -1.083405,-1.25714 -1.083405,-4.10364 0,-2.16888 0.07572,-2.62747 0.530153,-3.2106 0.408928,-0.524742 0.755626,-0.680304 1.516199,-0.680304 0.760573,0 1.107271,0.155562 1.516198,0.680304 0.462768,0.59383 0.530154,1.03837 0.530154,3.49734 0,2.64667 -0.03797,2.85536 -0.627859,3.45078 -0.650758,0.65687 -1.385798,0.76987 -2.38144,0.36612 z m 20.775358,-0.36612 c -0.59411,-0.59967 -0.62786,-0.79399 -0.62786,-3.6147 0,-3.47635 0.26867,-4.013724 2.00671,-4.013724 1.68541,0 1.9581,0.564204 1.9581,4.051454 0,2.92806 -0.009,2.97212 -0.7177,3.58759 -0.91646,0.79571 -1.82407,0.79203 -2.61925,-0.0106 z m -33.1137,-5.66324 v -2.682294 l -0.906461,-0.171647 c -1.545087,-0.292579 -2.352257,0.286272 -2.766422,1.983901 -0.382153,1.56641 1.18994,3.55233 2.8121,3.55233 h 0.860783 z m 50.5449,1.80443 c 0.73612,-0.74302 0.8697,-1.05965 0.8697,-2.06147 0,-0.93185 -0.1525,-1.35589 -0.71696,-1.993555 -0.65858,-0.743991 -0.80439,-0.795038 -1.79056,-0.626862 l -1.0736,0.183085 v 2.688332 2.68833 h 0.92086 c 0.70619,0 1.1236,-0.20464 1.79056,-0.87786 z m 48.913184,-7.365247 c 2.83892,-2.332614 5.16167,-4.321048 5.16167,-4.418743 0,-0.168362 -9.92592,-8.409013 -10.65452,-8.845543 -0.2863,-0.171535 -0.34462,1.327065 -0.34462,8.855938 0,7.441653 0.0604,9.025485 0.33789,8.855935 0.18585,-0.11356 2.66065,-2.114974 5.49958,-4.447587 z m -97.86603,-2.05564 c 7.393317,-2.961855 14.096274,-4.243972 22.196786,-4.245717 8.19588,-0.0018 14.28185,1.124353 21.693,4.013976 2.39776,0.934891 2.70732,0.998233 3.42073,0.699959 0.48839,-0.204192 0.92047,-0.656662 1.14496,-1.198994 0.77941,-1.882888 -0.49698,-2.818267 -6.74553,-4.943326 -3.10957,-1.05753 -3.56125,-1.284717 -3.87696,-1.950039 -0.44765,-0.943401 -0.16926,-1.835625 0.80003,-2.564044 l 0.70489,-0.529724 2.55648,0.79061 2.55648,0.790607 v -6.888863 c 0,-7.425712 -0.14752,-8.527537 -1.44052,-10.758967 -0.88139,-1.5210723 -3.19119,-3.6342533 -4.76974,-4.3637153 -0.74334,-0.343505 -2.15371,-0.74157 -3.13415,-0.884589 -2.17731,-0.31761 -23.105122,-0.341326 -25.505522,-0.0289 -3.685685,0.479705 -6.889625,2.809925 -8.457749,6.1513033 l -0.816784,1.740415 -0.07801,7.526183 -0.07801,7.526184 2.730808,-0.874747 c 6.491584,-2.07942 11.722868,-2.82301 19.679287,-2.79727 6.81283,0.02204 9.21403,0.304032 9.91201,1.164044 0.65384,0.805626 0.56565,1.94787 -0.21093,2.731726 -0.59261,0.598176 -0.79113,0.648686 -1.9824,0.504385 -0.72811,-0.0882 -3.51087,-0.233363 -6.18392,-0.322594 -6.707682,-0.22391 -11.94344,0.384064 -18.190674,2.1123 -3.689136,1.020561 -8.634004,2.900599 -9.321966,3.544209 -1.102102,1.03105 -0.834197,2.772055 0.534102,3.470919 0.832261,0.425078 0.727601,0.440258 2.863293,-0.415327 z m -2.085077,95.338492 c -0.510638,-0.65525 -0.530154,-0.97713 -0.530154,-8.74374 0,-7.76661 0.01952,-8.08848 0.530154,-8.74374 0.408926,-0.52474 0.755627,-0.6803 1.516199,-0.6803 0.760571,0 1.107272,0.15556 1.516198,0.6803 0.511011,0.65574 0.530154,0.97575 0.530154,8.86265 v 8.18235 l -0.592023,0.56139 c -0.86347,0.8188 -2.284098,0.76193 -2.970528,-0.11891 z m 54.510153,0.0827 c -0.54713,-0.58785 -0.55618,-0.73206 -0.55618,-8.86265 v -8.26507 l 0.59202,-0.5614 c 0.73595,-0.69786 1.96108,-0.728 2.76891,-0.0681 0.54812,0.44774 0.61155,0.72786 0.68695,3.03376 l 0.0831,2.54049 3.11435,3.19028 c 4.07019,4.16944 5.34837,4.77429 7.75664,3.67051 0.79637,-0.365 2.12567,-1.71691 5.32714,-5.41778 2.34628,-2.71228 4.479884,-5.04698 4.741334,-5.18821 0.64938,-0.3508 1.57058,-0.30899 2.09765,0.0952 0.63878,0.48986 0.99653,1.60994 0.73285,2.29448 -0.24993,0.64883 -7.756834,9.45961 -9.044044,10.6149 -1.48054,1.32881 -3.42459,2.07486 -5.42769,2.08294 -2.93036,0.0118 -4.18501,-0.57856 -6.93388,-3.26278 l -2.35779,-2.30234 -0.0863,2.95897 c -0.0721,2.46924 -0.167,3.04878 -0.57364,3.50167 -0.68547,0.76343 -2.18597,0.73525 -2.92135,-0.0549 z'
@@ -241,18 +246,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
     ref_setter_show_modal_tuto,
     ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
-
-  const logo_tempalte = <svg
-    xmlns='http://www.w3.org/2000/svg'
-    aria-hidden='false'
-    data-prefix='fas'
-    className='svg-inline--fa'
-    viewBox='0 0 1000 1000'
-    height='1.8rem'
-    width='1.8rem'
-  >
-    <path fill='currentColor' d='M10,7.5c0-.83,.67-1.5,1.5-1.5s1.5,.67,1.5,1.5-.67,1.5-1.5,1.5-1.5-.67-1.5-1.5Zm14-1v5c0,3.03-2.47,5.5-5.5,5.5H10.5c-3.03,0-5.5-2.47-5.5-5.5V6.5c0-3.03,2.47-5.5,5.5-5.5h8c3.03,0,5.5,2.47,5.5,5.5ZM8,11.5c0,1,.59,1.86,1.43,2.26l4.28-4.28c.62-.62,1.64-.62,2.26,0l1.04,1.04c.62,.62,1.64,.62,2.26,0l1.72-1.72v-2.29c0-1.38-1.12-2.5-2.5-2.5H10.5c-1.38,0-2.5,1.12-2.5,2.5v5Zm8.5,7.5H5.5c-1.38,0-2.5-1.12-2.5-2.5v-7c0-.83-.67-1.5-1.5-1.5s-1.5,.67-1.5,1.5v7c0,3.03,2.47,5.5,5.5,5.5h11c.83,0,1.5-.67,1.5-1.5s-.67-1.5-1.5-1.5Z' />
-  </svg>
 
   const sous_filieres = window.sankey && window.sankey.sous_filieres ? window.sankey.sous_filieres : undefined
 
@@ -347,14 +340,40 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
 
   if (!new_data.is_static) {
     ui['file'] = [
+
+      <OSTooltip
+        placement='bottom'
+        label={t('Menu.tooltips.new')}
+      >
+        <Button
+          variant='menutop_button'
+          onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}
+        >
+          <Box
+            layerStyle='menutop_button_style'
+          >
+            <Box
+              gridRow='1'
+            >
+              <FontAwesomeIcon
+                style={{ 'height': '2rem', 'width': '3rem' }}
+                icon={faPlus}
+              />
+            </Box>
+            <Box
+              gridRow='2'
+            >
+              {t('Menu.new')}
+            </Box>
+          </Box>
+        </Button>
+      </OSTooltip>,
+
       <ChakraMenu
         variant='menu_button_subnav_style'
-        placement='bottom-start'
+        placement='bottom-start' id='ouvrir'
       >
-        <OSTooltip
-          placement='bottom'
-          label={t('Menu.tooltips.new')}
-        >
+        <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
           <MenuButton>
             <Box
               gridColumn='1'
@@ -363,14 +382,14 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             >
               <FontAwesomeIcon
                 style={{ 'height': '2rem', 'width': '2rem' }}
-                icon={faPlus}
+                icon={faFolderOpen}
               />
             </Box>
             <Box
               gridColumn='1'
               gridRow='2'
             >
-              {t('Menu.new')}
+              {t('Menu.ouvrir')}
             </Box>
             <Box
               gridColumn='2'
@@ -384,107 +403,50 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             </Box>
           </MenuButton>
         </OSTooltip>
-
         <MenuList>
           <MenuItem
-            onClick={Reinitialization}
-          >
+            onClick={() => {
+              if (_load_json.current) {
+                _load_json.current.name = ''
+                _load_json.current.click()
+              }
+            }}>
             <FontAwesomeIcon
               style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faFile}
             />
-            {t('Menu.from_new')}
+            {t('Menu.open_json')}
           </MenuItem>
-
+          <Input
+            accept='.json'
+            type='file'
+            ref={_load_json}
+            style={{ display: 'none' }}
+            onChange={(evt: ChangeEvent) => {
+              const files = (evt.target as HTMLFormElement).files
+              const reader = new FileReader()
+              reader.onload = (() => {
+                return (e: ProgressEvent<FileReader>) => {
+                  // Get JSON Data
+                  const file_content = String((e.target as FileReader).result)
+                  const JSON_data = JSON.parse(file_content)
+                  new_data.fromJSON(JSON_data as Type_JSON)
+                }
+              })()
+              reader.readAsText(files[0])
+            }}
+          />
           <MenuItem
-            onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}
+            onClick={() => ref_setter_show_modal_excel_loader.current!(true)}
           >
-            {logo_tempalte}
-            {t('Menu.from_model')}
+            <FontAwesomeIcon
+              style={{ 'height': '1rem', 'width': '1rem' }}
+              icon={faTable}
+            />
+            {t('Menu.open_excel')}
           </MenuItem>
         </MenuList>
       </ChakraMenu>,
-
-      <Box>
-        <ChakraMenu
-          variant='menu_button_subnav_style'
-          placement='bottom-start' id='ouvrir'
-        >
-          <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
-            <MenuButton>
-              <Box
-                gridColumn='1'
-                gridColumnEnd='span 2'
-                gridRow='1'
-              >
-                <FontAwesomeIcon
-                  style={{ 'height': '2rem', 'width': '2rem' }}
-                  icon={faFolderOpen}
-                />
-              </Box>
-              <Box
-                gridColumn='1'
-                gridRow='2'
-              >
-                {t('Menu.ouvrir')}
-              </Box>
-              <Box
-                gridColumn='2'
-                gridRow='2'
-                height='1rem'
-                width='1rem'
-              >
-                <ChevronDownIcon
-                  style={{ 'height': '1rem', 'width': '1rem' }}
-                />
-              </Box>
-            </MenuButton>
-          </OSTooltip>
-          <MenuList>
-            <MenuItem
-              onClick={() => {
-                if (_load_json.current) {
-                  _load_json.current.name = ''
-                  _load_json.current.click()
-                }
-              }}>
-              <FontAwesomeIcon
-                style={{ 'height': '1rem', 'width': '1rem' }}
-                icon={faFile}
-              />
-              {t('Menu.open_json')}
-            </MenuItem>
-            <Input
-              accept='.json'
-              type='file'
-              ref={_load_json}
-              style={{ display: 'none' }}
-              onChange={(evt: ChangeEvent) => {
-                const files = (evt.target as HTMLFormElement).files
-                const reader = new FileReader()
-                reader.onload = (() => {
-                  return (e: ProgressEvent<FileReader>) => {
-                    // Get JSON Data
-                    const file_content = String((e.target as FileReader).result)
-                    const JSON_data = JSON.parse(file_content)
-                    new_data.fromJSON(JSON_data as Type_JSON)
-                  }
-                })()
-                reader.readAsText(files[0])
-              }}
-            />
-            <MenuItem
-              onClick={() => ref_setter_show_modal_excel_loader.current!(true)}
-            >
-              <FontAwesomeIcon
-                style={{ 'height': '1rem', 'width': '1rem' }}
-                icon={faTable}
-              />
-              {t('Menu.open_excel')}
-            </MenuItem>
-          </MenuList>
-        </ChakraMenu>
-      </Box>,
 
       <ChakraMenu
         placement='bottom-start'
@@ -608,35 +570,33 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
 
       <OSTooltip
         placement='bottom'
-        label={t('Menu.tooltips.preference')}>
-        <Box>
-          <Button
-            variant='menutop_button'
-            onClick={() => {
-              ref_setter_show_modal_preference.current!(true)
-            }}
-            className='settings_button'
+        label={t('Menu.tooltips.preference')}
+      >
+        <Button
+          variant='menutop_button'
+          onClick={() => {
+            ref_setter_show_modal_preference.current!(true)
+          }}
+          className='settings_button'
+        >
+          <Box
+            layerStyle='menutop_button_style'
           >
             <Box
-              layerStyle='menutop_button_style'
+              gridRow='1'
             >
-              <Box
-                gridRow='1'
-                padding='0.1rem 0 0.1rem 0'
-              >
-                <FontAwesomeIcon
-                  style={{ 'height': '2rem', 'width': '3rem' }}
-                  icon={faGears}
-                />
-              </Box>
-              <Box
-                gridRow='2'
-              >
-                {t('Menu.preference')}
-              </Box>
+              <FontAwesomeIcon
+                style={{ 'height': '2rem', 'width': '3rem' }}
+                icon={faGears}
+              />
             </Box>
-          </Button>
-        </Box>
+            <Box
+              gridRow='2'
+            >
+              {t('Menu.preference')}
+            </Box>
+          </Box>
+        </Button>
       </OSTooltip>,
 
       <ButtonLaunchGuide new_data={new_data} />,
@@ -656,7 +616,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             >
               <Box
                 gridRow='1'
-                padding='0.1rem 0 0.1rem 0'
               >
                 <FontAwesomeIcon
                   style={{ 'height': '2rem', 'width': '3rem' }}
@@ -688,7 +647,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           >
             <Box
               gridRow='1'
-              padding='0.1rem 0 0.1rem 0'
             >
               <FontAwesomeIcon
                 style={{ 'height': '2rem', 'width': '3rem' }}
@@ -781,7 +739,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           >
             <Box
               gridRow='1'
-              padding='0.1rem 0 0.1rem 0'
             >
               {logo_home}
             </Box>
@@ -808,7 +765,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           >
             <Box
               gridRow='1'
-              padding='0.1rem 0 0.1rem 0'
             >
               {logo_tuto}
             </Box>
@@ -834,7 +790,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           >
             <Box
               gridRow='1'
-              padding='0.1rem 0 0.1rem 0'
             >
               {logo_doc}
             </Box>
@@ -860,7 +815,6 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
           >
             <Box
               gridRow='1'
-              padding='0.1rem 0 0.1rem 0'
             >
               {logo_contact}
             </Box>
@@ -896,7 +850,7 @@ const ButtonLaunchGuide: FunctionComponent<FCType_ButtonLaunchGuide> = ({ new_da
     >
       <Box
         gridRow='1'
-        padding='0.1rem 0 0.1rem 0'
+        padding='0.1rem 0 0.15rem 0'
       >
         {logo_tour}
       </Box>
@@ -1069,7 +1023,6 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     processFunctions,
     configurations_menus,
     menus,
-    cardsTemplate,
     external_modal,
     reinitialization,
     additionalMenus,
@@ -1080,13 +1033,11 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   }
 ) => {
   const { t, logo, app_name, logo_terriflux } = new_data
-  const { ref_setter_show_modal_tuto, ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
+  const { ref_setter_show_modal_tuto } = new_data.menu_configuration.dict_setter_show_dialog
   const [show_nav, set_show_nav] = useState(false)
   const [show_tuto, set_show_tuto] = useState(false)
-  const [show_template, set_show_template] = useState(false)
   const [, setCount] = useState(0)
   ref_setter_show_modal_tuto.current = set_show_tuto
-  ref_setter_show_modal_templates_lib.current = set_show_template
   new_data.menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   new_data.menu_configuration.ref_menu_opened.current = show_nav
   new_data.menu_configuration.positionToolBar(menu_config_width)
@@ -1510,27 +1461,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         processFunctions={processFunctions}
       />
 
-      {
-        <Modal
-          isOpen={show_template}
-          onClose={() => set_show_template(false)}
-          scrollBehavior='inside'
-        >
-          <ModalContent
-            maxWidth='inherit'
-          >
-            <ModalHeader>{t('Banner.sdr')}</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <Box
-                layerStyle='options_cards'
-              >
-                {cardsTemplate}
-              </Box>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      }
+      <ModalTemplate new_data={new_data} additionalMenu={additionalMenus} Reinitialization={reinitialization} />
       {modal_tuto}
       {modal_support}
       {modal_resolution_png}
@@ -1846,6 +1777,174 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
             })}
           </TabPanels>
         </Tabs>
+      </ModalBody>
+    </ModalContent>
+  </Modal>
+}
+
+
+/**
+ * Modal containing templates to create sankey
+ *
+ * @param {*} { new_data, additionalMenu, Reinitialization }
+ * @return {*}
+ */
+const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, additionalMenu, Reinitialization }) => {
+  const [show_template, set_show_template] = useState(false)
+  const [firstRender, setFirstRender] = useState(true)
+  const [template, setTemplate] = useState<Dict_templates_type>({})
+
+  const { ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
+  ref_setter_show_modal_templates_lib.current = set_show_template
+
+
+  const path = window.location.origin
+  const url = path + '/opensankey/sankey/menus_templates'
+
+  // Get TerriFlux logo
+  let empty_sankey = ''
+  try {
+    empty_sankey = require('../css/empty_sankey.png')
+    if (!path.includes('localhost')) {
+      empty_sankey = empty_sankey.replace('static/', new_data.static_path)
+    }
+  } catch (expt) {
+    console.log('empty_sankey.png not found')
+  }
+
+  // On first render fetch template then re-render to have component with template
+  if (firstRender) {
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ module: additionalMenu.template_module_key })
+    })
+      .then(response => {
+        response
+          .text()
+          .then(text => {
+            const json_data = JSON.parse(text)
+            // Sort json with order in template_module_key
+            const sorted_json: Dict_templates_type = {}
+            additionalMenu.template_module_key.forEach(k => { sorted_json[k] = json_data[k] })
+
+            setTemplate(sorted_json)
+            setFirstRender(false)
+          })
+          .catch((error) => {
+            console.error('Error in fetchExamples - ' + error.toString())
+            setFirstRender(false)
+          })
+      }).catch((err) => {
+        console.error('Error in fetchExamples - ' + err.toString())
+
+      })
+  }
+
+  // Special card that create an empty DA to start a sankey
+  const card_empty_sankey = <Card variant='cards_empty_template'
+    onClick={() => {
+      Reinitialization()
+      set_show_template(false)
+    }}>
+    <CardHeader>
+      <Heading variant='heading_template_sankey'>{new_data.t('Menu.from_new')}</Heading>
+      <Divider />
+    </CardHeader>
+    <CardBody>
+      <Image
+        className='img-card'
+        src={empty_sankey}
+        style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
+      />
+
+    </CardBody>
+  </Card>
+
+  // Tabs for each entries of the template_module_key
+  const tabs_of_cards = <Tabs orientation='vertical' variant='tabs_variant_template'>
+    <TabList >{Object.keys(template).map((v, idx) => {
+      return <Tab key={idx}>{new_data.t('Template.' + v)}</Tab>
+    })}</TabList>
+    <TabPanels>
+
+      {Object.entries(template).map((v, idx) => {
+        // Create a card for each template of each entries
+        const cards = v[1] !== undefined ? v[1].image.map((image_str, idx) => {
+
+          const title_card = image_str.replaceAll('_', ' ').replaceAll('.png', '')
+
+          return <Card key={idx} variant='cards_template'
+            onClick={() => {
+              // Draw template by downloading data from server
+              UploadExemple(
+                ('Modèles/Template/' + (v[0]) + '/data/' + v[1].data[idx]), new_data
+              )
+              set_show_template(false)
+            }}
+          >
+            <CardHeader>
+              <Heading variant='heading_template_sankey'>{title_card}</Heading>
+              <Divider />
+            </CardHeader>
+
+            <CardBody>
+              {/* Get the image from the server */}
+              <Image
+                className='img-card'
+                src={'/fm/userfiles/Modèles/Template/' + (v[0]) + '/image/' + image_str}
+                style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
+              />
+
+            </CardBody>
+
+            <CardFooter>
+              <ButtonGroup
+                //ButtonGroup don't have variants theming so we modify directly the style
+                style={{
+                  margin: 'auto'
+                }}>
+                <Button variant='menuconfigpanel_option_button'
+                  onClick={() => {
+                    // Draw template by downloading data from server
+                    UploadExemple(
+                      ('Modèles/Template/' + (v[0]) + '/data/' + v[1].data[idx]), new_data
+                    )
+                    set_show_template(false)
+                  }}>
+                  {new_data.t('useTemplate')}
+                </Button>
+
+              </ButtonGroup>
+            </CardFooter>
+          </Card>
+        }) : <></>
+
+        return <TabPanel key={idx}>
+          {v[0] == 'Essential' ? card_empty_sankey : <></>}
+          {cards}
+        </TabPanel>
+      })}
+    </TabPanels>
+  </Tabs>
+
+
+  return <Modal
+    isOpen={show_template}
+    onClose={() => set_show_template(false)}
+    scrollBehavior='inside'
+  >
+    <ModalOverlay />
+    <ModalContent
+      maxWidth='inherit'
+    >
+      <ModalHeader>{new_data.t('Menu.templates')}</ModalHeader>
+      <ModalCloseButton />
+      <ModalBody>
+
+        {tabs_of_cards}
       </ModalBody>
     </ModalContent>
   </Modal>
