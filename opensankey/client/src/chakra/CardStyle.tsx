@@ -81,3 +81,11 @@ export const cards_template = definePartsStyle({
     borderColor: 'grey'
   }
 })
+
+export const cards_empty_template = definePartsStyle({
+  container: {
+    borderWidth: '1px',
+    borderStyle:'solid',
+    borderColor: 'grey'
+  }
+})

@@ -74,32 +74,32 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
 
 
   const menu_items = [
-      <AccordionItem>
-        {
-          //MENU PARAMETRE GENERAUX
-        }
-        <AccordionButton
-          onClick={() => {
-            const scroll_x = window.scrollX
-            const scroll_y = window.scrollY
-            setTimeout(() => {
-              document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-            }, 50)
-          }}
-        >
-          <Box
-            as='span'
-            layerStyle='menuconfig_entry'>
-            {t('Menu.MEP')}
-          </Box>
-          <AccordionIcon />
-        </AccordionButton>
-        <AccordionPanel>
-          <Box layerStyle='menuconfigpanel_grid'>
-            {menu_configuration_layout}
-          </Box>
-        </AccordionPanel>
-      </AccordionItem> ,
+    <AccordionItem>
+      {
+        //MENU PARAMETRE GENERAUX
+      }
+      <AccordionButton
+        onClick={() => {
+          const scroll_x = window.scrollX
+          const scroll_y = window.scrollY
+          setTimeout(() => {
+            document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
+          }, 50)
+        }}
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfig_entry'>
+          {t('Menu.MEP')}
+        </Box>
+        <AccordionIcon />
+      </AccordionButton>
+      <AccordionPanel>
+        <Box layerStyle='menuconfigpanel_grid'>
+          {menu_configuration_layout}
+        </Box>
+      </AccordionPanel>
+    </AccordionItem> ,
 
     <AccordionItem>
       {

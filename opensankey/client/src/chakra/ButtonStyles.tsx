@@ -283,6 +283,7 @@ export const menutop_button = defineStyle({
   textStyle: 'h4',
   fontSize: '9px',
   margin: '0rem 0rem 0rem 0.75rem',
+  paddingBottom: '0.175rem',
   border: '0px',
   borderColor: 'transparent',
   bg: 'transparent',

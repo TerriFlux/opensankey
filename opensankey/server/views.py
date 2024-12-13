@@ -420,18 +420,109 @@ def download_examples():
     return Response(exemple_file_path, status=400, mimetype='text')
 
 
+def parse_folder_template(current_dir, menus, modules, key=None):
+    """
+    _summary_
+
+    Parameters
+    ----------
+    :param current_dir: _description_
+    :type current_dir: _type_
+
+    :param menus: _description_
+    :type menus: _type_
+
+    :param modules: _description_
+    :type modules: _type_
+
+    Optional parameters
+    -------------------
+    :param key: _description_
+    :type key: _type_, optional (defaults to None)
+
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
+    if os.path.isfile(current_dir):
+        return
+    folder_content = os.listdir(current_dir)
+    folder_content.sort()
+
+    # Filter out template depending on modules given in parameter
+    if key is None:
+        folder_content = list(filter(lambda x: x in modules, folder_content))
+
+    exemple_found = False
+    extension_to_keep = ['.png', '.json']
+
+    for file_or_folder in folder_content:
+        # if file has an extendsions we want then save it in dict
+        if (any([_ in file_or_folder for _ in extension_to_keep])):
+            # If fict doen't have entries then create it
+            if key not in menus:
+                menus[key] = []
+            menus[key].append(file_or_folder)
+            exemple_found = True
+            continue
+
+        # If it's a file but doensn't have a extension we want go to next element in array folder_content
+        if os.path.isfile(os.path.join(current_dir, file_or_folder)):
+            continue
+
+        # If it's a folder then recursivly call parse_folder_template to continue consturcting the dict
+        child_key = file_or_folder
+        if key is not None:
+            if key not in menus:
+                menus[key] = {}
+            folder_found = parse_folder_template(
+                os.path.join(current_dir, file_or_folder),
+                menus[key],
+                modules,
+                child_key)
+            if folder_found:
+                exemple_found = True
+        else:
+            folder_found = parse_folder_template(
+                os.path.join(current_dir, file_or_folder),
+                menus,
+                modules,
+                child_key)
+            if folder_found:
+                exemple_found = True
+
+    if not exemple_found and key in menus:
+        del menus[key]
+    #  if not artefact_found and key in artefacts:
+    #      del artefacts[key]
+    return exemple_found
+
+
 def parse_folder(current_dir, menus, key=None):
     if os.path.isfile(current_dir):
         return
     folder_content = os.listdir(current_dir)
     folder_content.sort()
     exemple_found = False
+
+    extension_to_avoid = [
+        '.gitkeep',
+        'mfadata',
+        'not_tested',
+        'sankeylayout',
+        '.git',
+        '.md',
+        'Archive',
+        'new',
+        'prev',
+        'artefacts',
+        'Old',
+        'old',
+        'Matériaux']
+
     for file_or_folder in folder_content:
-        if '.gitkeep' in file_or_folder or 'mfadata' in file_or_folder or 'not_tested' in file_or_folder\
-            or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder\
-                or 'Archive' in file_or_folder or 'new' in file_or_folder or 'prev' in file_or_folder\
-                or 'artefacts' in file_or_folder or 'Old' in file_or_folder or 'old' in file_or_folder\
-                or 'Matériaux' in file_or_folder:
+        if (any([_ in file_or_folder for _ in extension_to_avoid])):
             continue
         if '.xlsx' in file_or_folder and 'old.' not in file_or_folder:
             if key not in menus:
@@ -458,15 +549,6 @@ def parse_folder(current_dir, menus, key=None):
         if os.path.isfile(os.path.join(current_dir, file_or_folder)):
             continue
         child_key = file_or_folder
-        # if 'Etude' == child_key:
-        #     if 'Etude' not in menus:
-        #         menus['Etude'] = {}
-        #     file_names = os.listdir(os.path.join(current_dir, file_or_folder))
-        #     file_names.sort()
-        #     folder_found = parse_folder(os.path.join(current_dir, 'Etude'), menus, child_key)
-        #     if folder_found:
-        #         exemple_found = True
-        #     continue
         if key is not None:
             if key not in menus:
                 menus[key] = {}
@@ -480,13 +562,44 @@ def parse_folder(current_dir, menus, key=None):
 
     if not exemple_found and key in menus:
         del menus[key]
-    #  if not artefact_found and key in artefacts:
-    #      del artefacts[key]
     return exemple_found
+
+
+@opensankey.route('/sankey/menus_templates', methods=['POST'])
+def menus_templates():
+    """
+    _summary_
+
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
+    data_folder = os.environ.get('MFAData')
+    data_folder += '/Modèles/Template'
+    menus = {}
+    modules = request.json.get('module')
+    parse_folder_template(data_folder, menus, modules)
+    context = menus
+    json_data = json.dumps(context)
+    response = Response(
+        response=json_data,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 
 @opensankey.route('/sankey/menu_examples', methods=['POST'])
 def menus_examples():
+    """
+    _summary_
+
+    Returns
+    -------
+    :return: _description_
+    :rtype: _type_
+    """
     data_folder = os.environ.get('MFAData')
     menus = {}
     # try:

@@ -2,6 +2,7 @@ import {
   IType_DictHookRefSetterShowDialogComponents
 } from '../../types/MenuConfig'
 import {
+  Type_AdditionalMenus,
   Type_GenericApplicationDataOS
 } from '../../types/TypesOS'
 import {
@@ -50,3 +51,9 @@ export type FType_OpenSankeyMenus = (
 export type FType_ModalResolutionPNG = (
   new_data: Type_GenericApplicationDataOS
 ) => JSX.Element
+
+export type FCtype_ModalTemplate = {
+  new_data: Type_GenericApplicationDataOS,
+  additionalMenu: Type_AdditionalMenus,
+  Reinitialization: () => void
+}
