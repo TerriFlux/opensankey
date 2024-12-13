@@ -482,7 +482,10 @@ export abstract class Class_ApplicationData
         // Post processing & menu updating
         this._afterFromJSON()
         // Then draw if asked
-        if (draw) this._drawing_area.draw()
+        if (draw) {
+          this._drawing_area.draw()
+          this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
+        }
       })
   }
 
@@ -507,7 +510,6 @@ export abstract class Class_ApplicationData
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.arrangeTrade(false)
-    this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
     this.menu_configuration.updateAllMenuComponents()
   }
 
