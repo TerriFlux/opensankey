@@ -1,4 +1,5 @@
 import React, { FunctionComponent} from 'react'
+import parse from 'html-react-parser'
 
 import {
   Box,
@@ -6,7 +7,6 @@ import {
 import { Class_ApplicationDataSA } from '../../ApplicationData'
 
 // Register : Modal for terms of use
-
 export const Presentation: FunctionComponent<{
   new_data_app: Class_ApplicationDataSA
 }> = ({
@@ -14,17 +14,17 @@ export const Presentation: FunctionComponent<{
 }) => {
 
   const { t, logo_sankey_plus} = new_data_app
-
-  return <Box layerStyle='welcome_license_row' background='gray.50'>
-    <Box>
-      <img
+  const html_text = parse(t('Register.presentation.text'))
+  return <Box>
+    <Box as='span'>
+      <center><img
         src={logo_sankey_plus}
         alt='logo_OSP'
-        style={{ 'objectFit': 'contain', 'width': '225px' }}
-      />
+        style={{ 'objectFit': 'contain', 'width': '225px','marginBottom': '10px' }}
+      /></center>
     </Box>
-    <Box layerStyle='welcome_license_desc'>
-      {t('Register.presentation.text')}
+    <Box as='span'>
+    {html_text}
     </Box>
   </Box>
 }

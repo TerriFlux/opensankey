@@ -168,7 +168,35 @@ export const resources_app_elements = {
       Register: {
         presentation: {
           'title': 'Bring your diagrams to life with OpenSankey+',
-          'text': 'OpenSankey+ is a storytelling tool designed for those who need to present flow data in a way that is both educational and visually appealing. This enhanced version includes advanced features such as gradients, icons, images, and text areas, allowing you to customize and elevate your diagrams. These additions make your presentations both more aesthetic and informative. Additionally, the "views" feature transforms your diagram into a slideshow mode, perfect for engaging presentations to colleagues, management, clients, or partners.',
+          'text': '<table>\
+                    <tr>\
+                      <td>\
+                        <p>\
+                          <b>OpenSankey+ is a storytelling tool designed for those who wish to present flow data in a way that is both clear and visually appealing.\
+                          Precise, impactful, and beautiful: a Sankey diagram is worth a thousand words.</b>\
+                        </p>\
+                        <p>OpenSankey+ offers an enhanced version of the basic OpenSankey, enriched with a slideshow mode, ideal for presentations and storytelling.</p>\
+                      </td>\
+                      <td>\
+                        <img src="https://terriflux.com/wp-content/uploads/2023/07/Tolkien.png" style="margin:20px">\
+                      </td>\
+                    </tr>\
+                    <tr>\
+                      <td>\
+                        <p>Specifically, OpenSankey+ allows the creation of enriched diagrams with:</p>\
+                        <ul>\
+                          <li>Floating labels to enhance the graphical representation</li>\
+                          <li>Icons to illustrate nodes</li>\
+                          <li>Gradient representations on flows</li>\
+                          <li>Management of complex hierarchies</li>\
+                          <li>Sankey animations with progressive appearance effects or a succession of “views” showing changes over time</li>\
+                        </ul>\
+                      </td>\
+                      <td>\
+                        <img src="https://terriflux.com/wp-content/uploads/2023/07/FiliereColza-980x359.jpg.webp" style="margin:20px">\
+                      </td>\
+                    </tr>\
+                  </table>',
           'btn_next': 'I want OpenSankey+ !'
         },
         account: {
@@ -640,7 +668,18 @@ export const resources_app_elements = {
       Register: {
         presentation: {
           'title': 'Donnez vie à vos diagrammes avec OpenSankey+',
-          'text': 'OpenSankey+ est un outil de storytelling conçu pour ceux qui souhaitent présenter des données de flux de manière à la fois claire et visuellement attrayante. Cette version enrichie intègre des fonctionnalités avancées, telles que les gradients, les icônes, les images et les zones de texte, permettant de personnaliser et de sublimer vos diagrammes. Ces ajouts rendent vos présentations plus esthétiques et informatives. De plus, la fonction "vues" transforme votre diagramme en un mode diaporama, idéal pour animer vos présentations auprès de vos collègues, de votre hiérarchie, de vos clients ou de vos partenaires.',
+          'text': '<table><tr><td><p><b>OpenSankey+ est un outil de storytelling conçu pour ceux qui souhaitent présenter des données de flux de manière à la fois claire et visuellement attrayante.\
+          Juste, parlant et beau : un Sankey vaut mille mots.</b></p>\
+          <p>OpenSankey+ propose une version d’OpenSankey de base enrichie avec un mode diaporama, idéale pour les présentations et le storytelling.</p></td>\
+          <td><img src="https://terriflux.com/wp-content/uploads/2023/07/Tolkien.png" style="margin:20px"></td></tr>\
+          <tr><td><p>Concrètement, OpenSankey+ permet de créer des diagrammes enrichis avec des :<p>\
+          <li>Labels flottants pour agrémenter la représentation graphique</li>\
+          <li>Icônes pour illustrer les nœuds</li>\
+          <li>Représentations de gradients sur les flux</li>\
+          <li>Gestions de hiérarchies complexes</li>\
+          <li>Animations des Sankey par des effets d’apparence progressive ou par une succession de « vues » montrant des évolutions</li></td>\
+          <td><img src="https://terriflux.com/wp-content/uploads/2023/07/FiliereColza-980x359.jpg.webp" style="margin:20px"></td><tr></table>\
+          ',
           'btn_next': 'Je veux OpenSankey+ !'
         },
         account: {
