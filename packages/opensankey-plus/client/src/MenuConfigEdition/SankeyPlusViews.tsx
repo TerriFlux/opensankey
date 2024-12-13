@@ -683,7 +683,6 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
       <Box as='span' layerStyle='menuconfig_entry'>
         {t('view.storytelling')}
       </Box>
-      <Tag colorScheme='teel' >Beta</Tag>
       <AccordionIcon />
     </AccordionButton>
     <AccordionPanel>
