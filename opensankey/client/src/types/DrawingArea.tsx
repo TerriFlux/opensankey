@@ -376,6 +376,9 @@ export abstract class Class_DrawingArea
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
     // Copy Legend
     this._legend.copyFrom(drawing_area_to_copy._legend)
+
+    //create new selection zone after deleting previous in 'this.delete()'
+    this._selection_zone=this.createNewSelectionZone()
   }
 
   protected _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
