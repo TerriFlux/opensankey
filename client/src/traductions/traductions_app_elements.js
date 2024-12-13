@@ -167,8 +167,8 @@ export const resources_app_elements = {
       },
       Register: {
         presentation: {
-          'title': 'Power-up your Sankeys with OpenSankey+',
-          'text': 'OpenSankey+ is a storytelling tool made for those who need to present flow data in a way that is both didactic and aesthetically pleasing.',
+          'title': 'Bring your diagrams to life with OpenSankey+',
+          'text': 'OpenSankey+ is a storytelling tool designed for those who need to present flow data in a way that is both educational and visually appealing. This enhanced version includes advanced features such as gradients, icons, images, and text areas, allowing you to customize and elevate your diagrams. These additions make your presentations both more aesthetic and informative. Additionally, the "views" feature transforms your diagram into a slideshow mode, perfect for engaging presentations to colleagues, management, clients, or partners.',
           'btn_next': 'I want OpenSankey+ !'
         },
         account: {
@@ -639,8 +639,8 @@ export const resources_app_elements = {
       },
       Register: {
         presentation: {
-          'title': 'Passez à la vitesse supérieure avec l\'extension OpenSankey+',
-          'text': 'OpenSankey+ est un outil de storytelling, fait pour ceux qui ont besoin de présenter des données de flux d’une façon à la fois didactique et esthétique.',
+          'title': 'Donnez vie à vos diagrammes avec OpenSankey+',
+          'text': 'OpenSankey+ est un outil de storytelling conçu pour ceux qui souhaitent présenter des données de flux de manière à la fois claire et visuellement attrayante. Cette version enrichie intègre des fonctionnalités avancées, telles que les gradients, les icônes, les images et les zones de texte, permettant de personnaliser et de sublimer vos diagrammes. Ces ajouts rendent vos présentations plus esthétiques et informatives. De plus, la fonction "vues" transforme votre diagramme en un mode diaporama, idéal pour animer vos présentations auprès de vos collègues, de votre hiérarchie, de vos clients ou de vos partenaires.',
           'btn_next': 'Je veux OpenSankey+ !'
         },
         account: {
