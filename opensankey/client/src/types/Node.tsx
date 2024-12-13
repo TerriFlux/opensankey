@@ -1084,7 +1084,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public hasGivenTag(tag: Class_Tag) {
-    return this._tags.includes(tag) || this._taggs_dict[tag.group.id] == undefined
+    return this._tags.includes(tag)
   }
 
   public tagsUpdated() {
