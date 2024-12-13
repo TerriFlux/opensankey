@@ -365,9 +365,11 @@ const Register: FunctionComponent<{
 
   let header = '404 not found'
   let content = [<></>]
+  let width = '33vw'
   if (registerStep === 0) {
     header = t('Register.presentation.title')
     content = osplus_presentation
+    width = '50vw'
   }
   else if (registerStep === 1) {
     header = t('Register.account.title')
@@ -421,7 +423,7 @@ const Register: FunctionComponent<{
 
 
       <div className="login-wrapper">
-        <Card variant='card_register' width='33vw'>
+        <Card variant='card_register' width={width}>
           <CardHeader
             style={{ 'textAlign': 'center' }}
           >
