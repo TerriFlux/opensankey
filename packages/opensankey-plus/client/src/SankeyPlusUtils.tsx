@@ -721,12 +721,13 @@ export const AddSimpleLevelDropDown: FunctionComponent<FType_AddSimpleLevelDropD
               key={level_taggs['Primaire'].id}
               value={level_taggs['Primaire'].selected_tags_list[0]?.id ?? ''}
               onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                new_data.drawing_area.bypass_redraws = true
                 level_taggs['Primaire'].selectTagsFromId(evt.target.value)
                 new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
                 setUpdate(!update)
                 // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
                 // (it isn't done for link not directly displayed after fromJSON)
-                new_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
+                new_data.drawing_area.draw()
                 new_data.drawing_area.areaAutoFit()
               }}
             >
