@@ -173,6 +173,7 @@ export const resources_app_elements = {
                       <td>\
                         <p>\
                           <b>OpenSankey+ is a storytelling tool designed for those who wish to present flow data in a way that is both clear and visually appealing.\
+                          <br><br>\
                           Precise, impactful, and beautiful: a Sankey diagram is worth a thousand words.</b>\
                         </p>\
                         <p>OpenSankey+ offers an enhanced version of the basic OpenSankey, enriched with a slideshow mode, ideal for presentations and storytelling.</p>\
@@ -184,7 +185,7 @@ export const resources_app_elements = {
                     <tr>\
                       <td>\
                         <p>Specifically, OpenSankey+ allows the creation of enriched diagrams with:</p>\
-                        <ul>\
+                        <ul style="padding-left: 1rem; ">\
                           <li>Floating labels to enhance the graphical representation</li>\
                           <li>Icons to illustrate nodes</li>\
                           <li>Gradient representations on flows</li>\
@@ -669,15 +670,16 @@ export const resources_app_elements = {
         presentation: {
           'title': 'Donnez vie à vos diagrammes avec OpenSankey+',
           'text': '<table><tr><td><p><b>OpenSankey+ est un outil de storytelling conçu pour ceux qui souhaitent présenter des données de flux de manière à la fois claire et visuellement attrayante.\
-          Juste, parlant et beau : un Sankey vaut mille mots.</b></p>\
+          <br><br>Juste, parlant et beau : un Sankey vaut mille mots.</b></p>\
           <p>OpenSankey+ propose une version d’OpenSankey de base enrichie avec un mode diaporama, idéale pour les présentations et le storytelling.</p></td>\
           <td><img src="https://terriflux.com/wp-content/uploads/2023/07/Tolkien.png" style="margin:20px"></td></tr>\
-          <tr><td><p>Concrètement, OpenSankey+ permet de créer des diagrammes enrichis avec des :<p>\
+          <tr><td><p>Concrètement, OpenSankey+ permet de créer des diagrammes enrichis avec des :</p>\
+          <ul style="padding-left: 1rem; ">\
           <li>Labels flottants pour agrémenter la représentation graphique</li>\
           <li>Icônes pour illustrer les nœuds</li>\
           <li>Représentations de gradients sur les flux</li>\
           <li>Gestions de hiérarchies complexes</li>\
-          <li>Animations des Sankey par des effets d’apparence progressive ou par une succession de « vues » montrant des évolutions</li></td>\
+          <li>Animations des Sankey par des effets d’apparence progressive ou par une succession de « vues » montrant des évolutions</li></ul></td>\
           <td><img src="https://terriflux.com/wp-content/uploads/2023/07/FiliereColza-980x359.jpg.webp" style="margin:20px"></td><tr></table>\
           ',
           'btn_next': 'Je veux OpenSankey+ !'

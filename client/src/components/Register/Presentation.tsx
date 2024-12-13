@@ -20,7 +20,7 @@ export const Presentation: FunctionComponent<{
       <center><img
         src={logo_sankey_plus}
         alt='logo_OSP'
-        style={{ 'objectFit': 'contain', 'width': '225px','marginBottom': '10px' }}
+        style={{ 'objectFit': 'contain', 'height': '100px', 'marginBottom': '10px' }}
       /></center>
     </Box>
     <Box as='span'>

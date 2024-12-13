@@ -423,7 +423,7 @@ const Register: FunctionComponent<{
 
 
       <div className="login-wrapper">
-        <Card variant='card_register' width={width}>
+        <Card variant='card_register' marginTop='100px' width={width}>
           <CardHeader
             style={{ 'textAlign': 'center' }}
           >
