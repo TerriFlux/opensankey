@@ -14,3 +14,9 @@ export const heading_template_dashboard = defineStyle({
   fontSize:'2rem',
   textStyle:'h2',
 })
+
+export const heading_template_sankey = defineStyle({
+  textAlign:'center',
+  fontSize:'1.3rem',
+  textStyle:'h2',
+})

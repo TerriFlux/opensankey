@@ -50,6 +50,7 @@ import {
   card_icon_selected,
   card_import_icon,
   card_register,
+  cards_empty_template,
   cards_template
 } from './CardStyle'
 import {
@@ -97,7 +98,8 @@ import {
 import {
   tabs_base_style,
   tabs_navbar,
-  tabs_variant_lib_cion
+  tabs_variant_lib_cion,
+  tabs_variant_template
 } from './TabStyles'
 import {
   textarea_base_style
@@ -113,6 +115,7 @@ import {
 import {
   heading_base_style,
   heading_template_dashboard,
+  heading_template_sankey,
   heading_welcome_style
 } from './HeadingStyles'
 import {
@@ -201,6 +204,7 @@ export const opensankey_theme = extendTheme({
         card_account,
         card_register,
         cards_template,
+        cards_empty_template,
       }
     },
     Checkbox: {
@@ -269,7 +273,8 @@ export const opensankey_theme = extendTheme({
       baseStyle: tabs_base_style,
       variants: {
         tabs_variant_lib_cion,
-        tabs_navbar
+        tabs_navbar,
+        tabs_variant_template
       }
     },
     Table: {
@@ -300,6 +305,7 @@ export const opensankey_theme = extendTheme({
       variants: {
         heading_welcome_style,
         heading_template_dashboard,
+        heading_template_sankey,
       }
     },
     Spinner: {

@@ -18,7 +18,8 @@ import {
   ModalPreference,
 } from './dialogs/SankeyMenuPreferences'
 import {
-  OpenSankeyMenus, Menu} from './topmenus/SankeyMenuTop'
+  OpenSankeyMenus, Menu
+} from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { Type_JSON } from './types/Utils'
 
@@ -61,6 +62,8 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   )
 
 
+ 
+
   /*************************************************************************************************/
 
   // If leveltags are present Primaire is desactivated
@@ -75,7 +78,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     (mode_pref === 'expert') &&
     menu_config.accordions_to_show.length !== 7
   ) {
-    menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED','EL', 'LL', 'Vis']
+    menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
   }
 
   /*************************************************************************************************/
@@ -90,7 +93,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     external_file_export_item: [],
     externale_save_item: [],
     externale_navbar_item: {},
-    footer:[],
+    footer: [],
     // Mise en page
     extra_background_element: <></>,
     apply_transformation_additional_elements: [<></>],
@@ -138,7 +141,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
       'strectch_zdd',
       'help',
       'fullscreen'],
-    cards_template: <></>
+    template_module_key: ['Essential'],
   }
 
   initializeAdditionalMenus(
@@ -234,7 +237,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
             processFunctions={new_data.processFunction}
             configurations_menus={menu_configuration}
             menus={sankey_menus}
-            cardsTemplate={additionalMenus.cards_template}
             external_modal={[
               <></>
             ]}

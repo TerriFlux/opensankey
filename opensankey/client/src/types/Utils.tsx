@@ -132,6 +132,8 @@ export const default_style_name = 'Style par default'
 
 // DEDICATED TYPES **********************************************************************
 
+export type Dict_templates_type={[y:string]:{data:string[],image:string[]}}
+export type Templates_builder_type={[y:string]:Dict_templates_type}
 
 // DEDICATED FUNCTIONS *******************************************************************
 
