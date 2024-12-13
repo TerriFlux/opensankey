@@ -78,7 +78,7 @@ export type Type_AdditionalMenus = {
   toolbar_order: string[],
   toolbar_elements: { [k: string]: JSX.Element; }
 
-  cards_template: JSX.Element
+  template_module_key: string[]
 }
 
 

@@ -36,10 +36,10 @@ export const tabs_base_style = definePartsStyle({
     margin: '0.5rem !important'
   },
   tabpanels: {
-    padding:'0px'
+    padding: '0px'
   },
   tabpanel: {
-    padding:'0.5rem'
+    padding: '0.5rem'
   },
 })
 
@@ -52,7 +52,7 @@ export const tabs_navbar = definePartsStyle({
     borderLeftColor: 'secondaire.2',
     borderRight: 'solid 1px',
     borderRightColor: 'secondaire.2',
-    fontSize:'1rem',
+    fontSize: '1rem',
     textStyle: 'h1',
   },
   tab: {
@@ -95,7 +95,7 @@ export const tabs_navbar = definePartsStyle({
   }
 })
 
-export const tabs_variant_lib_cion=definePartsStyle({
+export const tabs_variant_lib_cion = definePartsStyle({
   root: {
     border: 'inherit',
     borderRadius: '6px',
@@ -130,6 +130,63 @@ export const tabs_variant_lib_cion=definePartsStyle({
     borderTop: 'solid 1px !important',
     borderTopColor: 'gray.100 !important',
   },
+  // tabpanel: {
+  // },
+})
+
+export const tabs_variant_template = definePartsStyle({
+  root: {
+    border: 'inherit',
+    borderRadius: '6px',
+    borderColor: 'inherit',
+    '-webkit-user-select': 'none', /* Chrome all / Safari all */
+    '-moz-user-select': 'none', /* Firefox all */
+    '-ms-user-select': 'none', /* IE 10+ */
+    'user-select': 'none',
+  },
+  tab: {
+    border: 'solid 1px !important',
+    borderRadius: '6px',
+    borderColor: 'primaire.6',
+    margin: '0 !important',
+    padding: '0 !important',
+    height: '2rem !important',
+    backgroundColor: 'none',
+    width: '6rem',
+
+    _selected: {
+      border: 'solid 1px !important',
+      borderRadius: '6px',
+      color: 'primaire.3',
+      borderColor: 'primaire.6',
+      backgroundColor: ' openSankey.200',
+
+    }
+  },
+  tablist: {
+    display: 'inherit',
+    gridTemplateColumns: '1fr',
+    gridTemplateRows: '1fr',
+    gridRowGap: '0.25rem',
+    border: '0 !important',
+    margin: '0.5rem !important'
+  },
+  tabpanels: {
+    borderTop: 'solid 1px !important',
+    borderTopColor: 'gray.100 !important',
+
+  },
+  tabpanel: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gridTemplateRows: '0.5fr',
+    gridRowGap: '0.25rem',
+    gridColumnGap: '0.25rem',
+
+    width: '60vw',
+    height: '70vh',
+    overflow: 'auto'
+  }
   // tabpanel: {
   // },
 })

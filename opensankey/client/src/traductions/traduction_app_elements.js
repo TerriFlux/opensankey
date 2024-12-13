@@ -147,7 +147,7 @@ export const resources_app_elements = {
         node_label_sep_pos: 'Select text to display (before or after separator)',
         before: 'Before',
         after: 'After',
-        from_new: 'From new file',
+        from_new: 'Empty diagram',
         from_model: 'From a model',
         open_json: 'Sankey diagram (JSON file)',
         open_excel: 'Data (Excel file)',
@@ -757,6 +757,10 @@ export const resources_app_elements = {
         10: 'Buttons to open the configuration menu to edit the elements of the sankey diagram',
         excel: 'Button download the data used for the sankey in Excel format'
       },
+      Template:{
+        'Essential':'Essential',
+        'Advanced':'Advanced',
+      },
       DisplayWelcome: 'Welcome',
       dontSeeAgain: 'Don\'t show again',
       scale: 'Scale',
@@ -923,7 +927,7 @@ export const resources_app_elements = {
         node_label_sep_pos: 'Sélectionner la partie des labels à afficher',
         before: 'Avant',
         after: 'Après',
-        from_new: 'A partir d\'une page vierge',
+        from_new: 'Diagramme vierge',
         from_model: 'A partir d\'un modèle',
         open_json: 'Diagramme de Sankey (fichier JSON)',
         open_excel: 'Données (fichier Excel)',
@@ -1544,6 +1548,10 @@ export const resources_app_elements = {
         9: 'Bouton permettant de se connecter avec un compte opensankey et activer des modules supplémentaires',
         10: 'Bouton permettant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
         excel: 'Bouton permettant de télécharger les données au format Excel'
+      },
+      Template:{
+        'Essential':'Basique',
+        'Advanced':'Avancé',
       },
       DisplayWelcome: 'Accueil',
       dontSeeAgain: 'Ne plus montrer',
