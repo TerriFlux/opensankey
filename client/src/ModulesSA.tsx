@@ -9,13 +9,6 @@ import {
 import {
   Box,
   Button,
-  ButtonGroup,
-  Card,
-  CardBody,
-  CardFooter,
-  Heading,
-  Image,
-  Stack,
 } from '@chakra-ui/react'
 
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
@@ -26,8 +19,6 @@ import { initializeAdditionalMenusOSP } from './deps/OpenSankey+/OSPModule'
 
 import { Class_ApplicationDataSA } from './ApplicationData'
 import { LoginOutButton } from './components/Login/Login'
-import { JSONtoExcel } from './deps/OpenSankey+/deps/OpenSankey/dialogs/SankeyPersistence'
-import { Type_GenericApplicationDataOS } from './deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
 
 
 /**
@@ -110,7 +101,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     initial_list={true}
   />
 
-  additionalMenus.cards_template = CardsTemplateBuilder(new_data_app)
+
 }
 
 type FCType_UserPagesButtons = {
@@ -234,76 +225,4 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
 
 
   return (!new_data_app.has_account ? user_navigation_bar_free : user_navigation_bar_connected)
-}
-
-export const CardsTemplateBuilder = (
-  new_data: Type_GenericApplicationDataOS
-) => {
-  const { t, static_path } = new_data
-  /* eslint-disable */
-  // @ts-ignore
-  const image_preview = require.context('./css/image_preview', true)
-  // @ts-ignore
-  const imageList = image_preview.keys().map(image => {
-    let img = image_preview(image)
-    const path = window.location.href
-    if (!path.includes('localhost')) {
-      img = img.replace('static/', static_path)
-    }
-    return img
-  })
-  // @ts-ignore
-  const list_template = require.context('./css/easy_template', true)
-  // @ts-ignore
-  // Create the list of json associated to images
-  const list_template_data = list_template.keys().filter(im => im.includes('.json')).map(path_to_file => {
-    const d = list_template(path_to_file)
-    return d
-  })
-  /* eslint-enable */
-  return <>
-    {(imageList as string[]).map((_, idx) => {
-      // _ is the path to the image, it contain '/' because it is in a folder tree
-      // so we take the name of file by removing the path & keeping the file name
-      const tmp = _.split('/')
-      // then since we use a require file name have number in their name (exemple : tolkien.556685563.png)
-      // so we take only the name by removing extra (number + file extension)
-      const title = tmp[tmp.length - 1].split('.')[0]
-      return (
-        <Card key={idx} variant='cards_template'>
-          <CardBody>
-            <Stack>
-              <Heading variant='heading_template_dashboard'>{title.replaceAll('_', ' ')}</Heading>
-              <Image
-                className='img-card'
-                src={_}
-                style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
-              />
-            </Stack>
-
-          </CardBody>
-          <CardFooter>
-            <ButtonGroup
-              //ButtonGroup don't have variants theming so we modify directly the style
-              style={{
-                margin: 'auto'
-              }}>
-              <Button variant='menuconfigpanel_option_button'
-                onClick={() => {
-                  // Draw template
-                  new_data.fromJSON(list_template_data[idx])
-                }}>{t('useTemplate')}</Button>
-
-              <Button variant='menuconfigpanel_option_button_secondary'
-                onClick={() => {
-                  // Dowload template to excel format
-                  JSONtoExcel(list_template_data[idx], '/opensankey/')
-                }}>{t('dl')}</Button>
-            </ButtonGroup>
-          </CardFooter>
-        </Card>
-      )
-    }
-    )}
-  </>
 }
