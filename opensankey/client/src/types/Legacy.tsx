@@ -2324,8 +2324,8 @@ const convert_links: convert_linksFuncType = (
         const shift_dist_min = 40 // px
         if (l.local.vert_shift !== undefined) {
           const scale = d3.scaleLinear()
-          .range([0, 100])
-          .domain([0, data.user_scale])
+            .range([0, 100])
+            .domain([0, data.user_scale])
 
           const source_y = data.nodes[l.idSource].y
           const target_y = data.nodes[l.idTarget].y

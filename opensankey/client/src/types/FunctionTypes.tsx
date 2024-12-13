@@ -54,7 +54,6 @@ export type FCType_Menu = {
   diagramSelector: FType_DiagramSelector,
   configurations_menus: JSX.Element,
   menus: { [s: string]: JSX.Element[] | JSX.Element },
-  cardsTemplate: JSX.Element,
   external_modal: JSX.Element[],
   apply_transformation_additional_elements: JSX.Element[],
   additionalMenus:Type_AdditionalMenus,
