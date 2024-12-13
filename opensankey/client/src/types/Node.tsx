@@ -761,8 +761,10 @@ export abstract class Class_NodeElement
   }
 
   public drawAsSelected() {
-    // Redraw shape
-    this.drawShape()
+    // Change stroke
+    this.d3_selection_g_shape?.selectAll('.node_shape')
+    .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
+    .attr('stroke-opacity', this.is_selected ? default_selected_stroke_width : 0)
     // Redraw handles
     this.links_order_visible
       .forEach(link => {
