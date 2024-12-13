@@ -280,6 +280,11 @@ export abstract class Class_LinkElementPlus
 
   public getArrowColorToUse() {
     if (this.shape_is_gradient) {
+      const link_arrow_side_right = this.target_side == 'right'
+      const link_arrow_side_bottom = this.target_side == 'bottom'
+      const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
+      const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
+
       const source_color = this.source.getShapeColorToUse()
       const target_color = this.target.getShapeColorToUse()
       const shape_orientation = this.shape_orientation  // save to avoid recomputings
@@ -289,15 +294,15 @@ export abstract class Class_LinkElementPlus
           (!shape_is_recycling && this.source.position_x < this.target.position_x) ||
           (shape_is_recycling && this.source.position_x >= this.target.position_x)
         )
-          return target_color
+          return is_revert ? source_color : target_color
         else
-          return source_color
+          return is_revert ? target_color : source_color
       }
       else {
         if (this.source.position_y < this.target.position_y)
-          return target_color
+          return is_revert ? source_color : target_color
         else
-          return source_color
+          return is_revert ? target_color : source_color
       }
     }
     else {
