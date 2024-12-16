@@ -794,7 +794,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public drawValueLabel() {
-    this._process_or_bypass(() => { this._drawValueLabel; this._orderD3Elements() })
+    this._process_or_bypass(() => { this._drawValueLabel(); this._orderD3Elements() })
   }
 
   public drawLinks() {

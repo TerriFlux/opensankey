@@ -2485,6 +2485,7 @@ export abstract class Class_DrawingArea
       this._scale = value
       this._scaleValueToPx.domain([0, value])
       this._scale_fitting = false
+      this.application_data.menu_configuration.ref_to_menu_config_layout_updater.current()
       this.drawElements()
       this.areaAutoFit()
     }

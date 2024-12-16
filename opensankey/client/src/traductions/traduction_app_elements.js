@@ -466,6 +466,16 @@ export const resources_app_elements = {
             angle_orientation: 'Change the orientation of the node',
           }
         },
+        node_value: {
+          anchor: 'Anchor position',
+          anchor_dx: 'Horizontal shift',
+          anchor_dy: 'Vertical shift',
+          tooltips: {
+            anchor: 'The anchor of node value can be positioned by combining horizontal position : left, middle and right; and vertically : top, middle and bottom',
+            anchor_dx: 'Horizontal shift from label anchor',
+            anchor_dy: 'Vertical shift from label anchor',
+          }
+        },
         labels: {
           labels: 'Name',
           node_value: 'Value',
@@ -479,9 +489,9 @@ export const resources_app_elements = {
           cl: 'Text box width',
           vdv: 'Value',
           edit_node_label: 'Edit node label',
-          anchor: 'Position de l\'ancre',
-          anchor_dx: 'Décalage horizontal',
-          anchor_dy: 'Décalage vertical',
+          anchor: 'Anchor position',
+          anchor_dx: 'Horizontal shift',
+          anchor_dy: 'Vertical shift',
           tooltips: {
             vdb: 'Displays or not the label(s) attached to the selected node(s)',
             lb: 'Displays the text of the label(s) in white or black (useful if label is positioned on node(s))',
@@ -495,8 +505,8 @@ export const resources_app_elements = {
             cl: 'Width of the text area (in pixels) for the label(s) of the selected node(s)',
             vdv: 'Displays or not the associated value with the selected node(s)',
             anchor: 'L\'ancre du label peut être positionné de 9 manières par rapport à la forme combinant horizontalement bord gauche, milieu bord droit et verticalement bord supérieur milieu bord inférieur',
-            anchor_dx: 'Décalage horizontal par rapport à l\'ancre du label',
-            anchor_dy: 'Décalage vertical par rapport à l\'ancre du label',
+            anchor_dx: 'Horizontal shift from label anchor',
+            anchor_dy: 'Vertical shift from label anchor',
             haut_val: 'Displays the associated value above the selected node(s)',
             Milieu_pv_val: 'Displays the associated value in the middle (vertically) of the selected node(s)',
             Bas_val: 'Displays the associated value below the selected node(s)',
