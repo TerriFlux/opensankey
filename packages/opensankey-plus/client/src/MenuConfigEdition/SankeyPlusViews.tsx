@@ -573,7 +573,7 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
 
   // Components updaters ----------------------------------------------------------------
 
-  const [s_select_or_edit, sSelectOrEdit] = useState<'edit'|'select'>('select')
+  const [s_select_or_edit, sSelectOrEdit] = useState<'edit' | 'select'>('select')
 
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
@@ -709,7 +709,7 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
             </Tr>
           </Thead>
           <Tbody>
-            {list_view.map((d,idx) => {
+            {list_view.map((d, idx) => {
               return (
                 <React.Fragment key={idx}>
                   <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
@@ -728,24 +728,30 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
                       {/* Change the position of the view in the liste of view from master data */}
                       <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
                         onClick={() => { new_data_plus.moveViewUpInOrder(d.id); new_data_plus.menu_configuration.updateComponentRelatedToViews() }}
-                      ><FaArrowUp />
+                      >
+                        <FaArrowUp />
                       </Button>
                       <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
                         onClick={() => { new_data_plus.moveViewDownInOrder(d.id); new_data_plus.menu_configuration.updateComponentRelatedToViews() }}
-                      ><FaArrowDown />
+                      >
+                        <FaArrowDown />
                       </Button>
                     </Td>
-                    <Td><Button
-                      variant='menuconfigpanel_del_button_in_table'
-                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                      onClick={
-                        // Delete the view
-                        () => {
-                          new_data_plus.deleteView(d.id)
-                          new_data_plus.menu_configuration.updateComponentRelatedToViews()
+                    <Td>
+                      <Button
+                        variant='menuconfigpanel_del_button_in_table'
+                        isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                        onClick={
+                          // Delete the view
+                          () => {
+                            new_data_plus.deleteView(d.id)
+                            new_data_plus.menu_configuration.updateComponentRelatedToViews()
+                          }
                         }
-                      }
-                    ><FaMinus /></Button></Td>
+                      >
+                        <FaMinus />
+                      </Button>
+                    </Td>
                   </Tr>
                 </React.Fragment>
               )
@@ -820,7 +826,7 @@ export const MenuPreferenceViewOSP: FunctionComponent<FCType_MenuPreferenceViewO
   { new_data_plus }
 ) => {
   const [, setCount] = useState(0)
-  new_data_plus.menu_configuration.ref_to_checkbox_pref_view_updater.current=()=>setCount(a=>a+1)
+  new_data_plus.menu_configuration.ref_to_checkbox_pref_view_updater.current = () => setCount(a => a + 1)
   const { t } = new_data_plus
   return <Checkbox
     variant='menuconfigpanel_option_checkbox'
@@ -895,7 +901,7 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
   const { t } = new_data_plus
 
   const [state, setState] = useState(false)
-  const [,setUpdater]=useState(0)
+  const [, setUpdater] = useState(0)
   const show_modal = state
   // const update_modes = state.update_modes
 
@@ -905,8 +911,8 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
 
   new_data_plus.menu_configuration.ref_to_modal_view_attributes_switcher.current = switchThis
 
-  const updateComponent=()=>{
-    setUpdater(a=>a+1)
+  const updateComponent = () => {
+    setUpdater(a => a + 1)
   }
 
   const has_sankey_plus = new_data_plus.has_sankey_plus
