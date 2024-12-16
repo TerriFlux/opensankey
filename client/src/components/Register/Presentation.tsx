@@ -24,7 +24,7 @@ export const Presentation: FunctionComponent<{
       /></center>
     </Box>
     <Box as='span'>
-    {html_text}
+      {html_text}
     </Box>
   </Box>
 }
