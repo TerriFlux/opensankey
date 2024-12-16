@@ -136,7 +136,7 @@ test_opensankey:
     - bash deploy_SankeyApp.sh
     # Update db
     - cp server/db.sqlite server/db.sqlite.bk/db_`date --iso-8601='seconds'`.sqlite
-    - find ./server/db.sqlite.bk -mtime +30 -type f -delete
+    - find ./server/db.sqlite.bk -mtime +180 -type f -delete
     - alembic upgrade head
     # Start app
     - bash restart_site.sh $ENV
@@ -177,7 +177,7 @@ prod_opensankey:
     - bash deploy_SankeyApp.sh
     # Update db
     - cp server/db.sqlite server/db.sqlite.bk/db_`date --iso-8601='seconds'`.sqlite
-    - find ./server/db.sqlite.bk -mtime +30 -type f -delete
+    - find ./server/db.sqlite.bk -mtime +365 -type f -delete
     - alembic upgrade head
     # Start app
     - bash restart_site.sh $ENV
