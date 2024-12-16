@@ -137,7 +137,7 @@ export abstract class Class_ApplicationData
   protected _transform_layout_all_attr: string[] = ['addNode', 'addFlux', 'removeNode', 'removeFlux', 'posNode', 'Values', 'attrNode', 'posFlux', 'attrFlux', 'tagNode', 'tagFlux', 'tagData', 'tagLevel', 'attrDrawingArea']
 
   // All item selectable in SankeyMenuPreference
-  protected _preference_menu_all_item: string[] = ['MEP', 'EN', 'EF', 'ED']
+  protected _preference_menu_all_item: string[] = []
 
   // PRIVATE ATTRIBUTES =================================================================
 
