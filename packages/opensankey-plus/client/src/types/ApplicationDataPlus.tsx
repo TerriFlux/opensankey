@@ -520,7 +520,7 @@ export abstract class Class_ApplicationDataPlus
    */
   public deleteView(id: string) {
     // Check if we are not trying to delete master
-    if (id in this._views) {
+    if (this._views[id] !== undefined) {
       // Clean
       delete this._views[id] // Remove for view dict
       this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
