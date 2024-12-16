@@ -358,7 +358,7 @@ export abstract class Class_DrawingArea
     this._link_contextualied = undefined
     this._node_contextualied = undefined
     // Clean Elements
-    this._sankey.delete()
+    // this._sankey.delete() TODO Trop lourd + bug suppression vues
     this._legend.delete()
     this._selection_zone.delete()
     // Clean drawing area
