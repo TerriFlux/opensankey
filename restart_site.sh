@@ -12,8 +12,8 @@ else
 fi
 
 sudo systemctl restart nginx
-sudo systemctl stop  ${prefix}_sankeyapp
-sudo systemctl start ${prefix}_sankeyapp
-sudo systemctl enable ${prefix}_sankeyapp
+sudo systemctl stop  ${prefix}_opensankey
+sudo systemctl start ${prefix}_opensankey
+sudo systemctl enable ${prefix}_opensankey
 sudo systemctl restart nginx
-sudo systemctl status ${prefix}_sankeyapp --no-pager
+sudo systemctl status ${prefix}_opensankey --no-pager
