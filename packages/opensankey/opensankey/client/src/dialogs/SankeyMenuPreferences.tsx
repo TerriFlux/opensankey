@@ -161,45 +161,12 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
       </Checkbox>,
 
       <Checkbox
-        key={5}
-        ref={checkbox_refs['EN']}
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.menu_configuration.isGivenAccordionShowed('EN')}
-        onChange={() => {
-          new_data.menu_configuration.toggleGivenAccordion('EN')
-        }}>
-        {t('Menu.EN')}
-      </Checkbox>,
-
-      <Checkbox
         key={6}
         variant='menuconfigpanel_option_checkbox'
         isChecked
         disabled
       >
         {t('Menu.flux')}
-      </Checkbox>,
-
-      <Checkbox
-        key={7}
-        ref={checkbox_refs['EF']}
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.menu_configuration.isGivenAccordionShowed('EF')}
-        onChange={() => {
-          new_data.menu_configuration.toggleGivenAccordion('EF')
-        }}>
-        {t('Menu.EF')}
-      </Checkbox>,
-
-      <Checkbox
-        key={8}
-        ref={checkbox_refs['ED']}
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.menu_configuration.isGivenAccordionShowed('ED')}
-        onChange={() => {
-          new_data.menu_configuration.toggleGivenAccordion('ED')
-        }}>
-        {t('Menu.ED')}
       </Checkbox>,
       additionalMenus.additional_preferences
     ],
