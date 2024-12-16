@@ -13,6 +13,7 @@ import colormap from 'colormap'
 import {
   Box,
   Button,
+  Checkbox,
   Input,
   InputGroup,
   Select,
@@ -49,6 +50,7 @@ import {
   GetRandomInt,
   OSTooltip
 } from '../deps/OpenSankey/types/Utils'
+import { Type_GenericApplicationDataOSP } from '../types/TypesOSP'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -663,3 +665,51 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 export default null
 
 export { SankeySettingsEditionElementTags }
+type FCType_MenuPreferenceEditionTag = {
+  new_data: Type_GenericApplicationDataOSP
+}
+export const MenuPreferenceEditionTag: FunctionComponent<FCType_MenuPreferenceEditionTag> = ({ new_data }) => {
+  const [, setCount] = useState(0)
+  const { t } = new_data
+  new_data.menu_configuration.ref_to_checkbox_pref_edition_tags_updater.current = () => setCount(a => a + 1)
+
+  return <OSTooltip
+    label={!new_data.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''}
+  >
+    <Box>
+      <Checkbox
+        isDisabled={!new_data.has_sankey_plus}
+        key={5}
+        ref={new_data.checkbox_refs['EN']}
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={new_data.menu_configuration.isGivenAccordionShowed('EN')}
+        onChange={() => {
+          new_data.menu_configuration.toggleGivenAccordion('EN')
+        }}>
+        {t('Menu.EN')}
+      </Checkbox>
+      <Checkbox
+        isDisabled={!new_data.has_sankey_plus}
+        key={7}
+        ref={new_data.checkbox_refs['EF']}
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={new_data.menu_configuration.isGivenAccordionShowed('EF')}
+        onChange={() => {
+          new_data.menu_configuration.toggleGivenAccordion('EF')
+        }}>
+        {t('Menu.EF')}
+      </Checkbox>
+      <Checkbox
+        isDisabled={!new_data.has_sankey_plus}
+        key={8}
+        ref={new_data.checkbox_refs['ED']}
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={new_data.menu_configuration.isGivenAccordionShowed('ED')}
+        onChange={() => {
+          new_data.menu_configuration.toggleGivenAccordion('ED')
+        }}>
+        {t('Menu.ED')}
+      </Checkbox>
+    </Box>
+  </OSTooltip>
+}

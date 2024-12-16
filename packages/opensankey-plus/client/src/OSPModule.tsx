@@ -73,6 +73,7 @@ import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/dialogs/type
 import { SankeyMenuConfigurationNodesTags } from './MenuConfigEdition/SankeyPlusMenuConfigurationNodesTags'
 import { MenuConfigurationLinksTags } from './MenuConfigEdition/SankeyPlusMenuConfigurationLinksTags'
 import { MenuConfigurationLinksTooltip } from './MenuConfigEdition/SankeyPlusMenuConfigurationLinksTooltip'
+import { MenuPreferenceEditionTag } from './MenuConfigEdition/SankeyPlusMenuConfigurationTags'
 
 declare const window: Window &
   typeof globalThis & {
@@ -254,6 +255,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
 
   //Preferences
+  additionalMenus.additional_preferences.push(
+    <MenuPreferenceEditionTag
+      new_data={new_data_plus}
+    />
+  )
   additionalMenus.additional_preferences.push(
     <MenuPreferenceLabelsOSP
       new_data_plus={new_data_plus}

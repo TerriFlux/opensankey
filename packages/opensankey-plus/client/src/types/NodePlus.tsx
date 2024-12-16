@@ -418,6 +418,7 @@ export abstract class Class_NodeElementPlus
    * @memberof Class_NodeElementPlus
    */
   protected _drawNameLabelBackground() {
+    this.d3_selection_g_name_label?.select('.name_label_background').remove()
     // Draw label BG if attr is at true but also if we display label
     if (this.name_label_visible && this.name_label_background && this.d3_selection_g_name_label) {
 

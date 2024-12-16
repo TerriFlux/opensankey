@@ -69,6 +69,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
 
   private _ref_to_checkbox_pref_view_updater: MutableRefObject<(() => void)>
+  private _ref_to_checkbox_pref_edition_tags_updater: MutableRefObject<(() => void)>
+
 
   private _ref_to_checkbox_pref_container_updater: MutableRefObject<(() => void)>
 
@@ -111,6 +113,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_save_diagram_only_view_updater = useRef(() => null)
     this._ref_to_drawer_sequence_data_tag_updater = useRef(() => null)
     this._ref_to_checkbox_pref_view_updater = useRef(() => null)
+    this._ref_to_checkbox_pref_edition_tags_updater = useRef(() => null)
     this._ref_to_checkbox_pref_container_updater = useRef(() => null)
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
     this._zdt_accordion_ref = useRef<HTMLButtonElement>(null)
@@ -171,6 +174,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_accordion_containers_updater.current()
     this._ref_to_checkbox_pref_view_updater.current()
     this._ref_to_checkbox_pref_container_updater.current()
+    this._ref_to_checkbox_pref_edition_tags_updater.current()
   }
 
   public override updateComponentSaveDiagramJSON() {
@@ -415,5 +419,5 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get ref_to_checkbox_pref_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_checkbox_pref_view_updater }
   public get ref_to_checkbox_pref_container_updater(): MutableRefObject<(() => void)> { return this._ref_to_checkbox_pref_container_updater }
-
+  public get ref_to_checkbox_pref_edition_tags_updater(): MutableRefObject<(() => void)> {return this._ref_to_checkbox_pref_edition_tags_updater}
 }
