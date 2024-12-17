@@ -690,7 +690,8 @@ def delete_license_from_stripe(
 def create_user_license_subscription(
     license_stripe_id,
     user_license_stripe_id,
-    user_license_creation_date
+    user_license_creation_date,
+    user_license_expiry,
 ):
     """
     Set what type of license and creation date for a
@@ -735,6 +736,7 @@ def create_user_license_subscription(
     # Update infos
     user_license.creation = user_license_creation_date
     user_license.license = license
+    user_license.expiry = user_license_expiry
 
     # Apply modification to database
     db.session.commit()

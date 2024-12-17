@@ -281,7 +281,8 @@ def handle_subscription_creation_session(session):
     return create_user_license_subscription(
         item['plan']['product'],
         object['id'],
-        datetime.fromtimestamp(object['created']).isoformat())
+        datetime.fromtimestamp(object['created']).isoformat(),
+        datetime.fromtimestamp(object['current_period_end']).isoformat())
 
 
 def handle_subscription_update_session(session):
