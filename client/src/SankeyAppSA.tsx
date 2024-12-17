@@ -23,7 +23,6 @@ import { initializeMenuConfiguration } from './deps/OpenSankey+/deps/OpenSankey/
 import {
   initializeDiagrammSelectorOSP,
   initializeReinitializationOSP,
-  moduleDialogsOSP
 } from './deps/OpenSankey+/OSPModule'
 import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/welcome/ModalWelcomeOSP'
 
@@ -31,7 +30,7 @@ import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/welcome/ModalWelcomeO
 
 import { Class_ApplicationDataSA } from './ApplicationData'
 import { Theme_SankeyApplication }  from './chakra/Theme'
-import { ExempleMenuTypes, initializeAdditionalMenusSA, initializeApplicationDataSA } from './ModulesSA'
+import { initializeAdditionalMenusSA, initializeApplicationDataSA, moduleDialogsSA } from './ModulesSA'
 import Account from './components/UserPages/Account'
 import Dashboard from './components/UserPages/Dashboard'
 import Register from './components/Register/Register'
@@ -44,13 +43,11 @@ import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Pai
 // SankeyApp for OpenSankey+ ========================================================================
 
 type SankeyAppSAType = {
-  example_menu: ExempleMenuTypes,
-  formations_menu: ExempleMenuTypes,
   new_data_app:Class_ApplicationDataSA
 }
 
 export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
-  { example_menu, formations_menu,new_data_app }
+  {new_data_app }
 ) => {
 
   // Minimal app ------------------------------------------------------------------------------------
@@ -72,13 +69,10 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
         initializeAdditionalMenusSA(
           additionalMenus,
           new_data as Class_ApplicationDataSA,
-          example_menu,
-          formations_menu,
-          reinit
         )
       }}
       initializeDiagrammSelector={initializeDiagrammSelectorOSP}
-      moduleDialogs={moduleDialogsOSP}
+      moduleDialogs={moduleDialogsSA}
       ModalWelcome={ModalWelcomeBuilderOSP}
       ClickSaveDiagram={
         (new_data_app) => { ClickSaveDiagram(new_data_app) }

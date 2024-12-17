@@ -520,7 +520,8 @@ export const resources_app_elements = {
         input_analyse_uncert: 'Number of realisation',
         waiting_file: 'Choose an entering excel file'
       },
-      'useTemplate': 'Use this template',
+      'useSankeyThequeJSON':'Open (json)',
+      'useSankeyThequeEXCEL':'Open (excel)',
       'dl': 'Download excel',
       'elements_sankey+_blocked': 'Blocked diagram elements (OpenSankey+)',
       'mfa_blocked': 'Blocked diagram elements (MFASankey)',
@@ -1007,7 +1008,8 @@ export const resources_app_elements = {
         input_analyse_uncert: 'Nombre de réalisations',
         waiting_file: 'Veuillez choisir un fichier d\'entrée excel'
       },
-      'useTemplate': 'Utiliser ce modèle',
+      'useSankeyThequeJSON':'Ouvrir (json)',
+      'useSankeyThequeEXCEL':'Ouvrir (excel)',
       'dl': 'Télécharger (excel)',
       'elements_sankey+_blocked': 'Elements du diagrame bloqués (OpenSankey+)',
       'elements_mfa_blocked': 'Elements du diagrame bloqués (MFASankey+)',

@@ -158,3 +158,39 @@ export const btn_accountpage_danger = defineStyle({
     borderColor: 'secondaire.1',
   }
 })
+
+export const button_open_card_sankeytheque=defineStyle({
+  bg: 'primaire.6',
+  bgColor: 'primaire.6',
+  borderColor: 'primaire.6',
+  whiteSpace:'inherit',
+  _hover: {
+    bg: 'tertiaire.6',
+    bgColor: 'tertiaire.6',
+    borderColor: 'tertiaire.6',
+  }
+})
+
+export const button_sankey_open_json=defineStyle({
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  borderColor: 'primaire.2',
+  whiteSpace:'inherit',
+  _hover: {
+    bg: 'tertiaire.2',
+    bgColor: 'tertiaire.2',
+    borderColor: 'tertiaire.2',
+  }
+})
+
+export const button_sankey_open_excel=defineStyle({
+  bg: 'primaire.3',
+  bgColor: 'primaire.3',
+  borderColor: 'primaire.3',
+  whiteSpace:'inherit',
+  _hover: {
+    bg: 'tertiaire.3',
+    bgColor: 'tertiaire.3',
+    borderColor: 'tertiaire.3',
+  }
+})
