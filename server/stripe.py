@@ -100,6 +100,7 @@ def create_checkout_session():
                 'license/return?session_id={CHECKOUT_SESSION_ID}'),
             payment_method_types=['card'],
             mode='subscription',
+            allow_promotion_codes=True,
             line_items=[
                 {
                     'price': STRIPE_KEYS['price_id_osplusmensuel'],
