@@ -778,6 +778,37 @@ def update_user_license_subscription(
     return 'ok', True
 
 
+def delete_user_license_subscription(
+    user_license_stripe_id
+):
+    """
+    Triggered for subscription deletion event
+
+    Parameters
+    ----------
+    :param user_license_stripe_id: _description_
+    :type user_license_stripe_id: _type_
+
+    Returns
+    -------
+    :return: (response message, ok)
+    :rtype: (str, boolean)
+    """
+    # Get subcription license
+    user_license = UserLicences\
+        .query.filter_by(stripe_id=user_license_stripe_id)\
+        .first()
+    if (user_license is None):
+        return "Invalid subscription id", False
+
+    # Update infos
+    user_license.delete()
+
+    # Apply modification to database
+    db.session.commit()
+    return 'ok', True
+
+
 def set_licence_checkout_completed(
     user_id,
     user_email,

@@ -29,6 +29,7 @@ from .models import update_license_name_from_stripe
 from .models import delete_license_from_stripe
 from .models import create_user_license_subscription
 from .models import update_user_license_subscription
+from .models import delete_user_license_subscription
 from .models import create_license_from_stripe
 from .models import set_licence_checkout_completed
 from .models import set_license_invoice_created
@@ -186,6 +187,7 @@ def stripe_webhook():
         'customer.deleted': handle_customer_deletion,
         'customer.subscription.created': handle_subscription_creation_session,
         'customer.subscription.updated': handle_subscription_update_session,
+        'customer.subscription.deleted': handle_subscription_delete_session,
         'product.created': handle_product_creation,
         'product.updated': handle_product_update,
         'product.deleted': handle_product_deletion,
@@ -300,6 +302,26 @@ def handle_subscription_update_session(session):
         return update_user_license_subscription(
             object['id'],
             datetime.fromtimestamp(object['current_period_end']).isoformat())
+    return 'Nothing done', False
+
+
+def handle_subscription_delete_session(session):
+    """
+    Handle subscription updates session on webhook trigger
+
+    Parameters
+    ----------
+    :param session: Session object stripe
+    :type session: {}
+
+    Returns
+    -------
+    :return: msg, ok
+    :rtype: (str, boolean)
+    """
+    object = session['object']
+    if (object['object'] == 'subscription'):
+        return delete_user_license_subscription(object['id'])
     return 'Nothing done', False
 
 
