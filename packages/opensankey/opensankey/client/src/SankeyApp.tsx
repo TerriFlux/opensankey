@@ -62,7 +62,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
   )
 
 
- 
+
 
   /*************************************************************************************************/
 
@@ -141,7 +141,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
       'strectch_zdd',
       'help',
       'fullscreen'],
-    template_module_key: ['Essential'],
+    template_module_key: ['essential'],
   }
 
   initializeAdditionalMenus(
