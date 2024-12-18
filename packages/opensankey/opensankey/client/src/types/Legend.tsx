@@ -32,6 +32,7 @@ import {
   Type_JSON,
   getStringListFromJSON,
   getJSONFromJSON,
+  const_default_position_x,
 } from './Utils'
 import {
   Type_GenericNodeElementOS
@@ -143,7 +144,12 @@ export class Class_Legend
     this._display = {
       drawing_area: drawing_area,
       sankey: drawing_area.sankey as Type_GenericSankey,
-      position: structuredClone(default_element_position)
+      position: {
+        x: const_default_position_x,
+        y: drawing_area.getNavBarHeight(),
+        u: 0,
+        v: 0
+      }
     }
   }
 
