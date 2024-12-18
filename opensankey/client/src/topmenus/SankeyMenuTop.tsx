@@ -1866,7 +1866,7 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
   // Tabs for each entries of the template_module_key
   const tabs_of_cards = <Tabs orientation='vertical' variant='tabs_variant_template'>
     <TabList >{Object.keys(template).map((v, idx) => {
-      return <Tab key={idx}>{new_data.t('Template.' + v)}</Tab>
+      return <Tab key={idx}>{new_data.t('template.' + v + '.title')}</Tab>
     })}</TabList>
     <TabPanels>
 
@@ -1874,7 +1874,7 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
         // Create a card for each template of each entries
         const cards = v[1] !== undefined ? v[1].image.map((image_str, idx) => {
 
-          const title_card = image_str.replaceAll('_', ' ').replaceAll('.png', '')
+          const title_card = image_str.replaceAll('.png', '')
 
           return <Card key={idx} variant='cards_template'
             onClick={() => {
@@ -1886,7 +1886,9 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
             }}
           >
             <CardHeader>
-              <Heading variant='heading_template_sankey'>{title_card}</Heading>
+              <Heading variant='heading_template_sankey'>
+                {new_data.t('template.' + v[0] + '.' + title_card)}
+              </Heading>
               <Divider />
             </CardHeader>
 
@@ -1923,7 +1925,7 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
         }) : <></>
 
         return <TabPanel key={idx}>
-          {v[0] == 'Essential' ? card_empty_sankey : <></>}
+          {v[0] == 'essential' ? card_empty_sankey : <></>}
           {cards}
         </TabPanel>
       })}

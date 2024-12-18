@@ -4,6 +4,7 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import { resources_app_elements } from './traduction_app_elements.js'
 import { resources_guided_tour } from './traduction_guided_tour.js'
 import { resources_loading_toasts } from './traduction_loading_toasts.js'
+import { resources_template } from './traduction_templates.js'
 
 /**
  * Concat s into t
@@ -29,6 +30,7 @@ export const resources_opensankey = {}
 deep_assign_resources(resources_app_elements, resources_opensankey)
 deep_assign_resources(resources_guided_tour, resources_opensankey)
 deep_assign_resources(resources_loading_toasts, resources_opensankey)
+deep_assign_resources(resources_template, resources_opensankey)
 
 // Update traduction
 const resources = resources_opensankey // /!\ i18next accept only var with name "resources"
