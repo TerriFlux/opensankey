@@ -153,9 +153,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     )
   }
 
-
-
-
   if (!is_static || has_views) {
     additionalMenus.externale_navbar_item['view'] = <BannerViewsOSP
       new_data_plus={new_data_plus}
@@ -226,11 +223,13 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data={new_data}
     menu_for_modal={false}
   />
+
   // Add dashed config
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceDashedOSP
     new_data_plus={new_data_plus}
     menu_for_style={false}
   />)
+
   // Add gradient config
   additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradientOSP
     new_data_plus={new_data_plus}
@@ -238,8 +237,8 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />)
   additionalMenus.additional_link_appearence_value.push(<MenuConfLinkScientificPrecision
     new_data_plus={new_data_plus}
-  />
-  )
+  />)
+
   // Add config link data text value
   additionalMenus.additional_data_element.push(<MenuConfLinkDataText
     new_data_plus={new_data_plus}
@@ -252,7 +251,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Insert OSP Button at a specific place in the link context menu
   const idx_sep_4 = additionalMenus.context_link_order.indexOf('sep_4')
   additionalMenus.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
-
 
   //Preferences
   additionalMenus.additional_preferences.push(
@@ -299,8 +297,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Place new button in desired order in the toolbar
   additionalMenus.toolbar_order.splice(1, 0, 'aggregation', 'link_visual_filter', 'node_tag_filter', 'link_tag_filter', 'data_tag_filter')
 
-
-
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
 
@@ -315,9 +311,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus}/>)
 
   // More template
-  if(new_data_plus.has_sankey_plus)
-    additionalMenus.template_module_key.push('Advanced')
-
+  if(new_data_plus.has_sankey_plus) {
+    additionalMenus.template_module_key.push('intermediary')
+    additionalMenus.template_module_key.push('advanced')
+  }
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
