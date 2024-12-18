@@ -8,7 +8,8 @@ export const resources_template = {
         intermediary: {
           title: 'Intermediary',
           commercial_pipe_monthly_report: 'Business pipe monthly report',
-          personal_budget_with_tags: 'Tagged personal expenses'
+          personal_budget_with_tags: 'Tagged personal expenses',
+          cocoa_logistics: 'Cocoa logistics'
         },
         advanced: {
           title: 'Advanced',
@@ -32,7 +33,8 @@ export const resources_template = {
         intermediary: {
           title: 'Intermédiaire',
           commercial_pipe_monthly_report: 'Pipe commercial mensualisé',
-          personal_budget_with_tags: 'Dépenses personnelles étiquetées'
+          personal_budget_with_tags: 'Dépenses personnelles étiquetées',
+          cocoa_logistics: 'Logistique du cacao'
         },
         advanced: {
           title: 'Avancé',
