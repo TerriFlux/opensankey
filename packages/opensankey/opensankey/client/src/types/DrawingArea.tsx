@@ -374,6 +374,9 @@ export abstract class Class_DrawingArea
     this._copyAttrFrom(drawing_area_to_copy)
     // Copy Sankey
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
+
+    //create new Class_Legend after deleting previous in 'this.delete()'
+    this._legend = new Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
     // Copy Legend
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
