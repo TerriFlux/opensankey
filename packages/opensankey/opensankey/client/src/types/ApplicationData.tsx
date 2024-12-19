@@ -283,9 +283,11 @@ export abstract class Class_ApplicationData
   protected _reset() {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
-    // Node : To avoid loosing ref of drawing area & creating somehow memory leak,
-    //        we have to use copyFrom -> delete old values + reeaffectation of default values on the same object
-    this._drawing_area.copyFrom(this.createNewDrawingArea()) // TODO : lent sur gros SANkey -> fix da.delete() pour accelerer
+
+    // Undraw and create new DA
+    this._drawing_area.unDraw()
+    this._drawing_area = this.createNewDrawingArea()
+
     this._drawing_area.bypass_redraws = by_pass_redraw
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
