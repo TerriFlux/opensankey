@@ -19,7 +19,8 @@ export const resources_template = {
           filiere_vegetale: 'Vegetable industry',
           filiere_bois: 'Wood industry',
           exemple_gradients: 'Color gradients',
-          bilan_matiere_huilerie: 'Vegetable oil production'
+          bilan_matiere_huilerie: 'Vegetable oil production',
+          cocoa_logistics_illustrated: 'Cocoa logistics illustrated'
         }
       },
     }
@@ -44,7 +45,8 @@ export const resources_template = {
           filiere_vegetale: 'Filière économique du végétal',
           filiere_bois: 'Filière économique du bois',
           exemple_gradients: 'Gradients de couleurs',
-          bilan_matiere_huilerie: 'Production d\'huile végétale'
+          bilan_matiere_huilerie: 'Production d\'huile végétale',
+          cocoa_logistics_illustrated: 'Logistique du cacao illustrée'
         },
       },
     }
