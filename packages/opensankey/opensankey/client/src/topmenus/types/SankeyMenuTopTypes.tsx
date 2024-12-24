@@ -26,7 +26,6 @@ export type FCType_OpenSankeySaveButton = {
 export type FCType_ModalTuto = {
   new_data: Type_GenericApplicationDataOS,
   processFunctions: FType_ProcessFunctions,
-  formations_menu: object,
   show_tuto: boolean,
   set_show_tuto: (b: boolean) => void,
   Reinitialization: () => void

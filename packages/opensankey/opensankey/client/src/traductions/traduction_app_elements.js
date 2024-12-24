@@ -766,6 +766,7 @@ export const resources_app_elements = {
         10: 'Buttons to open the configuration menu to edit the elements of the sankey diagram',
         excel: 'Button download the data used for the sankey in Excel format'
       },
+      useTemplate: 'Use this template',
       DisplayWelcome: 'Welcome',
       dontSeeAgain: 'Don\'t show again',
       scale: 'Scale',
@@ -1552,6 +1553,7 @@ export const resources_app_elements = {
         10: 'Bouton permettant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
         excel: 'Bouton permettant de télécharger les données au format Excel'
       },
+      useTemplate: 'Utiliser ce modèle',
       DisplayWelcome: 'Accueil',
       dontSeeAgain: 'Ne plus montrer',
       scale: 'Échelle',
