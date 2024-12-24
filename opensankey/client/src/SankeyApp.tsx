@@ -241,7 +241,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
               <></>
             ]}
             reinitialization={reinitialization}
-            formations_menu={additionalMenus.formations_menu}
             additionalMenus={
               additionalMenus
             }
