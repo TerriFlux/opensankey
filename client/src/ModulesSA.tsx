@@ -240,7 +240,7 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
 
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
-      <ModalSankeyTheque new_data={new_data_SA} exemple_menu={{}} launch={() => null} Reinitialization={() => null} current_path='' />
+      <ModalSankeyTheque new_data={new_data_SA} />
     )
   }
 
