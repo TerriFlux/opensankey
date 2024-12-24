@@ -10,7 +10,7 @@ import { UploadExemple } from '../dialogs/SankeyPersistence'
  *
  * @type {*}
  */
-type ExempleMenuTypes = { [_: string]: ExempleMenuTypes | string[] }
+export type ExempleMenuTypes = { [_: string]: ExempleMenuTypes | string[] }
 
 type subtypeFileList = { [_: string]: string[] }
 type subtypeObjectList = { [_: string]: ExempleMenuTypes }
