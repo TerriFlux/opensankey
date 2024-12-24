@@ -56,18 +56,7 @@ const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
 const toast_bypass: boolean = false
 
-// SPECIFIC FUNCTIONS ******************************************************************/
 
-export function isDrawingAreaActive() {
-  const inputs = ['input', 'textarea']
-  if (
-    document.activeElement &&
-    inputs.indexOf(document.activeElement.tagName.toLowerCase()) !== -1
-  ) {
-    return false
-  }
-  return true
-}
 
 // CLASS APPLICATION DATA **************************************************************/
 
@@ -544,9 +533,22 @@ export abstract class Class_ApplicationData
       drawing_area_from_layout.fromJSON(json_layout)
       this.drawing_area.updateFrom(
         drawing_area_from_layout,
-        ['attrDrawingArea','posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views','tagNode','tagFlux',/*'tagLevel',*/'icon_catalog']
+        ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux',/*'tagLevel',*/'icon_catalog']
       )
     }
+  }
+
+  // SPECIFIC FUNCTIONS ******************************************************************/
+
+  protected isDrawingAreaActive() {
+    const inputs = ['input', 'textarea']
+    if (
+      document.activeElement &&
+      inputs.indexOf(document.activeElement.tagName.toLowerCase()) !== -1
+    ) {
+      return false
+    }
+    return true
   }
 
   // PUBLIC METHODS =====================================================================
@@ -619,7 +621,7 @@ export abstract class Class_ApplicationData
             this._toast_processes.splice(0, 1) // pop process from processes list
             resolve(200) // end
           },
-          500) // Leave 500ms of delay in order to give enough time to load spinner component
+            500) // Leave 500ms of delay in order to give enough time to load spinner component
         }),
         {
           success: {
@@ -668,8 +670,7 @@ export abstract class Class_ApplicationData
     evt: KeyboardEvent,
     app_ref: Class_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     // Events booleans ----------------------------------------------------------------
-
-    const evtOnDrawingArea = isDrawingAreaActive() // Avoid using hotkeys in text-inputs
+    const evtOnDrawingArea = this.isDrawingAreaActive() // Avoid using hotkeys in text-inputs
     const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
     const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
     const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
@@ -801,7 +802,7 @@ export abstract class Class_ApplicationData
         content: this.t('guide.toolbar'),
         actionAfter: () => {
           this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
-          setTimeout(()=> {}, 500)
+          setTimeout(() => { }, 500)
         }
       },
       {
