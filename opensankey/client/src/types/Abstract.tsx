@@ -66,7 +66,6 @@ export abstract class Class_AbstractDrawingArea {
   public abstract get legend(): Class_Legend<Type_GenericDrawingArea, Type_GenericSankeyOS>
   public abstract get scale(): number
   public abstract get scaleValueToPx(): (_: number) => number
-  public abstract get need_to_recompute_scale(): boolean
   public abstract get minimum_flux(): number | undefined
   public abstract get maximum_flux(): number | undefined
   public abstract get filter_link_value(): number

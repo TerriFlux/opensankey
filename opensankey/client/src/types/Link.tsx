@@ -2479,11 +2479,7 @@ export abstract class Class_LinkElement
     // Cast as number
     if (value !== null) {
       value.data_value = _
-      // Update scaling for first value
-      if ((_ !== null) && this.drawing_area.need_to_recompute_scale)
-        this.drawing_area.scale = _ // will redraw everything
-      else
-        this.redrawNodesSourceTarget()
+      this.redrawNodesSourceTarget()
     }
   }
 
