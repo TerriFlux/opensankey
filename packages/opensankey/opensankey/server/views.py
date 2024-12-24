@@ -640,6 +640,7 @@ def menus_examples():
 
     return response
 
+
 @opensankey.route('/sankey/data_tuto', methods=['POST'])
 def data_tuto():
     """
@@ -647,11 +648,11 @@ def data_tuto():
 
     Returns
     -------
-    :return: object formated for Component ModalTuto 
+    :return: object formated for Component ModalTuto
     :rtype: object
     """
     data_folder = os.environ.get('MFAData')
-    data_folder +='/Formations/Tutoriels'
+    data_folder += '/Formations/Tutoriels'
     menus = {}
     parse_folder(data_folder, menus)
     context = menus
