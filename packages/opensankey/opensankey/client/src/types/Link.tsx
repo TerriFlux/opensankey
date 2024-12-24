@@ -614,7 +614,7 @@ export abstract class Class_LinkElement
     this._display.position_starting.x = getNumberFromJSON(json_object, 'position_starting_x', this._display.position_starting.x)
     this._display.position_starting.y = getNumberFromJSON(json_object, 'position_starting_y', this._display.position_starting.y)
     this._display.position_ending.x = getNumberFromJSON(json_object, 'position_ending_x', this._display.position_starting.x)
-    this._display.position_ending.x = getNumberFromJSON(json_object, 'position_ending_y', this._display.position_starting.y)
+    this._display.position_ending.y = getNumberFromJSON(json_object, 'position_ending_y', this._display.position_starting.y)
     this._display.position_offset_label = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
     this._display.position_x_label = getNumberOrUndefinedFromJSON(json_object, 'position_x_label')
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_object, 'position_y_label')
