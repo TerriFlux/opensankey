@@ -29,3 +29,30 @@ export const modal_account = definePartsStyle({
   footer: {
   }
 })
+
+export const modal_sankeytheque = definePartsStyle({
+  dialogContainer: {
+    background: 'blackAlpha.500'
+  },
+  dialog:{
+    display: 'inherit',
+    width: '90vw',
+    height:'90vh',
+    alignSelf: 'center'
+  },
+  header: {
+    minWidth: 'inherit',
+    maxWidth: 'inherit',
+    width: 'max-content'
+  },
+  body: {
+    display: 'grid',
+    gridTemplateColumns:'2fr 10fr',
+    // gridAutoFlow: 'row',
+    // gridRowGap: '6px !important',
+    minWidth: 'inherit',
+    maxWidth: 'inherit',
+  },
+  footer: {
+  }
+})

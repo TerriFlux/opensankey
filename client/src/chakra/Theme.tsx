@@ -12,6 +12,9 @@ import {
   btn_lone_navigation_secondary,
   btn_lone_navigation_tertiary,
   btn_lone_navigation_tertiary_negative,
+  button_open_card_sankeytheque,
+  button_sankey_open_excel,
+  button_sankey_open_json,
   menutop_button_goto_dashboard,
   menutop_button_logout
 } from './ButtonStyles'
@@ -20,8 +23,10 @@ import {
   form_base_style
 } from './FormControl'
 import {
-  modal_account
+  modal_account,
+  modal_sankeytheque
 } from './ModalStyle'
+import { accordion_sankeytheque } from './AccordionStyles'
 
 const _text_style_log = {
   fontFamily: 'Open Sans,sans-serif',
@@ -30,9 +35,14 @@ const _text_style_log = {
 }
 
 export const Theme_SA = {
-  components:{
-    Button:{
-      variants:{
+  components: {
+    Accordion: {
+      variants: {
+        accordion_sankeytheque
+      }
+    },
+    Button: {
+      variants: {
         btn_lone_navigation,
         btn_lone_navigation_primary,
         btn_lone_navigation_secondary,
@@ -43,7 +53,10 @@ export const Theme_SA = {
         btn_accountpage_embedded,
         btn_accountpage_negative,
         menutop_button_logout,
-        menutop_button_goto_dashboard
+        menutop_button_goto_dashboard,
+        button_open_card_sankeytheque,
+        button_sankey_open_json,
+        button_sankey_open_excel,
       }
     },
     Form: {
@@ -54,7 +67,8 @@ export const Theme_SA = {
     },
     Modal: {
       variants: {
-        modal_account
+        modal_account,
+        modal_sankeytheque
       }
     }
   },
@@ -98,6 +112,20 @@ export const Theme_SA = {
       display: 'grid',
       gridColumnGap: '3px',
       gridRowGap: '3px',
+    },
+
+    cards_sankeytheque: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr',
+      gridAutoRows: 'max-content',
+      gridRowGap: '0.25rem',
+      gridColumnGap: '0.25rem',
+      border: 'solid 1px grey',
+      borderRadius: '6px',
+
+    },
+    accordion_sankeytheque: {
+      overflowY: 'auto'
     }
 
   },
@@ -133,4 +161,4 @@ const deep_assign = (s: Type_JSON, t: Type_JSON) => {
 
 deep_assign(Theme_SankeyPlus, Theme)
 deep_assign(Theme_SA, Theme)
-export const Theme_SankeyApplication = extendTheme({...Theme})
+export const Theme_SankeyApplication = extendTheme({ ...Theme })
