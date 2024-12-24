@@ -62,11 +62,7 @@ type FType_InitializeAdditionalMenusSA = (
 ) => void
 
 type FCType_ModalSankeyTheque = {
-  new_data: Class_ApplicationDataSA,
-  exemple_menu: JSX.Element | ExempleMenuTypes,
-  current_path: string,
-  launch: (s: string) => void,
-  Reinitialization: () => void,
+  new_data: Class_ApplicationDataSA
 }
 type FCType_SankeyThequeAccordionGenerator = {
   new_data: Class_ApplicationDataSA,
@@ -289,7 +285,7 @@ const ButtonOpenModalSankeyTheque: FunctionComponent<{ new_data: Class_Applicati
  * @param {*} { new_data, additionalMenu, Reinitialization }
  * @return {*} 
  */
-export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({ new_data, exemple_menu, current_path, Reinitialization, launch }) => {
+export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({ new_data }) => {
   const [show_sankeytheque, set_show_sankeytheque] = useState(false)
   const [firstRender, setFirstRender] = useState(true)
   const [sankeytheque, setSankeyTheque] = useState({})
@@ -509,10 +505,10 @@ const SankeyThequeCardsGenerator: FunctionComponent<FCType_SankeyThequeCardsGene
 }
 
 const getFilesFromkeys = (obj: Type_JSON, keys: string[]) => {
-  if (keys.length === 0) return obj;
-  const [firstKey, ...restKeys] = keys;
+  if (keys.length === 0) return obj
+  const [firstKey, ...restKeys] = keys
   const tmp = obj[firstKey] as Type_JSON
-  return getFilesFromkeys(tmp, restKeys);
+  return getFilesFromkeys(tmp, restKeys)
 }
 
 

@@ -30,7 +30,6 @@ import i18next from './traductions/traduction'
 // Local modules =================================================================================
 
 import { SankeyAppSA } from './SankeyAppSA'
-import { ExempleMenuTypes } from './ModulesSA'
 import { Class_ApplicationDataSA } from './ApplicationData'
 
 // Global variables ==============================================================================

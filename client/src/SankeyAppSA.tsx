@@ -51,8 +51,6 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
 ) => {
 
   // Minimal app ------------------------------------------------------------------------------------
-
-  const reinit = initializeReinitializationOSP(new_data_app)
   const sankeyApp =
     <SankeyApp
       initializeReinitialization={initializeReinitializationOSP}
