@@ -14,7 +14,7 @@ import {
 } from './Abstract'
 import { Class_SankeyPlus } from './SankeyPlus'
 import type { Class_NodeElementPlus } from './NodePlus'
-import type { Class_ContainerElement } from './FreeLabel'
+import { sortElementsContainersByDisplayingOrders, type Class_ContainerElement } from './FreeLabel'
 import type { Class_LinkElementPlus } from './LinkPlus'
 import { Class_ZoneSelectionPlus } from './Selection_ZonePlus'
 import {
@@ -78,6 +78,8 @@ export abstract class Class_DrawingAreaPlus
   // Attr for views
   private _heredited_attr: string[] = []
 
+  private _number_of_containers:number=0
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -85,11 +87,7 @@ export abstract class Class_DrawingAreaPlus
    * @param {number} height
    * @param {number} width
    * @param {
-   *  Class_AbstractApplicationDataPlus<
-        Class_DrawingAreaPlus<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
-        Type_GenericSankey,
-        Type_GenericNodeElement,
-        Type_GenericLinkElement>} application_data
+   *  Class_AbstractApplicationDataPlus} application_data
    * @memberof Class_DrawingAreaPlus
    */
   constructor(
@@ -130,6 +128,35 @@ export abstract class Class_DrawingAreaPlus
     // Update related menus
     this.application_data.menu_configuration.updateComponentRelatedToContainers()
   }
+
+  public addContainerElement(){
+    // We increase by two, in order to easyly swap elements
+    // ie : element0 order = 0, element1 order = 2, element3 order = 4
+    // to increase element 0 order, juste add 3
+    // then : element0 order = 3, element1 order = 2, element3 order = 4
+    // then orderElement() method will display elements as wanted + update their order value
+    // ie : element1 order = 0, element0 order = 2, element3 order = 4
+    this._number_of_containers = this._number_of_containers + 2
+    return this._number_of_containers
+  }
+
+  public orderElementsConatianer() {
+      // Sort containers
+      let new_order = 0
+      this.sankey.containers_list
+        .sort((a, b) => sortElementsContainersByDisplayingOrders(a, b))
+        .forEach(cont => {
+          if (cont.is_visible) {
+            cont.d3_selection?.raise()
+          }
+          // Re-update display order as consecutive
+          cont.displaying_order = new_order
+          new_order = new_order + 2
+        })
+      // Update number of elements
+      this._number_of_containers = new_order
+    }
+  
 
   /**
    * Permanently delete selected containers

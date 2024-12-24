@@ -30,6 +30,7 @@ import {
   Class_AbstractSankeyPlus
 } from './Abstract'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
+import { Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP } from './TypesOSP'
 
 
 export const default_container_content = 'Text Label ...'
@@ -41,6 +42,25 @@ export const default_container_opacity = 100
 export const default_container_transparent_border = false
 export const default_container_is_image = false
 export const default_container_image_src = ''
+
+
+type Type_AnyContainerElement = Class_ContainerElement<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP>
+
+/**
+ * Allow to sort  by their z-ordre on the drawing area
+ * @export
+ * @param {Type_AnyContainerElement} a
+ * @param {Type_AnyContainerElement} b
+ * @return {*}
+ */
+export function sortElementsContainersByDisplayingOrders(
+  a: Type_AnyContainerElement,
+  b: Type_AnyContainerElement
+) {
+  if (a.displaying_order > b.displaying_order) return 1
+  else if (a.displaying_order < b.displaying_order) return -1
+  else return 0
+}
 
 // CLASS FREE LABEL ELEMENT *************************************************************
 
@@ -76,6 +96,8 @@ export class Class_ContainerElement
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
     position: Type_ElementPosition,
+    displaying_order: number,
+
   }
 
   /**
@@ -125,6 +147,7 @@ export class Class_ContainerElement
       drawing_area: drawing_area,
       sankey: drawing_area.sankey,
       position: structuredClone(default_element_position as Type_ElementPosition),
+      displaying_order: drawing_area.addContainerElement()
     }
     // Free labels attributs
     this._title = 'Zone de texte ' + this.id
@@ -184,7 +207,7 @@ export class Class_ContainerElement
 
   /**
    * Define deletion behavior
-   * @memberof Class_LinkElement
+   * @memberof Class_ContainerElement
    */
   protected cleanForDeletion() {
     // Delete control points
@@ -239,6 +262,8 @@ export class Class_ContainerElement
     json_object['image_src'] = this._image_src
     json_object['label_width'] = this._label_width
     json_object['label_height'] = this._label_height
+    json_object['displaying_order'] = this._display.displaying_order
+
   }
 
   /**
@@ -262,6 +287,8 @@ export class Class_ContainerElement
     this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
     this._label_width = getNumberFromJSON(json_object, 'label_width', this.label_width)
     this._label_height = getNumberFromJSON(json_object, 'label_height', this.label_height)
+    this._display.displaying_order = getNumberFromJSON(json_object, 'displaying_order', this._display.displaying_order)
+
   }
 
   // PUBLIC METHODS =====================================================================
@@ -273,6 +300,7 @@ export class Class_ContainerElement
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
     this._drawShape()
     this._drawContent()
+    this.drawing_area.orderElementsConatianer()
   }
   /**
    * Draw ZDT shape (a rectangle with custom size,bg color, bg opacity,border color, ...)
@@ -344,6 +372,17 @@ export class Class_ContainerElement
     this._drag_handler.right.draw()
   }
 
+  public increaseDisplayOrder() {
+    this._display.displaying_order = this._display.displaying_order + 3
+    this.draw()
+  }
+
+  public decreaseDisplayOrder() {
+    this._display.displaying_order = this._display.displaying_order - 3
+    this.draw()
+  }
+
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -389,7 +428,7 @@ export class Class_ContainerElement
    *
    * @private
    * @return {*}
-   * @memberof Class_LinkElement
+   * @memberof Class_ContainerElement
    */
   private dragHandleStart() {
     return () => {
@@ -400,7 +439,7 @@ export class Class_ContainerElement
     * Deactivate the control points alignement guide
     * @private
     * @return {*}
-    * @memberof Class_LinkElement
+    * @memberof Class_ContainerElement
     */
   private dragHandleEnd() {
     return () => {
@@ -747,4 +786,7 @@ export class Class_ContainerElement
   public get label_height(): number { return this._label_height }
   public set label_height(value: number) { this._label_height = value }
 
+
+  public get displaying_order() { return this._display.displaying_order }
+  public set displaying_order(_: number) { this._display.displaying_order = _ }
 }
