@@ -222,13 +222,6 @@ export abstract class Class_DrawingArea
    */
   private _scale: number = default_scale
 
-  /**
-   * If true, recompute scale from first link.
-   * @private
-   * @type {boolean}
-   * @memberof Class_DrawingArea
-   */
-  private _scale_fitting: boolean = true
 
   /**
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
@@ -400,7 +393,6 @@ export abstract class Class_DrawingArea
     this._number_of_elements = drawing_area_to_copy._number_of_elements
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
-    this._scale_fitting = false
     this._show_structure = drawing_area_to_copy._show_structure
     this._vertical_spacing  = drawing_area_to_copy._vertical_spacing
     this._width = drawing_area_to_copy._width
@@ -501,7 +493,6 @@ export abstract class Class_DrawingArea
     this._number_of_elements = getNumberFromJSON(json_object, 'number_of_elements', this._number_of_elements)
     this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._scaleValueToPx.domain([0, this._scale])
-    this._scale_fitting = false
     this._show_structure = getStringFromJSON(json_object, 'show_structure', this._show_structure) as Type_Structure
     this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
     this._width = getNumberFromJSON(json_object, 'width', this._width)
@@ -2440,7 +2431,6 @@ export abstract class Class_DrawingArea
   public set height(_: number) { this._height = _; this.drawBackground(); this.drawGrid() }
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
   public get window_fitting_width(): number { return window.innerWidth - this._fit_margin - this.getSideBarWidth() }
-  public get need_to_recompute_scale(): boolean { return this._scale_fitting }
 
   // Number of element
   public get number_of_element() { return this._number_of_elements }
@@ -2487,7 +2477,6 @@ export abstract class Class_DrawingArea
     if (value > 0) {
       this._scale = value
       this._scaleValueToPx.domain([0, value])
-      this._scale_fitting = false
       this.application_data.menu_configuration.ref_to_menu_config_layout_updater.current()
       this.drawElements()
       this.areaAutoFit()
