@@ -4214,10 +4214,10 @@ export abstract class Class_NodeElement
   private get are_links_visibilities_ok() {
     // Check if links visibilies have somehow changed
     const links_visibilities_fingerprint = this.getLinksVisibilitiesFingerprint()
-    if (
-      (this._are_links_visibilities_ok === undefined) ||
-      (links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
-    ) {
+    // if (
+    //   (this._are_links_visibilities_ok === undefined) //||
+    //   //(links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
+    // ) {
       // Recompute value
       const are_links_visibilities_ok = this.checkIfLinksVisibilitiesAreOK()
       // Update  fingerprint if needed
@@ -4229,7 +4229,7 @@ export abstract class Class_NodeElement
       // Update memorized value
       this._are_links_visibilities_ok = are_links_visibilities_ok
       this._links_visibilities_fingerprint = links_visibilities_fingerprint
-    }
+    //}
     return this._are_links_visibilities_ok
   }
 
