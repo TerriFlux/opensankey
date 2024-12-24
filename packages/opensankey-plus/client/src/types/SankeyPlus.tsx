@@ -244,34 +244,6 @@ export abstract class Class_SankeyPlus
     this._containers[zdt.id] = zdt
   }
 
-  public moveUpFreeLabelOrder(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
-    const list_zdt = Object.entries(this._containers)
-    // Get idx of element to move up
-    const posElemt = list_zdt.indexOf([zdt.id, zdt])
-    // Remove zdt from original dict.
-    list_zdt.splice(posElemt, 1)
-    // Add zdt before previous zdt if dict
-    list_zdt.splice(posElemt - 1, 0, [zdt.id, zdt])
-    // Replace original dict with new one (the same in different order)
-    this._containers = Object.fromEntries(list_zdt)
-    // Redraw all free labels
-    this.containers_list.map(zdt => zdt.draw())
-  }
-
-  public moveDownFreeLabelOrder(zdt: Class_ContainerElement<Type_GenericDrawingArea, Class_SankeyPlus<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>>) {
-    const list_zdt = Object.entries(this._containers)
-    // Get idx of element to move up
-    const posElemt = list_zdt.indexOf([zdt.id, zdt])
-    // Remove zdt from original dict.
-    list_zdt.splice(posElemt, 1)
-    // Add zdt after next zdt if dict
-    list_zdt.splice(posElemt + 1, 0, [zdt.id, zdt])
-    // Replace original dict with new one (the same in different order)
-    this._containers = Object.fromEntries(list_zdt)
-    // Redraw all free labels
-    this.containers_list.map(zdt => zdt.draw())
-  }
-
   /**
    * Create and add a node for this Sankey
    * @param {string} id
