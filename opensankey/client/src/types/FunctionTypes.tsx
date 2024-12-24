@@ -57,8 +57,6 @@ export type FCType_Menu = {
   external_modal: JSX.Element[],
   apply_transformation_additional_elements: JSX.Element[],
   additionalMenus:Type_AdditionalMenus,
-  formations_menu: object,
-  // postProcessLoadExcel: postProcessLoadExcelFuncType,
 }
 
 /**
