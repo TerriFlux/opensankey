@@ -288,7 +288,11 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         </Box>
         <Box layerStyle='popover_sidebar_row_tag_filter'>
           <OSTooltip label={t('Banner.ndd_lst')}>
-            {selector}
+            <Box
+              height='2rem'
+              maxW='14.75rem'>
+              {selector}
+            </Box>
           </OSTooltip>
           <OSTooltip label={t('Banner.ndd_chk')} >
             <Box
@@ -398,7 +402,12 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
             layerStyle='popover_sidebar_row_tag_filter'
           >
             <OSTooltip label={t('Banner.ndd_lst')}>
-              {selector}
+              <Box
+                height='2rem'
+                width='14.75rem'
+              >
+                {selector}
+              </Box>
             </OSTooltip>
             <OSTooltip label={t('Banner.ndd_chk')} >
               <Box
@@ -458,9 +467,9 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
 
   // Component updater ------------------------------------------------------------------
   const [, setCount] = useState(0)
-  if(in_popover){
+  if (in_popover) {
     new_data.menu_configuration.ref_to_datatag_filter_updater.current = () => setCount(a => a + 1)
-  }else{
+  } else {
     new_data.menu_configuration.ref_to_datatag_filter_navbar_updater.current = () => setCount(a => a + 1)
   }
 
@@ -528,6 +537,8 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
             {tagg.name}
           </Box>
           <Box
+            maxWidth='14.75rem'
+            height='2rem'
             layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}
           >
             {selector}
@@ -770,11 +781,11 @@ const stretchButtons: FType_StretchButtons = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
-      <FontAwesomeIcon icon={faArrowsUpDown} />
-    </Button>
-  </OSTooltip></>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+      <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
+        <FontAwesomeIcon icon={faArrowsUpDown} />
+      </Button>
+    </OSTooltip></>
 }
 
 
