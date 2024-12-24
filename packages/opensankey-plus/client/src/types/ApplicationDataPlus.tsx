@@ -9,7 +9,7 @@
 
 // OpenSankey imports
 import { Type_SaveDiagramOptions } from '../deps/OpenSankey/dialogs/types/SankeyPersistenceTypes'
-import { default_save_JSON_options, isDrawingAreaActive } from '../deps/OpenSankey/types/ApplicationData'
+import { default_save_JSON_options } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_AbstractApplicationDataPlus } from './Abstract'
 
@@ -56,7 +56,7 @@ export abstract class Class_ApplicationDataPlus
   public override static_path: string = 'static/sankeyanimation'
 
   // Override all item selectable in SankeyMenuPreference
-  protected _preference_menu_all_item: string[] = [...this.preference_menu_all_item,'EN', 'EF', 'ED' ,'LL', 'Vis']
+  protected _preference_menu_all_item: string[] = [...this.preference_menu_all_item, 'EN', 'EF', 'ED', 'LL', 'Vis']
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -298,7 +298,7 @@ export abstract class Class_ApplicationDataPlus
 
     // Events booleans ----------------------------------------------------------------
 
-    const evtOnDrawingArea = isDrawingAreaActive() // Avoid using hotkeys in text-inputs
+    const evtOnDrawingArea = this.isDrawingAreaActive() // Avoid using hotkeys in text-inputs
     const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
     const evtKeyF7 = (evt.key === 'F7')
     const evtKeyF8 = (evt.key === 'F8')
@@ -311,7 +311,7 @@ export abstract class Class_ApplicationDataPlus
     // Event to move all selected containers with keyboard arrows --------------------------
     if (
       ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&
-      isDrawingAreaActive() // Avoid using this hotkey in text-inputs
+      evtOnDrawingArea // Avoid using this hotkey in text-inputs
     ) {
 
       // Deplace les containers sélectionné avec les flèches du clavier
@@ -373,6 +373,21 @@ export abstract class Class_ApplicationDataPlus
       evt.preventDefault()
       this.setCurrentViewToNext()
     }
+  }
+
+  // SPECIFIC FUNCTIONS ******************************************************************/
+
+  protected override isDrawingAreaActive() {
+    let superVal = super.isDrawingAreaActive()
+    const inputs = ['ql-editor']
+    if (
+      document.activeElement &&
+      inputs.indexOf(document.activeElement.className.toLowerCase()) !== -1
+    ) {
+      return false
+    }
+    return superVal
+
   }
 
   // PUBLIC METHODS =====================================================================
