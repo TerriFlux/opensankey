@@ -479,7 +479,7 @@ export const resources_app_elements = {
         labels: {
           labels: 'Name',
           node_value: 'Value',
-          vdb: 'Valeur',
+          vdb: 'Label',
           lb: 'White label',
           l_bg: 'Background',
           pos: 'Position',
