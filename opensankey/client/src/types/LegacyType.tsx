@@ -109,7 +109,7 @@ export type SankeyNode = {
     }
   }, local?: SankeyNodeAttrLocal, colorParameter: string,
   colorTag: string,
-
+  trade_close?: boolean,
   position?: string,
   x: number,
   y: number,
