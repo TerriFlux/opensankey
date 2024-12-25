@@ -1540,7 +1540,7 @@ const convert_nodes: convert_nodesFuncType = (
       n.y = 0
     }
     if ('position' in n) {
-      if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.position=='absolute' && !trade_set) {
+      if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.position=='absolute' && n.trade_close !== true && !trade_set) {
         trade_set = true
         setTrade(data)
       } else {
