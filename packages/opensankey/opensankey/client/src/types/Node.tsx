@@ -337,11 +337,12 @@ export abstract class Class_NodeElement
     this._display.position_y_label = _._display.position_y_label
   }
 
-  public copyLinkOrderingFrom(
+  public keepLinkOrderingFrom(
     node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
     matching_link_id: { [_: string]: string; }
   ) {
-    // Copy links orders ----------------------------------------------------------------
+    // keep links orders ----------------------------------------------------------------
+    const prev_links_order = [...this._links_order]
     this._links_order = []  // Empty current link order list
     // Fill with link that exist in current sankey and avoid duplicates in link order list
     node_to_copy._links_order
@@ -350,6 +351,10 @@ export abstract class Class_NodeElement
         if ((link !== undefined) && (!this._links_order.includes(link)))
           this._links_order.push(link)
       })
+    // after copying node_to_copy._link_orders add the remaining links
+    const to_keep = prev_links_order.filter(l=>!this._links_order.includes(l))
+    to_keep.forEach(l=>this._links_order.push(l))
+    
   }
 
   public copyTagsReferencingFrom(
