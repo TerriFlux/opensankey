@@ -1267,53 +1267,7 @@ export abstract class Class_DrawingArea
     })
   }
 
-  /**
-   * Compute the position of everything that define the sankey diagram
-   *
-   * /!\ Add to waiting spinner queue
-   *
-   * @memberof Class_DrawingArea
-   */
-  public computeAutoFullSankey() {
-    this.application_data.sendWaitingToast(
-      () => {
-        // First compute position of nodes which are not trade
-        this._computeAutoSankey(true)
-        this.computeParametrization()
-        // Initially there is only one node per type of exchanges.
-        // it must be splitted to have one import and one export per product
-        // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
-        this.splitTrade()
-        // Computes u v,x and initial y for trade nodes
-        this.arrangeTrade(true)
-        // Defaut color + auto reorg of links
-        const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-        this.sankey.visible_nodes_list.forEach((n,i,a)=> {
-          n.reorganizeIOLinks()
-          this.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
-        })
-        // Update defaut data on recycling mode
-        this.sankey.links_list.forEach(l=>{
-          if(l.shape_is_recycling){
-            l.shape_starting_tangeant=0.01
-            l.shape_ending_tangeant=0.01
-          }
-        })
-        // Update area
-        this.areaAutoFit()
-        // Saving indicator
-        this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-      },
-      {
-        success: {
-          title: this.application_data.t('toast.compute_auto_sankey.success.title')
-        },
-        loading: {
-          title: this.application_data.t('toast.compute_auto_sankey.loading.title')
-        }
-      }
-    )
-  }
+
 
   /**
    * Compute the position of the nodes which are not trade nodes
@@ -1330,8 +1284,32 @@ export abstract class Class_DrawingArea
         // Compute auto pos of nodes
         this._computeAutoSankey(launched_from_process)
         this.computeParametrization()
-        // Reorg pose of links
-        this.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+        if (launched_from_process) {
+          // Initially there is only one node per type of exchanges.
+          // it must be splitted to have one import and one export per product
+          // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
+          this.splitTrade()
+          // Computes u v,x and initial y for trade nodes
+          this.arrangeTrade(true)
+        }
+
+        // Defaut color + auto reorg of links
+        const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
+        this.sankey.visible_nodes_list.forEach((n,i,a)=> {
+          n.reorganizeIOLinks()
+          if (launched_from_process) {
+            this.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
+          }
+        })
+        if (launched_from_process) {
+          // Update defaut data on recycling mode
+          this.sankey.links_list.forEach(l=>{
+            if(l.shape_is_recycling){
+              l.shape_starting_tangeant=0.01
+              l.shape_ending_tangeant=0.01
+            }
+          })
+        }
         // Update area
         this.areaAutoFit()
         // Toggle saving indicator
