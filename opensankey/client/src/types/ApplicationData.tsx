@@ -572,6 +572,29 @@ export abstract class Class_ApplicationData
   }
 
   /**
+   * Compute the position of everything that define the sankey diagram
+   *
+   * /!\ Add to waiting spinner queue
+   *
+   * @memberof Class_DrawingArea
+   */
+  public computeAutoFullSankey() {
+    this.sendWaitingToast(
+      () => {
+        this.drawing_area.computeAutoSankey(true)
+      },
+      {
+        success: {
+          title: this.t('toast.compute_auto_sankey.success.title')
+        },
+        loading: {
+          title: this.t('toast.compute_auto_sankey.loading.title')
+        }
+      }
+    )
+  }
+
+  /**
    * Create a waiting toast and add function to waiting queue.
    * @param {() => void} funct
    * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
