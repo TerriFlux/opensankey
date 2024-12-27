@@ -645,7 +645,7 @@ export class Class_Legend
   }
 
   private _updateLegendHeight() {
-    d3.select('.zone_for_dragging').attr('height', this._dy+5)
+    d3.select('.zone_for_dragging').attr('height', this._dy)
   }
 
   /**
