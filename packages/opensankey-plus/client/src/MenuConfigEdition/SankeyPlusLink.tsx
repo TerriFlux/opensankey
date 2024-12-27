@@ -51,7 +51,7 @@ export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConf
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
 
-  return elements.length > 0 ? (<OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
+  return elements.length > 0 ? (
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
       isDisabled={!new_data_plus.has_sankey_plus}
@@ -72,13 +72,15 @@ export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConf
 
         setForceUpdate(!forceUpdate)
       }}>
+      <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
       {t('Flux.apparence.grad')}
+      </OSTooltip>
       {(!menu_for_style) &&
         isAttributeOverloaded(selected_links, 'value_label_on_path') ?
         TooltipValueSurcharge('link_var_', t) :
         <></>}
     </Checkbox>
-  </OSTooltip>) : <></>
+  ) : <></>
 
 }
 
@@ -118,8 +120,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
     return (selected_links[0].shape_is_dashed == curr.shape_is_dashed)
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
-  return <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
-    <Checkbox
+  return <Checkbox
       variant='menuconfigpanel_option_checkbox'
       isIndeterminate={is_indeterminate}
       isDisabled={!new_data_plus.has_sankey_plus}
@@ -147,7 +148,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
           TooltipValueSurcharge('link_var_', t) :
           <></>
       }
-    </Checkbox></OSTooltip>
+    </Checkbox>
 }
 
 
