@@ -269,6 +269,7 @@ export abstract class Class_ApplicationDataPlus
             const drawing_area_view = this.createNewDrawingArea(view_id)
             drawing_area_view.bypass_redraws = this.drawing_area.bypass_redraws
             drawing_area_view.fromJSON(view_json as Type_JSON)
+            drawing_area_view.arrangeTrade(false)
             // Add new drawing area to views
             this._views[view_id] = drawing_area_view
             this.pushViewIdInViewOrder(view_id)
