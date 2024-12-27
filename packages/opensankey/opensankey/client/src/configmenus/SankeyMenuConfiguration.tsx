@@ -99,7 +99,7 @@ export const OpenSankeyConfigurationsMenus: FunctionComponent<FCType_OpenSankeyC
           {menu_configuration_layout}
         </Box>
       </AccordionPanel>
-    </AccordionItem> ,
+    </AccordionItem>,
 
     <AccordionItem>
       {
@@ -234,11 +234,13 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   stepper = false,
   step = 1,
   unit_text = undefined,
+  fixed_dec = 2
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [value, setValue] = useState<string | null | undefined>(String(default_value ?? ''))
+  const fixed_value = fixed_dec !== 0 && default_value ? (default_value?.toFixed(fixed_dec)) : default_value
+  const [value, setValue] = useState<string | null | undefined>(String((fixed_value) ?? ''))
   ref_to_set_value.current = setValue
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
@@ -287,7 +289,11 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
           }
           // Update selected elements value
           // Use functionOnBlur with either value null or value casted as number
-          function_on_blur(value===null?value:Number(value))
+          let new_value = value === null ? value : Number(value)
+          if (fixed_dec > 0 && new_value !== null) {
+            new_value = +new_value?.toFixed(2)
+          }
+          function_on_blur(new_value)
         }}
       />
       {stepperBtn}
@@ -328,8 +334,8 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
       min={minimum_value}
       max={maximum_value}
       step={step}
-      value={value??''}
-      onChange={(_,value_as_number) => {
+      value={value ?? ''}
+      onChange={(_, value_as_number) => {
         // Launch/reset timeout before the input auto blur (and update the value in data)
         if (!menu_for_style) {
           // reset timeout if exist
@@ -342,7 +348,7 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
           }, 3000)
         }
         // Update displayed value_as_number
-        setValue(isNaN(value_as_number)?undefined:value_as_number)
+        setValue(isNaN(value_as_number) ? undefined : value_as_number)
       }}
       onKeyDown={e => {
         if (e.key === 'Enter') {
@@ -376,7 +382,8 @@ export type FCType_ConfigMenuNumberInput = {
   maximum_value?: number,
   stepper?: boolean,
   step?: number,
-  unit_text?: string
+  unit_text?: string,
+  fixed_dec?: number
 }
 
 export type FCType_ConfigMenuNumberOrUndefinedInput = {
