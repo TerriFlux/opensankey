@@ -158,6 +158,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           if (evt.target.checked) {
             tagg.show_legend = true
           }
+          new_data.drawing_area.legend.draw()
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -554,6 +555,7 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
                     Object.values(data_taggs_with_banner)
                       .forEach(tagg => tagg.show_legend = false)
                     tagg.show_legend = evt.target.checked
+                    new_data.drawing_area.legend.draw()
                     new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
                   }}
                 /> :
