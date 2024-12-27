@@ -1002,6 +1002,13 @@ const convert_tags: convert_tagsFuncType = (
         data.fluxTags[key] = { ...tags_group }
         data.fluxTags[key].banner = 'none'
       }
+      if(tags_group.banner=='movie'){
+        (tags_group as TagsGroup & {is_sequence:boolean}).is_sequence=true
+        tags_group.banner='one'
+        Object.values(tags_group.tags).forEach((tag,idx)=>{
+          tag.selected=idx==0;
+        })
+      }
     }
   )
   const new_dataTags = Object.entries(data.dataTags).filter(([key, tag_group]) => tag_group.banner !== 'display' && key !== 'flux_types' && key !== 'Uncert')
