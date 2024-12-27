@@ -170,6 +170,7 @@ export class Class_Legend
     this._legend_show_dataTags = _._legend_show_dataTags
     this._node_label_separator = _._node_label_separator
     this._info_link_value_void = _._info_link_value_void
+    this._pos_from_legacy=_._pos_from_legacy 
   }
 
   // SAVING METHODS =====================================================================
