@@ -207,7 +207,8 @@ export class Class_Legend
 
     const legend_position = getStringListFromJSON(json_legend, 'legend_position', ['0', String(this.drawing_area.getNavBarHeight())])
     this._display.position.x = +legend_position[0]
-    this._display.position.y = +legend_position[1]
+    const tmp_y=+legend_position[1]
+    this._display.position.y = (tmp_y<this.drawing_area.getNavBarHeight())?this.drawing_area.getNavBarHeight():tmp_y //fix legend position by putting it position just under the navbar
     this._masked = getBooleanFromJSON(json_legend, 'mask_legend', this._masked)
     this._dx = getNumberFromJSON(json_legend, 'legend_dx', this._dx)
     this._dy = getNumberFromJSON(json_legend, 'legend_dy', this._dy)
