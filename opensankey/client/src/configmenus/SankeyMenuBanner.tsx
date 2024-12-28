@@ -233,9 +233,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         value={tagg.selected_tags_list[0]?.id ?? ''}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // Set tag with given id as selected : other are unselected
-          new_data.drawing_area.bypass_redraws = true
           tagg.selectTagsFromId(evt.target.value)
-          new_data.drawing_area.draw()
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
