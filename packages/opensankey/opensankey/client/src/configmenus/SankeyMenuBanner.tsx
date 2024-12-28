@@ -184,6 +184,8 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
+            new_data.drawing_area.sankey.nodes_list.forEach(n=>n.dimensionsUpdated())
+            new_data.drawing_area.draw()
             // Refresh this & related component
             new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
           }}
