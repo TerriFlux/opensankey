@@ -272,7 +272,11 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       })
     // Redraw
     nodes_to_redraw
-      .forEach(node => node.draw())
+      .forEach(node => {
+        node.reorganizeIOLinks()
+        node.output_links_list.forEach(l=>l.target.reorganizeIOLinks())
+        node.input_links_list.forEach(l=>l.source.reorganizeIOLinks())
+      })
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
   }
