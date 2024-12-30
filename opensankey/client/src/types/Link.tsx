@@ -3382,7 +3382,9 @@ export abstract class Class_LinkElement
   }
 
   // PRIVATE GETTER / SETTER =============================================================
-  public get visibility_fingerprint() { return this._visibility_fingerprint+'_'+this._datatags_fingerprint }
+
+  public get datatags_fingerprint() { return this._datatags_fingerprint }
+
   /**
    * If link has tags :
    * - check for each tag group if the flow has at least one selected tag that isn't filtered out

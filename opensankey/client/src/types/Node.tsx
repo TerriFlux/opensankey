@@ -4283,7 +4283,7 @@ export abstract class Class_NodeElement
     let links_visibilities_fingerprint = ''
     this._links_order
       .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint)
-    return links_visibilities_fingerprint
+    return links_visibilities_fingerprint+'_'+this.sankey.data_tags_fingerprint
   }
 
   private get tooltip_html() {
