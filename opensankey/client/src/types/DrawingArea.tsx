@@ -1662,7 +1662,7 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public arrangeTrade(
-    compute_y : boolean
+    compute_xy : boolean
   ) {
     if (!this.sankey.node_taggs_dict['type de noeud']) {
       return
@@ -1691,9 +1691,9 @@ export abstract class Class_DrawingArea
       const target_node = output_link.target
       node.position_u = target_node.position_u
       node.position_v = target_node.position_v
-      const x = Math.round(target_node.position_x/h_space)*h_space - h_space
-      node.position_x = x
-      if (compute_y) {
+      if (compute_xy) {
+        const x = Math.round(target_node.position_x/h_space)*h_space - h_space
+        node.position_x = x
         node.position_y = 50
         // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < node.position_y+200) {
         //   const shift = 200 +node.position_y - firstNonEchangeNodeBelow.position_y
@@ -1707,9 +1707,13 @@ export abstract class Class_DrawingArea
       const source_node = input_link.source
       node.position_u = source_node.position_u
       node.position_v = source_node.position_v
-      const x = Math.round(source_node.position_x/h_space)*h_space+h_space
-      node.position_x = x
-      if (compute_y) {
+      if (node.position_type == 'relative') {
+        const x = Math.round(source_node.position_x/h_space)*h_space+h_space
+        node.position_x = x        
+      } 
+      if (compute_xy) {
+        const x = Math.round(source_node.position_x/h_space)*h_space+h_space
+        node.position_x = x
         node.position_y = max_vertical_offset
       }
     })
