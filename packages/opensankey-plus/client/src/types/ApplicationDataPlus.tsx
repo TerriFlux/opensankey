@@ -11,10 +11,13 @@
 import { Type_SaveDiagramOptions } from '../deps/OpenSankey/dialogs/types/SankeyPersistenceTypes'
 import { default_save_JSON_options } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
+import { GetOldDataFromView } from '../SankeyPlusConvert'
+import { getOldViewsFromJSON } from '../SankeyPlusUtils'
 import { Class_AbstractApplicationDataPlus } from './Abstract'
 
 // Local imports
 import { Class_DrawingAreaPlus } from './DrawingAreaPlus'
+import { ViewType, OSPData } from './LegacyTypes'
 import { Class_LinkElementPlus } from './LinkPlus'
 import { Class_MenuConfigPlus } from './MenuConfigPlus'
 import { Class_NodeElementPlus } from './NodePlus'
@@ -259,7 +262,30 @@ export abstract class Class_ApplicationDataPlus
    * @memberof Class_ApplicationDataPlus
    */
   public extractViewsFromJSON(json_object: Type_JSON) {
-    const views = getJSONOrUndefinedFromJSON(json_object, 'views')
+    let views = getJSONOrUndefinedFromJSON(json_object, 'views')
+
+    if (!views) {
+      const old_views = getOldViewsFromJSON(json_object, 'view') as ViewType[]
+      if (old_views && old_views.length > 0) {
+        views = {} as Type_JSON
+        // Convert old views
+        old_views.forEach((v) => {
+          if (v.heredited_attr_from_master === undefined) {
+            v.heredited_attr_from_master = []
+          }
+          // Convert old views that are diff to json
+          const d_view = GetOldDataFromView(json_object as unknown as OSPData, v.id)
+          if (d_view) {
+            (views as Type_JSON)[v.id] = d_view as unknown as Type_JSON
+          }
+
+          // Set Name of view
+          ((views as Type_JSON)[v.id] as Type_JSON).name = v.nom;
+          // Set heredited from master attr
+          ((views as Type_JSON)[v.id] as Type_JSON).heredited_attr = v.heredited_attr_from_master
+        })
+      }
+    }
     if (views) {
       // Create other views
       Object.entries(views)
