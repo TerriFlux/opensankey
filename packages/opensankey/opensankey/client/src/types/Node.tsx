@@ -610,6 +610,10 @@ export abstract class Class_NodeElement
     Object.entries(json_node_object['tags'] ?? {})
       .forEach(([tagg_id, tag_ids]) => {
         const tagg = this.sankey.node_taggs_dict[matching_taggs_id[tagg_id] ?? tagg_id]
+        if (tag_ids.length == 0) {
+          tagg.tags_list.forEach(tag => this.addTag(tag as Class_Tag))
+          return
+        }
         if (tagg !== undefined) {
           (tag_ids as string[])
             .forEach(tag_id => {
@@ -1035,13 +1039,14 @@ export abstract class Class_NodeElement
       const tagg_for_colormap = taggs_activated[0]
       const tags_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
+      const selected_tags_for_colormap = tags_for_colormap
         .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length > 0) {
+      if (selected_tags_for_colormap.length > 0 && tags_for_colormap.length != tagg_for_colormap.tags_list.length) {
         // if a node has several tags we take the first one. The logic is given
         // by the following example. Meuble en hêtre has two tags hêtre and feuillu
         // we put hêtre first as it is the most desagregated. This way we can display
-        // the nodes with different colors depending of thye level of detail selected.
-        shape_color = tags_for_colormap[0].color
+        // the nodes with different colors depending of the level of detail selected.
+        shape_color = selected_tags_for_colormap[0].color
       } else {
         shape_color = default_element_color
       }
