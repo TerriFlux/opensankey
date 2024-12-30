@@ -510,9 +510,13 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
           return (e: ProgressEvent<FileReader>) => {
             const file_content = String((e.target as FileReader).result)
             const JSON_data = JSON.parse(file_content)
-
             // Extract view of files
-            new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON)
+            new_data_plus.sendWaitingToast(
+              () => {
+                new_data_plus.drawing_area.bypass_redraws = true
+                new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON)
+                new_data_plus.updateDisplayedConfigMenu()
+              })
           }
         })()
         // Permet d'executer la transformation des blob en vues tout en evitant la var length
