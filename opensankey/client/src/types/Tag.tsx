@@ -138,7 +138,6 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
     this._name = tag_to_copy._name
     this._color = tag_to_copy._color
     this._is_selected = tag_to_copy._is_selected
-    this._ref_sankey = tag_to_copy._ref_sankey
     // Groups are switched from related group class
   }
 
