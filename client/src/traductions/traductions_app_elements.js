@@ -883,7 +883,7 @@ export const resources_app_elements = {
         'template_unitary_zdt_content': 'Vue unitaire construite à partir de :',
         'template_unitary_zdt_content_of_node': 'Noeud unitaire :',
         'keep_master_var': 'M.à.j',
-        'setTransparentAttr': 'Choisir variables hérité du sankey maître',
+        'setTransparentAttr': 'Choisir attributs hérité du sankey maître',
         'updateViewWithMasterVar': 'Mettre à jour la vue actuelle avec les paramètres sélectionnés',
         'edit_name': 'Editer le nom',
         'modify_name_view': 'Modifier le nom de la vue',
