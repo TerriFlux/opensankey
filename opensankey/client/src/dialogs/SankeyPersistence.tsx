@@ -361,7 +361,11 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     new_data.computeAutoFullSankey()
   }
   // Redraw
-  new_data.draw()
+  new_data.sendWaitingToast(
+    () => {
+      new_data.draw()
+    })
+  //new_data.draw()
 }
 
 
