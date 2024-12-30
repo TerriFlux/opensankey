@@ -383,6 +383,8 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
           onChange={(options_selected: [{ label: string, value: string }]) => {
             // Set correct tags as selected
             flux_tagg.selectTagsFromIds(options_selected.map(_ => _.value))
+            // TODO not optimal. Target Source nodes of redrawn link must be redrawn 
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())
             // Update related components (includes this)
             new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
           }}
