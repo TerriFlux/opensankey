@@ -872,12 +872,17 @@ export abstract class Class_NodeElement
       }
       const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
 
+      const level_tagg_id = this._dimensions_as_parent[id].parent_level_tag.group.id
+      const parent_level_tag_id = this._dimensions_as_parent[id].parent_level_tag.id
+      const child_level_tag_id = this._dimensions_as_parent[id].child_level_tag.id
+
       // All input exchange nodes must also be desaggregated
       this.input_links_list
         .forEach(input_link => {
           const input_node = input_link.source
           if (input_node.hasGivenTag(echangeTag)) {
-            input_node.drawChildren(id)
+            const new_id = level_tagg_id+'_'+input_node.id+'_'+parent_level_tag_id+'_'+child_level_tag_id
+            input_node.drawChildren(new_id)
           }
         })
 
@@ -886,7 +891,8 @@ export abstract class Class_NodeElement
         .forEach(output_link => {
           const output_node = output_link.target
           if (output_node.hasGivenTag(echangeTag)) {
-            output_node.drawChildren(id)
+            const new_id = level_tagg_id+'_'+output_node.id+'_'+parent_level_tag_id+'_'+child_level_tag_id
+            output_node.drawChildren(new_id)
           }
         })
     }
