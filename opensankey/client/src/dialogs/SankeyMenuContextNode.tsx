@@ -673,7 +673,7 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
                   (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.child_level_tagg.name}</option>
                 )}
               </Select>
-              <Text>{new_data.t('Noeud.text_agreg')}</Text>
+              <Text>{new_data.t('Noeud.text_desagreg')}</Text>
               {selected_grp.current?.children.map(child_name => <Text>{child_name.name}</Text>)}
             </Box>
           </ModalBody>
