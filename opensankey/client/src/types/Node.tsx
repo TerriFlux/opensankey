@@ -1646,7 +1646,7 @@ export abstract class Class_NodeElement
           const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
           if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
             // Importations
-            const firstNonEchangeNodeBelow = process_nodes.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
+            const firstNonEchangeNodeBelow = same_u.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
             same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
             const nodeAbove = same_u[same_u.indexOf(this) - 1]
             if (nodeAbove) {
@@ -4888,10 +4888,17 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     super.fromJSON(json_node_object)
 
     this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-    this._position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
-    this._position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
-    this._position.dx = getNumberOrUndefinedFromJSON(json_node_object, 'dx')
-    this._position.dy = getNumberOrUndefinedFromJSON(json_node_object, 'dy')
+    this._position.relative_dx = getNumberFromJSON(json_node_object, 'relative_dx', default_relative_dx)
+    this._position.relative_dy = getNumberFromJSON(json_node_object, 'relative_dy', default_relative_dy)
+    this._position.dx = getNumberFromJSON(json_node_object, 'dx',default_dx)
+    this._position.dy = getNumberFromJSON(json_node_object, 'dy',default_dy)
+  }
+
+  public toJSON(
+  ) {
+    const json_object = super.toJSON()
+    if (this.position.type) json_object['position'] = this.position.type
+    return json_object
   }
 
   // CLEANING ===========================================================================
