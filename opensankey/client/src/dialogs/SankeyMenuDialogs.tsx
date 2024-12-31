@@ -523,6 +523,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   Object.values(node_styles_dict)
                     .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
                     .forEach(style => style.position.type = 'parametric')
+                  applicationData.drawing_area.sankey.nodes_list.forEach(n=>n.position_v=-1)
                   applicationData.drawing_area.computeParametrization()
                 } else {
                   Object.values(node_styles_dict)

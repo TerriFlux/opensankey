@@ -1782,6 +1782,7 @@ export abstract class Class_DrawingArea
       let current_v = 0
       column.forEach(n => current_v = this.apply_v(n, current_v))
     })
+    this.sankey.sortNodes()
   }
 
   /**
@@ -1793,7 +1794,7 @@ export abstract class Class_DrawingArea
     node:Type_AbstractNodeElement,
     current_v:number
   ) {
-    if (!node.display.position.v) {
+    if (node.display.position.v == -1) {
       node.display.position.v = current_v
     }
     let new_current_v = current_v
