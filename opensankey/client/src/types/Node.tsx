@@ -610,10 +610,6 @@ export abstract class Class_NodeElement
     Object.entries(json_node_object['tags'] ?? {})
       .forEach(([tagg_id, tag_ids]) => {
         const tagg = this.sankey.node_taggs_dict[matching_taggs_id[tagg_id] ?? tagg_id]
-        if (tag_ids.length == 0) {
-          tagg.tags_list.forEach(tag => this.addTag(tag as Class_Tag))
-          return
-        }
         if (tagg !== undefined) {
           (tag_ids as string[])
             .forEach(tag_id => {
