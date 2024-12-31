@@ -1509,56 +1509,6 @@ export abstract class Class_NodeElement
     this._display.position.y += shift
   }
 
-  /**
-   * function to use at in eventMouseDragEnd
-   *
-   * @protected
-   * @memberof Class_NodeElement
-   */
-  protected functionAtMouseDragEnd() {
-    if (this.position_type === 'parametric') {
-      let smaller_x: number = Number.MAX_VALUE
-      this.sankey.visible_nodes_list.forEach(n => {
-        if (smaller_x === undefined) {
-          smaller_x = n.position_x
-        }
-        if (n.position_x < smaller_x) {
-          smaller_x = n.position_x
-        }
-      })
-      const previous_u = this.position_u
-      this.position_u = Math.floor((this.position_x - smaller_x / 3) / (this.sankey.node_styles_dict['default'] as Class_NodeStyle).position.dx!)
-      if (this.position_u !== previous_u) {
-        this.drawing_area.computeParametricV()
-      } else {
-        const same_u = this.sankey.visible_nodes_list
-          .filter(nn => nn.position_type === 'parametric')
-          .filter(nn => nn.position_u === this.position_u)
-        same_u.sort((n1, n2) => n1.position_v - n2.position_v)
-        const nodes_below = same_u.filter(nn => nn.position_v > this.position_v).reverse()
-        const node_below = nodes_below.pop()
-        if (node_below) {
-          if (this.position_y > node_below.position_y) {
-            const tmp = node_below.position_v
-            node_below.position_v = this.position_v
-            this.position_v = tmp
-          } else {
-            node_below.position_dy = node_below.position_y - this.position_y - this.getShapeHeightToUse()
-          }
-        }
-        const nodes_above = same_u.filter(nn => nn.position_v < this.position_v)
-        const node_above = nodes_above.pop()
-        if (node_above) {
-          if (this.position_y < node_above.position_y) {
-            const tmp = node_above.position_v
-            node_above.position_v = this.position_v
-            this.position_v = tmp
-          }
-          this.position_dy = this.position_y - node_above.position_y - node_above.getShapeHeightToUse()
-        }
-      }
-    }
-  }
 
   // PROTECTED METHODS ==================================================================
 
@@ -2158,24 +2108,22 @@ export abstract class Class_NodeElement
     }
   }
 
-  // /**
-  //  * Define event when mouse drag element
-  //  * @protected
-  //  * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-  //  * @memberof Class_NodeElement
-  //  */
-  // protected eventMouseDragStart(
-  //   event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  // ) {
-  //   // Apply parent behavior first
-  //   super.eventMouseDragStart(event)
-  //   if (event.sourceEvent.shiftKey) {
-  //     return
-  //   }
-  //   const drawing_area = this.drawing_area
-  //   drawing_area.addNodeToSelection(this)
-  //   this._drag = true
-  // }
+  /**
+   * Define event when mouse drag element
+   * @protected
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_NodeElement
+   */
+  protected eventMouseDragStart(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    // Apply parent behavior first
+    super.eventMouseDragStart(event)
+    if (event.sourceEvent.shiftKey) {
+      return
+    }
+    this._drag = true
+  }
 
   /**
    * Define event when mouse drag element
@@ -2229,22 +2177,10 @@ export abstract class Class_NodeElement
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Apply parent behavior first
     super.eventMouseDragEnd(event)
-    // Get related elements in drawing area
-    const drawing_area = this.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list as this[]
-    if (nodes_selected.includes(this)) {
-      // Only trigger the drag if we drag a selected node
-      // redraw node on target of output links
-      nodes_selected
-        .forEach(n => {
-          n.functionAtMouseDragEnd()
-        })
 
-
-    } else {
-      this.functionAtMouseDragEnd()
-    }
     // Move all elements so none of them are outside the DA
+    this.drawing_area.sankey.nodes_list.forEach(n=>n.position_v = -1)
+    this.drawing_area.computeParametricV()
     this.drawing_area.recenterElements()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     this._drag = false
