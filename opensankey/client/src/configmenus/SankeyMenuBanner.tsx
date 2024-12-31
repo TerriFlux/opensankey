@@ -105,7 +105,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
   {
     new_data,
     level
-  }
+  }:FCType_AddAllDropDownNode
 ) => {
   // Data -------------------------------------------------------------------------------
   const { t } = new_data
@@ -275,7 +275,10 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         options={tags_options}
         onChange={(curr_selected_tags_options: [{ label: string, value: string }]) => {
           // Set tags with given id as selected : other are unselected
+          //new_data.drawing_area.bypass_redraws = true
           tagg.selectTagsFromIds(curr_selected_tags_options.map(_ => _.value))
+          // TODO For now the draw below is necessary (interdependance of finger print of nodes and links not solved)
+          new_data.drawing_area.draw()
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
