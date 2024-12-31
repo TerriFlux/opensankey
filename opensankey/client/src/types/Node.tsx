@@ -4289,7 +4289,7 @@ export abstract class Class_NodeElement
   private getLinksVisibilitiesFingerprint() {
     let links_visibilities_fingerprint = ''
     this._links_order
-      .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint)
+      .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint+link.source.visibility_fingerprint+link.target.visibility_fingerprint)
     return links_visibilities_fingerprint+'_'+this.sankey.data_tags_fingerprint
   }
 
