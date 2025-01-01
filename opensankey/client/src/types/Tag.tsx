@@ -891,11 +891,15 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   public update() {
     this.dimensions_list_as_tag_for_children
       .forEach(dim => {
-        dim.showAccordingToLevelTags()
+        if (dim.parent_level_tag.group.activated) {
+          dim.showAccordingToLevelTags()
+        }
       })
     this.dimensions_list_as_tag_for_parent
       .forEach(dim => {
-        dim.showAccordingToLevelTags()
+        if (dim.parent_level_tag.group.activated) {
+          dim.showAccordingToLevelTags()
+        }
       })
   }
 
