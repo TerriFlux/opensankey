@@ -1274,7 +1274,7 @@ const convert_tags: convert_tagsFuncType = (
   if (!data.levelTags) {
     data.levelTags = {}
   }
-  if (!('Primaire' in data.levelTags) && !('Primaire' in data.levelTags)) {
+  if (!('Primaire' in data.levelTags)) {
     data.levelTags['Primaire'] = {
       group_name: 'Primaire',
       show_legend: false,
@@ -1286,6 +1286,9 @@ const convert_tags: convert_tagsFuncType = (
       activated: true,
       siblings: []
     }
+  }
+  if (Object.values(data.levelTags).length > 1) {
+    data.levelTags['Primaire'].activated = false
   }
   // Convertie les anciens groupTag des données issu d'un excel qui ont pour valeur 1 ou 0 pour signifier un boolean
   Object.values(data.nodeTags).forEach(t => {
