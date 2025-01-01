@@ -304,15 +304,17 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       this._parent,
       ...this._children
     ])
-    this._children
-      .forEach(child => {
-        child.dimensions_as_child
-          .forEach(dim => {
-            if (dim !== this) {
-              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
-            }
-          })
-      })
+    if (this.children[0].id !== this.parent.id) {
+      this._children
+        .forEach(child => {
+          child.dimensions_as_child
+            .forEach(dim => {
+              if (dim !== this && dim.parent_level_tag.group.activated) {
+                nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
+              }
+            })
+        })
+      }
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
     // Return set of all nodes that need to be redrawn
