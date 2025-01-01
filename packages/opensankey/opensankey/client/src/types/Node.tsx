@@ -4449,14 +4449,14 @@ export abstract class Class_NodeElement
   public setTradeDimensions(
     importation: boolean
   ) {
-    const root_name = this.name.split(' - ')[0];
+    const root_name = this.id.split('-')[1];
     (importation ? this.output_links_list : this.input_links_list).forEach((input_or_output_link) => {
       const extremity_node = importation ? input_or_output_link.target : input_or_output_link.source
       Object.values(extremity_node._dimensions_as_child)
         .forEach(dim => {
           const extremity_node_parent = dim.parent;
           (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
-            this.sankey.nodes_dict[extremity_node_parent.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')],
+            this.sankey.nodes_dict[extremity_node_parent.id + '-' + root_name],
             this,
             dim.child_level_tag as Class_LevelTag
           )
@@ -4464,9 +4464,9 @@ export abstract class Class_NodeElement
       Object.values(extremity_node._dimensions_as_parent)
         .forEach(dim => {
           const extremity_node_children = dim.children.filter(n =>
-            this.sankey.nodes_dict[n.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')] != undefined
+            this.sankey.nodes_dict[n.id + '-' + root_name] != undefined
           ).map(n =>
-            this.sankey.nodes_dict[n.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')]
+            this.sankey.nodes_dict[n.id + '-' + root_name]
           )
           new Class_NodeDimension(
             this,
