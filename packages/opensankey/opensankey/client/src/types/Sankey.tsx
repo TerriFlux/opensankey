@@ -383,7 +383,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]?? id] )
+          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]?? id],true,matching_tags_id['nodeTags'][id] )
         })
     }
 
@@ -405,7 +405,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id])
+          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id],true,matching_tags_id['fluxTags'][id] )
         })
     }
 
@@ -429,7 +429,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id])
+          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id],true,matching_tags_id['dataTags'][id] )
         })
     }
 
@@ -486,10 +486,10 @@ export abstract class Class_Sankey
 
       // Update nodes ref to node_taggs
       if ((sync_nodes_tags) || all) {
-        to_update
-          .forEach(id => {
-            this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[matching_nodes_id[id] ?? id], matching_taggs_id['nodeTags'], matching_tags_id['nodeTags'])
-          })
+        // to_update
+        //   .forEach(id => {
+        //     this._nodes[id].copyTagsReferencingFrom(other_sankey._nodes[matching_nodes_id[id] ?? id], matching_taggs_id['nodeTags'], matching_tags_id['nodeTags'])
+        //   })
 
 
         // Update nodes ref to node added
@@ -1030,7 +1030,7 @@ export abstract class Class_Sankey
               }
               // Then match tags using the same methode
               curr_matching_tags_id[tagg_id] = {}
-              Object.entries(tagg_json)
+              Object.entries(tagg_json.tags)
                 .forEach(([tag_id, __]) => {
                   // Get related tag group
                   const new_tagg_id = curr_matching_taggs_id[tagg_id] ?? tagg_id

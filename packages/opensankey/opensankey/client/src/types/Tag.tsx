@@ -1071,15 +1071,19 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
 
   public copyFrom(
     tagg_to_copy: Class_ProtoTagGroup,
-    tags_synchro = true
+    tags_synchro = true,
+    matching_tags_id : { [_: string]: string;  } = {}
   ) {
-    this._copyFrom(tagg_to_copy, tags_synchro)
+    this._copyFrom(tagg_to_copy, tags_synchro,matching_tags_id)
   }
 
   protected _copyFrom(
     tagg_to_copy: Class_ProtoTagGroup,
-    tags_synchro = true
+    tags_synchro = true,
+    matching_tags_id : { [_: string]: string;  } = {}
   ) {
+    const revert_matching_id: { [id: string]: string } = {}
+    Object.entries(matching_tags_id).forEach(([k, v]) => revert_matching_id[v] = k)
     // Common attributes
     this._name = tagg_to_copy._name
     this._banner = tagg_to_copy._banner
@@ -1092,17 +1096,17 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
       this.tags_list
         .forEach(tag => {
           // Delete tags not present in new layout but present in curr
-          if (!(tag.id in tagg_to_copy.tags_dict))
+          if (!((matching_tags_id[tag.id]??tag.id) in tagg_to_copy.tags_dict))
             this.removeTag(tag)
           // Transfer tags attr present in new layout and in curr
           else
-            tag.copyFrom(tagg_to_copy.tags_dict[tag.id])
+            tag.copyFrom(tagg_to_copy.tags_dict[(matching_tags_id[tag.id]??tag.id)])
         })
 
       // Add missing tags
       tagg_to_copy.tags_list
         .forEach(tag => {
-          if (!(tag.id in this.tags_dict))
+          if (!((revert_matching_id[tag.id]??tag.id) in this.tags_dict))
             this.addTag(tag.name, tag.id).copyFrom(tag)
         })
     }
@@ -1357,9 +1361,10 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   protected _copyFrom(
     tagg_to_copy: Class_TagGroup,
-    tags_synchro = true
+    tags_synchro = true,
+    matching_tags_id : { [_: string]: string; } = {}
   ) {
-    super._copyFrom(tagg_to_copy, tags_synchro)
+    super._copyFrom(tagg_to_copy, tags_synchro, matching_tags_id)
     this._show_legend = tagg_to_copy.show_legend
   }
 
