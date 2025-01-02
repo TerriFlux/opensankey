@@ -1550,13 +1550,19 @@ const convert_nodes: convert_nodesFuncType = (
       n.y = 0
     }
     if ('position' in n) {
-      if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.position=='absolute' && n.trade_close !== true && !trade_set) {
+      n.local!.position = n.position as "absolute" | "relative" | "parametric" | undefined
+      delete n.position
+    }
+
+    if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' ) {
+      if (n.local!.position=='absolute' && !trade_set) {
         trade_set = true
         setTrade(data)
-      } else {
-        delete n.position
+      } else if (n.local!.position == undefined && !n.trade_close ) {
+        trade_set = true
+        setTrade(data)       
       }
-    }
+    } 
 
     delete n_depreciated.visible
 
@@ -1842,6 +1848,10 @@ const convert_nodes: convert_nodesFuncType = (
             return
           }
           Object.entries(n.dimensions).forEach(([k,dim])=>{
+            if (data.levelTags[k] == undefined) {
+              delete n.dimensions[k]
+              return
+            }
             if (!data.levelTags[k].activated) {
               return
             }
