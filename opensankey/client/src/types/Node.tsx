@@ -375,12 +375,18 @@ export abstract class Class_NodeElement
     matching_tagg: { [_: string]: string } = {},
     matching_tags: { [_: string]: { [_: string]: string } } = {}
   ) {
+    const revert_matching_taggs_id: { [id: string]: string } = {}
+    Object.entries(matching_tagg).forEach(([k, v]) => revert_matching_taggs_id[v] = k)
+
     // Add missing tags
     node_to_copy.tags_list
       .forEach(tag_to_copy => {
-        const tagg = this.sankey.node_taggs_dict[matching_tagg[tag_to_copy.group.id] ?? tag_to_copy.group.id]
+        const revert_matching_tags_id: { [id: string]: string } = {}
+        Object.entries(matching_tags[revert_matching_taggs_id[tag_to_copy.group.id]]).forEach(([k, v]) => revert_matching_tags_id[v] = k)
+
+        const tagg = this.sankey.node_taggs_dict[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id]
         if (tagg !== undefined) {
-          const tag = tagg.tags_dict[(matching_tags[tag_to_copy.group.id] ?? {})[tag_to_copy.id] ?? tag_to_copy.id]
+          const tag = tagg.tags_dict[revert_matching_tags_id[tag_to_copy.id] ?? tag_to_copy.id]
           if (tag !== undefined)
             this.addTag(tag as Class_Tag)
         }
