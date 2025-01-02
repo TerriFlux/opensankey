@@ -1550,15 +1550,18 @@ const convert_nodes: convert_nodesFuncType = (
       n.y = 0
     }
     if ('position' in n) {
-      n.local!.position = n.position as "absolute" | "relative" | "parametric" | undefined
+      if (n.local == undefined) {
+        n.local = {}
+      }
+      n.local.position = n.position as "absolute" | "relative" | "parametric" | undefined
       delete n.position
     }
 
-    if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' ) {
-      if (n.local!.position=='absolute' && !trade_set) {
+    if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.local != undefined) {
+      if (n.local.position=='absolute' && !trade_set) {
         trade_set = true
         setTrade(data)
-      } else if (n.local!.position == undefined && !n.trade_close ) {
+      } else if (n.local.position == undefined && !n.trade_close ) {
         trade_set = true
         setTrade(data)       
       }
