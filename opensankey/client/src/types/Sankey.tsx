@@ -383,7 +383,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]?? id],true,matching_tags_id['nodeTags'][id] )
+          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]?? id],matching_tags_id['nodeTags'][id] )
         })
     }
 
@@ -405,7 +405,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id],true,matching_tags_id['fluxTags'][id] )
+          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id],matching_tags_id['fluxTags'][id] )
         })
     }
 
@@ -429,7 +429,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id],true,matching_tags_id['dataTags'][id] )
+          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id],matching_tags_id['dataTags'][id] )
         })
     }
 
