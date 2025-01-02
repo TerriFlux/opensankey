@@ -382,7 +382,7 @@ export abstract class Class_NodeElement
     node_to_copy.tags_list
       .forEach(tag_to_copy => {
         const revert_matching_tags_id: { [id: string]: string } = {}
-        Object.entries(matching_tags[revert_matching_taggs_id[tag_to_copy.group.id]??tag_to_copy.group.id]).forEach(([k, v]) => revert_matching_tags_id[v] = k)
+        Object.entries(matching_tags[revert_matching_taggs_id[tag_to_copy.group.id]??tag_to_copy.group.id]??[]).forEach(([k, v]) => revert_matching_tags_id[v] = k)
 
         const tagg = this.sankey.node_taggs_dict[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id]
         if (tagg !== undefined) {
