@@ -60,10 +60,14 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   const { node_styles_dict, link_styles_dict } = applicationData.drawing_area.sankey
   const { ref_to_updater_modal_apply_layout } = menu_configuration
 
-  const [, setForceUpdate] = useState(true)
+  const [forceUpdate, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
   const [parametric, set_parametric] = useState(node_styles_dict[default_style_id].position.type == 'parametric')
-  const [trade_close, set_trade_close] = useState(true)
+  let trade_close = true
+  if ( 'NodeImportStyle' in node_styles_dict) {
+    trade_close = node_styles_dict['NodeImportStyle'].position.type == 'relative'
+  }
+  //const [trade_close, set_trade_close] = useState(true)
 
   ref_to_updater_modal_apply_layout.current = () => setForceUpdate(b => !b)
 
@@ -83,23 +87,24 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   ]
 
   const setTrade = (trade_close: boolean) => {
+    applicationData.drawing_area.bypass_redraws = true
     if (trade_close) {
       // nodes of type
       node_styles_dict['NodeImportStyle'].position.type = 'relative'
       node_styles_dict['NodeImportStyle'].shape_visible = false
       node_styles_dict['NodeImportStyle'].shape_min_height = 40
       node_styles_dict['NodeImportStyle'].name_label_visible = false
-      node_styles_dict['NodeImportStyle'].value_label_visible = true
-      node_styles_dict['NodeImportStyle'].value_label_horiz = 'middle'
-      node_styles_dict['NodeImportStyle'].value_label_vert = 'top'
+      node_styles_dict['NodeImportStyle'].value_label_visible = false
+      // node_styles_dict['NodeImportStyle'].value_label_horiz = 'middle'
+      // node_styles_dict['NodeImportStyle'].value_label_vert = 'top'
 
       node_styles_dict['NodeExportStyle'].position.type = 'relative'
       node_styles_dict['NodeExportStyle'].shape_visible = false
       node_styles_dict['NodeExportStyle'].shape_min_height = 40
       node_styles_dict['NodeExportStyle'].name_label_visible = false
-      node_styles_dict['NodeExportStyle'].value_label_visible = true
-      node_styles_dict['NodeExportStyle'].value_label_horiz = 'middle'
-      node_styles_dict['NodeExportStyle'].value_label_vert = 'bottom'
+      node_styles_dict['NodeExportStyle'].value_label_visible = false
+      // node_styles_dict['NodeExportStyle'].value_label_horiz = 'middle'
+      // node_styles_dict['NodeExportStyle'].value_label_vert = 'bottom'
 
       link_styles_dict['LinkImportStyle'].shape_orientation = 'vh'
       link_styles_dict['LinkExportStyle'].shape_orientation = 'hv'
@@ -108,35 +113,29 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeImportStyle'].shape_visible = false
       node_styles_dict['NodeImportStyle'].shape_min_height = 1
       node_styles_dict['NodeImportStyle'].name_label_visible = true
-      node_styles_dict['NodeImportStyle'].name_label_horiz = 'right'
+      node_styles_dict['NodeImportStyle'].name_label_horiz = 'left'
       node_styles_dict['NodeImportStyle'].name_label_horiz_shift = -200
       node_styles_dict['NodeImportStyle'].value_label_visible = true
       node_styles_dict['NodeImportStyle'].value_label_horiz = 'left'
       node_styles_dict['NodeImportStyle'].value_label_vert = 'middle'
-      node_styles_dict['NodeImportStyle'].value_label_horiz_shift = -20
+      node_styles_dict['NodeImportStyle'].value_label_horiz_shift = -10
 
       node_styles_dict['NodeExportStyle'].position.type = 'parametric'
       node_styles_dict['NodeExportStyle'].shape_visible = false
       node_styles_dict['NodeExportStyle'].shape_min_height = 1
       node_styles_dict['NodeExportStyle'].name_label_visible = true
-      node_styles_dict['NodeExportStyle'].name_label_horiz = 'left'
+      node_styles_dict['NodeExportStyle'].name_label_horiz = 'right'
       node_styles_dict['NodeExportStyle'].name_label_horiz_shift = 200
       node_styles_dict['NodeExportStyle'].value_label_visible = true
       node_styles_dict['NodeExportStyle'].value_label_horiz = 'right'
       node_styles_dict['NodeExportStyle'].value_label_vert = 'middle'
-      node_styles_dict['NodeExportStyle'].value_label_horiz_shift = 20
+      node_styles_dict['NodeExportStyle'].value_label_horiz_shift = 10
 
       link_styles_dict['LinkImportStyle'].shape_orientation = 'hh'
       link_styles_dict['LinkImportStyle'].value_label_is_visible = false
       link_styles_dict['LinkExportStyle'].shape_orientation = 'hh'
       link_styles_dict['LinkExportStyle'].value_label_is_visible = false
     }
-    const process_nodes = applicationData.drawing_area.sankey.nodes_list
-    const echangeTag = applicationData.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
-    const exchange_nodes = process_nodes.filter(n => n.hasGivenTag(echangeTag))
-    // Position of trade nodes need to be recomputed
-    exchange_nodes.forEach(n => n.applyPosition())
-    applicationData.draw()
   }
 
   const content_modal_layout = <Tabs>
@@ -583,8 +582,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 variant='menuconfigpanel_option_checkbox'
                 isChecked={trade_close}
                 onChange={(evt: { target: { checked: boolean } }) => {
-                  set_trade_close(evt.target.checked)
                   setTrade(evt.target.checked)
+                  applicationData.drawing_area.arrangeTrade(true)
+                  applicationData.draw()
+                  setForceUpdate(!forceUpdate)
                 }}
               >
                 <OSTooltip label={t('MEP.tooltips.importExportClose')}>
@@ -596,8 +597,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 variant='menuconfigpanel_option_checkbox'
                 isChecked={!trade_close}
                 onChange={(evt: { target: { checked: boolean } }) => {
-                  set_trade_close(!evt.target.checked)
                   setTrade(!evt.target.checked)
+                  applicationData.drawing_area.arrangeTrade(true)
+                  applicationData.draw()
+                  setForceUpdate(!forceUpdate)
                 }}
               >
                 <OSTooltip label={t('MEP.tooltips.importExportAboveBelow')}>
