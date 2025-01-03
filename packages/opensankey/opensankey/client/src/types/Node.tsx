@@ -1611,7 +1611,7 @@ export abstract class Class_NodeElement
             if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
               const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
               this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
-              // this.drawing_area.draw()
+              this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.draw())
             }
           }
           else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
