@@ -4358,7 +4358,33 @@ export abstract class Class_NodeElement
       let idTrade = extremity_node.id + '-' + this.id + (importation ? 'Importations' : 'Exportations')
       idTrade = idTrade.replaceAll(' ', '')
 
-      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom)
+      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom);
+      Object.values(this._dimensions_as_child)
+        .forEach(dim => {
+          const node_parent = dim.parent;
+          const name = extremity_node.id + '-' + node_parent.id + (importation ? 'Importations' : 'Exportations');
+          (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
+            this.sankey.nodes_dict[name],
+            new_node,
+            dim.child_level_tag as Class_LevelTag
+          )
+        })
+      Object.values(this._dimensions_as_parent)
+        .forEach(dim => {
+          const node_children = dim.children.filter(n => {
+            const name = extremity_node.id + '-' + n.id + (importation ? 'Importations' : 'Exportations');
+            return this.sankey.nodes_dict[name] != undefined
+          }).map(n => {
+            const name = extremity_node.id + '-' + n.id + (importation ? 'Importations' : 'Exportations');
+            return this.sankey.nodes_dict[name]
+          })
+          new Class_NodeDimension(
+            this,
+            node_children,
+            dim.parent_level_tag,
+            dim.child_level_tag
+          )
+        })
 
       this.tags_list.forEach(tag => {
         new_node.addTag(tag)
