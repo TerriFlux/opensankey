@@ -1828,10 +1828,10 @@ const convert_nodes: convert_nodesFuncType = (
                   children_tags: children_tags
                 }
               }
-            } else {
+            } /*else {
               n.dimensions[leveltagg_id] = {}
               n.dimensions[leveltagg_id].antitag = true              
-            }
+            }*/
           }
         }
 
