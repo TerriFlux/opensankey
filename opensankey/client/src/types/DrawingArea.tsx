@@ -1693,10 +1693,6 @@ export abstract class Class_DrawingArea
         const x = target_node.position_x - this.horizontal_spacing
         node.position_x = x
         node.position_y = 50
-        // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < node.position_y+200) {
-        //   const shift = 200 +node.position_y - firstNonEchangeNodeBelow.position_y
-        //   this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag)).forEach(n=>n.shiftVertically(shift))
-        // }
       }
     })
 
@@ -1705,10 +1701,9 @@ export abstract class Class_DrawingArea
       const source_node = input_link.source
       node.position_u = source_node.position_u
       node.position_v = source_node.position_v
-      // if (node.position_type == 'relative') {
-      //   const x =source_node.position_x/this.horizontal_spacing)*this.horizontal_spacing+this.horizontal_spacing
-      //   node.position_x = x        
-      // } 
+      if (node.position_x<source_node.position_x) {
+        node.position_x = source_node.position_x+1
+      }
       if (compute_xy) {
         const x = source_node.position_x+this.horizontal_spacing
         node.position_x = x

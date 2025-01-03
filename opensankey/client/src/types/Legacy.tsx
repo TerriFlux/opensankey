@@ -915,35 +915,35 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 // }
 const setTrade = (data:SankeyData) => {
   let s = data.style_node['NodeImportStyle'] as Type_JSON
-  s.position = 'parametric'
+  s.position = 'absolute'
   s.shape_visible = false
   s.shape_min_height = 1
   s.name_label_visible = true
   s.name_label_horiz = 'left'
-  s.name_label_horiz_shift = -200
+  //s.name_label_horiz_shift = -200
   s.value_label_visible = true
   s.value_label_horiz = 'left'
   s.value_label_vert = 'middle'
-  s.value_label_horiz_shift = -10
+  //s.value_label_horiz_shift = -10
 
   s = data.style_node['NodeExportStyle'] as Type_JSON
-  s.position = 'parametric'
+  s.position = 'absolute'
   s.shape_visible = false
   s.shape_min_height = 1
   s.name_label_visible = true
   s.name_label_horiz = 'right'
-  s.name_label_horiz_shift = 200
+  //s.name_label_horiz_shift = 200
   s.value_label_visible = true
   s.value_label_horiz = 'right'
   s.value_label_vert = 'middle'
-  s.value_label_horiz_shift = 10
+  //s.value_label_horiz_shift = 10
 
   s = data.style_link['LinkImportStyle'] as Type_JSON
-  s.shape_orientation = 'hh'
-  s.value_label_is_visible = false
+  s.orientation = 'hh'
+  s.value_label_is_visible = true
   s = data.style_link['LinkExportStyle'] as Type_JSON
-  s.shape_orientation = 'hh'
-  s.value_label_is_visible = false
+  s.orientation = 'hh'
+  s.value_label_is_visible = true
 }
 
 const convert_tags: convert_tagsFuncType = (
