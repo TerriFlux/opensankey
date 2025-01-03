@@ -1684,15 +1684,13 @@ export abstract class Class_DrawingArea
     max_vertical_offset = max_vertical_offset + 200
     // const firstNonEchangeNodeBelow = other_nodes.sort((n1,n2)=> n1.position_y-n2.position_y)[0]
 
-    const default_style = this.sankey.node_styles_dict['default']
-    const h_space = default_style.position.dx!
     import_nodes.forEach(node => {
       const output_link = node.output_links_list[0]
       const target_node = output_link.target
       node.position_u = target_node.position_u
       node.position_v = target_node.position_v
       if (compute_xy) {
-        const x = Math.round(target_node.position_x/h_space)*h_space - h_space
+        const x = target_node.position_x - this.horizontal_spacing
         node.position_x = x
         node.position_y = 50
         // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < node.position_y+200) {
@@ -1707,12 +1705,12 @@ export abstract class Class_DrawingArea
       const source_node = input_link.source
       node.position_u = source_node.position_u
       node.position_v = source_node.position_v
-      if (node.position_type == 'relative') {
-        const x = Math.round(source_node.position_x/h_space)*h_space+h_space
-        node.position_x = x        
-      } 
+      // if (node.position_type == 'relative') {
+      //   const x =source_node.position_x/this.horizontal_spacing)*this.horizontal_spacing+this.horizontal_spacing
+      //   node.position_x = x        
+      // } 
       if (compute_xy) {
-        const x = Math.round(source_node.position_x/h_space)*h_space+h_space
+        const x = source_node.position_x+this.horizontal_spacing
         node.position_x = x
         node.position_y = max_vertical_offset
       }
