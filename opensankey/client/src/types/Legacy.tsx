@@ -914,32 +914,36 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 //   }
 // }
 const setTrade = (data:SankeyData) => {
-  data.style_node['NodeImportStyle'].position = 'absolute'
-  data.style_node['NodeImportStyle'].shape_visible = false
-  data.style_node['NodeImportStyle'].node_height = 1
-  data.style_node['NodeImportStyle'].label_visible = true
-  data.style_node['NodeImportStyle'].label_horiz = 'right'
-  // data.style_node['NodeImportStyle'].label_horiz_shift = -200
-  // data.style_node['NodeImportStyle'].value_label_visible = true
-  // data.style_node['NodeImportStyle'].value_label_horiz = 'left'
-  // data.style_node['NodeImportStyle'].value_label_vert = 'middle'
-  data.style_node['NodeImportStyle'].value_label_horiz_shift = -20
+  let s = data.style_node['NodeImportStyle'] as Type_JSON
+  s.position = 'parametric'
+  s.shape_visible = false
+  s.shape_min_height = 1
+  s.name_label_visible = true
+  s.name_label_horiz = 'left'
+  s.name_label_horiz_shift = -200
+  s.value_label_visible = true
+  s.value_label_horiz = 'left'
+  s.value_label_vert = 'middle'
+  s.value_label_horiz_shift = -10
 
-  data.style_node['NodeExportStyle'].position = 'absolute'
-  data.style_node['NodeExportStyle'].shape_visible = false
-  data.style_node['NodeExportStyle'].node_height = 1
-  data.style_node['NodeExportStyle'].label_visible = true
-  data.style_node['NodeExportStyle'].label_horiz = 'left'
-  //data.style_node['NodeExportStyle'].name_label_horiz_shift = 200
-  // data.style_node['NodeExportStyle'].value_label_visible = true
-  // data.style_node['NodeExportStyle'].value_label_horiz = 'right'
-  // data.style_node['NodeExportStyle'].value_label_vert = 'middle'
-  data.style_node['NodeExportStyle'].value_label_horiz_shift = 20
+  s = data.style_node['NodeExportStyle'] as Type_JSON
+  s.position = 'parametric'
+  s.shape_visible = false
+  s.shape_min_height = 1
+  s.name_label_visible = true
+  s.name_label_horiz = 'right'
+  s.name_label_horiz_shift = 200
+  s.value_label_visible = true
+  s.value_label_horiz = 'right'
+  s.value_label_vert = 'middle'
+  s.value_label_horiz_shift = 10
 
-  data.style_link['LinkImportStyle'].orientation = 'hh'
-  //data.style_link['LinkImportStyle'].label_is_visible = false
-  data.style_link['LinkExportStyle'].orientation = 'hh'
-  //data.style_link['LinkExportStyle'].value_label_is_visible = false
+  s = data.style_link['LinkImportStyle'] as Type_JSON
+  s.shape_orientation = 'hh'
+  s.value_label_is_visible = false
+  s = data.style_link['LinkExportStyle'] as Type_JSON
+  s.shape_orientation = 'hh'
+  s.value_label_is_visible = false
 }
 
 const convert_tags: convert_tagsFuncType = (

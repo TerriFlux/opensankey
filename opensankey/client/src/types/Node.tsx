@@ -1605,10 +1605,9 @@ export abstract class Class_NodeElement
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
+            } else {
+              this._display.position.y = 200
             }
-            // else {
-            //   this._display.position.y = 200
-            // }
             if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
               const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
               this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
