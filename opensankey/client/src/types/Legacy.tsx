@@ -325,7 +325,7 @@ export const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
   link_style.label_visible = true
   link_style.idLink = 'LinkExportStyle'
   link_style.name = 'Flux de type exportations'
-  link_style.starting_tangeant = 1
+  link_style.starting_tangeant = 0.25
   return link_style
 }
 /**
@@ -342,7 +342,7 @@ export const DefaultLinkImportStyle: DefaultLinkStyleFuncType = () => {
   link_style.label_visible = true
   link_style.idLink = 'LinkImportStyle'
   link_style.name = 'Flux de type importations'
-  link_style.ending_tangeant = 1
+  link_style.ending_tangeant = 0.25
   return link_style
 }
 
@@ -1092,11 +1092,11 @@ const convert_tags: convert_tagsFuncType = (
     if(!Object.keys(data.style_link).includes('LinkImportStyle')){
       data.style_link['LinkImportStyle']=DefaultLinkImportStyle()
     }
-    data.style_link['LinkImportStyle'].ending_tangeant = 1
+    data.style_link['LinkImportStyle'].ending_tangeant = 0.25
     if(!Object.keys(data.style_link).includes('LinkExportStyle')){
       data.style_link['LinkExportStyle']=DefaultLinkExportStyle()
     }
-    data.style_link['LinkExportStyle'].starting_tangeant = 1
+    data.style_link['LinkExportStyle'].starting_tangeant = 0.25
   }
 
   if (data.nodeTags.Dimensions) {
