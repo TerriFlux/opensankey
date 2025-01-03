@@ -1550,13 +1550,22 @@ const convert_nodes: convert_nodesFuncType = (
       n.y = 0
     }
     if ('position' in n) {
-      if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.position=='absolute' && n.trade_close !== true && !trade_set) {
+      if (n.local == undefined) {
+        n.local = {}
+      }
+      n.local.position = n.position as "absolute" | "relative" | "parametric" | undefined
+      delete n.position
+    }
+
+    if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.local != undefined) {
+      if (n.local.position=='absolute' && !trade_set) {
         trade_set = true
         setTrade(data)
-      } else {
-        delete n.position
+      } else if (n.local.position == undefined && !n.trade_close ) {
+        trade_set = true
+        setTrade(data)       
       }
-    }
+    } 
 
     delete n_depreciated.visible
 
@@ -1760,9 +1769,9 @@ const convert_nodes: convert_nodesFuncType = (
 
     // ================================================
     // Convert dimension for application version >= 0.9
-    Object.entries(n.tags)
+    const tmp = Object.entries(n.tags)
       .filter(nt => nt[0] in data_to_convert.levelTags)
-      .forEach(nt => {
+    tmp.forEach(nt => {
         const leveltagg_tags_ids = nt[1]
         const leveltagg_id = nt[0]
         if (!n.dimensions[leveltagg_id] ) {
@@ -1790,28 +1799,38 @@ const convert_nodes: convert_nodesFuncType = (
             possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
             n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
             n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
-          } else if (Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && +n.tags[leveltagg_id][0] > 1 && n.dimensions['Primaire'].parent_name) {
-            let parent_tag: number | undefined
-            const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
-            if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
-              parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
-            } else if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].children_tags) {
-              parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
-            }
-            if (parent_tag) {
-              const curLevelTag = n.tags[leveltagg_id]
-              let children_tags = [String(+parent_tag + 1)]
-              if (+curLevelTag[0] == +parent_tag + 2) {
-                // in old file the continuity between levels could be missing
-                // Exemple in Carbone 4 we were jumping from 2 to 4 so we correct
-                // by 3:4
-                children_tags = [...children_tags,...curLevelTag]
+          } else if (
+            Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && 
+            Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1 
+          ) {
+            if (n.dimensions['Primaire'].parent_name) {
+              let parent_tag: number | undefined
+              const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
+              if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
+                parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
+              } else if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].children_tags) {
+                parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
+              } else if (leveltagg_id in parent_dimensions && !parent_dimensions[leveltagg_id].level) {
+                parent_tag = 1
               }
-              n.dimensions[leveltagg_id] = {
-                parent_tag: String(parent_tag),
-                parent_name: n.dimensions['Primaire'].parent_name,
-                children_tags: children_tags
+              if (parent_tag) {
+                const curLevelTag = n.tags[leveltagg_id]
+                let children_tags = [String(+parent_tag + 1)]
+                if (+curLevelTag[0] == +parent_tag + 2) {
+                  // in old file the continuity between levels could be missing
+                  // Exemple in Carbone 4 we were jumping from 2 to 4 so we correct
+                  // by 3:4
+                  children_tags = [...children_tags,...curLevelTag]
+                }
+                n.dimensions[leveltagg_id] = {
+                  parent_tag: String(parent_tag),
+                  parent_name: n.dimensions['Primaire'].parent_name,
+                  children_tags: children_tags
+                }
               }
+            } else {
+              n.dimensions[leveltagg_id] = {}
+              n.dimensions[leveltagg_id].antitag = true              
             }
           }
         }
@@ -1842,6 +1861,10 @@ const convert_nodes: convert_nodesFuncType = (
             return
           }
           Object.entries(n.dimensions).forEach(([k,dim])=>{
+            if (data.levelTags[k] == undefined) {
+              delete n.dimensions[k]
+              return
+            }
             if (!data.levelTags[k].activated) {
               return
             }
