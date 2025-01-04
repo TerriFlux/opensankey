@@ -1492,7 +1492,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public setInputLabelVisible() {
-    this.d3_selection_g_name_label?.style('display', 'none')
+    this.d3_selection_g_name_label?.select('.name_label_text').style('display', 'none')
     this.d3_selection_g_name_label?.select('.name_label_fo_input').style('display', 'inline-block')
     document.getElementById('name_label_input_' + this.id)?.focus()
   }
@@ -4247,7 +4247,7 @@ export abstract class Class_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {
