@@ -1775,7 +1775,38 @@ export abstract class Class_DrawingArea
       let current_v = 0
       column.forEach(n => current_v = this.apply_v(n, current_v))
     })
+    Object.values(columns).forEach(column => {
+      column.forEach(n => this.apply_v_agregate(n))
+    })
     this.sankey.sortNodes()
+  }
+  /**
+   * Computes v for nodes in the drawing area
+   *
+   * @memberof Class_DrawingArea
+   */
+  public apply_v_agregate(
+    node:Type_AbstractNodeElement
+  ) {
+    let agregated_nodes : Type_GenericNodeElement[] = []
+    this.sankey.level_taggs_list.forEach(tagGroup => {
+      const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
+      if (!nodeDimParent) {
+        return
+      }
+      if ( nodeDimParent.parent.display.position.v != -1) {
+        return
+      }
+      agregated_nodes = [...agregated_nodes,nodeDimParent.parent as Type_GenericNodeElement]
+      agregated_nodes = [...new Set(agregated_nodes)]
+    })
+    agregated_nodes.forEach(nn=>{
+      nn.display.position.x = node.position_x
+      nn.display.position.y = node.position_y
+      nn.display.position.u = node.position_u
+      nn.display.position.v = node.position_v
+      this.apply_v_agregate(nn)
+    })
   }
 
   /**
