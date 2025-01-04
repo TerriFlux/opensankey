@@ -2969,6 +2969,17 @@ export abstract class Class_NodeElement
     return _.length > 0 ? _[0] : null
   }
 
+  // Level related ----------------------------------------------------------------------
+  /**
+   * For a given tagGroup return the corresponding parent Class_NodeDimension
+   * @memberof Class_NodeElement
+   */
+  public nodeDimensionAsChild(tagGroup: Class_LevelTagGroup) {
+    const _ = Object.values(this._dimensions_as_child)
+      .filter(dimension => dimension.parent_level_tag.group.id == tagGroup.id)
+    return _.length > 0 ? _[0] : null
+  }
+
   /**
    * List of level tags related to node
    * @readonly
