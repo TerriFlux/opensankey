@@ -244,7 +244,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus={new_data_plus}
   />)
 
-  additionalMenus.context_link_order.push('drag_tooltip','drag_tag')
+  additionalMenus.context_link_order.push('drag_tooltip')
   additionalMenus.additional_context_link_element['drag_tooltip'] = <ButtonLinkContextShowTooltipMenu new_data={new_data_plus} />
   additionalMenus.additional_context_link_element['drag_tag'] = <ButtonLinkContextShowTagMenu new_data={new_data_plus} />
   additionalMenus.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
@@ -377,7 +377,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
         new_data={new_data}
         menu_for_modal={true}
       />}
-      title={new_data_plus.t('Menu.Flux') + ' ' + new_data_plus.t('Menu.Etiquettes')}
+      title={new_data_plus.t('Menu.flux') + ' ' + new_data_plus.t('Menu.Etiquettes')}
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
