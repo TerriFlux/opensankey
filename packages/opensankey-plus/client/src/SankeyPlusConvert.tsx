@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Box, Button } from '@chakra-ui/react'
 
 import type { FCType_TransformationElementsOSP } from './ftypes/SankeyPlusConvertTypes'
-import { OSTooltip } from './deps/OpenSankey/types/Utils'
+import { OSTooltip, Type_JSON } from './deps/OpenSankey/types/Utils'
 import { DiffType, OSPData, ViewType } from './types/LegacyTypes'
 import { applyChange } from 'deep-diff'
 
@@ -528,16 +528,17 @@ export const GetOldDataFromView  = (
     alert('sankey master undefined')
     return undefined
   }
-  const copy_master_data= JSON.parse(JSON.stringify(master_data))
-  copy_master_data.view = []
-  const view_of_master= master_data.view as unknown as ViewType[]
+  const copy_master_data= {...master_data}
+  copy_master_data.view = [];
+  (copy_master_data as unknown as Type_JSON).views = {}
+  //const view_of_master= master_data.view as unknown as ViewType[]
   let data_init=JSON.parse(JSON.stringify(copy_master_data)) as OSPData
   // Get the difference from the view
-  if (view_of_master.filter(v=>v.id === id_view_to_see).length === 0) {
+  if (master_data.view.filter(v=>v.id === id_view_to_see).length === 0) {
     alert('view not found')
     return data_init
   }
-  const view_object=view_of_master.filter(v=>v.id === id_view_to_see)[0]
+  const view_object=master_data.view.filter(v=>v.id === id_view_to_see)[0]
 
   if((view_object.view_data as DiffType).diff){
     const diff_view=(view_object.view_data as DiffType).diff
