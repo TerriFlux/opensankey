@@ -1224,7 +1224,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
                       refreshThisAndUpdateRelatedComponents()
                     }}
                   >
-                    {style.id}
+                    {style.name}
                   </MenuItem>
                 )
               })
