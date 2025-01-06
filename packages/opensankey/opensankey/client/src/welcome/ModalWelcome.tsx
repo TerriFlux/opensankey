@@ -404,8 +404,10 @@ export const ModalWelcomeContent = (
           <Thead><Th colSpan={2}>{t('Menu.rcc_titre_select')}</Th></Thead>
           <Tbody>
             <Tr><Td>{t('Menu.rcc_cn_bold')}</Td><Td>{t('Menu.rcc_cn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_shift_cn_bold')}</Td><Td>{t('Menu.rcc_shift_cn')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_ctrl_cn_bold')}</Td><Td>{t('Menu.rcc_ctrl_cn')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_cf_bold')}</Td><Td>{t('Menu.rcc_cf')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_shift_cf_bold')}</Td><Td>{t('Menu.rcc_shift_cf')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_ctrl_cf_bold')}</Td><Td>{t('Menu.rcc_ctrl_cf')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_cs_bold')}</Td><Td>{t('Menu.rcc_cs')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_click_and_drag_bold')}</Td><Td>{t('Menu.rcc_click_and_drag')}</Td></Tr>
