@@ -614,7 +614,7 @@ export abstract class Class_LinkElement
     this._display.position_starting.x = getNumberFromJSON(json_object, 'position_starting_x', this._display.position_starting.x)
     this._display.position_starting.y = getNumberFromJSON(json_object, 'position_starting_y', this._display.position_starting.y)
     this._display.position_ending.x = getNumberFromJSON(json_object, 'position_ending_x', this._display.position_starting.x)
-    this._display.position_ending.x = getNumberFromJSON(json_object, 'position_ending_y', this._display.position_starting.y)
+    this._display.position_ending.y = getNumberFromJSON(json_object, 'position_ending_y', this._display.position_starting.y)
     this._display.position_offset_label = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
     this._display.position_x_label = getNumberOrUndefinedFromJSON(json_object, 'position_x_label')
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_object, 'position_y_label')
@@ -3383,6 +3383,8 @@ export abstract class Class_LinkElement
 
   // PRIVATE GETTER / SETTER =============================================================
 
+  public get datatags_fingerprint() { return this._datatags_fingerprint }
+
   /**
    * If link has tags :
    * - check for each tag group if the flow has at least one selected tag that isn't filtered out
@@ -4809,6 +4811,12 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     if (grp_id in this._taggs_dict) {
       const idx = this._taggs_dict[grp_id].indexOf(tag)
       this._taggs_dict[grp_id].splice(idx, 1)
+
+      // After removing a tag check if the flow has other tag from the group,
+      //  if not remove tag group entries from flow so are_related_flux_tags_selected don't take into account groupTag not linked to flow
+      if (Object.values(this._taggs_dict[grp_id]).length == 0) {
+        delete this._taggs_dict[grp_id]
+      }
     }
   }
 

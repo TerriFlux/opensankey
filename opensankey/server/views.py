@@ -568,7 +568,7 @@ def parse_folder(current_dir, menus, key=None):
 @opensankey.route('/sankey/menus_templates', methods=['POST'])
 def menus_templates():
     """
-    _summary_
+    Return data from MFAData/Modèles/Template
 
     Returns
     -------
@@ -637,6 +637,31 @@ def menus_examples():
             mimetype='application/json'
         )
         return response
+
+    return response
+
+
+@opensankey.route('/sankey/data_tuto', methods=['POST'])
+def data_tuto():
+    """
+    Return data from MFAData/Formation/Tutoriels
+
+    Returns
+    -------
+    :return: object formated for Component ModalTuto
+    :rtype: object
+    """
+    data_folder = os.environ.get('MFAData')
+    data_folder += '/Formations/Tutoriels'
+    menus = {}
+    parse_folder(data_folder, menus)
+    context = menus
+    json_data = json.dumps(context)
+    response = Response(
+        response=json_data,
+        status=200,
+        mimetype='application/json'
+    )
 
     return response
 

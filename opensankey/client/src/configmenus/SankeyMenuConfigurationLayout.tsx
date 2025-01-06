@@ -13,7 +13,8 @@ import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 
 export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSankeyMenuConfigurationLayout> = ({
   new_data,
-  extra_background_element
+  extra_background_element,
+  contextual
 }) => {
 
   // Data -------------------------------------------------------------------------------
@@ -23,7 +24,13 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
   // Components updaters ---------------------------------------------------------------
 
   const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_menu_config_layout_updater.current = () => setCount(a => a + 1)
+
+  // Assing component updater to corresponding ref updater
+  if (contextual) {
+    new_data.menu_configuration.ref_to_menu_contextual_config_layout_updater.current = () => setCount(a => a + 1)
+  } else {
+    new_data.menu_configuration.ref_to_menu_config_layout_updater.current = () => setCount(a => a + 1)
+  }
 
 
   // Link to ConfigMenuNumberInput state variable
@@ -33,8 +40,8 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
   // Be sure that values are updated in inputs when refreshing this component
   ref_set_number_inputs[0].current(String(new_data.drawing_area.scale))
-  ref_set_number_inputs[1].current(String(new_data.drawing_area.minimum_flux??''))
-  ref_set_number_inputs[2].current(String(new_data.drawing_area.maximum_flux??''))
+  ref_set_number_inputs[1].current(String(new_data.drawing_area.minimum_flux ?? ''))
+  ref_set_number_inputs[2].current(String(new_data.drawing_area.maximum_flux ?? ''))
   ref_set_number_inputs[3].current(String(new_data.drawing_area.legend.legend_police))
   ref_set_number_inputs[4].current(String(new_data.drawing_area.legend.legend_bg_opacity))
   ref_set_number_inputs[5].current(String(new_data.drawing_area.legend.position_x))
@@ -100,7 +107,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
         isChecked={new_data.drawing_area.grid_visible}
-        icon={<CustomFaEyeCheckIcon/>}
+        icon={<CustomFaEyeCheckIcon />}
         onChange={(evt) => {
           new_data.drawing_area.grid_visible = evt.target.checked
           refreshThisAndUpdateRelatedComponents()
@@ -222,7 +229,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
                 // Even we are changing a parameter for link we redraw all node so it also redraw link + arrow
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 refreshThisAndUpdateRelatedComponents()
-              }else{
+              } else {
                 new_data.drawing_area.removeMinimumLinkThickness()
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 refreshThisAndUpdateRelatedComponents()
@@ -251,7 +258,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
                 // Even we are changing a parameter for link we redraw all node so it also redraw link + arrow
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 refreshThisAndUpdateRelatedComponents()
-              }else{
+              } else {
                 new_data.drawing_area.removeMaximumLinkThickness()
                 new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
                 refreshThisAndUpdateRelatedComponents()
@@ -273,7 +280,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
     >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
-        icon={<CustomFaEyeCheckIcon/>}
+        icon={<CustomFaEyeCheckIcon />}
         isChecked={!new_data.drawing_area.legend.masked}
         onChange={() => {
           new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
@@ -365,7 +372,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
             ref_to_set_value={ref_set_number_inputs[4]}
             default_value={new_data.drawing_area.legend.legend_bg_opacity}
             function_on_blur={(value) => {
-              if (value!==undefined && value!==null) {
+              if (value !== undefined && value !== null) {
                 new_data.drawing_area.legend.legend_bg_opacity = value
                 refreshThisAndUpdateRelatedComponents()
               }
