@@ -68,6 +68,7 @@ export abstract class Class_AbstractNodeElement
   public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
   public abstract removeDimensionAsChild(_: Class_AbstractNodeDimension): void
   public abstract nodeDimensionAsParent(tagGroup: Class_LevelTagGroup): Class_NodeDimension | null
+  public abstract nodeDimensionAsChild(tagGroup: Class_LevelTagGroup): Class_NodeDimension | null
   public abstract addAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract removeAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract shiftVertically(shift: number): void

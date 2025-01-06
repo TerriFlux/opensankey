@@ -1515,56 +1515,6 @@ export abstract class Class_NodeElement
     this._display.position.y += shift
   }
 
-  /**
-   * function to use at in eventMouseDragEnd
-   *
-   * @protected
-   * @memberof Class_NodeElement
-   */
-  protected functionAtMouseDragEnd() {
-    if (this.position_type === 'parametric') {
-      let smaller_x: number = Number.MAX_VALUE
-      this.sankey.visible_nodes_list.forEach(n => {
-        if (smaller_x === undefined) {
-          smaller_x = n.position_x
-        }
-        if (n.position_x < smaller_x) {
-          smaller_x = n.position_x
-        }
-      })
-      const previous_u = this.position_u
-      this.position_u = Math.floor((this.position_x - smaller_x / 3) / (this.sankey.node_styles_dict['default'] as Class_NodeStyle).position.dx!)
-      if (this.position_u !== previous_u) {
-        this.drawing_area.computeParametricV()
-      } else {
-        const same_u = this.sankey.visible_nodes_list
-          .filter(nn => nn.position_type === 'parametric')
-          .filter(nn => nn.position_u === this.position_u)
-        same_u.sort((n1, n2) => n1.position_v - n2.position_v)
-        const nodes_below = same_u.filter(nn => nn.position_v > this.position_v).reverse()
-        const node_below = nodes_below.pop()
-        if (node_below) {
-          if (this.position_y > node_below.position_y) {
-            const tmp = node_below.position_v
-            node_below.position_v = this.position_v
-            this.position_v = tmp
-          } else {
-            node_below.position_dy = node_below.position_y - this.position_y - this.getShapeHeightToUse()
-          }
-        }
-        const nodes_above = same_u.filter(nn => nn.position_v < this.position_v)
-        const node_above = nodes_above.pop()
-        if (node_above) {
-          if (this.position_y < node_above.position_y) {
-            const tmp = node_above.position_v
-            node_above.position_v = this.position_v
-            this.position_v = tmp
-          }
-          this.position_dy = this.position_y - node_above.position_y - node_above.getShapeHeightToUse()
-        }
-      }
-    }
-  }
 
   // PROTECTED METHODS ==================================================================
 
@@ -1655,14 +1605,15 @@ export abstract class Class_NodeElement
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
+            } else {
+              // position of the first import node
+              this._display.position.y = 200
             }
-            // else {
-            //   this._display.position.y = 200
-            // }
             if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
+              // The import nodes must be above the rest of the diagram. It is pushed downward.
               const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
               this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
-              // this.drawing_area.draw()
+              this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.draw())
             }
           }
           else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
@@ -2164,24 +2115,22 @@ export abstract class Class_NodeElement
     }
   }
 
-  // /**
-  //  * Define event when mouse drag element
-  //  * @protected
-  //  * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-  //  * @memberof Class_NodeElement
-  //  */
-  // protected eventMouseDragStart(
-  //   event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  // ) {
-  //   // Apply parent behavior first
-  //   super.eventMouseDragStart(event)
-  //   if (event.sourceEvent.shiftKey) {
-  //     return
-  //   }
-  //   const drawing_area = this.drawing_area
-  //   drawing_area.addNodeToSelection(this)
-  //   this._drag = true
-  // }
+  /**
+   * Define event when mouse drag element
+   * @protected
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_NodeElement
+   */
+  protected eventMouseDragStart(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    // Apply parent behavior first
+    super.eventMouseDragStart(event)
+    if (event.sourceEvent.shiftKey) {
+      return
+    }
+    this._drag = true
+  }
 
   /**
    * Define event when mouse drag element
@@ -2235,22 +2184,10 @@ export abstract class Class_NodeElement
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Apply parent behavior first
     super.eventMouseDragEnd(event)
-    // Get related elements in drawing area
-    const drawing_area = this.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list as this[]
-    if (nodes_selected.includes(this)) {
-      // Only trigger the drag if we drag a selected node
-      // redraw node on target of output links
-      nodes_selected
-        .forEach(n => {
-          n.functionAtMouseDragEnd()
-        })
 
-
-    } else {
-      this.functionAtMouseDragEnd()
-    }
     // Move all elements so none of them are outside the DA
+    this.drawing_area.sankey.nodes_list.forEach(n=>n.position_v = -1)
+    this.drawing_area.computeParametricV()
     this.drawing_area.recenterElements()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     this._drag = false
@@ -3036,6 +2973,17 @@ export abstract class Class_NodeElement
    */
   public nodeDimensionAsParent(tagGroup: Class_LevelTagGroup) {
     const _ = Object.values(this._dimensions_as_parent)
+      .filter(dimension => dimension.parent_level_tag.group.id == tagGroup.id)
+    return _.length > 0 ? _[0] : null
+  }
+
+  // Level related ----------------------------------------------------------------------
+  /**
+   * For a given tagGroup return the corresponding parent Class_NodeDimension
+   * @memberof Class_NodeElement
+   */
+  public nodeDimensionAsChild(tagGroup: Class_LevelTagGroup) {
+    const _ = Object.values(this._dimensions_as_child)
       .filter(dimension => dimension.parent_level_tag.group.id == tagGroup.id)
     return _.length > 0 ? _[0] : null
   }
@@ -4318,7 +4266,7 @@ export abstract class Class_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {
@@ -4429,7 +4377,33 @@ export abstract class Class_NodeElement
       let idTrade = extremity_node.id + '-' + this.id + (importation ? 'Importations' : 'Exportations')
       idTrade = idTrade.replaceAll(' ', '')
 
-      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom)
+      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom);
+      Object.values(this._dimensions_as_child)
+        .forEach(dim => {
+          const node_parent = dim.parent;
+          const name = extremity_node.id + '-' + node_parent.id + (importation ? 'Importations' : 'Exportations');
+          (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
+            this.sankey.nodes_dict[name],
+            new_node,
+            dim.child_level_tag as Class_LevelTag
+          )
+        })
+      Object.values(this._dimensions_as_parent)
+        .forEach(dim => {
+          const node_children = dim.children.filter(n => {
+            const name = extremity_node.id + '-' + n.id + (importation ? 'Importations' : 'Exportations');
+            return this.sankey.nodes_dict[name] != undefined
+          }).map(n => {
+            const name = extremity_node.id + '-' + n.id + (importation ? 'Importations' : 'Exportations');
+            return this.sankey.nodes_dict[name]
+          })
+          new Class_NodeDimension(
+            this,
+            node_children,
+            dim.parent_level_tag,
+            dim.child_level_tag
+          )
+        })
 
       this.tags_list.forEach(tag => {
         new_node.addTag(tag)
