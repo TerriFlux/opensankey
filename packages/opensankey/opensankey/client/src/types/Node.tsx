@@ -1790,8 +1790,8 @@ export abstract class Class_NodeElement
         .attr('font-style', this.name_label_italic ? 'italic' : 'normal')
         .attr('font-size', String(this.name_label_font_size) + 'px')
         .attr('font-family', this.name_label_font_family)
+        .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .attr('stroke', 'none')
-        .attr('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .text(label_to_display)
         .filter(() => label_to_display.split(' ').length > 1)//only call wrapper if text displayed has space to be splitted by wrapper (sometime 1 word label can have some wrap problem with label bg)
         .call(wrapper)
@@ -1930,8 +1930,8 @@ export abstract class Class_NodeElement
         .attr('font-style', this.value_label_italic ? 'italic' : 'normal')
         .attr('font-size', String(this.value_label_font_size) + 'px')
         .attr('font-family', this.value_label_font_family)
+        .style('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
         .attr('stroke', 'none')
-        .attr('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
         .text(this.value_label)
     }
   }
