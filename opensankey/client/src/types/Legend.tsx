@@ -619,7 +619,7 @@ export class Class_Legend
 
     // Add explanation text
     g_scale?.append('text')
-      .text('scale' + ':')
+      .text(this.drawing_area.application_data.t('scale') + ':')
       .style('font-size', this._legend_police + 'px')
 
     const g_draggable = g_scale?.append('g')
