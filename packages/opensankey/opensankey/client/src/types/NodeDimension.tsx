@@ -220,7 +220,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
     this._force_show_parent = true
     this._updated()
     // Unset all other children node's dimensions
-    let nodes_to_redraw = new Set([
+    const nodes_to_redraw = new Set([
       this._parent,
       ...this._children
     ])
@@ -316,7 +316,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
               }
             })
         })
-      }
+    }
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
     // Return set of all nodes that need to be redrawn
