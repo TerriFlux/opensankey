@@ -1773,7 +1773,7 @@ export abstract class Class_DrawingArea
     Object.values(columns).forEach(column => {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
-      column.forEach(n => current_v = this.apply_v(n, current_v))
+      column.forEach(n => current_v = this.apply_v_desagregate(n, current_v))
     })
     Object.values(columns).forEach(column => {
       column.forEach(n => this.apply_v_agregate(n))
@@ -1795,6 +1795,7 @@ export abstract class Class_DrawingArea
         return
       }
       if ( nodeDimParent.parent.display.position.v != -1) {
+        // v is computed at the first path
         return
       }
       agregated_nodes = [...agregated_nodes,nodeDimParent.parent as Type_GenericNodeElement]
@@ -1814,11 +1815,12 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public apply_v(
+  public apply_v_desagregate(
     node:Type_AbstractNodeElement,
     current_v:number
   ) {
     if (node.display.position.v == -1) {
+      // v is computed at the first path
       node.display.position.v = current_v
     }
     let new_current_v = current_v
@@ -1837,7 +1839,7 @@ export abstract class Class_DrawingArea
       nn.display.position.u = node.position_u
       nn.display.position.y = current_y
       current_y += 20
-      new_current_v = this.apply_v(nn,new_current_v)
+      new_current_v = this.apply_v_desagregate(nn,new_current_v)
     })
     return new_current_v+1
   }
