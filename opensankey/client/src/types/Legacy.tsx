@@ -1006,7 +1006,7 @@ const convert_tags: convert_tagsFuncType = (
         (tags_group as TagsGroup & {is_sequence:boolean}).is_sequence=true
         tags_group.banner='one'
         Object.values(tags_group.tags).forEach((tag,idx)=>{
-          tag.selected=idx==0;
+          tag.selected=idx==0
         })
       }
     }
@@ -1553,7 +1553,7 @@ const convert_nodes: convert_nodesFuncType = (
       if (n.local == undefined) {
         n.local = {}
       }
-      n.local.position = n.position as "absolute" | "relative" | "parametric" | undefined
+      n.local.position = n.position as 'absolute' | 'relative' | 'parametric' | undefined
       delete n.position
     }
 
@@ -1772,109 +1772,109 @@ const convert_nodes: convert_nodesFuncType = (
     const tmp = Object.entries(n.tags)
       .filter(nt => nt[0] in data_to_convert.levelTags)
     tmp.forEach(nt => {
-        const leveltagg_tags_ids = nt[1]
-        const leveltagg_id = nt[0]
-        if (!n.dimensions[leveltagg_id] ) {
-          n.dimensions[leveltagg_id] = {}
+      const leveltagg_tags_ids = nt[1]
+      const leveltagg_id = nt[0]
+      if (!n.dimensions[leveltagg_id] ) {
+        n.dimensions[leveltagg_id] = {}
+      }
+      if (leveltagg_tags_ids.includes('0')) {
+        // if level is 0 we craate the dimension with antitag set_to_true.
+        // in old version the dimensions was not existing as the visibility was
+        // handled with the tag mechanism
+        n.dimensions[leveltagg_id] = {}
+        n.dimensions[leveltagg_id].antitag = true
+      } else if (n.dimensions[leveltagg_id]) {
+        const all_leveltagg_tags_ids = Object.keys(data_to_convert.levelTags[leveltagg_id].tags)
+        if (all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) == -1) {
+          leveltagg_tags_ids[0] = String(+leveltagg_tags_ids[0] - 1)
         }
-        if (leveltagg_tags_ids.includes('0')) {
-          // if level is 0 we craate the dimension with antitag set_to_true.
-          // in old version the dimensions was not existing as the visibility was
-          // handled with the tag mechanism
-          n.dimensions[leveltagg_id] = {}
-          n.dimensions[leveltagg_id].antitag = true
-        } else if (n.dimensions[leveltagg_id]) {
-          const all_leveltagg_tags_ids = Object.keys(data_to_convert.levelTags[leveltagg_id].tags)
-          if (all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) == -1) {
-            leveltagg_tags_ids[0] = String(+leveltagg_tags_ids[0] - 1)
+        // Dimension detection
+        const parent_id = n.dimensions[leveltagg_id]['parent_name']
+        if (parent_id) {
+          if (!(leveltagg_id in data.nodes[parent_id].dimensions)) {
+            // the condition above allows to correct bad parentship relation in legacy files
+            return
           }
-          // Dimension detection
-          const parent_id = n.dimensions[leveltagg_id]['parent_name']
-          if (parent_id) {
-            if (!(leveltagg_id in data.nodes[parent_id].dimensions)) {
-              // the condition above allows to correct bad parentship relation in legacy files
-              return
-            }
-            let possible_parent_tag = ''
-            possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
-            n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
-            n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
-          } else if (
-            Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && 
+          let possible_parent_tag = ''
+          possible_parent_tag = all_leveltagg_tags_ids[all_leveltagg_tags_ids.indexOf(leveltagg_tags_ids[0]) - 1]
+          n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
+          n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
+        } else if (
+          Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && 
             Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1 
-          ) {
-            if (n.dimensions['Primaire'].parent_name) {
-              let parent_tag: number | undefined
-              const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
-              if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
-                parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
-              } else if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].children_tags) {
-                parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
-              } else if (leveltagg_id in parent_dimensions && !parent_dimensions[leveltagg_id].level) {
-                parent_tag = 1
+        ) {
+          if (n.dimensions['Primaire'].parent_name) {
+            let parent_tag: number | undefined
+            const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
+            if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
+              parent_tag = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].level
+            } else if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].children_tags) {
+              parent_tag = +data.nodes[n.dimensions['Primaire'].parent_name!].dimensions[leveltagg_id].children_tags![0]
+            } else if (leveltagg_id in parent_dimensions && !parent_dimensions[leveltagg_id].level) {
+              parent_tag = 1
+            }
+            if (parent_tag) {
+              const curLevelTag = n.tags[leveltagg_id]
+              let children_tags = [String(+parent_tag + 1)]
+              if (+curLevelTag[0] == +parent_tag + 2) {
+                // in old file the continuity between levels could be missing
+                // Exemple in Carbone 4 we were jumping from 2 to 4 so we correct
+                // by 3:4
+                children_tags = [...children_tags,...curLevelTag]
               }
-              if (parent_tag) {
-                const curLevelTag = n.tags[leveltagg_id]
-                let children_tags = [String(+parent_tag + 1)]
-                if (+curLevelTag[0] == +parent_tag + 2) {
-                  // in old file the continuity between levels could be missing
-                  // Exemple in Carbone 4 we were jumping from 2 to 4 so we correct
-                  // by 3:4
-                  children_tags = [...children_tags,...curLevelTag]
-                }
-                n.dimensions[leveltagg_id] = {
-                  parent_tag: String(parent_tag),
-                  parent_name: n.dimensions['Primaire'].parent_name,
-                  children_tags: children_tags
-                }
+              n.dimensions[leveltagg_id] = {
+                parent_tag: String(parent_tag),
+                parent_name: n.dimensions['Primaire'].parent_name,
+                children_tags: children_tags
               }
-            } /*else {
+            }
+          } /*else {
               n.dimensions[leveltagg_id] = {}
               n.dimensions[leveltagg_id].antitag = true              
             }*/
-          }
         }
+      }
 
-        delete n.tags[leveltagg_id]
-        // Code below is to correct bad parentship relation coming from legacy
-        // Get lists of parents
-        // const node_parents_id = (node: SankeyNode) => {
-        //   return Object.values(node.dimensions).filter(dim => dim.parent_name).map(dim => dim.parent_name)
-        // }
-        // for a given parent retrieves the corresponding dim
-        // const parent_dim = (node: SankeyNode, parent_id: string) => {
-        //   return Object.entries(node.dimensions).filter(dim => data.levelTags[dim[0]].activated && dim[1].parent_name == parent_id).map(dim => dim[0])
-        // }
-        const pid = n.dimensions[leveltagg_id].parent_name
-        if (!pid) {
+      delete n.tags[leveltagg_id]
+      // Code below is to correct bad parentship relation coming from legacy
+      // Get lists of parents
+      // const node_parents_id = (node: SankeyNode) => {
+      //   return Object.values(node.dimensions).filter(dim => dim.parent_name).map(dim => dim.parent_name)
+      // }
+      // for a given parent retrieves the corresponding dim
+      // const parent_dim = (node: SankeyNode, parent_id: string) => {
+      //   return Object.entries(node.dimensions).filter(dim => data.levelTags[dim[0]].activated && dim[1].parent_name == parent_id).map(dim => dim[0])
+      // }
+      const pid = n.dimensions[leveltagg_id].parent_name
+      if (!pid) {
+        return
+      }
+      Object.entries(data.nodes[pid].dimensions).forEach(([pk,pdim])=>{
+        if (!data.levelTags[pk].activated) {
           return
         }
-        Object.entries(data.nodes[pid].dimensions).forEach(([pk,pdim])=>{
-          if (!data.levelTags[pk].activated) {
+        if (pdim.antitag || (data.nodes[pid].tags[pk] && data.nodes[pid].tags[pk][0]=='0')) {
+          return
+        }
+        const grand_parent_id = pdim.parent_name
+        if (grand_parent_id == undefined) {
+          return
+        }
+        Object.entries(n.dimensions).forEach(([k,dim])=>{
+          if (data.levelTags[k] == undefined) {
+            delete n.dimensions[k]
             return
           }
-          if (pdim.antitag || (data.nodes[pid].tags[pk] && data.nodes[pid].tags[pk][0]=='0')) {
+          if (!data.levelTags[k].activated) {
             return
           }
-          const grand_parent_id = pdim.parent_name
-          if (grand_parent_id == undefined) {
-            return
+          if (grand_parent_id == dim.parent_name) {
+            delete n.dimensions[k]
           }
-          Object.entries(n.dimensions).forEach(([k,dim])=>{
-            if (data.levelTags[k] == undefined) {
-              delete n.dimensions[k]
-              return
-            }
-            if (!data.levelTags[k].activated) {
-              return
-            }
-            if (grand_parent_id == dim.parent_name) {
-              delete n.dimensions[k]
-            }
-          })
         })
-
       })
+
+    })
 
 
     // Add links_order to node by combining input/outputs id (for version>=0.9)

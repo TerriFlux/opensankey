@@ -1667,30 +1667,30 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
 
 
 
-// At first render init formation object with data from server
-if(firstRender){
-  const fetchData = {
-    method: 'POST'
+  // At first render init formation object with data from server
+  if(firstRender){
+    const fetchData = {
+      method: 'POST'
+    }
+    const path = window.location.origin
+    const url = path + '/opensankey/sankey/data_tuto'
+    fetch(url, fetchData)
+      .then(response => {
+        response
+          .text()
+          .then(text => {
+            const json_data = JSON.parse(text)
+
+            setFormation(json_data)
+            setFirstRender(false)
+          })
+          .catch((error) => {
+            console.error('Error in fetchExamples - ' + error.toString())
+            setFirstRender(false)
+
+          })
+      })
   }
-  const path = window.location.origin
-  const url = path + '/opensankey/sankey/data_tuto'
-  fetch(url, fetchData)
-    .then(response => {
-      response
-        .text()
-        .then(text => {
-          const json_data = JSON.parse(text)
-
-          setFormation(json_data)
-          setFirstRender(false)
-        })
-        .catch((error) => {
-          console.error('Error in fetchExamples - ' + error.toString())
-          setFirstRender(false)
-
-        })
-    })
-}
 
 
 
