@@ -954,6 +954,19 @@ export abstract class Class_DrawingArea
   }
 
   /**
+   * Function to use after setting link value, it check if there is only 1 link and if so update DA scale
+   *
+   * @param {(number|null|undefined)} _
+   * @memberof Class_DrawingArea
+   */
+  public updateScaleAtLinkValueSetting(_: number | null | undefined) {
+    // Update scaling if only one link
+    if ((_ !== null) && _ && this.sankey.links_list.length == 1) {
+      this.scale = _ // will redraw everything
+    }
+  }
+
+  /**
    * Function to check if element are near drawing area border & update it size in consequence
    *
    * @memberof Class_DrawingArea
