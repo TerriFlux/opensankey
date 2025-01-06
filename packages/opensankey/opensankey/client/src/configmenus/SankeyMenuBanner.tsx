@@ -788,11 +788,11 @@ const stretchButtons: FType_StretchButtons = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-      <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
-        <FontAwesomeIcon icon={faArrowsUpDown} />
-      </Button>
-    </OSTooltip></>
+  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+    <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
+      <FontAwesomeIcon icon={faArrowsUpDown} />
+    </Button>
+  </OSTooltip></>
 }
 
 

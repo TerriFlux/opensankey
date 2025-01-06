@@ -63,10 +63,11 @@ done
 
 # Install global dependencies
 if [ "$skip_gdeps" = false ] ; then
-  printf "Global dependencies ------------------------------------------------\n"
+  printf "\nGlobal dependencies ------------------------------------------------\n"
   global=`npm root -g`
   printf ">>> Installation dans "${global}"\n"
   npm install -g pnpm
+  printf "OK -----------------------------------------------------------------\n"
 fi
 
 # Front-end build
