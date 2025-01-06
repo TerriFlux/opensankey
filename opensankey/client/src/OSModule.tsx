@@ -143,6 +143,7 @@ export const moduleDialogs: FType_ModuleDialogs = (
       content={<OpenSankeyMenuConfigurationLayout
         new_data={new_data}
         extra_background_element={additional_menus.extra_background_element}
+        contextual={true}
       />}
       title={t('Menu.MEP')}
     />,
@@ -168,6 +169,7 @@ export const initializeMenuConfiguration: FType_InitializeMenuConfiguration = (
       <OpenSankeyMenuConfigurationLayout
         new_data={new_data}
         extra_background_element={additional_menus.extra_background_element}
+        contextual={false}
       />
     }
     menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}

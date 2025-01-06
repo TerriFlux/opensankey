@@ -2459,7 +2459,7 @@ export abstract class Class_DrawingArea
     if (value > 0) {
       this._scale = value
       this._scaleValueToPx.domain([0, value])
-      this.application_data.menu_configuration.ref_to_menu_config_layout_updater.current()
+      this.application_data.menu_configuration.updateComponentRelatedToLayoutApparence()
       this.drawElements()
       this.areaAutoFit()
     }
