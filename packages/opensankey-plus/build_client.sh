@@ -65,23 +65,14 @@ done
 # Get script dir
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-# Recreate links with submodules
-printf "Linking dependencies ------------------------------------------------\n"
-cd $SCRIPT_DIR/client/src/deps
-if [ -h "OpenSankey" ]; then
-  rm OpenSankey
-fi
-ln -s $SCRIPT_DIR/submodules/OpenSankey/opensankey/client/src OpenSankey
-cd $SCRIPT_DIR
-
 # Install global dependencies
 if [ "$skip_gdeps" = false ] ; then
-  printf "Global dependencies -------------------------------------------------\n"
+  printf "\nGlobal dependencies -------------------------------------------------\n"
   global=`npm root -g`
   printf ">>> Installation dans "${global}"\n"
   npm install -g pnpm
+  printf "OK ------------------------------------------------------------------\n"
 fi
-printf "OK ------------------------------------------------------------------\n"
 
 # Clean deps first
 printf "\nClean deps ----------------------------------------------------------\n"
@@ -91,6 +82,16 @@ for dir in node_modules dist build; do
     rm -r "$SCRIPT_DIR/submodules/OpenSankey/opensankey/client/$dir" || exit_if_error $?
   fi
 done
+printf "OK ------------------------------------------------------------------\n"
+
+# Recreate links with submodules
+printf "\nLinking dependencies ------------------------------------------------\n"
+cd $SCRIPT_DIR/client/src/deps
+if [ -h "OpenSankey" ]; then
+  rm OpenSankey
+fi
+ln -s $SCRIPT_DIR/submodules/OpenSankey/opensankey/client/src OpenSankey
+cd $SCRIPT_DIR
 printf "OK ------------------------------------------------------------------\n"
 
 # Front-end build
