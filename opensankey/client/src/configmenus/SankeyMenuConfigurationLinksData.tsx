@@ -154,9 +154,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
               link.data_value = (_ ?? null)
             })
             // Update scaling if only one link
-            if ((_ !== null) && _ && new_data.drawing_area.sankey.links_list.length==1){
-              new_data.drawing_area.scale = _ // will redraw everything
-            }
+            new_data.drawing_area.updateScaleAtLinkValueSetting(_)
             // Update this menu
             refreshThisAndUpdateRelatedComponents()
           }}
@@ -239,6 +237,8 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
       selected_links.forEach(link => {
         link.data_value = (_ ?? null)
       })
+      // Update scaling if only one link
+      new_data.drawing_area.updateScaleAtLinkValueSetting(_)
       // Update this menu
       refreshThisAndUpdateRelatedComponents()
     }}
