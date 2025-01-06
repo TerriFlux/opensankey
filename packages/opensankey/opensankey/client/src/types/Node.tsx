@@ -2917,7 +2917,13 @@ export abstract class Class_NodeElement
     if (grp_id in this._taggs_dict) {
       const idx = this._taggs_dict[grp_id].indexOf(tag)
       this._taggs_dict[grp_id].splice(idx, 1)
-    }
+
+      // After removing a tag check if the node has other tag from the group,
+      //  if not remove tag group entries from node so are_related_node_tags_selected don't take into account groupTag not linked to node
+      if (Object.values(this._taggs_dict[grp_id]).length == 0) {
+        delete this._taggs_dict[grp_id]
+      }
+    }    
   }
 
   // GETTERS / SETTERS ==================================================================
