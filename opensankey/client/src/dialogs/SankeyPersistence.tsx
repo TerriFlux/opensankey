@@ -358,10 +358,14 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   // Case 2 :: No layout -> compute default positions & characteristics
   else {
     // Recompute all positions
-    new_data.drawing_area.computeAutoFullSankey()
+    new_data.computeAutoFullSankey()
   }
   // Redraw
-  new_data.draw()
+  new_data.sendWaitingToast(
+    () => {
+      new_data.draw()
+    })
+  //new_data.draw()
 }
 
 

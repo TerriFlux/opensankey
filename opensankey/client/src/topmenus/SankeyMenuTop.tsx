@@ -122,6 +122,7 @@ import {
 } from '../configmenus/SankeyMenuBanner'
 import { Type_GenericApplicationDataOS } from '../types/TypesOS'
 import { FCType_Menu } from '../types/FunctionTypes'
+import { ExempleMenuTypes } from '../welcome/MenuExamples'
 
 
 /*************************************************************************************************/
@@ -1028,8 +1029,6 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     additionalMenus,
     apply_transformation_additional_elements,
     diagramSelector,
-    formations_menu,
-    // postProcessLoadExcel,
   }
 ) => {
   const { t, logo, app_name, logo_terriflux } = new_data
@@ -1096,7 +1095,6 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   const modal_tuto = <ModalTuto
     new_data={new_data}
     processFunctions={processFunctions}
-    formations_menu={formations_menu}
     show_tuto={show_tuto}
     set_show_tuto={set_show_tuto}
     Reinitialization={reinitialization}
@@ -1659,17 +1657,47 @@ export const post_process_export_svg = () => {
 export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
   new_data,
   processFunctions,
-  formations_menu,
   show_tuto,
   set_show_tuto,
 }) => {
-
+  const [firstRender,setFirstRender]=useState(true)
+  const [formation,setFormation]=useState<ExempleMenuTypes>({})
   const { t } = new_data
+
+
+
+
+// At first render init formation object with data from server
+if(firstRender){
+  const fetchData = {
+    method: 'POST'
+  }
+  const path = window.location.origin
+  const url = path + '/opensankey/sankey/data_tuto'
+  fetch(url, fetchData)
+    .then(response => {
+      response
+        .text()
+        .then(text => {
+          const json_data = JSON.parse(text)
+
+          setFormation(json_data)
+          setFirstRender(false)
+        })
+        .catch((error) => {
+          console.error('Error in fetchExamples - ' + error.toString())
+          setFirstRender(false)
+
+        })
+    })
+}
+
+
 
   // Pré-traitement du menu tuto pour trier les groupes
   const n_a = new Array(50)
 
-  Object.keys(formations_menu).map(d => {
+  Object.keys(formation).map(d => {
     return d.replace('_', '__').split('__')
   }).forEach(element => {
     if (element.length > 1) {
@@ -1679,9 +1707,9 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
     }
   })
 
-  // Return l'objet formations_menu mais trier selon le numéro du groupe (quand il y en a un)
+  // Return l'objet formation mais trier selon le numéro du groupe (quand il y en a un)
   const new_array_for_exemple = Object.fromEntries(n_a.filter(f => f).map((d) => {
-    return [d, (formations_menu as { [k: string]: string })[d]]
+    return [d, (formation)[d]]
   }))
 
   const tuto_sub_nav: { [s: string]: JSX.Element } = {}
@@ -1691,8 +1719,8 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
       return <></>
     }
     tuto_sub_nav[d[0]] = <>
-      {(d[1] as { ['Files']: string[] })['Files'].filter((f: string) => !f.includes('.xlsx')).map((dd: string) => {
-        return <Card variant='card_icon_not_selected'>
+      {(d[1] as { ['Files']: string[] })['Files'].filter((f: string) => !f.includes('.xlsx')).map((dd: string,idx:number) => {
+        return <Card key={dd+'-'+idx} variant='card_icon_not_selected'>
           <CardBody>
             <Stack>
               <Image className='img-card'
@@ -1761,15 +1789,15 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
       <ModalBody>
         <Tabs variant='tabs_navbar'>
           <TabList>
-            {Object.keys(tuto_sub_nav).map(m => {
-              return <Tab>
+            {Object.keys(tuto_sub_nav).map((m,idx) => {
+              return <Tab key={'tab_'+idx}>
                 {(m.split('_').length > 1) ? m.split('_').filter(s => isNaN(+s)).join(' ') : m}
               </Tab>
             })}
           </TabList>
           <TabPanels>
-            {Object.keys(tuto_sub_nav).map(m => {
-              return <TabPanel>
+            {Object.keys(tuto_sub_nav).map((m,idx) => {
+              return <TabPanel key={'tabpane_'+idx}>
                 <Box layerStyle='options_4cols' >
                   {tuto_sub_nav[m]}
                 </Box>

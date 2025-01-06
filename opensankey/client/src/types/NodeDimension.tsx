@@ -224,15 +224,15 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       this._parent,
       ...this._children
     ])
-    this._children
-      .forEach(child => {
-        child.dimensions_as_child
-          .forEach(dim => {
-            if (dim !== this) {
-              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
-            }
-          })
-      })
+    // this._children
+    //   .forEach(child => {
+    //     child.dimensions_as_child
+    //       .forEach(dim => {
+    //         if (dim !== this) {
+    //           nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
+    //         }
+    //       })
+    //   })
     // Redraw
     nodes_to_redraw
       .forEach(node => node.draw())
@@ -244,7 +244,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
    * Force to set this dimension's children as visibles
    * @memberof Class_NodeDimension
    */
-  public setForceToShowChildren() {
+  public setForceToShowChildren(fromJSON:boolean=false) {
     // Speed-up computation
     if (this._force_show_children && !this._force_show_parent)
       return
@@ -271,8 +271,14 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
         }
       })
     // Redraw
-    nodes_to_redraw
-      .forEach(node => node.draw())
+    if (!fromJSON) { //when called in dimensionsFromJSON, we don't reorganise link order as it's informed by node json
+      nodes_to_redraw
+        .forEach(node => {
+          node.reorganizeIOLinks()
+          node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
+          node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
+        })
+    }
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
   }
@@ -300,15 +306,17 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
       this._parent,
       ...this._children
     ])
-    this._children
-      .forEach(child => {
-        child.dimensions_as_child
-          .forEach(dim => {
-            if (dim !== this) {
-              nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
-            }
-          })
-      })
+    if (this.children[0].id !== this.parent.id) {
+      this._children
+        .forEach(child => {
+          child.dimensions_as_child
+            .forEach(dim => {
+              if (dim !== this && dim.parent_level_tag.group.activated) {
+                nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
+              }
+            })
+        })
+      }
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
     // Return set of all nodes that need to be redrawn

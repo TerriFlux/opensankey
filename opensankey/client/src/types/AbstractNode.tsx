@@ -71,6 +71,7 @@ export abstract class Class_AbstractNodeElement
   public abstract addAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract removeAsAntiTagged(_: Class_AbstractLevelTagGroup): void
   public abstract shiftVertically(shift: number): void
+  public abstract reorganizeIOLinks(): void
 }
 
 export abstract class Class_AbstractNodeDimension {

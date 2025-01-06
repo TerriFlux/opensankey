@@ -170,6 +170,7 @@ export class Class_Legend
     this._legend_show_dataTags = _._legend_show_dataTags
     this._node_label_separator = _._node_label_separator
     this._info_link_value_void = _._info_link_value_void
+    this._pos_from_legacy=_._pos_from_legacy 
   }
 
   // SAVING METHODS =====================================================================
@@ -207,7 +208,8 @@ export class Class_Legend
 
     const legend_position = getStringListFromJSON(json_legend, 'legend_position', ['0', String(this.drawing_area.getNavBarHeight())])
     this._display.position.x = +legend_position[0]
-    this._display.position.y = +legend_position[1]
+    const tmp_y=+legend_position[1]
+    this._display.position.y = (tmp_y<this.drawing_area.getNavBarHeight())?this.drawing_area.getNavBarHeight():tmp_y //fix legend position by putting it position just under the navbar
     this._masked = getBooleanFromJSON(json_legend, 'mask_legend', this._masked)
     this._dx = getNumberFromJSON(json_legend, 'legend_dx', this._dx)
     this._dy = getNumberFromJSON(json_legend, 'legend_dy', this._dy)
@@ -643,7 +645,7 @@ export class Class_Legend
   }
 
   private _updateLegendHeight() {
-    d3.select('.zone_for_dragging').attr('height', this._dy)
+    d3.select('.zone_for_dragging').attr('height', this._dy+5)
   }
 
   /**

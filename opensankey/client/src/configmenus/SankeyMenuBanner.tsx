@@ -105,7 +105,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
   {
     new_data,
     level
-  }
+  }:FCType_AddAllDropDownNode
 ) => {
   // Data -------------------------------------------------------------------------------
   const { t } = new_data
@@ -158,6 +158,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           if (evt.target.checked) {
             tagg.show_legend = true
           }
+          new_data.drawing_area.legend.draw()
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -183,6 +184,8 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
+            new_data.drawing_area.sankey.nodes_list.forEach(n=>n.dimensionsUpdated())
+            new_data.drawing_area.draw()
             // Refresh this & related component
             new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
           }}
@@ -230,9 +233,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         value={tagg.selected_tags_list[0]?.id ?? ''}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // Set tag with given id as selected : other are unselected
-          new_data.drawing_area.bypass_redraws = true
           tagg.selectTagsFromId(evt.target.value)
-          new_data.drawing_area.draw()
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -274,7 +275,10 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         options={tags_options}
         onChange={(curr_selected_tags_options: [{ label: string, value: string }]) => {
           // Set tags with given id as selected : other are unselected
+          //new_data.drawing_area.bypass_redraws = true
           tagg.selectTagsFromIds(curr_selected_tags_options.map(_ => _.value))
+          // TODO For now the draw below is necessary (interdependance of finger print of nodes and links not solved)
+          new_data.drawing_area.draw()
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
@@ -288,7 +292,11 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         </Box>
         <Box layerStyle='popover_sidebar_row_tag_filter'>
           <OSTooltip label={t('Banner.ndd_lst')}>
-            {selector}
+            <Box
+              height='2rem'
+              maxW='14.75rem'>
+              {selector}
+            </Box>
           </OSTooltip>
           <OSTooltip label={t('Banner.ndd_chk')} >
             <Box
@@ -378,6 +386,8 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
           onChange={(options_selected: [{ label: string, value: string }]) => {
             // Set correct tags as selected
             flux_tagg.selectTagsFromIds(options_selected.map(_ => _.value))
+            // TODO not optimal. Target Source nodes of redrawn link must be redrawn 
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())
             // Update related components (includes this)
             new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
           }}
@@ -398,7 +408,12 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
             layerStyle='popover_sidebar_row_tag_filter'
           >
             <OSTooltip label={t('Banner.ndd_lst')}>
-              {selector}
+              <Box
+                height='2rem'
+                width='14.75rem'
+              >
+                {selector}
+              </Box>
             </OSTooltip>
             <OSTooltip label={t('Banner.ndd_chk')} >
               <Box
@@ -458,9 +473,9 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
 
   // Component updater ------------------------------------------------------------------
   const [, setCount] = useState(0)
-  if(in_popover){
+  if (in_popover) {
     new_data.menu_configuration.ref_to_datatag_filter_updater.current = () => setCount(a => a + 1)
-  }else{
+  } else {
     new_data.menu_configuration.ref_to_datatag_filter_navbar_updater.current = () => setCount(a => a + 1)
   }
 
@@ -528,6 +543,8 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
             {tagg.name}
           </Box>
           <Box
+            maxWidth='14.75rem'
+            height='2rem'
             layerStyle={in_popover ? 'popover_sidebar_row_tag_filter' : ''}
           >
             {selector}
@@ -543,6 +560,7 @@ export const DataTagSelector: FunctionComponent<FCType_DataTagSelector> = ({
                     Object.values(data_taggs_with_banner)
                       .forEach(tagg => tagg.show_legend = false)
                     tagg.show_legend = evt.target.checked
+                    new_data.drawing_area.legend.draw()
                     new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
                   }}
                 /> :
@@ -770,11 +788,11 @@ const stretchButtons: FType_StretchButtons = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
-      <FontAwesomeIcon icon={faArrowsUpDown} />
-    </Button>
-  </OSTooltip></>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+      <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
+        <FontAwesomeIcon icon={faArrowsUpDown} />
+      </Button>
+    </OSTooltip></>
 }
 
 

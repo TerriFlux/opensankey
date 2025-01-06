@@ -89,7 +89,7 @@ export class Class_MenuConfig {
    Ref to button on the top menu in the app
    ========================================*/
 
-  private _refs_to_btn_toogle_top_menus: {[id: string]: RefObject<HTMLButtonElement>} = {}
+  private _refs_to_btn_toogle_top_menus: { [id: string]: RefObject<HTMLButtonElement> } = {}
 
   /* ========================================
    Ref to button on the configuration menu in the app
@@ -116,6 +116,7 @@ export class Class_MenuConfig {
 
   // Update component OpenSankeyMenuConfigurationLayout
   private _ref_to_menu_config_layout_updater: MutableRefObject<() => void>
+  private _ref_to_menu_contextual_config_layout_updater: MutableRefObject<() => void>
 
   // Update component SankeyNodeEdition
   private _ref_to_menu_config_nodes_selection_updater: MutableRefObject<() => void>
@@ -221,7 +222,7 @@ export class Class_MenuConfig {
   private _ref_selected_style_link: MutableRefObject<string> = useRef('default')
 
   // Ref to updater show modal multi aggregate/disaggregate
-  private _ref_to_updater_node_disagregate: MutableRefObject<(b: boolean) => void> = useRef(()=>null)
+  private _ref_to_updater_node_disagregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
   private _ref_to_updater_node_agregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
 
 
@@ -252,6 +253,7 @@ export class Class_MenuConfig {
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
+    this._ref_to_menu_contextual_config_layout_updater = useRef(() => null) //contextual ref updater
 
     // Nodes
     this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
@@ -301,11 +303,11 @@ export class Class_MenuConfig {
 
     // Init ApplyLayoutDialog components updater ------------------------------------------------
 
-    this._ref_to_updater_modal_apply_layout=useRef(()=>null)
+    this._ref_to_updater_modal_apply_layout = useRef(() => null)
 
     // Init ModalPreference components updater ------------------------------------------------
 
-    this._ref_to_modal_pref_updater=useRef(()=>null)
+    this._ref_to_modal_pref_updater = useRef(() => null)
 
     // Init dict of setter show dialog -------------------------------------------------
 
@@ -525,6 +527,7 @@ export class Class_MenuConfig {
       'updateComponentRelatedToLayoutApparence',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_layout_updater.current()
+        _this._ref_to_menu_contextual_config_layout_updater.current()
       }
     )
   }
@@ -708,12 +711,12 @@ export class Class_MenuConfig {
     this.updateComponentPref()
   }
 
-  public updateComponentPref(){
+  public updateComponentPref() {
     this._ref_to_modal_pref_updater.current()
 
   }
 
-  public updateMenuConfigComponent(){
+  public updateMenuConfigComponent() {
     this._ref_to_menu_config_updater.current()
   }
 
@@ -834,7 +837,7 @@ export class Class_MenuConfig {
       this.updateAllComponentsRelatedToLevelTags()
   }
 
-  public updateAllComponentsRelatedToToolbar(){
+  public updateAllComponentsRelatedToToolbar() {
     this._ref_to_toolbar_updater.current()
   }
 
@@ -870,7 +873,7 @@ export class Class_MenuConfig {
    *
    * @memberof Class_MenuConfig
    */
-  public updateComponentApplyLayout(){
+  public updateComponentApplyLayout() {
     this._ref_to_updater_modal_apply_layout.current()
   }
 
@@ -912,7 +915,7 @@ export class Class_MenuConfig {
       clearTimeout(this._waiting_processes[process_id])
   }
 
-  protected _updateComponentRelatedToNodesApparence(){
+  protected _updateComponentRelatedToNodesApparence() {
     this._ref_to_menu_config_nodes_apparence_updater.current()
   }
 
@@ -938,7 +941,7 @@ export class Class_MenuConfig {
     this._refs_to_btn_toogle_top_menus[id] = useRef<HTMLButtonElement>(null)
   }
 
-  public get refs_to_btn_toogle_top_menus(): {[id: string]: RefObject<HTMLButtonElement>}  {
+  public get refs_to_btn_toogle_top_menus(): { [id: string]: RefObject<HTMLButtonElement> } {
     return this._refs_to_btn_toogle_top_menus
   }
 
@@ -977,6 +980,10 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_layout_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_layout_updater
+  }
+
+  public get ref_to_menu_contextual_config_layout_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_contextual_config_layout_updater
   }
 
   public get ref_to_menu_context_drawing_area_updater(): MutableRefObject<(() => void)> {
@@ -1018,7 +1025,7 @@ export class Class_MenuConfig {
     return this._ref_to_menu_context_nodes_updater
   }
 
-  public get ref_to_updater_node_disagregate(): MutableRefObject<(b:boolean)=>void> {
+  public get ref_to_updater_node_disagregate(): MutableRefObject<(b: boolean) => void> {
     return this._ref_to_updater_node_disagregate
   }
 
@@ -1141,7 +1148,7 @@ export class Class_MenuConfig {
     return this._ref_to_updater_modal_apply_layout
   }
 
-  public get ref_to_modal_pref_updater(){
+  public get ref_to_modal_pref_updater() {
     return this._ref_to_modal_pref_updater
   }
 }

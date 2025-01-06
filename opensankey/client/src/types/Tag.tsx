@@ -138,7 +138,6 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
     this._name = tag_to_copy._name
     this._color = tag_to_copy._color
     this._is_selected = tag_to_copy._is_selected
-    this._ref_sankey = tag_to_copy._ref_sankey
     // Groups are switched from related group class
   }
 
@@ -443,7 +442,7 @@ export class Class_DataTag extends Class_ProtoTag {
 
   // PUBLIC METHODS =====================================================================
 
-  public update() {} // Does nothing - never called
+  public update() { } // Does nothing - never called
 
   public override setSelected(): void {
     // Avoid useless update
@@ -892,11 +891,15 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   public update() {
     this.dimensions_list_as_tag_for_children
       .forEach(dim => {
-        dim.showAccordingToLevelTags()
+        if (dim.parent_level_tag.group.activated) {
+          dim.showAccordingToLevelTags()
+        }
       })
     this.dimensions_list_as_tag_for_parent
       .forEach(dim => {
-        dim.showAccordingToLevelTags()
+        if (dim.parent_level_tag.group.activated) {
+          dim.showAccordingToLevelTags()
+        }
       })
   }
 
@@ -919,13 +922,13 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
         // - child level tag is the same
         if (
           (dimension.parent_level_tag === this) &&
-            (dimension.child_level_tag == child_tag) &&
-            (dimension.parent === parent)
+          (dimension.child_level_tag == child_tag) &&
+          (dimension.parent === parent)
         ) {
           dimension_found = dimension
         }
       })
-      // If found - just add child
+    // If found - just add child
     if (dimension_found) {
       dimension_found.addNodeAsChild(child)
     }
@@ -934,8 +937,8 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
       dimension_found = new Class_NodeDimension(
         parent,
         [child],
-          this as Class_AbstractLevelTag,
-          child_tag
+        this as Class_AbstractLevelTag,
+        child_tag
       )
     }
     return dimension_found
@@ -1072,41 +1075,39 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
 
   public copyFrom(
     tagg_to_copy: Class_ProtoTagGroup,
-    tags_synchro = true
+    matching_tags_id: { [_: string]: string; } = {}
   ) {
-    this._copyFrom(tagg_to_copy, tags_synchro)
+    this._copyFrom(tagg_to_copy, matching_tags_id)
   }
 
   protected _copyFrom(
     tagg_to_copy: Class_ProtoTagGroup,
-    tags_synchro = true
+    matching_tags_id: { [_: string]: string; } = {}
   ) {
+    const revert_matching_id: { [id: string]: string } = {}
+    Object.entries(matching_tags_id).forEach(([k, v]) => revert_matching_id[v] = k)
     // Common attributes
     this._name = tagg_to_copy._name
     this._banner = tagg_to_copy._banner
     this._tag_count = tagg_to_copy._tag_count
 
-    // Synchronize tags
-    if (tags_synchro) {
+    // Synchro current tags
+    this.tags_list
+      .forEach(tag => {
+        // Delete tags not present in new layout but present in curr
+        if (!((matching_tags_id[tag.id] ?? tag.id) in tagg_to_copy.tags_dict))
+          this.removeTag(tag)
+        // Transfer tags attr present in new layout and in curr
+        else
+          tag.copyFrom(tagg_to_copy.tags_dict[(matching_tags_id[tag.id] ?? tag.id)])
+      })
 
-      // Synchro current tags
-      this.tags_list
-        .forEach(tag => {
-          // Delete tags not present in new layout but present in curr
-          if (!(tag.id in tagg_to_copy.tags_dict))
-            this.removeTag(tag)
-          // Transfer tags attr present in new layout and in curr
-          else
-            tag.copyFrom(tagg_to_copy.tags_dict[tag.id])
-        })
-
-      // Add missing tags
-      tagg_to_copy.tags_list
-        .forEach(tag => {
-          if (!(tag.id in this.tags_dict))
-            this.addTag(tag.name, tag.id).copyFrom(tag)
-        })
-    }
+    // Add missing tags
+    tagg_to_copy.tags_list
+      .forEach(tag => {
+        if (!((revert_matching_id[tag.id] ?? tag.id) in this.tags_dict))
+          this.addTag(tag.name, tag.id).copyFrom(tag)
+      })
   }
 
   public toJSON(
@@ -1358,9 +1359,9 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   protected _copyFrom(
     tagg_to_copy: Class_TagGroup,
-    tags_synchro = true
+    matching_tags_id: { [_: string]: string; } = {}
   ) {
-    super._copyFrom(tagg_to_copy, tags_synchro)
+    super._copyFrom(tagg_to_copy, matching_tags_id)
     this._show_legend = tagg_to_copy.show_legend
   }
 
@@ -1386,7 +1387,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   protected abstract createTag(
     name: string,
     id: string | undefined
-  ) : Class_Tag
+  ): Class_Tag
 
   // GETTER =============================================================================
 
@@ -1564,10 +1565,9 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   // COPY METHODS =======================================================================
 
   protected _copyFrom(
-    tagg_to_copy: Class_DataTagGroup,
-    tags_synchro = true
+    tagg_to_copy: Class_DataTagGroup
   ) {
-    super._copyFrom(tagg_to_copy, tags_synchro)
+    super._copyFrom(tagg_to_copy)
     this._show_legend = tagg_to_copy.show_legend
   }
 
@@ -1577,7 +1577,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   ) {
     super._toJSON(json_object, kwargs)
     json_object['show_legend'] = this._show_legend
-    json_object['is_sequence']=this._is_sequence
+    json_object['is_sequence'] = this._is_sequence
   }
 
   protected _fromJSON(
@@ -1685,7 +1685,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       this.updateTagsReferences()
     }
   }
-  public set is_sequence(value: boolean) {this._is_sequence = value}
+  public set is_sequence(value: boolean) { this._is_sequence = value }
 }
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -1760,15 +1760,13 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
   // COPY METHODS ========================================================================
 
   public copyFrom(
-    tagg_to_copy: Class_ProtoLevelTagGroup,
-    tags_synchro = true
+    tagg_to_copy: Class_ProtoLevelTagGroup
   ) {
-    this._copyFrom(tagg_to_copy, tags_synchro)
+    this._copyFrom(tagg_to_copy)
   }
 
   protected _copyFrom(
-    tagg_to_copy: Class_ProtoLevelTagGroup,
-    tags_synchro = true
+    tagg_to_copy: Class_ProtoLevelTagGroup
   ) {
     // Common attributes
     this._name = tagg_to_copy._name
@@ -1776,24 +1774,22 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
     this._tag_count = tagg_to_copy._tag_count
 
     // Synchronize tags
-    if (tags_synchro) {
-      // Synchronise current tag group's tag with tag groupto copy
-      this.tags_list
-        .forEach(tag => {
-          // Delete tags not present in new layout but present in curr
-          if (!(tag.id in tagg_to_copy.tags_dict))
-            this.removeTag(tag)
-          // Transfer tags attr present in new layout and in curr
-          else
-            tag.copyFrom(tagg_to_copy.tags_dict[tag.id])
-        })
-      // Add tag present in tagg_to_copy but not this
-      tagg_to_copy.tags_list
-        .forEach(tag => {
-          if (!(tag.id in this.tags_dict))
-            this.addTag(tag.name, tag.id).copyFrom(tag)
-        })
-    }
+    // Synchronise current tag group's tag with tag groupto copy
+    this.tags_list
+      .forEach(tag => {
+        // Delete tags not present in new layout but present in curr
+        if (!(tag.id in tagg_to_copy.tags_dict))
+          this.removeTag(tag)
+        // Transfer tags attr present in new layout and in curr
+        else
+          tag.copyFrom(tagg_to_copy.tags_dict[tag.id])
+      })
+    // Add tag present in tagg_to_copy but not this
+    tagg_to_copy.tags_list
+      .forEach(tag => {
+        if (!(tag.id in this.tags_dict))
+          this.addTag(tag.name, tag.id).copyFrom(tag)
+      })
   }
 
   public toJSON(
@@ -2023,10 +2019,9 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
   // COPY METHODS =======================================================================
 
   protected _copyFrom(
-    tagg_to_copy: Class_LevelTagGroup,
-    tags_synchro = true
+    tagg_to_copy: Class_LevelTagGroup
   ) {
-    super._copyFrom(tagg_to_copy, tags_synchro)
+    super._copyFrom(tagg_to_copy)
     this._activated = tagg_to_copy._activated
     this._siblings = tagg_to_copy._siblings
   }
