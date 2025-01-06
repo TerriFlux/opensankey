@@ -4811,6 +4811,12 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     if (grp_id in this._taggs_dict) {
       const idx = this._taggs_dict[grp_id].indexOf(tag)
       this._taggs_dict[grp_id].splice(idx, 1)
+
+      // After removing a tag check if the flow has other tag from the group,
+      //  if not remove tag group entries from flow so are_related_flux_tags_selected don't take into account groupTag not linked to flow
+      if (Object.values(this._taggs_dict[grp_id]).length == 0) {
+        delete this._taggs_dict[grp_id]
+      }
     }
   }
 
