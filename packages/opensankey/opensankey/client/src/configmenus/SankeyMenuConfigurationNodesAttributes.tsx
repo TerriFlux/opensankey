@@ -1169,7 +1169,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                     refreshThisAndUpdateRelatedComponents()
                   }}
                 >
-                  {style.id}
+                  {style.name}
                 </MenuItem></React.Fragment>
               )
             })
