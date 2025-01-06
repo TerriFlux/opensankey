@@ -337,11 +337,12 @@ export abstract class Class_NodeElement
     this._display.position_y_label = _._display.position_y_label
   }
 
-  public copyLinkOrderingFrom(
+  public keepLinkOrderingFrom(
     node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
     matching_link_id: { [_: string]: string; }
   ) {
-    // Copy links orders ----------------------------------------------------------------
+    // keep links orders ----------------------------------------------------------------
+    const prev_links_order = [...this._links_order]
     this._links_order = []  // Empty current link order list
     // Fill with link that exist in current sankey and avoid duplicates in link order list
     node_to_copy._links_order
@@ -350,6 +351,10 @@ export abstract class Class_NodeElement
         if ((link !== undefined) && (!this._links_order.includes(link)))
           this._links_order.push(link)
       })
+    // after copying node_to_copy._link_orders add the remaining links
+    const to_keep = prev_links_order.filter(l=>!this._links_order.includes(l))
+    to_keep.forEach(l=>this._links_order.push(l))
+    
   }
 
   public copyTagsReferencingFrom(
@@ -370,12 +375,18 @@ export abstract class Class_NodeElement
     matching_tagg: { [_: string]: string } = {},
     matching_tags: { [_: string]: { [_: string]: string } } = {}
   ) {
+    const revert_matching_taggs_id: { [id: string]: string } = {}
+    Object.entries(matching_tagg).forEach(([k, v]) => revert_matching_taggs_id[v] = k)
+
     // Add missing tags
     node_to_copy.tags_list
       .forEach(tag_to_copy => {
-        const tagg = this.sankey.node_taggs_dict[matching_tagg[tag_to_copy.group.id] ?? tag_to_copy.group.id]
+        const revert_matching_tags_id: { [id: string]: string } = {}
+        Object.entries(matching_tags[revert_matching_taggs_id[tag_to_copy.group.id]??tag_to_copy.group.id]??[]).forEach(([k, v]) => revert_matching_tags_id[v] = k)
+
+        const tagg = this.sankey.node_taggs_dict[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id]
         if (tagg !== undefined) {
-          const tag = tagg.tags_dict[(matching_tags[tag_to_copy.group.id] ?? {})[tag_to_copy.id] ?? tag_to_copy.id]
+          const tag = tagg.tags_dict[revert_matching_tags_id[tag_to_copy.id] ?? tag_to_copy.id]
           if (tag !== undefined)
             this.addTag(tag as Class_Tag)
         }
@@ -719,7 +730,7 @@ export abstract class Class_NodeElement
                         const childDim = cur_parent_tag.getOrCreateLowerDimension(cur_parent, this, child_tag)
                         if (dimension_as_json.force_show_children) {
                           const nodeDimParent = parent.nodeDimensionAsParent(cur_parent_tag.group)!
-                          nodeDimParent.setForceToShowChildren()
+                          nodeDimParent.setForceToShowChildren(true)
                         } else if (dimension_as_json.force_show_parent) {
                           childDim?.setForceToShowParent()
                         }
@@ -863,12 +874,17 @@ export abstract class Class_NodeElement
       }
       const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
 
+      const level_tagg_id = this._dimensions_as_parent[id].parent_level_tag.group.id
+      const parent_level_tag_id = this._dimensions_as_parent[id].parent_level_tag.id
+      const child_level_tag_id = this._dimensions_as_parent[id].child_level_tag.id
+
       // All input exchange nodes must also be desaggregated
       this.input_links_list
         .forEach(input_link => {
           const input_node = input_link.source
           if (input_node.hasGivenTag(echangeTag)) {
-            input_node.drawChildren(id)
+            const new_id = level_tagg_id+'_'+input_node.id+'_'+parent_level_tag_id+'_'+child_level_tag_id
+            input_node.drawChildren(new_id)
           }
         })
 
@@ -877,7 +893,8 @@ export abstract class Class_NodeElement
         .forEach(output_link => {
           const output_node = output_link.target
           if (output_node.hasGivenTag(echangeTag)) {
-            output_node.drawChildren(id)
+            const new_id = level_tagg_id+'_'+output_node.id+'_'+parent_level_tag_id+'_'+child_level_tag_id
+            output_node.drawChildren(new_id)
           }
         })
     }
@@ -1030,13 +1047,14 @@ export abstract class Class_NodeElement
       const tagg_for_colormap = taggs_activated[0]
       const tags_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
+      const selected_tags_for_colormap = tags_for_colormap
         .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length > 0) {
+      if (selected_tags_for_colormap.length > 0 && tags_for_colormap.length != tagg_for_colormap.tags_list.length) {
         // if a node has several tags we take the first one. The logic is given
         // by the following example. Meuble en hêtre has two tags hêtre and feuillu
         // we put hêtre first as it is the most desagregated. This way we can display
-        // the nodes with different colors depending of thye level of detail selected.
-        shape_color = tags_for_colormap[0].color
+        // the nodes with different colors depending of the level of detail selected.
+        shape_color = selected_tags_for_colormap[0].color
       } else {
         shape_color = default_element_color
       }
@@ -1474,7 +1492,7 @@ export abstract class Class_NodeElement
    * @memberof Class_NodeElement
    */
   public setInputLabelVisible() {
-    this.d3_selection_g_name_label?.style('display', 'none')
+    this.d3_selection_g_name_label?.select('.name_label_text').style('display', 'none')
     this.d3_selection_g_name_label?.select('.name_label_fo_input').style('display', 'inline-block')
     document.getElementById('name_label_input_' + this.id)?.focus()
   }
@@ -1630,7 +1648,7 @@ export abstract class Class_NodeElement
           const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
           if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
             // Importations
-            const firstNonEchangeNodeBelow = process_nodes.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
+            const firstNonEchangeNodeBelow = same_u.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
             same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
             const nodeAbove = same_u[same_u.indexOf(this) - 1]
             if (nodeAbove) {
@@ -1772,8 +1790,8 @@ export abstract class Class_NodeElement
         .attr('font-style', this.name_label_italic ? 'italic' : 'normal')
         .attr('font-size', String(this.name_label_font_size) + 'px')
         .attr('font-family', this.name_label_font_family)
+        .style('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .attr('stroke', 'none')
-        .attr('text-transform', this.name_label_uppercase ? 'uppercase' : 'none')
         .text(label_to_display)
         .filter(() => label_to_display.split(' ').length > 1)//only call wrapper if text displayed has space to be splitted by wrapper (sometime 1 word label can have some wrap problem with label bg)
         .call(wrapper)
@@ -1912,8 +1930,8 @@ export abstract class Class_NodeElement
         .attr('font-style', this.value_label_italic ? 'italic' : 'normal')
         .attr('font-size', String(this.value_label_font_size) + 'px')
         .attr('font-family', this.value_label_font_family)
+        .style('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
         .attr('stroke', 'none')
-        .attr('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
         .text(this.value_label)
     }
   }
@@ -2899,7 +2917,13 @@ export abstract class Class_NodeElement
     if (grp_id in this._taggs_dict) {
       const idx = this._taggs_dict[grp_id].indexOf(tag)
       this._taggs_dict[grp_id].splice(idx, 1)
-    }
+
+      // After removing a tag check if the node has other tag from the group,
+      //  if not remove tag group entries from node so are_related_node_tags_selected don't take into account groupTag not linked to node
+      if (Object.values(this._taggs_dict[grp_id]).length == 0) {
+        delete this._taggs_dict[grp_id]
+      }
+    }    
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -4215,8 +4239,8 @@ export abstract class Class_NodeElement
     // Check if links visibilies have somehow changed
     const links_visibilities_fingerprint = this.getLinksVisibilitiesFingerprint()
     if (
-      (this._are_links_visibilities_ok === undefined) ||
-      (links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
+      (this._are_links_visibilities_ok === undefined||
+       links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
     ) {
       // Recompute value
       const are_links_visibilities_ok = this.checkIfLinksVisibilitiesAreOK()
@@ -4277,8 +4301,8 @@ export abstract class Class_NodeElement
   private getLinksVisibilitiesFingerprint() {
     let links_visibilities_fingerprint = ''
     this._links_order
-      .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint)
-    return links_visibilities_fingerprint
+      .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint+link.source.visibility_fingerprint+link.target.visibility_fingerprint)
+    return links_visibilities_fingerprint+'_'+this.sankey.data_tags_fingerprint
   }
 
   private get tooltip_html() {
@@ -4294,7 +4318,7 @@ export abstract class Class_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {
@@ -4437,14 +4461,14 @@ export abstract class Class_NodeElement
   public setTradeDimensions(
     importation: boolean
   ) {
-    const root_name = this.name.split(' - ')[0];
+    const root_name = this.id.split('-')[1];
     (importation ? this.output_links_list : this.input_links_list).forEach((input_or_output_link) => {
       const extremity_node = importation ? input_or_output_link.target : input_or_output_link.source
       Object.values(extremity_node._dimensions_as_child)
         .forEach(dim => {
           const extremity_node_parent = dim.parent;
           (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
-            this.sankey.nodes_dict[extremity_node_parent.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')],
+            this.sankey.nodes_dict[extremity_node_parent.id + '-' + root_name],
             this,
             dim.child_level_tag as Class_LevelTag
           )
@@ -4452,9 +4476,9 @@ export abstract class Class_NodeElement
       Object.values(extremity_node._dimensions_as_parent)
         .forEach(dim => {
           const extremity_node_children = dim.children.filter(n =>
-            this.sankey.nodes_dict[n.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')] != undefined
+            this.sankey.nodes_dict[n.id + '-' + root_name] != undefined
           ).map(n =>
-            this.sankey.nodes_dict[n.id + '-' + root_name + (importation ? 'Importations' : 'Exportations')]
+            this.sankey.nodes_dict[n.id + '-' + root_name]
           )
           new Class_NodeDimension(
             this,
@@ -4872,10 +4896,17 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     super.fromJSON(json_node_object)
 
     this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-    this._position.relative_dx = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dx')
-    this._position.relative_dy = getNumberOrUndefinedFromJSON(json_node_object, 'relative_dy')
-    this._position.dx = getNumberOrUndefinedFromJSON(json_node_object, 'dx')
-    this._position.dy = getNumberOrUndefinedFromJSON(json_node_object, 'dy')
+    this._position.relative_dx = getNumberFromJSON(json_node_object, 'relative_dx', default_relative_dx)
+    this._position.relative_dy = getNumberFromJSON(json_node_object, 'relative_dy', default_relative_dy)
+    this._position.dx = getNumberFromJSON(json_node_object, 'dx',default_dx)
+    this._position.dy = getNumberFromJSON(json_node_object, 'dy',default_dy)
+  }
+
+  public toJSON(
+  ) {
+    const json_object = super.toJSON()
+    if (this.position.type) json_object['position'] = this.position.type
+    return json_object
   }
 
   // CLEANING ===========================================================================

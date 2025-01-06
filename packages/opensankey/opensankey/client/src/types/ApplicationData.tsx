@@ -557,6 +557,7 @@ export abstract class Class_ApplicationData
     this.sendWaitingToast(
       () => {
         this._drawing_area.draw()
+        this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
       },
       {
         success: {
@@ -566,6 +567,29 @@ export abstract class Class_ApplicationData
         loading: {
           title: this.t('toast.draw.loading.title'),
           desc: this.t('toast.draw.loading.desc')
+        }
+      }
+    )
+  }
+
+  /**
+   * Compute the position of everything that define the sankey diagram
+   *
+   * /!\ Add to waiting spinner queue
+   *
+   * @memberof Class_DrawingArea
+   */
+  public computeAutoFullSankey() {
+    this.sendWaitingToast(
+      () => {
+        this.drawing_area.computeAutoSankey(true)
+      },
+      {
+        success: {
+          title: this.t('toast.compute_auto_sankey.success.title')
+        },
+        loading: {
+          title: this.t('toast.compute_auto_sankey.loading.title')
         }
       }
     )

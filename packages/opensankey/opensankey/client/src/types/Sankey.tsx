@@ -262,7 +262,7 @@ export abstract class Class_Sankey
       .forEach(([idx, node_to_copy]) => {
         const node = (this._nodes[idx] ?? this.addNewNode(idx, node_to_copy.name))
         node.copyFrom(node_to_copy)
-        node.copyLinkOrderingFrom(node_to_copy,{}) // Same ordering
+        node.keepLinkOrderingFrom(node_to_copy,{}) // Same ordering
       })
   }
 
@@ -383,7 +383,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]?? id] )
+          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]?? id],matching_tags_id['nodeTags'][id] )
         })
     }
 
@@ -405,7 +405,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id])
+          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id],matching_tags_id['fluxTags'][id] )
         })
     }
 
@@ -429,7 +429,7 @@ export abstract class Class_Sankey
         })
       to_update
         .forEach(id => {
-          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id])
+          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id],matching_tags_id['dataTags'][id] )
         })
     }
 
@@ -565,11 +565,11 @@ export abstract class Class_Sankey
             // Source node
             const source = this._nodes[link.source.id]
             const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].source.id]
-            source.copyLinkOrderingFrom(other_source,revert_matching_links_id)
+            source.keepLinkOrderingFrom(other_source,revert_matching_links_id)
             // Target node
             const target = this._nodes[link.target.id]
             const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
-            target.copyLinkOrderingFrom(other_target,revert_matching_links_id)
+            target.keepLinkOrderingFrom(other_target,revert_matching_links_id)
           })
       }
 
@@ -600,11 +600,11 @@ export abstract class Class_Sankey
             // Source node
             const source = this._nodes[this._links[id].source.id]
             const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].source.id]
-            source.copyLinkOrderingFrom(other_source,revert_matching_links_id)
+            source.keepLinkOrderingFrom(other_source,revert_matching_links_id)
             // Target node
             const target = this._nodes[this._links[id].target.id]
             const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
-            target.copyLinkOrderingFrom(other_target,revert_matching_links_id)
+            target.keepLinkOrderingFrom(other_target,revert_matching_links_id)
           })
       }
 
@@ -1030,7 +1030,7 @@ export abstract class Class_Sankey
               }
               // Then match tags using the same methode
               curr_matching_tags_id[tagg_id] = {}
-              Object.entries(tagg_json)
+              Object.entries(tagg_json.tags)
                 .forEach(([tag_id, __]) => {
                   // Get related tag group
                   const new_tagg_id = curr_matching_taggs_id[tagg_id] ?? tagg_id

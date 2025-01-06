@@ -147,6 +147,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         <ConfigMenuNumberInput
           ref_to_set_value={ref_set_data_value_input}
           default_value={value?.data_value as number | undefined}
+          fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
           function_on_blur={(_) => {
             // Update data for links
             selected_links.forEach(link => {
