@@ -1606,9 +1606,11 @@ export abstract class Class_NodeElement
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
             } else {
+              // position of the first import node
               this._display.position.y = 200
             }
             if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
+              // The import nodes must be above the rest of the diagram. It is pushed downward.
               const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
               this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
               this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.draw())
