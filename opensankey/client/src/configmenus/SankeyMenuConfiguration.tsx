@@ -239,9 +239,15 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const fixed_value = fixed_dec !== 0 && default_value ? (default_value?.toFixed(fixed_dec)) : default_value
+  const getFixedVal = (_: string| Number | null | undefined) => {
+    const number_val = Number(_)
+    // if val has decimal & we want a fixed number of decimal & the number is not an Integer then fix value decimal else return value(Integer or null)
+    const new_fixed_value = (fixed_dec !== 0 && number_val !== null && number_val !== undefined && Math.trunc(number_val) != number_val) ? (number_val?.toFixed(fixed_dec)) : number_val
+    return (String(new_fixed_value))
+  }
+  const fixed_value = getFixedVal(default_value)
   const [value, setValue] = useState<string | null | undefined>(String((fixed_value) ?? ''))
-  ref_to_set_value.current = setValue
+  ref_to_set_value.current = (val: string | null | undefined) => setValue(getFixedVal(val))
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
     <NumberIncrementStepper />
