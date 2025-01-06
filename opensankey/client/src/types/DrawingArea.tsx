@@ -1697,21 +1697,15 @@ export abstract class Class_DrawingArea
     max_vertical_offset = max_vertical_offset + 200
     // const firstNonEchangeNodeBelow = other_nodes.sort((n1,n2)=> n1.position_y-n2.position_y)[0]
 
-    const default_style = this.sankey.node_styles_dict['default']
-    const h_space = default_style.position.dx!
     import_nodes.forEach(node => {
       const output_link = node.output_links_list[0]
       const target_node = output_link.target
       node.position_u = target_node.position_u
       node.position_v = target_node.position_v
       if (compute_xy) {
-        const x = Math.round(target_node.position_x/h_space)*h_space - h_space
+        const x = target_node.position_x - this.horizontal_spacing
         node.position_x = x
         node.position_y = 50
-        // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < node.position_y+200) {
-        //   const shift = 200 +node.position_y - firstNonEchangeNodeBelow.position_y
-        //   this.sankey.nodes_list.filter(n=>!n.hasGivenTag(echangeTag)).forEach(n=>n.shiftVertically(shift))
-        // }
       }
     })
 
@@ -1720,12 +1714,11 @@ export abstract class Class_DrawingArea
       const source_node = input_link.source
       node.position_u = source_node.position_u
       node.position_v = source_node.position_v
-      if (node.position_type == 'relative') {
-        const x = Math.round(source_node.position_x/h_space)*h_space+h_space
-        node.position_x = x        
-      } 
+      if (node.position_x<source_node.position_x) {
+        node.position_x = source_node.position_x+1
+      }
       if (compute_xy) {
-        const x = Math.round(source_node.position_x/h_space)*h_space+h_space
+        const x = source_node.position_x+this.horizontal_spacing
         node.position_x = x
         node.position_y = max_vertical_offset
       }
@@ -1793,7 +1786,40 @@ export abstract class Class_DrawingArea
     Object.values(columns).forEach(column => {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
-      column.forEach(n => current_v = this.apply_v(n, current_v))
+      column.forEach(n => current_v = this.apply_v_desagregate(n, current_v))
+    })
+    Object.values(columns).forEach(column => {
+      column.forEach(n => this.apply_v_agregate(n))
+    })
+    this.sankey.sortNodes()
+  }
+  /**
+   * Computes v for nodes in the drawing area
+   *
+   * @memberof Class_DrawingArea
+   */
+  public apply_v_agregate(
+    node:Type_AbstractNodeElement
+  ) {
+    let agregated_nodes : Type_GenericNodeElement[] = []
+    this.sankey.level_taggs_list.forEach(tagGroup => {
+      const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
+      if (!nodeDimParent) {
+        return
+      }
+      if ( nodeDimParent.parent.display.position.v != -1) {
+        // v is computed at the first path
+        return
+      }
+      agregated_nodes = [...agregated_nodes,nodeDimParent.parent as Type_GenericNodeElement]
+      agregated_nodes = [...new Set(agregated_nodes)]
+    })
+    agregated_nodes.forEach(nn=>{
+      nn.display.position.x = node.position_x
+      nn.display.position.y = node.position_y
+      nn.display.position.u = node.position_u
+      nn.display.position.v = node.position_v
+      this.apply_v_agregate(nn)
     })
   }
 
@@ -1802,11 +1828,12 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public apply_v(
+  public apply_v_desagregate(
     node:Type_AbstractNodeElement,
     current_v:number
   ) {
-    if (!node.display.position.v) {
+    if (node.display.position.v == -1) {
+      // v is computed at the first path
       node.display.position.v = current_v
     }
     let new_current_v = current_v
@@ -1825,7 +1852,7 @@ export abstract class Class_DrawingArea
       nn.display.position.u = node.position_u
       nn.display.position.y = current_y
       current_y += 20
-      new_current_v = this.apply_v(nn,new_current_v)
+      new_current_v = this.apply_v_desagregate(nn,new_current_v)
     })
     return new_current_v+1
   }
