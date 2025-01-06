@@ -730,7 +730,7 @@ export abstract class Class_NodeElement
                         const childDim = cur_parent_tag.getOrCreateLowerDimension(cur_parent, this, child_tag)
                         if (dimension_as_json.force_show_children) {
                           const nodeDimParent = parent.nodeDimensionAsParent(cur_parent_tag.group)!
-                          nodeDimParent.setForceToShowChildren()
+                          nodeDimParent.setForceToShowChildren(true)
                         } else if (dimension_as_json.force_show_parent) {
                           childDim?.setForceToShowParent()
                         }
