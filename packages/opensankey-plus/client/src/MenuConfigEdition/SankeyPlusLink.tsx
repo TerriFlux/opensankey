@@ -73,7 +73,7 @@ export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConf
         setForceUpdate(!forceUpdate)
       }}>
       <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
-      {t('Flux.apparence.grad')}
+        {t('Flux.apparence.grad')}
       </OSTooltip>
       {(!menu_for_style) &&
         isAttributeOverloaded(selected_links, 'value_label_on_path') ?
@@ -121,34 +121,34 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
   return <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isIndeterminate={is_indeterminate}
-      isDisabled={!new_data_plus.has_sankey_plus}
-      isChecked={shape_is_dashed}
-      onChange={(evt) => {
-        elements.forEach(element => element.shape_is_dashed = evt.target.checked)
-        const list_node_to_redraw_arrow: Type_GenericNodeElementOSP[] = []
-        elements.forEach(element => {
-          element.shape_is_dashed = evt.target.checked
-          if (!menu_for_style) {
-            list_node_to_redraw_arrow.push((element as Type_GenericLinkElementOSP).target)
-          }
-        })
+    variant='menuconfigpanel_option_checkbox'
+    isIndeterminate={is_indeterminate}
+    isDisabled={!new_data_plus.has_sankey_plus}
+    isChecked={shape_is_dashed}
+    onChange={(evt) => {
+      elements.forEach(element => element.shape_is_dashed = evt.target.checked)
+      const list_node_to_redraw_arrow: Type_GenericNodeElementOSP[] = []
+      elements.forEach(element => {
+        element.shape_is_dashed = evt.target.checked
+        if (!menu_for_style) {
+          list_node_to_redraw_arrow.push((element as Type_GenericLinkElementOSP).target)
+        }
+      })
 
-        new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
-        setForceUpdate(!forceUpdate)
-      }}>
-      <OSTooltip label={t('Flux.apparence.tooltips.hach')}>
-        {t('Flux.apparence.hach') + ' '}
-      </OSTooltip>
-      {
-        (!menu_for_style) &&
+      setForceUpdate(!forceUpdate)
+    }}>
+    <OSTooltip label={t('Flux.apparence.tooltips.hach')}>
+      {t('Flux.apparence.hach') + ' '}
+    </OSTooltip>
+    {
+      (!menu_for_style) &&
           isAttributeOverloaded(selected_links, 'shape_is_dashed') ?
-          TooltipValueSurcharge('link_var_', t) :
-          <></>
-      }
-    </Checkbox>
+        TooltipValueSurcharge('link_var_', t) :
+        <></>
+    }
+  </Checkbox>
 }
 
 

@@ -141,21 +141,21 @@ export abstract class Class_DrawingAreaPlus
   }
 
   public orderElementsConatianer() {
-      // Sort containers
-      let new_order = 0
-      this.sankey.containers_list
-        .sort((a, b) => sortElementsContainersByDisplayingOrders(a, b))
-        .forEach(cont => {
-          if (cont.is_visible) {
-            cont.d3_selection?.raise()
-          }
-          // Re-update display order as consecutive
-          cont.displaying_order = new_order
-          new_order = new_order + 2
-        })
+    // Sort containers
+    let new_order = 0
+    this.sankey.containers_list
+      .sort((a, b) => sortElementsContainersByDisplayingOrders(a, b))
+      .forEach(cont => {
+        if (cont.is_visible) {
+          cont.d3_selection?.raise()
+        }
+        // Re-update display order as consecutive
+        cont.displaying_order = new_order
+        new_order = new_order + 2
+      })
       // Update number of elements
-      this._number_of_containers = new_order
-    }
+    this._number_of_containers = new_order
+  }
   
 
   /**

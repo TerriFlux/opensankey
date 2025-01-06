@@ -405,7 +405,7 @@ export abstract class Class_ApplicationDataPlus
   // SPECIFIC FUNCTIONS ******************************************************************/
 
   protected override isDrawingAreaActive() {
-    let superVal = super.isDrawingAreaActive()
+    const superVal = super.isDrawingAreaActive()
     const inputs = ['ql-editor']
     if (
       document.activeElement &&
