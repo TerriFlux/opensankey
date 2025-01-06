@@ -244,7 +244,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
    * Force to set this dimension's children as visibles
    * @memberof Class_NodeDimension
    */
-  public setForceToShowChildren() {
+  public setForceToShowChildren(fromJSON:boolean=false) {
     // Speed-up computation
     if (this._force_show_children && !this._force_show_parent)
       return
@@ -271,12 +271,14 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
         }
       })
     // Redraw
-    nodes_to_redraw
-      .forEach(node => {
-        node.reorganizeIOLinks()
-        node.output_links_list.forEach(l=>l.target.reorganizeIOLinks())
-        node.input_links_list.forEach(l=>l.source.reorganizeIOLinks())
-      })
+    if (!fromJSON) { //when called in dimensionsFromJSON, we don't reorganise link order as it's informed by node json
+      nodes_to_redraw
+        .forEach(node => {
+          node.reorganizeIOLinks()
+          node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
+          node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
+        })
+    }
     // Unset protection
     this._is_currently_in_unsetting_recursion = false
   }
