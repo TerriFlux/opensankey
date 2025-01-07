@@ -27,6 +27,7 @@ import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurationLinksData> = ({
   new_data,
   additional_data_element,
+  contextual
 }) => {
 
   // Traduction
@@ -79,7 +80,11 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     // And update this menu also
     new_data.menu_configuration.updateComponentRelatedToLinksData()
   }
-  new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = refreshThis
+  if(contextual){
+    new_data.menu_configuration.ref_to_menu_contextual_config_links_data_updater.current = refreshThis
+  }else{
+    new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = refreshThis    
+  }
 
   // JSX -------------------------------------------------------------------------------
 
