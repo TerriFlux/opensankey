@@ -1589,8 +1589,18 @@ export abstract class Class_LinkElement
     // Draw control handler
     this._control_points.starting_curve_point.draw()
     this._control_points.ending_curve_point.draw()
-    this._control_points.starting_bezier_point.draw()
-    this._control_points.ending_bezier_point.draw()
+    this._control_points.starting_curve_point.draw()
+    this._control_points.ending_curve_point.draw()
+
+    //If the shape is curved set visible tangeant points else set them invissible 
+    if (this.shape_is_curved) {
+      this._control_points.starting_bezier_point.setVisible()
+      this._control_points.ending_bezier_point.setVisible()
+    } else {
+      this._control_points.starting_bezier_point.setInvisible()
+      this._control_points.ending_bezier_point.setInvisible()
+    }
+
     // Recyling handler
     if (this.shape_is_recycling)
       this._control_points.middle_recycling_point.setVisible()
@@ -1612,10 +1622,16 @@ export abstract class Class_LinkElement
       let path
       // Normal mode
       if (!this.shape_is_recycling) {
-        path = 'M ' + x1 + ',' + y1
-          + ' L ' + x2 + ',' + y2
-          + ' L ' + x4 + ',' + y4
-          + ' L ' + x5 + ',' + y5
+        //If the shape is curved use tangeant points 
+        if (this.shape_is_curved) {
+          path = 'M ' + x1 + ',' + y1
+            + ' L ' + x2 + ',' + y2
+            + ' L ' + x4 + ',' + y4
+            + ' L ' + x5 + ',' + y5
+        } else {
+          path = 'M ' + x1 + ',' + y1
+            + ' L ' + x5 + ',' + y5
+        }
       }
       else {
         const xmid = this._control_points.middle_recycling_point.position_x
@@ -2927,7 +2943,7 @@ export abstract class Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements() }
+  public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements();this.drawControlPoint()}
 
   /**
    * TODO Description
