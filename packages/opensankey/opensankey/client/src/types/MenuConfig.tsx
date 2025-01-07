@@ -142,6 +142,7 @@ export class Class_MenuConfig {
 
   // Update componenet MenuConfigurationLinksData
   private _ref_to_menu_config_links_data_updater: MutableRefObject<() => void>
+  private _ref_to_menu_contextual_config_links_data_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationLinksAttributes
   private _ref_to_menu_config_links_apparence_updater: MutableRefObject<() => void>
@@ -267,6 +268,7 @@ export class Class_MenuConfig {
     // Links
     this._ref_to_menu_config_links_selection_updater = useRef(() => null)
     this._ref_to_menu_config_links_data_updater = useRef(() => null)
+    this._ref_to_menu_contextual_config_links_data_updater = useRef(() => null)
     this._ref_to_menu_config_links_apparence_updater = useRef(() => null)
     this._ref_to_menu_config_links_styles_updater = useRef(() => null)
     this._ref_to_menu_config_links_styles_editor_updater = useRef(() => null)
@@ -633,6 +635,7 @@ export class Class_MenuConfig {
       'updateComponentRelatedToLinksData',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_links_data_updater.current()
+        _this._ref_to_menu_contextual_config_links_data_updater.current()
       }
     )
   }
@@ -1041,6 +1044,10 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_links_data_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_links_data_updater
+  }
+  
+  public get ref_to_menu_contextual_config_links_data_updater():MutableRefObject<()=>void>{
+    return this._ref_to_menu_contextual_config_links_data_updater
   }
 
   public get ref_to_menu_config_links_apparence_updater(): MutableRefObject<() => void> {
