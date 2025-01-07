@@ -324,7 +324,7 @@ export class Class_ContainerElement
       .attr('fill-opacity', this._opacity / 100)
       .attr('fill', this._color)
       .attr('stroke', this._color_border)
-      .attr('stroke-width', this.is_selected ? default_selected_stroke_width : ((this._transparent_border) ? 0 : 1))
+      .attr('stroke-width', (this._transparent_border) ? 0 : 1)
   }
 
   /**
