@@ -432,7 +432,7 @@ export class Class_Legend
     const node_list = this.drawing_area.sankey.visible_nodes_list
 
     // Get all grp tag insind one variable
-    const all_tags = [...node_taggs, ...flux_taggs, ...data_taggs]
+    const all_tags = [...node_taggs, ...flux_taggs]
     all_tags
       .filter(tag_group => tag_group.show_legend)
       .forEach(tag_group => {
@@ -525,7 +525,7 @@ export class Class_Legend
             this._dy += ((tagElement?.select('.name_tag').selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
           })
       })
-    const show_data = Object.values(data_taggs).filter(d => d.show_legend).length == 0
+    const show_data = Object.values(data_taggs).filter(d => d.show_legend).length > 0
     if (this._legend_show_dataTags && show_data) {
       this._dy += this._legend_police
       Object.entries(data_taggs).forEach(tag_group => {
@@ -609,7 +609,7 @@ export class Class_Legend
    */
   private _drawSankeyScale() {
     // Update vertical offset
-    this._dy += this._legend_police + 50 //(50 is the height of the draggable scale)
+    this._dy += this._legend_police + 15 //(50 is the height of the draggable scale)
     // Remove previous info zone for scale
     d3.selectAll(' .opensankey #svg .g_scale').remove()
     // Create info zone for scale
@@ -642,6 +642,8 @@ export class Class_Legend
       .on('drag', function (event) {
         g_draggable.attr('transform', 'translate(' + (event.x) + ',' + (event.y) + ')')
       }))
+    
+      this._dy+=20
   }
 
   private _updateLegendHeight() {
