@@ -41,7 +41,8 @@ import {
 } from '../deps/OpenSankey/types/Utils'
 import {
   Class_NodeAttribute,
-  Class_NodeStyle
+  Class_NodeStyle,
+  default_shape_color
 } from '../deps/OpenSankey/types/Node'
 
 // SPECIFIC FUNCTIONS *******************************************************************
@@ -649,6 +650,26 @@ export abstract class Class_NodeElementPlus
 
   public get FO_content(): string { return this._FO_content }
   public set FO_content(value: string) { this._FO_content = value }
+
+  /**
+   * Override setter of shape color to also redraw links (because of gradient)
+   *
+   * @memberof Class_NodeElementPlus
+   */
+  public override set shape_color(_: string) {
+    this._display.attributes.shape_color = _
+    this.drawShape()
+    this.drawLinks()
+  }
+
+  public override get shape_color() {
+    if (this._display.attributes.shape_color !== undefined) {
+      return this._display.attributes.shape_color
+    } else if (this._display.style.shape_color !== undefined) {
+      return this._display.style.shape_color
+    }
+    return default_shape_color
+  }
 
   /**
    * Getter of attribute name_label_background, get it either from display attribute if it exist else use value from related node style
