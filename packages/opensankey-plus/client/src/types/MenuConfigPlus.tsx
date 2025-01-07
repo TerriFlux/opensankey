@@ -300,6 +300,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
       'updateComponentRelatedToLinksData',
       (_this: Class_MenuConfigPlus) => {
         _this.ref_to_menu_config_links_data_updater.current()
+        _this.ref_to_menu_contextual_config_links_data_updater.current()
         _this._ref_to_menu_config_link_data_text_updater.current()
       }
     )
