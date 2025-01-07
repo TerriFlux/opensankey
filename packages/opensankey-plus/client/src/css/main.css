@@ -7,3 +7,13 @@
 	}
 
 }
+.selection_mode{
+	/* Style of ZDT handles top & bottom */
+	.zdt_top_handle,.zdt_bottom_handle{
+		cursor: ns-resize
+	}
+	/* Style of ZDT handles left & right */
+	.zdt_left_handle,.zdt_right_handle{
+		cursor: ew-resize;
+	}
+}
