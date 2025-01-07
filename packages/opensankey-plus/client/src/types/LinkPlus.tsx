@@ -403,5 +403,5 @@ export class Class_LinkStylePlus extends Class_LinkStyle {
 
   // GETTERS ============================================================================
   public get shape_is_gradient(): boolean { return this._shape_is_gradient }
-  public set shape_is_gradient(value: boolean) { this._shape_is_gradient = value }
+  public set shape_is_gradient(value: boolean) { this._shape_is_gradient = value;this.update() }
 }

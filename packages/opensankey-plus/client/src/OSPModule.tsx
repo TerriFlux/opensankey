@@ -194,15 +194,16 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />
 
   additionalMenus.additional_node_label_layout_content.push(
-    <NodeBgLabel
+    (menu_for_style:boolean)=> <NodeBgLabel
       new_data={new_data_plus}
-      menu_for_style={false}
+      menu_for_style={menu_for_style}
     />
   )
 
-  additionalMenus.additional_node_apparence_content.push(<NodeValue
+  additionalMenus.additional_node_apparence_content.push(
+    (menu_for_style:boolean)=> <NodeValue
     new_data={new_data_plus}
-    menu_for_style={false}
+    menu_for_style={menu_for_style}
   />)
   //Context node
   additionalMenus.context_node_order.push('drag_tag', 'drag_tooltip')
@@ -225,15 +226,15 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />
 
   // Add dashed config
-  additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceDashedOSP
+  additionalMenus.additional_link_appearence_items.push((menu_for_style:boolean)=><MenuConfLinkApparenceDashedOSP
     new_data_plus={new_data_plus}
-    menu_for_style={false}
+    menu_for_style={menu_for_style}
   />)
 
   // Add gradient config
-  additionalMenus.additional_link_appearence_items.push(<MenuConfLinkApparenceGradientOSP
+  additionalMenus.additional_link_appearence_items.push((menu_for_style:boolean)=><MenuConfLinkApparenceGradientOSP
     new_data_plus={new_data_plus}
-    menu_for_style={false}
+    menu_for_style={menu_for_style}
   />)
   additionalMenus.additional_link_appearence_value.push(<MenuConfLinkScientificPrecision
     new_data_plus={new_data_plus}
