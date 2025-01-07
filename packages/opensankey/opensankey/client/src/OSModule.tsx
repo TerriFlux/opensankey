@@ -124,6 +124,7 @@ export const moduleDialogs: FType_ModuleDialogs = (
       content={<MenuConfigurationLinksData
         new_data={new_data}
         additional_data_element={additional_menus.additional_data_element}
+        contextual={true}
       />}
       title={t('Menu.flux') + ' ' + t('Flux.data.données')}
     />,
