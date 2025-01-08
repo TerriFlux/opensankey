@@ -974,7 +974,6 @@ const StepperDataTagg: FunctionComponent<FCType_StepperDataTagg> = ({ new_data, 
     DataGroup.selectTagsFromId(stepper_sequence[idx].id_tag)
     new_data.drawing_area.checkAndUpdateAreaSize()
     new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
-
   }
 
   return <Box layerStyle='box_stepper'>

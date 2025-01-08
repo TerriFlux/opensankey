@@ -361,7 +361,7 @@ export abstract class Class_ApplicationDataPlus
         })
       }
       // Move all elements so none of them are outside the DA
-      this.drawing_area.recenterElements()
+      this.drawing_area.checkAndUpdateAreaSize()
     }
 
     // Event to add all visible containers to selection -----------------------------------------
