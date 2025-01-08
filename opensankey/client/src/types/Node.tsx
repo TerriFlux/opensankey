@@ -1774,7 +1774,7 @@ export abstract class Class_NodeElement
           .attr('x', box_pos_x)
           .attr('y', box_pos_y)
           .attr('width', box_width)
-          .attr('height', box_height + 2)
+          .attr('height', 30)
           .style('display', 'none')
           .append('xhtml:div')
           .append('input')
