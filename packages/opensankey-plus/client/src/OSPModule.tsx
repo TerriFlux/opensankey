@@ -171,13 +171,13 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />
 
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
-    new_data={new_data}
+    new_data={new_data_plus}
     menu_for_modal={false}
   />
 
   // Menu conf nodes
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.infos'] = <SankeyMenuConfigurationNodesTooltip
-    new_data={new_data}
+    new_data={new_data_plus}
     menu_for_modal={false}
   />,
   additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
@@ -217,11 +217,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   //Links
   additionalMenus.additional_menu_configuration_links['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
-    new_data={new_data}
+    new_data={new_data_plus}
     menu_for_modal={false}
   />
   additionalMenus.additional_menu_configuration_links['Flux.IS'] = <MenuConfigurationLinksTooltip
-    new_data={new_data}
+    new_data={new_data_plus}
     menu_for_modal={false}
   />
 
@@ -366,7 +366,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_node_tags'}
       content={<SankeyMenuConfigurationNodesTags
-        new_data={new_data}
+        new_data={new_data_plus}
         menu_for_modal={true}
       />}
       title={new_data_plus.t('Menu.Noeuds') + ' ' + new_data_plus.t('Menu.Etiquettes')}
@@ -375,7 +375,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_link_tags'}
       content={<MenuConfigurationLinksTags
-        new_data={new_data}
+        new_data={new_data_plus}
         menu_for_modal={true}
       />}
       title={new_data_plus.t('Menu.flux') + ' ' + new_data_plus.t('Menu.Etiquettes')}
@@ -384,7 +384,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_node_tooltip'}
       content={<SankeyMenuConfigurationNodesTooltip
-        new_data={new_data}
+        new_data={new_data_plus}
         menu_for_modal={true}
       />}
       title={new_data_plus.t('Menu.Noeuds') + ' ' + new_data_plus.t('Noeud.IS')}
@@ -393,7 +393,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_link_tooltip'}
       content={<MenuConfigurationLinksTooltip
-        new_data={new_data}
+        new_data={new_data_plus}
         menu_for_modal={true}
       />}
       title={new_data_plus.t('Menu.flux') + ' ' + new_data_plus.t('Flux.IB')}

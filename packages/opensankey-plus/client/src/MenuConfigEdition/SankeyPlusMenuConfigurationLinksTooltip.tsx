@@ -112,8 +112,9 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
     >
       {t('Noeud.IB')}
     </Box>
-    <OSTooltip label={t('Flux.tooltips.IB')}>
+    <OSTooltip label={new_data.has_sankey_plus ? t('Flux.tooltips.IB') : t('Menu.sankeyOSPDisabled')}>
       <Textarea
+        isDisabled={!new_data.has_sankey_plus}
         rows={5}
         ref={inputRef}
         defaultValue={editor_content_tooltip}

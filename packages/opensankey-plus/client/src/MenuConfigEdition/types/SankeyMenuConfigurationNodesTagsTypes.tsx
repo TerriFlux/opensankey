@@ -1,4 +1,4 @@
-import { Type_GenericApplicationDataOS } from '../../deps/OpenSankey/types/TypesOS'
+import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
@@ -8,6 +8,6 @@ import { Type_GenericApplicationDataOS } from '../../deps/OpenSankey/types/Types
    * @type {*}
    */
 export type FCType_SankeyMenuConfigurationNodesTags = {
-  new_data: Type_GenericApplicationDataOS,
+  new_data: Type_GenericApplicationDataOSP,
   menu_for_modal: boolean
 }

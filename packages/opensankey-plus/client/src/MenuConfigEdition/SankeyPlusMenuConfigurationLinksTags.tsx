@@ -13,6 +13,7 @@ import type { Type_GenericLinkElementOS } from '../deps/OpenSankey/types/TypesOS
 import type {
   FCType_MenuConfigurationLinksTags
 } from './types/SankeyMenuConfigurationLinksTagsTypes'
+import { OSTooltip } from '../deps/OpenSankey/types/Utils'
 
 /*************************************************************************************************/
 
@@ -54,7 +55,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
   const updateThis = () => {
     // Can just use simple refresh if flux_tagg entry exists
     if (new_data.drawing_area.sankey.flux_taggs_list[flux_tagg_entry_index])
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     // If not, reset entry
     else
       setFluxTaggEntryIndex(0)
@@ -97,7 +98,6 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
   const content = <>
     {
       (
-        has_flux_taggs &&
         selected_links.length !== 0
       ) ?
         <Box
@@ -112,6 +112,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
 
           {/* Groupe d'étiquettes  */}
           <Select
+            isDisabled={!new_data.has_sankey_plus}
             variant='menuconfigpanel_option_select'
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
               setFluxTaggEntryIndex(Number(evt.target.value))
@@ -142,6 +143,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
                     {data_tagg.name}
                   </Box>
                   <Select
+                    isDisabled={!new_data.has_sankey_plus}
                     variant='menuconfigpanel_option_select'
                     name={data_tagg.id}
                     value={data_tagg.first_selected_tags?.id ?? '-'}
@@ -169,47 +171,50 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
                 )
               })
           }
-
-          <Box
-            layerStyle='menuconfigpanel_grid'
-          >
-            {
-              flux_tagg_entry.tags_list
-                .map(flux_tag => {
-                  const [allTrue, allFalse] = haveAllSelectedLinksGivenTag(flux_tag)
-                  return (
-                    <Checkbox
-                      variant='menuconfigpanel_option_checkbox'
-                      isChecked={allTrue}
-                      isIndeterminate={!allTrue && !allFalse}
-                      onChange={(evt) => {
-                        const visible = evt.target.checked
-                        selected_links.forEach(link => {
-                          if (visible) {
-                            link.addTag(flux_tag)
-                          }
-                          else {
-                            link.removeTag(flux_tag)
-                          }
-                        })
-                        // Full update
-                        refreshThisAndUpdateRelatedComponents()
-                      }}>
-                      {flux_tag.name}
-                    </Checkbox>
-                  )
-                })
-            }
-          </Box>
+          {has_flux_taggs ?
+            <Box
+              layerStyle='menuconfigpanel_grid'
+            >
+              {
+                flux_tagg_entry.tags_list
+                  .map(flux_tag => {
+                    const [allTrue, allFalse] = haveAllSelectedLinksGivenTag(flux_tag)
+                    return (
+                      <Checkbox
+                        isDisabled={!new_data.has_sankey_plus}
+                        variant='menuconfigpanel_option_checkbox'
+                        isChecked={allTrue}
+                        isIndeterminate={!allTrue && !allFalse}
+                        onChange={(evt) => {
+                          const visible = evt.target.checked
+                          selected_links.forEach(link => {
+                            if (visible) {
+                              link.addTag(flux_tag)
+                            }
+                            else {
+                              link.removeTag(flux_tag)
+                            }
+                          })
+                          // Full update
+                          refreshThisAndUpdateRelatedComponents()
+                        }}>
+                        {flux_tag.name}
+                      </Checkbox>
+                    )
+                  })
+              }
+            </Box> : <></>}
         </Box>
         :
         <></>
     }</>
 
 
-  return menu_for_modal ?
+  return <OSTooltip label={new_data.has_sankey_plus?'':t('Menu.sankeyOSPDisabled')}>{menu_for_modal ?
     content :
     <TabPanel >
       {content}
     </TabPanel>
+    }
+    </OSTooltip>
 }
