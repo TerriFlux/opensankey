@@ -39,6 +39,7 @@ export class Class_MenuConfigSA extends Class_MenuConfigPlus {
   }
 
   public override updateAllMenuComponents(): void {
+    super.updateAllMenuComponents()
     this.updateComponentsRelatedToSA()
   }
   // GETTERS / SETTERS ==================================================================
