@@ -38,6 +38,8 @@ export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = 
 }) => {
   const _load_image = useRef<HTMLInputElement>(null)
   const [, setCount] = useState(0)
+  new_data_plus.menu_configuration.ref_to_config_DA_bg_image_updater.current = () => setCount(a => a + 1)
+
   const { drawing_area, t, has_sankey_plus } = new_data_plus
   const content_image = <>
     {/* Import image */}
