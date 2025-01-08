@@ -668,7 +668,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
     </OSTooltip></Box>
 
 
-    {additionMenus.additional_link_appearence_items.map((el, i) => el(menu_for_style)/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
+    {additionMenus.additional_link_appearence_items.map((el, ) => el(menu_for_style)/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
 
   </Box>
 
