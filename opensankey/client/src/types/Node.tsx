@@ -354,7 +354,7 @@ export abstract class Class_NodeElement
     // after copying node_to_copy._link_orders add the remaining links
     const to_keep = prev_links_order.filter(l=>!this._links_order.includes(l))
     to_keep.forEach(l=>this._links_order.push(l))
-    
+
   }
 
   public copyTagsReferencingFrom(
@@ -2161,7 +2161,8 @@ export abstract class Class_NodeElement
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
           })
       }
-    } else {
+    }
+    else {
       if (drawing_area.isInEditionMode()) {
         // /* TODO définir  */
       }
@@ -2188,14 +2189,13 @@ export abstract class Class_NodeElement
     // Move all elements so none of them are outside the DA
     this.drawing_area.sankey.nodes_list.forEach(n=>n.position_v = -1)
     this.drawing_area.computeParametricV()
-    this.drawing_area.recenterElements()
+    this.drawing_area.checkAndUpdateAreaSize()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     this._drag = false
   }
 
   /**
-   *
-   *
+   * Define when left mouse click is maintained
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof Class_NodeElement
@@ -2860,7 +2860,7 @@ export abstract class Class_NodeElement
       if (Object.values(this._taggs_dict[grp_id]).length == 0) {
         delete this._taggs_dict[grp_id]
       }
-    }    
+    }
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -4377,10 +4377,10 @@ export abstract class Class_NodeElement
       let idTrade = extremity_node.id + '-' + this.id + (importation ? 'Importations' : 'Exportations')
       idTrade = idTrade.replaceAll(' ', '')
 
-      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom);
+      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom)
       Object.values(this._dimensions_as_child)
         .forEach(dim => {
-          const node_parent = dim.parent;
+          const node_parent = dim.parent
           const name = extremity_node.id + '-' + node_parent.id + (importation ? 'Importations' : 'Exportations');
           (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
             this.sankey.nodes_dict[name],
@@ -4391,10 +4391,10 @@ export abstract class Class_NodeElement
       Object.values(this._dimensions_as_parent)
         .forEach(dim => {
           const node_children = dim.children.filter(n => {
-            const name = extremity_node.id + '-' + n.id + (importation ? 'Importations' : 'Exportations');
+            const name = extremity_node.id + '-' + n.id + (importation ? 'Importations' : 'Exportations')
             return this.sankey.nodes_dict[name] != undefined
           }).map(n => {
-            const name = extremity_node.id + '-' + n.id + (importation ? 'Importations' : 'Exportations');
+            const name = extremity_node.id + '-' + n.id + (importation ? 'Importations' : 'Exportations')
             return this.sankey.nodes_dict[name]
           })
           new Class_NodeDimension(
