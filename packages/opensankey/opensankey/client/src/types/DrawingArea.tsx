@@ -222,7 +222,6 @@ export abstract class Class_DrawingArea
    */
   private _scale: number = default_scale
 
-
   /**
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
    *
@@ -240,6 +239,8 @@ export abstract class Class_DrawingArea
   // Shifting of d3 elements
   private _elements_d3_groups_shift_x: number = 0
   private _elements_d3_groups_shift_y: number = 0
+  private _background_d3_groups_shift_x: number = 0
+  private _background_d3_groups_shift_y: number = 0
 
   // Limitations of link thickness
   private _maximum_flux?: number
@@ -555,11 +556,11 @@ export abstract class Class_DrawingArea
 
     // Init drawing area
     const x = this._fit_margin / 2
-    const y = this._fit_margin / 2 + this.getNavBarHeight()
+    const y = this._fit_margin / 2 + this.getNavBarHeight() // init drawing area zone with a margin for taking into account the navbar
     this.d3_selection = this.d3_selection_zoom_area
       .append('g')
       .attr('id', 'g_drawing')
-      .attr('transform', 'translate(' + x + ',' + y + ')') // init drawing area zone with a margin for taking into account the navbar
+      .attr('transform', 'translate(' + x + ',' + y + ')')
 
 
     // Add specific groups for drawing background
@@ -971,29 +972,69 @@ export abstract class Class_DrawingArea
    *
    * @memberof Class_DrawingArea
    */
-  public checkAndUpdateAreaSize() {
-
+  public checkAndUpdateAreaSize(
+    recenter: boolean = false
+  ) {
+    // Get bounding box for all elements
     const bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-    if (bbox == undefined) {
+
+    // No bounding box -> return
+    if (bbox == undefined)
+      return
+
+    // Bounding box with no element -> default dims
+    if ((bbox.width == 0) && (bbox.height == 0)){
+      // Set to fitting windows
+      this.width = this.window_fitting_width
+      this.height = this.window_fitting_height
+      // And redraw
+      this.drawBackground()
       return
     }
+
+    // Get fitting dimensions for drawing area - depends on screen size
     const fitting_width = this.window_fitting_width // acces speeding computation
     const fitting_height = this.window_fitting_height // acces speeding computation
 
+    // Get current drawing zone dimensions
+    let width = this.width
+    let height = this.height
+    let x0 = this._background_d3_groups_shift_x
+    let y0 = this._background_d3_groups_shift_y
 
-    // New dimensions for drawing area
-    const width = Math.max(bbox.width + this.grid_size*2, fitting_width)
-    const height = Math.max(bbox.height + this.grid_size*2, fitting_height)
-    // Shifting svg group that contains elements
-    this._elements_d3_groups_shift_x = -(bbox.x + bbox.width/2) + width/2
-    this._elements_d3_groups_shift_y = -(bbox.y + bbox.height/2) + height/2
-    this.d3_selection_elements_group?.attr(
+    // Check horizontal fitting
+    const new_x0 = Math.min(0, bbox.x - this.grid_size)
+    const new_x1 = Math.max(fitting_width, bbox.x + bbox.width + this._grid_size)
+    width = new_x1 - new_x0
+    x0 = new_x0
+
+    // Check vertical fitting
+    const new_y0 = Math.min(0, bbox.y - this.grid_size)
+    const new_y1 = Math.max(fitting_height, bbox.y + bbox.height + this._grid_size)
+    height = new_y1 - new_y0
+    y0 = new_y0
+
+    // Recenter elements
+    if (recenter) {
+      this._elements_d3_groups_shift_x = -(bbox.x + bbox.width/2) + (x0 + width/2)
+      this._elements_d3_groups_shift_y = -(bbox.y + bbox.height/2) + (y0 + height/2)
+      this.d3_selection_elements_group?.attr(
+        'transform',
+        'translate(' + this._elements_d3_groups_shift_x  + ', ' + this._elements_d3_groups_shift_y + ')')
+    }
+
+    // Save new dimensions
+    this._width = width
+    this._height = height
+    this._background_d3_groups_shift_x = x0
+    this._background_d3_groups_shift_y = y0
+
+    // And redraw
+    this.d3_selection_bg_group?.attr(
       'transform',
-      'translate(' + this._elements_d3_groups_shift_x  + ', ' + this._elements_d3_groups_shift_y + ')')
-    // Apply new dimensions
-    this.width = width
-    this.height = height
+      'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
     this.drawBackground()
+    this.drawGrid()
   }
 
   /**
@@ -1004,12 +1045,13 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public areaFitHorizontally() {
-    this.checkAndUpdateAreaSize()
+    this.checkAndUpdateAreaSize(true)
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_width / this.width
-      const x0 = this._fit_margin/2
-      const y0 = Math.max(this._fit_margin/2, (this.window_fitting_height - this.height*k)/2) + this.getNavBarHeight()
+
+      const x0 = this._fit_margin/2 - this._background_d3_groups_shift_x*k
+      const y0 = Math.max(this._fit_margin/2, (this.window_fitting_height - this.height*k)/2) + this.getNavBarHeight() - this._background_d3_groups_shift_y*k
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
@@ -1025,65 +1067,17 @@ export abstract class Class_DrawingArea
    * @memberof Class_DrawingArea
    */
   public areaFitVertically() {
-    this.checkAndUpdateAreaSize()
+    this.checkAndUpdateAreaSize(true)
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_height / this.height
-      const x0 = Math.max(this._fit_margin/2, (this.window_fitting_width - k*this.width)/2)
-      const y0 = this._fit_margin/2 + this.getNavBarHeight()
+      const x0 = Math.max(this._fit_margin/2, (this.window_fitting_width - k*this.width)/2) - this._background_d3_groups_shift_x*k
+      const y0 = this._fit_margin/2 + this.getNavBarHeight() - this._background_d3_groups_shift_y*k
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
         [x0, y0])
     }
-  }
-
-  /**
-   * Move all visible elements so that none of them are outside the DA
-   *
-   * @memberof Class_DrawingArea
-   */
-  public recenterElements() {
-    // let element_min_x: Type_GenericNodeElement | undefined = undefined
-    // let element_min_y: Type_GenericNodeElement | undefined = undefined
-
-    // // Get min x and min y elements
-    // this.sankey.visible_nodes_list
-    //   .forEach(n => {
-    //     // Search for node with position x inf. to 0 and to element with minimum x position value
-    //     if ((n.position_x < 0) && (n.position_x < (element_min_x?.position_x ?? 0))) {
-    //       element_min_x = n
-    //     }
-    //     // Search for node with position y inf. to 0 and to element with minimum y position value
-    //     if ((n.position_y < 0) && (n.position_y < (element_min_x?.position_y ?? 0))) {
-    //       element_min_y = n
-    //     }
-    //   })
-
-    // // Shift from min x element
-    // if (element_min_x !== undefined) {
-    //   const true_element: Type_GenericNodeElement = element_min_x
-    //   // If element is on the left of the DA move all elements to 'x' pixel to the right
-    //   // (x being the absolute value of element position x )
-    //   this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
-    //     node.position_x += Math.abs(true_element.position_x)
-    //   })
-    //   true_element.position_x = 0
-    // }
-
-    // // Shift from min y element
-    // if (element_min_y !== undefined) {
-    //   const true_element: Type_GenericNodeElement = element_min_y
-    //   // If element is on top of the DA move all elements to 'y' pixel to the bottom
-    //   // (y being the absolute value of element position y )
-    //   this.sankey.visible_nodes_list.filter(el => el !== true_element).forEach(node => {
-    //     node.position_y += Math.abs(true_element.position_y)
-    //   })
-    //   true_element.position_y = 0
-    // }
-
-    // Redraw
-    this.checkAndUpdateAreaSize()
   }
 
   /**
@@ -1279,8 +1273,6 @@ export abstract class Class_DrawingArea
       (node as Type_GenericNodeElement).setTradeDimensions(false)
     })
   }
-
-
 
   /**
    * Compute the position of the nodes which are not trade nodes
@@ -1919,14 +1911,14 @@ export abstract class Class_DrawingArea
    */
   public areaAutoFit() {
     this._process_or_bypass(() => {
-      this.checkAndUpdateAreaSize()
-
-      const ratio_v = this._height / this.window_fitting_height // get ration of sankey height / screen height
-      const ratio_h = this._width / this.window_fitting_width // get ration of sankey width / screen width
-
+      // Ratios
+      const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
+      const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
+      // Fit from ratio
       if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
         this.areaFitHorizontally()
-      } else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
+      }
+      else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
         this.areaFitVertically()
       }
     })

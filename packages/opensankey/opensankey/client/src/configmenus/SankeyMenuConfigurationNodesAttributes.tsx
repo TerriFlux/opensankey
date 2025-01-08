@@ -907,7 +907,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
           </Box>
 
           {/* Additional input to modify attr from submodule */}
-          {additional_menus.additional_node_label_layout_content.map((content,idx)=>{
+          {additional_menus.additional_node_label_layout_content.map((content, )=>{
             return content(menu_for_style) //<React.Fragment key={idx}>{content}</React.Fragment>
           })}
 
@@ -1197,7 +1197,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
     <React.Fragment key={'sep_2'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
     <React.Fragment key={'lab'}>{content_label}</React.Fragment>
     <React.Fragment key={'sep_3'}><hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} /></React.Fragment>
-    {additional_menus.additional_node_apparence_content.map((content,idx)=>content(menu_for_style) /*<React.Fragment key={idx}>{content}</React.Fragment>*/)}
+    {additional_menus.additional_node_apparence_content.map((content, )=>content(menu_for_style) /*<React.Fragment key={idx}>{content}</React.Fragment>*/)}
   </>
 }
 
