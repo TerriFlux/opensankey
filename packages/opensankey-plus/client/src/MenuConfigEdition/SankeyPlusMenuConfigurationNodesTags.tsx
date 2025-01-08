@@ -13,6 +13,7 @@ import type { Type_GenericNodeElementOS } from '../deps/OpenSankey/types/TypesOS
 import type {
   FCType_SankeyMenuConfigurationNodesTags
 } from './types/SankeyMenuConfigurationNodesTagsTypes'
+import { OSTooltip } from '../deps/OpenSankey/types/Utils'
 
 // Component definition =================================================================
 
@@ -57,7 +58,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
   const updateThis = () => {
     // Can just use simple refresh if node_tagg entry exists
     if (new_data.drawing_area.sankey.node_taggs_list[node_tagg_entry_index])
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     // If not, reset entry index
     else
       setNodeTaggEntryIndex(0)
@@ -71,7 +72,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setCount(a=>a+1)
+    setCount(a => a + 1)
   }
 
   // Utils functions --------------------------------------------------------------------
@@ -99,7 +100,6 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
 
   const content = <> {
     (
-      has_node_taggs &&
       selected_nodes.length > 0
     ) ?
       <Box
@@ -114,6 +114,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
 
         {/* Groupe d'étiquettes  */}
         <Select
+          isDisabled={!new_data.has_sankey_plus}
           variant='menuconfigpanel_option_select'
           value={node_tagg_entry_index}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
@@ -132,8 +133,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
               )
           }
         </Select>
-
-        <Box
+        {has_node_taggs?<Box
           layerStyle='menuconfigpanel_grid'
         >
           {
@@ -141,6 +141,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
               .map(node_tag => {
                 const [allTrue, allFalse] = haveAllSelectedNodesGivenTag(node_tag)
                 return <Checkbox
+                  isDisabled={!new_data.has_sankey_plus}
                   variant='menuconfigpanel_tag_checkbox'
                   isIndeterminate={
                     (selected_nodes.length > 1) &&
@@ -166,15 +167,15 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
                 </Checkbox>
               })
           }
-        </Box>
+        </Box>:<></>}
       </Box>
       :
       <></>
   } </>
 
-  return menu_for_modal ?
+  return<OSTooltip label={new_data.has_sankey_plus?'':t('Menu.sankeyOSPDisabled')}>{ menu_for_modal ?
     content :
     <TabPanel>
       {content}
-    </TabPanel>
+    </TabPanel>}</OSTooltip>
 }

@@ -1,6 +1,6 @@
-import { Type_GenericApplicationDataOS } from '../../deps/OpenSankey/types/TypesOS'
+import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 
 export type FCType_MenuConfigurationLinksTooltip = {
-  new_data: Type_GenericApplicationDataOS,
+  new_data: Type_GenericApplicationDataOSP,
   menu_for_modal: boolean
 }
