@@ -6,7 +6,6 @@ import LZString from 'lz-string'
 import * as d3 from 'd3'
 /*************************************************************************************************/
 
-import { setDiagram, ToolbarBuilder } from './configmenus/SankeyMenuBanner'
 import { MenuConfigurationLinksAppearence } from './configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksData } from './configmenus/SankeyMenuConfigurationLinksData'
 import { OpenSankeyConfigurationNodesAttributes } from './configmenus/SankeyMenuConfigurationNodesAttributes'
@@ -18,7 +17,7 @@ import {
   ModalPreference,
 } from './dialogs/SankeyMenuPreferences'
 import {
-  OpenSankeyMenus, Menu
+  Menu
 } from './topmenus/SankeyMenuTop'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './dialogs/SankeyStyle'
 import { Type_JSON } from './types/Utils'
@@ -27,12 +26,6 @@ import { FCType_SankeyApp } from './types/FunctionTypes'
 import { Type_AdditionalMenus } from './types/TypesOS'
 import { TourProvider } from '@reactour/tour'
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      toolbar: true,
-    }
-  }
 
 /*************************************************************************************************/
 
@@ -149,16 +142,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     new_data
   )
 
-  const sankey_menus = OpenSankeyMenus(
-    reinitialization,
-    new_data,
-    additionalMenus.external_edition_item,
-    additionalMenus.external_file_item,
-    additionalMenus.external_file_export_item,
-    additionalMenus.externale_save_item,
-    additionalMenus.externale_navbar_item,
-    setDiagram,
-  )
+ 
 
   const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
     new_data={new_data}
@@ -178,18 +162,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     menu_for_style={false}
   />
 
-  if (
-    (window.sankey === undefined) ||
-    (window.sankey.toolbar === undefined) ||
-    (window.sankey.toolbar === true)
-  ) {
-    sankey_menus['toolbar'] = <ToolbarBuilder
-      new_data={new_data}
-      additionalMenu={additionalMenus}
-    />
-  }
-
-  Object.assign(sankey_menus, additionalMenus.sankey_menus)
 
   const menu_configuration = initializeMenuConfiguration(
     new_data,
@@ -237,7 +209,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
             new_data={new_data}
             processFunctions={new_data.processFunction}
             configurations_menus={menu_configuration}
-            menus={sankey_menus}
             external_modal={[
               <></>
             ]}
