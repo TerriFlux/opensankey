@@ -699,8 +699,8 @@ export class Class_MenuConfig {
    */
   public updateAllMenuComponents() {
     this._ref_to_menu_updater.current()
-    // TDODO : to have an updater in OpenSankeyMenus so if we cahnge language it update language of submenus,
-    //  for now OpenSankeyMenus is a function so the updater crash the app because the re-render is out of the correct scope
+    // TDODO : to have an updater in OpenSankeyMenusDictBuilder so if we cahnge language it update language of submenus,
+    //  for now OpenSankeyMenusDictBuilder is a function so the updater crash the app because the re-render is out of the correct scope
     // this._ref_to_submenu_updater.current()
     this.updateMenuConfigComponent()
     this.updateComponentRelatedToLayoutApparence()

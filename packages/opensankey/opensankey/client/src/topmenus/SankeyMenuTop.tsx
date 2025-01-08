@@ -93,7 +93,7 @@ import {
   FCType_MenuDraggable,
   FCType_ModalTuto,
   FType_ModalResolutionPNG,
-  FType_OpenSankeyMenus,
+  FType_OpenSankeyMenusDictBuilder,
   FCType_ButtonLaunchGuide,
   FCtype_ModalTemplate,
 } from './types/SankeyMenuTopTypes'
@@ -118,7 +118,9 @@ import {
 } from '../dialogs/SankeyPersistence'
 
 import {
-  DataTagSelector
+  DataTagSelector,
+  setDiagram,
+  ToolbarBuilder
 } from '../configmenus/SankeyMenuBanner'
 import { Type_GenericApplicationDataOS } from '../types/TypesOS'
 import { FCType_Menu } from '../types/FunctionTypes'
@@ -136,7 +138,8 @@ declare const window: Window &
       excel: string
       structure: boolean,
       advanced: boolean,
-      footer: boolean
+      footer: boolean,
+      toolbar: true
     }
   }
 
@@ -218,14 +221,10 @@ const logo_tour = <svg
 
 /*************************************************************************************************/
 
-export const OpenSankeyMenus: FType_OpenSankeyMenus = (
+export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
   Reinitialization,
   new_data,
-  external_edition_item,
-  external_file_item,
-  external_file_export_item,
-  externale_save_item,
-  externale_navbar_item,
+  additionanl_menu,
   setDiagram
 ) => {
   const { t } = new_data
@@ -503,7 +502,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             />
             {t('Menu.open_excel')}
           </MenuItem>
-          {externale_save_item}
+          {additionanl_menu.externale_save_item}
         </MenuList>
       </ChakraMenu>,
 
@@ -563,11 +562,11 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
             />
             PDF
           </MenuItem>
-          {external_file_export_item}
+          {additionanl_menu.external_file_export_item}
         </MenuList>
       </ChakraMenu>,
 
-      <>{external_file_item}</>,
+      <>{additionanl_menu.external_file_item}</>,
 
       <OSTooltip
         placement='bottom'
@@ -720,7 +719,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
         </MenuList>
       </ChakraMenu>,
 
-      <>{external_edition_item}</>
+      <>{additionanl_menu.external_edition_item}</>
     ]
 
     ui['aide'] = [
@@ -830,7 +829,7 @@ export const OpenSankeyMenus: FType_OpenSankeyMenus = (
     ]
   }
 
-  Object.entries(externale_navbar_item).forEach(ext_nav => {
+  Object.entries(additionanl_menu.externale_navbar_item).forEach(ext_nav => {
     ui[ext_nav[0]] = [ext_nav[1]]
   })
 
@@ -1023,7 +1022,6 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     new_data,
     processFunctions,
     configurations_menus,
-    menus,
     external_modal,
     reinitialization,
     additionalMenus,
@@ -1067,11 +1065,32 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     'demo',
     'aide']
 
+  const menus_dict = OpenSankeyMenusDictBuilder(
+    reinitialization,
+    new_data,
+    additionalMenus,
+    setDiagram,
+  )
+
+  let toolbarComponent = <></>
+  if (
+    (window.sankey === undefined) ||
+    (window.sankey.toolbar === undefined) ||
+    (window.sankey.toolbar === true)
+  ) {
+    toolbarComponent = <ToolbarBuilder
+      new_data={new_data}
+      additionalMenu={additionalMenus}
+    />
+  }
+  Object.assign(menus_dict, additionalMenus.sankey_menus)
+
+
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
   ordered_key.forEach((key) => {
-    if (Object.keys(menus).includes(key)) {
+    if (Object.keys(menus_dict).includes(key)) {
       let content_menu
-      const menu_curr = menus[key]
+      const menu_curr = menus_dict[key]
       if (Array.isArray(menu_curr)) {
         content_menu = <React.Fragment>{(menu_curr).map((el, i) => {
           return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
@@ -1166,7 +1185,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   />
 
   const show_data = new_data.drawing_area.sankey.data_taggs_list.length > 0
-  const unit_rem = Object.keys(menus).includes('unité') ? '10fr' : '0fr'
+  const unit_rem = Object.keys(menus_dict).includes('unité') ? '10fr' : '0fr'
   const data_rem = show_data ? '10fr' : '0fr'
   let DDDT = <></>
   let menutop_grid_template = 'minmax(7vw, 150px) minmax(51rem, 70vw) auto auto auto'
@@ -1212,9 +1231,9 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   const modal_resolution_png = modalResolutionPNG(new_data)
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
-  const content_menu_unity = Array.isArray(menus['unité']) ? <React.Fragment key={'content_ui_pref'}>{menus['unité'].map((el, i) => {
+  const content_menu_unity = Array.isArray(menus_dict['unité']) ? <React.Fragment key={'content_ui_pref'}>{menus_dict['unité'].map((el, i) => {
     return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
-  })}</React.Fragment> : <React.Fragment key={'content_ui_pref'}>{menus['unité']}</React.Fragment>
+  })}</React.Fragment> : <React.Fragment key={'content_ui_pref'}>{menus_dict['unité']}</React.Fragment>
 
   return (
     <>
@@ -1417,7 +1436,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
           zIndex: 1
         }}
       >
-        {menus['toolbar']}
+        {toolbarComponent}
         {!(new_data.is_static ? new_data.is_static : false) ? (
           <Button
             ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
@@ -1660,15 +1679,15 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
   show_tuto,
   set_show_tuto,
 }) => {
-  const [firstRender,setFirstRender]=useState(true)
-  const [formation,setFormation]=useState<ExempleMenuTypes>({})
+  const [firstRender, setFirstRender] = useState(true)
+  const [formation, setFormation] = useState<ExempleMenuTypes>({})
   const { t } = new_data
 
 
 
 
   // At first render init formation object with data from server
-  if(firstRender){
+  if (firstRender) {
     const fetchData = {
       method: 'POST'
     }
@@ -1719,8 +1738,8 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
       return <></>
     }
     tuto_sub_nav[d[0]] = <>
-      {(d[1] as { ['Files']: string[] })['Files'].filter((f: string) => !f.includes('.xlsx')).map((dd: string,idx:number) => {
-        return <Card key={dd+'-'+idx} variant='card_icon_not_selected'>
+      {(d[1] as { ['Files']: string[] })['Files'].filter((f: string) => !f.includes('.xlsx')).map((dd: string, idx: number) => {
+        return <Card key={dd + '-' + idx} variant='card_icon_not_selected'>
           <CardBody>
             <Stack>
               <Image className='img-card'
@@ -1789,15 +1808,15 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
       <ModalBody>
         <Tabs variant='tabs_navbar'>
           <TabList>
-            {Object.keys(tuto_sub_nav).map((m,idx) => {
-              return <Tab key={'tab_'+idx}>
+            {Object.keys(tuto_sub_nav).map((m, idx) => {
+              return <Tab key={'tab_' + idx}>
                 {(m.split('_').length > 1) ? m.split('_').filter(s => isNaN(+s)).join(' ') : m}
               </Tab>
             })}
           </TabList>
           <TabPanels>
-            {Object.keys(tuto_sub_nav).map((m,idx) => {
-              return <TabPanel key={'tabpane_'+idx}>
+            {Object.keys(tuto_sub_nav).map((m, idx) => {
+              return <TabPanel key={'tabpane_' + idx}>
                 <Box layerStyle='options_4cols' >
                   {tuto_sub_nav[m]}
                 </Box>
