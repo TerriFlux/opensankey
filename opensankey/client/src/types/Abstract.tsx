@@ -46,7 +46,6 @@ export abstract class Class_AbstractDrawingArea {
   public abstract isInSelectionMode(): boolean
   public abstract isInEditionMode(): boolean
   public abstract addElement(): number
-  public abstract recenterElements(): void
   public abstract checkAndUpdateAreaSize(): void
   public abstract deleteNode(_: Type_AbstractNodeElement): void
   public abstract deleteLink(_: Type_AbstractLinkElement): void

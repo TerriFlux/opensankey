@@ -734,8 +734,8 @@ export abstract class Class_ApplicationData
           node.position_x += app_ref.drawing_area.grid_size
         })
       }
-      // Move all elements so none of them are outside the DA
-      this.drawing_area.recenterElements()
+      // Update drawing area size so none of elements are outside the DA
+      this.drawing_area.checkAndUpdateAreaSize()
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {

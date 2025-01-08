@@ -24,7 +24,6 @@ import {
 } from './Element'
 import {
   Type_ElementPosition,
-  default_element_position,
   default_element_color,
   getBooleanFromJSON,
   getNumberFromJSON,
@@ -170,7 +169,7 @@ export class Class_Legend
     this._legend_show_dataTags = _._legend_show_dataTags
     this._node_label_separator = _._node_label_separator
     this._info_link_value_void = _._info_link_value_void
-    this._pos_from_legacy=_._pos_from_legacy 
+    this._pos_from_legacy=_._pos_from_legacy
   }
 
   // SAVING METHODS =====================================================================
@@ -233,7 +232,7 @@ export class Class_Legend
 
   /**
    * Function called in _afterFromJSON in ApplicationData,
-   * the function correctly place legend as if it was in legacy despite being not anymore relative to DA 
+   * the function correctly place legend as if it was in legacy despite being not anymore relative to DA
    *
    * @memberof Class_Legend
    */
@@ -642,8 +641,8 @@ export class Class_Legend
       .on('drag', function (event) {
         g_draggable.attr('transform', 'translate(' + (event.x) + ',' + (event.y) + ')')
       }))
-    
-      this._dy+=20
+
+    this._dy+=20
   }
 
   private _updateLegendHeight() {
