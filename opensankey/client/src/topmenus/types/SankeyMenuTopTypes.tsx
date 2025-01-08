@@ -36,14 +36,15 @@ export type FCType_ButtonLaunchGuide={
 }
 
 
-export type FType_OpenSankeyMenus = (
+export type FType_OpenSankeyMenusDictBuilder = (
   Reinitialization: () => void,
   new_data: Type_GenericApplicationDataOS,
-  external_edition_item: JSX.Element[],
-  external_file_item: JSX.Element[],
-  external_file_export_item: JSX.Element[],
-  externale_save_item: JSX.Element[],
-  externale_navbar_item: { [_: string]: JSX.Element },
+  additional_menus:Type_AdditionalMenus,
+  // external_edition_item: JSX.Element[],
+  // external_file_item: JSX.Element[],
+  // external_file_export_item: JSX.Element[],
+  // externale_save_item: JSX.Element[],
+  // externale_navbar_item: { [_: string]: JSX.Element },
   setDiagram: FType_SetDiagram,
 ) => { [s: string]: JSX.Element | JSX.Element[] }
 
