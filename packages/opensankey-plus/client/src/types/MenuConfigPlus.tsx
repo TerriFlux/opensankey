@@ -38,6 +38,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
   private _is_playing_sequence: boolean = false
   private _is_sequence_loop: boolean = false
 
+  private _ref_to_config_DA_bg_image_updater: MutableRefObject<(() => void)>
+
 
   /* ========================================
     Updater of component for containers related menus
@@ -130,6 +132,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     this._ref_to_accordion_edition_tag_updater=useRef(()=>null)
 
     this._ref_to_toolbar_link_visual_filter_updater=useRef(()=>null)
+    this._ref_to_config_DA_bg_image_updater=useRef(()=>null)
     this._ref_to_menu_config_node_icon_updater=useRef(()=>null)
 
     this._ref_to_updater_modal_apply_layout_plus=useRef(()=>null)
@@ -152,6 +155,7 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
     super.updateAllMenuComponents()
     this.updateComponentRelatedToContainers()
     this.updateComponentRelatedToViews()
+    this._ref_to_config_DA_bg_image_updater.current()
   }
 
   public openConfigMenuElementsContainers() {
@@ -403,6 +407,8 @@ export class Class_MenuConfigPlus extends Class_MenuConfig {
 
   public get ref_to_toolbar_link_visual_filter_updater(): MutableRefObject<(() => void)> {return this._ref_to_toolbar_link_visual_filter_updater}
   public get ref_to_accordion_edition_tag_updater(){return this._ref_to_accordion_edition_tag_updater}
+
+  public get ref_to_config_DA_bg_image_updater(){return this._ref_to_config_DA_bg_image_updater}
 
   public get ref_to_menu_config_node_icon_updater(){return this._ref_to_menu_config_node_icon_updater}
 
