@@ -12,7 +12,7 @@ export const resources_app_elements = {
       MEP: {
         onValidate: 'Don\'t forget to load the file',
         load_icon: 'Load an icon library (from icomoon)',
-        'onBlurNoEnter': 'Quit editor to update the data',
+        'onBlurNoEnter': 'Exit editor to update the data',
         show_image: 'Show image',
       },
       Menu: {
@@ -27,21 +27,21 @@ export const resources_app_elements = {
         'sankeyPlusDisabled': 'Parameter disabled because you don\'t have OpenSankey+',
         'featureLocked': 'Locked',
         'featureBeta': 'Beta-test',
-
+  
         'home': 'Master',
         'addView': 'Add',
         'updateView': 'Update',
-        'precView': 'Prec.',
+        'precView': 'Prev.',
         'nextView': 'Next',
-
+  
         'toBeautify': 'Beautify JSON file',
         'updateFOZdd': 'Update Foreign object on drawing area',
-
+  
         'import_icon': 'Select icon',
         'import_icon_from_pack': 'Import icons from pack',
-        'filter_by_name': 'Filter by name ',
-
-        'presentation_OS': 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge, and includes simple functions for creating nodes, flows and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
+        'filter_by_name': 'Filter by name',
+  
+        'presentation_OS': 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge and includes simple functions for creating nodes, flows, and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
         'presentation_OS_limit_node': 'The 15-node limit for use without an account can be lifted by creating a free account.\n\n',
         'presentation_OSP': 'OpenSankey+ is a paid license that unlocks new features for creating beautiful Sankey diagrams for presentations.\n\nThis license includes advanced formatting features such as the addition of illustrative images or icons for nodes, the addition of color gradients on flows and animations, and more.\n\n But above all, OpenSankey+ lets you generate slideshows to explain your Sankey diagrams, thanks to the "Views" mechanism, which records their visual states (with / without certain filters activated, for example) to simplify navigation between them.\n\n',
         'presentation_OSS': 'SankeySuite is a paid license that unlocks all the advanced charting and analysis features of Sankey.\n\n This license includes flow data reconciliation functionalities to identify inconsistencies or calculate flows whose values are not directly accessible.\n\n It also includes OpenSankey+ functionalities.\n\n',
@@ -52,49 +52,49 @@ export const resources_app_elements = {
         trade_close: 'Close to node',
         Transformation: {
           'amp_short': 'Trans.',
-          'amp': 'Modifier la mise en page',
-          'amp_import': 'Depuis autre diagramme',
-          'amp_manuelle': 'Positionnement',
-          'trans_topo': 'Topologiques',
-          'fmep': 'Autre diagramme',
-          'ad': 'Appliquer',
-          'undo': 'Annuler',
-          'Shortcuts': 'Raccourcis sélections',
-          'unSelectAll': 'Aucun',
-          'selectAll': 'Tout',
-          'selectDefault': 'Défaut',
-          'Topology': 'Ajouts et suppressions',
-          'Geometry': 'Tailles et positions',
-          'Attribut': 'Attributs',
-          'Tags': 'Etiquettes',
-          'Values': 'Valeurs des flux',
-          'Views': 'Vues',
-          'freeLabels': 'Zones de texte',
-          'addNode': 'Aj. Noeuds',
-          'removeNode': 'Sup. Noeuds',
-          'addFlux': 'Aj. Flux',
-          'removeFlux': 'Sup. Flux',
-          'PosNoeud': 'Noeuds',
-          'posFlux': 'Flux',
-          'attrNode': 'Noeuds',
-          'attrFlux': 'Flux',
-          'tagLevel': 'Niveaux de détail',
-          'tagNode': 'Noeuds',
-          'tagFlux': 'Flux',
-          'tagData': 'Données',
-          'tagNode_assign': 'Assigner une étiquette',
-          'tagFlux_assign': 'Assigner une étiquette',
-          'attrGeneral': 'Zone de dessin',
+          'amp': 'Modify the layout',
+          'amp_import': 'From another diagram',
+          'amp_manuelle': 'Positioning',
+          'trans_topo': 'Topological',
+          'fmep': 'Other diagram',
+          'ad': 'Apply',
+          'undo': 'Undo',
+          'Shortcuts': 'Selection shortcuts',
+          'unSelectAll': 'None',
+          'selectAll': 'All',
+          'selectDefault': 'Default',
+          'Topology': 'Additions and deletions',
+          'Geometry': 'Sizes and positions',
+          'Attribut': 'Attributes',
+          'Tags': 'Tags',
+          'Values': 'Flow values',
+          'Views': 'Views',
+          'freeLabels': 'Text areas',
+          'addNode': 'Add Nodes',
+          'removeNode': 'Remove Nodes',
+          'addFlux': 'Add Flows',
+          'removeFlux': 'Remove Flows',
+          'PosNoeud': 'Nodes',
+          'posFlux': 'Flows',
+          'attrNode': 'Nodes',
+          'attrFlux': 'Flows',
+          'tagLevel': 'Detail levels',
+          'tagNode': 'Nodes',
+          'tagFlux': 'Flows',
+          'tagData': 'Data',
+          'tagNode_assign': 'Assign a tag',
+          'tagFlux_assign': 'Assign a tag',
+          'attrGeneral': 'Drawing area',
           'title': 'Transformations',
-          'disabled_view': 'Impossible to import views into a view, if you want to import them go to the master data',
+          'disabled_view': 'Impossible to import views into a view; to import them, go to the master data',
           'list_icon': 'Icon catalog',
-          'list_icon_tooltip': 'Import icon list used in imported layout to the actual data.'
+          'list_icon_tooltip': 'Import icon list used in imported layout to the current data.'
         },
         tooltips: {
           publish: 'Publish online',
           export: 'Export as image',
-          reconcil: 'Reconciliate data',
-          tool_afm: 'Use annex tools to reconciliation',
+          reconcil: 'Reconcile data',
+          tool_afm: 'Use annex tools for reconciliation',
         }
       },
       Noeud: {
@@ -122,7 +122,7 @@ export const resources_app_elements = {
           'couleur': 'Color',
           'rIN': 'Size ratio icon/node',
           'Aucun': 'None',
-          'icon_catalog': 'Select an icon from catalog'
+          'icon_catalog': 'Select an icon from the catalog'
         },
         foreign_object: {
           'Visibilité': 'Visibility',
@@ -143,7 +143,7 @@ export const resources_app_elements = {
           'fla': 'Display free links',
           'astr': 'Display structure',
         },
-
+  
       },
       LL: {
         'hl': 'Height',
@@ -156,7 +156,7 @@ export const resources_app_elements = {
         'cbl': 'Border Color',
         'labels': 'Labels',
         'title': 'Title'
-      },
+      },  
       UserNav: {
         'to_con': 'Sign in',
         'to_reg': 'Sign up',
@@ -205,12 +205,12 @@ export const resources_app_elements = {
           id: {
             'label': 'E-mail',
             'placeholder': 'E-mail is needed to create your account',
-            'error': 'Please enter a valid e-mail adress.'
+            'error': 'Please enter a valid e-mail address.'
           },
           pwd: {
             'label': 'Password',
             'placeholder': 'Choose a good password',
-            'error': 'Password must take more than eight characters, with at least one letter, one number and one special character.',
+            'error': 'Password must have more than eight characters, with at least one letter, one number, and one special character.',
             'show': 'show',
             'hide': 'hide',
           },
@@ -221,18 +221,18 @@ export const resources_app_elements = {
             'err_captcha': 'Captcha is invalid',
             'err_email_invalid': 'Email is not valid',
             'err_email_exists': 'An account already exists with this e-mail',
-            'nok': 'An error has occured, could not create account.'
+            'nok': 'An error has occurred, could not create account.'
           },
           'btn_terms': 'Please read and accept the terms and conditions',
           'btn_next': 'Sign up'
         },
         validation: {
-          'title': 'Validation du compte',
+          'title': 'Account validation',
           msg: {
             'ok': 'This account has been successfully validated.',
             'nok': 'Error, wrong link',
             'account_already_created': 'This account has already been validated',
-            'redirect': 'You will be redirected to license checkout page.',
+            'redirect': 'You will be redirected to the license checkout page.',
           }
         }
       },
@@ -241,11 +241,11 @@ export const resources_app_elements = {
         'accept': 'Accept the terms and conditions of use'
       },
       Paiement: {
-        'win_header_buy': 'Create and share Sankey\'s diagrams like a pro.',
+        'win_header_buy': 'Create and share Sankey diagrams like a pro.',
         'win_header_success': 'Thank you for your subscription to OpenSankey+',
-        'win_header_error': 'Oops, somethings goes wrong',
+        'win_header_error': 'Oops, something went wrong',
         'win_content_success': 'OpenSankey+ is now activated for your account.',
-        'win_content_error': 'Something went wrong during the paiement process',
+        'win_content_error': 'Something went wrong during the payment process',
         'btn_checkout': 'I want OpenSankey+ !'
       },
       Login: {
@@ -254,7 +254,7 @@ export const resources_app_elements = {
         id: {
           'label': 'E-mail',
           'placeholder': '',
-          'error': 'Please enter a valid e-mail adress.'
+          'error': 'Please enter a valid e-mail address.'
         },
         pwd: {
           'label': 'Password',
@@ -269,14 +269,14 @@ export const resources_app_elements = {
         },
         forgot: {
           'title': 'Reset password',
-          'ask': 'Password forgotten ?',
+          'ask': 'Password forgotten?',
           'sub': 'Reset',
           msg: {
-            'ok': 'The password has been successfully replaced.',
+            'ok': 'The password has been successfully reset.',
             'mail_sent': 'A password reset e-mail has been sent to you.',
             'err_server': 'An error occurred when calling the server',
             'err_user_already_connected': 'Error, you\'re already logged in.',
-            'err_user_inexistant': 'Error, given account does not exists',
+            'err_user_inexistant': 'Error, the given account does not exist',
             'err_token_expire': 'Error, the request has expired.'
           }
         }
@@ -284,8 +284,8 @@ export const resources_app_elements = {
       UserPages: {
         login_modify: {
           'title': 'Your login details',
-          'pwd': 'Changer mot de passe',
-          'del': 'Supprimer le compte',
+          'pwd': 'Change password',
+          'del': 'Delete account',
           email_modal: {
             'title': 'Confirm e-mail modification with your password',
             'btn': 'Apply modification'
@@ -297,7 +297,7 @@ export const resources_app_elements = {
           },
           del_modal: {
             'title': 'Do you really want to delete your account?',
-            'desc': 'Warning: This action will delete your account, your data and stop your OpenSankey+ subscription if present.',
+            'desc': 'Warning: This action will delete your account, your data, and stop your OpenSankey+ subscription if present.',
             'fdback': 'Why do you want to delete your account? (optional)',
             'fdback_default': '-',
             'fdback_customer_service': 'Customer service was less than expected',
@@ -319,19 +319,19 @@ export const resources_app_elements = {
             'del_account': 'Delete account'
           },
           msgs: {
-            'ok_email': 'E-mail has successfully been changed',
+            'ok_email': 'E-mail has been successfully changed',
             'prs_email': 'Processing e-mail change',
             'err_email_regex': 'E-mail is not valid',
             'err_email_failed': 'The e-mail could not be modified',
             'ok_pwd': 'The password has been successfully changed',
             'prs_pwd': 'A password reset e-mail has been sent to you.',
             'err_pwd_failed': 'Password change request error',
-            'ok_del': 'Account has been deleted. Going back to main page.',
+            'ok_del': 'Account has been deleted. Returning to the main page.',
             'err_del': 'Account deletion request error. Please check your password.',
           },
         },
         infos_modify: {
-          'title': 'Your personal informations',
+          'title': 'Your personal information',
           btns: {
             'set_fn': 'Apply modification',
             'set_ln': 'Apply modification',
@@ -344,8 +344,8 @@ export const resources_app_elements = {
           },
         },
         license: {
-          'title': 'OpenSankey+ license informations',
-          'exp_until': 'Next renewal : ',
+          'title': 'OpenSankey+ license information',
+          'exp_until': 'Next renewal: ',
           btns: {
             'mng_sub': 'Manage subscription',
             'add_sub': 'Switch to OpenSankey+',
@@ -355,16 +355,16 @@ export const resources_app_elements = {
         'SS_lic': 'SankeySuite license',
         'update_lic': 'Register new license number',
         'win_acc_infos': 'Account details',
-        'win_db_template': 'Availables templates',
+        'win_db_template': 'Available templates',
         'db_desc_template': 'Template description',
         'usr_no_lic': 'No license currently registered',
-        'usr_lic_validdate': 'Date of validity : ',
-        'usr_lic_expdate': 'Expired on : ',
+        'usr_lic_validdate': 'Date of validity: ',
+        'usr_lic_expdate': 'Expired on: ',
         'usr_lic_valid': 'Valid license',
         'usr_lic_invalid': 'Invalid license',
         'usr_lic_deactivated': 'License deactivated',
         'usr_lic_err': 'License number invalid',
-        'err_get_user_infos': 'Error while trying to access the user\'s infos',
+        'err_get_user_infos': 'Error while trying to access the user\'s information',
         'err_get_OS+_infos': 'Error while trying to access the OpenSankey+ license server',
         'err_get_SS_infos': 'Error while trying to access the SankeySuite license server'
       },
@@ -381,19 +381,19 @@ export const resources_app_elements = {
         'export': 'Download only the current view',
         'applyDisplayFromView': 'Apply the layout from another view',
         'ns': 'View not saved',
-        'warn_ns': 'You are about to change your view before saving the current view, do you want to save the changes before changing your view ?',
+        'warn_ns': 'You are about to change your view before saving the current view, do you want to save the changes before changing your view?',
         'dont_save': 'Don\'t save',
         'save': 'Save the view',
-        'exportAll': 'Export all view',
+        'exportAll': 'Export all views',
         'importMultiple': 'Import multiple views',
         'unit_node': 'Create a unitary view',
         'to_normal_view': 'Considering this view as non-exploring',
-        'in_new': 'in a new vue',
-        'in_existing': 'in the view :',
-        'template_unitary_zdt_content': 'Unitary Sankey build from :',
-        'template_unitary_zdt_content_of_node': 'Unitary node :',
+        'in_new': 'in a new view',
+        'in_existing': 'in the view:',
+        'template_unitary_zdt_content': 'Unitary Sankey build from:',
+        'template_unitary_zdt_content_of_node': 'Unitary node:',
         'keep_master_var': 'Master variable',
-        'setTransparentAttr': 'Choose variables value herited from Master',
+        'setTransparentAttr': 'Choose variables value inherited from Master',
         'updateViewWithMasterVar': 'Update current view with selected parameter',
         'edit_name': 'Edit name',
         'modify_name_view': 'Modify the name of the view',
@@ -401,48 +401,47 @@ export const resources_app_elements = {
         'choose_link_ref_sankey_unit': 'Values',
         'chose_io': 'Choose input or output links',
         'chose_node_to_configure': 'Choose a unitary node to configure',
-        'chose_link_ref': 'Choose links referentiel to normalize sankey',
+        'chose_link_ref': 'Choose link referential to normalize Sankey',
         'prefix_copy': 'Copy of',
-        'selectNodeForUnitaryView': 'Select a node to create a unitary sankey from',
+        'selectNodeForUnitaryView': 'Select a node to create a unitary Sankey from',
         'output_link': 'Output',
         'input_link': 'Input',
         legend_unit_sankey_values_links: 'Links value',
         legend_unit_sankey_percent_links: 'Percent compared to the sum of input or output',
-        legend_unit_sankey_normalize_links: 'Standardized value by the link :',
+        legend_unit_sankey_normalize_links: 'Standardized value by the link:',
         from_actual: 'From current data',
-        from_excel: 'From excel file',
-        unit_from_excel: 'Unit. from excel',
-        select_excel_file: 'Choose an excel file to extract unitary view from',
+        from_excel: 'From Excel file',
+        unit_from_excel: 'Unit. from Excel',
+        select_excel_file: 'Choose an Excel file to extract unitary view from',
         select_data_source: 'Select an imported file',
         create_unit: 'Create unitary views',
         create: 'Create unitary view from selected nodes',
-        unit_sankey_values_links: 'Display links value',
-        unit_sankey_percent_links: 'Display links value as percent',
-        unit_sankey_normalize_links: 'Display links value normalized by one or more links value',
+        unit_sankey_values_links: 'Display link values',
+        unit_sankey_percent_links: 'Display link values as percent',
+        unit_sankey_normalize_links: 'Display link values normalized by one or more link values',
         default_unit_view_name: 'Unitary view of node ',
-
+  
         tooltips: {
-          keep_master_var: 'Allow to choose variable value of the sankey view to be from the sankey master',
-          catalog_data: 'Generate a catalog of views : gather views from different files',
-
+          keep_master_var: 'Allow choosing variable value of the Sankey view to be from the Sankey master',
+          catalog_data: 'Generate a catalog of views: gather views from different files',
+  
           PrevViewButton: 'Display previous view',
           NextViewButton: 'Display next view',
           saveView: 'Save the modification of the view in master data',
           home: 'Return to master data (database from which views come from)',
-          buttonCreateView: 'Generate a view from actual sankey diagram',
-          buttonCloneView: 'Copy the the current view to a new one ',
-          buttonImportView: 'Import a data as a view',
-          buttonExportView: 'Export a view as a data (without other view)',
-          buttonCloneMasterAttrView: 'Tranfer value from master data to the view elements',
-          button_delete_actual_view: 'Delete actual view',
-          unit_from_excel: 'Excel  Generate views from one or more excel files',
-          choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher Choose links values to display'
+          buttonCreateView: 'Generate a view from the current Sankey diagram',
+          buttonCloneView: 'Copy the current view to a new one',
+          buttonImportView: 'Import data as a view',
+          buttonExportView: 'Export a view as data (without other views)',
+          buttonCloneMasterAttrView: 'Transfer value from master data to the view elements',
+          button_delete_actual_view: 'Delete current view',
+          unit_from_excel: 'Excel: Generate views from one or more Excel files',
+          choose_link_ref_sankey_unit: 'Choose link values to display'
         }
-
       },
       welcome: {
         news: 'What\'s new in this version',
-        view: 'Buttons to navigate through the differents views of the sankey',
+        view: 'Buttons to navigate through the different views of the Sankey',
         breadcrumbs: {
           intro: 'Overview',
           news: 'Updates',
@@ -451,31 +450,31 @@ export const resources_app_elements = {
           230803: {
             main_title: 'August 03, 2023: New features',
             main_content: 'We added new features to make it easier to manipulate Sankey diagrams',
-            sub_title_1: 'Right-click with a lot of options',
-            sub_content_1: 'From now on, a lot of actions on nodes, links and even drawing areas are accessible by right-clicking on the concerned elements.',
+            sub_title_1: 'Right-click with many options',
+            sub_content_1: 'From now on, a lot of actions on nodes, links, and even drawing areas are accessible by right-clicking on the concerned elements.',
             sub_title_2: 'Multiple selection frame',
-            sub_content_2: 'Multiple selection of nodes can now be made with selection frames.',
+            sub_content_2: 'Multiple selections of nodes can now be made with selection frames.',
             sub_title_3: 'Ease the expansion of your diagrams',
             sub_content_3: 'The drawing area can be expanded in any direction by dragging nodes/flows/text boxes/captions in the chosen direction.',
-            image1: 'clic droit noeud EN.PNG',
-            image2: 'clic droit flux EN.PNG',
-            image3: 'clic droit fond EN.PNG',
-            image4: 'Zone de selection.PNG'
+            image1: 'right_click_node_EN.PNG',
+            image2: 'right_click_flow_EN.PNG',
+            image3: 'right_click_background_EN.PNG',
+            image4: 'Selection_frame.PNG'
           },
           230908: {
-            main_title: 'September 08, 2023 ',
+            main_title: 'September 08, 2023',
             main_content: 'Visual enhancement of configuration menu',
             sub_title_1: 'Visual redesign of the input in the configuration menu',
-            sub_content_1: 'Configuration menu inputs have been reshaped with more visible labels and logos for buttons to better understand their usefulness',
+            sub_content_1: 'Configuration menu inputs have been reshaped with more visible labels and logos for buttons to better understand their usefulness.',
             sub_title_2: 'Data checkpoint',
-            sub_content_2: 'At any time you can make a quick backup of your current diagram, once the backup is done you can continue to develop your diagram and if the changes made do not please you, reload the application to find your diagram at the time of backup',
+            sub_content_2: 'At any time, you can make a quick backup of your current diagram. Once the backup is done, you can continue to develop your diagram and, if the changes made do not please you, reload the application to find your diagram at the time of backup.',
             img1: 'menu_config_enhanced_en.PNG',
             img2: 'menu_config_enhanced_zdd_en.PNG',
             img3: 'menu_last_save_en.PNG',
           }
         },
         caroussel: {
-          Image0: 'Welcome to TerriFlux\'s toolsuite OpenSankey, OpenSankey+ and SankeySuite',
+          Image0: 'Welcome to TerriFlux\'s toolsuite OpenSankey, OpenSankey+, and SankeySuite',
           Image1: 'Understand your flows, represent them with Sankey diagrams',
           Image2: 'Quickly import your data or draw your diagrams directly',
           Image3: 'Clarify the information represented',
@@ -485,13 +484,13 @@ export const resources_app_elements = {
           Image6: 'Create interactive & didactic infographics',
           descr: {
             Image0: 'These tools make it easy to create flow diagrams',
-            Image1: 'In this representation mode, the thickness of each arrow is proportional to the value of the flow it represents',
-            Image2: 'Create your diagrams from Excel spreadsheets or via the interactive drawing area',
-            Image3: 'Make your diagrams easy to read with integrated node, flow and data labeling',
-            Image40: 'Aggregation levels allow you to represent your flows in several levels of detail',
-            Image41: 'Each level of detail can be directly selected to display only what is useful',
-            Image5: 'Explain your achievements simply with the automatic legend system and the addition of text boxes',
-            Image6: 'Create beautiful diagrams by directly integrating images or icons'
+            Image1: 'In this representation mode, the thickness of each arrow is proportional to the value of the flow it represents.',
+            Image2: 'Create your diagrams from Excel spreadsheets or via the interactive drawing area.',
+            Image3: 'Make your diagrams easy to read with integrated node, flow, and data labeling.',
+            Image40: 'Aggregation levels allow you to represent your flows in several levels of detail.',
+            Image41: 'Each level of detail can be directly selected to display only what is useful.',
+            Image5: 'Explain your achievements simply with the automatic legend system and the addition of text boxes.',
+            Image6: 'Create beautiful diagrams by directly integrating images or icons.'
           }
         }
       },
