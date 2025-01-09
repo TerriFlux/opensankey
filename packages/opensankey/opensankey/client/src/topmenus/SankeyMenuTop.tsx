@@ -151,17 +151,17 @@ export const menu_config_width = 450
 
 /*************************************************************************************************/
 
-// const GoToUserDoc = () => {
-//   const path = window.location.origin
-//   const url = path + 'doc'
-//   fetch(url, {
-//     method: 'GET'
-//   }).then((response) => {
-//     if (response.redirected) {
-//       return window.open(response.url, '_blank')
-//     }
-//   }).then(win => win?.focus())
-// }
+const GoToUserDoc = () => {
+  const path = window.location.origin
+  const url = path + '/doc'
+  fetch(url, {
+    method: 'GET'
+  }).then((response) => {
+    if (response.redirected) {
+      return window.open(response.url, '_blank')
+    }
+  }).then(win => win?.focus())
+}
 
 // Logo for sub-nav 'aide'
 const logo_home = <svg
@@ -783,7 +783,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
       >
         <Button
           variant='menutop_button'
-
+          onClick={() => GoToUserDoc()}
         >
           <Box
             layerStyle='menutop_button_style'
