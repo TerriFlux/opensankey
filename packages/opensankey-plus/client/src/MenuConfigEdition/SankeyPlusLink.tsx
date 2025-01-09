@@ -199,7 +199,7 @@ export const MenuConfLinkDataText: FunctionComponent<FCType_MenuConfLinkDataText
   }
 
 
-  return <OSTooltip label={t('Flux.data.tooltips.affichage')}>
+  return <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') :t('Flux.data.tooltips.affichage')}>
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
       <Box layerStyle='menuconfigpanel_option_name' >
         {t('Flux.data.affichage')}
