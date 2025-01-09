@@ -8,13 +8,13 @@ try:
 except Exception:
     from server import create_app
 
-# try:
-#     from .doc import doc as doc_blueprint
-# except Exception:
-#     from doc import doc as doc_blueprint
+try:
+    from .doc import doc as doc_blueprint
+except Exception:
+    from doc import doc as doc_blueprint
 
 app = create_app()
-# app.register_blueprint(doc_blueprint, url_prefix='/doc')
+app.register_blueprint(doc_blueprint, url_prefix='/doc')
 app.secret_key = secrets.token_urlsafe(64)
 app.config['SESSION_TYPE'] = 'filesystem'
 mfa_data_dir = os.environ.get('MFAData')

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenSankey &mdash; Documentation SankeySuite 0.1</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/translations.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Recherche" href="search.html" />
+    <link rel="next" title="Edition étiquettes" href="user_tools_tag.html" />
+    <link rel="prev" title="Fonctionnalités de SankeySuite" href="user_tools.html" />
+    <link href="_static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SankeySuite
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Sommaire:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="user.html">Documentation Utilisateur</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="user_introduction.html">Introduction de l’applications</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="user_tools.html">Fonctionnalités de SankeySuite</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="user_tools.html#menu-de-configuration">Menu de configuration</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">OpenSankey</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#options-opensankey">Options OpenSankey+</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="user_tools.html#barre-d-edition">Barre d’édition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_tools.html#menu-de-navigation">Menu de navigation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SankeySuite</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="user.html">Documentation Utilisateur</a></li>
+          <li class="breadcrumb-item"><a href="user_tools.html">Fonctionnalités de SankeySuite</a></li>
+      <li class="breadcrumb-item active">OpenSankey</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/user_tools_menu_config_sankeysuite.rst.txt" rel="nofollow"> Afficher la source de la page</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="opensankey">
+<h1>OpenSankey<a class="headerlink" href="#opensankey" title="Lien permanent vers cette rubrique"></a></h1>
+<section id="zone-de-dessin">
+<h2>Zone de dessin<a class="headerlink" href="#zone-de-dessin" title="Lien permanent vers cette rubrique"></a></h2>
+<p>La Zone de dessin est onglet du menu de configuration permettant de gérer des caractèristiques global de la zone de dessin.</p>
+<img alt="_images/mep.PNG" class="align-center" src="_images/mep.PNG" />
+<p>L’onglet contient 2 sous-parties : L’arrière plan et la légende.</p>
+<p>Dans <strong>Arrière plan</strong> les différents paramètres modifiables sont :</p>
+<ul class="simple">
+<li><p><strong>La couleur de fond</strong>: Permet de modifier la couleur de fond du sankey</p></li>
+<li><p><strong>Taille des carrés du quadrillage de fond</strong> et <strong>Grille visible</strong>: Permet de choisir la taille des carrés du grillage de fond de la zone de sankey. Ce grillage aide lorsque l’on veut aligner les différents élements du diagramme.</p></li>
+<li><p><strong>L’échelle</strong>: Permet de reduire ou augumenter l’échelle du diagramme et ainsi modifier l’épaisseur des flux</p></li>
+</ul>
+<p>Dans <strong>Légendes</strong> les différents paramètres modifiables sont :</p>
+<ul class="simple">
+<li><p><strong>Position horizontal</strong>: Permet de modifier la position horizontal de la légende par rapport au coin en haut à gauche de la zone de dessin</p></li>
+<li><p><strong>Position vertical</strong>: Permet de modifier la position vertical de la légende par rapport au coin en haut à gauche de la zone de dessin</p></li>
+<li><p><strong>Largeur</strong>: Permet de choisir la largeur de la légende, si le nom d’une étiquette affiché est plus grand que la largeur de la légende alors le nom sea coupé et remis à la ligne.</p></li>
+<li><p><strong>Afficher l’échelle</strong>: Permet d’afficher une barre servant échelle que l’on peut déplacer pour estimer la valeur d’un flux</p></li>
+<li><p><strong>Taille de la police</strong>: Permet de modifier la taille de la police de la légende</p></li>
+</ul>
+</section>
+<section id="edition-noeuds">
+<h2>Edition noeuds<a class="headerlink" href="#edition-noeuds" title="Lien permanent vers cette rubrique"></a></h2>
+<p>L’onglet d’édition permet de modifier les paramètres des noeuds du diagramme. Cet onglet contient une partie supérieur qui permet de sélectionner, créer,supprimer et modifier des noeuds.
+Ensuite, après avoir sélectionner des noeuds, il possible de modifier des paramètres plus spécifiques regroupé dans des sous-onglets:</p>
+<p><strong>Apparence</strong></p>
+<p>Par défault les noeuds ont un style par défaut qui décrit leur apparence, ont peut modifier le style des noeuds la barre de navigation en haut de l’application : <strong>Edition &gt; Styles &gt; Editer le style des noeuds</strong>.
+Dans le menu de configuration, l’onglet apparence permet de surcharger le style (la valeur des attributs ne proviennet plus du style associé au noeud mais du noeud lui-même).</p>
+<p><em>Apparence</em>:</p>
+<p>Dans cet sous-partie, nous pouvons modifier des paramètres sur l’apparence des noeuds tel que :</p>
+<ul class="simple">
+<li><p>La <strong>visibilité</strong> de sa forme</p></li>
+<li><p>Sa <strong>couleur</strong></p></li>
+<li><p>Si ca <strong>couleur reste</strong> quand une étiquette est sélectionné</p></li>
+<li><p>Sa <strong>forme</strong> (soit une ellipse soit un rectangle)</p></li>
+<li><p>Sa <strong>largeur</strong> et <strong>hauteur minimum</strong>, car la taille d’un noeud peut augumenter selon les flux entrant et sortant</p></li>
+</ul>
+<p><em>Labels</em></p>
+<p>Dans cette sous-partie, nous pouvons mdoifier des paramètres liés aux labels des noeuds tel que :</p>
+<ul class="simple">
+<li><p>Sa <strong>visibilité</strong></p></li>
+<li><p>Si il est de couleur <strong>blanc</strong> ou non (utilé si le label est placé sur le noeud)</p></li>
+<li><p>Si on affiche un <strong>fond de label</strong> pour qu’il soit + visible si il est par dessus d’autres éléments du sankey</p></li>
+<li><p>Sa <strong>position vertical</strong> par rapport au noeud</p></li>
+<li><p>Sa <strong>position horizontal</strong> par rapport au noeud</p></li>
+<li><p>La <strong>police de caractère</strong> (Gras,Majuscule,Italique,Famille)</p></li>
+<li><p>La <strong>taille de la police</strong></p></li>
+<li><p>La <strong>longueur des labels</strong>, si les labels des noeuds sont trop long il est possible de faire des retour à la ligne</p></li>
+</ul>
+<p><em>Labels de valeur</em></p>
+<ul class="simple">
+<li><p><strong>Afficher la valeur des noeuds</strong>, affiche le maximum entre la somme des liens entrants et la somme des liens sortants</p></li>
+<li><p>La <strong>position vertical de la valeur</strong> par rapport au noeud</p></li>
+<li><p>La <strong>position horizontal de la valeur</strong> par rapport au noeud</p></li>
+<li><p>La <strong>taille de la police de la valeur</strong></p></li>
+</ul>
+<p><strong>Étiquettes</strong></p>
+<p>Cet onglet permet d’associer les noeuds sélectionnés à des étiquettes de noeud définis dans le menu <em>Étiquettes des noeuds</em>.
+Un noeud peut être associé à plusieurs étiquettes d’un même groupe, pour voir les noeuds celon leurs étiquettes aller dans la barre de navigation <strong>Filtres &gt; Noeuds</strong> puis cliquer sur le bouton switch pour appliquer la couleur des étiquettes du groupe d’étiquette aux noeud.</p>
+<p><strong>Info-bulle</strong></p>
+<p>Dans cet onglet on gère le contenue le l’info-bulle qui s’affiche lorsque l’on survol les noeuds tous en ayant les la touche <strong>shift</strong> pressé.</p>
+<p><strong>Position flux e/s</strong></p>
+<p>Dans cet onglet qui n’apparait que si l’on sélectionne qu’un seul noeud, on gère la position des flux entrant sortant permettant de mieux les organiser
+Il est composé d’une partie avec des sélecteurs et d’une partie avec un tableau</p>
+<p>Les sélecteurs permettent spécifié si l’on veux organiser les liens entrant ou sortant et de quel côté. Il y a aussi un boutnon pour coloré les lignes du tableau pour mieux pour voir identifier les liens du diagramme</p>
+<p>Ensuite le tableau affiche les liens répondant à ces critères et avec la colone position nous pouvons modifier la position des flux attachés aux noeuds</p>
+<img alt="_images/menu_noeud_position_flux.PNG" class="align-center" src="_images/menu_noeud_position_flux.PNG" />
+</section>
+<section id="edition-des-etiquettes-de-noeuds">
+<h2>Edition des étiquettes de noeuds<a class="headerlink" href="#edition-des-etiquettes-de-noeuds" title="Lien permanent vers cette rubrique"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_tools_tag.html">Edition étiquettes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#qu-est-ce-qu-une-etiquette">Qu’est-ce qu’une étiquette ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#quels-sont-les-differents-type-d-etiquette">Quels sont les différents type d’étiquette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes">Comment créer des groupes et des étiquettes ?</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="edition-flux">
+<h2>Edition flux<a class="headerlink" href="#edition-flux" title="Lien permanent vers cette rubrique"></a></h2>
+<p>L’onglet d’édition permet de modifier les paramètres des flux du diagramme. Cet onglet contient une partie supérieur qui permet de sélectionner, créer,supprimer et modifier des noeuds, et d’une partie inférieur qui, après avoir sélectionner des flux, permet de modifier des paramètres plus spécifiques regroupés dans des sous-onglets:</p>
+<p>Parmis les paramètres généraux modifiables des flux il y a :
+* Leur <strong>source/cible</strong>
+* <strong>Inverser</strong> la source/cible
+* Déplacer des liens par <strong>dessus/dessous</strong> les autres</p>
+<p>Les paramètres spécifiques regroupé par catégories sont :</p>
+<section id="donnees">
+<h3>Données<a class="headerlink" href="#donnees" title="Lien permanent vers cette rubrique"></a></h3>
+<p>Cet onglet permet d’attribuer une valeur aux flux.</p>
+<ul class="simple">
+<li><p>Les flux peuvent avoir des étiquettes de données qui correspondent à des <strong>filtres</strong>.</p></li>
+<li><p>Nous pouvons y renseigner la <strong>valeur</strong> pour ces filtres</p></li>
+<li><p>Nous pouvons afficher la valeur de ces flux de manière <strong>scientifique</strong> ou non</p></li>
+<li><p>Nous pouvons choisir d’afficher un <strong>texte</strong> au lieu de la valeur</p></li>
+</ul>
+</section>
+<section id="apparence">
+<h3>Apparence<a class="headerlink" href="#apparence" title="Lien permanent vers cette rubrique"></a></h3>
+<p>Par défault les flux ont un style par défaut qui décrit leur apparence, ont peut modifier le style des flux la barre de navigation en haut de l’application : <strong>Edition &gt; Styles &gt; Editer le style des flux</strong>.
+Dans le menu de configuration, l’onglet apparence permet de surcharger le style (la valeur des attributs ne proviennet plus du style associé au flux mais du flux lui-même).</p>
+<ul class="simple">
+<li><p>Le <strong>style</strong> associé au flux et la possibilité de supprimer les surcharges des variables d’apparence</p></li>
+</ul>
+<p><em>Apparence</em></p>
+<p>Cette sous-partie gère des paramètres d’apparence des flux tel que :</p>
+<ul class="simple">
+<li><p>Sa <strong>couleur</strong></p></li>
+<li><p>Son <strong>opacité</strong></p></li>
+<li><dl class="simple">
+<dt>L’orientation du flux :</dt><dd><ul>
+<li><p><strong>Horiz-Horiz</strong> : Le flux part du noeud source à l’horizontal et arrive au noeud cible à l’horizontal</p></li>
+<li><p><strong>Vert-Vert</strong> : Le flux part du noeud source à la vertical et arrive au noeud cible à la vertical</p></li>
+<li><p><strong>Vert-Horiz</strong> : Le flux part du noeud source à la vertical et arrive au noeud cible à l’horizontal</p></li>
+<li><p><strong>Horiz-Vert</strong> : Le flux part du noeud source à l’horizontal et arrive au noeud cible à la vertical</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><strong>Position du centre</strong> du flux, en pourcent (0%= début du flux à côté du noeud source, 100%= à la fin du flux près du noeud cible)</p></li>
+<li><p><strong>Ecart entre les poignées</strong></p></li>
+<li><dl class="simple">
+<dt><strong>Type de courbe</strong>:</dt><dd><ul>
+<li><p>ca peut être un flux avec des traits doits ou <strong>courbé</strong></p></li>
+<li><p>avoir une <strong>flêche</strong> pour connaitre le sens du flux</p></li>
+<li><p>Être en mode <strong>recyclage</strong> donnant une forme au flux pour montrer un retour en arrière dans le diagramme</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>La <strong>tension de la courbure</strong> si l’option est sélectionné</p></li>
+<li><p>L”<strong>épaisseur de la flêche</strong></p></li>
+</ul>
+<p><em>Label</em></p>
+<p>Cet sous-partie gère les paramètres liés aux labels des flux tel que :</p>
+<ul class="simple">
+<li><p>Sa <strong>visibilité</strong></p></li>
+<li><p>La <strong>visibilité</strong> de l’unité du flux</p></li>
+<li><p>Le nom de  l”<strong>unité</strong> du flux (si elle visible)</p></li>
+<li><p>Afficher le label du flux en <strong>notation scientifique</strong></p></li>
+<li><p>Choisir le <strong>nombre de signes significatifs</strong> (si l’on affiche le label en notation scientifique)</p></li>
+<li><p>Afficher le label avec un <strong>nombre de décimale fixe</strong></p></li>
+<li><p>Choisir le <strong>nombre de décimale</strong> (si l’on affiche le label avec un nombre de décimale fixe)</p></li>
+<li><p>La <strong>couleur</strong> du label</p></li>
+<li><p>La <strong>police du label</strong> (famille,taille)</p></li>
+<li><p><strong>Alginer le texte avec le chemin du flux</strong> (suit la courbure du flux au lieu de rester horizontal)</p></li>
+<li><p><strong>Position</strong> du texte par rapport au flux (au début du flux, au milieux du flux ou à la fin du flux) et (au dessus du flux, au milieux du flux ou en dessous du flux)</p></li>
+<li><p>L’option de <strong>positionner le label à la souris</strong>, détaché du flux</p></li>
+</ul>
+</section>
+<section id="info-bulle">
+<h3>Info-bulle<a class="headerlink" href="#info-bulle" title="Lien permanent vers cette rubrique"></a></h3>
+<p>Dans cet onglet on gère le contenue le l’info-bulle qui s’affiche lorsque l’on survol les flux tous en ayant les la touche <strong>shift</strong> pressé.</p>
+</section>
+</section>
+<section id="edition-des-etiquettes-de-flux">
+<h2>Edition des étiquettes de flux<a class="headerlink" href="#edition-des-etiquettes-de-flux" title="Lien permanent vers cette rubrique"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_tools_tag.html">Edition étiquettes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#qu-est-ce-qu-une-etiquette">Qu’est-ce qu’une étiquette ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#quels-sont-les-differents-type-d-etiquette">Quels sont les différents type d’étiquette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes">Comment créer des groupes et des étiquettes ?</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="edition-des-etiquettes-de-donnees">
+<h2>Edition des étiquettes de données<a class="headerlink" href="#edition-des-etiquettes-de-donnees" title="Lien permanent vers cette rubrique"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_tools_tag.html">Edition étiquettes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#qu-est-ce-qu-une-etiquette">Qu’est-ce qu’une étiquette ?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#quels-sont-les-differents-type-d-etiquette">Quels sont les différents type d’étiquette</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_tools_tag.html#comment-creer-des-groupes-et-des-etiquettes">Comment créer des groupes et des étiquettes ?</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="options-opensankey">
+<h1>Options OpenSankey+<a class="headerlink" href="#options-opensankey" title="Lien permanent vers cette rubrique"></a></h1>
+<section id="id1">
+<h2>Edition noeuds<a class="headerlink" href="#id1" title="Lien permanent vers cette rubrique"></a></h2>
+<section id="icon">
+<h3>Icon<a class="headerlink" href="#icon" title="Lien permanent vers cette rubrique"></a></h3>
+<p>Dans cet onglet, on gère l’insertion d’icones dans les noeuds. Au préalable il faut avoir charger une liste d’icones provenant d’icomoon dans le menu préférence.
+Les différents paramètres de cet onglet sont :</p>
+<ul class="simple">
+<li><p>Sa <strong>visibilité</strong></p></li>
+<li><p>L”<strong>icon</strong> que l’on veut afficher</p></li>
+<li><p>Sa <strong>couleur</strong></p></li>
+<li><p>Son <strong>ratio</strong> : sa taille par rapport au noeud</p></li>
+</ul>
+</section>
+<section id="images">
+<h3>Images<a class="headerlink" href="#images" title="Lien permanent vers cette rubrique"></a></h3>
+<p>Dans cet onglet, on gère l’insertion d’image et du html dans les noeuds. Cette onglet est souvent utilisé pour l’insertion d’image dans les noeuds (d’où son nom) via l’éditeur wysiwyg <em>(what you see is what you get)</em></p>
+<img alt="_images/node_image.PNG" class="align-center" src="_images/node_image.PNG" />
+<p>Les différents paramètres de cet onglet sont :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>La <strong>visibilité</strong> de l”<em>image</em></p></li>
+<li><p>Transformer l’éditeur wysiwyg en champs de <strong>texte brut</strong> pour écrire du html brut est être plus précis dans ce que l’on fait.</p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+<section id="zone-de-textes">
+<h2>Zone de textes<a class="headerlink" href="#zone-de-textes" title="Lien permanent vers cette rubrique"></a></h2>
+<p>Dans cet onglet on gère les zone de textes que l’on peut placer où l’on veut. On peut aussi les utlisé pour repésenter des groupes d’élements sur le diagramme.</p>
+<img alt="_images/label_libre_exemple.PNG" class="align-center" src="_images/label_libre_exemple.PNG" />
+<p>Les paramètres modifiables des zones de textes sont :</p>
+<img alt="_images/zdt_wysiwyg.PNG" class="align-center" src="_images/zdt_wysiwyg.PNG" />
+<ul class="simple">
+<li><p>Son <strong>Titre</strong></p></li>
+<li><p>Un <strong>éditeur de texte</strong> avec des options de formatage de texte intégré (couleur,taille police,…)</p></li>
+<li><p>Un <strong>bonton pour mettre à jour</strong> les zone de textes avec ce qui il y a dans l’éditeur</p></li>
+<li><p>La <strong>hauteur</strong> de la zone de texte</p></li>
+<li><p>La <strong>largeur</strong> de la zone de texte</p></li>
+<li><p>La <strong>couleur de fond</strong> de la zone de texte</p></li>
+<li><p><strong>L’opacité de la couleur de fond</strong></p></li>
+<li><p>La <strong>couleur de la bordure</strong></p></li>
+<li><p>Si la <strong>bordure est transparente</strong></p></li>
+</ul>
+</section>
+<section id="vues-storytelling">
+<h2>Vues (<em>Storytelling</em>)<a class="headerlink" href="#vues-storytelling" title="Lien permanent vers cette rubrique"></a></h2>
+<p>Les vues sont d’autres diagrammes de sankey présent dans les données, elles sont généralement une copie des données principales avec quelques variables modifiées pour visualiser le sankey sous un autre angle.
+La création de vue ce fait soit via le raccourcis clavier <strong>Ctrl+X</strong> soit dans le menu de navigation</p>
+<section id="menu-de-configuration">
+<h3>Menu de configuration<a class="headerlink" href="#menu-de-configuration" title="Lien permanent vers cette rubrique"></a></h3>
+<p>Dans le <strong>menu de configuration</strong> ,nous pouvons simplement :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>Editer le nom</strong> de la vue</p></li>
+<li><p><strong>Modifier son ordre</strong> dans la liste des Vues</p></li>
+<li><p><strong>Supprimer</strong> la vue</p></li>
+</ul>
+</div></blockquote>
+<img alt="_images/menu_conf_view.PNG" class="align-center" src="_images/menu_conf_view.PNG" />
+</section>
+<section id="menu-de-navigation">
+<h3>Menu de navigation<a class="headerlink" href="#menu-de-navigation" title="Lien permanent vers cette rubrique"></a></h3>
+<img alt="_images/navbar_view.PNG" class="align-center" src="_images/navbar_view.PNG" />
+<p>Dans le menu de navigation des vues, nous pouvons :</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Naviguer entres les vues avec les boutons <strong>Suivant</strong>, <strong>Précédent</strong>, <strong>Maître</strong> (pour retourner sur les données principale)</p></li>
+<li><p>Créer une vue avec le boutons <strong>ajout</strong></p></li>
+<li><p><strong>Mettre-à-jour</strong> une vue (lorsque vous modifiez les données d’une vue, si vous voulez sauvegarder les modifications apportées il faut soit faire un <strong>Ctrl+S</strong> soit cliquer sur le bouton <strong>M-à-J</strong> car si vous changez de vues il vous sera demandé de confirmer que vous souhaité changer de vue sans mettre à jour celle actuelle)</p></li>
+<li><p>Naviguer entres les vues avec le <strong>selecteur</strong> de vue</p></li>
+<li><p>Choisir si certaines variables sont hérités du sankey principale : Par défaut les vues sont des diagramme à part entière, cependant on peut chosiir certains attributs des vues dont leur valeur proviennent directement du maître ce qui entrainera lors d’une modification de de l’attribut dans le maitre la même modifiaction dans la vue (exemple: si dans le modale <em>Choisir variables hérité du sankey maître</em> on choisis que les attributs des noeuds sont hérités du maître alors lorsque l’on modifiera la couleur d’un noeud dans le maître alors le noeud avec le même id dans la vue aura la même couleur)</p></li>
+<li><p><strong>Cloner</strong> la vue : fait un double de la vue actuel</p></li>
+<li><p><strong>Editer le nom</strong> de la vue</p></li>
+</ul>
+</div></blockquote>
+<p>De plus il est maintenant possible d’utiliser les vues comme source d’import pour la transformation de diagramme :</p>
+<img alt="_images/transf_view.PNG" class="align-center" src="_images/transf_view.PNG" />
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pied de page">
+        <a href="user_tools.html" class="btn btn-neutral float-left" title="Fonctionnalités de SankeySuite" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Précédent</a>
+        <a href="user_tools_tag.html" class="btn btn-neutral float-right" title="Edition étiquettes" accesskey="n" rel="next">Suivant <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Vincent.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
