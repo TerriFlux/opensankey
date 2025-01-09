@@ -75,6 +75,10 @@ body {
 		cursor: 'move';
 	}
 }
+/* Since legend & legend handlers are outside DA, it can't have parent class .edition_mode or .selection_mode */
+.legend_left_handle,.legend_right_handle{
+	cursor: ew-resize;
+}
 
 /* Cursor when in edition mode */
 .edition_mode {
@@ -85,7 +89,8 @@ body {
 	}
 
 	#g_handlers,
-	.link {
+	.link
+	{
 		cursor: url(pen-nib-slash.svg) 0 24, auto;
 	}
 
