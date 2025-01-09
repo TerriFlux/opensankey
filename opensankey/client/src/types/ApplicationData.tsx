@@ -777,6 +777,7 @@ export abstract class Class_ApplicationData
       // Select all node & links
       app_ref.drawing_area.addAllVisibleNodesToSelection()
       app_ref.drawing_area.addAllVisibleLinksToSelection()
+      app_ref.drawing_area.addLegendToSelection()
     }
     // Event to save current diagram in cache -----------------------------------------
     else if (evtCtrlS) {
