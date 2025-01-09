@@ -836,7 +836,7 @@ export const resources_app_elements = {
           'title': 'Votre licence OpenSankey+',
           'exp_until': 'Prochain renouvellement : ',
           btns: {
-            'mng_sub': 'Gerer l\'abonnement',
+            'mng_sub': 'Gérer l\'abonnement',
             'add_sub': 'Passer à OpenSankey+',
           },
         },
