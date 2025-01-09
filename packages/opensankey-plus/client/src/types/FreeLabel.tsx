@@ -22,7 +22,6 @@ import {
   getNumberFromJSON,
   getStringFromJSON
 } from '../deps/OpenSankey/types/Utils'
-import { default_selected_stroke_width } from '../deps/OpenSankey/types/Node'
 
 // Local imports
 import {
