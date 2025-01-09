@@ -456,10 +456,10 @@ export const resources_app_elements = {
             sub_content_2: 'Multiple selections of nodes can now be made with selection frames.',
             sub_title_3: 'Ease the expansion of your diagrams',
             sub_content_3: 'The drawing area can be expanded in any direction by dragging nodes/flows/text boxes/captions in the chosen direction.',
-            image1: 'right_click_node_EN.PNG',
-            image2: 'right_click_flow_EN.PNG',
-            image3: 'right_click_background_EN.PNG',
-            image4: 'Selection_frame.PNG'
+            image1: 'clic droit noeud EN.PNG',
+            image2: 'clic droit flux EN.PNG',
+            image3: 'clic droit fond EN.PNG',
+            image4: 'Zone de selection.PNG'
           },
           230908: {
             main_title: 'September 08, 2023',
