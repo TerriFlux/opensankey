@@ -819,6 +819,7 @@ export const OpenSankeyDiagramSelector: FType_DiagramSelector = (
                     tmp_DA.fromJSON(new_layout)
                     new_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
                     new_data.drawing_area.drawElements()
+                    new_data.drawing_area.areaAutoFit()
                     new_data.menu_configuration.updateAllMenuComponents()
                   }
                 }
