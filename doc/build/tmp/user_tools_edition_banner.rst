@@ -1,0 +1,1 @@
+/home/vledoze/sankeysuitemanager/OpenSankey/opensankey/doc/sources/pages/user_tools_edition_banner.rst
