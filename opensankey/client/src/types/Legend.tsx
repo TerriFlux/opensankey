@@ -36,6 +36,7 @@ import {
 import {
   Type_GenericNodeElementOS
 } from './TypesOS'
+import { Class_Handler } from './Handler'
 
 
 // CLASS LEGEND *************************************************************************
@@ -73,6 +74,11 @@ export class Class_Legend
   private _node_label_separator: string = ''
   private _width: number = 180
   private _info_link_value_void: boolean = false
+
+  private _drag_handler: {
+    left: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    right: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+  }
 
   /**
    * Attribute for legend content positionning.
@@ -150,6 +156,34 @@ export class Class_Legend
         v: 0
       }
     }
+
+    this._drag_handler = {
+      left: new Class_Handler(
+        'legend_left_handle_' + this.id,
+        drawing_area,
+        menu_config,
+        this,
+        this.dragHandleStart(),
+        this.dragLeftHandler(),
+        this.dragHandleEnd(),
+        { class: 'legend_left_handle' },
+        undefined,
+        'grp_legend',
+      ),
+      right: new Class_Handler(
+        'legend_right_handle_' + this.id,
+        drawing_area,
+        menu_config,
+        this,
+        this.dragHandleStart(),
+        this.dragRightHandler(),
+        this.dragHandleEnd(),
+        { class: 'legend_right_handle' },
+        undefined,
+        'grp_legend',
+      ),
+        
+    }
   }
 
   // COPY METHODS =======================================================================
@@ -169,7 +203,7 @@ export class Class_Legend
     this._legend_show_dataTags = _._legend_show_dataTags
     this._node_label_separator = _._node_label_separator
     this._info_link_value_void = _._info_link_value_void
-    this._pos_from_legacy=_._pos_from_legacy
+    this._pos_from_legacy = _._pos_from_legacy
   }
 
   // SAVING METHODS =====================================================================
@@ -207,8 +241,8 @@ export class Class_Legend
 
     const legend_position = getStringListFromJSON(json_legend, 'legend_position', ['0', String(this.drawing_area.getNavBarHeight())])
     this._display.position.x = +legend_position[0]
-    const tmp_y=+legend_position[1]
-    this._display.position.y = (tmp_y<this.drawing_area.getNavBarHeight())?this.drawing_area.getNavBarHeight():tmp_y //fix legend position by putting it position just under the navbar
+    const tmp_y = +legend_position[1]
+    this._display.position.y = (tmp_y < this.drawing_area.getNavBarHeight()) ? this.drawing_area.getNavBarHeight() : tmp_y //fix legend position by putting it position just under the navbar
     this._masked = getBooleanFromJSON(json_legend, 'mask_legend', this._masked)
     this._dx = getNumberFromJSON(json_legend, 'legend_dx', this._dx)
     this._dy = getNumberFromJSON(json_legend, 'legend_dy', this._dy)
@@ -302,6 +336,17 @@ export class Class_Legend
     this._process_or_bypass(() => this._drawSankeyScale())
   }
 
+  /**
+     * Function triggered when element is (un)selected
+     *
+     * @memberof Class_ContainerElement
+     */
+  public drawAsSelected() {
+    this.draw()
+    this.drawDragHandlers()
+  }
+
+
   // PROTECTED METHODS ==================================================================
 
   protected eventMouseOver(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
@@ -328,12 +373,14 @@ export class Class_Legend
     if (this._display.position.y < 0) this._display.position.y = 0
 
     this.setPosXY(this._display.position.x, this._display.position.y)
+    this.drawDragHandlers()
   }
 
   protected eventMouseDragEnd(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     this.draw()
+    this.drawDragHandlers()
   }
 
   protected override _initDraw() {
@@ -392,7 +439,115 @@ export class Class_Legend
     }
   }
 
+  protected override eventMaintainedClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Apply parent behavior first
+    super.eventMaintainedClick(event)
+    console.log('lmb')
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    // EDITION MODE ===========================================================
+    if (drawing_area.isInEditionMode()) {
+      // Purge selection list
+      drawing_area.purgeSelection()
+      // Close all menus
+      drawing_area.closeAllMenus()
+    }
+    // SELECTION MODE =========================================================
+    else if (drawing_area.isInSelectionMode() && event.button === 0) {
+      // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
+      // Add node to selection
+      drawing_area.addLegendToSelection()
+    }
+  }
+
   // PRIVATE METHODS ====================================================================
+
+  /**
+   * Activate the control points alignement guide
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_ContainerElement
+   */
+  private dragHandleStart() {
+    return () => {
+    }
+  }
+
+  /**
+    * Deactivate the control points alignement guide
+    * @private
+    * @return {*}
+    * @memberof Class_ContainerElement
+    */
+  private dragHandleEnd() {
+    return () => {
+    }
+  }
+
+  /**
+   * Event when we drag the left handle
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_ContainerElement
+   */
+  private dragLeftHandler() {
+    return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      this._width -= event.dx
+      this.setPosXY(this.position_x + event.dx, this.position_y)
+      this.draw()
+
+      // Reposition drag handler with updated with & pos of the free label
+      this.drawDragHandlers()
+    }
+  }
+
+  /**
+   * Event when we drag the right handle
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_ContainerElement
+   */
+  private dragRightHandler() {
+    return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      this._width += event.dx
+      this.draw()
+
+      // Reposition drag handler with updated with & pos of the free label
+      this.drawDragHandlers()
+    }
+  }
+
+  /**
+ * Draw all control points
+ *
+ * @private
+ * @memberof Class_ContainerElement
+ */
+  public drawDragHandlers() {
+    // Compute positions
+    this.computeLeftHandlerPos()
+    this.computeRightHandlerPos()
+    // Draw
+    this._drag_handler.left.draw()
+    this._drag_handler.right.draw()
+  }
+
+  private computeLeftHandlerPos() {
+    // left handle pos
+    this._drag_handler.left.position_x = this.position_x + 0
+    this._drag_handler.left.position_y = this.position_y + this._dy / 2
+  }
+
+  private computeRightHandlerPos() {
+    // right handle pos
+    this._drag_handler.right.position_x = this.position_x + this._width
+    this._drag_handler.right.position_y = this.position_y + this._dy / 2
+  }
 
   /**
    * Function that draw the background of the legend, it is also used as draggable
@@ -642,11 +797,11 @@ export class Class_Legend
         g_draggable.attr('transform', 'translate(' + (event.x) + ',' + (event.y) + ')')
       }))
 
-    this._dy+=20
+    this._dy += 20
   }
 
   private _updateLegendHeight() {
-    d3.select('.zone_for_dragging').attr('height', this._dy+5)
+    d3.select('.zone_for_dragging').attr('height', this._dy + 5)
   }
 
   /**
