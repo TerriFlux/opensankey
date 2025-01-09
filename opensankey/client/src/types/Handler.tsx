@@ -60,6 +60,8 @@ export class Class_Handler
   private _ref_element: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>
   private _ref_element_optional?: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined
 
+  private _custom_html_grp: boolean
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -85,11 +87,13 @@ export class Class_Handler
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     options?: { class?: string, size?: number, color?: string, filled?: boolean },
     ref_optional?: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
+    custom_parent_grp?: string
   ) {
     // Init parent class attributes
-    super(id, menu_config, 'g_handlers')
+    super(id, menu_config, custom_parent_grp ? custom_parent_grp : 'g_handlers')
     this._ref_element = ref
     this._ref_element_optional = ref_optional
+    this._custom_html_grp = custom_parent_grp !== undefined
     // Init other class attributes
     this._display = {
       drawing_area: drawing_area,
@@ -155,6 +159,34 @@ export class Class_Handler
   protected _draw() {
     super._draw()
     this._drawElement()
+  }
+
+
+  /**
+   * Override initDraw to allow the creation of html grp outside the DA
+   *
+   * @memberof Class_Handler
+   */
+  protected override _initDraw(): void {
+
+    // If the parent id is referenced in the constructor we allow the creation of the new group outside the DA
+    // (orginally this override was created to allow the creation of legend handler outside the DA)
+    if (this._custom_html_grp) {
+      const d3_svg = this.drawing_area.d3_selection_zoom_area
+      if (d3_svg !== null) {
+        const d3_drawing_area_selection = d3_svg.selectAll(' #' + this._svg_parent_group)
+        if (d3_drawing_area_selection.nodes().length > 0) {
+          this.d3_selection = d3_drawing_area_selection.append('g')
+          this.d3_selection.attr('id', this.svg_group)
+            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
+        }
+      }
+    } else {
+      // Normal _initDraw
+      super._initDraw()
+    }
+
+
   }
 
   // GETTERS / SETTERS ==================================================================

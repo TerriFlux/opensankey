@@ -50,7 +50,9 @@ export abstract class Class_AbstractDrawingArea {
   public abstract deleteNode(_: Type_AbstractNodeElement): void
   public abstract deleteLink(_: Type_AbstractLinkElement): void
   public abstract addNodeToSelection(_: Type_AbstractNodeElement): void
+  public abstract addLegendToSelection(): void
   public abstract removeNodeFromSelection(_: Type_AbstractNodeElement): void
+  public abstract removeLegendFromSelection(): void
   public abstract addLinkToSelection(_: Type_AbstractLinkElement): void
   public abstract removeLinkFromSelection(_: Type_AbstractLinkElement): void
   public abstract purgeSelection(): void

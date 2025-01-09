@@ -799,6 +799,12 @@ export abstract class Class_DrawingArea
     this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
   }
 
+  public addLegendToSelection(): void {
+    // Update selection list
+    this._selection['legend'] = this._legend
+    this._legend.setSelected()
+  }
+
   /**
    * Add all nodes to selection set
    * Update menu accordingly
@@ -823,6 +829,20 @@ export abstract class Class_DrawingArea
       node.setUnSelected()
       // Update related menus
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+  }
+
+  /**
+   * remove a legend from a selection set
+   * @param {Type_GenericNodeElement} node
+   * @memberof Class_DrawingArea
+   */
+  public removeLegendFromSelection() {
+    if (this._selection['legend'] !== undefined) {
+      // Update selection list
+      delete this._selection['legend']
+      // Update selection attribute on legend
+      this._legend.setUnSelected()
     }
   }
 
