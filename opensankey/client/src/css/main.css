@@ -1,16 +1,4 @@
 /*! @import url("colors/dark violet.css"); COLOR IMPORT */
-
-/*!
- * TRY - Retina Ready Theme
- *
- * Copyright 2013
- * Licensed under the Apache License v2.0
- * http://www.apache.org/licenses/LICENSE-2.0
- * Created by: Carlos Alvarez
- * URL: http://www.basicoh.com
- * Designed and built based on Twitter Bootstrap.
- */
-
 /********** MAIN CONFIGURATION **********/
 
 
@@ -21,6 +9,7 @@ body {
 	font-size: 14px;
 	letter-spacing: 0px;
 	color: #000;
+	font-family: system-ui,sans-serif
 
 }
 
