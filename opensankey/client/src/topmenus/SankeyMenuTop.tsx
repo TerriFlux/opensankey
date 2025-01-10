@@ -1402,6 +1402,14 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             isOpen={show_nav}
             placement='right'
             onClose={() => set_show_nav(false)}
+            onEsc={()=>{
+              // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component 
+              const ev = document
+              const tmp = new KeyboardEvent('keydown', { key: 'Escape' })
+              if (ev.onkeydown) {
+                ev.onkeydown(tmp as KeyboardEvent)
+              }
+            }}
             variant='drawer_menu_config'
             id='drawer_config'
             trapFocus={false}
