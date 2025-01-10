@@ -98,6 +98,8 @@ export abstract class Class_NodeElementPlus
   protected _menu_config: Class_MenuConfigPlus
 
   protected d3_selection_g_FO_illustration:d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_image:d3.Selection<SVGImageElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_icon:d3.Selection<SVGPathElement, unknown, SVGGElement, unknown> | null = null
   // PRIVATE ATTRIBUTES =================================================================
 
   private _iconName: string
@@ -464,7 +466,6 @@ export abstract class Class_NodeElementPlus
   }
 
   protected _drawIllustration() {
-    this.d3_selection?.selectAll('.illustration').remove()
     if (this._is_image) {
       this._drawIllustrationImage()
     }
@@ -474,7 +475,9 @@ export abstract class Class_NodeElementPlus
   }
 
   protected _drawIllustrationImage() {
-    this.d3_selection?.append('image')
+    if(!this.d3_selection)
+      return
+    this.d3_selection_g_image= this.d3_selection?.append('image')
       .attr('id', 'image_node_' + this.id)
       .attr('class', 'illustration image')
       .attr('href', this.image_src)
@@ -483,7 +486,9 @@ export abstract class Class_NodeElementPlus
   }
 
   protected _drawIllustrationIcon() {
-    this.d3_selection?.append('svg')
+    if(!this.d3_selection)
+      return
+    this.d3_selection_g_icon= this.d3_selection?.append('svg')
       .attr('id', 'icon_node_' + this.id)
       .attr('class', 'illustration icon_node')
       .attr('viewBox', this.iconViewBox ? this.iconViewBox : '0 0 1000 1000')
@@ -607,6 +612,8 @@ export abstract class Class_NodeElementPlus
   protected override _orderD3Elements(){
     super._orderD3Elements()
     this.d3_selection_g_FO_illustration?.raise()
+    this.d3_selection_g_image?.raise()
+    this.d3_selection_g_icon?.raise()
   }
 
   // GETTERS / SETTERS ==================================================================
