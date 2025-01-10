@@ -355,8 +355,8 @@ export class Class_Legend
   }
 
   protected eventMouseOut(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
-    this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', 'unherit')
-    this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_border ? this._legend_bg_color : 'none')
+    this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', this.is_selected?'6,6':'unherit')
+    this.d3_selection?.select('.zone_for_dragging').attr('stroke', (this._legend_bg_border|| this.is_selected) ? this._legend_bg_color : 'none')
   }
 
   protected eventMouseDragStart(
@@ -566,8 +566,9 @@ export class Class_Legend
       .attr('rx', '2px')
       .attr('ry', '2px')
       .attr('stroke-dasharray', () => '')
-      .attr('stroke', this._legend_bg_border ? this._legend_bg_color : 'none')
-      .attr('stroke-width', this._legend_bg_border ? 1 : 0)
+      .attr('stroke', (this._legend_bg_border || this.is_selected) ? this._legend_bg_color : 'none')
+      .attr('stroke-width', (this._legend_bg_border || this.is_selected) ? 1 : 0)
+      .attr('stroke-dasharray', (this.is_selected) ? '6,6' : 'unherit')
       .attr('fill', this._legend_bg_color)
       .attr('fill-opacity', this._legend_bg_opacity / 100)
   }
