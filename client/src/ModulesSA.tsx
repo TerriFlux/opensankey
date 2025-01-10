@@ -364,6 +364,30 @@ const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccor
   const entries_tree = Object.entries(theque_tree)
   const sub_acc_item = entries_tree.filter(ent => ent[0] !== 'Files').map(ent => {
     let btn_open = <></>
+    let child_etudes = Object.entries(ent[1]).filter(e=>e[0] =='Etude')
+    if (child_etudes.length>0 && Object.keys(ent[1]['Etude']).length == 1) {
+      return <AccordionItem>
+      <Button
+        variant='button_open_card_sankeytheque'
+        rightIcon={<FontAwesomeIcon icon={faUpRightFromSquare} />}
+        onClick={() => setPathToCard([...path, ent[0],'Etude'])}
+      >
+        {ent[0]}
+      </Button>
+      </AccordionItem>
+    }
+    let child_files = Object.entries(ent[1]).filter(e=>e[0] =='Files')
+    if (child_files.length>0 && Object.keys(ent[1]).length==1) { 
+    return <AccordionItem>
+    <Button
+        variant='button_open_card_sankeytheque'
+        rightIcon={<FontAwesomeIcon icon={faUpRightFromSquare} />}
+        onClick={() => setPathToCard([...path, ent[0]])}
+      >
+        {ent[0]}
+      </Button>
+    </AccordionItem>
+    }
     if ('Files' in ent[1]) {
       btn_open = <Button
         variant='button_open_card_sankeytheque'

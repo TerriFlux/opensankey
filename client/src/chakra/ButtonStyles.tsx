@@ -160,6 +160,8 @@ export const btn_accountpage_danger = defineStyle({
 })
 
 export const button_open_card_sankeytheque=defineStyle({
+  width: '90%',
+  margin: '10px',
   bg: 'primaire.6',
   bgColor: 'primaire.6',
   borderColor: 'primaire.6',
