@@ -407,7 +407,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
           <MenuItem
             onClick={() => {
               if (_load_json.current) {
-                _load_json.current.name = ''
+                _load_json.current.value = ''
                 _load_json.current.click()
               }
             }}>
