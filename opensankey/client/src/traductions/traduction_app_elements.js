@@ -292,7 +292,7 @@ export const resources_app_elements = {
         importExportClose: 'Près du noeud',
         importExportAboveBelow: 'Haut et bas du diagramme',
         show_legend_free_value: 'Value is contained in an interval',
-        legend_dashed_links: 'Existing link',
+        legend_dashed_links: 'Unknown flow value',
         hide_leg: 'Hide the legend',
         show_leg: 'Show the legend',
         tooltips: {
@@ -1082,7 +1082,7 @@ export const resources_app_elements = {
         importExportAboveBelow: 'Haut et bas du diagramme',
         defaultParametric: 'Calculer paramétrisation',
         show_legend_free_value: 'Valeur contenue dans un intervalle',
-        legend_dashed_links: 'Flux existant',
+        legend_dashed_links: 'Valeur du flux inconnu',
         hide_leg: 'Masquer la légende',
         show_leg: 'Afficher la légende',
         tooltips: {

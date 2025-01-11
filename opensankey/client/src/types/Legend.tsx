@@ -151,7 +151,7 @@ export class Class_Legend
       sankey: drawing_area.sankey as Type_GenericSankey,
       position: {
         x: const_default_position_x,
-        y: drawing_area.getNavBarHeight(),
+        y: drawing_area.getNavBarHeight()+50,
         u: 0,
         v: 0
       }
@@ -415,7 +415,7 @@ export class Class_Legend
       this._drawInfoDataType()
     }
     // Draw explication for dashed links
-    const sankey_has_dashed_links = d3.selectAll('.gg_links').nodes().filter(lv => d3.select(lv).attr('stroke-dasharray') !== null).length > 0
+    const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l=>l.value!.data_value == null).length > 0
     if (sankey_has_dashed_links && this._info_link_value_void) {
       this._drawInfoDashedLink()
     }
@@ -737,14 +737,14 @@ export class Class_Legend
     // Create info zone
     const dashed_link = this.d3_selection?.append('g')
       .attr('id', 'gg_legend_dashed_links')
-      .attr('transform', 'translate(0,' + (this._dy) + ')')
+      .attr('transform', 'translate(0,'+ this._dy + ')')
       .attr('font-size', this._legend_police + 'px')
     // Create path as exemple
     dashed_link?.append('path')
       .attr('d', 'M 0 0 L 25 0  Z')
       .attr('fill', 'none')
       .attr('stroke-width', '5')
-      .attr('stroke', 'red')
+      .attr('stroke', default_element_color)
       .attr('stroke-opacity', 0.85)
       .attr('stroke-dasharray', '3,3')
     // Set explanation text for path as dashed

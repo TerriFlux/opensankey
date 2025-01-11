@@ -37,6 +37,7 @@ export abstract class Class_AbstractLinkElement
   public abstract get source():Type_AbstractNodeElement;
   public abstract get target():Type_AbstractNodeElement;
   public abstract set shape_arrow_path(_: string)
+  public abstract get value() : Class_AbstractLinkValue | null
 }
 
 export abstract class Class_AbstractLinkValue {
@@ -47,6 +48,7 @@ export abstract class Class_AbstractLinkValue {
   public abstract getAllValues(): { [_: string]: [Class_AbstractLinkValue, Class_AbstractTag[] | undefined]; };
   // Mandatory getters / setters
   public abstract get id(): string
+  public abstract get data_value() : number | null
 }
 
 export abstract class Class_AbstractLinkStyle {
