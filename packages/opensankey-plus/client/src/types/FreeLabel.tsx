@@ -420,6 +420,7 @@ export class Class_ContainerElement
       .style('height', this._label_height+'px')
       .attr('id', this.id + '_img')
       .attr('xlink:href', this._image_src)
+      .attr('xmlns:xlink','http://www.w3.org/1999/xlink')
   }
 
   /**

@@ -402,6 +402,14 @@ export abstract class Class_ApplicationDataPlus
     }
   }
 
+  protected override _pre_process_export_svg(): d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | undefined {
+    const svg_clone=super._pre_process_export_svg()
+
+    svg_clone?.selectAll('.node_fo').raise() // place correctly image html in in node <g> to avoid problem at export
+
+    return svg_clone
+  }
+
   // SPECIFIC FUNCTIONS ******************************************************************/
 
   protected override isDrawingAreaActive() {

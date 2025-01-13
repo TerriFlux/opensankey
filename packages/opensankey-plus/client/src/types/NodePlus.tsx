@@ -319,7 +319,7 @@ export abstract class Class_NodeElementPlus
    * @memberof Class_NodeElementPlus
    */
   public drawIllustrationImage() {
-    this._process_or_bypass(() => this.drawIllustrationImage())
+    this._process_or_bypass(() => this._drawIllustrationImage())
   }
 
   /**
@@ -481,8 +481,11 @@ export abstract class Class_NodeElementPlus
       .attr('id', 'image_node_' + this.id)
       .attr('class', 'illustration image')
       .attr('xlink:href', this.image_src)
+      .attr('xmlns:xlink','http://www.w3.org/1999/xlink')
       .attr('height', this.getShapeHeightToUse()+'px')
       .attr('width', this.getShapeWidthToUse()+'px')
+      .style('height', this.getShapeHeightToUse()+'px')
+      .style('width', this.getShapeWidthToUse()+'px')
   }
 
   protected _drawIllustrationIcon() {
