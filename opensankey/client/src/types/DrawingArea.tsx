@@ -481,6 +481,8 @@ export abstract class Class_DrawingArea
     this.application_data.node_label_separator = getStringFromJSON(json_object, 'node_label_separator', ' - ')
     this.application_data.node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', 'before') as 'before' | 'after'
 
+    this.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
+
     // Update direct attributes
     this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
     this._filter_label = getNumberFromJSON(json_object, 'filter_label', 0)

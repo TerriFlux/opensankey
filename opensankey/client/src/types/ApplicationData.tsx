@@ -7,7 +7,7 @@
 // External imports
 import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
-import { TFunction } from 'i18next'
+import i18next, { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 
 import FileSaver from 'file-saver'
@@ -129,9 +129,11 @@ export abstract class Class_ApplicationData
   protected _preference_menu_all_item: string[] = []
 
   // PRIVATE ATTRIBUTES =================================================================
-
   // General attributes for the application
-  private _t: TFunction = useTranslation().t //traductor
+  private _t: TFunction = useTranslation('translation', { useSuspense: false }).t //traductor
+  
+  private _i18n = useTranslation('translation', { useSuspense: false }).i18n //traductor
+
   private _logo_opensankey: string // path to logo
   private _logo_terriflux: string  //path to logo_terriflux
   private _logo_width: number = 100
@@ -142,6 +144,10 @@ export abstract class Class_ApplicationData
   // it can contain separator (special caracter) that split label between what we want tot display and what not
   private _node_label_separator = '-'
   private _node_label_separator_part: 'before' | 'after' = 'before'
+
+  // Varaible to save language selected
+  private _language?: string | undefined
+
 
   // Ref to checkbox of displayed menu in SankeyMenuPreference
   private _checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
@@ -180,8 +186,6 @@ export abstract class Class_ApplicationData
     this._menu_configuration = this.createNewMenuConfiguration()
     // Contains all drawn objects
     this._drawing_area = this.createNewDrawingArea()
-    // Link keyboard listener with app key down detection
-    document.onkeydown = this.keyboardEventListener(this)
     // For published mode only
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
@@ -233,6 +237,8 @@ export abstract class Class_ApplicationData
         this._processFunction.ref_result.current('')
       }
     }
+    // Link keyboard listener with app key down detection
+    document.onkeydown = this.keyboardEventListener(this)
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -436,6 +442,9 @@ export abstract class Class_ApplicationData
   protected _toJSON() {
     // Create json struct
     const json_object = {} as Type_JSON
+    // App language 
+    if(this._language!==undefined)
+      json_object['language'] = this._language
     // Node label separator attribute
     json_object['node_label_separator'] = this._node_label_separator
     json_object['node_label_separator_part'] = this._node_label_separator_part
@@ -501,6 +510,9 @@ export abstract class Class_ApplicationData
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.arrangeTrade(false)
+    if(this._language!==undefined && i18next.language !==this.language)
+      i18next.changeLanguage(this.language)
+      
     this.menu_configuration.updateAllMenuComponents()
   }
 
@@ -892,5 +904,10 @@ export abstract class Class_ApplicationData
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
   public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
   public get preference_menu_all_item() { return this._preference_menu_all_item }
+
+  public get language(): string | undefined {return this._language}
+  public set language(value: string | undefined) {this._language = value}
+
+  public get i18n() {return this._i18n}
 }
 
