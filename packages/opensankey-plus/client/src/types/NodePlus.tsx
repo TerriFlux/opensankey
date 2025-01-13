@@ -434,10 +434,10 @@ export abstract class Class_NodeElementPlus
         .classed('name_label', true)
         .classed('name_label_background', true)
         .attr('id', 'name_label_background_' + this.id)
-        .attr('x', name_label_bounding_box.x)
-        .attr('y', name_label_bounding_box.y)
-        .attr('width', name_label_bounding_box.width)
-        .attr('height', name_label_bounding_box.height)
+        .attr('x', (name_label_bounding_box.x-5)+'px')
+        .attr('y', name_label_bounding_box.y+'px')
+        .attr('width', (name_label_bounding_box.width+10)+'px')
+        .attr('height', name_label_bounding_box.height+'px')
         .attr('fill', 'white')
         .attr('fill-opacity', 0.55)
         .attr('rx', 4)
@@ -480,9 +480,9 @@ export abstract class Class_NodeElementPlus
     this.d3_selection_g_image= this.d3_selection?.append('image')
       .attr('id', 'image_node_' + this.id)
       .attr('class', 'illustration image')
-      .attr('href', this.image_src)
-      .attr('height', this.getShapeHeightToUse())
-      .attr('width', this.getShapeWidthToUse())
+      .attr('xlink:href', this.image_src)
+      .attr('height', this.getShapeHeightToUse()+'px')
+      .attr('width', this.getShapeWidthToUse()+'px')
   }
 
   protected _drawIllustrationIcon() {

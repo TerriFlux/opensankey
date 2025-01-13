@@ -323,7 +323,7 @@ export class Class_ContainerElement
       .attr('fill-opacity', this._opacity / 100)
       .attr('fill', this._color)
       .attr('stroke', this._color_border)
-      .attr('stroke-width', (this._transparent_border) ? 0 : 1)
+      .attr('stroke-opacity', (this._transparent_border) ? 0 : 1)
   }
 
   /**
@@ -414,12 +414,12 @@ export class Class_ContainerElement
   private drawContentImage() {
     this.d3_selection?.append('image')
       .classed('content', true)
-      .attr('width', this._label_width)
-      .attr('height', this._label_height)
-      .style('width', this._label_width)
-      .style('height', this._label_height)
+      .attr('width', this._label_width+'px')
+      .attr('height', this._label_height+'px')
+      .style('width', this._label_width+'px')
+      .style('height', this._label_height+'px')
       .attr('id', this.id + '_img')
-      .attr('href', this._image_src)
+      .attr('xlink:href', this._image_src)
   }
 
   /**
