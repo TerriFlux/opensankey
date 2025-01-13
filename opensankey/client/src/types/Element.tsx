@@ -247,7 +247,6 @@ export abstract class Class_ProtoElement
   ) {
     json_object['id'] = this._id
     json_object['is_visible'] = this._is_visible
-    json_object['is_selected'] = this._is_selected
     json_object['svg_parent_group'] = this._svg_parent_group
   }
 
@@ -274,7 +273,6 @@ export abstract class Class_ProtoElement
   ) {
     this._id = getStringFromJSON(json_object, 'id', this._id)
     this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
-    this._is_selected = getBooleanFromJSON(json_object, 'is_selected', this._is_selected)
     this._svg_parent_group = getStringFromJSON(json_object, 'svg_parent_group', this._svg_parent_group)
   }
 
