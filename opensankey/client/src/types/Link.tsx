@@ -70,6 +70,7 @@ export const default_shape_is_arrow = true
 export const default_shape_is_curved = true
 export const default_shape_is_dashed = false
 export const default_shape_is_recycling = false
+export const default_shape_is_structure = false
 export const default_shape_opacity = 0.85
 export const default_shape_orientation = 'hh'
 export const default_shape_starting_curve = 0.05
@@ -1040,7 +1041,7 @@ export abstract class Class_LinkElement
         .attr('stroke', () => this.getPathColorToUse())
         .attr('stroke-opacity', this.shape_opacity)
         .attr('stroke-width', this.thickness)
-        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null) ? '10,2' : '')
+        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null || this.shape_is_structure) ? '10,2' : '')
     }
   }
 
@@ -2651,7 +2652,7 @@ export abstract class Class_LinkElement
     // Get link value for current dataTaggs selected
     const data_value = this.data_value
     // Scale this value for the drawing area
-    const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
+    const linkValueInPx = (data_value !== null && (!this.shape_is_structure)) ? this.scaleValueToPx(data_value) : 2
 
     // If link processed size is inferior to min. limit return min. limit
     if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
@@ -2944,6 +2945,18 @@ export abstract class Class_LinkElement
    * @memberof Class_LinkElement
    */
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements();this.drawControlPoint()}
+
+  public get shape_is_structure(){
+    if (this._display.attributes.shape_is_structure !== undefined) {
+      return this._display.attributes.shape_is_structure
+    } else if (this._display.style.shape_is_structure !== undefined) {
+      return this._display.style.shape_is_structure
+    }
+    return default_shape_is_structure
+  }
+
+  public set shape_is_structure(_: boolean) { this._display.attributes.shape_is_structure = _; this.drawWithNodes();this.drawControlPoint()}
+
 
   /**
    * TODO Description
@@ -3573,6 +3586,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   protected _shape_is_curved?: boolean
   protected _shape_curvature?: number
   protected _shape_is_recycling?: boolean
+  protected _shape_is_structure?: boolean
 
   // Shape orientation
   protected _shape_orientation?: Type_Orientation
@@ -3631,6 +3645,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (this._shape_curvature !== undefined) json_object['curvature'] = this._shape_curvature
     if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
     if (this._shape_is_recycling !== undefined) json_object['recycling'] = this._shape_is_recycling
+    if (this._shape_is_structure !== undefined) json_object['is_structur'] = this._shape_is_structure
     if (this._shape_arrow_size !== undefined) json_object['arrow_size'] = this._shape_arrow_size
     if ('_local_link_scale' in this) (json_object['user_scale'] as number | undefined) = this._local_link_scale
     // Geometry link labels
@@ -3672,6 +3687,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (json_local_object['curvature'] !== undefined) this._shape_curvature = getNumberFromJSON(json_local_object, 'curvature', default_shape_curvature)
     if (json_local_object['curved'] !== undefined) this._shape_is_curved = getBooleanFromJSON(json_local_object, 'curved', default_shape_is_curved)
     if (json_local_object['recycling'] !== undefined) this._shape_is_recycling = getBooleanFromJSON(json_local_object, 'recycling', default_shape_is_recycling)
+    if (json_local_object['is_structur'] !== undefined) this._shape_is_structure = getBooleanFromJSON(json_local_object, 'is_structur', default_shape_is_recycling)
     if (json_local_object['arrow_size'] !== undefined) this._shape_arrow_size = getNumberFromJSON(json_local_object, 'arrow_size', default_shape_arrow_size)
     // Since local_scale can be undefined we don't test the value but if the object have the key
     const user_scale = getNumberOrUndefinedFromJSON(json_local_object, 'user_scale')
@@ -3714,6 +3730,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     this._shape_is_curved = element._shape_is_curved
     this._shape_curvature = element._shape_curvature
     this._shape_is_recycling = element._shape_is_recycling
+    this._shape_is_structure = element._shape_is_structure
 
     // Shape orientation
     this._shape_orientation = element._shape_orientation
@@ -3773,6 +3790,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   public get shape_is_curved() { return this._shape_is_curved }
   public get shape_curvature() { return this._shape_curvature }
   public get shape_is_recycling() { return this._shape_is_recycling }
+  public get shape_is_structure() { return this._shape_is_structure }
 
   // Shape orientation
   public get shape_orientation() { return this._shape_orientation }
@@ -3818,6 +3836,7 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   public set shape_is_curved(_: boolean | undefined) { this._shape_is_curved = _; this.update() }
   public set shape_curvature(_: number | undefined) { this._shape_curvature = _; this.update() }
   public set shape_is_recycling(_: boolean | undefined) { this._shape_is_recycling = _; this.update() }
+  public set shape_is_structure(_: boolean | undefined) { this._shape_is_structure = _; this.update() }
 
   // Shape orientation
   public set shape_orientation(_: Type_Orientation | undefined) {
@@ -4007,6 +4026,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     this._shape_is_curved = default_shape_is_curved
     this._shape_is_dashed = default_shape_is_dashed
     this._shape_is_recycling = default_shape_is_recycling
+    this._shape_is_structure = default_shape_is_structure
     this._shape_opacity = default_shape_opacity
     this._shape_orientation = default_shape_orientation
 
