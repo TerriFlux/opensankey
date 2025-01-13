@@ -33,6 +33,8 @@ export abstract class Class_AbstractApplicationData {
   public abstract set node_label_separator(_:string)
   public abstract get node_label_separator_part() : 'before' | 'after'
   public abstract set node_label_separator_part(_:'before' | 'after')
+  public abstract set language(_:string| undefined)
+  public abstract get language():string| undefined
 }
 
 export abstract class Class_AbstractDrawingArea {
