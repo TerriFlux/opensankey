@@ -9,6 +9,7 @@ import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } 
 import LZString from 'lz-string'
 import i18next, { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
+import * as d3 from 'd3'
 
 import FileSaver from 'file-saver'
 
@@ -682,6 +683,59 @@ export abstract class Class_ApplicationData
 
   }
 
+  /**
+   * Some pre-process to correct html we will send to converter 
+   * because there is some difference between what our code produce 
+   * & what the converter wait to correctly produce an image 
+   *
+   * @protected
+   * @return {*} 
+   * @memberof Class_ApplicationData
+   */
+  protected _pre_process_export_svg() {
+    this.drawing_area.purgeSelection()
+    this.drawing_area.areaAutoFit()
+
+    const svg = this.drawing_area.d3_selection_zoom_area
+    const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
+    const scale_da = this.drawing_area.getZoomScale()
+
+    // Legend width (if present)
+    const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
+
+    svg_clone?.select('#g_drawing').attr('transform', 'translate(' + legend_w + ',0' + ') scale(' + scale_da + ')')
+    svg_clone?.select('#grp_legend .gg_legend').attr('transform', 'translate(0,0)')
+    svg_clone?.selectAll('input').remove()
+
+    // For some reason when attr 'dominant-baseline' is 'text-after-edge', 
+    // at the export to image the text is shifted to the bottom by half the font size of the text.
+    // So before the convertion to image modify the svg clone to correct the error
+    svg_clone?.selectAll('.name_label_text').nodes().forEach(el => {
+      if (d3.select(el).attr('dominant-baseline') == 'text-after-edge') {
+        const fontSize = +d3.select(el).attr('font-size').replace('px', '')
+        const yPos = +d3.select(el).attr('y').replace('px', '')
+        d3.select(el).attr('y', yPos - (fontSize / 2))
+      }
+    })
+
+    return svg_clone
+  }
+
+  public pre_process_export_svg() {
+    const d3_select = this._pre_process_export_svg()
+    const scale_da = this.drawing_area.getZoomScale()
+    const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
+
+    const svg_with_header = '<svg version="1.1" ' +
+      ' height=\'' + (this.drawing_area.height * scale_da + 5).toString() + '\'' +
+      ' width=\'' + ((this.drawing_area.width * scale_da) + legend_w + 5).toString() + '\'' +
+      ' xmlns="http://www.w3.org/2000/svg">' +
+      (d3_select?.node()?.innerHTML ?? '') +
+      '</svg>'
+    d3_select?.remove()
+    return svg_with_header
+  }
+
   // PRIVATE METHODS ====================================================================
 
   /**
@@ -905,9 +959,9 @@ export abstract class Class_ApplicationData
   public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
   public get preference_menu_all_item() { return this._preference_menu_all_item }
 
-  public get language(): string | undefined {return this._language}
-  public set language(value: string | undefined) {this._language = value}
+  public get language(): string | undefined { return this._language }
+  public set language(value: string | undefined) { this._language = value }
 
-  public get i18n() {return this._i18n}
+  public get i18n() { return this._i18n }
 }
 
