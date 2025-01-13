@@ -752,6 +752,11 @@ def _html_to_image(
         for s in tmp:
             if ('main' in s):
                 css.append('client/build/static/css/'+s)
+    elif os.path.exists(os.getcwd()+'/'+'client/build/static/sankeyapp'):
+        tmp = (os.listdir('client/build/static/sankeyapp/css'))
+        for s in tmp:
+            if ('main' in s):
+                css.append('client/build/static/sankeyapp/css/'+s)
 
     # Common options for conversions
     options = {
