@@ -444,7 +444,6 @@ export class Class_Legend
   ) {
     // Apply parent behavior first
     super.eventMaintainedClick(event)
-    console.log('lmb')
     // Get related drawing area
     const drawing_area = this.drawing_area
     // EDITION MODE ===========================================================
