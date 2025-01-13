@@ -969,7 +969,7 @@ const clickSavePNG = (
   v: number | undefined,
   new_data: Type_GenericApplicationDataOS
 ) => {
-  const svg = pre_process_export_svg(new_data)
+  const svg = new_data.pre_process_export_svg()
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
@@ -1614,7 +1614,7 @@ export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton
 }
 
 const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
-  const svg = pre_process_export_svg(new_data)
+  const svg = new_data.pre_process_export_svg()
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
@@ -1650,31 +1650,7 @@ const clickSavePDF = (new_data: Type_GenericApplicationDataOS) => {
     .then(cleanFile)
 }
 
-export const pre_process_export_svg = (new_data: Type_GenericApplicationDataOS) => {
-  new_data.drawing_area.purgeSelection()
-  new_data.drawing_area.areaAutoFit()
 
-  const svg = new_data.drawing_area.d3_selection_zoom_area
-  const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
-  const scale_da = new_data.drawing_area.getZoomScale()
-
-  // Legend width (if present)
-  const legend_w = !new_data.drawing_area.legend.masked ? new_data.drawing_area.legend.width : 0
-
-  svg_clone?.select('#g_drawing').attr('transform', 'translate(' + legend_w + ',0' + ') scale(' + scale_da + ')')
-  svg_clone?.select('#grp_legend .gg_legend').attr('transform', 'translate(0,0)')
-
-  const svg_with_header = '<svg version="1.1" ' +
-    ' height=' + (new_data.drawing_area.height * scale_da + 5).toString() +
-    ' width=' + ((new_data.drawing_area.width * scale_da) + legend_w + 5).toString() +
-    ' xmlns="http://www.w3.org/2000/svg">' +
-    (svg_clone?.node()?.innerHTML ?? '') +
-    '</svg>'
-
-  svg_clone?.remove() //
-
-  return svg_with_header
-}
 
 export const post_process_export_svg = () => {
   d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity', '1')
