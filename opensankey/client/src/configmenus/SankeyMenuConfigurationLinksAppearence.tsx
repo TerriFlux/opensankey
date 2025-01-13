@@ -37,6 +37,7 @@ import {
   default_shape_is_arrow,
   default_shape_is_curved,
   default_shape_is_recycling,
+  default_shape_is_structure,
   default_shape_local_scale,
   default_shape_opacity,
   default_shape_orientation,
@@ -199,6 +200,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   const shape_is_arrow = (elements[0]?.shape_is_arrow ?? default_shape_is_arrow)
   const shape_color = (elements[0]?.shape_color ?? default_shape_color)
   const shape_opacity = (elements[0]?.shape_opacity ?? default_shape_opacity)
+  const shape_is_structure = (elements[0]?.shape_is_structure ?? default_shape_is_structure)
   const value_label_is_visible = (elements[0]?.value_label_is_visible ?? default_value_label_is_visible)
   const value_label_font_size = (elements[0]?.value_label_font_size ?? default_value_label_font_size)
   const value_label_color = (elements[0]?.value_label_color ?? default_value_label_color)
@@ -391,6 +393,21 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
         </OSTooltip>
       </Box>
     </Box>
+
+    {/* Forme en structure  */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={is_indeterminate}
+      isChecked={shape_is_structure}
+      onChange={(evt) => {
+        elements.forEach(element => element.shape_is_structure = evt.target.checked)
+        refreshThisAndUpdateRelatedComponents()
+      }}
+    >
+      <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
+        {t('Flux.apparence.structure')}
+      </OSTooltip>
+    </Checkbox>
 
     {/* Forme fleche droite  */}
     <Checkbox
