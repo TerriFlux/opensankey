@@ -52,15 +52,19 @@ declare const window: Window &
 window.React = React
 i18next.changeLanguage(navigator.language.includes('fr') ? 'fr' : 'en')
 
-
 const container = document.getElementById('react-container') as Element | DocumentFragment
 const root = createRoot(container)
 
+let initialRender: boolean = true
+let dataApp: Class_ApplicationDataSA
 
 const App: FunctionComponent = () => {
-  const new_data_app = new Class_ApplicationDataSA(false)
+  if (initialRender) {
+    initialRender = false 
+    dataApp = new Class_ApplicationDataSA(false)
+  }
   return <SankeyAppSA
-    new_data_app={new_data_app}
+    new_data_app={dataApp}
   />
 }
 
