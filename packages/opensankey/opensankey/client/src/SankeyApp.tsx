@@ -25,6 +25,7 @@ import { Type_JSON } from './types/Utils'
 import { FCType_SankeyApp } from './types/FunctionTypes'
 import { Type_AdditionalMenus } from './types/TypesOS'
 import { TourProvider } from '@reactour/tour'
+import i18next from 'i18next'
 
 
 /*************************************************************************************************/
@@ -185,7 +186,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = ({
     // Delete potential duplicat
     d3.select('#draw_zoom').remove()
     new_data.draw()
-  })
+  },[new_data.language])
 
   /*************************************************************************************************/
   return <TourProvider steps={new_data.steps}>

@@ -12,7 +12,7 @@ import {
 import { OSTooltip } from '../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { ConfigMenuTextInput } from '../configmenus/SankeyMenuConfiguration'
-
+import * as d3 from 'd3'
 
 // COMPONENTS ===========================================================================
 
@@ -106,9 +106,11 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         variant='menuconfigpanel_option_select'
         value={i18next.language}
         onChange={evt => {
-          i18next.changeLanguage((evt.target.value))
-          setUpdate(a => a + 1)
+          new_data.language=evt.target.value
+          new_data.saveInCache() // Save data in cache because change language re-render the app from index
+          new_data.i18n.changeLanguage(evt.target.value)
           new_data.menu_configuration.updateAllMenuComponents()
+          new_data.draw()
         }}
       >
         <option key={'francais'} value={'fr'}>Français</option>
