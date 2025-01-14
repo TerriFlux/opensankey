@@ -4,7 +4,7 @@ import { Box, Button, Checkbox, Menu, MenuButton, MenuItem, MenuList } from '@ch
 
 // OpenSankey imports
 import { OSTooltip, TooltipValueSurcharge } from '../deps/OpenSankey/types/Utils'
-import { default_shape_is_dashed, default_value_label_scientific_precision, default_value_label_to_precision, isAttributeOverloaded } from '../deps/OpenSankey/types/Link'
+import { default_shape_is_dashed, default_value_label_significant_digits, default_value_label_nb_significant_digits, default_value_label_scientific_notation, isAttributeOverloaded, Class_LinkStyle } from '../deps/OpenSankey/types/Link'
 
 // Local imports
 import type { FCType_MenuConfLinkApparenceDashedOSP, FCType_MenuConfLinkApparenceGradientOSP, FCType_MenuConfLinkDataTextOSP, FCType_MenuConfLinkScientificPrecision, FCType_MenuContextLink } from './types/SankeyPlusGradientTypes'
@@ -222,10 +222,10 @@ export const MenuConfLinkDataText: FunctionComponent<FCType_MenuConfLinkDataText
 }
 
 
-export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfLinkScientificPrecision> = ({ new_data_plus }) => {
+export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfLinkScientificPrecision> = ({ new_data_plus,menu_for_style }) => {
   {/* Afficher ou non les donnée sur le Sankey  */ }
   const { drawing_area, menu_configuration, t } = new_data_plus
-
+  const { ref_selected_style_link } = new_data_plus.menu_configuration
   // Function used to force this component to reload
   const [, setCount] = useState(0)
   menu_configuration.ref_to_menu_config_link_scientific_precision_updater.current = () => setCount(a => a + 1)
@@ -240,19 +240,28 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
     // Only visible links
     selected_links = drawing_area.visible_and_selected_links_list_sorted
   }
+  // Elements on which menu modification applies
+  let elements: Class_LinkStyle[] | Type_GenericLinkElementOSP[]
+  if (menu_for_style) {
+    elements = [new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
+  }
+  else {
+    elements = selected_links
+  }
 
 
-  const value_label_to_precision = (selected_links[0]?.value_label_to_precision ?? default_value_label_to_precision)
-  const value_label_scientific_precision = (selected_links[0]?.value_label_scientific_precision ?? default_value_label_scientific_precision)
+  const value_label_scientific_notation = (elements[0]?.value_label_scientific_notation ?? default_value_label_scientific_notation)
+  const value_label_significant_digits = (elements[0]?.value_label_significant_digits ?? default_value_label_significant_digits)
+  const value_label_nb_significant_digits = (elements[0]?.value_label_nb_significant_digits ?? default_value_label_nb_significant_digits)
 
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
-  ref_set_number_inputs.current(String(value_label_scientific_precision))
+  ref_set_number_inputs.current(String(value_label_nb_significant_digits))
 
 
-  const check_indeterminate = (curr: Type_GenericLinkElementOSP) => {
-    return (selected_links[0].shape_is_gradient == curr.shape_is_gradient)
-  }
-  const is_indeterminate = !selected_links.every(check_indeterminate)
+  // const check_indeterminate = (curr: Type_GenericLinkElementOSP) => {
+  //   return (elements[0].shape_is_gradient == curr.shape_is_gradient)
+  // }
+  // const is_indeterminate = !elements.every(check_indeterminate)
 
 
   /**
@@ -262,66 +271,93 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
     // Whatever is done, set saving indicator
     new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     setCount(a => a + 1)
-    // if (menu_for_style) {
-    //   new_data.menu_configuration.updateAllComponentsRelatedToLinks()
-    //   // Update menus for link's apparence in case we use this for style
-    //   new_data.menu_configuration.updateComponentRelatedToLinksStyles()
-    //   // Redraw all visible nodes if we modifie link style
-    //   new_data.drawing_area.sankey.visible_links_list.forEach(link => link.draw())
-    // }
+    if (menu_for_style) {
+      new_data_plus.menu_configuration.updateAllComponentsRelatedToLinks()
+      // Update menus for link's apparence in case we use this for style
+      new_data_plus.menu_configuration.updateComponentRelatedToLinksStyles()
+      // Redraw all visible nodes if we modifie link style
+      new_data_plus.drawing_area.sankey.visible_links_list.forEach(link => link.draw())
+    }
     // And update this menu also
     new_data_plus.menu_configuration.updateComponentRelatedToLinksApparence()
   }
 
 
   return <>
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isIndeterminate={is_indeterminate}
-      isChecked={value_label_to_precision}
-      onChange={(evt) => {
-        selected_links.forEach(element => {
-          element.value_label_custom_digit = false
-          element.value_label_to_precision = evt.target.checked
-        })
-        refreshThisAndUpdateRelatedComponents()
-      }}>
-      <OSTooltip label={t('Flux.label.tooltips.toPrecision')}>
-        {t('Flux.label.toPrecision') + ' '}
-      </OSTooltip>
-      {
-        // (!menu_for_style) &&
-        //   isAttributeOverloaded(selected_links, 'value_label_to_precision') ?
-        //   TooltipValueSurcharge('link_var_', t) :
-        //   <></>
-      }
-    </Checkbox>
+    {/* Choose number of significant number */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        {/* Choix d'affichage du nombre de chiffre significatifs  */}
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={value_label_significant_digits}
+          onChange={(evt) => {
+            elements.forEach(element => {
+              element.value_label_significant_digits = evt.target.checked
+              if (evt.target.checked) {
+                element.value_label_scientific_notation = false
+                element.value_label_custom_digit = false
+              }
+            })
+            refreshThisAndUpdateRelatedComponents()
+          }}>
+          <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
+            {t('Flux.label.significantDigits') + ' '}
+          </OSTooltip>
+          {
+            (!menu_for_style) &&
+              isAttributeOverloaded(selected_links, 'value_label_significant_digits') ?
+              TooltipValueSurcharge('link_var_', t) :
+              <></>
+          }
+        </Checkbox>
+        {value_label_significant_digits || value_label_scientific_notation?
+          /* Choose number of custom digit */
 
-    {
-      value_label_to_precision ?
-        <>{/* Choose number of significant number */}
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Flux.label.NbPrecision')}
-            </Box>
-            <OSTooltip label={t('Flux.label.tooltips.NbPrecision')}>
+            /* <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Flux.label.NbDigit')}
+            </Box> */
+            <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
               <ConfigMenuNumberInput
                 ref_to_set_value={ref_set_number_inputs}
-                default_value={value_label_scientific_precision}
-                menu_for_style={false}
+                default_value={value_label_nb_significant_digits}
+                menu_for_style={/*menu_for_style*/false}
                 minimum_value={0}
                 stepper={true}
                 function_on_blur={(value) => {
-                  selected_links.forEach(element =>
-                    element.value_label_scientific_precision = value ?? default_value_label_scientific_precision)
+                  elements.forEach(element =>
+                    element.value_label_nb_significant_digits = value ?? undefined)
                   refreshThisAndUpdateRelatedComponents()
                 }}
               />
             </OSTooltip>
-          </Box></> :
-        <></>
-    }</>
+          :<></>
+          }
+      </Box>
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={value_label_scientific_notation}
+      onChange={(evt) => {
+        elements.forEach(element => {
+          if (evt.target.checked) {
+            element.value_label_custom_digit = false
+            element.value_label_significant_digits = false
+          }
+          element.value_label_scientific_notation = evt.target.checked
+        })
+        refreshThisAndUpdateRelatedComponents()
+      }}>
+      <OSTooltip label={t('Flux.label.tooltips.scientificNotation')}>
+        {t('Flux.label.scientificNotation') + ' '}
+      </OSTooltip>
+      {
+        (!menu_for_style) &&
+           isAttributeOverloaded(selected_links, 'value_label_scientific_notation') ?
+           TooltipValueSurcharge('link_var_', t) :
+           <></>
+      }
+    </Checkbox>
 
+</>
 }
 
 export const ButtonLinkContextShowTooltipMenu: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {

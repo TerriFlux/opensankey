@@ -15,7 +15,9 @@ export type FCType_MenuConfLinkDataTextOSP={
 }
 
 export type FCType_MenuConfLinkScientificPrecision={
-  new_data_plus:Type_GenericApplicationDataOSP
+  new_data_plus:Type_GenericApplicationDataOSP,
+  menu_for_style:boolean
+
 }
 
 export type FCType_MenuContextLink={
