@@ -56,6 +56,7 @@ const default_grid_visible = true
 const default_horizontal_spacing = 200
 const default_vertical_spacing = 50
 const default_scale = 50
+const default_DA_marging = 50
 
 type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
 
@@ -1025,14 +1026,14 @@ export abstract class Class_DrawingArea
     let y0 = this._background_d3_groups_shift_y
 
     // Check horizontal fitting
-    const new_x0 = Math.min(0, bbox.x - this.grid_size)
-    const new_x1 = Math.max(fitting_width, bbox.x + bbox.width + this._grid_size)
+    const new_x0 = Math.min(0, bbox.x - default_DA_marging)
+    const new_x1 = Math.max(fitting_width, bbox.x + bbox.width + default_DA_marging)
     width = new_x1 - new_x0
     x0 = new_x0
 
     // Check vertical fitting
-    const new_y0 = Math.min(0, bbox.y - this.grid_size)
-    const new_y1 = Math.max(fitting_height, bbox.y + bbox.height + this._grid_size)
+    const new_y0 = Math.min(0, bbox.y - default_DA_marging)
+    const new_y1 = Math.max(fitting_height, bbox.y + bbox.height + default_DA_marging)
     height = new_y1 - new_y0
     y0 = new_y0
 
@@ -2333,6 +2334,8 @@ export abstract class Class_DrawingArea
         target.setPosXY(
           mouse_position[0] - (target.getShapeWidthToUse() / 2),
           mouse_position[1] - (target.getShapeHeightToUse() / 2))
+          
+        this.checkAndUpdateAreaSize()
       }
     } else if (this.isInSelectionMode()) {
       if (this._selection_zone.is_visible) {
