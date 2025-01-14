@@ -584,7 +584,7 @@ export const resources_app_elements = {
           affichage: 'Display',
           tooltips: {
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
-            toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
+            scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram'
           }
         },
@@ -642,8 +642,8 @@ export const resources_app_elements = {
           dessous: 'Above',
           dessus: 'Below',
           pls: 'Manual positioning of the label',
-          toPrecision: 'Scientific notation',
-          NbPrecision: 'Number of significant digit',
+          scientificNotation: 'Scientific notation',
+          significantDigits: 'Significant digits',
           custom_digit: 'Display custom decimal',
           NbDigit: 'Number of decimals',
           l_u_v: 'Unit',
@@ -662,8 +662,8 @@ export const resources_app_elements = {
             milieu_v: 'For the selected link(s), allows to position the label inside the link',
             top: 'For the selected stream(s), allows to position the label above the stream',
             pls: 'Combination Alt/left click move the label of the selected stream(s)',
-            toPrecision: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
-            NbPrecision: 'Choose the number of significant figures when the value is diplayed in scientific notation',
+            scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
+            significantDigits: 'Choose the number of significant digits',
             custom_digit: 'Activate custom custom decimal',
             NbDigit: 'Choose the number of decimals figures of the value',
             l_u_v: 'Display the unit of the links',
@@ -1375,7 +1375,7 @@ export const resources_app_elements = {
           affichage: 'Affichage',
           tooltips: {
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
-            toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
+            scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
             affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey'
           }
         },
@@ -1434,8 +1434,8 @@ export const resources_app_elements = {
           dessous: 'Dessous',
           dessus: 'Dessus',
           pls: 'Positionnement manuel du label',
-          toPrecision: 'Notation scientifique',
-          NbPrecision: 'Nombre de chiffres significatifs',
+          scientificNotation: 'Notation scientifique',
+          significantDigits: 'Chiffres significatifs',
           custom_digit: 'Décimales fixes',
           NbDigit: 'Nombre de décimale',
           l_u_v: 'Unité',
@@ -1454,8 +1454,8 @@ export const resources_app_elements = {
             milieu_v: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label dans le flux',
             dessus: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label au dessus du flux',
             pls: 'La combinaison Alt/click gauche déplace le label du/des flux sélectionné(s)',
-            toPrecision: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
-            NbPrecision: 'Choisi le nombre de chiffre significatif à afficher quand la valeur est en notation scientifique',
+            scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
+            significantDigits: 'Choisi le nombre de chiffre significatif',
             custom_digit: 'Affiche la valeur des flux avec un nombre de décimale fixe',
             NbDigit: 'Choisi le nombre de chiffres après la virgule à afficher',
 

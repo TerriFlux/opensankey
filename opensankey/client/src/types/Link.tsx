@@ -79,17 +79,21 @@ export const default_shape_starting_tangeant = 0.25
 export const default_shape_ending_tangeant = 0.25
 export const default_shape_middle_recyling = 100
 export const default_value_label_color = 'black'
-export const default_value_label_custom_digit = false
+
+
 export const default_value_label_font_family = default_font
 export const default_value_label_font_size = 20
 export const default_value_label_is_visible = true
-export const default_value_label_nb_digit = 0
 export const default_value_label_on_path = true
 export const default_value_label_pos_auto = false
 export const default_value_label_position: Type_PathLabelHPosition = 'middle'
 export const default_value_label_orthogonal_position: Type_PathLabelVPosition = 'middle'
-export const default_value_label_scientific_precision = 5
-export const default_value_label_to_precision = false
+export const default_value_label_custom_digit = true
+export const default_value_label_nb_digit = 2
+export const default_value_label_significant_digits = false
+export const default_value_label_nb_significant_digits = 3
+
+export const default_value_label_scientific_notation = false
 export const default_value_label_unit = ''
 export const default_value_label_unit_factor = 1
 export const default_value_label_unit_visible = false
@@ -862,10 +866,19 @@ export abstract class Class_LinkElement
     if (this.value_label_color !== _.value_label_color) {
       return false
     }
-    if (this.value_label_to_precision !== _.value_label_to_precision) {
+    if (this.value_label_custom_digit !== _.value_label_custom_digit) {
       return false
     }
-    if (this.value_label_scientific_precision !== _.value_label_scientific_precision) {
+    if (this.value_label_nb_digit !== _.value_label_nb_digit) {
+      return false
+    }
+    if (this.value_label_significant_digits !== _.value_label_significant_digits) {
+      return false
+    }
+    if (this.value_label_nb_significant_digits !== _.value_label_nb_significant_digits) {
+      return false
+    }
+    if (this.value_label_scientific_notation !== _.value_label_scientific_notation) {
       return false
     }
     if (this.value_label_font_family !== _.value_label_font_family) {
@@ -877,12 +890,7 @@ export abstract class Class_LinkElement
     if (this.value_label_unit !== _.value_label_unit) {
       return false
     }
-    if (this.value_label_custom_digit !== _.value_label_custom_digit) {
-      return false
-    }
-    if (this.value_label_nb_digit !== _.value_label_nb_digit) {
-      return false
-    }
+
     return true
   }
 
@@ -2538,23 +2546,26 @@ export abstract class Class_LinkElement
         data_value /= this.value_label_unit_factor
       }
 
-      // Do we need to keep only N significant numbers ?
-      if (this.value_label_scientific_precision > 0) {
-        // 12345.67 avec nb_sign = 4 devient 12340
-        text_value = data_value.toPrecision(this.value_label_scientific_precision)
-        data_value = parseFloat(text_value)
-      }
       // Convert
-      if (this.value_label_to_precision) {
+      if (this.value_label_scientific_notation) {
         // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-        text_value = data_value.toPrecision()
+        text_value = data_value.toPrecision(this.value_label_nb_significant_digits)
       }
-      else if (this.value_label_custom_digit) {
-        text_value = data_value.toFixed(this.value_label_nb_digit)
+      // Do we need to keep only N significant numbers ?
+      else if (this.value_label_significant_digits == true) {
+        // 12345.67 avec nb_sign = 4 devient 12340
+        text_value = String(parseFloat(data_value.toPrecision(this.value_label_nb_significant_digits)).toPrecision(this.value_label_nb_significant_digits))
+        if (text_value[text_value.length-1] == '0' && text_value.length == this.value_label_nb_significant_digits && text_value == String(this.data_value)) {
+          text_value += '.'
+        }
+      } else if (this.value_label_custom_digit) {
+        text_value = String(parseFloat(data_value.toFixed(this.value_label_nb_digit)))
       }
       else {
         text_value = String(data_value)
       }
+
+      text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
       // Add unit suffix
       if (text_value && this.value_label_unit_visible)
         text_value = text_value + ' ' + this.value_label_unit
@@ -3237,39 +3248,57 @@ export abstract class Class_LinkElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public get value_label_to_precision() {
-    if (this._display.attributes.value_label_to_precision !== undefined) {
-      return this._display.attributes.value_label_to_precision
-    } else if (this._display.style.value_label_to_precision !== undefined) {
-      return this._display.style.value_label_to_precision
+  public get value_label_scientific_notation() {
+    if (this._display.attributes.value_label_scientific_notation !== undefined) {
+      return this._display.attributes.value_label_scientific_notation
+    } else if (this._display.style.value_label_scientific_notation !== undefined) {
+      return this._display.style.value_label_scientific_notation
     }
-    return default_value_label_to_precision
+    return default_value_label_scientific_notation
   }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_to_precision(_: boolean) { this._display.attributes.value_label_to_precision = _; this.drawLabel() }
+  public set value_label_scientific_notation(_: boolean) { this._display.attributes.value_label_scientific_notation = _; this.drawLabel() }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public get value_label_scientific_precision() {
-    if (this._display.attributes.value_label_scientific_precision !== undefined) {
-      return this._display.attributes.value_label_scientific_precision
-    } else if (this._display.style.value_label_scientific_precision !== undefined) {
-      return this._display.style.value_label_scientific_precision
+  public get value_label_significant_digits() {
+    if (this._display.attributes.value_label_significant_digits !== undefined) {
+      return this._display.attributes.value_label_significant_digits
+    } else if (this._display.style.value_label_significant_digits !== undefined) {
+      return this._display.style.value_label_significant_digits
     }
-    return default_value_label_scientific_precision
+    return default_value_label_significant_digits
   }
 
   /**
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_scientific_precision(_: number) { this._display.attributes.value_label_scientific_precision = _; this.drawLabel() }
+  public get value_label_nb_significant_digits() {
+    if (this._display.attributes.value_label_nb_significant_digits !== undefined) {
+      return this._display.attributes.value_label_nb_significant_digits
+    } else if (this._display.style.value_label_nb_significant_digits !== undefined) {
+      return this._display.style.value_label_nb_significant_digits
+    }
+    return default_value_label_nb_significant_digits
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_significant_digits(_: boolean) { this._display.attributes.value_label_significant_digits = _; this.drawLabel() }
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_nb_significant_digits(_: number|undefined) { this._display.attributes.value_label_nb_significant_digits = _; this.drawLabel() }
 
   /**
    * TODO Description
@@ -3616,8 +3645,9 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   protected _value_label_font_family?: string
   protected _value_label_font_size?: number
   protected _value_label_color?: string
-  protected _value_label_to_precision?: boolean
-  protected _value_label_scientific_precision?: number
+  protected _value_label_scientific_notation?: boolean
+  protected _value_label_significant_digits?: boolean
+  protected _value_label_nb_significant_digits?: number
   protected _value_label_custom_digit?: boolean
   protected _value_label_nb_digit?: number
   protected _value_label_unit_visible?: boolean
@@ -3664,8 +3694,10 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (this._value_label_is_visible !== undefined) json_object['label_visible'] = this._value_label_is_visible
     if (this._value_label_font_size !== undefined) json_object['label_font_size'] = this._value_label_font_size
     if (this._value_label_color !== undefined) json_object['text_color'] = this._value_label_color
-    if (this._value_label_to_precision !== undefined) json_object['to_precision'] = this._value_label_to_precision
-    if (this._value_label_scientific_precision !== undefined) json_object['scientific_precision'] = this._value_label_scientific_precision
+    if (this._value_label_scientific_notation !== undefined) json_object['to_precision'] = this._value_label_scientific_notation
+    if (this._value_label_significant_digits !== undefined) json_object['scientific_precision'] = this._value_label_significant_digits
+    if (this._value_label_nb_significant_digits !== undefined) json_object['nb_scientific_precision'] = this._value_label_nb_significant_digits
+
     if (this._value_label_font_family !== undefined) json_object['font_family'] = this._value_label_font_family
     if (this._value_label_unit_visible !== undefined) json_object['label_unit_visible'] = this._value_label_unit_visible
     if (this._value_label_unit !== undefined) json_object['label_unit'] = this._value_label_unit
@@ -3712,8 +3744,9 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     if (json_local_object['label_visible'] !== undefined) this._value_label_is_visible = getBooleanFromJSON(json_local_object, 'label_visible', default_value_label_is_visible)
     if (json_local_object['label_font_size'] !== undefined) this._value_label_font_size = getNumberFromJSON(json_local_object, 'label_font_size', default_value_label_font_size)
     if (json_local_object['text_color'] !== undefined) this._value_label_color = getStringFromJSON(json_local_object, 'text_color', default_value_label_color)
-    if (json_local_object['to_precision'] !== undefined) this._value_label_to_precision = getBooleanFromJSON(json_local_object, 'to_precision', default_value_label_to_precision)
-    if (json_local_object['scientific_precision'] !== undefined) this._value_label_scientific_precision = getNumberFromJSON(json_local_object, 'scientific_precision', default_value_label_scientific_precision)
+    if (json_local_object['to_precision'] !== undefined) this._value_label_scientific_notation = getBooleanFromJSON(json_local_object, 'to_precision', default_value_label_scientific_notation)
+    if (json_local_object['scientific_precision'] !== undefined) this._value_label_significant_digits = getBooleanFromJSON(json_local_object, 'scientific_precision', default_value_label_significant_digits)
+    if (json_local_object['nb_scientific_precision'] !== undefined) this._value_label_nb_significant_digits = getNumberFromJSON(json_local_object, 'scientific_precision', default_value_label_nb_significant_digits)
     if (json_local_object['font_family'] !== undefined) this._value_label_font_family = getStringFromJSON(json_local_object, 'font_family', default_value_label_font_family)
     if (json_local_object['label_unit_visible'] !== undefined) this._value_label_unit_visible = getBooleanFromJSON(json_local_object, 'label_unit_visible', default_value_label_unit_visible)
     if (json_local_object['label_unit'] !== undefined) this._value_label_unit = getStringFromJSON(json_local_object, 'label_unit', default_value_label_unit)
@@ -3760,8 +3793,9 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
     this._value_label_font_family = element._value_label_font_family
     this._value_label_font_size = element._value_label_font_size
     this._value_label_color = element._value_label_color
-    this._value_label_to_precision = element._value_label_to_precision
-    this._value_label_scientific_precision = element._value_label_scientific_precision
+    this._value_label_scientific_notation = element._value_label_scientific_notation
+    this._value_label_significant_digits = element._value_label_significant_digits
+    this._value_label_nb_significant_digits = element._value_label_nb_significant_digits
     this._value_label_custom_digit = element._value_label_custom_digit
     this._value_label_nb_digit = element._value_label_nb_digit
     this._value_label_unit_visible = element._value_label_unit_visible
@@ -3820,8 +3854,9 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   public get value_label_font_family() { return this._value_label_font_family }
   public get value_label_font_size() { return this._value_label_font_size }
   public get value_label_color() { return this._value_label_color }
-  public get value_label_to_precision() { return this._value_label_to_precision }
-  public get value_label_scientific_precision() { return this._value_label_scientific_precision }
+  public get value_label_scientific_notation() { return this._value_label_scientific_notation }
+  public get value_label_significant_digits() { return this._value_label_significant_digits }
+  public get value_label_nb_significant_digits() { return this._value_label_nb_significant_digits }
   public get value_label_custom_digit() { return this._value_label_custom_digit }
   public get value_label_nb_digit() { return this._value_label_nb_digit }
   public get value_label_unit_visible() { return this._value_label_unit_visible }
@@ -3970,8 +4005,9 @@ export class Class_LinkAttribute extends Class_AbstractLinkStyle {
   public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _; this.update() }
   public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _; this.update() }
   public set value_label_color(_: string | undefined) { this._value_label_color = _; this.update() }
-  public set value_label_to_precision(_: boolean | undefined) { this._value_label_to_precision = _; this.update() }
-  public set value_label_scientific_precision(_: number | undefined) { this._value_label_scientific_precision = _; this.update() }
+  public set value_label_scientific_notation(_: boolean | undefined) { this._value_label_scientific_notation = _; this.update() }
+  public set value_label_significant_digits(_: boolean | undefined) { this._value_label_significant_digits = _; this.update() }
+  public set value_label_nb_significant_digits(_: number | undefined) { this._value_label_nb_significant_digits = _; this.update() }
   public set value_label_custom_digit(_: boolean | undefined) { this._value_label_custom_digit = _; this.update() }
   public set value_label_nb_digit(_: number | undefined) { this._value_label_nb_digit = _; this.update() }
   public set value_label_unit_visible(_: boolean | undefined) { this._value_label_unit_visible = _; this.update() }
@@ -4045,8 +4081,9 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     this._value_label_orthogonal_position = default_value_label_orthogonal_position
     this._value_label_pos_auto = default_value_label_pos_auto
     this._value_label_position = default_value_label_position
-    this._value_label_scientific_precision = default_value_label_scientific_precision
-    this._value_label_to_precision = default_value_label_to_precision
+    this._value_label_significant_digits = default_value_label_significant_digits
+    this._value_label_nb_significant_digits = default_value_label_nb_significant_digits
+    this._value_label_scientific_notation = default_value_label_scientific_notation
     this._value_label_unit = default_value_label_unit
     this._value_label_unit_factor = default_value_label_unit_factor
     this._value_label_unit_visible = default_value_label_unit_visible
