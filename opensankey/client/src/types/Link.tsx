@@ -2549,7 +2549,11 @@ export abstract class Class_LinkElement
       // Convert
       if (this.value_label_scientific_notation) {
         // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-        text_value = data_value.toPrecision(this.value_label_nb_significant_digits)
+        if (this.value_label_significant_digits) {
+          text_value = data_value.toExponential(this.value_label_nb_significant_digits!-1)
+        } else {
+          text_value = data_value.toExponential()
+        }
       }
       // Do we need to keep only N significant numbers ?
       else if (this.value_label_significant_digits == true) {
