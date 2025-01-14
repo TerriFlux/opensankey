@@ -310,7 +310,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
               <></>
           }
         </Checkbox>
-        {value_label_significant_digits || value_label_scientific_notation?
+        {value_label_significant_digits?
           /* Choose number of custom digit */
 
             /* <Box layerStyle='menuconfigpanel_option_name'>
@@ -340,7 +340,6 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         elements.forEach(element => {
           if (evt.target.checked) {
             element.value_label_custom_digit = false
-            element.value_label_significant_digits = false
           }
           element.value_label_scientific_notation = evt.target.checked
         })
