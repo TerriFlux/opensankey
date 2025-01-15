@@ -9,10 +9,10 @@
 
 // OpenSankey imports
 import {
-  Class_Element
+  ClassTemplate_Element
 } from '../deps/OpenSankey/types/Element'
 import {
-  Class_Handler
+  ClassTemplate_Handler
 } from '../deps/OpenSankey/types/Handler'
 import {
   Type_ElementPosition,
@@ -25,10 +25,10 @@ import {
 
 // Local imports
 import {
-  Class_AbstractDrawingAreaPlus,
-  Class_AbstractSankeyPlus
-} from './Abstract'
-import { Class_MenuConfigPlus } from './MenuConfigPlus'
+  ClassAbstract_DrawingAreaOSP,
+  ClassAbstract_SankeyOSP
+} from './AbstractOSP'
+import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP } from './TypesOSP'
 
 
@@ -65,10 +65,10 @@ export function sortElementsContainersByDisplayingOrders(
 
 export class Class_ContainerElement
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingAreaPlus<any, any, any>, // eslint-disable-line
-    Type_GenericSankey extends Class_AbstractSankeyPlus<any, any, any> // eslint-disable-line
+    Type_GenericDrawingArea extends ClassAbstract_DrawingAreaOSP<any, any, any>, // eslint-disable-line
+    Type_GenericSankey extends ClassAbstract_SankeyOSP<any, any, any> // eslint-disable-line
   >
-  extends Class_Element
+  extends ClassTemplate_Element
   <
     Type_GenericDrawingArea,
     Type_GenericSankey
@@ -103,9 +103,9 @@ export class Class_ContainerElement
    * Config menu ref to html element & function to update it
    * @protected
    * @type {string}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
-  declare protected _menu_config: Class_MenuConfigPlus
+  declare protected _menu_config: Class_MenuConfigOSP
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -122,10 +122,10 @@ export class Class_ContainerElement
   private _label_height: number
 
   private _drag_handler: {
-    top: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    bottom: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    left: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    right: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    top: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    bottom: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    left: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    right: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
   }
 
   // CONSTRUCTOR ========================================================================
@@ -133,12 +133,12 @@ export class Class_ContainerElement
   /**
    * Creates an instance of Class_ContainerElement.
    * @param {string} id
-   * @param {Class_MenuConfigPlus} menu_config
+   * @param {Class_MenuConfigOSP} menu_config
    * @param {Type_GenericDrawingArea} drawing_area
    * @memberof Class_ContainerElement
    */
   constructor(id: string,
-    menu_config: Class_MenuConfigPlus,
+    menu_config: Class_MenuConfigOSP,
     drawing_area: Type_GenericDrawingArea,
   ) {
     super(id, menu_config, 'g_labels')
@@ -162,7 +162,7 @@ export class Class_ContainerElement
 
     // Free labels drag handlers
     this._drag_handler = {
-      top: new Class_Handler(
+      top: new ClassTemplate_Handler(
         'zdt_top_handle_' + id,
         drawing_area,
         menu_config,
@@ -171,7 +171,7 @@ export class Class_ContainerElement
         this.dragTopHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_top_handle' }),
-      bottom: new Class_Handler(
+      bottom: new ClassTemplate_Handler(
         'zdt_bottom_handle_' + id,
         drawing_area,
         menu_config,
@@ -180,7 +180,7 @@ export class Class_ContainerElement
         this.dragBottomHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_bottom_handle' }),
-      left: new Class_Handler(
+      left: new ClassTemplate_Handler(
         'zdt_left_handle_' + id,
         drawing_area,
         menu_config,
@@ -189,7 +189,7 @@ export class Class_ContainerElement
         this.dragLeftHandler(),
         this.dragHandleEnd(),
         { class: 'zdt_left_handle' }),
-      right: new Class_Handler(
+      right: new ClassTemplate_Handler(
         'zdt_right_handle_' + id,
         drawing_area,
         menu_config,
@@ -549,7 +549,7 @@ export class Class_ContainerElement
    * Deal with simple left Mouse Button (LMB) click on given element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -598,7 +598,7 @@ export class Class_ContainerElement
    * Deal with double left Mouse Button (LMB) click on given element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventDoubleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -610,7 +610,7 @@ export class Class_ContainerElement
    * Deal with simple right Mouse Button (RMB) click on given element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventSimpleRMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -622,7 +622,7 @@ export class Class_ContainerElement
    * Define maintained left mouse button click for free labels
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMaintainedClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -634,7 +634,7 @@ export class Class_ContainerElement
    * Define released left mouse button click for drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventReleasedClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -646,7 +646,7 @@ export class Class_ContainerElement
    * Define event when mouse moves over drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseOver(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -658,7 +658,7 @@ export class Class_ContainerElement
    * Define event when mouse moves out of drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseOut(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -670,7 +670,7 @@ export class Class_ContainerElement
    * Define event when mouse moves in drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseMove(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -682,7 +682,7 @@ export class Class_ContainerElement
    * Define event when mouse drag starts
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseDragStart(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -694,7 +694,7 @@ export class Class_ContainerElement
    * Define event when mouse drag element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -735,7 +735,7 @@ export class Class_ContainerElement
    * Define event when mouse drag ends
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseDragEnd(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
