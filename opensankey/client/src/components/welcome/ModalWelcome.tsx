@@ -40,7 +40,10 @@ import { faArrowPointer, faShareNodes, faFolderTree, faSliders, faArrowsUpDown, 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { FaUser, FaAngleDoubleLeft } from 'react-icons/fa'
 
+
+/* eslint-disable */
 const video_accueil = require('../../media/catch_phrase_OpenSankey.webm')
+/* eslint-enable */
 
 export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
   new_data,
