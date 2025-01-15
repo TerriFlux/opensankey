@@ -14,12 +14,13 @@ import './css/main.css'
 
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import { ChakraProvider } from '@chakra-ui/react'
 
 // Local imports ====================================================================================
 
 import './traductions/traduction'
 
-import SankeyApp from './SankeyApp'
+import OpenSankeyApp from './App'
 import {
   initializeApplicationData,
   initializeReinitialization,
@@ -27,14 +28,13 @@ import {
   moduleDialogs,
   initializeMenuConfiguration,
   initializeDiagrammSelector
-} from './OSModule'
+} from './Modules'
 import {
   ClickSaveDiagram
-} from './dialogs/SankeyPersistence'
+} from './components/dialogs/SankeyPersistence'
 import {
   ModalWelcomeBuilder
-} from './welcome/ModalWelcome'
-import { ChakraProvider } from '@chakra-ui/react'
+} from './components/welcome/ModalWelcome'
 import { opensankey_theme } from './chakra/Theme'
 
 // CONSTANTS =========================================================================================
@@ -49,7 +49,7 @@ const root=createRoot(container)
 // RENDERING ==========================================================================================
 root.render(
   <ChakraProvider theme={opensankey_theme}>
-    <SankeyApp
+    <OpenSankeyApp
       initializeReinitialization={initializeReinitialization}
 
       //- Data

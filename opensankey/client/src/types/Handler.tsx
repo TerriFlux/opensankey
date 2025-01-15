@@ -12,14 +12,14 @@ import type {
   Class_MenuConfig
 } from './MenuConfig'
 import type {
-  Class_AbstractDrawingArea,
-  Class_AbstractSankey
+  ClassAbstract_DrawingArea,
+  ClassAbstract_Sankey
 } from './Abstract'
 
 // Local modules imports
 import {
-  Class_Element,
-  Class_ProtoElement
+  ClassTemplate_Element,
+  ClassTemplate_ProtoElement
 } from './Element'
 import { Type_ElementPosition } from './Utils'
 import { default_element_position } from './Utils'
@@ -29,15 +29,15 @@ import { default_element_position } from './Utils'
 /**
  * Class that define a handler used to manipulate a element
  * @export
- * @class Class_Handler
- * @extends {Class_Element}
+ * @class ClassTemplate_Handler
+ * @extends {ClassTemplate_Element}
  */
-export class Class_Handler
+export class ClassTemplate_Handler
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey
   >
-  extends Class_Element
+  extends ClassTemplate_Element
   <
     Type_GenericDrawingArea,
     Type_GenericSankey
@@ -57,36 +57,35 @@ export class Class_Handler
   private _color: string = 'black'
   private _filled: boolean = true
   private _custom_class: string | undefined
-  private _ref_element: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>
-  private _ref_element_optional?: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined
-
+  private _ref_element: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>
+  private _ref_element_optional?: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined
   private _custom_html_grp: boolean
 
   // CONSTRUCTOR ========================================================================
 
   /**
-  * Creates an instance of Class_Handler.
+  * Creates an instance of ClassTemplate_Handler.
   * @param {string} id
   * @param {Type_GenericDrawingArea} drawing_area
   * @param {Class_MenuConfig} menu_config
-  * @param {Class_ProtoElement} ref
+  * @param {ClassTemplate_ProtoElement} ref
   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragStart_function
   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} drag_function
   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragEnd_function
   * @param {{class?:string, size?: number, color?: string, filled?: boolean }} [options]
-  * @param {Class_ProtoElement} [ref_optional]
-  * @memberof Class_Handler
+  * @param {ClassTemplate_ProtoElement} [ref_optional]
+  * @memberof ClassTemplate_Handler
   */
   constructor(
     id: string,
     drawing_area: Type_GenericDrawingArea,
     menu_config: Class_MenuConfig,
-    ref: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
+    ref: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     options?: { class?: string, size?: number, color?: string, filled?: boolean },
-    ref_optional?: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
+    ref_optional?: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
     custom_parent_grp?: string
   ) {
     // Init parent class attributes
@@ -123,7 +122,7 @@ export class Class_Handler
 
   // COPY METHODS =======================================================================
 
-  protected _copyFrom(element: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
+  protected _copyFrom(element: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
     super._copyFrom(element)
     this._size = element._size
     this._color = element._color
@@ -168,7 +167,6 @@ export class Class_Handler
    * @memberof Class_Handler
    */
   protected override _initDraw(): void {
-
     // If the parent id is referenced in the constructor we allow the creation of the new group outside the DA
     // (orginally this override was created to allow the creation of legend handler outside the DA)
     if (this._custom_html_grp) {
@@ -185,17 +183,15 @@ export class Class_Handler
       // Normal _initDraw
       super._initDraw()
     }
-
-
   }
 
   // GETTERS / SETTERS ==================================================================
 
   /**
-     * Getter used to display or not the handler (called in draw of Class_Element)
+     * Getter used to display or not the handler (called in draw of ClassTemplate_Element)
      *
      * @readonly
-     * @memberof Class_Handler
+     * @memberof ClassTemplate_Handler
      */
   public get is_visible(): boolean {
     return (
@@ -205,11 +201,11 @@ export class Class_Handler
       (this._ref_element_optional?.is_visible ?? true))
   }
 
-  public get ref_element(): Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {
+  public get ref_element(): ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {
     return this._ref_element
   }
 
-  public get ref_element_optional(): Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined {
+  public get ref_element_optional(): ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined {
     return this._ref_element_optional
   }
 }
