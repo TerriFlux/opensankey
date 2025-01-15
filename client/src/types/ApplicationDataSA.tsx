@@ -1,5 +1,6 @@
-import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/TypesOSP'
-import { Class_MenuConfigSA } from './MenuConfig'
+import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/TypesOSP'
+import { Class_MenuConfigSA } from './MenuConfigSA'
+
 export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
 
   // PROTECTED ATTRIBUTES ===============================================================

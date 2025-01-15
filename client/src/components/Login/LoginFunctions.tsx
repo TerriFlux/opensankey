@@ -4,7 +4,7 @@ import {
   activateLicenseToken,
   app_name_opensankeyplus,
 } from '../Register/RegisterFunctions'
-import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
 
 const resetLogs = () => {
   d3.select('.LogInfo').selectAll('*').remove()

@@ -29,8 +29,8 @@ import i18next from './traductions/traduction'
 
 // Local modules =================================================================================
 
-import { SankeyAppSA } from './SankeyAppSA'
-import { Class_ApplicationDataSA } from './ApplicationData'
+import { SankeyApp } from './AppSA'
+import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
 
 // Global variables ==============================================================================
 
@@ -60,10 +60,10 @@ let dataApp: Class_ApplicationDataSA
 
 const App: FunctionComponent = () => {
   if (initialRender) {
-    initialRender = false 
+    initialRender = false
     dataApp = new Class_ApplicationDataSA(false)
   }
-  return <SankeyAppSA
+  return <SankeyApp
     new_data_app={dataApp}
   />
 }

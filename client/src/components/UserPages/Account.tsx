@@ -32,8 +32,8 @@ import {
   useDisclosure
 } from '@chakra-ui/react'
 
-import { Class_ApplicationDataSA } from '../../ApplicationData'
-import { returnToApp } from '../../SankeyAppSA'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
+import { returnToApp } from '../../AppSA'
 import {
   checkLicenseOpenOSP,
   registerNewLicenseOpenOSP,

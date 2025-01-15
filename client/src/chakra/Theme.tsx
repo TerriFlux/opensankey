@@ -1,5 +1,5 @@
 import { extendTheme } from '@chakra-ui/react'
-import { Theme_SankeyPlus } from '../deps/OpenSankey+/chakra/Theme'
+import { ThemeOSP } from '../deps/OpenSankey+/chakra/Theme'
 import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 import {
@@ -159,6 +159,6 @@ const deep_assign = (s: Type_JSON, t: Type_JSON) => {
   })
 }
 
-deep_assign(Theme_SankeyPlus, Theme)
+deep_assign(ThemeOSP, Theme)
 deep_assign(Theme_SA, Theme)
 export const Theme_SankeyApplication = extendTheme({ ...Theme })

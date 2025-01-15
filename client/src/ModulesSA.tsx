@@ -27,18 +27,21 @@ import {
   ModalHeader,
   ModalOverlay,
 } from '@chakra-ui/react'
-
-import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/TypesOS'
-import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
-
-import { initializeAdditionalMenusOSP, moduleDialogsOSP } from './deps/OpenSankey+/OSPModule'
-
-import { Class_ApplicationDataSA } from './ApplicationData'
-import { LoginOutButton } from './components/Login/Login'
-import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
-import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/dialogs/SankeyPersistence'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
+
+// OpenSankey imports
+import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
+import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
+import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyPersistence'
+
+// OpenSankey+ imports
+import { initializeAdditionalMenusOSP, moduleDialogsOSP } from './deps/OpenSankey+/ModulesOSP'
+
+// Local imports
+import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
+import { LoginOutButton } from './components/Login/Login'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -283,7 +286,7 @@ const ButtonOpenModalSankeyTheque: FunctionComponent<{ new_data: Class_Applicati
  * Modal containing sankeytheque
  *
  * @param {*} { new_data, additionalMenu, Reinitialization }
- * @return {*} 
+ * @return {*}
  */
 export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({ new_data }) => {
   const [show_sankeytheque, set_show_sankeytheque] = useState(false)
@@ -358,7 +361,7 @@ export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({
  * Component to represent MFAData with accordeon menu
  *
  * @param {*} { new_data, theque_tree, path, setPathToCard }
- * @return {*} 
+ * @return {*}
  */
 const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccordionGenerator> = ({ new_data, theque_tree, path, setPathToCard }) => {
   const entries_tree = Object.entries(theque_tree)
@@ -477,7 +480,7 @@ const FileToCardsStructur = (files: string[]) => {
  * Generate cards for files in a MFAData subtree
  *
  * @param {*} { new_data, theque_tree, path }
- * @return {*} 
+ * @return {*}
  */
 const SankeyThequeCardsGenerator: FunctionComponent<FCType_SankeyThequeCardsGenerator> = ({ new_data, theque_tree, path }) => {
   const folder = getFilesFromkeys(theque_tree as Type_JSON, path)
@@ -512,7 +515,7 @@ const SankeyThequeCardsGenerator: FunctionComponent<FCType_SankeyThequeCardsGene
             {(cardStruct[1].is_reconciled || cardStruct[1].is_excel) ? <Button
               variant='button_sankey_open_excel'
               onClick={() => {
-                // Button that open file in Excel version                
+                // Button that open file in Excel version
                 new_data.menu_configuration.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
 
                 const file_name = cardStruct[1].is_reconciled ? cardStruct[1].is_reconciled : cardStruct[1].is_excel
