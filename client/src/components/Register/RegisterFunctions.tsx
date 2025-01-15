@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import LZString from 'lz-string'
 import i18next from 'i18next'
 import { NavigateFunction } from 'react-router-dom'
-import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
 
 export const app_name_opensankeyplus = 'OpenSankey+'
 export const app_name_sankeysuite = 'SankeySuite'

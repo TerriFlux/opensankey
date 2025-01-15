@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react'
 import { Navigate } from 'react-router-dom'
 
-import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
 
 type FCType_PrivateRoute = {
     new_data_app: Class_ApplicationDataSA,

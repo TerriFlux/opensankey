@@ -11,8 +11,8 @@ import {
   SimpleGrid
 } from '@chakra-ui/react'
 
-import { Class_ApplicationDataSA } from '../../ApplicationData'
-import { returnToApp } from '../../SankeyAppSA'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
+import { returnToApp } from '../../AppSA'
 import { LoginOutButton } from '../Login/Login'
 
 
@@ -60,10 +60,10 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   const myAccount = () => {
     navigate('/account')
   }
- 
+
   // Displayed in card
   const modalTemplate = <></>
-  
+
 
   return (
     <div>

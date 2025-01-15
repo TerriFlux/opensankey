@@ -4,7 +4,7 @@ import parse from 'html-react-parser'
 import {
   Box,
 } from '@chakra-ui/react'
-import { Class_ApplicationDataSA } from '../../ApplicationData'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
 
 // Register : Modal for terms of use
 export const Presentation: FunctionComponent<{

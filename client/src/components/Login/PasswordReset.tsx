@@ -18,8 +18,8 @@ import {
   Spinner
 } from '@chakra-ui/react'
 
-import { Class_ApplicationDataSA } from '../../ApplicationData'
-import { returnToApp } from '../../SankeyAppSA'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
+import { returnToApp } from '../../AppSA'
 import {
   email_regex_str,
   pwd_regex_str

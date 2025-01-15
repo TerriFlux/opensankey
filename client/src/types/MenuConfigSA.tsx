@@ -1,10 +1,10 @@
 import { Dispatch, MutableRefObject, SetStateAction, useRef } from 'react'
-import { Class_MenuConfigPlus } from './deps/OpenSankey+/types/MenuConfigPlus'
+import { Class_MenuConfigOSP } from '../deps/OpenSankey+/types/MenuConfigOSP'
 
 type SAShowMenuComponentsVarType={
   ref_setter_show_modal_sankeytheque: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
-export class Class_MenuConfigSA extends Class_MenuConfigPlus {
+export class Class_MenuConfigSA extends Class_MenuConfigOSP {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -13,14 +13,14 @@ export class Class_MenuConfigSA extends Class_MenuConfigPlus {
     ========================================*/
 
   private _ref_to_additional_menus_updater: MutableRefObject<(() => void)>
-  
+
   private _dict_setter_show_dialog_SA: SAShowMenuComponentsVarType
 
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of Class_MenuConfigPlus.
-   * @memberof Class_MenuConfigPlus
+   * Creates an instance of Class_MenuConfigOSP.
+   * @memberof Class_MenuConfigOSP
    */
   constructor() {
     // Init parent class

@@ -24,8 +24,8 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 
-import { Class_ApplicationDataSA } from '../../ApplicationData'
-import { returnToApp } from '../../SankeyAppSA'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
+import { returnToApp } from '../../AppSA'
 import { Theme_SankeyApplication } from '../../chakra/Theme'
 import { logError, userSignUp, userValidate } from './RegisterFunctions'
 import TermsOfUse from './TermsOfUse'

@@ -14,22 +14,22 @@ import { Center, ChakraProvider, Spinner } from '@chakra-ui/react'
 
 // OpenSankey imports ===============================================================================
 
-import SankeyApp from './deps/OpenSankey+/deps/OpenSankey/SankeyApp'
-import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/dialogs/SankeyPersistence'
-import { initializeMenuConfiguration } from './deps/OpenSankey+/deps/OpenSankey/OSModule'
+import OpenSankeyApp from './deps/OpenSankey+/deps/OpenSankey/App'
+import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyPersistence'
+import { initializeMenuConfiguration } from './deps/OpenSankey+/deps/OpenSankey/Modules'
 
 // OpenSankey+ imports ===============================================================================
 
 import {
   initializeDiagrammSelectorOSP,
   initializeReinitializationOSP,
-} from './deps/OpenSankey+/OSPModule'
-import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/welcome/ModalWelcomeOSP'
+} from './deps/OpenSankey+/ModulesOSP'
+import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/components/welcome/ModalWelcomeOSP'
 
 // Local imports ====================================================================================
 
-import { Class_ApplicationDataSA } from './ApplicationData'
-import { Theme_SankeyApplication }  from './chakra/Theme'
+import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
+import { Theme_SankeyApplication } from './chakra/Theme'
 import { initializeAdditionalMenusSA, initializeApplicationDataSA, moduleDialogsSA } from './ModulesSA'
 import Account from './components/UserPages/Account'
 import Dashboard from './components/UserPages/Dashboard'
@@ -40,19 +40,19 @@ import { PrivateRoute } from './components/Routes/PrivateRoutes'
 import { PublicRoute } from './components/Routes/PublicRoutes'
 import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Paiement/Paiement'
 
-// SankeyApp for OpenSankey+ ========================================================================
+// OpenSankeyApp for OpenSankey+ ========================================================================
 
-type SankeyAppSAType = {
-  new_data_app:Class_ApplicationDataSA
+type FCType_SankeyApp = {
+  new_data_app: Class_ApplicationDataSA
 }
 
-export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
-  {new_data_app }
+export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
+  { new_data_app }
 ) => {
 
   // Minimal app ------------------------------------------------------------------------------------
   const sankeyApp =
-    <SankeyApp
+    <OpenSankeyApp
       initializeReinitialization={initializeReinitializationOSP}
       initializeApplicationData={
         (initial_data) => {
@@ -87,7 +87,7 @@ export const SankeyAppSA: FunctionComponent<SankeyAppSAType> = (
       theme={Theme_SankeyApplication}
     >
       <Center h={window.innerHeight} w={window.innerWidth}>
-        <Spinner size='xl'/>
+        <Spinner size='xl' />
       </Center>
     </ChakraProvider>
   )
