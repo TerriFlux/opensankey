@@ -66,7 +66,7 @@ def extract_json_from_sankey(sankey: Sankey):
     sankeyToJson.parse_links(sankey, links)
     # Return data struct
     return {
-        'version': '0.8',
+        'version': '1.0',
 
         'dataTags': dataTags,
         'nodeTags': nodeTags,

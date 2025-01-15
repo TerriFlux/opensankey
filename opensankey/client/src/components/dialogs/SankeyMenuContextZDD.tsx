@@ -1,0 +1,231 @@
+import * as d3 from 'd3'
+import React, { FunctionComponent, useState } from 'react'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
+
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  Menu,
+  MenuButton,
+  MenuList,
+  Input,
+  NumberInput,
+  NumberInputField
+} from '@chakra-ui/react'
+import { ChevronRightIcon } from '@chakra-ui/icons'
+
+import { FCType_ContextMenuZdd } from './types/SankeyMenuContextZDDTypes'
+import { GetRandomInt, list_palette_color } from '../../types/Utils'
+
+const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
+const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
+
+export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
+  new_data,
+}) => {
+
+  const { t } = new_data
+  const [forceUpdate, setForceUpdate] = useState(false)
+
+  new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current = () => setForceUpdate(!forceUpdate)
+
+  const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+  let style_c_zdd = '0px 0px auto auto'
+  let is_top = true
+  let pos_x = new_data.drawing_area.pointer_pos[0] + 10
+  let pos_y = new_data.drawing_area.pointer_pos[1] - 20
+
+  // The limit value of the mouse position that engages the shift of the context menu
+  // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
+  if (new_data.drawing_area.is_drawing_area_contextualised) {
+    if (new_data.drawing_area.pointer_pos[0] + 450 > window.innerWidth) {
+      pos_x = new_data.drawing_area.pointer_pos[0] - 455
+    }
+
+    if (new_data.drawing_area.pointer_pos[1] + 330 > window.innerHeight) {
+      pos_y = new_data.drawing_area.pointer_pos[1] - 310
+      is_top = false
+    }
+    style_c_zdd = pos_y + 'px auto auto ' + pos_x + 'px'
+  }
+
+  const button_bg_color = <Button variant='contextmenu_button'>
+    <Input hidden type='color' id='color_bg_zdd' name='color_bg_zdd'
+      onChange={(evt) => {
+        new_data.drawing_area.color = evt.target.value
+      }}
+    >
+    </Input>
+    <label htmlFor='color_bg_zdd' style={{ width: '100%', margin: 0 }}>{t('Menu.BgC')}</label>
+  </Button>
+
+  const button_bg_grid = <><Button variant='contextmenu_button' onClick={() => {
+    new_data.drawing_area.grid_visible = !new_data.drawing_area.grid_visible
+    setForceUpdate(!forceUpdate)
+    indicateSankeyToSaveInCache()
+  }}>{t('MEP.TCG')}{checked(new_data.drawing_area.grid_visible)}</Button>
+  </>
+  const button_assgn_rand_node_color = <><Button variant='contextmenu_button' onClick={() => {
+    const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
+    const size_color = new_data.drawing_area.sankey.nodes_list.length
+
+    for (const i in d3.range(size_color)) {
+      new_data.drawing_area.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / size_color))?.formatHex() as string)
+    }
+    indicateSankeyToSaveInCache()
+  }}>{t('Menu.rand_node_color')}</Button>
+  </>
+
+  // Item to change sankey scale
+  const dropdown_c_zdd_scale = <Box>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.Echelle')}
+      </Box>
+
+      <NumberInput
+        min={0}
+        value={new_data.drawing_area.scale}
+        onChange={evt => {
+          new_data.drawing_area.scale = +evt
+          new_data.drawing_area.sankey.nodes_list.forEach(node => node.draw())
+          indicateSankeyToSaveInCache()
+          setForceUpdate(!forceUpdate)
+        }}>
+        <NumberInputField />
+      </NumberInput>
+    </Box>
+  </Box>
+
+  // Item to set vert and horiz shift and automatically position nodes
+  const button_pa = <Menu placement='end'>
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+      {t('MEP.PA')}
+    </MenuButton>
+    <MenuList as={Box} layerStyle='context_menu' >
+      {/* Set horizontal value for automatic positionning */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.Horizontal')}
+        </Box>
+
+        <NumberInput
+          variant='menuconfigpanel_option_numberinput_with_right_addon'
+          min={0}
+          value={new_data.drawing_area.horizontal_spacing}
+          onChange={evt => {
+            new_data.drawing_area.horizontal_spacing = +evt
+            indicateSankeyToSaveInCache()
+            setForceUpdate(!forceUpdate)
+          }}>
+          <NumberInputField />
+        </NumberInput>
+      </Box>
+
+      {/* Set vertical value for automatic positionning */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.Vertical')}
+        </Box>
+
+        <NumberInput
+          variant='menuconfigpanel_option_numberinput_with_right_addon'
+          min={0}
+          value={new_data.drawing_area.vertical_spacing}
+          onChange={evt => {
+            new_data.drawing_area.vertical_spacing = +evt
+            indicateSankeyToSaveInCache()
+            setForceUpdate(!forceUpdate)
+          }}>
+          <NumberInputField />
+        </NumberInput>
+      </Box>
+
+
+      <Button variant='contextmenu_button'
+        onClick={() => {
+          new_data.drawing_area.computeAutoSankey(false)
+        }}>
+        {t('MEP.PA_action')}
+      </Button>
+    </MenuList>
+  </Menu>
+
+  // Item to display or mask the legend
+  const button_mask_leg = <Button variant='contextmenu_button'
+    onClick={() => {
+      new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
+      indicateSankeyToSaveInCache()
+      setForceUpdate(!forceUpdate)
+    }}>
+    {new_data.drawing_area.legend.masked ? t('MEP.hide_leg') : t('MEP.show_leg')}
+  </Button>
+
+  const button_an = <Button variant='contextmenu_button'
+    onClick={() => {
+
+      new_data.drawing_area.arrangeNodesToGrid()
+      indicateSankeyToSaveInCache()
+
+    }}>
+    {t('MEP.AN')}
+  </Button>
+
+  let full = t('fullscreen')
+  if (!document.fullscreenElement) {
+    full = t('fullscreen')
+  } else {
+    full = t('exitFullscreen')
+  }
+
+  const button_fullscreen = <Button variant='contextmenu_button'
+    onClick={() => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+      new_data.drawing_area.is_drawing_area_contextualised = false
+    }}
+  >
+    {full}
+  </Button>
+
+  // Item to open a draggable modal with the configuration menu of the draw area
+  const button_open_layout = <Button onClick={() => {
+    new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_layout.current(true)
+    new_data.drawing_area.is_drawing_area_contextualised = false
+  }} variant='contextmenu_button'>
+    {t('Menu.MEP')} {icon_open_modal}
+  </Button>
+
+  return new_data.drawing_area.is_drawing_area_contextualised ? <Box
+    id="context_zdd_pop_over"
+    layerStyle='context_menu'
+    className={'context_popover ' + (is_top ? '' : 'at_bot')}
+
+    style={{ maxWidth: '100%', position: 'absolute', zIndex: '1', inset: style_c_zdd }}>
+    <ButtonGroup isAttached orientation='vertical'>
+      {button_pa}
+      {button_an}
+      {sep}
+      {button_assgn_rand_node_color}
+      {sep}
+
+      {button_bg_color}
+      {button_bg_grid}
+      {dropdown_c_zdd_scale}
+      {button_mask_leg}
+      {sep}
+      {button_open_layout}
+      {sep}
+      {button_fullscreen}
+
+    </ButtonGroup>
+  </Box> : <></>
+}

@@ -13,8 +13,8 @@ import type {
   Class_MenuConfig
 } from './MenuConfig'
 import type {
-  Class_AbstractDrawingArea,
-  Class_AbstractSankey
+  ClassAbstract_DrawingArea,
+  ClassAbstract_Sankey
 } from './Abstract'
 
 // LOcal constants
@@ -37,20 +37,20 @@ import {
 /**
  * Class that define a meta element to display on drawing area
  *
- * @class Class_ProtoElement
+ * @class ClassTemplate_ProtoElement
  */
-export abstract class Class_ProtoElement
+export abstract class ClassTemplate_ProtoElement
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey
   > {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
   /**
    * D3 selection that contains related svg element
-   * @type {(d3.Selection<SVGGElement, Class_Element, SVGGElement, unknown> | null)}
-   * @memberof Class_Element
+   * @type {(d3.Selection<SVGGElement, ClassTemplate_Element, SVGGElement, unknown> | null)}
+   * @memberof ClassTemplate_Element
    */
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
@@ -63,7 +63,7 @@ export abstract class Class_ProtoElement
    * @type {{
    *     drawing_area: Type_GenericDrawingArea,
    *   }}
-   * @memberof Class_ProtoElement
+   * @memberof ClassTemplate_ProtoElement
    */
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
@@ -74,7 +74,7 @@ export abstract class Class_ProtoElement
    * Parent svg group : where element belong
    * @protected
    * @type {string}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected _svg_parent_group: string
 
@@ -82,7 +82,7 @@ export abstract class Class_ProtoElement
    * Config menu ref to html element & function to update it
    * @protected
    * @type {string}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected _menu_config: Class_MenuConfig
 
@@ -90,7 +90,7 @@ export abstract class Class_ProtoElement
    * Is element currently visually selected
    * @protected
    * @type {boolean}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected _is_selected: boolean = false
 
@@ -98,7 +98,7 @@ export abstract class Class_ProtoElement
    * Is element currently drawn
    * @protected
    * @type {boolean}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected _is_visible: boolean = true
 
@@ -106,7 +106,7 @@ export abstract class Class_ProtoElement
    * Allows to know if element visibility must be recomputed
    * @protected
    * @type {boolean}
-   * @memberof Class_ProtoElement
+   * @memberof ClassTemplate_ProtoElement
    */
   protected _visibility_fingerprint: string
 
@@ -114,7 +114,7 @@ export abstract class Class_ProtoElement
    * Is mouse cursor over element d3 selection (default=false)
    * @protected
    * @type {boolean}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected _is_mouse_over: boolean = false
 
@@ -122,7 +122,7 @@ export abstract class Class_ProtoElement
    * Is this element grabbed by mouse (default=false)
    * @protected
    * @type {boolean}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected _is_mouse_grabbed: boolean = false
 
@@ -132,7 +132,7 @@ export abstract class Class_ProtoElement
    * Id of element
    * @private
    * @type {string}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   private _id: string
 
@@ -140,18 +140,18 @@ export abstract class Class_ProtoElement
    * True if element is currently on a deletion process
    * Avoid cross calls of delete() method
    * @private
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of Class_Element.
+   * Creates an instance of ClassTemplate_Element.
    * @param {string} id
    * @param {Type_GenericDrawingArea} drawing_area
    * @param {string} svg_parent_group
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   constructor(
     id: string,
@@ -172,7 +172,7 @@ export abstract class Class_ProtoElement
 
   /**
    * Define deletion behavior
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   public delete() {
     if (this._is_currently_deleted === false) {
@@ -188,7 +188,7 @@ export abstract class Class_ProtoElement
   /**
    * Methods that needs to be overrides to properly clean elements
    * @protected
-   * @memberof Class_ProtoElement
+   * @memberof ClassTemplate_ProtoElement
    */
   protected cleanForDeletion() {
     // Does nothing here
@@ -199,10 +199,10 @@ export abstract class Class_ProtoElement
   /**
    * Copy only attributes that are not references
    * /!\ Id is not copied
-   * @param {Class_ProtoElement} element_to_copy
-   * @memberof Class_ProtoElement
+   * @param {ClassTemplate_ProtoElement} element_to_copy
+   * @memberof ClassTemplate_ProtoElement
    */
-  public copyFrom(element_to_copy: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
+  public copyFrom(element_to_copy: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
     // Remove from drawing area
     this.unDraw()
     // Copy intrasect values
@@ -214,10 +214,10 @@ export abstract class Class_ProtoElement
   /**
    * Copy only intrasect attributes that are not references
    * Function to override
-   * @param {Class_ProtoElement} element_to_copy
-   * @memberof Class_ProtoElement
+   * @param {ClassTemplate_ProtoElement} element_to_copy
+   * @memberof ClassTemplate_ProtoElement
    */
-  protected _copyFrom(element_to_copy: Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
+  protected _copyFrom(element_to_copy: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
     this._is_visible = element_to_copy._is_visible
     this._is_selected = element_to_copy._is_selected
     this._svg_parent_group = element_to_copy._svg_parent_group
@@ -228,7 +228,7 @@ export abstract class Class_ProtoElement
   /**
    * Convert element to JSON
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public toJSON(
     kwargs?: Type_JSON
@@ -253,7 +253,7 @@ export abstract class Class_ProtoElement
   /**
    * Apply json to element
    * @param {Type_JSON} json_object
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public fromJSON(
     json_object: Type_JSON,
@@ -280,7 +280,7 @@ export abstract class Class_ProtoElement
 
   /**
    * Set up element on d3 svg area
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   public draw() {
     this._process_or_bypass(() => {
@@ -292,7 +292,7 @@ export abstract class Class_ProtoElement
 
   /**
    * Unset element from d3 svg area
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   public unDraw() {
     if (this.d3_selection !== null) {
@@ -317,7 +317,7 @@ export abstract class Class_ProtoElement
   /**
    * Set up events related to element d3_element
    * @protected
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   public setEventsListeners() {
     if (!this._display.drawing_area.static) {
@@ -392,8 +392,8 @@ export abstract class Class_ProtoElement
    *
    * @protected
    * @param {string} process_id
-   * @param {(_: Class_ProtoElement) => void} process_func
-   * @memberof Class_ProtoElement
+   * @param {(_: ClassTemplate_ProtoElement) => void} process_func
+   * @memberof ClassTemplate_ProtoElement
    */
   protected _process_or_bypass(
     process_func: () => void
@@ -427,7 +427,7 @@ export abstract class Class_ProtoElement
    * Deal with simple left Mouse Button (LMB) click on given element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventSimpleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -441,7 +441,7 @@ export abstract class Class_ProtoElement
    * Deal with double left Mouse Button (LMB) click on given element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventDoubleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -453,7 +453,7 @@ export abstract class Class_ProtoElement
    * Deal with simple right Mouse Button (RMB) click on given element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventSimpleRMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -467,7 +467,7 @@ export abstract class Class_ProtoElement
    * Define maintained left mouse button click for drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMaintainedClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -480,7 +480,7 @@ export abstract class Class_ProtoElement
    * Define released left mouse button click for drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventReleasedClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -493,7 +493,7 @@ export abstract class Class_ProtoElement
    * Define event when mouse moves over drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseOver(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -506,7 +506,7 @@ export abstract class Class_ProtoElement
    * Define event when mouse moves out of drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseOut(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -519,7 +519,7 @@ export abstract class Class_ProtoElement
    * Define event when mouse moves in drawing area
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseMove(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -531,7 +531,7 @@ export abstract class Class_ProtoElement
    * Define event when mouse drag starts
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseDragStart(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -543,7 +543,7 @@ export abstract class Class_ProtoElement
    * Define event when mouse drag element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseDrag(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -555,7 +555,7 @@ export abstract class Class_ProtoElement
    * Define event when mouse drag ends
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseDragEnd(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -605,16 +605,16 @@ export abstract class Class_ProtoElement
 
 /**
  * Class that define a meta element to display on drawing area
- * Difference with Class_ProtoElement, Class_Element set its position
+ * Difference with ClassTemplate_ProtoElement, ClassTemplate_Element set its position
  *
- * @class Class_Element
+ * @class ClassTemplate_Element
  */
-export abstract class Class_Element
+export abstract class ClassTemplate_Element
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey
   >
-  extends Class_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {
+  extends ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -625,7 +625,7 @@ export abstract class Class_Element
    *     drawing_area: Type_GenericDrawingArea,
    *     position: Type_ElementPosition,
    *   }}
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
@@ -636,11 +636,11 @@ export abstract class Class_Element
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of Class_Element.
+   * Creates an instance of ClassTemplate_Element.
    * @param {string} id
    * @param {Type_GenericDrawingArea} drawing_area
    * @param {string} svg_parent_group
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   constructor(
     id: string,
@@ -655,10 +655,10 @@ export abstract class Class_Element
   /**
    * Copy only intrasect attributes that are not references
    * Function to override
-   * @param {Class_ProtoElement} _
-   * @memberof Class_ProtoElement
+   * @param {ClassTemplate_ProtoElement} _
+   * @memberof ClassTemplate_ProtoElement
    */
-  protected _copyFrom(_: Class_Element<Type_GenericDrawingArea, Type_GenericSankey>): void {
+  protected _copyFrom(_: ClassTemplate_Element<Type_GenericDrawingArea, Type_GenericSankey>): void {
     super._copyFrom(_)
     this._display.position.type = _._display.position.type
     this._display.position.x = _._display.position.x
@@ -731,7 +731,7 @@ export abstract class Class_Element
   /**
    * Set up element on d3 svg area
    * @protected
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected _draw() {
     // Draw element on D3

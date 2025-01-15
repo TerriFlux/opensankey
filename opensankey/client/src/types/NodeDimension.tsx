@@ -6,34 +6,34 @@
 
 // Internal imports
 import {
-  Class_AbstractLevelTag,
-  Class_AbstractDrawingArea,
-  Class_AbstractSankey
+  ClassAbstract_ProtoLevelTag,
+  ClassAbstract_DrawingArea,
+  ClassAbstract_Sankey
 } from './Abstract'
 import {
-  Class_AbstractNodeElement,
-  Class_AbstractNodeDimension
+  ClassAbstract_NodeElement,
+  ClassAbstract_NodeDimension
 } from './AbstractNode'
 
 // SPECIFIC TYPES ***********************************************************************
 
-type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
+type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS NODE DIMENSION *****************************************************************
 
-export class Class_NodeDimension extends Class_AbstractNodeDimension {
+export class Class_NodeDimension extends ClassAbstract_NodeDimension {
 
   // PRIVATE ATTRIBUTES =================================================================
   // Unique id
   private _id: string
 
   // Structure
-  private _parent: Type_AbstractNodeElement
-  private _children: Type_AbstractNodeElement[]
+  private _parent: TypeAbstract_NodeElement
+  private _children: TypeAbstract_NodeElement[]
 
   // Tags relations
-  private _parent_level_tag: Class_AbstractLevelTag
-  private _child_level_tag: Class_AbstractLevelTag
+  private _parent_level_tag: ClassAbstract_ProtoLevelTag
+  private _child_level_tag: ClassAbstract_ProtoLevelTag
 
   // Forcing
   private _force_show_children: boolean = false
@@ -43,7 +43,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
    * True if element is currently on a deletion process
    * Avoid cross calls of delete() method
    * @private
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   private _is_currently_deleted = false
   private _is_currently_in_unsetting_recursion = false
@@ -51,17 +51,17 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   // CONSTRUCTOR ========================================================================
   /**
    * Creates an instance of Class_NodeDimension.
-   * @param {Class_AbstractNodeElement<Type_GenericDrawingArea>} parent
-   * @param {Class_AbstractNodeElement[]} children
-   * @param {Class_AbstractLevelTag} parent_level_tag
-   * @param {Class_AbstractLevelTag} children_level_tag
+   * @param {ClassAbstract_NodeElement<Type_GenericDrawingArea>} parent
+   * @param {ClassAbstract_NodeElement[]} children
+   * @param {ClassAbstract_ProtoLevelTag} parent_level_tag
+   * @param {ClassAbstract_ProtoLevelTag} children_level_tag
    * @memberof Class_NodeDimension
    */
   constructor(
-    parent: Type_AbstractNodeElement,
-    children: Type_AbstractNodeElement[],
-    parent_level_tag: Class_AbstractLevelTag,
-    child_level_tag: Class_AbstractLevelTag,
+    parent: TypeAbstract_NodeElement,
+    children: TypeAbstract_NodeElement[],
+    parent_level_tag: ClassAbstract_ProtoLevelTag,
+    child_level_tag: ClassAbstract_ProtoLevelTag,
     id?: string
   ) {
     super()
@@ -158,20 +158,20 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
 
   }
 
-  public removeNodeAsParent(_: Type_AbstractNodeElement) {
+  public removeNodeAsParent(_: TypeAbstract_NodeElement) {
     if (this._parent === _) {
       this.delete() // Simply delete because dimension can not exist without parent
     }
   }
 
-  public addNodeAsChild(_: Type_AbstractNodeElement) {
+  public addNodeAsChild(_: TypeAbstract_NodeElement) {
     if (!(this._children.includes(_))) {
       this._children.push(_)
       _.addNewDimensionAsChild(this)
     }
   }
 
-  public removeNodeFromChildren(_: Type_AbstractNodeElement) {
+  public removeNodeFromChildren(_: TypeAbstract_NodeElement) {
     const idx = this._children.indexOf(_)
     if (idx !== undefined) {
       this._children.splice(idx, 1)
@@ -335,7 +335,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   public get related_level_tagg() { return this.parent_level_tag.group }
 
   public get parent_level_tag() { return this._parent_level_tag }
-  public set parent_level_tag(_: Class_AbstractLevelTag) {
+  public set parent_level_tag(_: ClassAbstract_ProtoLevelTag) {
     // Do modification only if there is a change & if parent/children tag group are matching
     if ((_ !== this._parent_level_tag) &&
       (this.child_level_tagg === _.group)) {
@@ -347,7 +347,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   }
 
   public get child_level_tag() { return this._child_level_tag }
-  public set child_level_tag(_: Class_AbstractLevelTag) {
+  public set child_level_tag(_: ClassAbstract_ProtoLevelTag) {
     // Do modification only if there is a change & if parent/children tag group are matching
     if ((_ !== this._child_level_tag) &&
       (this.child_level_tagg === _.group)) {
@@ -360,7 +360,7 @@ export class Class_NodeDimension extends Class_AbstractNodeDimension {
   public get child_level_tagg() { return this._child_level_tag?.group ?? undefined }
 
   public get parent() { return this._parent }
-  public set parent(_: Type_AbstractNodeElement) {
+  public set parent(_: TypeAbstract_NodeElement) {
     if ((this._parent !== _) &&
       !(this._children.includes(_))) {
       const old_parent = this._parent

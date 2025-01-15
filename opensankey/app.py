@@ -1,15 +1,22 @@
+# coding: utf-8
+
+# ---------------------------------------------------------------
+# External libs
+import flaskfilemanager
+import os
+
+# Local libs
 try:
     from .server import create_app
 except Exception:
     from server import create_app
-import flaskfilemanager
-import os
-
-app = create_app()
 try:
     from .doc import doc as doc_blueprint
 except Exception:
     from doc import doc as doc_blueprint
+
+# --------------------------------------------------------------
+app = create_app()
 app.register_blueprint(doc_blueprint, url_prefix='/doc')
 app.secret_key = 'super secret key'
 app.config['SESSION_TYPE'] = 'filesystem'

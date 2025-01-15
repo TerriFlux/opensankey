@@ -10,8 +10,8 @@ import { textwrap } from 'd3-textwrap'
 
 // Local types imports
 import type {
-  Class_AbstractDrawingArea,
-  Class_AbstractSankey
+  ClassAbstract_DrawingArea,
+  ClassAbstract_Sankey
 } from './Abstract'
 import type {
   Class_LinkStyle,
@@ -32,15 +32,15 @@ import type {
 
 // Local modules imports
 import {
-  Class_Handler
+  ClassTemplate_Handler
 } from './Handler'
 import {
-  Class_LinkElement,
-  Class_GhostLinkElement,
+  ClassTemplate_LinkElement,
+  ClassTemplate_GhostLinkElement,
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import {
-  Class_AbstractNodeElement
+  ClassAbstract_NodeElement
 } from './AbstractNode'
 import {
   Type_ElementPosition,
@@ -59,7 +59,7 @@ import {
   getStringOrUndefinedFromJSON,
   Type_JSON,
 } from './Utils'
-import * as SankeyShapes from '../draw/SankeyDrawShapes'
+import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -67,8 +67,8 @@ type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
 type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
 
-type Type_AnyLinkElement = Class_LinkElement<Class_AbstractDrawingArea, Class_AbstractSankey, Type_AnyNodeElement>
-type Type_AnyNodeElement = Class_NodeElement<Class_AbstractDrawingArea, Class_AbstractSankey, Type_AnyLinkElement>
+type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
+type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -140,16 +140,16 @@ export function isPositionOverloaded(
 /**
  * Class that define a node element and how to interact with it
  *
- * @class Class_NodeElement
- * @extends {Class_AbstractNodeElement}
+ * @class ClassTemplate_NodeElement
+ * @extends {ClassAbstract_NodeElement}
  */
-export abstract class Class_NodeElement
+export abstract class ClassTemplate_NodeElement
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey,
-    Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey,
+    Type_GenericLinkElement extends ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
   >
-  extends Class_AbstractNodeElement
+  extends ClassAbstract_NodeElement
   <
     Type_GenericDrawingArea,
     Type_GenericSankey
@@ -165,7 +165,7 @@ export abstract class Class_NodeElement
   protected d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
-  // Definition of abstract attribut from Class_Element
+  // Definition of abstract attribut from ClassTemplate_Element
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
@@ -207,8 +207,8 @@ export abstract class Class_NodeElement
   private _drag: boolean = false
 
   // Handles used to move related IO links relativly to eachother
-  private _input_links_handle: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
-  private _output_links_handle: { [x: string]: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
+  private _input_links_handle: { [x: string]: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
+  private _output_links_handle: { [x: string]: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
 
   // Node tags
   private _tags: Class_Tag[] = []
@@ -230,11 +230,11 @@ export abstract class Class_NodeElement
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of Class_NodeElement.
+   * Creates an instance of ClassTemplate_NodeElement.
    * @param {string} id
    * @param {string} name
    * @param {Type_GenericDrawingArea} drawing_area
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   constructor(
     id: string,
@@ -297,10 +297,10 @@ export abstract class Class_NodeElement
   /**
    * Full copy
    * @protected
-   * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} _
-   * @memberof Class_NodeElement
+   * @param {ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} _
+   * @memberof ClassTemplate_NodeElement
    */
-  protected _copyFrom(_: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): void {
+  protected _copyFrom(_: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): void {
     // Attributes
     this.copyAttrFrom(_)
     this._tooltip_text = _._tooltip_text
@@ -314,10 +314,10 @@ export abstract class Class_NodeElement
   /**
    * Copy attributes from a given node & create/copy ref to current sankey (ref to node_taggs & style)
    *
-   * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node_to_copy
-   * @memberof Class_NodeElement
+   * @param {ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node_to_copy
+   * @memberof ClassTemplate_NodeElement
    */
-  public copyAttrFrom(_: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): void {
+  public copyAttrFrom(_: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): void {
     super._copyFrom(_)
     // Name
     this._name = _.name
@@ -338,7 +338,7 @@ export abstract class Class_NodeElement
   }
 
   public keepLinkOrderingFrom(
-    node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
     matching_link_id: { [_: string]: string; }
   ) {
     // keep links orders ----------------------------------------------------------------
@@ -358,7 +358,7 @@ export abstract class Class_NodeElement
   }
 
   public copyTagsReferencingFrom(
-    node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
     matching_tagg: { [_: string]: string },
     matching_tags: { [_: string]: { [_: string]: string } }
   ) {
@@ -371,7 +371,7 @@ export abstract class Class_NodeElement
   }
 
   private _addTagsReferecingFrom(
-    node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
     matching_tagg: { [_: string]: string } = {},
     matching_tags: { [_: string]: { [_: string]: string } } = {}
   ) {
@@ -393,7 +393,7 @@ export abstract class Class_NodeElement
       })
   }
 
-  public copyDimensionsFrom(node_to_copy: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public copyDimensionsFrom(node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     // Create a dict of all existing dimensions in this related sankey
     const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
     this.sankey.level_taggs_list
@@ -456,12 +456,12 @@ export abstract class Class_NodeElement
             const parent_tag = level_tagg.tags_dict[dim_to_copy.parent_level_tag.id]
             if (parent_tag !== undefined) {
               // Get possible childrens
-              const children: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[] = []
+              const children: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[] = []
               dim_to_copy.children
                 .forEach(child_to_copy => {
                   const child = this.sankey.nodes_dict[child_to_copy.id]
                   if (child !== undefined)
-                    children.push(child as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>)
+                    children.push(child as ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>)
                 })
               // Get possible children tags
               const tag = level_tagg.tags_dict[dim_to_copy.child_level_tag.id]
@@ -494,7 +494,7 @@ export abstract class Class_NodeElement
    *
    *
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _toJSON(
     json_object: Type_JSON,
@@ -580,7 +580,7 @@ export abstract class Class_NodeElement
    * @protected
    * @param {Type_JSON} json_node_object
    * @param {Type_JSON} [kwargs]
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _fromJSON(
     json_node_object: Type_JSON,
@@ -632,7 +632,7 @@ export abstract class Class_NodeElement
    * When reading JSON, we must wait for all links to be created in ordre
    * to correctly set input & output link for each nodes
    * @param {Type_JSON} json_node_object
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public linksFromJSON(
     json_node_object: Type_JSON,
@@ -669,7 +669,7 @@ export abstract class Class_NodeElement
    * When reading JSON, we must wait for all nodes to be created in order
    * to correctly set dimensions for each nodes
    * @param {Type_JSON} json_node_object
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public dimensionsFromJSON(
     json_node_object: Type_JSON,
@@ -786,7 +786,7 @@ export abstract class Class_NodeElement
 
   /**
    * Draw node shape on D3 svg
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public drawShape() {
     this._process_or_bypass(() => { this._drawShape(); this._orderD3Elements() })
@@ -794,7 +794,7 @@ export abstract class Class_NodeElement
 
   /**
    * Draw node name label on D3 svg
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public drawNameLabel() {
     this._process_or_bypass(() => { this._drawNameLabel(); this._orderD3Elements() })
@@ -802,7 +802,7 @@ export abstract class Class_NodeElement
 
   /**
    * Draw node value label on D3 svg
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public drawValueLabel() {
     this._process_or_bypass(() => { this._drawValueLabel(); this._orderD3Elements() })
@@ -819,7 +819,7 @@ export abstract class Class_NodeElement
   /**
    * Agregate node
    * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, agregate with 'Primaire'
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public drawParent(id?: string) {
     if (this.is_child) {
@@ -860,7 +860,7 @@ export abstract class Class_NodeElement
   /**
    * Disagregate node
    * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, disagregate with 'Primaire'
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public drawChildren(id: string) {
     if (this.is_parent) {
@@ -904,7 +904,7 @@ export abstract class Class_NodeElement
    * Display the tooltip on drawing area
    *
    * @private
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public drawTooltip() {
     // Clean previous label
@@ -941,7 +941,7 @@ export abstract class Class_NodeElement
     delete this._display.position[attr]
   }
 
-  public isEqual(_: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public isEqual(_: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
 
     if (this.shape_visible !== _.shape_visible) {
       return false
@@ -1032,7 +1032,7 @@ export abstract class Class_NodeElement
    *  if the node has more than 1 tag associated then return default color
    * @public
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public getShapeColorToUse() {
     // Default color
@@ -1065,7 +1065,7 @@ export abstract class Class_NodeElement
   /**
    * Get the width to apply on shape
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public getShapeWidthToUse() {
     // Compute sum of thickness on each sides
@@ -1078,7 +1078,7 @@ export abstract class Class_NodeElement
   /**
    * Get the height to apply on shape
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public getShapeHeightToUse() {
     // Compute sum of thickness on each sides
@@ -1099,7 +1099,7 @@ export abstract class Class_NodeElement
    * Check if given tag is referenced by node
    * @param {Class_Tag} tag
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public hasGivenTag(tag: Class_Tag) {
     return this._tags.includes(tag)
@@ -1112,7 +1112,7 @@ export abstract class Class_NodeElement
   /**
    * Add and cross-reference a Tag with node
    * @param {Class_Tag} tag
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public addTag(tag: Class_Tag) {
     if (!this._tags.includes(tag)) {
@@ -1128,7 +1128,7 @@ export abstract class Class_NodeElement
    * Remove tag and its cross-reference from node
    *
    * @param {Class_Tag} tag
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public removeTag(tag: Class_Tag) {
     if (this._tags.includes(tag)) {
@@ -1147,7 +1147,7 @@ export abstract class Class_NodeElement
    * Check if given level tag is referenced by node
    * @param {Class_Tag} tag
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public hasGivenLevelTag(tag: Class_LevelTag) {
     return (this.level_tags_list.includes(tag))
@@ -1216,21 +1216,21 @@ export abstract class Class_NodeElement
   /**
    * Return true if this node hase at least one input link
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public hasInputLinks() { return (this.input_links_list.length > 0) }
 
   /**
    * Return true if this node hase at least one output link
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public hasOutputLinks() { return (this.output_links_list.length > 0) }
 
   /**
    * Add given link as input
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public addInputLink(link: Type_GenericLinkElement) {
     if (!this._input_links[link.id]) {
@@ -1246,7 +1246,7 @@ export abstract class Class_NodeElement
   /**
    * Add given link as output
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public addOutputLink(link: Type_GenericLinkElement) {
     if (!this._output_links[link.id]) {
@@ -1262,7 +1262,7 @@ export abstract class Class_NodeElement
   /**
    * Remove and delete given input link if it exists
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public deleteInputLink(link: Type_GenericLinkElement) {
     if (this._input_links[link.id] !== undefined) {
@@ -1275,7 +1275,7 @@ export abstract class Class_NodeElement
   /**
    * Remove and delete given output link if it exists
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public deleteOutputLink(link: Type_GenericLinkElement) {
     if (this._output_links[link.id] !== undefined) {
@@ -1290,7 +1290,7 @@ export abstract class Class_NodeElement
    * /!\ Keep as private method. This can create dangling ref for links
    *
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public removeInputLink(link: Type_GenericLinkElement) {
     this._input_links_handle[link.id]?.delete()
@@ -1304,7 +1304,7 @@ export abstract class Class_NodeElement
    * Remove link reference from all related attributes it this node.
    * /!\ Keep as private method. This can create dangling ref for links
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public removeOutputLink(link: Type_GenericLinkElement) {
     this._output_links_handle[link.id]?.delete()
@@ -1317,12 +1317,12 @@ export abstract class Class_NodeElement
   /**
    * Move given input link to a given node
    * @param {Type_GenericLinkElement} link
-   * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node
-   * @memberof Class_NodeElement
+   * @param {ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node
+   * @memberof ClassTemplate_NodeElement
    */
   public swapInputLink(
     link: Type_GenericLinkElement,
-    node: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+    node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
   ) {
     if (this._input_links[link.id] !== undefined) {
       this.removeInputLink(link)
@@ -1335,10 +1335,10 @@ export abstract class Class_NodeElement
   /**
    * Move given output link to a given node
    * @param {Type_GenericLinkElement} link
-   * @param {Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node
-   * @memberof Class_NodeElement
+   * @param {ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>} node
+   * @memberof ClassTemplate_NodeElement
    */
-  public swapOutputLink(link: Type_GenericLinkElement, node: Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public swapOutputLink(link: Type_GenericLinkElement, node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     if (this._output_links[link.id] !== undefined) {
       this.removeOutputLink(link)
       node.addOutputLink(link)
@@ -1377,7 +1377,7 @@ export abstract class Class_NodeElement
    * Get list of link in order for a given side
    * @param {Type_Side} _
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public getLinksOrdered(_: Type_Side) {
     return this._links_order.filter(link => {
@@ -1420,7 +1420,7 @@ export abstract class Class_NodeElement
   /**
    * Function to reorganize links_order depending of source/target position
    *
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public reorganizeIOLinks() {
     this._links_order = this._links_order
@@ -1434,7 +1434,7 @@ export abstract class Class_NodeElement
    *
    * @param {Type_GenericLinkElement} link_to_move
    * @param {Type_GenericLinkElement} link_target_pos
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public moveLinkToPositionInOrderBefore(
     link_to_move: Type_GenericLinkElement,
@@ -1462,7 +1462,7 @@ export abstract class Class_NodeElement
    *
    * @param {Type_GenericLinkElement} link_to_move
    * @param {Type_GenericLinkElement} link_target_pos
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public moveLinkToPositionInOrderAfter(
     link_to_move: Type_GenericLinkElement,
@@ -1489,7 +1489,7 @@ export abstract class Class_NodeElement
 
   /**
    * Hide the name label of the node & set visible the input to modify it
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public setInputLabelVisible() {
     this.d3_selection_g_name_label?.select('.name_label_text').style('display', 'none')
@@ -1499,7 +1499,7 @@ export abstract class Class_NodeElement
 
   /**
    * Hide the input label of the node & set visible the name
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public setInputLabelInvisible() {
     this.d3_selection_g_name_label?.select('.name_label_fo_input').style('display', 'none')
@@ -1524,7 +1524,7 @@ export abstract class Class_NodeElement
    * Draw given node on drawing area
    *
    * @protected
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _draw() {
     // Heritance of draw function
@@ -1548,7 +1548,7 @@ export abstract class Class_NodeElement
   /**
    * Put d3 elements in correct display order
    * @protected
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _orderD3Elements() {
     this.d3_selection_g_shape?.raise()
@@ -1652,7 +1652,7 @@ export abstract class Class_NodeElement
   /**
    * Draw node shape on d3 svg
    * @private
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _drawShape() {
     // Speed-up computing
@@ -1703,7 +1703,7 @@ export abstract class Class_NodeElement
   /**
    * Draw node label on D3 svg
    * @private
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _drawNameLabel() {
     // Speed-up computing
@@ -1800,7 +1800,7 @@ export abstract class Class_NodeElement
   /**
    * Draw node label on D3 svg
    * @private
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _drawValueLabel() {
     // Speed-up computing
@@ -1890,7 +1890,7 @@ export abstract class Class_NodeElement
   /**
    * Call what is necessary each time a link is modified
    * @private
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _drawLinks() {
     // Links positions are modified by nodes's position changes
@@ -1902,7 +1902,7 @@ export abstract class Class_NodeElement
   /**
    * Function that draw all the arrow of link visible linked to this node (if the link have shape_is_arrow at true)
    * @private
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _drawLinksArrow() {
     const list_link_to_add_arrow = this.input_links_list
@@ -2054,7 +2054,7 @@ export abstract class Class_NodeElement
   /**
    * TODO
    * @protected
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected addOrRemoveNodeFromSelection() {
     if (this.drawing_area.selected_nodes_list.includes(this)) {
@@ -2119,7 +2119,7 @@ export abstract class Class_NodeElement
    * Define event when mouse drag element
    * @protected
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected eventMouseDragStart(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -2136,7 +2136,7 @@ export abstract class Class_NodeElement
    * Define event when mouse drag element
    * @protected
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -2179,7 +2179,7 @@ export abstract class Class_NodeElement
    * Define event when mouse drag element
    * @protected
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected eventMouseDragEnd(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
@@ -2198,7 +2198,7 @@ export abstract class Class_NodeElement
    * Define when left mouse click is maintained
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected eventMaintainedClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2220,7 +2220,7 @@ export abstract class Class_NodeElement
       this.drawing_area.closeAllMenus()
 
       // Ref newly created link this var to be used in other mouse event
-      this.drawing_area.ghost_link = new Class_GhostLinkElement<Type_GenericDrawingArea, Type_GenericSankey, this>(
+      this.drawing_area.ghost_link = new ClassTemplate_GhostLinkElement<Type_GenericDrawingArea, Type_GenericSankey, this>(
         'ghost_link',
         this,
         target as this,
@@ -2250,7 +2250,7 @@ export abstract class Class_NodeElement
    * Define event when mouse moves over element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseOver(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2270,7 +2270,7 @@ export abstract class Class_NodeElement
  *
  * @protected
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
- * @memberof Class_NodeElement
+ * @memberof ClassTemplate_NodeElement
  */
   protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
@@ -2341,7 +2341,7 @@ export abstract class Class_NodeElement
    *
    * @private
    * @param {d3.D3DragEvent<SVGTextElement,unknown,unknown>} event
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
 
@@ -2378,7 +2378,7 @@ export abstract class Class_NodeElement
    *
    * @private
    * @param {d3.D3DragEvent<SVGTextElement,unknown,uniquenknown>} event
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private dragTextMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
 
@@ -2398,7 +2398,7 @@ export abstract class Class_NodeElement
    *
    * @private
    * @return {*}  {[number, number, string]}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private updateNameLabelPos(): [number, number, string] {
     const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getNameLabelPos()
@@ -2482,7 +2482,7 @@ export abstract class Class_NodeElement
   /**
    * Draw all related links
    * @private
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private updateLinksPositions() {
     // Reference position
@@ -2642,7 +2642,7 @@ export abstract class Class_NodeElement
  *
  * @private
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
- * @memberof Class_NodeElement
+ * @memberof ClassTemplate_NodeElement
  */
   private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     d3.selectAll('.sankey-tooltip')
@@ -2656,7 +2656,7 @@ export abstract class Class_NodeElement
    * @private
    * @param {Type_Side} side
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private getSumOfLinksThickness(side: Type_Side) {
     let sum = 0
@@ -2674,7 +2674,7 @@ export abstract class Class_NodeElement
    * @private
    * @param {Type_Side} side
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private getLinksStartingPositionOffSet(side: Type_Side) {
     if (side === 'left' || side === 'right') {
@@ -2690,7 +2690,7 @@ export abstract class Class_NodeElement
    * /!\ Keep as private method. This can create dangling ref for links
    * @private
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private removeLinkFromOrderingLinksList(link: Type_GenericLinkElement) {
     const idx = this._links_order.indexOf(link)
@@ -2704,13 +2704,13 @@ export abstract class Class_NodeElement
    * @private
    * @param {Type_GenericLinkElement} link
    * @param {boolean} input
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private addMovingHandleForGivenLink(
     link: Type_GenericLinkElement,
     type: 'input' | 'output'
   ) {
-    const handle = new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+    const handle = new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
       ('handle_' + this.id + type + '_' + link.id),
       this.drawing_area,
       this.menu_config,
@@ -2733,18 +2733,18 @@ export abstract class Class_NodeElement
 
   /**
    * Event listener for drag start on link moving handler
-   * This method will not be called inside a Class_NodeElement object,
-   * but instead inside Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> object
+   * This method will not be called inside a ClassTemplate_NodeElement object,
+   * but instead inside ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey> object
    * @private
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private dragHandlerMoveLink(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    // Since we pass this func to a Class_Handler<Type_GenericDrawingArea, Type_GenericSankey> (without executing it)
+    // Since we pass this func to a ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey> (without executing it)
     // 'this' take the scope of the handler so we have to cast it here for compilation
-    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>
+    const handler = this as unknown as ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>
     // Get node from the handler
-    const node_ref = handler.ref_element as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+    const node_ref = handler.ref_element as ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
     if (
       (node_ref.link_dragged) &&
       (event.dy !== 0 || event.dx !== 0)
@@ -2806,21 +2806,21 @@ export abstract class Class_NodeElement
   }
 
   private dragStartHandlerMoveLink(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>
+    const handler = this as unknown as ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>
     const node_ref_handler = handler.ref_element as this
     const link_ref = (handler.ref_element as this).getLinkFromHandler(handler)
-    if (link_ref && link_ref instanceof Class_LinkElement) {
+    if (link_ref && link_ref instanceof ClassTemplate_LinkElement) {
       node_ref_handler.link_dragged = link_ref as Type_GenericLinkElement
     }
   }
 
   private dragEndHandlerMoveLink(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    const handler = this as unknown as Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>
+    const handler = this as unknown as ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>
     const node_ref_handler = handler.ref_element as this
     node_ref_handler.link_dragged = undefined
   }
 
-  private getLinkFromHandler(handler: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
+  private getLinkFromHandler(handler: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
     return handler.ref_element_optional
   }
 
@@ -2829,7 +2829,7 @@ export abstract class Class_NodeElement
    *
    * @private
    * @param {Class_Tag} tag
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private addTagToGroupTagDict(tag: Class_Tag) {
     const grp_id = tag.group.id
@@ -2847,7 +2847,7 @@ export abstract class Class_NodeElement
    *
    * @private
    * @param {Class_Tag} tag
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private removeTagToGroupTagDict(tag: Class_Tag) {
     const grp_id = tag.group.id
@@ -2868,7 +2868,7 @@ export abstract class Class_NodeElement
   /**
    * Node visibility check
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get is_visible() {
     return (
@@ -2881,7 +2881,7 @@ export abstract class Class_NodeElement
 
   /**
    * Get node name
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name() {
     return this._name
@@ -2889,7 +2889,7 @@ export abstract class Class_NodeElement
 
   /**
    * Set node name
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name(_: string) {
     // TODO update id
@@ -2900,7 +2900,7 @@ export abstract class Class_NodeElement
   /**
    * Get node name formated as label
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label() {
     if (this.drawing_area.application_data.node_label_separator !== '') {
@@ -2915,7 +2915,7 @@ export abstract class Class_NodeElement
    * Get links order of only visible links
    *
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get links_order_visible(): Type_GenericLinkElement[] {
     return this._links_order.filter(link => link.is_visible)
@@ -2927,7 +2927,7 @@ export abstract class Class_NodeElement
    * Function that return tag list grouped by groupTag
    *
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get grouped_taggs_dict() {
     return this._taggs_dict
@@ -2936,7 +2936,7 @@ export abstract class Class_NodeElement
   /**
    * Array of tags related to node
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get tags_list() {
     return this._tags
@@ -2945,7 +2945,7 @@ export abstract class Class_NodeElement
   /**
    * Dict as [id: tag group] of tag groups related to node
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get taggs_dict() {
     const taggs: { [_: string]: Class_TagGroup } = {}
@@ -2960,7 +2960,7 @@ export abstract class Class_NodeElement
   /**
    * Array of tag groups related to node
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get taggs_list() {
     return Object.values(this.taggs_dict)
@@ -2969,7 +2969,7 @@ export abstract class Class_NodeElement
   // Level related ----------------------------------------------------------------------
   /**
    * For a given tagGroup return the corresponding parent Class_NodeDimension
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public nodeDimensionAsParent(tagGroup: Class_LevelTagGroup) {
     const _ = Object.values(this._dimensions_as_parent)
@@ -2980,7 +2980,7 @@ export abstract class Class_NodeElement
   // Level related ----------------------------------------------------------------------
   /**
    * For a given tagGroup return the corresponding parent Class_NodeDimension
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public nodeDimensionAsChild(tagGroup: Class_LevelTagGroup) {
     const _ = Object.values(this._dimensions_as_child)
@@ -2991,7 +2991,7 @@ export abstract class Class_NodeElement
   /**
    * List of level tags related to node
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get level_tags_list() {
     const level_tags_list: Class_LevelTag[] = []
@@ -3009,7 +3009,7 @@ export abstract class Class_NodeElement
   /**
    * Dict of level taggs related to node
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get level_taggs_dict() {
     const level_taggs_dict: { [id: string]: Class_LevelTagGroup } = {}
@@ -3021,7 +3021,7 @@ export abstract class Class_NodeElement
   /**
    * List of level taggs related to node
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get level_taggs_list() {
     return Object.values(this.level_taggs_dict)
@@ -3030,7 +3030,7 @@ export abstract class Class_NodeElement
   /**
    * TODO Description
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get is_child() {
     return (Object.values(this._dimensions_as_child).length > 0)
@@ -3039,7 +3039,7 @@ export abstract class Class_NodeElement
   /**
    * TODO description
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get is_parent() {
     return (Object.values(this._dimensions_as_parent).length > 0)
@@ -3049,7 +3049,7 @@ export abstract class Class_NodeElement
    *Return ture if nod eis in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
    *
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get is_multi_parent() {
     return (Object.values(this._dimensions_as_parent).filter(dim => dim.related_level_tagg.id != 'Primaire').length > 1)
@@ -3059,7 +3059,7 @@ export abstract class Class_NodeElement
    * Retun list of dimensions where this node is the parent
    *
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get dimensions_as_parent() {
     return Object.values(this._dimensions_as_parent)
@@ -3069,7 +3069,7 @@ export abstract class Class_NodeElement
    *Return ture if node is in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
    *
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get is_multi_children() {
     return (Object.values(this._dimensions_as_child).filter(dim => dim.parent_level_tag.group.id != 'Primaire').length > 1)
@@ -3079,7 +3079,7 @@ export abstract class Class_NodeElement
    * Retun list of dimensions where this node is a child
    *
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get dimensions_as_child() {
     return Object.values(this._dimensions_as_child)
@@ -3090,7 +3090,7 @@ export abstract class Class_NodeElement
   /**
    * Get node value formatted as label
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label() {
     let input_val = 0
@@ -3135,7 +3135,7 @@ export abstract class Class_NodeElement
    * Get dict of input links
    *
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get input_links_dict() {
     return this._input_links
@@ -3144,7 +3144,7 @@ export abstract class Class_NodeElement
   /**
    * Get list of all input link
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get input_links_list() {
     return Object.values(this._input_links)
@@ -3153,7 +3153,7 @@ export abstract class Class_NodeElement
   /**
    * Get dict of output links
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get output_links_dict() {
     return this._output_links
@@ -3162,7 +3162,7 @@ export abstract class Class_NodeElement
   /**
    * Get list of all output link
    * @readonly
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get output_links_list() {
     return Object.values(this._output_links)
@@ -3171,13 +3171,13 @@ export abstract class Class_NodeElement
   /**
    * Get current link element that is dragged through a link handler
    * @type {(Type_GenericLinkElement | undefined)}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get link_dragged(): Type_GenericLinkElement | undefined { return this._link_dragged }
 
   /**
    * Indicate that a given link element is dragged through a link handler
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set link_dragged(value: Type_GenericLinkElement | undefined) { this._link_dragged = value }
 
@@ -3206,7 +3206,7 @@ export abstract class Class_NodeElement
 
   /**
    * Position type can be parametric absolute or relative
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get position_type() {
     if (this._display.position.type !== undefined) {
@@ -3220,7 +3220,7 @@ export abstract class Class_NodeElement
 
   /**
    * Position type can be parametric absolute or relative
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set position_type(_: Type_Position) {
     this._display.position.type = _
@@ -3228,7 +3228,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get position_dx() {
     if (this._display.position.dx !== undefined) {
@@ -3241,7 +3241,7 @@ export abstract class Class_NodeElement
   }
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set position_dx(_: number) {
     this._display.position.dx = _
@@ -3249,7 +3249,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get position_dy() {
     if (this._display.position.dy !== undefined) {
@@ -3262,7 +3262,7 @@ export abstract class Class_NodeElement
   }
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set position_dy(_) {
     this._display.position.dy = _
@@ -3270,7 +3270,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get position_relative_dx() {
     if (this._display.position.relative_dx !== undefined) {
@@ -3283,7 +3283,7 @@ export abstract class Class_NodeElement
   }
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set position_relative_dx(_) {
     this._display.position.relative_dx = _
@@ -3292,7 +3292,7 @@ export abstract class Class_NodeElement
 
   /**
  * TODO Description
- * @memberof Class_NodeElement
+ * @memberof ClassTemplate_NodeElement
  */
   public get position_relative_dy() {
     if (this._display.position.relative_dy !== undefined) {
@@ -3306,7 +3306,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set position_relative_dy(_) {
     this._display.position.relative_dy = _
@@ -3315,7 +3315,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get shape_visible() {
     if (this._display.attributes.shape_visible !== undefined) {
@@ -3329,7 +3329,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set shape_visible(_: boolean) {
     this._display.attributes.shape_visible = _
@@ -3338,7 +3338,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get shape_min_width() {
     if (this._display.attributes.shape_min_width !== undefined) {
@@ -3351,7 +3351,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set shape_min_width(_: number) {
     this._display.attributes.shape_min_width = _
@@ -3360,7 +3360,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get shape_min_height() {
     if (this._display.attributes.shape_min_height !== undefined) {
@@ -3373,7 +3373,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set shape_min_height(_: number) {
     this._display.attributes.shape_min_height = _
@@ -3382,7 +3382,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get shape_color() {
     if (this._display.attributes.shape_color !== undefined) {
@@ -3395,7 +3395,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set shape_color(_: string) {
     this._display.attributes.shape_color = _
@@ -3404,7 +3404,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get shape_type() {
     if (this._display.attributes.shape_type !== undefined) {
@@ -3417,7 +3417,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set shape_type(_: Type_Shape) {
     this._display.attributes.shape_type = _
@@ -3426,7 +3426,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get shape_arrow_angle_factor() {
     if (this._display.attributes.shape_arrow_angle_factor !== undefined) {
@@ -3439,7 +3439,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set shape_arrow_angle_factor(_: number) {
     this._display.attributes.shape_arrow_angle_factor = _
@@ -3448,7 +3448,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get shape_arrow_angle_direction() {
     if (this._display.attributes.shape_arrow_angle_direction !== undefined) {
@@ -3461,7 +3461,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set shape_arrow_angle_direction(_: Type_Side) {
     this._display.attributes.shape_arrow_angle_direction = _
@@ -3470,7 +3470,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get shape_color_sustainable() {
     if (this._display.attributes.shape_color_sustainable !== undefined) {
@@ -3483,7 +3483,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set shape_color_sustainable(_: boolean) {
     this._display.attributes.shape_color_sustainable = _
@@ -3492,7 +3492,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_visible() {
     if (this._display.attributes.name_label_visible !== undefined) {
@@ -3505,7 +3505,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_visible(_: boolean) {
     this._display.attributes.name_label_visible = _
@@ -3514,7 +3514,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_font_family() {
     if (this._display.attributes.name_label_font_family !== undefined) {
@@ -3527,7 +3527,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_font_family(_: string) {
     this._display.attributes.name_label_font_family = _
@@ -3536,7 +3536,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_font_size() {
     if (this._display.attributes.name_label_font_size !== undefined) {
@@ -3549,7 +3549,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_font_size(_: number) {
     this._display.attributes.name_label_font_size = _
@@ -3558,7 +3558,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_uppercase() {
     if (this._display.attributes.name_label_uppercase !== undefined) {
@@ -3571,7 +3571,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_uppercase(_: boolean) {
     this._display.attributes.name_label_uppercase = _
@@ -3580,7 +3580,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_bold() {
     if (this._display.attributes.name_label_bold !== undefined) {
@@ -3593,7 +3593,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_bold(_: boolean) {
     this._display.attributes.name_label_bold = _
@@ -3602,7 +3602,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_italic() {
     if (this._display.attributes.name_label_italic !== undefined) {
@@ -3615,7 +3615,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_italic(_: boolean) {
     this._display.attributes.name_label_italic = _
@@ -3624,7 +3624,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_box_width() {
     if (this._display.attributes.name_label_box_width !== undefined) {
@@ -3637,7 +3637,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_box_width(_: number) {
     this._display.attributes.name_label_box_width = _
@@ -3646,7 +3646,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_color() {
     if (this._display.attributes.name_label_color !== undefined) {
@@ -3659,7 +3659,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_color(_: boolean) {
     this._display.attributes.name_label_color = _
@@ -3668,7 +3668,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_vert() {
     if (this._display.attributes.name_label_vert !== undefined) {
@@ -3681,7 +3681,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_vert(_: Type_TextVPos) {
     if (_ !== 'dragged') delete this._display.position_y_label
@@ -3691,7 +3691,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_vert_shift() {
     if (this._display.attributes.name_label_vert_shift !== undefined) {
@@ -3704,7 +3704,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_vert_shift(_: number) {
     this._display.attributes.name_label_vert_shift = _
@@ -3713,7 +3713,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_horiz() {
     if (this._display.attributes.name_label_horiz !== undefined) {
@@ -3726,7 +3726,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set name_label_horiz(_: Type_TextHPos) {
     if (_ !== 'dragged') delete this._display.position_x_label
@@ -3736,7 +3736,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get name_label_horiz_shift() {
     if (this._display.attributes.name_label_horiz_shift !== undefined) {
@@ -3749,7 +3749,7 @@ export abstract class Class_NodeElement
 
   /**
  * TODO Description
- * @memberof Class_NodeElement
+ * @memberof ClassTemplate_NodeElement
  */
   public set name_label_horiz_shift(_: number) {
     this._display.attributes.name_label_horiz_shift = _
@@ -3758,7 +3758,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_visible() {
     if (this._display.attributes.value_label_visible !== undefined) {
@@ -3771,7 +3771,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_visible(_: boolean) {
     this._display.attributes.value_label_visible = _
@@ -3780,7 +3780,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_vert() {
     if (this._display.attributes.value_label_vert !== undefined) {
@@ -3793,7 +3793,7 @@ export abstract class Class_NodeElement
 
   /** Set value for value_label_vert
    *
-   TODO Description * @memberof Class_NodeElement
+   TODO Description * @memberof ClassTemplate_NodeElement
    */
   public set value_label_vert(_: Type_TextVPos) {
     this._display.attributes.value_label_vert = _
@@ -3802,7 +3802,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_vert_shift() {
     if (this._display.attributes.value_label_vert_shift !== undefined) {
@@ -3815,7 +3815,7 @@ export abstract class Class_NodeElement
 
   /** Set value for value_label_vert
      *
-     TODO Description * @memberof Class_NodeElement
+     TODO Description * @memberof ClassTemplate_NodeElement
      */
   public set value_label_vert_shift(_: number) {
     this._display.attributes.value_label_vert_shift = _
@@ -3824,7 +3824,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_horiz() {
     if (this._display.attributes.value_label_horiz !== undefined) {
@@ -3837,7 +3837,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_horiz(_: Type_TextHPos) {
     this._display.attributes.value_label_horiz = _
@@ -3846,7 +3846,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_horiz_shift() {
     if (this._display.attributes.value_label_horiz_shift !== undefined) {
@@ -3859,7 +3859,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_horiz_shift(_: number) {
     this._display.attributes.value_label_horiz_shift = _
@@ -3868,7 +3868,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_font_size() {
     if (this._display.attributes.value_label_font_size !== undefined) {
@@ -3881,7 +3881,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_font_size(_: number) {
     this._display.attributes.value_label_font_size = _
@@ -3890,7 +3890,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_background(_: boolean) {
     this._display.attributes.value_label_background = _
@@ -3899,7 +3899,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_color() {
     if (this._display.attributes.value_label_color !== undefined) {
@@ -3912,7 +3912,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_color(_: boolean) {
     this._display.attributes.value_label_color = _
@@ -3921,7 +3921,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_uppercase() {
     if (this._display.attributes.value_label_uppercase !== undefined) {
@@ -3934,7 +3934,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_uppercase(_: boolean) {
     this._display.attributes.value_label_uppercase = _
@@ -3943,7 +3943,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_bold() {
     if (this._display.attributes.value_label_bold !== undefined) {
@@ -3956,7 +3956,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_bold(_: boolean) {
     this._display.attributes.value_label_bold = _
@@ -3965,7 +3965,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_italic() {
     if (this._display.attributes.value_label_italic !== undefined) {
@@ -3978,7 +3978,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_italic(_: boolean) {
     this._display.attributes.value_label_italic = _
@@ -3987,7 +3987,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public get value_label_font_family() {
     if (this._display.attributes.value_label_font_family !== undefined) {
@@ -4000,7 +4000,7 @@ export abstract class Class_NodeElement
 
   /**
    * TODO Description
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public set value_label_font_family(_: string) {
     this._display.attributes.value_label_font_family = _
@@ -4025,7 +4025,7 @@ export abstract class Class_NodeElement
    *
    * @private
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private get are_related_node_tags_selected(): boolean {
     if (
@@ -4063,7 +4063,7 @@ export abstract class Class_NodeElement
    * @readonly
    * @private
    * @type {boolean}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private get are_related_dimensions_selected(): boolean {
     if ( this._are_related_dimensions_selected === undefined ) {
@@ -4086,7 +4086,7 @@ export abstract class Class_NodeElement
    *
    * @private
    * @return {boolean}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private checkIfRelatedDimensionsAreSelected(): boolean {
     // Draw by default if there is no dimensions
@@ -4181,7 +4181,7 @@ export abstract class Class_NodeElement
    *
    * @readonly
    * @private
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private get are_links_visibilities_ok() {
     // Check if links visibilies have somehow changed
@@ -4213,7 +4213,7 @@ export abstract class Class_NodeElement
    *
    * @private
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private checkIfLinksVisibilitiesAreOK() {
     if (this.input_links_list.length + this.output_links_list.length == 0) {
@@ -4244,7 +4244,7 @@ export abstract class Class_NodeElement
    * Compute fingerprint of links visibilities
    * @private
    * @return {*}
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   private getLinksVisibilitiesFingerprint() {
     let links_visibilities_fingerprint = ''
@@ -4423,10 +4423,10 @@ export abstract class Class_NodeElement
       })
 
       if (importation) {
-        input_or_output_link.source = new_node as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+        input_or_output_link.source = new_node as ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
         new_node.output_links_list.push(input_or_output_link)
       } else {
-        input_or_output_link.target = new_node as Class_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+        input_or_output_link.target = new_node as ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
         new_node.input_links_list.push(input_or_output_link)
       }
     })
@@ -4862,7 +4862,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
    * Does not assign links -> need to read links from JSON before
    *
    * @param {Type_JSON} json_node_object
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   public fromJSON(
     json_node_object: Type_JSON
