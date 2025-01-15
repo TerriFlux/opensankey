@@ -738,7 +738,6 @@ export const resources_app_elements = {
         read_me: 'Read me',
         intro: 'Quick overview of the application\'s functionalities',
         caroussel: {
-          Image0: 'Welcome to TerriFlux\'s toolsuite OpenSankey, OpenSankey+ and SankeySuite',
           Image1: 'Understand your flows, represent them with Sankey diagrams',
           Image2: 'Quickly import your data or draw your diagrams directly',
           Image3: 'Clarify the information represented',
@@ -747,7 +746,6 @@ export const resources_app_elements = {
           Image5: 'Create interactive & didactic infographics',
           Image6: 'Create interactive & didactic infographics',
           descr: {
-            Image0: 'These tools make it easy to create flow diagrams',
             Image1: 'In this representation mode, the thickness of each arrow is proportional to the value of the flow it represents',
             Image2: 'Create your diagrams from Excel spreadsheets or via the interactive drawing area',
             Image3: 'Make your diagrams easy to read with integrated node, flow and data labeling',
@@ -1531,7 +1529,6 @@ export const resources_app_elements = {
         read_me: 'Lisez moi',
         intro: 'Présentation rapide de l\'outils et de ses fonctionnalités',
         caroussel: {
-          Image0: 'Bienvenue sur la suite d\'outils OpenSankey, OpenSankey+ et SankeySuite de TerriFlux',
           Image1: 'Comprenez vos flux, Représentez les avec des diagrammes de Sankey',
           Image2: 'Importez rapidement vos données ou tracez directement vos diagrammes',
           Image3: 'Clarifiez l\'information représentée',
@@ -1540,7 +1537,6 @@ export const resources_app_elements = {
           Image5: 'Créez de véritables infographies didactiques',
           Image6: 'Créez de véritables infographies didactiques',
           descr: {
-            Image0: 'Ces outils vous permettent de réaliser simplement des diagrammes de flux',
             Image1: 'Dans ce mode de réprésentation, l\'épaisseur de chaque flèche est proportionnelle à la valeur du flux qu\'elle représente.',
             Image2: 'Créez vos diagrammes à partir de tableurs Excel ou via l\'espace de dessin interactif',
             Image3: 'Facilitez la lecture de vos diagrammes grâce au système intégré d\'étiquetage des noeuds, des flux et des données',
