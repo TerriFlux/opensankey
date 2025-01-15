@@ -20,19 +20,19 @@ import type {
 
 // Local modules
 import {
-  Class_AbstractDrawingArea,
-  Class_AbstractSankey,
+  ClassAbstract_DrawingArea,
+  ClassAbstract_Sankey,
 } from './Abstract'
 import {
-  Class_AbstractNodeElement
+  ClassAbstract_NodeElement
 } from './AbstractNode'
 import {
-  Class_AbstractLinkStyle,
-  Class_AbstractLinkElement,
-  Class_AbstractLinkValue
+  ClassAbstract_LinkStyle,
+  ClassAbstract_LinkElement,
+  ClassAbstract_LinkValue
 } from './AbstractLink'
 import {
-  Class_Handler
+  ClassTemplate_Handler
 } from './Handler'
 import {
   Type_ElementPosition,
@@ -58,8 +58,8 @@ export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'start' | 'middle' | 'end'
 export type Type_PathLabelVPosition = 'dragged' | 'above' | 'middle' | 'below'
 
-type Type_AnyLinkElement = Class_LinkElement<Class_AbstractDrawingArea, Class_AbstractSankey, Type_AnyAbstractNodeElement>
-type Type_AnyAbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
+type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyAbstractNodeElement>
+type Type_AnyAbstractNodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -240,15 +240,15 @@ export function isAttributeOverloaded(
 /**
  * Class that define how to display a link element and how to interact with it
  *
- * @class Class_LinkElement
+ * @class ClassTemplate_LinkElement
  */
-export abstract class Class_LinkElement
+export abstract class ClassTemplate_LinkElement
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey,
-    Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey,
+    Type_GenericNodeElement extends ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey>
   >
-  extends Class_AbstractLinkElement
+  extends ClassAbstract_LinkElement
   <
     Type_GenericDrawingArea,
     Type_GenericSankey
@@ -265,7 +265,7 @@ export abstract class Class_LinkElement
   *     local: Class_LinkAttribute,
   *     style: Class_LinkStyle
   *   }}
-  * @memberof Class_LinkElement
+  * @memberof ClassTemplate_LinkElement
   */
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
@@ -299,7 +299,7 @@ export abstract class Class_LinkElement
   * Node from which link starts
   * @private
   * @type {Type_GenericNodeElement}
-  * @memberof Class_LinkElement
+  * @memberof ClassTemplate_LinkElement
   */
   private _source: Type_GenericNodeElement
 
@@ -307,7 +307,7 @@ export abstract class Class_LinkElement
    * Node to which link arrives
    * @private
    * @type {Type_GenericNodeElement}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private _target: Type_GenericNodeElement
 
@@ -315,7 +315,7 @@ export abstract class Class_LinkElement
    * Value of link
    * @private
    * @type {Class_LinkValueTree | Class_LinkValue}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private _values: Class_LinkValueTree | Class_LinkValue
 
@@ -323,7 +323,7 @@ export abstract class Class_LinkElement
    * d3 shape for this link arrow
    * @private
    * @type {(string | undefined)}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private _arrow_shape: string | undefined
 
@@ -331,7 +331,7 @@ export abstract class Class_LinkElement
    * Value of tooltip text associated to link
    * @private
    * @type {string}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private _tooltip_text: string = ''
 
@@ -339,21 +339,21 @@ export abstract class Class_LinkElement
    * Struct of all control points
    * @private
    * @type {{
-   *     starting_curve_point: Class_Handler,
-   *     ending_curve_point: Class_Handler,
-   *     starting_bezier_point: Class_Handler,
-   *     ending_bezier_point: Class_Handler,
-   *     middle_recycling_point: Class_Handler,
+   *     starting_curve_point: ClassTemplate_Handler,
+   *     ending_curve_point: ClassTemplate_Handler,
+   *     starting_bezier_point: ClassTemplate_Handler,
+   *     ending_bezier_point: ClassTemplate_Handler,
+   *     middle_recycling_point: ClassTemplate_Handler,
    *     is_dragged: boolean
    *   }}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private _control_points: {
-    starting_curve_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    ending_curve_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    starting_bezier_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    ending_bezier_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    middle_recycling_point: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    starting_curve_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    ending_curve_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    starting_bezier_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    ending_bezier_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    middle_recycling_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
     is_dragged: boolean
   }
 
@@ -364,7 +364,7 @@ export abstract class Class_LinkElement
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
    *
    * @private
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private _scaleValueToPx = d3.scaleLinear()
     .domain([0, 1])
@@ -373,10 +373,10 @@ export abstract class Class_LinkElement
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of Class_LinkElement.
+   * Creates an instance of ClassTemplate_LinkElement.
    * @param {string} id
    * @param {Type_GenericDrawingArea} drawing_area
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   constructor(
     id: string,
@@ -406,7 +406,7 @@ export abstract class Class_LinkElement
     drawing_area: Type_GenericDrawingArea
   ) {
     return {
-      starting_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      starting_curve_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'cp_start_' + this.id,
         drawing_area,
         this.menu_config,
@@ -415,7 +415,7 @@ export abstract class Class_LinkElement
         this.startCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_start' }),
-      ending_curve_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      ending_curve_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'cp_end_' + this.id,
         drawing_area,
         this.menu_config,
@@ -424,7 +424,7 @@ export abstract class Class_LinkElement
         this.endCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_end' }),
-      starting_bezier_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      starting_bezier_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'bz_start_' + this.id,
         drawing_area,
         this.menu_config,
@@ -433,7 +433,7 @@ export abstract class Class_LinkElement
         this.startTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_start' }),
-      ending_bezier_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      ending_bezier_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'bz_end_' + this.id,
         drawing_area,
         this.menu_config,
@@ -442,7 +442,7 @@ export abstract class Class_LinkElement
         this.endTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_end' }),
-      middle_recycling_point: new Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      middle_recycling_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
         'recy_middle_' + this.id,
         drawing_area,
         this.menu_config,
@@ -459,7 +459,7 @@ export abstract class Class_LinkElement
 
   /**
    * Define deletion behavior
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   protected cleanForDeletion() {
     // Unref self from source node
@@ -482,10 +482,10 @@ export abstract class Class_LinkElement
   /**
    * Copy attributes from a given link
    *
-   * @param {Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>} link_to_copy
-   * @memberof Class_LinkElement
+   * @param {ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>} link_to_copy
+   * @memberof ClassTemplate_LinkElement
    */
-  public copyAttrFrom(_: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+  public copyAttrFrom(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
     super._copyFrom(_)
     // Update style
     if (this._display.style.id !== _._display.style.id) {
@@ -509,7 +509,7 @@ export abstract class Class_LinkElement
     this._tooltip_text = _._tooltip_text
   }
 
-  protected _copyFrom(_: Class_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+  protected _copyFrom(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
     // Source relations
     if (this._source.id !== _._source.id) {
       let source = this._display.sankey.nodes_dict[_._source.id] as Type_GenericNodeElement
@@ -590,7 +590,7 @@ export abstract class Class_LinkElement
    * @protected
    * @param {Type_JSON} json_object
    * @param {Type_JSON} [kwargs]
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   protected _fromJSON(
     json_object: Type_JSON,
@@ -663,7 +663,7 @@ export abstract class Class_LinkElement
 
   /**
    * Reset all attributes as defined by style
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public resetAttributes() {
     this._display.attributes = new Class_LinkAttribute()
@@ -673,7 +673,7 @@ export abstract class Class_LinkElement
 
   /**
    * Reverse source with target
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public inverse() {
     // Save prev source & target + remove link/nodes relationships
@@ -723,7 +723,7 @@ export abstract class Class_LinkElement
    * Check if given tag is referenced by link's data
    * @param {Class_Tag} tag
    * @return {*}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public hasGivenTag(tag: Class_Tag) {
     const value = this.value
@@ -739,7 +739,7 @@ export abstract class Class_LinkElement
   /**
    * Add and cross-reference a Tag with a link
    * @param {Class_Tag} tag
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public addTag(tag: Class_Tag) {
     const value = this.value
@@ -753,7 +753,7 @@ export abstract class Class_LinkElement
   /**
    * Remove given tag and cross-reference from link
    * @param {Class_Tag} tag
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public removeTag(tag: Class_Tag) {
     const value = this.value
@@ -963,7 +963,7 @@ export abstract class Class_LinkElement
    * Return maximum value possible for this link
    *
    * @return {*}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public getMaxValue() {
     return this._values.getMaxValue()
@@ -984,7 +984,7 @@ export abstract class Class_LinkElement
   /**
    * Set up element on d3 svg area
    * @private
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   protected _draw() {
     // Heritance
@@ -1019,7 +1019,7 @@ export abstract class Class_LinkElement
   /**
    * Draw link shape on d3 svg
    * @protected
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   protected _drawPath() {
     // Speed-up computing
@@ -1048,7 +1048,7 @@ export abstract class Class_LinkElement
   /**
    * Draw arrow shape on d3
    * @protected
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   protected _drawArrow() {
     // Speed-up computing
@@ -1077,7 +1077,7 @@ export abstract class Class_LinkElement
   /**
    * Draw link label on d3 svg
    * @protected
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   protected _drawLabel() {
     // Speed-up computing
@@ -1165,7 +1165,7 @@ export abstract class Class_LinkElement
   /**
    * Draw all d3 elements on link d3 selection
    * @protected
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   protected _drawElements() {
     this._drawPath()
@@ -1176,7 +1176,7 @@ export abstract class Class_LinkElement
   /**
    * Put d3 elements in correct display order
    * @protected
-   * @memberof Class_NodeElement
+   * @memberof ClassTemplate_NodeElement
    */
   protected _orderD3Elements() {
     this.d3_selection?.selectAll('.link_path').raise()
@@ -1263,7 +1263,7 @@ export abstract class Class_LinkElement
    * Define event when mouse moves over element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseOver(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -1288,7 +1288,7 @@ export abstract class Class_LinkElement
  *
  * @protected
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
- * @memberof Class_LinkElement
+ * @memberof ClassTemplate_LinkElement
  */
   protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
@@ -1301,7 +1301,7 @@ export abstract class Class_LinkElement
    * Define event when mouse move out of element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_Element
+   * @memberof ClassTemplate_Element
    */
   protected eventMouseOut(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -1336,7 +1336,7 @@ export abstract class Class_LinkElement
    * Function used to set link label offset on DA & other attribute linkd to it
    *
    * @private
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private updateTextPathOffset() {
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getTextPathOffset()
@@ -1351,7 +1351,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @return {*}  {[number, string, number, string]}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private getTextPathOffset(): [number, string, number, string] {
     // Initialize value as if it link attributes were :
@@ -1411,7 +1411,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @param {d3.D3DragEvent<SVGTextPathElement,Unknown,Unknown>} event
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private dragTextPathStart(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
@@ -1429,7 +1429,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @param {d3.D3DragEvent<SVGTextPathElement,unknown,unknown>} event
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private dragTextPathMove(event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     this._display.position_offset_label = ((this._display.position_offset_label !== undefined) ? this._display.position_offset_label : 0) + event.dx
@@ -1448,7 +1448,7 @@ export abstract class Class_LinkElement
    * Set the position of the label of the link when it doesn't follow the path
    *
    * @private
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private updateTextXYPosition() {
     const [label_pos, label_ortho_pos, label_anchor] = this.getTextXYPos()
@@ -1464,7 +1464,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @return {*}  {[number, number, string]}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private getTextXYPos(): [number, number, string] {
     // Initialize value as if it link attributes were :
@@ -1516,7 +1516,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @param {d3.D3DragEvent<SVGTextElement,unknown,unknown>} event
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
@@ -1538,8 +1538,8 @@ export abstract class Class_LinkElement
    * Function triggered when we move the node name label, it update relative node position & redraw the name slabel
    *
    * @private
-   * @param {d3.D3DragEvent<SVGTextElement,Class_LinkElement,Class_LinkElement>} event
-   * @memberof Class_LinkElement
+   * @param {d3.D3DragEvent<SVGTextElement,ClassTemplate_LinkElement,ClassTemplate_LinkElement>} event
+   * @memberof ClassTemplate_LinkElement
    */
   private dragTextMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     this._display.position_x_label = ((this._display.position_x_label !== undefined) ? this._display.position_x_label : 0) + event.dx
@@ -1555,7 +1555,7 @@ export abstract class Class_LinkElement
    * Display the tooltip on drawing area
    *
    * @private
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private drawTooltip() {
     // Clean previous label
@@ -1575,7 +1575,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     d3.selectAll('.sankey-tooltip')
@@ -1593,7 +1593,7 @@ export abstract class Class_LinkElement
     this._control_points.starting_curve_point.draw()
     this._control_points.ending_curve_point.draw()
 
-    //If the shape is curved set visible tangeant points else set them invissible 
+    //If the shape is curved set visible tangeant points else set them invissible
     if (this.shape_is_curved) {
       this._control_points.starting_bezier_point.setVisible()
       this._control_points.ending_bezier_point.setVisible()
@@ -1623,7 +1623,7 @@ export abstract class Class_LinkElement
       let path
       // Normal mode
       if (!this.shape_is_recycling) {
-        //If the shape is curved use tangeant points 
+        //If the shape is curved use tangeant points
         if (this.shape_is_curved) {
           path = 'M ' + x1 + ',' + y1
             + ' L ' + x2 + ',' + y2
@@ -1673,7 +1673,7 @@ export abstract class Class_LinkElement
    * Return a svg path for link path drawing
    * @private
    * @return {*}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private getBezierPath() {
     // Update control points
@@ -1858,7 +1858,7 @@ export abstract class Class_LinkElement
    * Function used to update starting curve point position value
    *
    * @private
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private computeStartingCurvePoint() {
     const x0 = this.position_x_start  // Shorter to write
@@ -1900,7 +1900,7 @@ export abstract class Class_LinkElement
   * Function used to update ending curve point position value
   *
   * @private
-  * @memberof Class_LinkElement
+  * @memberof ClassTemplate_LinkElement
   */
   private computeEndingCurvePoint() {
     const x0 = this.position_x_start  // Shorter to write
@@ -1941,7 +1941,7 @@ export abstract class Class_LinkElement
   * Function used to update starting tangeant point position value
   *
   * @private
-  * @memberof Class_LinkElement
+  * @memberof ClassTemplate_LinkElement
   */
   private computeStartingBezierPoint() {
     const x1 = this._control_points.starting_curve_point.position_x
@@ -1980,7 +1980,7 @@ export abstract class Class_LinkElement
   * Function used to update ending tangeant point position value
   *
   * @private
-  * @memberof Class_LinkElement
+  * @memberof ClassTemplate_LinkElement
   */
   private computeEndingBezierPoint() {
     const x1 = this._control_points.starting_curve_point.position_x
@@ -2053,7 +2053,7 @@ export abstract class Class_LinkElement
    * Compute position of these points :
    * - Starting tangeant first & second point
    * - Ending tangeant first & second point
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public computeControlPoints() {
     this.computeStartingCurvePoint()
@@ -2069,7 +2069,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @return {*}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private dragHandleStart() {
     return () => {
@@ -2080,7 +2080,7 @@ export abstract class Class_LinkElement
    * Deactivate the control points alignement guide
    * @private
    * @return {*}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private dragHandleEnd() {
     return () => {
@@ -2096,7 +2096,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private startCurvePointDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
@@ -2128,7 +2128,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private endCurvePointDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
@@ -2162,7 +2162,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private startTangeantDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
@@ -2196,7 +2196,7 @@ export abstract class Class_LinkElement
   *
   * @private
   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-  * @memberof Class_LinkElement
+  * @memberof ClassTemplate_LinkElement
   */
   private endTangeantDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
@@ -2281,7 +2281,7 @@ export abstract class Class_LinkElement
   /**
    * Get name of link
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get name() {
     return defaultLinkId(this._source, this._target)
@@ -2302,7 +2302,7 @@ export abstract class Class_LinkElement
 
   /**
    * displaying order on drawing area
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get displaying_order() {
     return this._display.displaying_order
@@ -2314,7 +2314,7 @@ export abstract class Class_LinkElement
 
   /**
    * Get source node
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get source(): Type_GenericNodeElement {
     return this._source
@@ -2322,7 +2322,7 @@ export abstract class Class_LinkElement
 
   /**
    * set source node
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set source(_: Type_GenericNodeElement) {
     if (this.source !== _) {
@@ -2346,7 +2346,7 @@ export abstract class Class_LinkElement
    * Get starting node side for link
    * @readonly
    * @type {Type_Side}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get source_side(): Type_Side {
     // Failsafe : because of constructor
@@ -2387,7 +2387,7 @@ export abstract class Class_LinkElement
 
   /**
    * get destination node
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get target(): Type_GenericNodeElement {
     return this._target
@@ -2395,7 +2395,7 @@ export abstract class Class_LinkElement
 
   /**
    * Set destination node
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set target(_: Type_GenericNodeElement) {
     if (this.target !== _) {
@@ -2418,7 +2418,7 @@ export abstract class Class_LinkElement
    * Get starting node side for link
    * @readonly
    * @type {Type_Side}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get target_side(): Type_Side {
     // Failsafe : because of constructor
@@ -2462,7 +2462,7 @@ export abstract class Class_LinkElement
    * Either search correct current value with data_taggs,
    * or return directly the value when there is no data_taggs
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value() {
     if (this._values instanceof Class_LinkValue)
@@ -2474,7 +2474,7 @@ export abstract class Class_LinkElement
   /**
    * Either search correct current value with data_taggs,
    *  or return directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get data_value() {
     if (this.drawing_area.show_structure === 'structure')
@@ -2489,7 +2489,7 @@ export abstract class Class_LinkElement
   /**
    * Either set correct current value with data_taggs,
    *  or set directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set data_value(_: number | null) {
     const value = this.value
@@ -2504,7 +2504,7 @@ export abstract class Class_LinkElement
    * Either search correct current value with data_taggs,
    *  or return directly the value when there is no data_taggs
    * @return string
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get text_value() {
     const value = this.value
@@ -2516,7 +2516,7 @@ export abstract class Class_LinkElement
   /**
    * Either set correct current value with data_taggs,
    *  or set directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set text_value(_: string) {
     const value = this.value
@@ -2565,7 +2565,7 @@ export abstract class Class_LinkElement
   /**
    * Dict as [id: tag] of tags related to link
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get flux_tags_dict() {
     const value = this.value
@@ -2577,7 +2577,7 @@ export abstract class Class_LinkElement
   /**
    * Array of tags related to link
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get flux_tags_list() {
     const value = this.value
@@ -2589,7 +2589,7 @@ export abstract class Class_LinkElement
   /**
    * Dict as [id: tag group] of tag groups related to link
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get flux_taggs_dict() {
     const value = this.value
@@ -2601,7 +2601,7 @@ export abstract class Class_LinkElement
   /**
    * Array of tag groups related to link
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get flux_taggs_list() {
     return Object.values(this.flux_taggs_dict)
@@ -2609,13 +2609,13 @@ export abstract class Class_LinkElement
 
   /**
    * Set tooltip text
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get tooltip_text() { return this._tooltip_text }
 
   /**
    * Get tooltip text
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set tooltip_text(_: string) {
     this._tooltip_text = _
@@ -2646,7 +2646,7 @@ export abstract class Class_LinkElement
   /**
    * Get thickness of stroke shape
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get thickness() {
     // Get link value for current dataTaggs selected
@@ -2700,7 +2700,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_orientation() {
     if (this._display.attributes.shape_orientation !== undefined) {
@@ -2713,7 +2713,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_orientation(_: Type_Orientation) {
     if (
@@ -2741,7 +2741,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_starting_curve() {
     if (this._display.attributes.shape_starting_curve !== undefined) {
@@ -2754,7 +2754,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_starting_curve(_: number) {
     if (_ >= 0) {
@@ -2789,7 +2789,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_ending_curve() {
     if (this._display.attributes.shape_ending_curve !== undefined) {
@@ -2802,7 +2802,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_ending_curve(_: number) {
     if (_ >= 0) {
@@ -2837,7 +2837,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_starting_tangeant() {
     if (this._display.attributes.shape_starting_tangeant !== undefined) {
@@ -2850,7 +2850,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_starting_tangeant(_: number) {
     if (_ > 0) {
@@ -2862,7 +2862,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_ending_tangeant() {
     if (this._display.attributes.shape_ending_tangeant !== undefined) {
@@ -2875,7 +2875,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_ending_tangeant(_: number) {
     if (_ > 0) {
@@ -2887,7 +2887,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_middle_recycling() {
     if (this._display.attributes.shape_middle_recycling !== undefined) {
@@ -2900,7 +2900,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_middle_recycling(_: number) {
     this._display.attributes.shape_middle_recycling = _
@@ -2910,7 +2910,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_curvature() {
     if (this._display.attributes.shape_curvature !== undefined) {
@@ -2923,13 +2923,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_curvature(_: number) { this._display.attributes.shape_curvature = _; this.drawElements() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_is_curved() {
     if (this._display.attributes.shape_is_curved !== undefined) {
@@ -2942,7 +2942,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements();this.drawControlPoint()}
 
@@ -2960,7 +2960,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_is_recycling() {
     if (this._display.attributes.shape_is_recycling !== undefined) {
@@ -2973,7 +2973,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_is_recycling(_: boolean) {
     // In recylcing mode we dont have upperbound for starting & ending
@@ -2991,7 +2991,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_arrow_size() {
     if (this._display.attributes.shape_arrow_size !== undefined) {
@@ -3004,13 +3004,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawElements() }
 
   /**
    * Set and redraw d3 path for link arrow
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_arrow_path(_: string) {
     this._arrow_shape = _
@@ -3019,7 +3019,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_position() {
     if (this._display.attributes.value_label_position !== undefined) {
@@ -3032,7 +3032,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_position(_: Type_PathLabelHPosition) {
     if (_ !== 'dragged') delete this._display.position_offset_label
@@ -3042,7 +3042,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_orthogonal_position() {
     if (this._display.attributes.value_label_orthogonal_position !== undefined) {
@@ -3055,7 +3055,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_orthogonal_position(_: Type_PathLabelVPosition) {
     this._display.attributes.value_label_orthogonal_position = _
@@ -3064,7 +3064,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_on_path() {
     if (this._display.attributes.value_label_on_path !== undefined) {
@@ -3077,13 +3077,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_on_path(_: boolean) { this._display.attributes.value_label_on_path = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_pos_auto() {
     if (this._display.attributes.value_label_pos_auto !== undefined) {
@@ -3096,13 +3096,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_pos_auto(_: boolean) { this._display.attributes.value_label_pos_auto = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_is_arrow() {
     if (this._display.attributes.shape_is_arrow !== undefined) {
@@ -3115,13 +3115,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawElements() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_color() {
     if (this._display.attributes.shape_color !== undefined) {
@@ -3134,13 +3134,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawElements() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_opacity() {
     if (this._display.attributes.shape_opacity !== undefined) {
@@ -3153,13 +3153,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawElements() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get shape_is_dashed() {
     if (this._display.attributes.shape_is_dashed !== undefined) {
@@ -3172,13 +3172,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set shape_is_dashed(_: boolean) { this._display.attributes.shape_is_dashed = _; this.drawElements() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_is_visible() {
     if (this._display.attributes.value_label_is_visible !== undefined) {
@@ -3191,13 +3191,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_is_visible(_: boolean) { this._display.attributes.value_label_is_visible = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_font_size() {
     if (this._display.attributes.value_label_font_size !== undefined) {
@@ -3210,13 +3210,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_font_size(_: number) { this._display.attributes.value_label_font_size = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_color() {
     if (this._display.attributes.value_label_color !== undefined) {
@@ -3229,13 +3229,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_to_precision() {
     if (this._display.attributes.value_label_to_precision !== undefined) {
@@ -3248,13 +3248,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_to_precision(_: boolean) { this._display.attributes.value_label_to_precision = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_scientific_precision() {
     if (this._display.attributes.value_label_scientific_precision !== undefined) {
@@ -3267,13 +3267,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_scientific_precision(_: number) { this._display.attributes.value_label_scientific_precision = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_font_family() {
     if (this._display.attributes.value_label_font_family !== undefined) {
@@ -3286,13 +3286,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_font_family(_: string) { this._display.attributes.value_label_font_family = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_unit_visible() {
     if (this._display.attributes.value_label_unit_visible !== undefined) {
@@ -3305,13 +3305,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_unit() {
     if (this._display.attributes.value_label_unit !== undefined) {
@@ -3324,13 +3324,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_unit_factor() {
     if (this._display.attributes.value_label_unit_factor !== undefined) {
@@ -3343,13 +3343,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_unit_factor(_: number) { this._display.attributes.value_label_unit_factor = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_custom_digit() {
     if (this._display.attributes.value_label_custom_digit !== undefined) {
@@ -3362,13 +3362,13 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_custom_digit(_: boolean) { this._display.attributes.value_label_custom_digit = _; this.drawLabel() }
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get value_label_nb_digit() {
     if (this._display.attributes.value_label_nb_digit !== undefined) {
@@ -3381,7 +3381,7 @@ export abstract class Class_LinkElement
 
   /**
    * TODO Description
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawLabel() }
 
@@ -3419,7 +3419,7 @@ export abstract class Class_LinkElement
    * - check for each tag group if the flow has at least one selected tag that isn't filtered out
    * else if the link doesn't have tag it isn't filtered by them
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get are_related_flux_tags_selected(): boolean {
     if (
@@ -3458,7 +3458,7 @@ export abstract class Class_LinkElement
    * If link value for current dataTagg parameter is different of 0 then pass the check,
    *
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get is_not_null(): boolean {
     if (
@@ -3486,7 +3486,7 @@ export abstract class Class_LinkElement
    *
    * @private
    * @return {*}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private get are_source_and_target_displayed(): boolean {
     if (
@@ -3519,7 +3519,7 @@ export abstract class Class_LinkElement
    *   if not don't display the link
    * @readonly
    * @private
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   protected get is_value_above_threshold(): boolean {
     if (this.drawing_area.filter_link_value == 0) {
@@ -3578,7 +3578,7 @@ export abstract class Class_LinkElement
  * @export
  * @class Class_LinkAttribute
  */
-export class Class_LinkAttribute extends Class_AbstractLinkStyle {
+export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -4153,7 +4153,7 @@ export class Class_LinkValueTree {
 
   /**
    * Creates an instance of Class_LinkValueTree.
-   * @param {(Class_LinkValueTree | Class_LinkElement)} parent
+   * @param {(Class_LinkValueTree | ClassTemplate_LinkElement)} parent
    * @param {Class_DataTagGroup} tag_group
    * @memberof Class_LinkValueTree
    */
@@ -4587,7 +4587,7 @@ export class Class_LinkValueTree {
  * @export
  * @class Class_LinkValue
  */
-export class Class_LinkValue extends Class_AbstractLinkValue {
+export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -4606,7 +4606,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    * FluxTags
    * @private
    * @type {{ [_: string]: Class_Tag }}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   private _flux_tags: Class_Tag[] = []
 
@@ -4717,7 +4717,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
     // where 'key_grp_tag' represent the id of a flux tag group
     // &  '[key_tag, ...]' represent the array of id of tag selected
     // for that flux tag group
-    const flux_taggs_dict = ((this.link?.drawing_area as Class_AbstractDrawingArea).sankey.flux_taggs_dict ?? {})
+    const flux_taggs_dict = ((this.link?.drawing_area as ClassAbstract_DrawingArea).sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
       .filter(([_id_tagg, list]) => {
         if (matching_tags_id[_id_tagg] === undefined) //Sanity check, it is possible that json_object link have ref to tag that fluxTags doesn't have (it can occurs with legecy view)
@@ -4763,7 +4763,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    * Check if given flux tag is referenced by value
    * @param {Class_Tag} tag
    * @return {*}
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public hasGivenTag(tag: Class_Tag) {
     return this._flux_tags.includes(tag)
@@ -4772,7 +4772,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
   /**
    * Add and cross-reference a Flux tag with this value
    * @param {Class_Tag} tag
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public addTag(tag: Class_Tag) {
     if (!this.hasGivenTag(tag)) {
@@ -4786,7 +4786,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
   /**
    * Remove given tag and cross-reference from link
    * @param {Class_Tag} tag
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public removeTag(tag: Class_Tag) {
     if (this.hasGivenTag(tag)) {
@@ -4870,7 +4870,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
    * Related link of value
    *
    * @readonly
-   * @type {(Class_LinkElement | null)}
+   * @type {(ClassTemplate_LinkElement | null)}
    * @memberof Class_LinkValue
    */
   public get link(): Type_AnyLinkElement | null {
@@ -4881,7 +4881,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
   /**
    * Dict as [id: tag] of flux tags related to this value
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get flux_tags_dict() {
     return this._flux_tags
@@ -4890,7 +4890,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
   /**
    * Array of flux tags related to this value
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get flux_tags_list() {
     return Object.values(this._flux_tags)
@@ -4899,7 +4899,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
   /**
    * Dict as [id: tag group] of tag groups related to link
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get flux_taggs_dict() {
     const taggs: { [_: string]: Class_TagGroup } = {}
@@ -4918,7 +4918,7 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
   /**
    * Array of tag groups related to link
    * @readonly
-   * @memberof Class_LinkElement
+   * @memberof ClassTemplate_LinkElement
    */
   public get flux_taggs_list() {
     return Object.values(this.flux_taggs_dict)
@@ -4948,13 +4948,13 @@ export class Class_LinkValue extends Class_AbstractLinkValue {
 
 // CLASS GHOST LINK *********************************************************************
 
-export class Class_GhostLinkElement
+export class ClassTemplate_GhostLinkElement
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey,
-    Type_GenericNodeElement extends Class_AbstractNodeElement<Type_GenericDrawingArea, Type_GenericSankey>
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey,
+    Type_GenericNodeElement extends ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey>
   >
-  extends Class_LinkElement
+  extends ClassTemplate_LinkElement
   <
     Type_GenericDrawingArea,
     Type_GenericSankey,

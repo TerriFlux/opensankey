@@ -25,28 +25,28 @@ import {
   list_palette_color
 } from './Utils'
 import {
-  Class_Sankey
+  ClassTemplate_Sankey
 } from './Sankey'
 import {
-  Class_NodeElement,
+  ClassTemplate_NodeElement,
   sortNodesElements
 } from './Node'
 import {
-  Class_GhostLinkElement,
-  Class_LinkElement,
+  ClassTemplate_GhostLinkElement,
+  ClassTemplate_LinkElement,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from './Link'
-import { Class_Legend } from './Legend'
-import { Class_ZoneSelection } from './Selection_Zone'
+import { ClassTemplate_Legend } from './Legend'
+import { ClassTemplate_ZoneSelection } from './SelectionZone'
 import { convert_data_legacy } from './Legacy'
 import {
-  Class_AbstractDrawingArea,
-  Class_AbstractApplicationData,
-  Class_AbstractSankey,
+  ClassAbstract_DrawingArea,
+  ClassAbstract_ApplicationData,
+  ClassAbstract_Sankey,
 } from './Abstract'
-import { Class_ProtoElement } from './Element'
-import { Class_AbstractNodeElement } from './AbstractNode'
+import { ClassTemplate_ProtoElement } from './Element'
+import { ClassAbstract_NodeElement } from './AbstractNode'
 
 // CONSTANTS ****************************************************************************
 
@@ -58,112 +58,112 @@ const default_vertical_spacing = 50
 const default_scale = 50
 const default_DA_marging = 50
 
-type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
+type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS DRAWING AREA *******************************************************************
 /**
  * Class to deal with drawing area properties and display
  *
- * @class Class_DrawingArea
+ * @class ClassTemplate_DrawingArea
  */
-export abstract class Class_DrawingArea
+export abstract class ClassTemplate_DrawingArea
   <
-    Type_GenericSankey extends Class_Sankey<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
-    Type_GenericNodeElement extends Class_NodeElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
-    Type_GenericLinkElement extends Class_LinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>,
+    Type_GenericSankey extends ClassTemplate_Sankey<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
+    Type_GenericNodeElement extends ClassTemplate_NodeElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends ClassTemplate_LinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>,
   >
-  extends Class_AbstractDrawingArea {
+  extends ClassAbstract_DrawingArea {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
   /**
    * Application object which relates to this drawing area
-   * @type {Class_AbstractApplicationData}
-   * @memberof Class_DrawingArea
+   * @type {ClassAbstract_ApplicationData}
+   * @memberof ClassTemplate_DrawingArea
    */
-  public application_data: Class_AbstractApplicationData
+  public application_data: ClassAbstract_ApplicationData
 
   /**
  * d3 svg element containing all sub svg elements, it is also wher we can zoom with scroll wheel
  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
- * @memberof Class_DrawingArea
+ * @memberof ClassTemplate_DrawingArea
  */
   public d3_selection_zoom_area: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 svg groups for drawing area
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area background
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_bg_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
  * d3 selection of svg group that contains drawing area background
  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
- * @memberof Class_DrawingArea
+ * @memberof ClassTemplate_DrawingArea
  */
   public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area grid
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area elements
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area nodes
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_nodes: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area links
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_links: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area legend elements
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area legend elements
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area zone of selection element
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * Is drawing area in publish _mode or not. If so, blocks all interactions with it
    * @type {boolean}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public static: boolean = false
 
@@ -177,7 +177,7 @@ export abstract class Class_DrawingArea
    * Height in px of drawing area in application
    * @private
    * @type {number}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   protected _height: number
 
@@ -185,7 +185,7 @@ export abstract class Class_DrawingArea
    * Width in px of drawing area in application
    * @private
    * @type {number}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   protected _width: number
 
@@ -200,7 +200,7 @@ export abstract class Class_DrawingArea
   // Objects containeds in drawing area -------------------------------------------------
 
   protected _sankey: Type_GenericSankey
-  protected _legend: Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
+  protected _legend: ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -211,7 +211,7 @@ export abstract class Class_DrawingArea
    * when calling window fit
    * @private
    * @type {number}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private _fit_margin: number = 10
 
@@ -219,7 +219,7 @@ export abstract class Class_DrawingArea
    * Scaling factor as value = scale * value in pixel
    * @private
    * @type {number}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private _scale: number = default_scale
 
@@ -227,7 +227,7 @@ export abstract class Class_DrawingArea
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
    *
    * @private
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private _scaleValueToPx = d3.scaleLinear()
     .domain([0, this._scale])
@@ -258,7 +258,7 @@ export abstract class Class_DrawingArea
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  public _selection_zone: Class_ZoneSelection<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
+  public _selection_zone: ClassTemplate_ZoneSelection<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
   private _number_of_elements: number = 0
 
   // Context attributes for drawing area ------------------------------------------------
@@ -267,7 +267,7 @@ export abstract class Class_DrawingArea
    * Interaction mode with drawing area
    * @private
    * @type {('edition' | 'selection')}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private _mode: 'edition' | 'selection' = 'edition'
 
@@ -276,18 +276,18 @@ export abstract class Class_DrawingArea
    *
    * @private
    * @type {boolean}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
-  private _ghost_link: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null = null
+  private _ghost_link: ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null = null
 
   /**
    *Elements that are selected in this area
    *
    * @protected
-   * @type {{ [id: string]: Class_ProtoElement }}
-   * @memberof Class_DrawingArea
+   * @type {{ [id: string]: ClassTemplate_ProtoElement }}
+   * @memberof ClassTemplate_DrawingArea
    */
-  protected _selection: { [id: string]: Class_ProtoElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> } = {}
+  protected _selection: { [id: string]: ClassTemplate_ProtoElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
@@ -300,7 +300,7 @@ export abstract class Class_DrawingArea
    * if we want to move manually the drawing_area, we should use this variable
    * (see areaFitHorizontally && areaFitVertically)
    * @private
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private zoomListener = d3.zoom<SVGSVGElement, unknown>()
     // only trigger zoom event when we scroll (which == 0) &&
@@ -323,12 +323,12 @@ export abstract class Class_DrawingArea
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of Class_DrawingArea.
-   * @param {Class_AbstractApplicationData} application_data
-   * @memberof Class_DrawingArea
+   * Creates an instance of ClassTemplate_DrawingArea.
+   * @param {ClassAbstract_ApplicationData} application_data
+   * @memberof ClassTemplate_DrawingArea
    */
   constructor(
-    application_data: Class_AbstractApplicationData,
+    application_data: ClassAbstract_ApplicationData,
     id: string = default_main_sankey_id
   ) {
     super()
@@ -337,7 +337,7 @@ export abstract class Class_DrawingArea
     this._height = this.window_fitting_height
     this._width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
-    this._legend = new Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
+    this._legend = new ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
     this._selection_zone = this.createNewSelectionZone()
   }
 
@@ -362,7 +362,7 @@ export abstract class Class_DrawingArea
 
   // COPY METHODS ======================================================================
 
-  public copyFrom(drawing_area_to_copy: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+  public copyFrom(drawing_area_to_copy: ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     // Delete everything
     this.delete()
     // Copy All attributes
@@ -370,8 +370,8 @@ export abstract class Class_DrawingArea
     // Copy Sankey
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
 
-    //create new Class_Legend after deleting previous in 'this.delete()'
-    this._legend = new Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
+    //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
+    this._legend = new ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
     // Copy Legend
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
@@ -379,7 +379,7 @@ export abstract class Class_DrawingArea
     this._selection_zone=this.createNewSelectionZone()
   }
 
-  protected _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+  protected _copyAttrFrom(drawing_area_to_copy: ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     // Copy All attributes
     this._color = drawing_area_to_copy._color
     this._filter_label = drawing_area_to_copy._filter_label
@@ -401,7 +401,7 @@ export abstract class Class_DrawingArea
   }
 
   public updateFrom(
-    other_drawing_area: Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    other_drawing_area: ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
     mode: string[]
   ) {
     // Transfert all attributes = Copy everything from other drawing area
@@ -422,7 +422,7 @@ export abstract class Class_DrawingArea
    * @param {boolean} [only_visible_elements=false]
    * @param {boolean} [with_values=true]
    * @return {*}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public toJSON(
     only_visible_elements: boolean = false,
@@ -463,7 +463,7 @@ export abstract class Class_DrawingArea
    * Export current drawing area & its contents as json struct
    *
    * @param {Type_JSON} json_object
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public fromJSON(
     json_object: Type_JSON,
@@ -511,13 +511,13 @@ export abstract class Class_DrawingArea
   // ABSTRACT METHODS ==================================================================
 
   protected abstract createNewSankey(id?: string): Type_GenericSankey
-  protected abstract createNewSelectionZone(): Class_ZoneSelection<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
+  protected abstract createNewSelectionZone(): ClassTemplate_ZoneSelection<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
   // PUBLIC METHODS ====================================================================
 
   /**
    * Reset drawing area & add waiting toast
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public draw(
   ) {
@@ -546,7 +546,7 @@ export abstract class Class_DrawingArea
   /**
    * Reinit d3 selections
    * @protected
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   protected _initDraw() {
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
@@ -585,7 +585,7 @@ export abstract class Class_DrawingArea
   /**
    * Draw grid for drawing area
    * @public
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public drawGrid() {
     // Clean if needed
@@ -624,7 +624,7 @@ export abstract class Class_DrawingArea
 
   /**
    * Draw all elements inside drawing area
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public drawElements() {
     // Draw grid
@@ -652,7 +652,7 @@ export abstract class Class_DrawingArea
 
   /**
    * Context menus are directly diplayed in drawing area when deal with them directly here
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public closeAllContextMenus() {
     // Reset contextulised elements
@@ -698,7 +698,7 @@ export abstract class Class_DrawingArea
   /**
    * Checks if it is possible to directly deal with events
    * @return {boolean}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public eventsEnabled(): boolean {
     // Deal with node events in priority
@@ -721,8 +721,8 @@ export abstract class Class_DrawingArea
 
   /**
    * Add a new default node to drawing area sankey
-   * @return {Class_NodeElement}
-   * @memberof Class_DrawingArea
+   * @return {ClassTemplate_NodeElement}
+   * @memberof ClassTemplate_DrawingArea
    */
   public addNewDefaultNodeToSankey(): Type_GenericNodeElement {
     return this.sankey.addNewDefaultNode()
@@ -731,8 +731,8 @@ export abstract class Class_DrawingArea
   /**
    * Retrieve node by id from sankey struct
    * @param {string} id
-   * @return {Class_NodeElement | null}
-   * @memberof Class_DrawingArea
+   * @return {ClassTemplate_NodeElement | null}
+   * @memberof ClassTemplate_DrawingArea
    */
   public getNodeFromSankey(id: string): Type_GenericNodeElement | null {
     return this.sankey.getNode(id)
@@ -740,8 +740,8 @@ export abstract class Class_DrawingArea
 
   /**
    * Delete a given node -> node will not exist anymore
-   * @param {Class_NodeElement} node
-   * @memberof Class_DrawingArea
+   * @param {ClassTemplate_NodeElement} node
+   * @memberof ClassTemplate_DrawingArea
    */
   public deleteNode(node: Type_GenericNodeElement) {
     // Remove from selection if necessary
@@ -757,7 +757,7 @@ export abstract class Class_DrawingArea
   /**
    * Add a new default link to drawing area sankey
    * @return {Type_GenericLinkElement}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public addNewDefaultLinkToSankey(): Type_GenericLinkElement {
     return this.sankey.addNewDefaultLink()
@@ -767,14 +767,14 @@ export abstract class Class_DrawingArea
    * Retrieve node by id from sankey struct
    * @param {string} id
    * @return {Type_GenericLinkElement | null}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public getLinkFromSankey(id: string): Type_GenericLinkElement | null { return this.sankey.getLink(id) }
 
   /**
    * Delete a given link -> link will not exist anymore
-   * @param {Class_NodeElement} node
-   * @memberof Class_DrawingArea
+   * @param {ClassTemplate_NodeElement} node
+   * @memberof ClassTemplate_DrawingArea
    */
   public deleteLink(link: Type_GenericLinkElement) {
     // Remove link from selection if necessary
@@ -790,8 +790,8 @@ export abstract class Class_DrawingArea
   /**
    * Add a node to selection set
    * Update menu accordingly
-   * @param {Class_NodeElement} node
-   * @memberof Class_DrawingArea
+   * @param {ClassTemplate_NodeElement} node
+   * @memberof ClassTemplate_DrawingArea
    */
   public addNodeToSelection(node: Type_GenericNodeElement) {
     // Update selection list
@@ -811,7 +811,7 @@ export abstract class Class_DrawingArea
   /**
    * Add all nodes to selection set
    * Update menu accordingly
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public addAllVisibleNodesToSelection() {
     this.sankey.visible_nodes_list
@@ -822,7 +822,7 @@ export abstract class Class_DrawingArea
    * remove a node from a selection set
    * Update menu accordingly
    * @param {Type_GenericNodeElement} node
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public removeNodeFromSelection(node: Type_GenericNodeElement) {
     if (this._selection[node.id] !== undefined) {
@@ -852,7 +852,7 @@ export abstract class Class_DrawingArea
   /**
    * Permanently delete selected nodes
    * Update menu accordingly
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public deleteSelectedNodes() {
     // Get copy of selected nodes
@@ -866,7 +866,7 @@ export abstract class Class_DrawingArea
    * Add a link to selection set
    * Update menu accordingly
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public addLinkToSelection(link: Type_GenericLinkElement) {
     // Update selection list
@@ -880,7 +880,7 @@ export abstract class Class_DrawingArea
   /**
    * Add all links to selection set
    * Update menu accordingly
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public addAllVisibleLinksToSelection() {
     this.sankey.visible_links_list
@@ -889,8 +889,8 @@ export abstract class Class_DrawingArea
 
   /**
    * Remove given link from selection set
-   * @param {Class_LinkElement} link
-   * @memberof Class_DrawingArea
+   * @param {ClassTemplate_LinkElement} link
+   * @memberof ClassTemplate_DrawingArea
    */
   public removeLinkFromSelection(link: Type_GenericLinkElement) {
     if (this._selection[link.id] !== undefined) {
@@ -905,7 +905,7 @@ export abstract class Class_DrawingArea
 
   /**
    * Remove all link selected
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public purgeSelectionOfLinks(reset = true) {
     // Unselect elements
@@ -922,7 +922,7 @@ export abstract class Class_DrawingArea
 
   /**
  * Remove all node selected
- * @memberof Class_DrawingArea
+ * @memberof ClassTemplate_DrawingArea
  */
   public purgeSelectionOfNode(reset = true) {
     // Unselect elements
@@ -940,7 +940,7 @@ export abstract class Class_DrawingArea
   /**
    * Delete all selected links -> link will not exist anymore
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public deleteSelectedLinks() {
     // Get copy of selected nodes
@@ -952,7 +952,7 @@ export abstract class Class_DrawingArea
 
   /**
    * Clean selection set of sankey elements
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public purgeSelection() {
     // Unselect everything
@@ -970,7 +970,7 @@ export abstract class Class_DrawingArea
   /**
    * Delete all selected elements
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public deleteSelection() {
     this.deleteSelectedNodes()
@@ -981,7 +981,7 @@ export abstract class Class_DrawingArea
    * Function to use after setting link value, it check if there is only 1 link and if so update DA scale
    *
    * @param {(number|null|undefined)} _
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public updateScaleAtLinkValueSetting(_: number | null | undefined) {
     // Update scaling if only one link
@@ -993,7 +993,7 @@ export abstract class Class_DrawingArea
   /**
    * Function to check if element are near drawing area border & update it size in consequence
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public checkAndUpdateAreaSize(
     recenter: boolean = false
@@ -1065,7 +1065,7 @@ export abstract class Class_DrawingArea
    *
    * (not recommended for vertical sankey)
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public areaFitHorizontally() {
     this.checkAndUpdateAreaSize(true)
@@ -1087,7 +1087,7 @@ export abstract class Class_DrawingArea
    *
    * (not recommended for horizontal sankey)
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public areaFitVertically() {
     this.checkAndUpdateAreaSize(true)
@@ -1266,7 +1266,7 @@ export abstract class Class_DrawingArea
    * it must be splitted to have one import and one export per product
    * International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public splitTrade (
   ) {
@@ -1302,7 +1302,7 @@ export abstract class Class_DrawingArea
    *
    * /!\ Add to waiting spinner queue
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public computeAutoSankey(
     launched_from_process: boolean
@@ -1358,7 +1358,7 @@ export abstract class Class_DrawingArea
    * Compute the position of the nodes which are not trade nodes
    * @protected
    * @param {boolean} launched_from_process
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   protected _computeAutoSankey(
     launched_from_process: boolean
@@ -1687,7 +1687,7 @@ export abstract class Class_DrawingArea
   /**
    * Computes u,v,x and initial y for trade nodes
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public arrangeTrade(
     compute_xy : boolean
@@ -1743,7 +1743,7 @@ export abstract class Class_DrawingArea
   /**
    * Computes u,v for nodes in the drawing area
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public computeParametrization() {
 
@@ -1770,10 +1770,10 @@ export abstract class Class_DrawingArea
   /**
    * Computes v for nodes in the drawing area
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public computeParametricV() {
-    const columns: { [_: number]: Type_AbstractNodeElement[]}  = {}
+    const columns: { [_: number]: TypeAbstract_NodeElement[]}  = {}
     this.sankey.visible_nodes_list.forEach(n => {
       if (n.position_type === 'relative') {
         return
@@ -1811,10 +1811,10 @@ export abstract class Class_DrawingArea
   /**
    * Computes v for nodes in the drawing area
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public apply_v_agregate(
-    node:Type_AbstractNodeElement
+    node:TypeAbstract_NodeElement
   ) {
     let agregated_nodes : Type_GenericNodeElement[] = []
     this.sankey.level_taggs_list.forEach(tagGroup => {
@@ -1841,10 +1841,10 @@ export abstract class Class_DrawingArea
   /**
    * Computes v for nodes in the drawing area
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public apply_v_desagregate(
-    node:Type_AbstractNodeElement,
+    node:TypeAbstract_NodeElement,
     current_v:number
   ) {
     if (node.display.position.v == -1) {
@@ -1876,7 +1876,7 @@ export abstract class Class_DrawingArea
   /**
    * Reposition visible nodes so that their left/top side is close to a grid line
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public arrangeNodesToGrid() {
     this._sankey.visible_nodes_list.forEach(node => {
@@ -1889,7 +1889,7 @@ export abstract class Class_DrawingArea
   /**
    * Function to delete attr _minimum_flux
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public removeMinimumLinkThickness() {
     delete this._minimum_flux
@@ -1898,7 +1898,7 @@ export abstract class Class_DrawingArea
   /**
    * Function to delete attr _maximum_flux
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public removeMaximumLinkThickness() {
     delete this._maximum_flux
@@ -1914,8 +1914,8 @@ export abstract class Class_DrawingArea
    *
    * @protected
    * @param {string} process_id
-   * @param {(_: Class_ProtoElement) => void} process_func
-   * @memberof Class_ProtoElement
+   * @param {(_: ClassTemplate_ProtoElement) => void} process_func
+   * @memberof ClassTemplate_ProtoElement
    */
   protected _process_or_bypass(
     process_func: () => void
@@ -1930,7 +1930,7 @@ export abstract class Class_DrawingArea
    *
    * Function generally use at opening of file to automatically fit sankey on screen
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public areaAutoFit() {
     this._process_or_bypass(() => {
@@ -1952,7 +1952,7 @@ export abstract class Class_DrawingArea
   /**
    * Delete html element SVG containing drawing area
    * @private
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public unDraw() {
     if (this.d3_selection_zoom_area) {
@@ -1986,7 +1986,7 @@ export abstract class Class_DrawingArea
    *
    * @private
    * @return {*}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private isMouseOverAnExistingNode(): boolean {
     let node_id: string
@@ -2000,7 +2000,7 @@ export abstract class Class_DrawingArea
   /**
    * Set up events related to element d3_element
    * @private
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private setEventsListeners() {
     if (
@@ -2059,7 +2059,7 @@ export abstract class Class_DrawingArea
    * Deal with simple left Mouse Button (LMB) click on given element
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2075,7 +2075,7 @@ export abstract class Class_DrawingArea
    * Deal with double left Mouse Button (LMB) click on given element
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventDoubleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2087,7 +2087,7 @@ export abstract class Class_DrawingArea
    * Deal with simple right Mouse Button (RMB) click on given element
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2109,7 +2109,7 @@ export abstract class Class_DrawingArea
    * Define maintained left mouse button click for drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventMaintainedClick(
     event: MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2126,7 +2126,7 @@ export abstract class Class_DrawingArea
         // Close all menus
         this.closeAllMenus()
 
-        if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node 
+        if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
 
           // Get relative mouse position
           const mouse_position = d3.pointer(event)
@@ -2144,7 +2144,7 @@ export abstract class Class_DrawingArea
           // Make target a 'ghost' node
           target.setInvisible()
           // Ref newly created link this var to be used in other mouse event
-          this._ghost_link = new Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
+          this._ghost_link = new ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
             'ghost_link',
             source,
             target,
@@ -2153,8 +2153,8 @@ export abstract class Class_DrawingArea
           this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
 
         } else {
-          // If by any means we have already a ghost link but we start clicking the DA 
-          // (It can occur when we relase the mouse out of DA while we have a ghost link & restart clicking in DA 
+          // If by any means we have already a ghost link but we start clicking the DA
+          // (It can occur when we relase the mouse out of DA while we have a ghost link & restart clicking in DA
 
           // Mouse released on source node
           if (this._ghost_link.source.isMouseOver()) {
@@ -2224,7 +2224,7 @@ export abstract class Class_DrawingArea
    * Define released left mouse button click for drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventReleasedClick(
     event: MouseEvent
@@ -2290,7 +2290,7 @@ export abstract class Class_DrawingArea
    * Define event when mouse moves over drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventMouseOver(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2302,7 +2302,7 @@ export abstract class Class_DrawingArea
    * Define event when mouse moves out of drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventMouseOut(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2314,7 +2314,7 @@ export abstract class Class_DrawingArea
    * Define event when mouse moves in drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventMouseMove(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2373,7 +2373,7 @@ export abstract class Class_DrawingArea
    * Note : Under the hood, this calls eventZoom method throught this.zoomListener
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventMouseScroll(
     event: WheelEvent
@@ -2411,7 +2411,7 @@ export abstract class Class_DrawingArea
    *
    * @private
    * @param {*} e
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   private eventZoom(
     event: d3.D3ZoomEvent<SVGSVGElement, unknown>
@@ -2449,7 +2449,7 @@ export abstract class Class_DrawingArea
   /**
    * Technically don't draw a cursor but add a class & then css use it to modify cursor
    *
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public drawCursor() {
     const mode_edition = this.isInEditionMode()
@@ -2461,23 +2461,23 @@ export abstract class Class_DrawingArea
    * return sankey
    *
    * @readonly
-   * @return {Class_Sankey<any, Type_GenericNodeElement, Type_GenericLinkElement>}
-   * @memberof Class_DrawingArea
+   * @return {ClassTemplate_Sankey<any, Type_GenericNodeElement, Type_GenericLinkElement>}
+   * @memberof ClassTemplate_DrawingArea
    */
   public get sankey() { return this._sankey }
 
   // Legend
-  public get legend(): Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._legend }
-  public set legend(value: Class_Legend<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>) { this._legend = value }
+  public get legend(): ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._legend }
+  public set legend(value: ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>) { this._legend = value }
 
   // Ghost link
   public get ghost_link() { return this._ghost_link }
-  public set ghost_link(value: Class_GhostLinkElement<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null) { this._ghost_link = value }
+  public set ghost_link(value: ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null) { this._ghost_link = value }
 
   // Selections
   public get selected_nodes_list(): Type_GenericNodeElement[] {
     return Object.values(this._selection)
-      .filter(element => element instanceof Class_NodeElement) as Type_GenericNodeElement[]
+      .filter(element => element instanceof ClassTemplate_NodeElement) as Type_GenericNodeElement[]
   }
 
   public get selected_nodes_list_sorted(): Type_GenericNodeElement[] {
@@ -2497,7 +2497,7 @@ export abstract class Class_DrawingArea
 
   public get selected_links_list(): Type_GenericLinkElement[] {
     return Object.values(this._selection)
-      .filter(element => element instanceof Class_LinkElement) as Type_GenericLinkElement[]
+      .filter(element => element instanceof ClassTemplate_LinkElement) as Type_GenericLinkElement[]
   }
 
   public get selected_links_list_sorted(): Type_GenericLinkElement[] {
@@ -2530,7 +2530,7 @@ export abstract class Class_DrawingArea
    * Return height of the top nav bar
    *
    * @return {*}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
     return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 6 * 16 // 16 because we set size in rem in css 1 rem = 16px
@@ -2540,7 +2540,7 @@ export abstract class Class_DrawingArea
    * Return height of the top nav bar
    *
    * @return {*}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public getBottomBarHeight() {
     return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * 16 // 16 because we set size in rem in css 1 rem = 16px
@@ -2550,7 +2550,7 @@ export abstract class Class_DrawingArea
    * Return height of the top nav bar
    *
    * @return {*}
-   * @memberof Class_DrawingArea
+   * @memberof ClassTemplate_DrawingArea
    */
   public getSideBarWidth() {
     return (document.getElementsByClassName('openMenu')[0]?.getBoundingClientRect().width) ?? 50
@@ -2594,7 +2594,7 @@ export abstract class Class_DrawingArea
   public get vertical_spacing() { return this._vertical_spacing }
   public set vertical_spacing(_: number) { this._vertical_spacing = _ }
 
-  public get selection_zone(): Class_ZoneSelection<Class_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._selection_zone }
+  public get selection_zone(): ClassTemplate_ZoneSelection<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._selection_zone }
 
   // Node Context menu
   public get node_contextualised(): Type_GenericNodeElement | undefined { return this._node_contextualied }
