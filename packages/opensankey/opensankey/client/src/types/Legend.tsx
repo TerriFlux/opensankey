@@ -11,8 +11,8 @@ import { MouseEvent } from 'react'
 
 // Local types imports
 import type {
-  Class_AbstractDrawingArea,
-  Class_AbstractSankey
+  ClassAbstract_DrawingArea,
+  ClassAbstract_Sankey
 } from './Abstract'
 import type {
   Class_MenuConfig
@@ -20,7 +20,7 @@ import type {
 
 // Local modules imports
 import {
-  Class_Element
+  ClassTemplate_Element
 } from './Element'
 import {
   Type_ElementPosition,
@@ -34,9 +34,11 @@ import {
   const_default_position_x,
 } from './Utils'
 import {
-  Type_GenericNodeElementOS
-} from './TypesOS'
-import { Class_Handler } from './Handler'
+  Type_GenericNodeElement
+} from './Types'
+import {
+  ClassTemplate_Handler
+} from './Handler'
 
 
 // CLASS LEGEND *************************************************************************
@@ -45,15 +47,15 @@ import { Class_Handler } from './Handler'
  * Class that define how we draw legend for a Sankey
  *
  * @export
- * @class Class_Legend
- * @extends {Class_Element}
+ * @class ClassTemplate_Legend
+ * @extends {ClassTemplate_Element}
  */
-export class Class_Legend
+export class ClassTemplate_Legend
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey
   >
-  extends Class_Element
+  extends ClassTemplate_Element
   <
     Type_GenericDrawingArea,
     Type_GenericSankey
@@ -76,8 +78,8 @@ export class Class_Legend
   private _info_link_value_void: boolean = false
 
   private _drag_handler: {
-    left: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    right: Class_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    left: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    right: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
   }
 
   /**
@@ -85,7 +87,7 @@ export class Class_Legend
    * Souldn't have getter & setter public because the variable is only use & computed when we draw the legend
    * @private
    * @type {number}
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _dx: number = 0
 
@@ -94,7 +96,7 @@ export class Class_Legend
    * Souldn't have getter & setter public because the variable is only use & computed when we draw the legend
    * @private
    * @type {number}
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _dy: number = 0
 
@@ -105,14 +107,14 @@ export class Class_Legend
    *
    * @private
    * @type {number}
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _scale: number = 1
 
   /**
    * Text wrapper function
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _wrapper = textwrap()
     .bounds({ height: 100, width: this._width })
@@ -127,7 +129,7 @@ export class Class_Legend
    *     drawing_area: Type_GenericDrawingArea,
    *     position: Type_ElementPosition,
    *   }}
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
@@ -158,7 +160,7 @@ export class Class_Legend
     }
 
     this._drag_handler = {
-      left: new Class_Handler(
+      left: new ClassTemplate_Handler(
         'legend_left_handle_' + this.id,
         drawing_area,
         menu_config,
@@ -170,7 +172,7 @@ export class Class_Legend
         undefined,
         'grp_legend',
       ),
-      right: new Class_Handler(
+      right: new ClassTemplate_Handler(
         'legend_right_handle_' + this.id,
         drawing_area,
         menu_config,
@@ -182,13 +184,13 @@ export class Class_Legend
         undefined,
         'grp_legend',
       ),
-        
+
     }
   }
 
   // COPY METHODS =======================================================================
 
-  protected _copyFrom(_: Class_Legend<Type_GenericDrawingArea, Type_GenericSankey>): void {
+  protected _copyFrom(_: ClassTemplate_Legend<Type_GenericDrawingArea, Type_GenericSankey>): void {
     super._copyFrom(_)
     this._masked = _._masked
     this._dx = _._dx
@@ -268,7 +270,7 @@ export class Class_Legend
    * Function called in _afterFromJSON in ApplicationData,
    * the function correctly place legend as if it was in legacy despite being not anymore relative to DA
    *
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   public posIfFromLegacy() {
     if (this._pos_from_legacy) {
@@ -290,7 +292,7 @@ export class Class_Legend
    * _drawLegendBg with timeout
    *
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   public drawLegendBg() {
     this._process_or_bypass(() => this._drawLegendBg())
@@ -300,7 +302,7 @@ export class Class_Legend
    * _drawTagDisplayed with timeout
    *
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   public drawTagDisplayed() {
     this._process_or_bypass(() => this._drawTagDisplayed())
@@ -310,7 +312,7 @@ export class Class_Legend
    * _drawInfoDataType with timeout
    *
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   public drawInfoDataType() {
     this._process_or_bypass(() => this._drawInfoDataType())
@@ -320,7 +322,7 @@ export class Class_Legend
    * _drawInfoDashedLink with timeout
    *
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   public drawInfoDashedLink() {
     this._process_or_bypass(() => this._drawInfoDashedLink())
@@ -330,7 +332,7 @@ export class Class_Legend
    * _drawSankeyScale with timeout
    *
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   public drawSankeyScale() {
     this._process_or_bypass(() => this._drawSankeyScale())
@@ -552,7 +554,7 @@ export class Class_Legend
    * Function that draw the background of the legend, it is also used as draggable
    * element to move the legend
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _drawLegendBg() {
     this.d3_selection?.select('.g_drag_zone_leg').remove()
@@ -576,7 +578,7 @@ export class Class_Legend
    * Function to draw tags in legend that are used in the sankey
    * (when they're activated in the toolbar)
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _drawTagDisplayed() {
     const node_taggs = this.drawing_area.sankey.node_taggs_list
@@ -623,17 +625,17 @@ export class Class_Legend
               .on('mouseover', () => {
                 //Add event on hovering tag in legend that allow to highlight elemnt of the sankey that have the tag we are hovering
 
-                const nodes_tied_to_link_with_tag_hovered = ([] as Type_GenericNodeElementOS[])
+                const nodes_tied_to_link_with_tag_hovered = ([] as Type_GenericNodeElement[])
                 //Get nodes tied to links who have the tag we hovering & get the list of links that have the tag hovered
                 flux_list
                   .filter(l => {
                     if (l.hasGivenTag(tag)) {
-                      nodes_tied_to_link_with_tag_hovered.push(l.source as Type_GenericNodeElementOS)
-                      nodes_tied_to_link_with_tag_hovered.push(l.target as Type_GenericNodeElementOS)
+                      nodes_tied_to_link_with_tag_hovered.push(l.source as Type_GenericNodeElement)
+                      nodes_tied_to_link_with_tag_hovered.push(l.target as Type_GenericNodeElement)
                       return true
                     } else if (l.source.hasGivenTag(tag) && l.target.hasGivenTag(tag)) {
-                      nodes_tied_to_link_with_tag_hovered.push(l.source as Type_GenericNodeElementOS)
-                      nodes_tied_to_link_with_tag_hovered.push(l.target as Type_GenericNodeElementOS)
+                      nodes_tied_to_link_with_tag_hovered.push(l.source as Type_GenericNodeElement)
+                      nodes_tied_to_link_with_tag_hovered.push(l.target as Type_GenericNodeElement)
                       return true
                     }
                     l.d3_selection?.attr('opacity', 0.1)
@@ -643,7 +645,7 @@ export class Class_Legend
                 //Reduce opacity of all node that doesn't have the tag hovered or aren't tied to a link that have the tag hovered
                 node_list
                   .forEach(n => {
-                    if (!nodes_tied_to_link_with_tag_hovered.includes(n as Type_GenericNodeElementOS)) {
+                    if (!nodes_tied_to_link_with_tag_hovered.includes(n as Type_GenericNodeElement)) {
                       n.d3_selection?.attr('opacity', 0.1)
                     }
                   })
@@ -700,7 +702,7 @@ export class Class_Legend
   /**
    * Add text to describe why there is * in some link value
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _drawInfoDataType() {
     // Write information in the legend depending to the diagram representation:
@@ -728,7 +730,7 @@ export class Class_Legend
    * (because their value are undefined, only appear when data_type
    * is set to anything but structur)
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _drawInfoDashedLink() {
     this._dy += this._legend_police
@@ -759,7 +761,7 @@ export class Class_Legend
   /**
    * Add info zone in legend for "Sankey scale"
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private _drawSankeyScale() {
     // Update vertical offset
@@ -808,7 +810,7 @@ export class Class_Legend
    * _updateLegendHeight with timeout
    *
    * @private
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
    */
   private updateLegendHeight() {
     this._process_or_bypass(() => this.updateLegendHeight())

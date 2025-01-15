@@ -11,8 +11,13 @@ def create_app():
     app.config['SECRET_KEY'] = 'secret-key-goes-here'
 
     # Blueprint for OpenSankey part of app
-    from .views import opensankey as main_blueprint
-    app.register_blueprint(main_blueprint, url_prefix='/opensankey')
+    from .views import opensankey
+    from .views import converter_funct
+    from .converter import extract_json_from_sankey
+    from .converter import extract_sankey_from_json
+    converter_funct['extract_json_from_sankey'] = extract_json_from_sankey
+    converter_funct['extract_sankey_from_json'] = extract_sankey_from_json
+    app.register_blueprint(opensankey, url_prefix='/opensankey')
 
     # 404 handler
     def page_not_found(e):

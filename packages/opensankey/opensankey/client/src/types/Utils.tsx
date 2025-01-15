@@ -13,7 +13,7 @@ import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import * as d3 from 'd3'
 // Local type imports
-import type { OSTooltpFuncType } from '../configmenus/types/SankeyUtilsTypes'
+import type { OSTooltpFuncType } from '../components/configmenus/types/SankeyUtilsTypes'
 
 // SPECIFIC TYPES ************************************************************************
 

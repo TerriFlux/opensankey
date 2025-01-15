@@ -9,19 +9,19 @@ import {
   Class_NodeDimension
 } from './NodeDimension'
 import {
-  Class_AbstractDrawingArea,
-  Class_AbstractLevelTag,
-  Class_AbstractLevelTagGroup,
-  Class_AbstractSankey,
-  Class_AbstractTag,
-  Class_AbstractTagGroup
+  ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoLevelTag,
+  ClassAbstract_ProtoLevelTagGroup,
+  ClassAbstract_Sankey,
+  ClassAbstract_ProtoTag,
+  ClassAbstract_ProtoTagGroup
 } from './Abstract'
 import {
-  Class_AbstractNodeElement
+  ClassAbstract_NodeElement
 } from './AbstractNode'
 import {
-  Class_AbstractLinkElement,
-  Class_AbstractLinkValue
+  ClassAbstract_LinkElement,
+  ClassAbstract_LinkValue
 } from './AbstractLink'
 import {
   Type_JSON,
@@ -37,9 +37,9 @@ import colormap from 'colormap'
 
 export type tag_banner_type = 'none' | 'one' | 'multi' | 'level'
 
-type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
-type Type_TagReference = Type_AbstractNodeElement | Class_AbstractLinkValue
-type Type_DataTagReference = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
+type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+type TypeAbstract_TagReference = TypeAbstract_NodeElement | ClassAbstract_LinkValue
+type TypeAbstract_DataTagReference = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS PROTO TAG ***********************************************************************
 
@@ -47,7 +47,7 @@ type Type_DataTagReference = Class_AbstractLinkElement<Class_AbstractDrawingArea
  * Class that define a Tag object
  * @class Class_Tag
  */
-export abstract class Class_ProtoTag extends Class_AbstractTag {
+export abstract class Class_ProtoTag extends ClassAbstract_ProtoTag {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -78,7 +78,7 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
   protected abstract _group: Class_ProtoTagGroup
 
   // Sankey in which it applies
-  protected _ref_sankey: Class_AbstractSankey
+  protected _ref_sankey: ClassAbstract_Sankey
 
   // CONSTRUCTOR ========================================================================
 
@@ -90,7 +90,7 @@ export abstract class Class_ProtoTag extends Class_AbstractTag {
    */
   constructor(
     name: string,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
     id: string | undefined = undefined
   ) {
     super()
@@ -286,7 +286,7 @@ export abstract class Class_Tag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
   // List of elements that relates to this tag
-  private _references: { [_: string]: Type_TagReference } = {}
+  private _references: { [_: string]: TypeAbstract_TagReference } = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -305,7 +305,7 @@ export abstract class Class_Tag extends Class_ProtoTag {
   constructor(
     name: string,
     group: Class_TagGroup,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -339,18 +339,18 @@ export abstract class Class_Tag extends Class_ProtoTag {
     this._ref_sankey.drawing_area.legend.draw()
   }
 
-  public hasGivenReference(_: Type_TagReference) {
+  public hasGivenReference(_: TypeAbstract_TagReference) {
     return (this._references[_.id] !== undefined)
   }
 
-  public addReference(_: Type_TagReference) {
+  public addReference(_: TypeAbstract_TagReference) {
     if (!this.hasGivenReference(_)) {
       this._references[_.id] = _
       _.addTag(this)
     }
   }
 
-  public removeReference(_: Type_TagReference) {
+  public removeReference(_: TypeAbstract_TagReference) {
     if (this.hasGivenReference(_)) {
       delete this._references[_.id]
       _.removeTag(this)
@@ -408,7 +408,7 @@ export class Class_DataTag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
   // List of elements that relates to this tag
-  private _references: { [_: string]: Type_DataTagReference } = {}
+  private _references: { [_: string]: TypeAbstract_DataTagReference } = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -421,14 +421,14 @@ export class Class_DataTag extends Class_ProtoTag {
    * Creates an instance of Class_DataTag.
    * @param {string} name
    * @param {Class_TagGroup} group
-   * @param {Class_AbstractSankey} sankey
+   * @param {ClassAbstract_Sankey} sankey
    * @param {(string | undefined)} [id=undefined]
    * @memberof Class_DataTag
    */
   constructor(
     name: string,
     group: Class_DataTagGroup,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -497,7 +497,7 @@ export class Class_DataTag extends Class_ProtoTag {
  * Class that define a Tag object
  * @class Class_Tag
  */
-export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
+export abstract class Class_ProtoLevelTag extends ClassAbstract_ProtoLevelTag {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -528,7 +528,7 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
   protected abstract _group: Class_ProtoLevelTagGroup
 
   // Sankey in which it applies
-  protected _ref_sankey: Class_AbstractSankey
+  protected _ref_sankey: ClassAbstract_Sankey
 
   // CONSTRUCTOR ========================================================================
 
@@ -540,7 +540,7 @@ export abstract class Class_ProtoLevelTag extends Class_AbstractLevelTag {
    */
   constructor(
     name: string,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
     id: string | undefined = undefined
   ) {
     super()
@@ -706,7 +706,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   constructor(
     name: string,
     group: Class_LevelTagGroup,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
     id: string | undefined = undefined
   ) {
     super(name, sankey, id)
@@ -797,8 +797,8 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   //       const new_dim = new Class_NodeDimension(
   //         parent,
   //         children,
-  //         parent_level_tag as Class_AbstractLevelTag,
-  //         [this] as Class_AbstractLevelTag[],
+  //         parent_level_tag as ClassAbstract_ProtoLevelTag,
+  //         [this] as ClassAbstract_ProtoLevelTag[],
   //         dim.id
   //       )
   //       this.addAsChildrenLevel(new_dim)
@@ -856,7 +856,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   //       const new_dim = new Class_NodeDimension(
   //         parent,
   //         children,
-  //         this as Class_AbstractLevelTag,
+  //         this as ClassAbstract_ProtoLevelTag,
   //         children_level_tag,
   //         dim.id
   //       )
@@ -905,8 +905,8 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   }
 
   public getOrCreateLowerDimension(
-    parent: Type_AbstractNodeElement,
-    child: Type_AbstractNodeElement,
+    parent: TypeAbstract_NodeElement,
+    child: TypeAbstract_NodeElement,
     child_tag: Class_LevelTag
   ) {
 
@@ -938,7 +938,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
       dimension_found = new Class_NodeDimension(
         parent,
         [child],
-        this as Class_AbstractLevelTag,
+        this as ClassAbstract_ProtoLevelTag,
         child_tag
       )
     }
@@ -1009,7 +1009,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
  * @export
  * @class Class_TagGroup
  */
-export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
+export abstract class Class_ProtoTagGroup extends ClassAbstract_ProtoTagGroup {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -1035,7 +1035,7 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
 
   protected abstract _tags: { [id: string]: Class_ProtoTag }
 
-  protected _ref_sankey: Class_AbstractSankey
+  protected _ref_sankey: ClassAbstract_Sankey
 
   // CONSTRUCTOR ========================================================================
 
@@ -1045,7 +1045,7 @@ export abstract class Class_ProtoTagGroup extends Class_AbstractTagGroup {
    * @param {string} name
    * @memberof Class_TagGroup
    */
-  constructor(id: string, name: string, sankey: Class_AbstractSankey) {
+  constructor(id: string, name: string, sankey: ClassAbstract_Sankey) {
     super()
     this._id = id
     this._name = name
@@ -1332,7 +1332,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   constructor(
     id: string,
     name: string,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
   ) {
     super(id, name, sankey)
     // Default banner as multi
@@ -1366,10 +1366,10 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
         format: 'hex',
         alpha: 1
       })
-      let step = 1;
+      let step = 1
       if (nb_tags < 11) {
-          // colormap is sampled uniformly between the first index and the last
-          step = Math.round(11 / nb_tags);
+        // colormap is sampled uniformly between the first index and the last
+        step = Math.round(11 / nb_tags)
       }
       Object.values(this._tags).forEach((tag,i)=>tag.color = colors[i*step])
     }
@@ -1386,7 +1386,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   // PUBLIC METHODS =====================================================================
 
   public updateTagsReferences(): void {
-    const ref_updated: Type_TagReference[] = []
+    const ref_updated: TypeAbstract_TagReference[] = []
     Object.values(this._tags)
       .forEach(tag => {
         tag.references
@@ -1467,7 +1467,7 @@ export class Class_NodeTagGroup extends Class_TagGroup {
   constructor(
     id: string,
     name: string,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
     with_a_tag: boolean = true
   ) {
     super(id, name, sankey)
@@ -1514,7 +1514,7 @@ export class Class_FluxTagGroup extends Class_TagGroup {
   constructor(
     id: string,
     name: string,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
     with_a_tag: boolean = true
   ) {
     super(id, name, sankey)
@@ -1567,7 +1567,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   constructor(
     id: string,
     name: string,
-    sankey: Class_AbstractSankey,
+    sankey: ClassAbstract_Sankey,
     with_a_tag: boolean = true
   ) {
     super(id, name, sankey)
@@ -1712,7 +1712,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
  * @export
  * @class Class_TagGroup
  */
-export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGroup {
+export abstract class Class_ProtoLevelTagGroup extends ClassAbstract_ProtoLevelTagGroup {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -1730,7 +1730,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
 
   protected abstract _tags: { [id: string]: Class_ProtoLevelTag }
 
-  protected _ref_sankey: Class_AbstractSankey
+  protected _ref_sankey: ClassAbstract_Sankey
 
   /**
    * True if tag is currently on a deletion process
@@ -1748,7 +1748,7 @@ export abstract class Class_ProtoLevelTagGroup extends Class_AbstractLevelTagGro
    * @param {string} name
    * @memberof Class_TagGroup
    */
-  constructor(id: string, name: string, sankey: Class_AbstractSankey) {
+  constructor(id: string, name: string, sankey: ClassAbstract_Sankey) {
     super()
     this._id = id
     this._name = name
@@ -2016,7 +2016,7 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
 
   private _activated: boolean = false
   private _siblings: string[] = []
-  private _antitagged_refs: Type_AbstractNodeElement[] = []
+  private _antitagged_refs: TypeAbstract_NodeElement[] = []
 
   // CLEANING METHODS ===================================================================
 
@@ -2070,14 +2070,14 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     }).map(tagg => this._ref_sankey.level_taggs_dict[tagg])
   }
 
-  public addAntiTaggedRef(_: Type_AbstractNodeElement) {
+  public addAntiTaggedRef(_: TypeAbstract_NodeElement) {
     if (!this._antitagged_refs.includes(_)) {
       this._antitagged_refs.push(_)
       _.addAsAntiTagged(this)
     }
   }
 
-  public removeAntiTaggedRef(_: Type_AbstractNodeElement) {
+  public removeAntiTaggedRef(_: TypeAbstract_NodeElement) {
     if (this._antitagged_refs.includes(_)) {
       const idx = this._antitagged_refs.indexOf(_)
       this._antitagged_refs.splice(idx, 1)
