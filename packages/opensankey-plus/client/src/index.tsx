@@ -22,7 +22,7 @@ import { createRoot } from 'react-dom/client'
 // Local imports ====================================================================================
 
 import './traductions/traduction'
-import { SankeyAppOSP } from './SankeyApp'
+import { OpenSankeyPlusApp } from './AppOSP'
 
 // CONSTANTS =========================================================================================
 
@@ -42,5 +42,5 @@ window.React = React
 const container = document.getElementById('react-container') as Element | DocumentFragment
 const root = createRoot(container)
 
-root.render(SankeyAppOSP)
+root.render(OpenSankeyPlusApp)
 
