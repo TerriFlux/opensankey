@@ -11,18 +11,18 @@ import {
   Class_MenuConfig
 } from './MenuConfig'
 import {
-  Class_AbstractDrawingArea,
-  Class_AbstractSankey
+  ClassAbstract_DrawingArea,
+  ClassAbstract_Sankey
 } from './Abstract'
 import {
-  Class_LinkElement,
+  ClassTemplate_LinkElement,
   Class_LinkStyle,
   defaultLinkId,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from './Link'
 import {
-  Class_NodeElement,
+  ClassTemplate_NodeElement,
   Class_NodeStyle,
   sortNodesElements
 } from './Node'
@@ -81,22 +81,22 @@ export function get_sync_lists(
  * Contains all necessary elements to draw a Sankey
  *
  * @export
- * @class Class_Sankey
+ * @class ClassTemplate_Sankey
  */
-export abstract class Class_Sankey
+export abstract class ClassTemplate_Sankey
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericNodeElement extends Class_NodeElement<Type_GenericDrawingArea, Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>,
-    Type_GenericLinkElement extends Class_LinkElement<Type_GenericDrawingArea, Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement>,
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericNodeElement extends ClassTemplate_NodeElement<Type_GenericDrawingArea, ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>,
+    Type_GenericLinkElement extends ClassTemplate_LinkElement<Type_GenericDrawingArea, ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement>,
   >
-  extends Class_AbstractSankey {
+  extends ClassAbstract_Sankey {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
   /**
    * Drawing area where sankey belongs
    * @type {Type_GenericDrawingArea}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public drawing_area: Type_GenericDrawingArea
 
@@ -106,7 +106,7 @@ export abstract class Class_Sankey
    * Config menu ref to html element & function to update it
    * @protected
    * @type {Class_MenuConfig}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   protected _menu_config: Class_MenuConfig
 
@@ -114,7 +114,7 @@ export abstract class Class_Sankey
    * Use a status key to indicated that something has change on datatags
    * @protected
    * @type {string}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   protected _node_tags_fingerprint: string
   protected _flux_tags_fingerprint: string
@@ -127,7 +127,7 @@ export abstract class Class_Sankey
    *
    * @private
    * @type {string}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   private _id: string
 
@@ -136,7 +136,7 @@ export abstract class Class_Sankey
    *
    * @protected
    * @type {{ [_: string]: Type_GenericNodeElement }}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   protected _nodes: { [_: string]: Type_GenericNodeElement } = {}
 
@@ -156,9 +156,9 @@ export abstract class Class_Sankey
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of Class_Sankey.
+   * Creates an instance of ClassTemplate_Sankey.
    * @param {Type_GenericDrawingArea} drawing_area
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   constructor(
     drawing_area: Type_GenericDrawingArea,
@@ -209,10 +209,10 @@ export abstract class Class_Sankey
 
   /**
    * Copy everything from input sankey to copy
-   * @param {Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>} sankey_to_copy
-   * @memberof Class_Sankey
+   * @param {ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>} sankey_to_copy
+   * @memberof ClassTemplate_Sankey
    */
-  public copyFrom(sankey_to_copy: Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>): void {
+  public copyFrom(sankey_to_copy: ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>): void {
     // First clean everything
     this.delete()
     // Then copy tags
@@ -274,12 +274,12 @@ export abstract class Class_Sankey
    * - 'tagNode' - Copy node tags
    * - 'tagFlux' - Copy flux tags
    * - 'tagData' - Copy data tags
-   * @param {Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>} other_sankey
+   * @param {ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>} other_sankey
    * @param {string[]} mode
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public updateFrom(
-    other_sankey: Class_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
+    other_sankey: ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
     mode: string[],
   ) {
     const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
@@ -716,7 +716,7 @@ export abstract class Class_Sankey
    * @param {boolean} [only_visible_elements=false]
    * @param {boolean} [with_values=true]
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public toJSON(
     only_visible_elements: boolean = default_save_only_visible_elements,
@@ -786,7 +786,7 @@ export abstract class Class_Sankey
    * Setting value of sankey and substructur from JSON
    *
    * @param {{[_:string]:any} json_object
-   * @memberof Class_Legend
+   * @memberof ClassTemplate_Legend
   */
   public fromJSON(
     json_object: Type_JSON,
@@ -1127,7 +1127,7 @@ export abstract class Class_Sankey
    * @param {string} id
    * @param {string} name
    * @return {Class_Node}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewNode(id: string, name: string): Type_GenericNodeElement {
     if (!this._nodes[id]) {
@@ -1147,7 +1147,7 @@ export abstract class Class_Sankey
   /**
    * Create and add a node for this Sankey with default name
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewDefaultNode(): Type_GenericNodeElement {
     const n = String(Object.values(this._nodes).length)
@@ -1160,7 +1160,7 @@ export abstract class Class_Sankey
   * Get a specific node from this Sankey
   * @param {string} id
   * @return {*}
-  * @memberof Class_Sankey
+  * @memberof ClassTemplate_Sankey
   */
   public getNode(id: string) {
     if (id in this._nodes) {
@@ -1172,7 +1172,7 @@ export abstract class Class_Sankey
   /**
    * Delete a given node from Sankey -> node may still exist somewhere
    * @param {Class_Node} node
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public deleteNode(node: Type_GenericNodeElement) {
     if (this._nodes[node.id] !== undefined) {
@@ -1195,7 +1195,7 @@ export abstract class Class_Sankey
    * @param {Type_GenericNodeElement} source
    * @param {Type_GenericNodeElement} target
    * @return {*}  {Type_GenericLinkElement}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewLink(
     source: Type_GenericNodeElement,
@@ -1217,7 +1217,7 @@ export abstract class Class_Sankey
    * @param {Type_GenericNodeElement} source
    * @param {Type_GenericNodeElement} target
    * @return {*}  {Type_GenericLinkElement}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewLinkWithId(
     id: string,
@@ -1240,7 +1240,7 @@ export abstract class Class_Sankey
   /**
    * Create a new default link : select a default source and default target
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewDefaultLink() {
     let source: Type_GenericNodeElement
@@ -1267,7 +1267,7 @@ export abstract class Class_Sankey
    *
    * @param {string} id
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public getLink(id: string) {
     if (id in this._links) {
@@ -1279,7 +1279,7 @@ export abstract class Class_Sankey
   /**
    * Remove a given link from sankey
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public removeLink(link: Type_GenericLinkElement) {
     delete this._links[link.id]
@@ -1290,7 +1290,7 @@ export abstract class Class_Sankey
   /**
    * Create a new default style for node
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewDefaultNodeStyle() {
     const _ = String(this.node_styles_list.length)
@@ -1304,7 +1304,7 @@ export abstract class Class_Sankey
    * @param {string} id
    * @param {string} name
    * @return {*}  {Class_NodeStyle}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewNodeStyle(
     id: string,
@@ -1323,7 +1323,7 @@ export abstract class Class_Sankey
   /**
    * Delete a given style
    * @param {Class_NodeStyle} style
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public deleteNodeStyle(style: Class_NodeStyle) {
     if (this._node_styles[style.id] !== undefined) {
@@ -1335,7 +1335,7 @@ export abstract class Class_Sankey
   /**
    * Create a new default style for link
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewDefaultLinkStyle() {
     const _ = String(this.link_styles_list.length)
@@ -1349,7 +1349,7 @@ export abstract class Class_Sankey
    * @param {string} id
    * @param {string} name
    * @return {*}  {Class_LinkStyle}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public addNewLinkStyle(
     id: string,
@@ -1368,7 +1368,7 @@ export abstract class Class_Sankey
   /**
    * Delete a given style
    * @param {Class_NodeStyle} style
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public deleteLinkStyle(style: Class_LinkStyle) {
     if (this._link_styles[style.id] !== undefined) {
@@ -1472,7 +1472,7 @@ export abstract class Class_Sankey
    * Create a TagGroup and add it to to specified group
    *
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public createTagGroup(type_group: Type_MacroTagGroup) {
     // Get a new id
@@ -1498,7 +1498,7 @@ export abstract class Class_Sankey
    * Properly remove tag group related to given id
    * @param {Type_MacroTagGroup} type_group
    * @param {string} id
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public removeTagGroupWithId(type_group: Type_MacroTagGroup, id: string) {
     const macro_tag_group = this.getTagGroupsAsDict(type_group)
@@ -1519,7 +1519,7 @@ export abstract class Class_Sankey
    * Properly remove tag group
    * @param {Type_MacroTagGroup} type_group
    * @param {Class_NodeTagGroup | Class_FluxTagGroup | Class_LevelTagGroup | Class_DataTagGroup} tagg
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public removeTagGroup(
     type_group: Type_MacroTagGroup,
@@ -1532,7 +1532,7 @@ export abstract class Class_Sankey
    * Return list of group tag from specified group type
    * @param {Type_MacroTagGroup} type_group
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public getTagGroupsAsList(type_group: Type_MacroTagGroup) {
     return Object.values(this.getTagGroupsAsDict(type_group))
@@ -1542,7 +1542,7 @@ export abstract class Class_Sankey
    * Return dict of group tag from specified group type
    * @param {Type_MacroTagGroup} type_group
    * @return {*}
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public getTagGroupsAsDict(type_group: Type_MacroTagGroup) {
     if (type_group === 'node_taggs') {
@@ -1561,7 +1561,7 @@ export abstract class Class_Sankey
 
   /**
    * Update data tags random key to ensure that element's visibilty will be recalculated
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public nodeTagsUpdated() {
     this._node_tags_fingerprint = randomId()
@@ -1569,7 +1569,7 @@ export abstract class Class_Sankey
 
   /**
    * Update data tags random key to ensure that element's visibilty will be recalculated
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public fluxTagsUpdated() {
     this._flux_tags_fingerprint = randomId()
@@ -1577,7 +1577,7 @@ export abstract class Class_Sankey
 
   /**
    * Update data tags random key to ensure that element's visibilty will be recalculated
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public dataTagsUpdated() {
     this._data_tags_fingerprint = randomId()
@@ -1590,7 +1590,7 @@ export abstract class Class_Sankey
   /**
    * Add a given node to Sankey
    * @param {Class_Node} node
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   protected _addNode(node: Type_GenericNodeElement) { this._nodes[node.id] = node }
 
@@ -1599,7 +1599,7 @@ export abstract class Class_Sankey
   /**
    * Add a given link to Sankey
    * @param {Type_GenericLinkElement} link
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   private _addLink(link: Type_GenericLinkElement) {
     this._links[link.id] = link
@@ -1616,7 +1616,7 @@ export abstract class Class_Sankey
   /**
    * Get all nodes as dict
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get nodes_dict() {
     return this._nodes
@@ -1624,7 +1624,7 @@ export abstract class Class_Sankey
 
   /**
    * Sorts nodes from lower v coordinates to higher v
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public sortNodes() {
     const echangeTag = this.node_taggs_dict['type de noeud']?this.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
@@ -1663,7 +1663,7 @@ export abstract class Class_Sankey
   /**
    * Get all nodes as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get nodes_list(): Type_GenericNodeElement[] {
     return Object.values(this._nodes)
@@ -1672,7 +1672,7 @@ export abstract class Class_Sankey
   /**
    * Get all nodes sorted by their names as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get nodes_list_sorted(): Type_GenericNodeElement[] {
     return this.nodes_list
@@ -1682,7 +1682,7 @@ export abstract class Class_Sankey
   /**
    * Get all visible nodes as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get visible_nodes_list(): Type_GenericNodeElement[] {
     return Object.values(this._nodes)
@@ -1692,7 +1692,7 @@ export abstract class Class_Sankey
   /**
    * Get all nodes sorted by their names as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get visible_nodes_list_sorted(): Type_GenericNodeElement[] {
     return this.visible_nodes_list
@@ -1704,7 +1704,7 @@ export abstract class Class_Sankey
   /**
    * Return a dict with all the links of the sankey
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get links_dict() {
     return this._links
@@ -1713,7 +1713,7 @@ export abstract class Class_Sankey
   /**
    * Return a list with all the links of the sankey
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get links_list(): Type_GenericLinkElement[] {
     return Object.values(this._links)
@@ -1722,7 +1722,7 @@ export abstract class Class_Sankey
   /**
    * Get all nodes sorted by their names as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get links_list_sorted(): Type_GenericLinkElement[] {
     return this.links_list
@@ -1732,7 +1732,7 @@ export abstract class Class_Sankey
   /**
    * Get all visible links as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get visible_links_list(): Type_GenericLinkElement[] {
     return Object.values(this._links)
@@ -1742,7 +1742,7 @@ export abstract class Class_Sankey
   /**
    * Get all links sorted by their names as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get visible_links_list_sorted(): Type_GenericLinkElement[] {
     return this.visible_links_list
@@ -1754,7 +1754,7 @@ export abstract class Class_Sankey
   /**
    * Return the object containing all the style
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get node_styles_dict() {
     return this._node_styles
@@ -1763,7 +1763,7 @@ export abstract class Class_Sankey
   /**
    * Return default style for nodes
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get default_node_style() {
     return this._node_styles[default_style_id]
@@ -1772,7 +1772,7 @@ export abstract class Class_Sankey
   /**
    * Return all the style as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get node_styles_list() {
     return Object.values(this._node_styles)
@@ -1781,7 +1781,7 @@ export abstract class Class_Sankey
   /**
    * Return all the style as a sorted list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get node_styles_list_sorted() {
     return this.node_styles_list
@@ -1791,7 +1791,7 @@ export abstract class Class_Sankey
   /**
    * Return the object containing all the style
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get link_styles_dict() {
     return this._link_styles
@@ -1800,14 +1800,14 @@ export abstract class Class_Sankey
   /**
    * Return default link style
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public abstract get default_link_style(): Class_LinkStyle
 
   /**
    * Return all the style as a list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get link_styles_list() {
     return Object.values(this._link_styles)
@@ -1816,7 +1816,7 @@ export abstract class Class_Sankey
   /**
    * Return all the style as a sorted list
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get link_styles_list_sorted() {
     return this.link_styles_list
@@ -1869,7 +1869,7 @@ export abstract class Class_Sankey
    * Return an array  of id of tag selected of that data_taggs
    *
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get selected_data_tags_list() {
     const data_tags: Class_DataTag[] = []
@@ -1884,7 +1884,7 @@ export abstract class Class_Sankey
    * and value an array of id of tag selected of that data_taggs
    *
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get selected_data_tags_entries() {
     const obj_data_tags_selected: { [x: string]: Class_DataTag } = {}
@@ -1912,7 +1912,7 @@ export abstract class Class_Sankey
    * ]
    * *
    * @readonly
-   * @memberof Class_Sankey
+   * @memberof ClassTemplate_Sankey
    */
   public get list_combinatorial_data_taggs_path() {
     const list_tag_by_grp: string[][] = []

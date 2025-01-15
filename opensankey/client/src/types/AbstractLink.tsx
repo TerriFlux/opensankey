@@ -7,21 +7,21 @@
 // ==================================================================================================
 
 import {
-  Class_AbstractDrawingArea,
-  Class_AbstractSankey,
-  Class_AbstractTag
+  ClassAbstract_DrawingArea,
+  ClassAbstract_Sankey,
+  ClassAbstract_ProtoTag
 } from './Abstract'
-import { Class_AbstractNodeElement } from './AbstractNode'
-import { Class_ProtoElement } from './Element'
+import { ClassAbstract_NodeElement } from './AbstractNode'
+import { ClassTemplate_ProtoElement } from './Element'
 
 
-type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
-export abstract class Class_AbstractLinkElement
+type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+export abstract class ClassAbstract_LinkElement
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey
   >
-  extends Class_ProtoElement
+  extends ClassTemplate_ProtoElement
   <
     Type_GenericDrawingArea,
     Type_GenericSankey
@@ -29,29 +29,29 @@ export abstract class Class_AbstractLinkElement
 {
   // Mandatory methods
   public abstract drawWithNodes(): void;
-  public abstract addDataTag(_: Class_AbstractTag): void;
-  public abstract removeDataTag(_: Class_AbstractTag): void;
-  public abstract getAllValues(): { [_: string]: [Class_AbstractLinkValue, Class_AbstractTag[] | undefined]; };
-  public abstract hasGivenTag(tag: Class_AbstractTag):boolean
+  public abstract addDataTag(_: ClassAbstract_ProtoTag): void;
+  public abstract removeDataTag(_: ClassAbstract_ProtoTag): void;
+  public abstract getAllValues(): { [_: string]: [ClassAbstract_LinkValue, ClassAbstract_ProtoTag[] | undefined]; };
+  public abstract hasGivenTag(tag: ClassAbstract_ProtoTag):boolean
   // Mandatory getters / setters
-  public abstract get source():Type_AbstractNodeElement;
-  public abstract get target():Type_AbstractNodeElement;
+  public abstract get source():TypeAbstract_NodeElement;
+  public abstract get target():TypeAbstract_NodeElement;
   public abstract set shape_arrow_path(_: string)
-  public abstract get value() : Class_AbstractLinkValue | null
+  public abstract get value() : ClassAbstract_LinkValue | null
 }
 
-export abstract class Class_AbstractLinkValue {
+export abstract class ClassAbstract_LinkValue {
   // Mandatory methods
   public abstract draw(): void
-  public abstract addTag(_: Class_AbstractTag): void
-  public abstract removeTag(_: Class_AbstractTag): void
-  public abstract getAllValues(): { [_: string]: [Class_AbstractLinkValue, Class_AbstractTag[] | undefined]; };
+  public abstract addTag(_: ClassAbstract_ProtoTag): void
+  public abstract removeTag(_: ClassAbstract_ProtoTag): void
+  public abstract getAllValues(): { [_: string]: [ClassAbstract_LinkValue, ClassAbstract_ProtoTag[] | undefined]; };
   // Mandatory getters / setters
   public abstract get id(): string
   public abstract get data_value() : number | null
 }
 
-export abstract class Class_AbstractLinkStyle {
+export abstract class ClassAbstract_LinkStyle {
   // Mandatory getters / setters
   public abstract get id(): string
 }

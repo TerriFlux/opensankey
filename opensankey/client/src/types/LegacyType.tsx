@@ -1,6 +1,6 @@
 import { MutableRefObject } from 'react'
-import { FType_SetDiagram } from '../configmenus/types/SankeyMenuBannerTypes'
-import { Type_GenericApplicationDataOS } from './TypesOS'
+import { FType_SetDiagram } from '../components/configmenus/types/SankeyMenuBannerTypes'
+import { Type_GenericApplicationData } from './Types'
 import { Type_JSON } from './Utils'
 
 export type SankeyNodeAttrLocal = {
@@ -32,7 +32,7 @@ export type SankeyNodeAttrLocal = {
   label_horiz_valeur?: string,
   value_font_size?: number,
   label_horiz_shift?: number,
-  name_label_horiz_shift?: number,  
+  name_label_horiz_shift?: number,
 
   value_label_horiz_shift?: number,
   label_horiz_valeur_shift?: number,
@@ -75,7 +75,7 @@ export type SankeyNodeStyle = {
   label_vert_valeur: string,
   label_horiz_valeur: string,
   value_font_size: number,
-  
+
   value_label_horiz_shift: number,
   label_horiz_valeur_shift: number,
   value_label_vert_shift: number,
@@ -84,7 +84,7 @@ export type SankeyNodeStyle = {
   label_vert_shift: number,
   name_label_vert_shift : number,
   label_horiz_shift: number,
-  name_label_horiz_shift: number, 
+  name_label_horiz_shift: number,
 
   relative_dx: number
   relative_dy: number
@@ -322,7 +322,7 @@ export type applicationDataType = {
   // min_link_thickness: number,
   dataVarToUpdate: MutableRefObject<string[]>,
   setDiagram: FType_SetDiagram,
-  new_data: Type_GenericApplicationDataOS
+  new_data: Type_GenericApplicationData
 }
 
 /*****************************************************************************/
