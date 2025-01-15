@@ -38,11 +38,12 @@ import SankeyExcelParser.su_trace as trace
 # Sankey modules
 from SankeyExcelParser.sankey import Sankey
 
-# Local modules
-from . import converter
-
 # ---------------------------------------------------------------
-# Create opensankey app blueprint
+# Shared vars
+converter_funct = {
+    'extract_sankey_from_json': None,
+    'extract_json_from_sankey': None
+}
 
 template_folder = os.path.join(
     os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'),
@@ -52,6 +53,7 @@ static_folder = os.path.join(
     os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'), 'build'),
     'static'
 )
+
 opensankey = Blueprint(
     'opensankey',
     __name__,
@@ -59,6 +61,7 @@ opensankey = Blueprint(
     template_folder=template_folder,
     static_url_path='/static/opensankey'
 )
+
 image_template_folder = os.path.join(
     os.path.join(
         os.path.join(
@@ -89,7 +92,7 @@ def goto(adress):
     return render_template(adress)
 
 
-@opensankey.route('/sankey/save_excel', methods=['POST'])
+@opensankey.route('/excel/save', methods=['POST'])
 def save_excel():
     '''
     HTTP POST request to save Sankey as Excel
@@ -106,7 +109,7 @@ def save_excel():
     try:
         sankey_as_data = request.get_data().decode("utf-8")
         sankey_as_json = json.loads(sankey_as_data)
-        sankey = converter.extract_sankey_from_json(sankey_as_json)
+        sankey = converter_funct['extract_sankey_from_json'](sankey_as_json)
     except Exception as excpt:
         return Response(
             response='save_excel: ' + str(excpt),
@@ -136,6 +139,17 @@ def save_excel():
     return Response(status=200)
 
 
+@opensankey.route('/excel/save/post_clean', methods=['POST'])
+def clean_excel():
+    cwd = os.getcwd()
+    excel_filename = os.path.join(cwd, "tutu.xlsx")
+    os.remove(excel_filename)
+    response = Response(
+        status=200
+    )
+    return response
+
+
 def cut_layout(layout):
     '''
     Split the layout string to substring in an array, each substring is as long as 32767 character maximum wich
@@ -150,18 +164,70 @@ def cut_layout(layout):
     return [layout[i: i + 32767] for i in range(0, len(layout), 32767)]
 
 
-@opensankey.route('/sankey/clean_excel', methods=['POST'])
-def clean_excel():
-    cwd = os.getcwd()
-    excel_filename = os.path.join(cwd, "tutu.xlsx")
-    os.remove(excel_filename)
-    response = Response(
-        status=200
-    )
-    return response
+@opensankey.route('/excel/upload/check_process', methods=['POST'])
+def excel_check_process():
+    if "load_started" not in session or session["load_started"] is False:
+        trace.logger.debug(session['base_filename'])
+        trace.logger.debug('not started')
+        return Response(
+            json.dumps({}),
+            status=200,
+            mimetype='application/json'
+        )
+    try:
+        # trace.logger.debug(session['base_filename'])
+        # trace.logger.debug('open')
+        if os.path.isfile(session['base_filename']):
+            # trace.logger.debug('is file')
+            f = open(session['base_filename'], "r")
+            # trace.logger.debug('opened')
+            results = f.read()
+            # trace.logger.debug('read')
+            results_dict = {"output": results}
+            json_data = json.dumps(results_dict)
+            # trace.logger.debug('dumps')
+            return Response(
+                json_data,
+                status=200,
+                mimetype='application/json'
+            )
+        else:
+            return Response(
+                json.dumps({'output':  'ERROR: excel/upload/check_process: le fichier tmp_log n\'existe pas.'}),
+                status=500,
+                mimetype='application/json'
+            )
+    except json.JSONDecodeError:
+        return Response(
+            json.dumps({'output':  'ERROR: excel/upload/check_process: le fichier tmp_log ne peut pas être ouvert.'}),
+            status=500,
+            mimetype='application/json')
 
 
-@opensankey.route('/sankey/upload_excel', methods=['POST'])
+@opensankey.route('/excel/upload/retrieve_results', methods=['POST'])
+def load_retrieves_result():
+    session['load_started'] = False
+    try:
+        json_file = open(session['output_file_name'], encoding="utf-8", mode="r")
+        json_data = json.load(json_file)
+        json_file.close()
+        response = Response(
+            json.dumps(json_data),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    except Exception:
+        trace.logger.error('load_retrieves_result failed')
+        response = Response(
+            json.dumps('{}'),
+            status=510,
+            mimetype='application/json'
+        )
+        return response
+
+
+@opensankey.route('/excel/upload/launch', methods=['POST'])
 def upload_excel():
     '''
     HTTP POST request to upload Sankey from Excel file
@@ -272,7 +338,7 @@ def upload_excel_thread(
     # Step 2 : Extract sankey data
     trace.logger.info('{:-<{w}}'.format('Extract diagram structure ', w=max_line_length))
     try:
-        sankey_json = converter.extract_json_from_sankey(sankey)
+        sankey_json = converter_funct['extract_json_from_sankey'](sankey)
         trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
     except Exception as expt:
         trace.logger.error('Extract Diagram Structure Failed: ' + str(expt))
@@ -333,7 +399,7 @@ def upload_excel_thread(
         return
 
 
-@opensankey.route('/sankey/upload_examples', methods=['POST'])
+@opensankey.route('/example/upload', methods=['POST'])
 def upload_exemple():
     session['load_started'] = True
     tmp_dir = tempfile.mkdtemp()
@@ -409,7 +475,7 @@ def upload_exemple():
         return response
 
 
-@opensankey.route('/sankey/download_examples', methods=['POST'])
+@opensankey.route('/example/download', methods=['POST'])
 def download_examples():
     data_folder = os.environ.get('MFAData')
     # exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
@@ -565,7 +631,7 @@ def parse_folder(current_dir, menus, key=None):
     return exemple_found
 
 
-@opensankey.route('/sankey/menus_templates', methods=['POST'])
+@opensankey.route('/menus/templates', methods=['POST'])
 def menus_templates():
     """
     Return data from MFAData/Modèles/Template
@@ -590,7 +656,7 @@ def menus_templates():
     return response
 
 
-@opensankey.route('/sankey/menu_examples', methods=['POST'])
+@opensankey.route('/menus/examples', methods=['POST'])
 def menus_examples():
     """
     _summary_
@@ -641,7 +707,7 @@ def menus_examples():
     return response
 
 
-@opensankey.route('/sankey/data_tuto', methods=['POST'])
+@opensankey.route('/menus/tutorials', methods=['POST'])
 def data_tuto():
     """
     Return data from MFAData/Formation/Tutoriels
@@ -664,69 +730,6 @@ def data_tuto():
     )
 
     return response
-
-
-@opensankey.route('/loads_retrieves_result', methods=['POST'])
-def load_retrieves_result():
-    session['load_started'] = False
-    try:
-        json_file = open(session['output_file_name'], encoding="utf-8", mode="r")
-        json_data = json.load(json_file)
-        json_file.close()
-        response = Response(
-            json.dumps(json_data),
-            status=200,
-            mimetype='application/json'
-        )
-        return response
-    except Exception:
-        trace.logger.error('load_retrieves_result failed')
-        response = Response(
-            json.dumps('{}'),
-            status=510,
-            mimetype='application/json'
-        )
-        return response
-
-
-@opensankey.route('/load_process', methods=['POST'])
-def load_process():
-    if "load_started" not in session or session["load_started"] is False:
-        trace.logger.debug(session['base_filename'])
-        trace.logger.debug('not started')
-        return Response(
-            json.dumps({}),
-            status=200,
-            mimetype='application/json'
-        )
-    try:
-        # trace.logger.debug(session['base_filename'])
-        # trace.logger.debug('open')
-        if os.path.isfile(session['base_filename']):
-            # trace.logger.debug('is file')
-            f = open(session['base_filename'], "r")
-            # trace.logger.debug('opened')
-            results = f.read()
-            # trace.logger.debug('read')
-            results_dict = {"output": results}
-            json_data = json.dumps(results_dict)
-            # trace.logger.debug('dumps')
-            return Response(
-                json_data,
-                status=200,
-                mimetype='application/json'
-            )
-        else:
-            return Response(
-                json.dumps({'output':  'ERROR: load_process: le fichier tmp_log n\'existe pas.'}),
-                status=500,
-                mimetype='application/json'
-            )
-    except json.JSONDecodeError:
-        return Response(
-            json.dumps({'output':  'ERROR:load_process: le fichier tmp_log ne peut pas être ouvert.'}),
-            status=500,
-            mimetype='application/json')
 
 
 def _html_to_image(
@@ -804,7 +807,7 @@ def _html_to_image(
             os.remove(output_filename+'.pdf')
 
 
-@opensankey.route('/sankey/save_svg', methods=['POST'])
+@opensankey.route('/save/svg', methods=['POST'])
 def save_svg():
     '''
     HTTP POST request to save current sankey as PNG
@@ -826,7 +829,7 @@ def save_svg():
     return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
 
 
-@opensankey.route('/sankey/save_png', methods=['POST'])
+@opensankey.route('/save/png', methods=['POST'])
 def save_png():
     '''
     HTTP POST request to save current sankey as PNG
@@ -859,7 +862,7 @@ def save_png():
 
 
 # Create opensanker app routes
-@opensankey.route('/sankey/save_pdf', methods=['POST'])
+@opensankey.route('/save/pdf', methods=['POST'])
 def save_pdf():
     '''
     HTTP POST request to save current sankey as PDF
@@ -883,7 +886,7 @@ def save_pdf():
     return send_file(os.path.join(os.getcwd(), filename), as_attachment=True)
 
 
-@opensankey.route('/sankey/clean_svg', methods=['POST'])
+@opensankey.route('/save/svg/post_clean', methods=['POST'])
 def clean_svg():
     '''
     HTTP POST request to remove remaining generated png image
@@ -897,7 +900,7 @@ def clean_svg():
     return clean_file("tutu.svg", "CLEAN_SVG")
 
 
-@opensankey.route('/sankey/clean_png', methods=['POST'])
+@opensankey.route('/save/png/post_clean', methods=['POST'])
 def clean_png():
     '''
     HTTP POST request to remove remaining generated png image
@@ -911,7 +914,7 @@ def clean_png():
     return clean_file("tutu.png", "CLEAN_PNG")
 
 
-@opensankey.route('/sankey/clean_pdf', methods=['POST'])
+@opensankey.route('/save/pdf/post_clean', methods=['POST'])
 def clean_pdf():
     '''
     HTTP POST request to remove remaining generated pdf image

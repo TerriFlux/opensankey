@@ -3,8 +3,8 @@ import { Dispatch, MutableRefObject, SetStateAction, FunctionComponent } from 'r
 
 import {
   Type_AdditionalMenus,
-  Type_GenericApplicationDataOS
-} from './TypesOS'
+  Type_GenericApplicationData
+} from './Types'
 import {
   Type_JSON
 } from './Utils'
@@ -12,18 +12,18 @@ import {
   FType_ClickSaveDiagram,
   FType_RetrieveExcelResults,
   FType_UploadExcelImpl
-} from '../dialogs/types/SankeyPersistenceTypes'
+} from '../components/dialogs/types/SankeyPersistenceTypes'
 import {
   FType_DiagramSelector,
   FType_InitializeDiagrammSelector
-} from '../dialogs/types/SankeyMenuDialogsTypes'
+} from '../components/dialogs/types/SankeyMenuDialogsTypes'
 import {
   FCType_ModalWelcomeBuilder
-} from '../welcome/types/ModalWelcome'
+} from '../components/welcome/types/ModalWelcome'
 
 // Function components prototypes =================================================================
 
-export type FCType_SankeyApp = {
+export type FCType_OpenSankeyApp = {
   initializeApplicationData: FType_InitializeApplicationData,
   initializeMenuConfiguration: FType_InitializeMenuConfiguration,
   initializeReinitialization: FType_InitializeReinitialization,
@@ -35,27 +35,27 @@ export type FCType_SankeyApp = {
 }
 
 export type FCType_ExcelModal = {
-  new_data: Type_GenericApplicationDataOS,
+  new_data: Type_GenericApplicationData,
   uploadExcelImpl: FType_UploadExcelImpl,
   launch: (path: string) => void,
   Reinitialization: () => void,
 }
 
 export type FCType_SankeyLoad = {
-  new_data: Type_GenericApplicationDataOS,
+  new_data: Type_GenericApplicationData,
   successAction: () => void,
   processFunctions: FType_ProcessFunctions
 }
 
 export type FCType_Menu = {
-  new_data: Type_GenericApplicationDataOS,
+  new_data: Type_GenericApplicationData,
   processFunctions: FType_ProcessFunctions,
   reinitialization: () => void,
   diagramSelector: FType_DiagramSelector,
   configurations_menus: JSX.Element,
   external_modal: JSX.Element[],
   apply_transformation_additional_elements: JSX.Element[],
-  additionalMenus:Type_AdditionalMenus,
+  additionalMenus: Type_AdditionalMenus,
 }
 
 /**
@@ -63,7 +63,7 @@ export type FCType_Menu = {
  * @type {{ ref_setter_show_modal_json_saver: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
  */
 export type FCType_ApplySaveJSONDialog = {
-  new_data: Type_GenericApplicationDataOS,
+  new_data: Type_GenericApplicationData,
   additional_file_save_json_option: JSX.Element[],
   ClickSaveDiagram: FType_ClickSaveDiagram
 }
@@ -72,20 +72,20 @@ export type FCType_ApplySaveJSONDialog = {
 
 export type FType_InitializeApplicationData = (
   initial_data: Type_JSON | undefined
-) => Type_GenericApplicationDataOS
+) => Type_GenericApplicationData
 
 export type FType_InitializeReinitialization = (
-  new_data: Type_GenericApplicationDataOS
+  new_data: Type_GenericApplicationData
 ) => (() => void)
 
 export type FType_InitializeAdditionalMenus = (
   additional_menus: Type_AdditionalMenus,
-  new_data: Type_GenericApplicationDataOS
+  new_data: Type_GenericApplicationData
 ) => void
 
 
 export type FType_InitializeMenuConfiguration = (
-  new_data: Type_GenericApplicationDataOS,
+  new_data: Type_GenericApplicationData,
   additional_menus: Type_AdditionalMenus,
   config_link_data: JSX.Element,
   config_link_attr: JSX.Element,
@@ -93,7 +93,7 @@ export type FType_InitializeMenuConfiguration = (
 ) => JSX.Element
 
 export type FType_ModuleDialogs = (
-  new_data: Type_GenericApplicationDataOS,
+  new_data: Type_GenericApplicationData,
   additional_menus: Type_AdditionalMenus,
   menu_configuration_nodes_attributes: JSX.Element,
   processFunctions: FType_ProcessFunctions

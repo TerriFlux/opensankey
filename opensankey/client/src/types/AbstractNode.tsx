@@ -8,29 +8,29 @@
 
 
 import {
-  Class_AbstractLinkElement,
+  ClassAbstract_LinkElement,
 } from './AbstractLink'
 import {
-  Class_AbstractSankey,
-  Class_AbstractTag,
-  Class_AbstractDrawingArea,
-  Class_AbstractLevelTag,
-  Class_AbstractLevelTagGroup
+  ClassAbstract_Sankey,
+  ClassAbstract_ProtoTag,
+  ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoLevelTag,
+  ClassAbstract_ProtoLevelTagGroup
 } from './Abstract'
-import { Class_Element } from './Element'
+import { ClassTemplate_Element } from './Element'
 import { Class_LevelTagGroup } from './Tag'
 import { Class_NodeDimension } from './NodeDimension'
 import { Class_Tag, Class_TagGroup } from './Tag'
 
-type Type_AbstractLinkElement = Class_AbstractLinkElement<Class_AbstractDrawingArea, Class_AbstractSankey>
-type Type_AbstractNodeElement = Class_AbstractNodeElement<Class_AbstractDrawingArea, Class_AbstractSankey>
+type TypeAbstract_LinkElement = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
-export abstract class Class_AbstractNodeElement
+export abstract class ClassAbstract_NodeElement
   <
-    Type_GenericDrawingArea extends Class_AbstractDrawingArea,
-    Type_GenericSankey extends Class_AbstractSankey
+    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
+    Type_GenericSankey extends ClassAbstract_Sankey
   >
-  extends Class_Element
+  extends ClassTemplate_Element
   <
     Type_GenericDrawingArea,
     Type_GenericSankey
@@ -38,58 +38,58 @@ export abstract class Class_AbstractNodeElement
   // Mandatory getters
   public abstract get name(): string
   public abstract get position_type(): string
-  public abstract get input_links_list(): Type_AbstractLinkElement[]
-  public abstract get output_links_list(): Type_AbstractLinkElement[]
+  public abstract get input_links_list(): TypeAbstract_LinkElement[]
+  public abstract get output_links_list(): TypeAbstract_LinkElement[]
   public abstract get taggs_list(): Class_TagGroup[]
   public abstract get grouped_taggs_dict(): { [x: string]: Class_Tag[] }
-  public abstract get dimensions_as_parent(): Class_AbstractNodeDimension[]
-  public abstract get dimensions_as_child(): Class_AbstractNodeDimension[]
+  public abstract get dimensions_as_parent(): ClassAbstract_NodeDimension[]
+  public abstract get dimensions_as_child(): ClassAbstract_NodeDimension[]
   // Mandatory methods
-  public abstract addTag(_: Class_AbstractTag): void
-  public abstract hasGivenTag(_: Class_AbstractTag): boolean
-  public abstract removeTag(_: Class_AbstractTag): void
+  public abstract addTag(_: ClassAbstract_ProtoTag): void
+  public abstract hasGivenTag(_: ClassAbstract_ProtoTag): boolean
+  public abstract removeTag(_: ClassAbstract_ProtoTag): void
   public abstract getShapeWidthToUse(): number
   public abstract getShapeHeightToUse(): number
   public abstract getShapeColorToUse(): string
-  public abstract addInputLink(_: Type_AbstractLinkElement): void
-  public abstract addOutputLink(_: Type_AbstractLinkElement): void
-  public abstract deleteInputLink(_: Type_AbstractLinkElement): void
-  public abstract deleteOutputLink(_: Type_AbstractLinkElement): void
-  public abstract removeInputLink(_: Type_AbstractLinkElement): void
-  public abstract removeOutputLink(_: Type_AbstractLinkElement): void
-  public abstract getOutputLinkStartingPoint(_: Type_AbstractLinkElement): {x: number, y: number} | undefined
-  public abstract getInputLinkEndingPoint(_: Type_AbstractLinkElement): {x: number, y: number} | undefined
-  public abstract swapInputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
-  public abstract swapOutputLink(_: Type_AbstractLinkElement, __: Type_AbstractNodeElement): void
+  public abstract addInputLink(_: TypeAbstract_LinkElement): void
+  public abstract addOutputLink(_: TypeAbstract_LinkElement): void
+  public abstract deleteInputLink(_: TypeAbstract_LinkElement): void
+  public abstract deleteOutputLink(_: TypeAbstract_LinkElement): void
+  public abstract removeInputLink(_: TypeAbstract_LinkElement): void
+  public abstract removeOutputLink(_: TypeAbstract_LinkElement): void
+  public abstract getOutputLinkStartingPoint(_: TypeAbstract_LinkElement): {x: number, y: number} | undefined
+  public abstract getInputLinkEndingPoint(_: TypeAbstract_LinkElement): {x: number, y: number} | undefined
+  public abstract swapInputLink(_: TypeAbstract_LinkElement, __: TypeAbstract_NodeElement): void
+  public abstract swapOutputLink(_: TypeAbstract_LinkElement, __: TypeAbstract_NodeElement): void
   public abstract drawLinksArrow(): void
   public abstract dimensionsUpdated(): void
-  public abstract addNewDimensionAsParent(_: Class_AbstractNodeDimension): void
-  public abstract removeDimensionAsParent(_: Class_AbstractNodeDimension): void
-  public abstract addNewDimensionAsChild(_: Class_AbstractNodeDimension): void
-  public abstract removeDimensionAsChild(_: Class_AbstractNodeDimension): void
+  public abstract addNewDimensionAsParent(_: ClassAbstract_NodeDimension): void
+  public abstract removeDimensionAsParent(_: ClassAbstract_NodeDimension): void
+  public abstract addNewDimensionAsChild(_: ClassAbstract_NodeDimension): void
+  public abstract removeDimensionAsChild(_: ClassAbstract_NodeDimension): void
   public abstract nodeDimensionAsParent(tagGroup: Class_LevelTagGroup): Class_NodeDimension | null
   public abstract nodeDimensionAsChild(tagGroup: Class_LevelTagGroup): Class_NodeDimension | null
-  public abstract addAsAntiTagged(_: Class_AbstractLevelTagGroup): void
-  public abstract removeAsAntiTagged(_: Class_AbstractLevelTagGroup): void
+  public abstract addAsAntiTagged(_: ClassAbstract_ProtoLevelTagGroup): void
+  public abstract removeAsAntiTagged(_: ClassAbstract_ProtoLevelTagGroup): void
   public abstract shiftVertically(shift: number): void
   public abstract reorganizeIOLinks(): void
 }
 
-export abstract class Class_AbstractNodeDimension {
+export abstract class ClassAbstract_NodeDimension {
   // Mandatory methods
   public abstract getLevel(): number
-  //public abstract removeTagFromChildrenLevelTag(_: Class_AbstractLevelTag): void
+  //public abstract removeTagFromChildrenLevelTag(_: ClassAbstract_ProtoLevelTag): void
   public abstract showAccordingToLevelTags(): void
-  protected abstract _unsetForcingToShow(): Set<Type_AbstractNodeElement>
+  protected abstract _unsetForcingToShow(): Set<TypeAbstract_NodeElement>
   // Mandatory getters
   public abstract get id(): string
-  public abstract get parent_level_tag(): Class_AbstractLevelTag
-  public abstract get child_level_tag(): Class_AbstractLevelTag
-  public abstract get parent(): Type_AbstractNodeElement
-  public abstract get children(): Type_AbstractNodeElement[]
+  public abstract get parent_level_tag(): ClassAbstract_ProtoLevelTag
+  public abstract get child_level_tag(): ClassAbstract_ProtoLevelTag
+  public abstract get parent(): TypeAbstract_NodeElement
+  public abstract get children(): TypeAbstract_NodeElement[]
 }
 
-export abstract class Class_AbstractNodeStyle {
+export abstract class ClassAbstract_NodeStyle {
   // Mandatory getters
   public abstract get id(): string
 }
