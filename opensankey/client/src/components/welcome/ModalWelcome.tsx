@@ -40,7 +40,7 @@ import { faArrowPointer, faShareNodes, faFolderTree, faSliders, faArrowsUpDown, 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { FaUser, FaAngleDoubleLeft } from 'react-icons/fa'
 
-const video_test = require('../../media/catch_phrase_OpenSankey.webm')
+const video_accueil = require('../../media/catch_phrase_OpenSankey.webm')
 
 export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
   new_data,
@@ -242,7 +242,7 @@ export const ModalWelcomeContent = (
               playsInline
               loop
             >
-              <source src={video_test} type="video/webm" />
+              <source src={video_accueil} type="video/webm" />
               Your browser does not support the video tag.
             </video>
           </Carousel.Item>
