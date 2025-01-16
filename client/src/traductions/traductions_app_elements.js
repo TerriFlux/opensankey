@@ -139,7 +139,7 @@ export const resources_app_elements = {
       Flux: {
         'asf': 'Apply style to links having this style',
         data: {
-          'toPrecision': 'Display the value in scientific notation',
+          'scientificNotation': 'Display the value in scientific notation',
           'fla': 'Display free links',
           'astr': 'Display structure',
         },
@@ -640,7 +640,7 @@ export const resources_app_elements = {
       Flux: {
         'asf': 'Appliquer le Style aux flux',
         data: {
-          'toPrecision': 'En notation scientifique',
+          'scientificNotation': 'En notation scientifique',
           'fla': 'Flux nuls indéterminés visibles',
           'astr': 'Affichage structure',
         },
