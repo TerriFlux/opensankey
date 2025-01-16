@@ -1,5 +1,5 @@
 import { extendTheme } from '@chakra-ui/react'
-import { ThemeOSP } from '../deps/OpenSankey+/chakra/Theme'
+import { ThemeOSP } from '../deps/OpenSankey+/chakra/ThemeOSP'
 import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 import {
