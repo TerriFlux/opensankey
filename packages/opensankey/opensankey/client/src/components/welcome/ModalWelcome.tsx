@@ -41,9 +41,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { FaUser, FaAngleDoubleLeft } from 'react-icons/fa'
 
 
-/* eslint-disable */
-const video_accueil = require('../../media/catch_phrase_OpenSankey.webm')
-/* eslint-enable */
+
 
 export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
   new_data,
@@ -53,8 +51,10 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
 }) => {
   const { t } = new_data
   const { never_see_again } = new_data.menu_configuration
-
   const [show_welcome, set_show_welcome] = useState(!never_see_again.current)
+
+
+
   new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current = set_show_welcome
 
   const content_rc_static = <>
@@ -186,6 +186,14 @@ export const ModalWelcomeContent = (
   const { t, static_path } = new_data
   const welcome_text = (new_data.options?.welcome_text as string) ?? ''
   const has_welcome_text = welcome_text.length > 0
+
+  /* eslint-disable */
+  let video_accueil = require('../../media/catch_phrase_OpenSankey.webm')
+  const path = window.location.origin
+  if (!path.includes('localhost')) {
+    video_accueil = video_accueil.replace('static/', new_data.static_path)
+  }
+  /* eslint-enable */
 
   /* eslint-disable */
   // @ts-ignore
