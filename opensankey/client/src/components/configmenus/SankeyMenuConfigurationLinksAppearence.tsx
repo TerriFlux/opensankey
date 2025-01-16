@@ -718,52 +718,58 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       </Checkbox>
     </Box>
 
-    {value_label_is_visible ? <>
-
-      {/* Choix d'affichage du nombre de chiffre après la virgule  */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminate}
-        isChecked={value_label_custom_digit}
-        onChange={(evt) => {
-          elements.forEach(element => {
-            element.value_label_custom_digit = evt.target.checked
-            element.value_label_to_precision = false
-          })
-          refreshThisAndUpdateRelatedComponents()
-        }}>
-        <OSTooltip label={t('Flux.label.tooltips.custom_digit')}>
-          {t('Flux.label.custom_digit') + ' '}
-        </OSTooltip>
-        {
-          (!menu_for_style) &&
-            isAttributeOverloaded(selected_links, 'value_label_custom_digit') ?
-            TooltipValueSurcharge('link_var_', t) :
-            <></>
-        }
-      </Checkbox>
-
-      {value_label_custom_digit ? <>
-        {/* Choose number of custom digit */}
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t('Flux.label.NbDigit')}
-          </Box>
-          <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
-            <ConfigMenuNumberInput
-              ref_to_set_value={ref_set_number_inputs[6]}
-              default_value={value_label_nb_digit}
-              menu_for_style={menu_for_style}
-              minimum_value={0}
-              stepper={true}
-              function_on_blur={(value) => {
-                elements.forEach(element =>
-                  element.value_label_nb_digit = value ?? undefined)
-                refreshThisAndUpdateRelatedComponents()
-              }}
-            />
+    {value_label_is_visible ?<>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        {/* Choix d'affichage du nombre de chiffre après la virgule  */}
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isIndeterminate={is_indeterminate}
+          isChecked={value_label_custom_digit}
+          onChange={(evt) => {
+            elements.forEach(element => {
+              element.value_label_custom_digit = evt.target.checked
+              if (evt.target.checked) {
+                element.value_label_scientific_notation = false
+                element.value_label_significant_digits = false
+              }
+            })
+            refreshThisAndUpdateRelatedComponents()
+          }}>
+          <OSTooltip label={t('Flux.label.tooltips.custom_digit')}>
+            {t('Flux.label.custom_digit') + ' '}
           </OSTooltip>
-        </Box></> : <></>}
+          {
+            (!menu_for_style) &&
+              isAttributeOverloaded(selected_links, 'value_label_custom_digit') ?
+              TooltipValueSurcharge('link_var_', t) :
+              <></>
+          }
+        </Checkbox>
+        {value_label_custom_digit ?
+          /* Choose number of custom digit */
+
+            /* <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Flux.label.NbDigit')}
+            </Box> */
+            <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
+              <ConfigMenuNumberInput
+                ref_to_set_value={ref_set_number_inputs[6]}
+                default_value={value_label_nb_digit}
+                menu_for_style={menu_for_style}
+                minimum_value={0}
+                stepper={true}
+                function_on_blur={(value) => {
+                  elements.forEach(element =>
+                    element.value_label_nb_digit = value ?? undefined)
+                  refreshThisAndUpdateRelatedComponents()
+                }}
+              />
+            </OSTooltip>
+          :<></>
+          }
+      </Box>
+
+        {additionMenus.additional_link_appearence_value.map(el => el(menu_for_style))}
 
       {/* Ajout une unité au label de flux */}
       <Checkbox
@@ -843,8 +849,6 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
           </> :
           <></>
       }
-
-      {additionMenus.additional_link_appearence_value.map((el, i) => <React.Fragment key={'additional_config_link__value_' + i}>{el}</React.Fragment>)}
 
       <Box
         layerStyle='menuconfigpanel_grid'
