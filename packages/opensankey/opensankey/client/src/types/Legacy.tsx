@@ -298,7 +298,7 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     vert_shift: 0,
     opacity: 0.85,
     to_precision: false,
-    scientific_precision: 5,
+    scientific_precision: 3,
     arrow_size: 10,
     font_family: 'Arial,serif',
     label_unit_visible: false,
