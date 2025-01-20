@@ -12,7 +12,6 @@ import {
 import { OSTooltip } from '../../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { ConfigMenuTextInput } from '../configmenus/SankeyMenuConfiguration'
-import * as d3 from 'd3'
 
 // COMPONENTS ===========================================================================
 
