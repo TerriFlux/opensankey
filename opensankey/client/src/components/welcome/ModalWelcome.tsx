@@ -483,7 +483,6 @@ export const ModalWelcomeContent = (
       </Box>
       <Box layerStyle='welcome_license_desc'>
         <span>{t('Menu.presentation_OS')}</span>
-        <span style={{ fontWeight: 'bold' }}>{t('Menu.presentation_OS_limit_node')}</span>
         <Button variant='welcome_button_license_description'
           onClick={() => {
             window.open('https://terriflux.com/downloads/open-sankey/')

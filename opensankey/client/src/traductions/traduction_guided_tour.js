@@ -23,8 +23,9 @@ export const resources_guided_tour = {
     translation: {
       guide: {
         guide: 'Visite guidée',
+        drawing_area: 'La zone de dessin. A partir de là, vous pouvez directement dessiner et interagir avec votre diagramme Sankey à l\'aide de la souris. \n Pour dessinez un flux \li Cliquez, \li draguez sans relacher, relacher',
         toolbar: 'La barre d\'outils. Outils d\'édition, de sélection et de filtrage qui vous permettent d\'interagir rapidement avec votre diagramme Sankey.',
-        drawing_area: 'La zone de dessin. A partir de là, vous pouvez directement dessiner et interagir avec votre diagramme Sankey à l\'aide de la souris.',
+
         nav_menu: 'Le menu de navigation. Vous y trouverez toutes les fonctionnalités de votre projet comme le chargement, le téléchargement, les réglages et l\'aide.',
         save_in_cache: 'Ce bouton vous permet de sauvegarder votre progression dans le cache de votre navigateur. Ainsi si vous quittez l\'application vous pourrez revenir plus tard et continuer votre projet à partir de cette sauvegarde.',
         menu_config: 'Le menu de configuration. C\'est à partir d\'ici que vous pouvez tout paramétrer sur votre diagramme Sankey, comme les valeurs des données, les noms, et bien d\'autres options encore',
