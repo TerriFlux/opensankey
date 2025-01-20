@@ -2558,7 +2558,7 @@ export abstract class ClassTemplate_LinkElement
       // Do we need to keep only N significant numbers ?
       else if (this.value_label_significant_digits == true) {
         // 12345.67 avec nb_sign = 4 devient 12340
-        text_value = String(parseFloat(data_value.toPrecision(this.value_label_nb_significant_digits)).toPrecision(this.value_label_nb_significant_digits))
+        text_value = String(parseFloat(data_value.toPrecision(this.value_label_nb_significant_digits)))
         if (text_value[text_value.length-1] == '0' && text_value.length == this.value_label_nb_significant_digits && text_value == String(this.data_value)) {
           text_value += '.'
         }
@@ -3698,14 +3698,15 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     if (this._value_label_is_visible !== undefined) json_object['label_visible'] = this._value_label_is_visible
     if (this._value_label_font_size !== undefined) json_object['label_font_size'] = this._value_label_font_size
     if (this._value_label_color !== undefined) json_object['text_color'] = this._value_label_color
-    if (this._value_label_scientific_notation !== undefined) json_object['to_precision'] = this._value_label_scientific_notation
-    if (this._value_label_significant_digits !== undefined) json_object['scientific_precision'] = this._value_label_significant_digits
-    if (this._value_label_nb_significant_digits !== undefined) json_object['nb_scientific_precision'] = this._value_label_nb_significant_digits
 
     if (this._value_label_font_family !== undefined) json_object['font_family'] = this._value_label_font_family
     if (this._value_label_unit_visible !== undefined) json_object['label_unit_visible'] = this._value_label_unit_visible
     if (this._value_label_unit !== undefined) json_object['label_unit'] = this._value_label_unit
     if (this._value_label_unit_factor !== undefined) json_object['label_unit_factor'] = this._value_label_unit_factor
+
+    if (this._value_label_scientific_notation !== undefined) json_object['to_precision'] = this._value_label_scientific_notation
+    if (this._value_label_significant_digits !== undefined) json_object['scientific_precision'] = this._value_label_significant_digits
+    if (this._value_label_nb_significant_digits !== undefined) json_object['nb_scientific_precision'] = this._value_label_nb_significant_digits
     if (this._value_label_custom_digit !== undefined) json_object['custom_digit'] = this._value_label_custom_digit
     if (this._value_label_nb_digit !== undefined) json_object['nb_digit'] = this._value_label_nb_digit
 
@@ -3748,15 +3749,17 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     if (json_local_object['label_visible'] !== undefined) this._value_label_is_visible = getBooleanFromJSON(json_local_object, 'label_visible', default_value_label_is_visible)
     if (json_local_object['label_font_size'] !== undefined) this._value_label_font_size = getNumberFromJSON(json_local_object, 'label_font_size', default_value_label_font_size)
     if (json_local_object['text_color'] !== undefined) this._value_label_color = getStringFromJSON(json_local_object, 'text_color', default_value_label_color)
-    if (json_local_object['to_precision'] !== undefined) this._value_label_scientific_notation = getBooleanFromJSON(json_local_object, 'to_precision', default_value_label_scientific_notation)
-    if (json_local_object['scientific_precision'] !== undefined) this._value_label_significant_digits = getBooleanFromJSON(json_local_object, 'scientific_precision', default_value_label_significant_digits)
-    if (json_local_object['nb_scientific_precision'] !== undefined) this._value_label_nb_significant_digits = getNumberFromJSON(json_local_object, 'scientific_precision', default_value_label_nb_significant_digits)
     if (json_local_object['font_family'] !== undefined) this._value_label_font_family = getStringFromJSON(json_local_object, 'font_family', default_value_label_font_family)
+
     if (json_local_object['label_unit_visible'] !== undefined) this._value_label_unit_visible = getBooleanFromJSON(json_local_object, 'label_unit_visible', default_value_label_unit_visible)
     if (json_local_object['label_unit'] !== undefined) this._value_label_unit = getStringFromJSON(json_local_object, 'label_unit', default_value_label_unit)
     if (json_local_object['label_unit_factor'] !== undefined) this._value_label_unit_factor = getNumberFromJSON(json_local_object, 'label_unit_factor', default_value_label_unit_factor)
+
     if (json_local_object['custom_digit'] !== undefined) this._value_label_custom_digit = getBooleanFromJSON(json_local_object, 'custom_digit', default_value_label_custom_digit)
     if (json_local_object['nb_digit'] !== undefined) this._value_label_nb_digit = getNumberFromJSON(json_local_object, 'nb_digit', default_value_label_nb_digit)
+    if (json_local_object['to_precision'] !== undefined) this._value_label_scientific_notation = getBooleanFromJSON(json_local_object, 'to_precision', default_value_label_scientific_notation)
+    if (json_local_object['scientific_precision'] !== undefined) this._value_label_significant_digits = getBooleanFromJSON(json_local_object, 'scientific_precision', default_value_label_significant_digits)
+    if (json_local_object['nb_scientific_precision'] !== undefined) this._value_label_nb_significant_digits = getNumberFromJSON(json_local_object, 'nb_scientific_precision', default_value_label_nb_significant_digits)
   }
 
   public copyFrom(element: Class_LinkAttribute) {
