@@ -2115,7 +2115,7 @@ export abstract class ClassTemplate_LinkElement
         const x6 = this.position_x_end
         // Compute starting curve point coef based on new handle pos
         const dx6x0 = Math.abs(x6 - x0)
-        if (dx6x0 > 0) // Avoid NaN
+        if (dx6x0 >= 0) // Avoid NaN
           this.shape_starting_curve = Math.abs(handle_new_pos_x - x0) / dx6x0
       }
       else {
@@ -2125,7 +2125,7 @@ export abstract class ClassTemplate_LinkElement
         const y6 = this.position_y_end
         // Compute starting curve point coef based on new handle pos
         const dy6y0 = Math.abs(y6 - y0)
-        if (dy6y0 > 0) // Avoid NaN
+        if (dy6y0 >= 0) // Avoid NaN
           this.shape_starting_curve = Math.abs(handle_new_pos_y - y0) / dy6y0
       }
     }
@@ -2148,7 +2148,7 @@ export abstract class ClassTemplate_LinkElement
         const x6 = this.position_x_end
         // Compute ending curve point coef based on new handle pos
         const dx6x0 = Math.abs(x6 - x0)
-        if (dx6x0 > 0) // Avoid NaN
+        if (dx6x0 >= 0) // Avoid NaN
           this.shape_ending_curve = Math.abs(handle_new_pos_x - x6) / dx6x0
       }
       else {
@@ -2158,7 +2158,7 @@ export abstract class ClassTemplate_LinkElement
         const y6 = this.position_y_end
         // Compute ending curve point coef based on new handle pos
         const dy6y0 = Math.abs(y6 - y0)
-        if (dy6y0 > 0) // Avoid NaN
+        if (dy6y0 >= 0) // Avoid NaN
           this.shape_ending_curve = Math.abs(handle_new_pos_y - y6) / dy6y0
       }
       this._control_points.is_dragged = false

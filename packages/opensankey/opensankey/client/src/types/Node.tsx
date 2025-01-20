@@ -1720,7 +1720,6 @@ export abstract class ClassTemplate_NodeElement
       const box_width = Math.min(
         label_to_display.length * this.name_label_font_size,
         this.name_label_box_width)
-      const box_height = this.name_label_font_size
 
       // CReate label wrapper
       const wrapper = textwrap()

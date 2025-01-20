@@ -20,9 +20,9 @@ import { useToast } from '@chakra-ui/react'
 import { Class_MenuConfig } from './MenuConfig'
 import { ClassAbstract_ApplicationData } from './Abstract'
 import { ClassTemplate_DrawingArea } from './DrawingArea'
-import { randomId, Type_JSON } from './Utils'
-import { ClassTemplate_NodeElement } from './Node'
-import { ClassTemplate_LinkElement } from './Link'
+import { default_style_id, getStringFromJSON, randomId, Type_JSON } from './Utils'
+import { ClassTemplate_NodeElement, default_label_font_size, default_shape_min_width } from './Node'
+import { ClassTemplate_LinkElement, default_shape_color, default_shape_opacity } from './Link'
 import { ClassTemplate_Sankey } from './Sankey'
 import { FType_ProcessFunctions } from './FunctionTypes'
 import { DataSuiteType } from './LegacyType'
@@ -57,6 +57,11 @@ const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
 const toast_bypass: boolean = false
 
+function normalizeName(s:string){
+  return s.replaceAll(' ','_')
+  .replaceAll('(','')
+  .replaceAll(')','')
+}
 
 // CLASS APPLICATION DATA **************************************************************/
 
@@ -733,6 +738,101 @@ export abstract class ClassTemplate_ApplicationData
       '</svg>'
     d3_select?.remove()
     return svg_with_header
+  }
+
+  public fromSankeyMaticJSON(obj:Type_JSON){
+    this.sendWaitingToast(
+      () => {
+        // Always bypass redrawings
+        this._drawing_area.bypass_redraws = true
+        // Reset everything
+        this._reset()
+        // Read json file
+        this._fromSankeyMaticJSON(obj)
+        this._drawing_area.draw()
+
+        // Post processing & menu updating
+        this.drawing_area.computeAutoSankey(false)
+      })
+
+  }
+
+  protected _fromSankeyMaticJSON(obj:Type_JSON){
+
+    const default_node_style_element=this._drawing_area.sankey.node_styles_dict[default_style_id]
+    const default_flow_style_element=this._drawing_area.sankey.link_styles_dict[default_style_id]
+
+    // General attributes set when from fromSankeyMatic
+    default_node_style_element.value_label_visible=true
+    default_node_style_element.shape_min_height=0
+    default_flow_style_element.value_label_is_visible=false
+    default_flow_style_element.shape_is_arrow=false
+    default_flow_style_element.shape_starting_curve=0.01
+    default_flow_style_element.shape_ending_curve=0.01
+    this._drawing_area.grid_visible=false
+
+    const setting:Type_JSON=obj['setting'] as Type_JSON
+
+    //Set general attributes from setting dict
+    this._drawing_area.color = getStringFromJSON(setting, 'bg_color', this._drawing_area.color)
+    
+    // Setting default style attributes of nodes from sankeymatic file
+    default_node_style_element.shape_min_width = +getStringFromJSON(setting, 'node_width', String(default_shape_min_width))
+    default_node_style_element.shape_color = getStringFromJSON(setting, 'node_color', default_shape_color)
+    default_node_style_element.shape_visible = +getStringFromJSON(setting, 'node_opacity', '1')>0.5
+
+    // Setting default style name/value label visibility of nodes from sankeymatic file
+    default_node_style_element.name_label_visible = getStringFromJSON(setting, 'label_name_appears', 'Y')=='Y'
+    default_node_style_element.value_label_visible = getStringFromJSON(setting, 'label_value_appears', 'Y')=='Y'
+    default_node_style_element.name_label_visible = getStringFromJSON(setting, 'labels_hide', 'N')!=='Y'
+    default_node_style_element.value_label_visible = getStringFromJSON(setting, 'labels_hide', 'N')!=='Y'
+    default_node_style_element.name_label_font_size = +getStringFromJSON(setting, 'label_name_size', String(default_label_font_size))
+
+    // Setting default style attributes of flow from sankeymatic file
+    default_flow_style_element.shape_color = getStringFromJSON(setting, 'flow_color', default_shape_color)
+    default_flow_style_element.shape_opacity = +getStringFromJSON(setting, 'flow_opacity', String(default_shape_opacity))
+    default_flow_style_element.shape_is_curved = +getStringFromJSON(setting, 'flow_curvature', '1')>0.5
+
+
+    // name/value label size is determined by a base size & a weight of that size, 
+    // for exemple : base size is 12 and labels_relativesize is 150 (so value value relative size is 50) then name label size is 16 (12*150%) and value size is 6 (12*50%)
+    let baseSize=default_label_font_size
+    const labels_relativesize=+getStringFromJSON(setting, 'labels_relativesize', String(100))
+    baseSize = +getStringFromJSON(setting, 'label_name_size', String(default_label_font_size))
+    default_node_style_element.name_label_font_size = baseSize*(labels_relativesize/100)
+    default_node_style_element.value_label_font_size = baseSize*(1-(labels_relativesize/100))
+
+    // Create nodes from sankeymatic JSON
+    Object.entries(obj['nodes']).forEach(n=>{
+      const n_id=normalizeName(n[0])
+      const new_node=this._drawing_area.sankey.addNewNode(n_id, n[0])
+      new_node.name=n[0]
+      if(n[1].color!==undefined)
+        new_node.shape_color=n[1].color
+    })
+    const node_dict=this._drawing_area.sankey.nodes_dict
+    
+    // Create flows from sankeymatic JSON
+    let linksMaxValue = 0
+    Object.entries(obj['flows']).forEach(source=>{
+      Object.entries(source[1]).forEach(flow=>{
+        const src=node_dict[normalizeName(source[0])]
+        const dst=node_dict[normalizeName(flow[0])]
+        const new_link=this.drawing_area.sankey.addNewLinkWithId(src.id+'-->'+dst.id,src,dst)
+        new_link.data_value=flow[1] as number    
+        linksMaxValue = Math.max(
+        linksMaxValue,
+        new_link.data_value ? new_link.data_value : 0
+      )
+      })
+    })
+    linksMaxValue += 1 // Protection if all values are at 0
+    this._drawing_area.scale = this._drawing_area.maximum_flux ? Math.max(this._drawing_area.maximum_flux, linksMaxValue) : linksMaxValue
+
+    const reverseGraph=getStringFromJSON(setting, 'layout_reversegraph', 'N')=='Y'
+    if(reverseGraph){
+      this._drawing_area.sankey.links_list.forEach(l=>l.inverse())
+    }
   }
 
   // PRIVATE METHODS ====================================================================

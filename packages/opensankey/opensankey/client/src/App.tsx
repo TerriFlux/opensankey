@@ -5,7 +5,6 @@ import React, {
 import LZString from 'lz-string'
 import * as d3 from 'd3'
 import { TourProvider } from '@reactour/tour'
-import i18next from 'i18next'
 
 /*************************************************************************************************/
 
