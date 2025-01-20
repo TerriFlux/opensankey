@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "OpenSankey",
+  "name": "OpenSankey application to create flow diagrams",
   "icons": [
     {
       "src": "favicon.ico",
