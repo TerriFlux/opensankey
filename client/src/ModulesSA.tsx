@@ -299,7 +299,7 @@ export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({
 
 
   const path = window.location.origin
-  const url = path + '/opensankey/sankey/menu_examples'
+  const url = path + '/opensankey//menus/examples'
 
   // On first render fetch sankeytheque data then re-render to have component with sankeytheque
   if (firstRender) {

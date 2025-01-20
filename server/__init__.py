@@ -53,6 +53,11 @@ def create_app():
 
     # Blueprint for OpenSankey part of app
     from opensankey.server.views import opensankey
+    from opensankey.server.views import converter_funct
+    from opensankey.server.converter import extract_json_from_sankey
+    from opensankey.server.converter import extract_sankey_from_json
+    converter_funct['extract_json_from_sankey'] = extract_json_from_sankey
+    converter_funct['extract_sankey_from_json'] = extract_sankey_from_json
     app.register_blueprint(opensankey, url_prefix='/opensankey')
     # from opensankey.doc import doc as opensankey_doc
     # app.register_blueprint(opensankey_doc, url_prefix='/doc')
