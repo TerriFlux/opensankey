@@ -63,7 +63,7 @@ def goto(path):
     try:
         return render_template(path)
     except Exception:
-        return index()
+        return redirect('/', 301)
 
 
 @sankeyapp.route('/api/edd_license', methods=['POST'])
