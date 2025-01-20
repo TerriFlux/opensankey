@@ -12,6 +12,7 @@ import requests
 from flask import Blueprint
 from flask import render_template
 from flask import request
+from flask import redirect
 
 # ---------------------------------------------------------------
 # Local imports
@@ -63,7 +64,7 @@ def goto(path):
     try:
         return render_template(path)
     except Exception:
-        return index()
+        return redirect('/', 301)
 
 
 @sankeyapp.route('/api/edd_license', methods=['POST'])

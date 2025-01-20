@@ -69,8 +69,7 @@ const App: FunctionComponent = () => {
 }
 
 const renderPage = () => {
-  root.render(<App />
-  )
+  root.render(<App />)
 }
 
 renderPage()
