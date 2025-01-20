@@ -59,6 +59,15 @@ def index():
     )
 
 
+@sankeyapp.route('/fr')
+def index_fr():
+    return render_template(
+        'index_fr.html',
+        filename='',
+        static_site='false'
+    )
+
+
 @sankeyapp.route('/<path:path>')
 def goto(path):
     try:
