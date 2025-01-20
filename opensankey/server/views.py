@@ -38,6 +38,9 @@ import SankeyExcelParser.su_trace as trace
 # Sankey modules
 from SankeyExcelParser.sankey import Sankey
 
+# Local modules
+from . import sankeymatic
+
 # ---------------------------------------------------------------
 # Shared vars
 converter_funct = {
@@ -730,6 +733,39 @@ def data_tuto():
     )
 
     return response
+
+
+@opensankey.route('/open_sankeymatic', methods=['POST'])
+def open_sankeymatic():
+
+    try:
+        # Get input Excel filename
+        text_input_file = request.files['file_content']
+
+        # Create conversion files
+        tmp_dir = tempfile.mkdtemp()  # Tempory dir for conversion
+        text_input_filename = os.path.join(tmp_dir,  'toto.txt')
+        text_input_file.save(text_input_filename)
+
+        ok, msg, json_obj = sankeymatic.parse_sankeymatic_file(text_input_filename)
+        if (not ok):
+            print(msg)
+        clean_file(text_input_filename, 'Clean_TXT')
+
+        response = Response(
+            response=json.dumps(json_obj),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    except Exception as e:
+        current_app.logger.error('OPEN SANKEY MATIC | {0}'.format(e))
+        abort(500)
+    return Response(
+                json.dumps({'output':  'ERROR: load_process: le fichier tmp_log n\'existe pas.'}),
+                status=500,
+                mimetype='application/json'
+            )
 
 
 def _html_to_image(
