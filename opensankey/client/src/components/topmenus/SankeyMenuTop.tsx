@@ -26,6 +26,7 @@ import {
   faShapes,
   faShareNodes,
   faTable,
+  faChartSimple
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -229,6 +230,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
 ) => {
   const { t } = new_data
   const _load_json = useRef<HTMLInputElement>(null)
+  const _load_sankeymatic = useRef<HTMLInputElement>(null)
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
   const {
@@ -445,6 +447,59 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             />
             {t('Menu.open_excel')}
           </MenuItem>
+
+          <MenuItem
+            onClick={() => {
+              if (_load_sankeymatic.current) {
+                _load_sankeymatic.current.name = ''
+                _load_sankeymatic.current.click()
+              }
+            }}
+          >
+            {/* TODO : find a better icon when we'll use FontAwesome pro */}
+            <FontAwesomeIcon icon={faChartSimple} />
+            {t('Menu.open_sankeymatic')}
+          </MenuItem>
+          <Input
+            accept='.txt'
+            type='file'
+            ref={_load_sankeymatic}
+            style={{ display: 'none' }}
+            onChange={(evt: ChangeEvent) => {
+              const files = (evt.target as HTMLFormElement).files
+              const reader = new FileReader()
+              const path = window.location.origin
+              const url = path + '/opensankey/open_sankeymatic'
+
+              reader.onload = (() => {
+                return (e: ProgressEvent<FileReader>) => {
+
+                  const file_content = String((e.target as FileReader).result)
+
+                  const blob = new Blob([file_content], { type: 'text/plain' })
+                  const form_data = new FormData()
+                  form_data.append('file_content', blob)
+
+                  fetch(url, {
+                    method: 'POST',
+                    body: form_data
+                  })  .then(response => {
+                    response
+                      .text()
+                      .then(text => {
+                        const json_data = JSON.parse(text)
+                        new_data.fromSankeyMaticJSON(json_data)
+                      })
+                      .catch((error) => {
+                        console.error('Error in fetchExamples - ' + error.toString())
+            
+                      })
+                  })
+                }
+              })()
+              reader.readAsText(files[0])
+            }}
+          />
         </MenuList>
       </ChakraMenu>,
 
