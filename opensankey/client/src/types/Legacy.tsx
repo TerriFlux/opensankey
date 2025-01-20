@@ -298,7 +298,8 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     vert_shift: 0,
     opacity: 0.85,
     to_precision: false,
-    scientific_precision: 3,
+    scientific_precision: true,
+    nb_scientific_precision: 5,
     arrow_size: 10,
     font_family: 'Arial,serif',
     label_unit_visible: false,
@@ -441,6 +442,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     }
     // Change default behavior on right shift for link
     s[1].right_horiz_shift = 1.0 - s[1].right_horiz_shift
+    s[1].scientific_precision = true
   })
   if (data_to_convert.style_node === undefined) {
     data_to_convert.style_node = {}
@@ -2293,7 +2295,8 @@ const convert_links: convert_linksFuncType = (
       text_color: '',
 
       to_precision: true,
-      scientific_precision: 0,
+      scientific_precision: true,
+      nb_scientific_precision: 5,
       custom_digit: true,
       nb_digit: 0,
 
