@@ -23,7 +23,7 @@ export const resources_guided_tour = {
     translation: {
       guide: {
         guide: 'Visite guidée',
-        drawing_area: 'La zone de dessin. A partir de là, vous pouvez directement dessiner et interagir avec votre diagramme Sankey à l\'aide de la souris. \n Pour dessinez un flux \li Cliquez, \li draguez sans relacher, relacher',
+        drawing_area: 'La zone de dessin. A partir de là, vous pouvez directement dessiner et interagir avec votre diagramme Sankey à l\'aide de la souris. Pour dessinez un flux Cliquez, draguez sans relacher, relacher',
         toolbar: 'La barre d\'outils. Outils d\'édition, de sélection et de filtrage qui vous permettent d\'interagir rapidement avec votre diagramme Sankey.',
 
         nav_menu: 'Le menu de navigation. Vous y trouverez toutes les fonctionnalités de votre projet comme le chargement, le téléchargement, les réglages et l\'aide.',
