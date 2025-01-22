@@ -40,7 +40,7 @@ import { faArrowPointer, faShareNodes, faFolderTree, faSliders, faArrowsUpDown, 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { FaUser, FaAngleDoubleLeft } from 'react-icons/fa'
 
-
+import resources from './resources.json'
 
 
 export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
@@ -187,29 +187,15 @@ export const ModalWelcomeContent = (
   const welcome_text = (new_data.options?.welcome_text as string) ?? ''
   const has_welcome_text = welcome_text.length > 0
 
-  /* eslint-disable */
-  let video_accueil = require('../../media/catch_phrase_OpenSankey.webm')
-  const path = window.location.origin
-  if (!path.includes('localhost')) {
-    video_accueil = video_accueil.replace('static/', new_data.static_path)
-  }
-  /* eslint-enable */
-
-  /* eslint-disable */
-  // @ts-ignore
-  const carousel = require.context('../../css/image_carousel', true)
-  // @ts-ignore
-  const imageList = carousel.keys().map(image => {
-    let carousel_element = carousel(image)
+  const images_paths = resources['images_carousel_paths'].map(image_path => {
     const path = window.location.href
     if (!path.includes('localhost')) {
-      carousel_element = carousel_element.replace('static/', static_path)
+      image_path = image_path.replace('static/', static_path)
     }
-    return carousel_element
+    return image_path
   })
-  /* eslint-enable */
 
-  const src_intro_static = 'intro_static.png'
+  const src_intro_static = 'welcome/intro_static.png'
 
   const page_links: { [x: string]: JSX.Element } = {}
   const page_content: { [x: string]: JSX.Element } = {}
@@ -240,25 +226,8 @@ export const ModalWelcomeContent = (
           nextLabel={null}
           interval={null}
         >
-          <Carousel.Item>
-            <video
-              style={{
-                'display': 'grid',
-                'width': '60vw',
-                'height': '60vh'
-              }}
-              id="Catch phrase OpenSankey"
-              autoPlay
-              muted
-              playsInline
-              loop
-            >
-              <source src={video_accueil} type="video/webm" />
-              Your browser does not support the video tag.
-            </video>
-          </Carousel.Item>
           {
-            (imageList as string[]).map((_, idx) => {
+            (images_paths as string[]).map((_, idx) => {
               let title = _.split('/').pop()
               title = title!.split('.').splice(0, 1).join('')
               return (
@@ -301,8 +270,7 @@ export const ModalWelcomeContent = (
                     </Text>
                   </div>
                 </Carousel.Item>
-              )
-            })
+              )})
           }
         </Carousel>
     }
