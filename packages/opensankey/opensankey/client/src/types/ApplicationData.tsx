@@ -92,6 +92,7 @@ export abstract class ClassTemplate_ApplicationData
 
   // Attributes to transfer between sankeys
   public data_var_to_update: MutableRefObject<string[]> = React.useRef([])
+  public ref_to_spreadsheet: MutableRefObject<(() => void)> = useRef(() => null)
 
   // PROTECTED ATTRIBUTES ==============================================================
 

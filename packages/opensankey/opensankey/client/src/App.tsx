@@ -26,6 +26,7 @@ import { ModalPreference } from './components/dialogs/SankeyMenuPreferences'
 import { Type_JSON } from './types/Utils'
 import { Type_AdditionalMenus } from './types/Types'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
+import { SpreadSheet } from './components/dialogs/SpreadSheet'
 
 /*************************************************************************************************/
 
