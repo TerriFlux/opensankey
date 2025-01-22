@@ -115,21 +115,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
     this.pushViewIdInViewOrder(this._drawing_area.id)
 
     // Get OpenSankey+ logo
-    let logo_sankey_plus = ''
-    try {
-      /* eslint-disable */
-      // @ts-ignore
-      logo_sankey_plus = require('../css/OSP.png')
-      /* eslint-enable */
-      const path = window.location.href
-      if (!path.includes('localhost')) {
-        logo_sankey_plus = logo_sankey_plus.replace('static/', this.static_path)
-      }
-    }
-    catch (expt) {
-      console.log('OSP.png not found')
-    }
-    this._logo_sankey_plus = logo_sankey_plus
+    this._logo_sankey_plus = 'logos/logo_opensankeyplus.png'
     this._logo = this._logo_sankey_plus
   }
 

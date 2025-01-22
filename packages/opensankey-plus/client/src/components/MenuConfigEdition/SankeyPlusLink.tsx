@@ -337,53 +337,53 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
   return <>
     {/* Choose number of significant number */}
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        {/* Choix d'affichage du nombre de chiffre significatifs  */}
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={value_label_significant_digits}
-          onChange={(evt) => {
-            elements.forEach(element => {
-              element.value_label_significant_digits = evt.target.checked
-              if (evt.target.checked) {
-                element.value_label_scientific_notation = false
-                element.value_label_custom_digit = false
-              }
-            })
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
-            {t('Flux.label.significantDigits') + ' '}
-          </OSTooltip>
-          {
-            (!menu_for_style) &&
+      {/* Choix d'affichage du nombre de chiffre significatifs  */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={value_label_significant_digits}
+        onChange={(evt) => {
+          elements.forEach(element => {
+            element.value_label_significant_digits = evt.target.checked
+            if (evt.target.checked) {
+              element.value_label_scientific_notation = false
+              element.value_label_custom_digit = false
+            }
+          })
+          refreshThisAndUpdateRelatedComponents()
+        }}>
+        <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
+          {t('Flux.label.significantDigits') + ' '}
+        </OSTooltip>
+        {
+          (!menu_for_style) &&
               isAttributeOverloaded(selected_links, 'value_label_significant_digits') ?
-              TooltipValueSurcharge('link_var_', t) :
-              <></>
-          }
-        </Checkbox>
-        {value_label_significant_digits?
-          /* Choose number of custom digit */
+            TooltipValueSurcharge('link_var_', t) :
+            <></>
+        }
+      </Checkbox>
+      {value_label_significant_digits?
+      /* Choose number of custom digit */
 
-            /* <Box layerStyle='menuconfigpanel_option_name'>
+      /* <Box layerStyle='menuconfigpanel_option_name'>
               {t('Flux.label.NbDigit')}
             </Box> */
-            <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
-              <ConfigMenuNumberInput
-                ref_to_set_value={ref_set_number_inputs}
-                default_value={value_label_nb_significant_digits}
-                menu_for_style={/*menu_for_style*/false}
-                minimum_value={0}
-                stepper={true}
-                function_on_blur={(value) => {
-                  elements.forEach(element =>
-                    element.value_label_nb_significant_digits = value ?? undefined)
-                  refreshThisAndUpdateRelatedComponents()
-                }}
-              />
-            </OSTooltip>
-          :<></>
-          }
-      </Box>
+        <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs}
+            default_value={value_label_nb_significant_digits}
+            menu_for_style={/*menu_for_style*/false}
+            minimum_value={0}
+            stepper={true}
+            function_on_blur={(value) => {
+              elements.forEach(element =>
+                element.value_label_nb_significant_digits = value ?? undefined)
+              refreshThisAndUpdateRelatedComponents()
+            }}
+          />
+        </OSTooltip>
+        :<></>
+      }
+    </Box>
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
       isChecked={value_label_scientific_notation}
@@ -402,12 +402,12 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
       {
         (!menu_for_style) &&
            isAttributeOverloaded(selected_links, 'value_label_scientific_notation') ?
-           TooltipValueSurcharge('link_var_', t) :
-           <></>
+          TooltipValueSurcharge('link_var_', t) :
+          <></>
       }
     </Checkbox>
 
-</>
+  </>
 }
 
 export const ButtonLinkContextShowTooltipMenu: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {
@@ -461,58 +461,58 @@ export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLin
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-    {sep}
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {t('Menu.Transformation.tagFlux_assign')}
-      </MenuButton>
+      {sep}
+      <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {t('Menu.Transformation.tagFlux_assign')}
+        </MenuButton>
 
-      <MenuList>
-        {
-          new_data.drawing_area.sankey.flux_taggs_list
-            .filter(tagg => tagg.has_tags)
-            .map((tagg, i) => {
-              return <Menu key={i} placement='end'>
-                <MenuButton
-                  variant='contextmenu_button'
-                  as={Button}
-                  rightIcon={<ChevronRightIcon />}
-                  className="dropdown-basic"
-                >
-                  {tagg.name}
-                </MenuButton>
-                <MenuList>
-                  {
-                    tagg.tags_list
-                      .map(tag => {
-                        const has_tag = contextualised_link.hasGivenTag(tag)
-                        return <MenuItem
-                          onClick={() => {
+        <MenuList>
+          {
+            new_data.drawing_area.sankey.flux_taggs_list
+              .filter(tagg => tagg.has_tags)
+              .map((tagg, i) => {
+                return <Menu key={i} placement='end'>
+                  <MenuButton
+                    variant='contextmenu_button'
+                    as={Button}
+                    rightIcon={<ChevronRightIcon />}
+                    className="dropdown-basic"
+                  >
+                    {tagg.name}
+                  </MenuButton>
+                  <MenuList>
+                    {
+                      tagg.tags_list
+                        .map(tag => {
+                          const has_tag = contextualised_link.hasGivenTag(tag)
+                          return <MenuItem
+                            onClick={() => {
                             // Assign tag to selected links
-                            if (has_tag) {
-                              selected_links.forEach(l => l.addTag(tag))
-                            }
-                            else {
-                              selected_links.forEach(l => l.removeTag(tag))
-                            }
-                            refreshThisAndToggleSaving()
-                          }}
-                        >
-                          {t.name}
-                          {checked(has_tag)}
-                        </MenuItem>
-                      })
-                  }
-                </MenuList>
-              </Menu>
-            })
-        }
-      </MenuList>
-    </Menu></> :
+                              if (has_tag) {
+                                selected_links.forEach(l => l.addTag(tag))
+                              }
+                              else {
+                                selected_links.forEach(l => l.removeTag(tag))
+                              }
+                              refreshThisAndToggleSaving()
+                            }}
+                          >
+                            {t.name}
+                            {checked(has_tag)}
+                          </MenuItem>
+                        })
+                    }
+                  </MenuList>
+                </Menu>
+              })
+          }
+        </MenuList>
+      </Menu></> :
     <></>
 }
