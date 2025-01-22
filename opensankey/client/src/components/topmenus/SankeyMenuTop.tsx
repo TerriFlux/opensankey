@@ -23,6 +23,7 @@ import {
   faPenToSquare,
   faPlus,
   faRightFromBracket,
+  faSliders,
   faShapes,
   faShareNodes,
   faTable,
@@ -45,6 +46,7 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  DrawerFooter,
   FormControl,
   Heading,
   Image,
@@ -126,6 +128,7 @@ import {
 import { Type_GenericApplicationData } from '../../types/Types'
 import { FCType_Menu } from '../../types/FunctionTypes'
 import { ExempleMenuTypes } from '../welcome/MenuExamples'
+import { SpreadSheet } from '../dialogs/SpreadSheet'
 
 
 /*************************************************************************************************/
@@ -243,6 +246,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
     ref_setter_png_saver_res_v,
     ref_setter_show_modal_png_saver,
     ref_setter_show_modal_preference,
+    ref_setter_show_spreadsheet,
     ref_setter_show_modal_apply_layout,
     ref_setter_show_modal_welcome,
     ref_setter_show_modal_tuto,
@@ -655,37 +659,6 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
       </OSTooltip>,
 
       <ButtonLaunchGuide new_data={new_data} />,
-
-      <OSTooltip
-        placement='bottom'
-        label={t('Menu.tooltips.old_app')}>
-        <Box>
-          <Button
-            variant='menutop_button'
-            onClick={() => {
-              window.open('https://legacy.open-sankey.fr')
-            }}
-          >
-            <Box
-              layerStyle='menutop_button_style'
-            >
-              <Box
-                gridRow='1'
-              >
-                <FontAwesomeIcon
-                  style={{ 'height': '2rem', 'width': '3rem' }}
-                  icon={faRightFromBracket}
-                />
-              </Box>
-              <Box
-                gridRow='2'
-              >
-                {t('Menu.old_app')}
-              </Box>
-            </Box>
-          </Button>
-        </Box>
-      </OSTooltip>
     ]
 
     ui['edition'] = [
@@ -891,7 +864,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
   return ui
 }
 
-const ButtonLaunchGuide: FunctionComponent<FCType_ButtonLaunchGuide> = ({ new_data }) => {
+const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }:FCType_ButtonLaunchGuide) => {
   const { setIsOpen } = useTour()
   return <Button
     variant='menutop_button'
@@ -1082,16 +1055,17 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     additionalMenus,
     apply_transformation_additional_elements,
     diagramSelector,
-  }
+  }:FCType_Menu
 ) => {
   const { t, logo, app_name, logo_terriflux } = new_data
   const { ref_setter_show_modal_tuto } = new_data.menu_configuration.dict_setter_show_dialog
   const [show_nav, set_show_nav] = useState(false)
   const [show_tuto, set_show_tuto] = useState(false)
   const [, setCount] = useState(0)
+  const [spreadsheet,setSpreadSheet] = useState(true)
   ref_setter_show_modal_tuto.current = set_show_tuto
   new_data.menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
-  new_data.menu_configuration.ref_menu_opened.current = show_nav
+  new_data.menu_configuration.ref_menu_opened.current = [show_nav,()=>set_show_nav(true)]
   new_data.menu_configuration.positionToolBar(menu_config_width)
 
   //Switch the variable value that handle opening and closing the configuration menu
@@ -1480,9 +1454,24 @@ export const Menu: FunctionComponent<FCType_Menu> = (
 
               }}
             >
-              <DrawerBody className='drawer_menu_config_body' zIndex={2}>
-                {configurations_menus}
-              </DrawerBody>
+              <DrawerFooter>
+                <Button variant='toolbar_button_5' style={{marginRight:'10px'}} onClick={()=>setSpreadSheet(true)}>
+                  <FontAwesomeIcon icon={faTable} />
+                </Button>
+                <Button variant='toolbar_button_5' style={{marginLeft:'10px'}} onClick={()=>setSpreadSheet(false)}>
+                  <FontAwesomeIcon icon={faSliders} />
+                </Button>
+              </DrawerFooter>
+            {spreadsheet?
+              (<DrawerBody className='drawer_menu_config_body' zIndex={2}>
+                  <SpreadSheet
+                      new_data={new_data}
+                    />
+              </DrawerBody>):
+              (<DrawerBody className='drawer_menu_config_body' zIndex={2}>
+              {configurations_menus}
+              </DrawerBody>)}
+
             </DrawerContent>
           </Drawer> :
           <></>}
@@ -2000,6 +1989,7 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
                     UploadExemple(
                       ('Modèles/Template/' + (v[0]) + '/data/' + v[1].data[idx]), new_data
                     )
+                    new_data.menu_configuration.ref_menu_opened.current[1]()
                     set_show_template(false)
                   }}>
                   {new_data.t('useTemplate')}
