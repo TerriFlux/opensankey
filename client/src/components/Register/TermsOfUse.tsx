@@ -42,7 +42,7 @@ const TermsOfUse: FunctionComponent<{
 
   useEffect(() => {
     // Fetch the HTML content from the public directory
-    const path = window.location.origin + '/terms_of_uses_' + i18next.language + '.html'
+    const path = window.location.origin + '/terms_of_uses/terms_of_uses_' + i18next.language + '.html'
     fetch(path, {
       method: 'GET'
     }).then((response) => {

@@ -10,7 +10,14 @@
 
 import React, { FunctionComponent, useEffect, useState } from 'react'
 import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
-import { Center, ChakraProvider, Spinner } from '@chakra-ui/react'
+import { HelmetProvider } from 'react-helmet-async'
+
+import {
+  Center,
+  ChakraProvider,
+  Spinner
+} from '@chakra-ui/react'
+
 
 // OpenSankey imports ===============================================================================
 
@@ -39,6 +46,7 @@ import { PasswordResetFromMail, PasswordResetFromToken } from './components/Logi
 import { PrivateRoute } from './components/Routes/PrivateRoutes'
 import { PublicRoute } from './components/Routes/PublicRoutes'
 import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Paiement/Paiement'
+import { MetaTags } from './components/MetaTags'
 
 // OpenSankeyApp for OpenSankey+ ========================================================================
 
@@ -83,13 +91,37 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
   // Full app ------------------------------------------------------------------------------------
 
   const [app, setApp] = useState(
-    <ChakraProvider
-      theme={Theme_SankeyApplication}
-    >
-      <Center h={window.innerHeight} w={window.innerWidth}>
-        <Spinner size='xl' />
-      </Center>
-    </ChakraProvider>
+    <HelmetProvider>
+      <MetaTags
+        new_data_app={new_data_app}
+      />
+      <ChakraProvider
+        theme={Theme_SankeyApplication}
+      >
+        <Center
+          h={window.innerHeight}
+          w={window.innerWidth}
+          display="grid"
+          gridAutoFlow="row"
+        >
+          <video
+            style={{
+              'display': 'grid',
+              'width': '75vw',
+              'height': '75vh'
+            }}
+            id="Catch phrase OpenSankey"
+            autoPlay
+            muted
+            playsInline
+            loop
+          >
+            <source src="media/catch_phrase_OpenSankey.webm" type="video/webm" />
+          </video>
+          <Spinner size='xl' />
+        </Center>
+      </ChakraProvider>
+    </HelmetProvider>
   )
   const exemple_menu = {} as { [_: string]: JSX.Element }
 
@@ -120,141 +152,148 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
   const blockers = {}
 
   useEffect(() => {
-    new_data_app.checkTokens()
-      .then(() => setApp(
-        <ChakraProvider
-          theme={Theme_SankeyApplication}
-        >
-          <HashRouter>
-            <Routes>
-              <Route
-                path='/register'
-                element={
-                  <PublicRoute
-                    new_data_app={new_data_app}
-                    component={
-                      <Register
+    setTimeout(() =>
+      new_data_app.checkTokens()
+        .then(() => setApp(
+          <HelmetProvider>
+            <MetaTags
+              new_data_app={new_data_app}
+            />
+            <ChakraProvider
+              theme={Theme_SankeyApplication}
+            >
+              <HashRouter>
+                <Routes>
+                  <Route
+                    path='/register'
+                    element={
+                      <PublicRoute
                         new_data_app={new_data_app}
+                        component={
+                          <Register
+                            new_data_app={new_data_app}
+                          />
+                        }
                       />
                     }
                   />
-                }
-              />
-              <Route
-                path='/login'
-              >
-                <Route
-                  index
-                  element={
-                    <PublicRoute
-                      new_data_app={new_data_app}
-                      component={
-                        <Login
+                  <Route
+                    path='/login'
+                  >
+                    <Route
+                      index
+                      element={
+                        <PublicRoute
                           new_data_app={new_data_app}
+                          component={
+                            <Login
+                              new_data_app={new_data_app}
+                            />
+                          }
                         />
                       }
                     />
-                  }
-                />
-                <Route
-                  path='forgot'
-                  element={
-                    <PublicRoute
-                      new_data_app={new_data_app}
-                      component={
-                        <PasswordResetFromMail
+                    <Route
+                      path='forgot'
+                      element={
+                        <PublicRoute
                           new_data_app={new_data_app}
+                          component={
+                            <PasswordResetFromMail
+                              new_data_app={new_data_app}
+                            />
+                          }
                         />
                       }
                     />
-                  }
-                />
-                <Route
-                  path='reset/:token'
-                  element={
-                    <PublicRoute
-                      new_data_app={new_data_app}
-                      component={
-                        <PasswordResetFromToken
+                    <Route
+                      path='reset/:token'
+                      element={
+                        <PublicRoute
                           new_data_app={new_data_app}
+                          component={
+                            <PasswordResetFromToken
+                              new_data_app={new_data_app}
+                            />
+                          }
                         />
                       }
                     />
-                  }
-                />
-              </Route>
-              <Route
-                path='/dashboard'
-                element={
-                  <PrivateRoute
-                    new_data_app={new_data_app}
-                    component={
-                      <Dashboard
+                  </Route>
+                  <Route
+                    path='/dashboard'
+                    element={
+                      <PrivateRoute
                         new_data_app={new_data_app}
-                        exemple_menu={exemple_menu}
+                        component={
+                          <Dashboard
+                            new_data_app={new_data_app}
+                            exemple_menu={exemple_menu}
+                          />
+                        }
                       />
                     }
                   />
-                }
-              />
-              <Route
-                path='/license'
-              >
-                <Route
-                  index
-                  element={
-                    <PrivateRoute
-                      new_data_app={new_data_app}
-                      component={
-                        <PaiementPage
+                  <Route
+                    path='/license'
+                  >
+                    <Route
+                      index
+                      element={
+                        <PrivateRoute
                           new_data_app={new_data_app}
+                          component={
+                            <PaiementPage
+                              new_data_app={new_data_app}
+                            />
+                          }
                         />
                       }
                     />
-                  }
-                />
-                <Route
-                  path='checkout'
-                  element={
-                    <PrivateRoute
-                      new_data_app={new_data_app}
-                      component={
-                        <PaiementCheckout />
+                    <Route
+                      path='checkout'
+                      element={
+                        <PrivateRoute
+                          new_data_app={new_data_app}
+                          component={
+                            <PaiementCheckout />
+                          }
+                        />
                       }
                     />
-                  }
-                />
-                <Route
-                  path='return'
-                  element={
-                    <PrivateRoute
-                      new_data_app={new_data_app}
-                      component={
-                        <PaiementReturn />
+                    <Route
+                      path='return'
+                      element={
+                        <PrivateRoute
+                          new_data_app={new_data_app}
+                          component={
+                            <PaiementReturn />
+                          }
+                        />
                       }
                     />
-                  }
-                />
-              </Route>
-              <Route
-                path='/account'
-                element={
-                  <PrivateRoute
-                    new_data_app={new_data_app}
-                    component={
-                      <Account
+                  </Route>
+                  <Route
+                    path='/account'
+                    element={
+                      <PrivateRoute
                         new_data_app={new_data_app}
-                        blocker_suite_sankey={blockers}
+                        component={
+                          <Account
+                            new_data_app={new_data_app}
+                            blocker_suite_sankey={blockers}
+                          />
+                        }
                       />
                     }
                   />
-                }
-              />
-              <Route path='/' element={sankeyApp} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </HashRouter>
-        </ChakraProvider>))
+                  <Route path='/' element={sankeyApp} />
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </HashRouter>
+            </ChakraProvider>
+          </HelmetProvider>
+        )), 5000)
   }, []
   )
 
