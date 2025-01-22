@@ -83,11 +83,19 @@ printf "OK ------------------------------------------------------------------\n"
 
 # Recreate links with submodules
 printf "Linking dependencies ------------------------------------------------\n"
+# - Src
 cd $SCRIPT_DIR/client/src/deps
 if [ -h "OpenSankey+" ]; then
   rm OpenSankey+
 fi
 ln -s "$SCRIPT_DIR/submodules/OpenSankey+/client/src" OpenSankey+
+# - Public dir
+cd $SCRIPT_DIR/client
+if [ -d "public" ]; then
+  rm -r public
+  git restore public
+fi
+cp -rs $SCRIPT_DIR/submodules/OpenSankey+/client/public .
 cd $SCRIPT_DIR
 printf "OK ------------------------------------------------------------------\n"
 
