@@ -746,30 +746,30 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
           }
         </Checkbox>
         {value_label_custom_digit ?
-          /* Choose number of custom digit */
+        /* Choose number of custom digit */
 
-            /* <Box layerStyle='menuconfigpanel_option_name'>
+        /* <Box layerStyle='menuconfigpanel_option_name'>
               {t('Flux.label.NbDigit')}
             </Box> */
-            <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
-              <ConfigMenuNumberInput
-                ref_to_set_value={ref_set_number_inputs[6]}
-                default_value={value_label_nb_digit}
-                menu_for_style={menu_for_style}
-                minimum_value={0}
-                stepper={true}
-                function_on_blur={(value) => {
-                  elements.forEach(element =>
-                    element.value_label_nb_digit = value ?? undefined)
-                  refreshThisAndUpdateRelatedComponents()
-                }}
-              />
-            </OSTooltip>
+          <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
+            <ConfigMenuNumberInput
+              ref_to_set_value={ref_set_number_inputs[6]}
+              default_value={value_label_nb_digit}
+              menu_for_style={menu_for_style}
+              minimum_value={0}
+              stepper={true}
+              function_on_blur={(value) => {
+                elements.forEach(element =>
+                  element.value_label_nb_digit = value ?? undefined)
+                refreshThisAndUpdateRelatedComponents()
+              }}
+            />
+          </OSTooltip>
           :<></>
-          }
+        }
       </Box>
 
-        {additionMenus.additional_link_appearence_value.map(el => el(menu_for_style))}
+      {additionMenus.additional_link_appearence_value.map(el => el(menu_for_style))}
 
       {/* Ajout une unité au label de flux */}
       <Checkbox
