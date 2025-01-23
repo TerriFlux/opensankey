@@ -29,7 +29,7 @@ export const MetaTags: FunctionComponent<FCType_MetaTags> = (
       <meta property="og:image:secure_url" content={new_data_app.t('metatags.image')} />
       <meta property="og:image:type" content="image/jpeg" />
       <meta property="og:image:width" content="200" />
-      <meta property="og:image:alt" content={"Image of " + new_data_app.t('metatags.title') + " site"} />
+      <meta property="og:image:alt" content={'Image of ' + new_data_app.t('metatags.title') + ' site'} />
       { /* Twitter tags */ }
       <meta name="twitter:creator" content={new_data_app.t('metatags.name')} />
       <meta name="twitter:title" content={new_data_app.t('metatags.title')} />
