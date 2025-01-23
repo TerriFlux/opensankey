@@ -1,6 +1,6 @@
 import React, {
   FunctionComponent,
-  useEffect,
+  useEffect,useState
 } from 'react'
 import LZString from 'lz-string'
 import * as d3 from 'd3'
@@ -26,6 +26,7 @@ import { ModalPreference } from './components/dialogs/SankeyMenuPreferences'
 import { Type_JSON } from './types/Utils'
 import { Type_AdditionalMenus } from './types/Types'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
+import { SplashScreen,ModalDocumentation } from './components/welcome/SplashScreen'
 
 /*************************************************************************************************/
 
@@ -39,6 +40,10 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   ModalWelcome,
   ClickSaveDiagram,
 }) => {
+
+  const [show_splashscreen,set_show_splashscreen] = useState(true)
+  const [show_documentation,set_show_documentation] = useState(false)
+
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
   let initial_data: Type_JSON | undefined = undefined
@@ -169,12 +174,15 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   )
 
   // // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
-  // useEffect(() => {
-  //   // Setup logic here
-  //   return () => {
-  //     localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-  //   }
-  // }, [])
+  useEffect(() => {
+    if (show_splashscreen) {
+      setTimeout(() => {
+        set_show_splashscreen(false)
+        set_show_documentation(true)
+        new_data.setSteps()
+      }, 5000)
+    }
+  }, [])
 
   /*************************************************************************************************/
 
@@ -197,8 +205,15 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
         {
-          <ModalWelcome
+          <SplashScreen
             new_data={new_data}
+            show_splashscreen={show_splashscreen}
+          />
+        }
+        {
+          <ModalDocumentation
+            show_documentation={show_documentation}
+            set_show_documentation={set_show_documentation}
           />
         }
         <>

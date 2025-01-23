@@ -5,5 +5,6 @@ export type OSTooltpFuncType={
   delay?:number,
   label:string,
   placement?:PlacementWithLogical
-  children:ReactNode
+  children:ReactNode,
+  defaultIsOpen?:boolean
 }
