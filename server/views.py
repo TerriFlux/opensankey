@@ -13,6 +13,7 @@ from flask import Blueprint
 from flask import render_template
 from flask import request
 from flask import redirect
+from flask import send_from_directory
 
 # ---------------------------------------------------------------
 # Local imports
@@ -71,9 +72,15 @@ def index_fr():
 @sankeyapp.route('/<path:path>')
 def goto(path):
     try:
+        # First possibility - return a template
         return render_template(path)
     except Exception:
-        return redirect('/', 301)
+        try:
+            # Second possibility return a file from public folder
+            return send_from_directory(template_folder, path)
+        except Exception:
+            # Otherwise return index
+            return redirect('/', 301)
 
 
 @sankeyapp.route('/api/edd_license', methods=['POST'])
