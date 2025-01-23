@@ -90,6 +90,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
 
   // Full app ------------------------------------------------------------------------------------
 
+  const video_src = "media/catch_phrase_OpenSankey.v" + String(Math.round(Math.random() * 3)) + ".webm"
   const [app, setApp] = useState(
     <HelmetProvider>
       <MetaTags
@@ -116,7 +117,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
             playsInline
             loop
           >
-            <source src="media/catch_phrase_OpenSankey.webm" type="video/webm" />
+            <source src={video_src} type="video/webm" />
           </video>
           <Spinner size='xl' />
         </Center>
