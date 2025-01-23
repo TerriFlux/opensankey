@@ -892,12 +892,12 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
 }
 
 const ButtonLaunchGuide: FunctionComponent<FCType_ButtonLaunchGuide> = ({ new_data }) => {
-  const { setIsOpen } = useTour()
+  //const { setIsOpen } = useTour()
   return <Button
     variant='menutop_button'
     onClick={() => {
       new_data.setSteps()
-      setIsOpen(true)
+      //setIsOpen(true)
     }}
   >
     <Box
@@ -912,7 +912,11 @@ const ButtonLaunchGuide: FunctionComponent<FCType_ButtonLaunchGuide> = ({ new_da
       <Box
         gridRow='2'
       >
-        {new_data.t('guide.guide')}
+        <OSTooltip
+        placement='top'
+        label={'Commencer la visite guidée'}
+      >
+        {new_data.t('guide.guide')}</OSTooltip>
       </Box>
     </Box>
   </Button>
