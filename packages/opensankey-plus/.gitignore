@@ -40,7 +40,7 @@ client/public/cursors/cursor_nl.svg
 client/public/icons/guided_tour.svg
 client/public/illustrations/empty_sankey.png
 client/public/logos/logo_opensankey.png
-client/public/media/catch_phrase_OpenSankey.webm
+client/public/media/catch_phrase_OpenSankey*.webm
 client/public/meta/android-chrome-192x192.png
 client/public/meta/android-chrome-512x512.png
 client/public/meta/apple-touch-icon.png
