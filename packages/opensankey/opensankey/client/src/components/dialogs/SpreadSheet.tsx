@@ -1,6 +1,10 @@
 // External imports
-import React, { FunctionComponent,useState } from 'react'
-import { ReactGrid, Column, Row, CellChange, TextCell,NumberCell,Id,MenuOption,SelectionMode,DefaultCellTypes  } from "@silevis/reactgrid";
+import React, { FunctionComponent, useState } from 'react'
+import {
+  ReactGrid, Column, Row, CellChange, TextCell, NumberCell, Id, MenuOption,
+  SelectionMode, DefaultCellTypes, Cell, CellTemplate, Compatible, getCellProperty,
+  isAlphaNumericKey, isNavigationKey, keyCodes, Uncertain, UncertainCompatible
+} from "@silevis/reactgrid";
 import "@silevis/reactgrid/styles.css";
 import { Type_GenericApplicationData, Type_GenericDrawingArea, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types';
 import { ClassTemplate_Sankey } from '../../types/Sankey';
@@ -8,8 +12,8 @@ import { ClassTemplate_NodeElement } from '../../types/Node';
 // COMPONENTS ===========================================================================
 
 
-export const SpreadSheet: FunctionComponent<{new_data:Type_GenericApplicationData}> = (
-  {new_data} : {new_data:Type_GenericApplicationData}
+export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationData }> = (
+  { new_data }: { new_data: Type_GenericApplicationData }
 ) => {
   const getColumns = (): Column[] => [
     { columnId: 'source', width: 150, resizable: true },
@@ -20,41 +24,34 @@ export const SpreadSheet: FunctionComponent<{new_data:Type_GenericApplicationDat
     source: string
     target: string
     value: number
-    isSourceOpen: boolean
-    isTargetOpen: boolean
   }
 
-  const getFlux = (): Flux[] => { 
-    const a = new_data.drawing_area.sankey.links_list.map((l,i)=> {
+  const getFlux = (): Flux[] => {
+    const a = new_data.drawing_area.sankey.links_list.map((l, i) => {
       return {
-        source: l.source.name, 
+        source: l.source.name,
         target: l.target.name,
         value: l.data_value!,
-        isSourceOpen: false,
-        isTargetOpen: false,
       }
     })
-    if (a.length ==0) {
-      a.push({ source: 'Editer nom', target: 'Editer nom', value: 0,isSourceOpen: false,isTargetOpen: false,})
-    } else {
-      a.push({ source: '', target: '', value: 0,isSourceOpen: false,isTargetOpen: false,})
-    }
+    a.push({ source: '', target: '', value: 0 })
     return a
   }
-  const name2id :{[_:string]:string} = {}
-  const tmp_nodes = new_data.drawing_area.sankey.nodes_list.map(n=>{name2id[n.name] = n.id;return{'label':n.name, 'value' :n.name}})
-  tmp_nodes.push({'label':'Editer nom', 'value' :'Editer nom'})
-  const [nodes,setNodes] = useState(tmp_nodes)
 
-  //const [update,setUpdate] = useState(false)
+  const name2id: { [_: string]: string } = {}
+  const tmp_nodes = new_data.drawing_area.sankey.nodes_list.map(n => { name2id[n.name] = n.id; return { 'label': n.name, 'value': n.name } })
+  tmp_nodes.push({ 'label': '', 'value': '' })
+  const [nodes, setNodes] = useState(tmp_nodes)
+
   const [columns, setColumns] = React.useState<Column[]>(getColumns());
   const [flux, setFlux] = React.useState<Flux[]>(getFlux())
 
   new_data.ref_to_spreadsheet.current = () => {
+    //const lastRow = flux[flux.length-1]
     setFlux(getFlux())
     setNodes(tmp_nodes)
   }
-  
+
   const headerRow: Row = {
     rowId: 'header',
     cells: [
@@ -64,28 +61,14 @@ export const SpreadSheet: FunctionComponent<{new_data:Type_GenericApplicationDat
     ]
   }
 
-  const source_cell = (flux:Flux)=>{
-    if (flux.source == 'Editer nom') {
-      return { type: 'text', text: flux.source}
-    }
-    return { type: 'dropdown', selectedValue: flux.source, values:nodes, isOpen:flux.isSourceOpen }
-  }
-
-  const target_cell = (flux:Flux)=>{
-    if (flux.target == 'Editer nom') {
-      return { type: 'text', text: flux.source}
-    }
-    return { type: 'dropdown', selectedValue: flux.target, values:nodes, isOpen:flux.isTargetOpen }
-  }
-
   const getRows = (all_flux: Flux[]): Row[] => [
     headerRow,
     ...all_flux.map<Row>((flux, idx) => (
       {
         rowId: idx,
         cells: [
-          source_cell(flux) as DefaultCellTypes,
-          target_cell(flux) as DefaultCellTypes,
+          { type: 'select' as 'text', text: flux.source, options: nodes, isOpen: false } as DefaultCellTypes,
+          { type: 'select' as 'text', text: flux.target, options: nodes, isOpen: false } as DefaultCellTypes,
           { type: 'number', value: flux.value }
         ]
       }
@@ -93,18 +76,18 @@ export const SpreadSheet: FunctionComponent<{new_data:Type_GenericApplicationDat
   ]
 
   const handleColumnResize = (ci: Id, width: number) => {
-    setColumns((prevColumns:Column[]) => {
-        const columnIndex = prevColumns.findIndex(el => el.columnId === ci);
-        const resizedColumn = prevColumns[columnIndex];
-        const updatedColumn = { ...resizedColumn, width };
-        prevColumns[columnIndex] = updatedColumn;
-        return [...prevColumns];
+    setColumns((prevColumns: Column[]) => {
+      const columnIndex = prevColumns.findIndex(el => el.columnId === ci);
+      const resizedColumn = prevColumns[columnIndex];
+      const updatedColumn = { ...resizedColumn, width };
+      prevColumns[columnIndex] = updatedColumn;
+      return [...prevColumns];
     });
   }
 
-  const addNode = ( 
-    i:number,
-    name:string
+  const addNode = (
+    i: number,
+    name: string
   ) => {
     const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
     new_node.name = name
@@ -112,22 +95,22 @@ export const SpreadSheet: FunctionComponent<{new_data:Type_GenericApplicationDat
   }
   type Type_AnyAbstractNodeElement = ClassTemplate_NodeElement<Type_GenericDrawingArea, ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>
 
-  const addLink = ( 
-    i:number
+  const addLink = (
+    i: number
   ) => {
     const source_name = flux[i].source
     const target_name = flux[i].target
-    let source_node : Type_AnyAbstractNodeElement | undefined
+    let source_node: Type_AnyAbstractNodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]) {
       source_node = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
     } else {
-      source_node = addNode(i,source_name)
+      source_node = addNode(i, source_name)
     }
-    let target_node : Type_AnyAbstractNodeElement | undefined
+    let target_node: Type_AnyAbstractNodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]) {
       target_node = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
     } else {
-      target_node = addNode(i,target_name)
+      target_node = addNode(i, target_name)
     }
     const l = new_data.drawing_area.sankey.addNewLink(
       source_node,
@@ -137,112 +120,97 @@ export const SpreadSheet: FunctionComponent<{new_data:Type_GenericApplicationDat
   }
 
   const applyChangesToFlux = (
-    changes: CellChange[],
+    changes: CellChange<SelectCell | NumberCell>[],
     prevFlux: Flux[]
   ): Flux[] => {
-    changes.forEach((change) => {
+    changes.filter(change => change.type === "number").forEach(change => {
       const fluxIndex = change.rowId as number
-      let create_links = false
-      let modify_links = false
-      let modify_node = false
-      if (change.type === "number") {
-        const fieldName = change.columnId as 'value'
-        const l = new_data.drawing_area.sankey.links_list[fluxIndex]
-        if (l) {
-          l.data_value = (change.newCell as NumberCell).value
-          new_data.drawing_area.updateScaleAtLinkValueSetting()
-        }
-        prevFlux[fluxIndex][fieldName] = (change.newCell as NumberCell).value
+      const fieldName = change.columnId as 'value'
+      const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+      if (l) {
+        l.data_value = (change.newCell as NumberCell).value
+        new_data.drawing_area.updateScaleAtLinkValueSetting()
+      }
+      prevFlux[fluxIndex][fieldName] = (change.newCell as NumberCell).value
+    })
+    // Three possible actions 
+    // - new link with two new node
+    // - new link with two existing nodes
+    // - new link with one existing node and the other to create
+    // - modifying source or/and target of link
+    // - rename node
 
-      }
-      if (change.type === "text") {
-        const fieldName = change.columnId as 'source' | 'target'
-        const l = new_data.drawing_area.sankey.links_list[fluxIndex]
-        if (l) {
-          modify_node = true
-        } else {
-          nodes.push({'label':(change.newCell as TextCell).text, 'value' :(change.newCell as TextCell).text})
-          create_links = true
-        }
-        prevFlux[fluxIndex][fieldName] = (change.newCell as TextCell).text
-      }
-      if (change.type === "dropdown") {
-        const fieldName = change.columnId as 'source' | 'target'
-        /**
-         * Checking for an opening/closing of a dropdown list
-         */
-        if (change.previousCell.isOpen !== change.newCell.isOpen) {
-          if (fieldName == 'source') {
-            prevFlux[fluxIndex].isSourceOpen = change.newCell.isOpen!
-          } else {
-            prevFlux[fluxIndex].isTargetOpen = change.newCell.isOpen!
-          }
-          /**
-           * Finally updating the value of a selected option, selection of new value always causes
-           * the closing of a dropdown
-           */
-          if (
-            change.previousCell.selectedValue !== change.newCell.selectedValue
-          ) {
-            console.log(
-              `${change.previousCell.selectedValue} -> ${change.newCell.selectedValue}`
-            );
-            if (prevFlux[fluxIndex][fieldName] == 'Editer nom') {
-              create_links = true
-            } else if (prevFlux[fluxIndex].source !== '' && prevFlux[fluxIndex].target !== '') {
-              modify_links = true
-            }
-            prevFlux[fluxIndex][fieldName] = change.newCell.selectedValue!
-          }
-        }
-      }
-      const create_or_modify = prevFlux[fluxIndex].source != 'Editer nom' && prevFlux[fluxIndex].target != 'Editer nom' &&
-          prevFlux[fluxIndex].source != '' && prevFlux[fluxIndex].target != ''
-      if (create_links && create_or_modify
-      ) {
+    let redraw = false
+
+    // 1. New Flux
+    changes.filter(change => change.type === "select" && change.rowId == prevFlux.length - 1).forEach(change => {
+      const fluxIndex = change.rowId as number
+      const fieldName = change.columnId as 'source' | 'target'
+      prevFlux[fluxIndex][fieldName] = (change.newCell as SelectCell).text
+      const otherfieldName = change.columnId == 'source' ? 'target' : 'source'
+      if (prevFlux[fluxIndex][otherfieldName] != '' && prevFlux[fluxIndex][fieldName] != '') {
         addLink(fluxIndex)
-        new_data.drawing_area.computeAutoSankey(true)
-        new_data.sendWaitingToast(
-          () => {
-            new_data.draw()
-          })
-        new_data.sendWaitingToast(()=>{
-          new_data.ref_to_spreadsheet.current()
-        })
-      } else if (modify_links && create_or_modify && change.type === "dropdown") {
-        const l = new_data.drawing_area.sankey.links_list[fluxIndex]
-        if (l) {
-          l.source = new_data.drawing_area.sankey.nodes_dict[name2id[change.newCell.selectedValue!]]
-          new_data.drawing_area.computeAutoSankey(true)
-          new_data.sendWaitingToast(()=>{
-            new_data.ref_to_spreadsheet.current()
-          })
-        } else {
-          addLink(fluxIndex)
-          new_data.drawing_area.computeAutoSankey(true)
-          new_data.sendWaitingToast(
-            () => {
-              new_data.draw()
-            })
-          new_data.sendWaitingToast(()=>{
-            new_data.ref_to_spreadsheet.current()
-          })          
-        }
-      } else if (modify_node) {
-        const node = new_data.drawing_area.sankey.links_list[fluxIndex][change.columnId as 'source' | 'target']
-        node.name = (change.newCell as TextCell).text
-        new_data.sendWaitingToast(()=>{
-          new_data.ref_to_spreadsheet.current()
-        })
+        redraw = true
       }
+    })
+
+    // 2. Modify flux
+    changes.filter(change =>
+      change.type === "select" && change.rowId !== prevFlux.length - 1 && name2id[change.newCell.text!] != undefined
+    ).forEach(change => {
+      const fluxIndex = change.rowId as number
+      const fieldName = change.columnId as 'source' | 'target'
+      const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+
+      if (fieldName == 'source') {
+        l.source = new_data.drawing_area.sankey.nodes_dict[name2id[(change.newCell as SelectCell).text]]
+      } else {
+        l.target = new_data.drawing_area.sankey.nodes_dict[name2id[(change.newCell as SelectCell).text]]
+      }
+    })
+
+    // 3. Change node name
+    changes.filter(change =>
+      change.type === "select" && change.rowId !== prevFlux.length - 1 && name2id[change.newCell.text] == undefined
+    ).forEach(change => {
+      const fluxIndex = change.rowId as number
+      const fieldName = change.columnId as 'source' | 'target'
+      const prev_node_name = (change.previousCell as SelectCell).text
+      const new_node_name = (change.newCell as SelectCell).text
+      prevFlux[fluxIndex][fieldName] = new_node_name
+      const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+
+      if (fieldName == 'source') {
+        l.source.name = new_node_name
+      } else {
+        l.target.name = new_node_name
+      }
+      const nodeIdx = nodes.map(n => n.label).indexOf(prev_node_name)
+
+      const copy_nodes = nodes.filter((n: { label: string; value: string; }) => n.label != prev_node_name)
+      copy_nodes.splice(nodeIdx, 0, { 'label': new_node_name, 'value': new_node_name })
+      setNodes(copy_nodes)
+      //new_data.ref_to_spreadsheet.current()
+    })
+
+    if (redraw) {
+      new_data.drawing_area.computeAutoSankey(true)
+      new_data.sendWaitingToast(
+        () => {
+          new_data.draw()
+        })
+    }
+    new_data.sendWaitingToast(() => {
+      new_data.ref_to_spreadsheet.current()
     })
     return [...prevFlux]
   }
 
-  const handleChanges = (changes: CellChange[]) => { 
-    setFlux(
-      (prevFlux : Flux[]) => applyChangesToFlux(changes, prevFlux)
-    ) 
+  const handleChanges = (changes: CellChange<SelectCell | NumberCell>[]) => {
+    applyChangesToFlux(changes, flux)
+    // setFlux(
+    //   (prevFlux: Flux[]) => applyChangesToFlux(changes, prevFlux)
+    // )
   }
 
   const handleContextMenu = (
@@ -258,12 +226,16 @@ export const SpreadSheet: FunctionComponent<{new_data:Type_GenericApplicationDat
           id: "removeFlux",
           label: "Remove Flux",
           handler: () => {
-            selectedRowIds.forEach(i=>
+            selectedRowIds.forEach(i =>
               new_data.drawing_area.deleteLink(new_data.drawing_area.sankey.links_list[i as number])
             )
-            setFlux((prevFlux:Flux[]) => {
+            setFlux((prevFlux: Flux[]) => {
               return [...prevFlux.filter((flux, idx) => !selectedRowIds.includes(idx))]
             })
+            new_data.sendWaitingToast(
+              () => {
+                new_data.draw()
+              })
           }
         }
       ];
@@ -288,13 +260,127 @@ export const SpreadSheet: FunctionComponent<{new_data:Type_GenericApplicationDat
   const rows = getRows(flux)
 
   return <ReactGrid
-    rows={rows} 
+    customCellTemplates={{ select: new SelectCellTemplate }}
+    rows={rows}
     columns={columns}
     enableRangeSelection
     enableRowSelection
-    onCellsChanged={handleChanges}
+    onCellsChanged={handleChanges as unknown as (changes: CellChange[]) => void}
     onColumnResized={handleColumnResize}
     onContextMenu={handleContextMenu}
   />
 }
 
+interface IOption {
+  label: string
+  value: string
+}
+
+export interface SelectCell extends Cell {
+  type: "select"
+  text: string
+  options: IOption[]
+  isOpen: boolean
+}
+
+export class SelectCellTemplate implements CellTemplate<Cell | SelectCell> {
+  private wasEscKeyPressed = false;
+
+  getCompatibleCell(
+    uncertainCell: Uncertain<SelectCell>
+  ): Compatible<SelectCell> {
+    const isOpen = getCellProperty(uncertainCell, "isOpen", "boolean");
+    const text = getCellProperty(uncertainCell, "text", "string");
+    const options = getCellProperty(uncertainCell, "options", "object");
+    const value = parseFloat(text);
+    return { ...uncertainCell, text, value, options, isOpen };
+  }
+  render(
+    cell: Compatible<SelectCell>,
+    isInEditMode: boolean,
+    onCellChanged: (cell: Compatible<SelectCell>, commit: boolean) => void
+  ): JSX.Element {
+    const options = getCellProperty(cell, "options", "object");
+    if (isInEditMode || (!options.map((o: { label: string; value: string; }) => o.label).includes(cell.text))) {
+      const value = cell.text.toLocaleLowerCase();
+      return (
+        <input
+          className="rg-input"
+          ref={(input) => {
+            if (input) {
+              input.focus();
+              input.setSelectionRange(input.value.length, input.value.length);
+            }
+          }}
+          defaultValue={cell.text}
+          onChange={(e) => {
+            return
+            const tmp = this.getCompatibleCell({ ...cell, text: e.currentTarget.value })
+            onCellChanged(tmp, true)
+          }}
+          onBlur={(e) => {
+            onCellChanged(this.getCompatibleCell({ ...cell, text: e.currentTarget.value }), !this.wasEscKeyPressed);
+            this.wasEscKeyPressed = false;
+          }}
+          onCopy={(e) => e.stopPropagation()}
+          onCut={(e) => e.stopPropagation()}
+          onPaste={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          //placeholder={cell.placeholder}
+          onKeyDown={(e) => {
+            if (isAlphaNumericKey(e.keyCode) || isNavigationKey(e.keyCode)) e.stopPropagation();
+            if (e.keyCode === keyCodes.ESCAPE) this.wasEscKeyPressed = true;
+          }}
+        />)
+    }
+    let nb_click = 0
+    return (
+      <select
+        ref={(input) => {
+          input && input.focus();
+        }}
+        defaultValue={cell.text}
+        onChange={(e) =>
+          onCellChanged(
+            this.getCompatibleCell({ ...cell, text: e.currentTarget.options[e.currentTarget.selectedIndex].value }),
+            true
+          )
+        }
+        onCopy={(e) => e.stopPropagation()}
+        onCut={(e) => e.stopPropagation()}
+        onPaste={(e) => e.stopPropagation()}
+        onPointerDown={(e) => {
+          cell.isOpen = !cell.isOpen
+          console.log(cell.isOpen)
+          if (!cell.isOpen) {
+            e.stopPropagation()
+          }
+        }}
+      >
+        {cell.text == '' ? (cell.options.map((opt, idx) => <option key={idx} value={opt.value}>{opt.value}</option>))
+          : (cell.options.filter(opt => opt.label != '').map((opt, idx) => <option key={idx} value={opt.value}>{opt.value}</option>))
+        }
+      </select>
+    );
+  }
+
+  handleKeyDown(
+    cell: Compatible<SelectCell>,
+    keyCode: number,
+    ctrl: boolean,
+    shift: boolean,
+    alt: boolean
+  ): { cell: Compatible<SelectCell>; enableEditMode: boolean } {
+    if (!ctrl && !alt && isAlphaNumericKey(keyCode))
+      return { cell, enableEditMode: true };
+    return {
+      cell,
+      enableEditMode:
+        keyCode === 1,
+    };
+  }
+
+  update(cell: Compatible<SelectCell>, cellToMerge: UncertainCompatible<SelectCell>): Compatible<SelectCell> {
+    return this.getCompatibleCell({ ...cell, text: cellToMerge.text })
+  }
+}
