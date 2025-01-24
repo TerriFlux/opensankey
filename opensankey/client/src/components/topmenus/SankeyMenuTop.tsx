@@ -452,7 +452,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             {t('Menu.open_excel')}
           </MenuItem>
 
-          <MenuItem
+          {/* <MenuItem
             onClick={() => {
               if (_load_sankeymatic.current) {
                 _load_sankeymatic.current.name = ''
@@ -461,7 +461,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             }}
           >
             {/* TODO : find a better icon when we'll use FontAwesome pro */}
-            <FontAwesomeIcon icon={faChartSimple} />
+            {/* <FontAwesomeIcon icon={faChartSimple} />
             {t('Menu.open_sankeymatic')}
           </MenuItem>
           <Input
@@ -496,14 +496,14 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
                       })
                       .catch((error) => {
                         console.error('Error in fetchExamples - ' + error.toString())
-            
+
                       })
                   })
                 }
               })()
               reader.readAsText(files[0])
             }}
-          />
+          /> */}
         </MenuList>
       </ChakraMenu>,
 
@@ -1876,17 +1876,6 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
   const path = window.location.origin
   const url = path + '/opensankey/menus/templates'
 
-  // Get TerriFlux logo
-  let empty_sankey = ''
-  try {
-    empty_sankey = require('../../css/empty_sankey.png')
-    if (!path.includes('localhost')) {
-      empty_sankey = empty_sankey.replace('static/', new_data.static_path)
-    }
-  } catch (expt) {
-    console.log('empty_sankey.png not found')
-  }
-
   // On first render fetch template then re-render to have component with template
   if (firstRender) {
     fetch(url, {
@@ -1931,7 +1920,7 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
     <CardBody>
       <Image
         className='img-card'
-        src={empty_sankey}
+        src={'illustrations/empty_sankey.png'}
         style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
       />
 

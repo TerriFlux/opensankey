@@ -59,8 +59,8 @@ const toast_bypass: boolean = false
 
 function normalizeName(s:string){
   return s.replaceAll(' ','_')
-  .replaceAll('(','')
-  .replaceAll(')','')
+    .replaceAll('(','')
+    .replaceAll(')','')
 }
 
 // CLASS APPLICATION DATA **************************************************************/
@@ -137,7 +137,7 @@ export abstract class ClassTemplate_ApplicationData
   // PRIVATE ATTRIBUTES =================================================================
   // General attributes for the application
   private _t: TFunction = useTranslation('translation', { useSuspense: false }).t //traductor
-  
+
   private _i18n = useTranslation('translation', { useSuspense: false }).i18n //traductor
 
   private _logo_opensankey: string // path to logo
@@ -197,33 +197,11 @@ export abstract class ClassTemplate_ApplicationData
     this.fit_screen = published_mode
 
     // Get OpenSankey logo
-    let logo_opensankey = ''
-    try {
-      logo_opensankey = require('../css/opensankey.png')
-      const path = window.location.origin
-      if (!path.includes('localhost')) {
-        logo_opensankey = logo_opensankey.replace('static/', this.static_path)
-      }
-    } catch (expt) {
-      console.log('opensankey.png not found')
-    }
-    this._logo_opensankey = logo_opensankey
-
+    this._logo_opensankey = 'logos/logo_opensankey.png'
     // Get TerriFlux logo
-    let logo_terriflux = ''
-    try {
-      logo_terriflux = require('../css/terriflux.png')
-      const path = window.location.origin
-      if (!path.includes('localhost')) {
-        logo_terriflux = logo_terriflux.replace('static/', this.static_path)
-      }
-    } catch (expt) {
-      console.log('terriflux.png not found')
-    }
-    this._logo_terriflux = logo_terriflux
-
+    this._logo_terriflux = 'logos/logo_terriflux.png'
     // Default logo for app
-    this._logo = logo_opensankey
+    this._logo = this._logo_opensankey
 
     // Excel processing function
     this._processFunction = {
@@ -448,7 +426,7 @@ export abstract class ClassTemplate_ApplicationData
   protected _toJSON() {
     // Create json struct
     const json_object = {} as Type_JSON
-    // App language 
+    // App language
     if(this._language!==undefined)
       json_object['language'] = this._language
     // Node label separator attribute
@@ -518,7 +496,7 @@ export abstract class ClassTemplate_ApplicationData
     this._drawing_area.arrangeTrade(false)
     if(this._language!==undefined && i18next.language !==this.language)
       i18next.changeLanguage(this.language)
-      
+
     this.menu_configuration.updateAllMenuComponents()
   }
 
@@ -689,12 +667,12 @@ export abstract class ClassTemplate_ApplicationData
   }
 
   /**
-   * Some pre-process to correct html we will send to converter 
-   * because there is some difference between what our code produce 
-   * & what the converter wait to correctly produce an image 
+   * Some pre-process to correct html we will send to converter
+   * because there is some difference between what our code produce
+   * & what the converter wait to correctly produce an image
    *
    * @protected
-   * @return {*} 
+   * @return {*}
    * @memberof Class_ApplicationData
    */
   protected _pre_process_export_svg() {
@@ -712,7 +690,7 @@ export abstract class ClassTemplate_ApplicationData
     svg_clone?.select('#grp_legend .gg_legend').attr('transform', 'translate(0,0)')
     svg_clone?.selectAll('input').remove()
 
-    // For some reason when attr 'dominant-baseline' is 'text-after-edge', 
+    // For some reason when attr 'dominant-baseline' is 'text-after-edge',
     // at the export to image the text is shifted to the bottom by half the font size of the text.
     // So before the convertion to image modify the svg clone to correct the error
     svg_clone?.selectAll('.name_label_text').nodes().forEach(el => {
@@ -776,7 +754,7 @@ export abstract class ClassTemplate_ApplicationData
 
     //Set general attributes from setting dict
     this._drawing_area.color = getStringFromJSON(setting, 'bg_color', this._drawing_area.color)
-    
+
     // Setting default style attributes of nodes from sankeymatic file
     default_node_style_element.shape_min_width = +getStringFromJSON(setting, 'node_width', String(default_shape_min_width))
     default_node_style_element.shape_color = getStringFromJSON(setting, 'node_color', default_shape_color)
@@ -795,7 +773,7 @@ export abstract class ClassTemplate_ApplicationData
     default_flow_style_element.shape_is_curved = +getStringFromJSON(setting, 'flow_curvature', '1')>0.5
 
 
-    // name/value label size is determined by a base size & a weight of that size, 
+    // name/value label size is determined by a base size & a weight of that size,
     // for exemple : base size is 12 and labels_relativesize is 150 (so value value relative size is 50) then name label size is 16 (12*150%) and value size is 6 (12*50%)
     let baseSize=default_label_font_size
     const labels_relativesize=+getStringFromJSON(setting, 'labels_relativesize', String(100))
@@ -812,7 +790,7 @@ export abstract class ClassTemplate_ApplicationData
         new_node.shape_color=n[1].color
     })
     const node_dict=this._drawing_area.sankey.nodes_dict
-    
+
     // Create flows from sankeymatic JSON
     let linksMaxValue = 0
     Object.entries(obj['flows']).forEach(source=>{
@@ -820,11 +798,11 @@ export abstract class ClassTemplate_ApplicationData
         const src=node_dict[normalizeName(source[0])]
         const dst=node_dict[normalizeName(flow[0])]
         const new_link=this.drawing_area.sankey.addNewLinkWithId(src.id+'-->'+dst.id,src,dst)
-        new_link.data_value=flow[1] as number    
+        new_link.data_value=flow[1] as number
         linksMaxValue = Math.max(
-        linksMaxValue,
-        new_link.data_value ? new_link.data_value : 0
-      )
+          linksMaxValue,
+          new_link.data_value ? new_link.data_value : 0
+        )
       })
     })
     linksMaxValue += 1 // Protection if all values are at 0
