@@ -3,13 +3,42 @@ import React, { FunctionComponent, useState } from 'react'
 import {
   ReactGrid, Column, Row, CellChange, TextCell, NumberCell, Id, MenuOption,
   SelectionMode, DefaultCellTypes, Cell, CellTemplate, Compatible, getCellProperty,
-  isAlphaNumericKey, isNavigationKey, keyCodes, Uncertain, UncertainCompatible
+  isAlphaNumericKey, isNavigationKey, keyCodes, Uncertain, UncertainCompatible, CellLocation
 } from "@silevis/reactgrid";
 import "@silevis/reactgrid/styles.css";
 import { Type_GenericApplicationData, Type_GenericDrawingArea, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types';
 import { ClassTemplate_Sankey } from '../../types/Sankey';
 import { ClassTemplate_NodeElement } from '../../types/Node';
 // COMPONENTS ===========================================================================
+// ! Won't work with locales using characters different than Arabic numerals (e.g. *Eastern* Arabic numerals: ١٢٣٬٤٥٦٫٧٨٩)
+// TODO: If possible add support for locales using characters different than Arabic numerals
+function getLocaleSeparators(locale: string) {
+  const testNumber = 123456.789;
+  const localeFormattedNumber = Intl.NumberFormat(locale).format(testNumber);
+
+  // Get the thousands separator of the locale
+  const thousandsSeparator = localeFormattedNumber.split("123")[1][0];
+
+  // Get the decimal separator of the locale
+  const decimalSeparator = localeFormattedNumber.split("123")[1][4];
+  return { thousandsSeparator, decimalSeparator };
+}
+
+export function parseLocaleNumber(stringNumber: string, locale = navigator.language): number {
+  if (!stringNumber.trim()) return NaN;
+  const { thousandsSeparator, decimalSeparator } = getLocaleSeparators(locale);
+  const normalizedStringNumber = stringNumber.replace(/\u00A0/g, " "); // Replace non-breaking space with normal space
+  const numberString = normalizedStringNumber
+    .replace(new RegExp(`[${thousandsSeparator}\\s]`, "g"), "") // Replace thousands separator and white-space
+    .replace(new RegExp(`\\${decimalSeparator}`, "g"), "."); // Replace decimal separator
+
+  const trimmedNumberString = numberString.replace(/^(?!-)\D+|\D+$/g, ""); // Remove characters before first and after last number, but keep negative sign
+  if (trimmedNumberString === null || trimmedNumberString.trim().length === 0) {
+    return NaN;
+  }
+  return Number(trimmedNumberString);
+}
+
 
 
 export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationData }> = (
@@ -86,7 +115,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   }
 
   const addNode = (
-    i: number,
     name: string
   ) => {
     const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
@@ -96,27 +124,30 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   type Type_AnyAbstractNodeElement = ClassTemplate_NodeElement<Type_GenericDrawingArea, ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericLinkElement>
 
   const addLink = (
-    i: number
+    cur_flux: Flux
   ) => {
-    const source_name = flux[i].source
-    const target_name = flux[i].target
+    const source_name = cur_flux.source
+    const target_name = cur_flux.target
     let source_node: Type_AnyAbstractNodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]) {
       source_node = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
     } else {
-      source_node = addNode(i, source_name)
+      source_node = addNode(source_name)
+      name2id[source_name] = source_node.id
     }
     let target_node: Type_AnyAbstractNodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]) {
       target_node = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
     } else {
-      target_node = addNode(i, target_name)
+      target_node = addNode(target_name)
+      name2id[target_name] = target_node.id
     }
     const l = new_data.drawing_area.sankey.addNewLink(
       source_node,
       target_node
     )
-    l.data_value = flux[i].value
+    l.data_value = +cur_flux.value;
+    (l as unknown as {shape_is_gradient:boolean}).shape_is_gradient = true
   }
 
   const applyChangesToFlux = (
@@ -149,7 +180,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       prevFlux[fluxIndex][fieldName] = (change.newCell as SelectCell).text
       const otherfieldName = change.columnId == 'source' ? 'target' : 'source'
       if (prevFlux[fluxIndex][otherfieldName] != '' && prevFlux[fluxIndex][fieldName] != '') {
-        addLink(fluxIndex)
+        addLink(prevFlux[fluxIndex])
         redraw = true
       }
     })
@@ -212,49 +243,78 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     //   (prevFlux: Flux[]) => applyChangesToFlux(changes, prevFlux)
     // )
   }
+  async function getCellsFromClipboardPlainText(): Promise<Compatible<Cell>[][]> {
+    const text = await navigator.clipboard.readText().catch(() => {
+      throw new Error("Failed to read textual data from clipboard!");
+    });
+  
+    return text.split("\n").map((line) =>
+      line.split("\t").map((textValue) => ({
+        type: "text",
+        text: textValue,
+        value: parseLocaleNumber(textValue),
+      }))
+    );
+  }
 
   const handleContextMenu = (
     selectedRowIds: Id[],
     selectedColIds: Id[],
     selectionMode: SelectionMode,
-    menuOptions: MenuOption[]
+    menuOptions: MenuOption[],
+    selectedRanges: Array<CellLocation[]>
   ): MenuOption[] => {
-    if (selectionMode === "row") {
-      menuOptions = [
-        ...menuOptions,
-        {
-          id: "removeFlux",
-          label: "Remove Flux",
-          handler: () => {
-            selectedRowIds.forEach(i =>
-              new_data.drawing_area.deleteLink(new_data.drawing_area.sankey.links_list[i as number])
+    menuOptions.pop()
+    menuOptions.push(
+      {
+        id: "paste",
+        label: "Paste",
+        handler: () => {
+          getCellsFromClipboardPlainText().then(rows=>{
+            console.log(selectedRanges)
+            const columns = getColumns().map(c=>c.columnId) as Id[]
+            const current_row = selectedRanges[0][0].rowId as number
+            const current_col = columns.indexOf(selectedRanges[0][0].columnId) as number
+            const new_flux = flux
+            rows.pop()
+            if (current_row + rows.length>flux.length) {
+              for (let i=flux.length;i<current_row + rows.length;i++) {
+                new_flux.push(({ source: '', target: '', value: 0 }))
+              }
+            }
+            rows.forEach(
+              (r,i)=>r.forEach((item,j)=>{
+                const row_flux = new_flux[current_row+i]
+                const fieldName = columns[current_col+j] as 'source' | 'target'
+                row_flux[fieldName] = item.text
+              }) 
             )
-            setFlux((prevFlux: Flux[]) => {
-              return [...prevFlux.filter((flux, idx) => !selectedRowIds.includes(idx))]
+            new_flux.forEach(flux=>{
+              const source_name = flux.source
+              const target_name = flux.target
+              if (isNaN(flux.value)) {
+                flux.value = (flux.value as unknown as string).replace(' ','').replace('\r','') as unknown as number
+              }
+              flux.value = +flux.value
+              if (!name2id[source_name] || !name2id[target_name]) {
+                addLink(flux)
+              }
             })
+            new_data.drawing_area.computeAutoSankey(true)
             new_data.sendWaitingToast(
               () => {
                 new_data.draw()
               })
-          }
-        }
-      ];
-    } else {
-      menuOptions = [
-        ...menuOptions,
-        {
-          id: "addFlux",
-          label: "Add Flux",
-          handler: () => {
-            // setPeople(prevPeople => {
-            //   return [...prevPeople.filter((person, idx) => !selectedRowIds.includes(idx))]
+            // new_data.sendWaitingToast(() => {
+            //   new_data.ref_to_spreadsheet.current()
             // })
-          }
-        }
-      ];
-    }
-    return menuOptions;
+          })
+        }    
+      },
+    );
+    return menuOptions
   }
+
 
 
   const rows = getRows(flux)
@@ -384,3 +444,4 @@ export class SelectCellTemplate implements CellTemplate<Cell | SelectCell> {
     return this.getCompatibleCell({ ...cell, text: cellToMerge.text })
   }
 }
+
