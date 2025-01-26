@@ -256,6 +256,9 @@ export const resources_app_elements = {
           old_app: 'Redirect to the legacy version of OpenSankey',
         },
       },
+      SpreadSheet: {
+        paste: 'Paste'
+      },
       MEP: {
         onBlur: 'Value is applied when we leave the input or we press enter',
         Echelle: 'Scale',
@@ -1047,6 +1050,9 @@ export const resources_app_elements = {
           LegBgColor: 'Moddifie la couleur de fond de la légende',
           old_app: 'Redirige vers la version précédente de OpenSankey',
         },
+      },
+      SpreadSheet: {
+        paste: 'Coller'
       },
       MEP: {
         onBlur: 'La valeur sera appliqué dès que l\'on quitte l\'input ou presser la touche entrée',
