@@ -86,8 +86,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         source_node,
         target_node
       )
-      l.data_value = +cur_flux.value;
-      (l as unknown as { shape_is_gradient: boolean }).shape_is_gradient = true
+      l.data_value = +cur_flux.value
+      //(l as unknown as { shape_is_gradient: boolean }).shape_is_gradient = true
     }
   }
 
@@ -129,7 +129,9 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     columns={columns}
     onCellsChanged={
       (changes: CellChange[])  => {
-        //const changes = cur_changes as CellChange<TextCell|NumberCell>[]
+        let redraw = false
+        let updateTable = false
+
         changes.filter(change => change.type === "number").forEach(change => {
           const fluxIndex = change.rowId as number
           const fieldName = change.columnId as 'value'
@@ -139,6 +141,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             new_data.drawing_area.updateScaleAtLinkValueSetting()
           }
           spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as NumberCell).value
+          updateTable = true
         })
         // Three possible actions 
         // - new link with two new node
@@ -147,8 +150,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         // - modifying source or/and target of link
         // - rename node
 
-        let redraw = false
-        let updateTable = false
+
 
         // 1. New Flux
         changes.filter(change => change.type === 'text' && change.rowId == spreadSheetFlux.length - 1).forEach(change => {
@@ -160,7 +162,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             addLink(spreadSheetFlux[fluxIndex])
             redraw = true
           } else {
-            setSpreadSheetFlux([...spreadSheetFlux])
             updateTable = true
           }
         })
@@ -228,7 +229,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       return [
         {
           id: "paste",
-          label: "Paste",
+          label: new_data.t('SpreadSheet.paste'),
           handler: () => {
             getCellsFromClipboardPlainText().then(rows => {
               console.log(selectedRanges)
