@@ -128,7 +128,7 @@ import {
 import { Type_GenericApplicationData } from '../../types/Types'
 import { FCType_Menu } from '../../types/FunctionTypes'
 import { ExempleMenuTypes } from '../welcome/MenuExamples'
-import { SpreadSheet } from '../dialogs/SpreadSheet'
+import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 
 
 /*************************************************************************************************/
