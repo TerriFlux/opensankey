@@ -27,7 +27,6 @@ import {
   faShapes,
   faShareNodes,
   faTable,
-  faChartSimple
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
