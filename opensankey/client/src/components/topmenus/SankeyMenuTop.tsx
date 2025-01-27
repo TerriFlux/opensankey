@@ -448,7 +448,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             {t('Menu.open_excel')}
           </MenuItem>
 
-          {/* <MenuItem
+          <MenuItem
             onClick={() => {
               if (_load_sankeymatic.current) {
                 _load_sankeymatic.current.name = ''
@@ -457,7 +457,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             }}
           >
             {/* TODO : find a better icon when we'll use FontAwesome pro */}
-            {/* <FontAwesomeIcon icon={faChartSimple} />
+              <FontAwesomeIcon icon={faChartSimple} />
             {t('Menu.open_sankeymatic')}
           </MenuItem>
           <Input
@@ -488,7 +488,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
                       .text()
                       .then(text => {
                         const json_data = JSON.parse(text)
-                        new_data.fromSankeyMaticJSON(json_data)
+                        new_data.fromJSON(json_data)
                       })
                       .catch((error) => {
                         console.error('Error in fetchExamples - ' + error.toString())
@@ -499,7 +499,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
               })()
               reader.readAsText(files[0])
             }}
-          /> */}
+          />
         </MenuList>
       </ChakraMenu>,
 
