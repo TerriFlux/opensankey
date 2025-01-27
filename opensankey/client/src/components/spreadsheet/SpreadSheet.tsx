@@ -22,18 +22,18 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   interface SpreadSheetFluxType {
     source: string
     target: string
-    value: number
+    value?: number
   }
 
   const getFluxFromSankey = (): SpreadSheetFluxType[] => {
-    const a = new_data.drawing_area.sankey.links_list.map((l, i) => {
+    const a : SpreadSheetFluxType[] = new_data.drawing_area.sankey.links_list.map((l, i) => {
       return {
         source: l.source.name,
         target: l.target.name,
         value: l.data_value!,
       }
     })
-    a.push({ source: '', target: '', value: 0 })
+    a.push({ source: '', target: '' })
     return a
   }
   const name2id: { [_: string]: string } = {}
@@ -86,7 +86,9 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         source_node,
         target_node
       )
-      l.data_value = +cur_flux.value
+      if (cur_flux.value) {
+        l.data_value = +cur_flux.value
+      }
       //(l as unknown as { shape_is_gradient: boolean }).shape_is_gradient = true
     }
   }
@@ -121,7 +123,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           cells: [
             { type: 'text' as 'text', text: flux.source } as DefaultCellTypes,
             { type: 'text' as 'text', text: flux.target } as DefaultCellTypes,
-            { type: 'number', value: flux.value }
+            { type: 'number', value: flux.value as number }
           ]
         }
       ))
@@ -240,7 +242,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
               rows.pop()
               if (current_row + rows.length > spreadSheetFlux.length) {
                 for (let i = spreadSheetFlux.length; i < current_row + rows.length; i++) {
-                  spreadSheetFlux.push(({ source: '', target: '', value: 0 }))
+                  spreadSheetFlux.push(({ source: '', target: '' }))
                 }
               }
               rows.forEach(
@@ -255,10 +257,12 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
               spreadSheetFlux.forEach(flux => {
                 const source_name = flux.source
                 const target_name = flux.target
-                if (isNaN(flux.value)) {
+                if (flux.value && isNaN(flux.value)) {
                   flux.value = (flux.value as unknown as string).replace(' ', '').replace('\r', '') as unknown as number
                 }
-                flux.value = +flux.value
+                if (flux.value ) {
+                  flux.value = +flux.value
+                }
                 if (!name2id[source_name] || !name2id[target_name]) {
                   addLink(flux)
                   redraw = true
@@ -266,7 +270,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
                   const sourceNode = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
                   const targetNode = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
                   const l =  new_data.drawing_area.sankey.links_dict[name2id[defaultLinkId(sourceNode,targetNode)]]          
-                  if (l) {
+                  if (l && flux.value) {
                     l.data_value = flux.value
                   }
                   synchronizeSpreadSheet = true
