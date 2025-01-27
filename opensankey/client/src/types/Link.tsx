@@ -1035,9 +1035,22 @@ export abstract class ClassTemplate_LinkElement
       return
     // Clean previous shape
     this.d3_selection?.selectAll('.link_path').remove()
+    this.d3_selection?.selectAll('.link_shape').remove()
     // Failsafe
     if (this._source && this._target) {
-      // Add new path shape
+      // Avoid recomputations
+      const thickness = this.thickness
+      const shape_color = this.getPathColorToUse()
+      const shape_opacity = this.shape_opacity
+      // Check to choose how to draw
+      const show_as_dash = this.shape_is_dashed || this.data_value == null || this.shape_is_structure
+      const x0 = this.position_x_start
+      const y0 = this.position_y_start
+      const xf = this.position_x_end
+      const yf = this.position_y_end
+      const dist = Math.sqrt((xf - x0)*(xf - x0) + (yf - y0)*(yf - y0))
+      const show_as_path = show_as_dash || ((dist/thickness) > 2) || this.shape_is_recycling
+      // Add new path
       this.d3_selection?.append('path')
         .classed('link', true)
         .classed('link_path', true)
@@ -1046,10 +1059,25 @@ export abstract class ClassTemplate_LinkElement
       this.d3_selection?.selectAll('.link_path')
         .attr('id', this.id)
         .attr('fill', 'none')
-        .attr('stroke', () => this.getPathColorToUse())
-        .attr('stroke-opacity', this.shape_opacity)
-        .attr('stroke-width', this.thickness)
-        .attr('stroke-dasharray', (this.shape_is_dashed || this.data_value == null || this.shape_is_structure) ? '10,2' : '')
+        .attr('stroke', show_as_path ? shape_color : 'none')
+        .attr('stroke-opacity', show_as_path ? shape_opacity : '0')
+        .attr('stroke-width', show_as_path ? thickness : '0')
+        .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+      // Show as full shape for specific shapes
+      if (!show_as_path) {
+        this.d3_selection?.append('path')
+          .classed('link', true)
+          .classed('link_shape', true)
+          .attr('d', () => this.getBezierShape())
+        // Apply properties
+        this.d3_selection?.selectAll('.link_shape')
+          .attr('id', this.id+'_shape')
+          .attr('fill', shape_color )
+          .attr('opacity', shape_opacity)
+          .attr('stroke', 'none')
+          .attr('stroke-opacity', '0')
+          .attr('stroke-width', '0')
+      }
     }
   }
 
@@ -1187,6 +1215,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_NodeElement
    */
   protected _orderD3Elements() {
+    this.d3_selection?.selectAll('.link_shape').raise()
     this.d3_selection?.selectAll('.link_path').raise()
     this.d3_selection?.selectAll('.link_arrow').raise()
     this.d3_selection?.selectAll('.link_label').raise()
@@ -1709,6 +1738,13 @@ export abstract class ClassTemplate_LinkElement
       const y5 = this._control_points.ending_curve_point.position_y
 
       // Center point
+      // let k = 1
+      // if (Math.abs(x4 - x5) > 0) {
+      //   k = Math.abs((x2 - x1)/(x4 - x5))
+      //   k = k / (1 + k)
+      // }
+      // const x3 = x2 + k*(x4 - x2)
+      // const y3 = y2 + k*(y4 - y2)
       const x3 = (x2 + x4) / 2
       const y3 = (y2 + y4) / 2
 
@@ -1841,6 +1877,267 @@ export abstract class ClassTemplate_LinkElement
           + ' L ' + xf + ',' + yf
         return path
       }
+    }
+  }
+
+  /**
+   * Return a svg path for link path drawing
+   * @private
+   * @return {*}
+   * @memberof ClassTemplate_LinkElement
+   */
+  private getBezierShape() {
+    // Update control points
+    this.computeControlPoints()
+
+    // Normal mode
+    if (!this.shape_is_recycling) {
+      // Get starting and ending position per type of shape
+      const x0 = this.position_x_start
+      const y0 = this.position_y_start
+      const x6 = this.position_x_end
+      const y6 = this.position_y_end
+      // Get control points coordinates
+      const x1 = this._control_points.starting_curve_point.position_x
+      const y1 = this._control_points.starting_curve_point.position_y
+      const x2 = this._control_points.starting_bezier_point.position_x
+      const y2 = this._control_points.starting_bezier_point.position_y
+      const x4 = this._control_points.ending_bezier_point.position_x
+      const y4 = this._control_points.ending_bezier_point.position_y
+      const x5 = this._control_points.ending_curve_point.position_x
+      const y5 = this._control_points.ending_curve_point.position_y
+      // Coefs to help tranform path -> shape
+      const half_thickness = this.thickness/2
+      const dx = x5 - x1
+      const dy = y5 - y1
+      let ang
+      let v_axe, v_ortho
+      let dx_fwd, dy_fwd
+      // Clamping function
+      function clamp(p: number, v: number, pmin: number, pmax: number) {
+        const dmin = p - pmin
+        const dmax = p - pmax
+        const toward_min = (Math.sign(dmin) !== Math.sign(v))
+        const toward_max = (Math.sign(dmax) !== Math.sign(v))
+        const keep_above_min = (!toward_min) || ((toward_min) && (Math.abs(v) < Math.abs(dmin)))
+        const keep_below_max = (!toward_max) || ((toward_max) && (Math.abs(v) < Math.abs(dmax)))
+        if (keep_above_min && keep_below_max)
+          return p + v
+        else {
+          if ((toward_min) && (!keep_above_min)) {
+            return pmin
+          }
+          if ((toward_max) && (!keep_below_max)) {
+            return pmax
+          }
+          // Should never happen
+          return p
+        }
+      }
+      // Upper part of shape
+      let x0_fwd, y0_fwd
+      let x1_fwd, y1_fwd
+      let x2_fwd, y2_fwd
+      let x4_fwd, y4_fwd
+      let x5_fwd, y5_fwd
+      let x6_fwd, y6_fwd
+      // First part of path
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        // Coefs to help tranform path -> shape
+        ang = Math.atan2(dy, dx) // Mean angle of curve
+        v_axe = -half_thickness*Math.tan(ang/2) // Advance in curve axe to cross lines
+        v_ortho = -half_thickness // Orthogonal vector to v_axe
+        if (dx < 0) { // Inverse vector for inversed direction
+          v_axe = -half_thickness*Math.tan((Math.PI - ang)/2)
+          v_ortho = half_thickness
+        }
+        dx_fwd = -v_ortho*Math.sin(ang) + v_axe*Math.cos(ang) // Centre displacement fwd
+        dy_fwd =  v_ortho*Math.cos(ang) + v_axe*Math.sin(ang) // ...
+        // Starting point
+        x0_fwd = x0
+        y0_fwd = y0 - half_thickness
+        // Bezier start
+        x1_fwd = clamp(x1, dx_fwd, x0, x5)
+        y1_fwd = y0_fwd
+        // Bezier first tangent dir
+        x2_fwd = clamp(x2, dx_fwd, x1, x6)
+        y2_fwd = y0_fwd
+      }
+      else {
+        // Coefs to help tranform path -> shape
+        ang = Math.atan2(dy, dx) // Mean angle of curve
+        if (dy > 0 && dx > 0) {
+          v_axe = half_thickness*Math.tan((Math.PI/2 - ang)/2) // Advance in curve axe to cross lines
+          v_ortho = -half_thickness // Orthogonal vector to v_axe
+        }
+        else if (dy < 0 && dx > 0) {
+          v_axe = half_thickness*Math.tan(ang/2)
+          v_ortho = -half_thickness
+        }
+        else if (dy < 0 && dx < 0) {
+          v_axe = -half_thickness*Math.tan(ang/2)
+          v_ortho = half_thickness
+
+        }
+        else {
+          v_axe = -half_thickness*Math.tan((Math.PI/2 - ang)/2)
+          v_ortho = half_thickness
+        }
+        dx_fwd = -v_ortho*Math.sin(ang) + v_axe*Math.cos(ang) // Centre displacement fwd
+        dy_fwd =  v_ortho*Math.cos(ang) + v_axe*Math.sin(ang) // ...
+        // Starting point
+        x0_fwd = x0 + Math.sign(dx)*Math.sign(dy)*half_thickness
+        y0_fwd = y0
+        // Bezier start
+        x1_fwd = x0_fwd
+        y1_fwd = clamp(y1, dy_fwd, y0, y5)
+        // Bezier first tangent dir
+        x2_fwd = x0_fwd
+        y2_fwd = clamp(y2, dy_fwd, y1, y6)
+      }
+      // Second part of path
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        // Coefs to help tranform path -> shape
+        ang = Math.atan2(dy, dx) // Mean angle of curve
+        v_axe = -half_thickness*Math.tan(ang/2) // Advance in curve axe to cross lines
+        v_ortho = -half_thickness // Orthogonal vector to v_axe
+        if (dx < 0) { // Inverse vector for inversed direction
+          v_axe = -half_thickness*Math.tan((Math.PI - ang)/2)
+          v_ortho = half_thickness
+        }
+        dx_fwd = -v_ortho*Math.sin(ang) + v_axe*Math.cos(ang) // Centre displacement fwd
+        dy_fwd =  v_ortho*Math.cos(ang) + v_axe*Math.sin(ang) // ...
+        // End point
+        x6_fwd = x6
+        y6_fwd = y6 - half_thickness
+        // Bezier end
+        x5_fwd = clamp(x5, dx_fwd, x1, x6)
+        y5_fwd = y6_fwd
+        // Bezier second tangent dir
+        x4_fwd = clamp(x4, dx_fwd, x0, x5)
+        y4_fwd = y6_fwd
+      }
+      else {
+        // Coefs to help tranform path -> shape
+        ang = Math.atan2(dy, dx) // Mean angle of curve
+        if (dy > 0 && dx > 0) {
+          v_axe = half_thickness*Math.tan((Math.PI/2 - ang)/2) // Advance in curve axe to cross lines
+          v_ortho = -half_thickness // Orthogonal vector to v_axe
+        }
+        else if (dy < 0 && dx > 0) {
+          v_axe = half_thickness*Math.tan(ang/2)
+          v_ortho = -half_thickness
+        }
+        else if (dy < 0 && dx < 0) {
+          v_axe = -half_thickness*Math.tan(ang/2)
+          v_ortho = half_thickness
+
+        }
+        else {
+          v_axe = -half_thickness*Math.tan((Math.PI/2 - ang)/2)
+          v_ortho = half_thickness
+        }
+        dx_fwd = -v_ortho*Math.sin(ang) + v_axe*Math.cos(ang) // Centre displacement fwd
+        dy_fwd =  v_ortho*Math.cos(ang) + v_axe*Math.sin(ang) // ...
+        // End point
+        x6_fwd = x6 + Math.sign(dx)*Math.sign(dy)*half_thickness
+        y6_fwd = y6
+        // Bezier end
+        x5_fwd = x6_fwd
+        y5_fwd = clamp(y5, dy_fwd, y1, y6)
+        // Bezier second tangent dir
+        x4_fwd = x6_fwd
+        y4_fwd = clamp(y4, dy_fwd, y0, y5)
+      }
+      // Rotating function
+      function rotx(p: number, pc: number) {
+        const v = p - pc
+        return p - 2*v
+      }
+      function roty(p: number, pc: number) {
+        const v = p - pc
+        return p - 2*v
+      }
+      // Lower part of shape
+      let x0_bwd, y0_bwd
+      let x1_bwd, y1_bwd
+      let x2_bwd, y2_bwd
+      let x4_bwd, y4_bwd
+      let x5_bwd, y5_bwd
+      let x6_bwd, y6_bwd
+      if (this.is_horizontal || this.is_vertical) {
+        const xcentre = (x0 + x6)/2
+        const ycentre = (y0 + y6)/2
+        x0_bwd = rotx(x0_fwd, xcentre)
+        y0_bwd = roty(y0_fwd, ycentre)
+        x1_bwd = rotx(x1_fwd, xcentre)
+        y1_bwd = roty(y1_fwd, ycentre)
+        x2_bwd = rotx(x2_fwd, xcentre)
+        y2_bwd = roty(y2_fwd, ycentre)
+        x6_bwd = rotx(x6_fwd, xcentre)
+        y6_bwd = roty(y6_fwd, ycentre)
+        x5_bwd = rotx(x5_fwd, xcentre)
+        y5_bwd = roty(y5_fwd, ycentre)
+        x4_bwd = rotx(x4_fwd, xcentre)
+        y4_bwd = roty(y4_fwd, ycentre)
+      }
+      else {
+        x0_bwd = rotx(x6_fwd, x6)
+        y0_bwd = roty(y6_fwd, y6)
+        x1_bwd = rotx(x5_fwd, x5)
+        y1_bwd = roty(y5_fwd, y5)
+        x2_bwd = rotx(x4_fwd, x4)
+        y2_bwd = roty(y4_fwd, y4)
+        x6_bwd = rotx(x0_fwd, x0)
+        y6_bwd = roty(y0_fwd, y0)
+        x5_bwd = rotx(x1_fwd, x1)
+        y5_bwd = roty(y1_fwd, y1)
+        x4_bwd = rotx(x2_fwd, x2)
+        y4_bwd = roty(y2_fwd, y2)
+      }
+
+      // Center point
+      let k_fwd = 1
+      if (Math.abs(x4_fwd - x5_fwd) > 0) {
+        k_fwd = Math.abs((x2_fwd - x1_fwd)/(x4_fwd - x5_fwd))
+        k_fwd = k_fwd / (1 + k_fwd)
+      }
+      let k_bwd = 1
+      if (Math.abs(x4_bwd - x5_bwd) > 0) {
+        k_bwd = Math.abs((x2_bwd - x1_bwd)/(x4_bwd - x5_bwd))
+        k_bwd = k_bwd / (1 + k_bwd)
+      }
+      const x3_fwd = x2_fwd + 0.5*(x4_fwd - x2_fwd)
+      const x3_bwd = x2_bwd + 0.5*(x4_bwd - x2_bwd)
+      const y3_fwd = y2_fwd + 0.5*(y4_fwd - y2_fwd)
+      const y3_bwd = y2_bwd + 0.5*(y4_bwd - y2_bwd)
+
+      // Return paths
+      if (!this.shape_is_curved) {
+        return 'M ' + x0_fwd + ',' + y0_fwd
+          + ' L ' + x1_fwd + ',' + y1_fwd
+          + ' L ' + x5_fwd + ',' + y5_fwd
+          + ' L ' + x6_fwd + ',' + y6_fwd
+          + ' L ' + x0_bwd + ',' + y0_bwd
+          + ' L ' + x1_bwd + ',' + y1_bwd
+          + ' L ' + x5_bwd + ',' + y5_bwd
+          + ' L ' + x6_bwd + ',' + y6_bwd
+      }
+      else {
+        return 'M ' + x0_fwd + ',' + y0_fwd
+          + ' L ' + x1_fwd + ',' + y1_fwd
+          + ' Q ' + x2_fwd + ',' + y2_fwd + ' ' + x3_fwd + ',' + y3_fwd
+          + ' Q ' + x4_fwd + ',' + y4_fwd + ' ' + x5_fwd + ',' + y5_fwd
+          + ' L ' + x6_fwd + ',' + y6_fwd
+          + ' L ' + x0_bwd + ',' + y0_bwd
+          + ' L ' + x1_bwd + ',' + y1_bwd
+          + ' Q ' + x2_bwd + ',' + y2_bwd + ' ' + x3_bwd + ',' + y3_bwd
+          + ' Q ' + x4_bwd + ',' + y4_bwd + ' ' + x5_bwd + ',' + y5_bwd
+          + ' L ' + x6_bwd + ',' + y6_bwd
+      }
+    }
+    else {
+      return ''
     }
   }
 
