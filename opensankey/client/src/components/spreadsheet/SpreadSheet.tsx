@@ -275,6 +275,9 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           handler: () => {
             getCellsFromClipboardPlainText().then((rows) => {
               // Paste and handle clipboard data
+              if (rows.length == 1) {
+                return
+              }
               const columnsId = columns.map(c => c.columnId) as Id[]
               const current_row = selectedRanges[0][0].rowId as number
               const current_col = columnsId.indexOf(selectedRanges[0][0].columnId) as number
