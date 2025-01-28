@@ -278,7 +278,21 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
               const columnsId = columns.map(c => c.columnId) as Id[]
               const current_row = selectedRanges[0][0].rowId as number
               const current_col = columnsId.indexOf(selectedRanges[0][0].columnId) as number
-              //const new_flux = spreadSheetFlux
+              const linksToRemove = []
+              if (current_row<spreadSheetFlux.length-1) {
+                for (let i = spreadSheetFlux.length-2; i>=current_row; i--) {
+                  const l =  new_data.drawing_area.sankey.links_list[i]
+                  linksToRemove.push(l)
+                }
+              }
+              linksToRemove.forEach(l=>new_data.drawing_area.deleteLink(l))
+              new_data.drawing_area.sankey.nodes_list.forEach(n=>{
+                if (!n.hasInputLinks() && !n.hasOutputLinks()) {
+                  // Remove lone nodes
+                  new_data.drawing_area.deleteNode(n)
+                }
+              })
+
               rows.pop()
               if (current_row + rows.length > spreadSheetFlux.length) {
                 for (let i = spreadSheetFlux.length; i < current_row + rows.length; i++) {
@@ -289,7 +303,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
                 (r, i) => r.forEach((item, j) => {
                   const row_flux = spreadSheetFlux[current_row + i]
                   const fieldName = columnsId[current_col + j] as 'source' | 'target'
-                  row_flux[fieldName] = item.text
+                  row_flux[fieldName] = item.text.replace('\r', '')
                 })
               )
               let redraw = false
