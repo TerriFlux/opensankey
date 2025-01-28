@@ -45,6 +45,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_spreadsheet : MutableRefObject<Dispatch<SetStateAction<boolean>>>
 }
 
 // CLASS MENU CONFIG *******************************************************************/
@@ -83,7 +84,7 @@ export class Class_MenuConfig {
   private _ref_to_submenu_updater: MutableRefObject<() => void>
 
   // Ref to state if configuration is opened
-  private _ref_menu_opened: MutableRefObject<boolean>
+  private _ref_menu_opened: MutableRefObject<[boolean,() => void]>
 
   /* ========================================
    Ref to button on the top menu in the app
@@ -250,7 +251,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_updater = useRef(() => null)
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
-    this._ref_menu_opened = useRef(false)
+    this._ref_menu_opened = useRef([false,() => null])
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
@@ -345,6 +346,7 @@ export class Class_MenuConfig {
       // Other modals
       ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_templates_lib: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_spreadsheet: useRef<Dispatch<SetStateAction<boolean>>>(() => null)
     }
   }
 
@@ -419,6 +421,7 @@ export class Class_MenuConfig {
     // -- Other modals
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
   }
 
   /**
@@ -867,7 +870,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public positionToolBar(menu_config_width: number) {
-    d3.select('.sideToolBar').transition().duration(300).style('right', ((this._ref_menu_opened.current ? menu_config_width : 0)) + 'px')
+    d3.select('.sideToolBar').transition().duration(300).style('right', ((this._ref_menu_opened.current[0] ? menu_config_width : 0)) + 'px')
   }
 
   /**
@@ -934,7 +937,7 @@ export class Class_MenuConfig {
     return this._ref_to_submenu_updater
   }
 
-  public get ref_menu_opened(): MutableRefObject<boolean> {
+  public get ref_menu_opened(): MutableRefObject<[boolean,() => void]> {
     return this._ref_menu_opened
   }
 

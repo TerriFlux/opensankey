@@ -254,7 +254,12 @@ export const resources_app_elements = {
           LegBgBorder: 'Add a border to the legend area',
           LegBgColor: 'Choose background color opacity',
           old_app: 'Redirect to the legacy version of OpenSankey',
+          SpreadSheet:'Representation and editing of the diagram in a spreadsheet',
+          ConfigMenu: 'Editing the diagram through a configuration menu'
         },
+      },
+      SpreadSheet: {
+        paste: 'Paste'
       },
       MEP: {
         onBlur: 'Value is applied when we leave the input or we press enter',
@@ -554,8 +559,9 @@ export const resources_app_elements = {
         pg: 'General settings',
         pdl: 'Font',
         pl: 'Parameters per link',
-        src: 'Source',
-        trgt: 'Target',
+        src: 'Origin',
+        trgt: 'Destination',
+        value: 'Value',
         if: 'Reverse direction',
         dzf: 'Overlaying order',
         style: 'Style',
@@ -1045,7 +1051,12 @@ export const resources_app_elements = {
           LegBgBorder: 'Ajoute une bordure à la légende',
           LegBgColor: 'Moddifie la couleur de fond de la légende',
           old_app: 'Redirige vers la version précédente de OpenSankey',
+          SpreadSheet: 'Représentation et édition du diagramme dans une spreadsheet',
+          ConfigMenu: 'Edition du diagramme dans un menu de configuration'
         },
+      },
+      SpreadSheet: {
+        paste: 'Coller'
       },
       MEP: {
         onBlur: 'La valeur sera appliqué dès que l\'on quitte l\'input ou presser la touche entrée',
@@ -1344,8 +1355,9 @@ export const resources_app_elements = {
         pg: 'Paramètres généraux',
         pdl: 'Police des labels',
         pl: 'Paramètres par flux',
-        src: 'Source',
-        trgt: 'Cible',
+        src: 'Origine',
+        trgt: 'Destination',
+        value: 'Valeur',
         if: 'Inverser le sens',
         dzf: 'Superposition d\'affichage',
         style: 'Style',
