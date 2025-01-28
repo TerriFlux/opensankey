@@ -705,6 +705,7 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
       <OSTooltip
         placement='left'
         label={(new_data.drawing_area.isInEditionMode()) ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}
+        isAlwaysOpen={new_data.show_documentation}
       >
         <Button
           variant='toolbar_button_1'
