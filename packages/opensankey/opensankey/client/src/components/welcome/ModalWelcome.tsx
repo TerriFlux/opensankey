@@ -50,7 +50,6 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
   external_content
 }) => {
   const { t } = new_data
-  //const { never_see_again } = new_data.menu_configuration
   const [show_welcome, set_show_welcome] = useState(false)
 
 
@@ -137,20 +136,6 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
         </Box>
 
       </ModalBody>
-      {/* <ModalFooter style={{ justifyContent: 'center' }}>
-        <Box layerStyle='box_footer_welcome'>
-          <Checkbox
-            variant='checkbox_dont_show_again'
-            isChecked={never_see_again.current} onChange={evt => {
-              never_see_again.current = evt.target.checked
-              localStorage.setItem('dontSeeAggainWelcome', '1')
-              set_show_welcome(false)
-            }}
-          >
-            {t('dontSeeAgain')}
-          </Checkbox>
-        </Box>
-      </ModalFooter> */}
     </ModalContent>
   </Modal>
 
