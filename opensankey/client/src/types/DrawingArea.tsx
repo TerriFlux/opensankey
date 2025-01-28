@@ -47,6 +47,7 @@ import {
 } from './Abstract'
 import { ClassTemplate_ProtoElement } from './Element'
 import { ClassAbstract_NodeElement } from './AbstractNode'
+import { Class_ApplicationData } from './Types'
 
 // CONSTANTS ****************************************************************************
 
@@ -540,7 +541,8 @@ export abstract class ClassTemplate_DrawingArea
     this.setEventsListeners()
 
     // Unset saving indicator
-    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true);
+    (this.application_data as Class_ApplicationData).ref_to_spreadsheet.current()
   }
 
   /**
@@ -980,13 +982,13 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Function to use after setting link value, it check if there is only 1 link and if so update DA scale
    *
-   * @param {(number|null|undefined)} _
    * @memberof ClassTemplate_DrawingArea
    */
-  public updateScaleAtLinkValueSetting(_: number | null | undefined) {
+  public updateScaleAtLinkValueSetting() {
     // Update scaling if only one link
-    if ((_ !== null) && _ && this.sankey.links_list.length == 1) {
-      this.scale = _ // will redraw everything
+    const links = this.sankey.links_list.filter(l=>l.value != null && l.value.data_value != null && l.value.data_value != 0)
+    if (links.length == 1) {
+      this.scale = links[0].value!.data_value! // will redraw everything // will redraw everything
     }
   }
 
