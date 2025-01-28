@@ -2097,20 +2097,22 @@ export abstract class ClassTemplate_LinkElement
       }
 
       // Center point
-      let k_fwd = 1
-      if (Math.abs(x4_fwd - x5_fwd) > 0) {
-        k_fwd = Math.abs((x2_fwd - x1_fwd)/(x4_fwd - x5_fwd))
-        k_fwd = k_fwd / (1 + k_fwd)
-      }
-      let k_bwd = 1
-      if (Math.abs(x4_bwd - x5_bwd) > 0) {
-        k_bwd = Math.abs((x2_bwd - x1_bwd)/(x4_bwd - x5_bwd))
-        k_bwd = k_bwd / (1 + k_bwd)
-      }
-      const x3_fwd = x2_fwd + 0.5*(x4_fwd - x2_fwd)
-      const x3_bwd = x2_bwd + 0.5*(x4_bwd - x2_bwd)
-      const y3_fwd = y2_fwd + 0.5*(y4_fwd - y2_fwd)
-      const y3_bwd = y2_bwd + 0.5*(y4_bwd - y2_bwd)
+      let k_fwd = 0.5
+      // Experimental code - kept for memory
+      // if (Math.abs(x4_fwd - x5_fwd) > 0) {
+      //   k_fwd = Math.abs((x2_fwd - x1_fwd)/(x4_fwd - x5_fwd))
+      //   k_fwd = k_fwd / (1 + k_fwd)
+      // }
+      let k_bwd = 0.5
+      // Experimental code - kept for memory
+      // if (Math.abs(x4_bwd - x5_bwd) > 0) {
+      //   k_bwd = Math.abs((x2_bwd - x1_bwd)/(x4_bwd - x5_bwd))
+      //   k_bwd = k_bwd / (1 + k_bwd)
+      // }
+      const x3_fwd = x2_fwd + k_fwd*(x4_fwd - x2_fwd)
+      const x3_bwd = x2_bwd + k_bwd*(x4_bwd - x2_bwd)
+      const y3_fwd = y2_fwd + k_fwd*(y4_fwd - y2_fwd)
+      const y3_bwd = y2_bwd + k_bwd*(y4_bwd - y2_bwd)
 
       // Return paths
       if (!this.shape_is_curved) {
