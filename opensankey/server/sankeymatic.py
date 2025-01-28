@@ -2,16 +2,310 @@
 
 # ---------------------------------------------------------------
 import re
+from typing import List, Dict
+try:
+    from . import sankeymatic_utils
+except Exception:
+    try:
+        import sankeymatic_utils
+    except Exception:
+        pass
+
+
 # Expression régulière pour extraire les nœuds, les flux et les couleurs
 orig_pattern = re.compile(r'.+\[')
 dest_pattern = re.compile(r'\].+')
-value_pattern = re.compile(r'\[\d+\]')
-flow_pattern = re.compile(r'.+\[[\d]+\].+')
+value_pattern = re.compile(r'\[[\d*\.]+\]')
+flow_pattern = re.compile(r'.+\[[\d*\.]+\].+')
 
 
 color_pattern = re.compile(r'^:.+#[A-Za-z0-9]+\s{0,1}<{0,2}')
 color_node_pattern = re.compile(r'^:.+#')
 color_hexa_pattern = re.compile(r'#[A-Za-z0-9]+\s{0,1}<{0,2}')
+
+
+def computeHorizontalIndex(
+    node: dict,
+    nodes: dict,
+    links: dict,
+    starting_index: int,
+    visited_nodes_ids: List[str],
+    horizontal_indexes_per_nodes_ids: Dict[str, int]
+):
+    # Update node index
+    if (node['id'] not in horizontal_indexes_per_nodes_ids):
+        horizontal_indexes_per_nodes_ids[node['id']] = starting_index
+    else:
+        if (starting_index > horizontal_indexes_per_nodes_ids[node['id']]):
+            horizontal_indexes_per_nodes_ids[node['id']] = starting_index
+
+    # From current node, use output links to
+    # recurse on following node
+    for link in node['outputLinksId']:
+        # Next node to recurse on
+        next_node = nodes[links[link]['idTarget']]
+        # But first we check if next node has not been already visited
+        if (not next_node['id'] in visited_nodes_ids):
+            new_visited_nodes_ids = visited_nodes_ids.copy()
+            new_visited_nodes_ids.append(node['id'])
+            # Recursive calling
+            computeHorizontalIndex(
+                next_node,
+                nodes,
+                links,
+                starting_index + 1,
+                new_visited_nodes_ids,
+                horizontal_indexes_per_nodes_ids
+            )
+
+
+def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
+    """
+    Compute node position by sorting them in column
+
+    Parameters
+    ----------
+    nodes : dict
+        dict containing all nodes of sankey
+    links : dict
+        dict containing all flows of sankey
+    setting : dict
+        dict containing parameter used to compute position
+
+    Returns
+    -------
+    - DA_scale : number
+        scale of sankey used in front application
+    """
+
+    # Some var from setting
+    label_pos_autoalign = float(setting['label_position_autoalign'])
+    label_pos_scheme = setting['label_position_scheme']
+    label_pos_breakpoint = float(setting['label_position_breakpoint'])
+    label_pos_first = setting['label_position_first']
+    label_linespaceing = float(setting['labels_linespacing'])
+    baseLabelSize = float(setting['label_name_size'])
+    relativeLAbelSize = float(setting['labels_relativesize'])
+    fontSize = baseLabelSize*(100/relativeLAbelSize)
+    flowInheritance = setting['flow_inheritfrom']
+    DA_height = float(setting['size_height'])
+    DA_margin_top = float(setting['margin_top'])
+    DA_margin_bottom = float(setting['margin_bottom'])
+    node_height = float(setting['node_height'])
+
+    # Compute positionning indexes
+    horizontal_indexes_per_nodes_ids = {}
+    for k, node in nodes.items():
+        if (len(node['inputLinksId']) == 0 and len(node['outputLinksId']) > 0):
+            # get current node horizontal index (eg longest branch length)
+            starting_index = 0
+            computeHorizontalIndex(
+                node,
+                nodes,
+                links,
+                starting_index,
+                [],
+                horizontal_indexes_per_nodes_ids
+            )
+
+        else:
+            # Lone node case
+            if (len(node['inputLinksId']) == 0 and
+                    len(node['outputLinksId']) == 0):
+                horizontal_indexes_per_nodes_ids[node['id']] = 0
+
+    # Use results from previous index computing
+    # TODO : maybe possible to speed up here overall computing with getting
+    #        max_horizontal_index and nodes_per_horizontal_indexes
+    #  from another loop
+    max_horizontal_index = 0
+    nodes_per_horizontal_indexes: Dict[int, List[str]] = {}
+    for k, node in nodes.items():
+        # Previously computed index for given node
+        node_index = horizontal_indexes_per_nodes_ids[node['id']]
+        # Update reversed dict index-> nodes
+        if (node_index not in nodes_per_horizontal_indexes):
+            nodes_per_horizontal_indexes[node_index] = []
+
+        nodes_per_horizontal_indexes[node_index].append(nodes[node['id']])
+        # Update max horizontal index
+        if (node_index > max_horizontal_index):
+            max_horizontal_index = node_index
+
+    # for the node which have no input links they
+    # should stick to the next output node and
+    # have an horizontal index equal to output node horizontal index minus one
+    for horizontal_index in range(max_horizontal_index):
+        # Pass if no nodes for this horizontal_index
+        # TODO : if it is the case -> something was wrong before
+        if (not nodes_per_horizontal_indexes[horizontal_index]):
+            continue
+        to_splice: List[str] = []
+        for node in nodes_per_horizontal_indexes[horizontal_index]:
+            if (len(node['inputLinksId']) == 0):
+                min_next_horizontal_index = max_horizontal_index + 1
+                for link_id in node['outputLinksId']:
+
+                    target_node = nodes[links[link_id]['idTarget']]
+                    if target_node is None:
+                        return
+
+                    if (horizontal_indexes_per_nodes_ids[target_node['id']] <
+                            horizontal_indexes_per_nodes_ids[node['id']]):
+                        return
+
+                    if (horizontal_indexes_per_nodes_ids[target_node['id']] <
+                            min_next_horizontal_index):
+                        min_next_horizontal_index = \
+                            horizontal_indexes_per_nodes_ids[
+                                target_node['id']]
+
+                if (horizontal_indexes_per_nodes_ids[node['id']] <
+                        min_next_horizontal_index - 1):
+                    to_splice.append(node)
+                    # Il semblerait que dans certains cas nodes2horizontal_indices
+                    #  de certains noeuds peuvent devenir négatif
+                    # ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
+                    horizontal_indexes_per_nodes_ids[node['id']
+                                                     ] = min_next_horizontal_index - 1
+                    if (not nodes_per_horizontal_indexes[min_next_horizontal_index - 1]):
+                        nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
+
+                    nodes_per_horizontal_indexes[min_next_horizontal_index - 1].append(
+                        node)
+
+        for node in to_splice:
+            nodes_per_horizontal_indexes[horizontal_index].remove(node)
+
+    node_max_value = 0
+    # After parsing all flow compute scale
+    for k, v in nodes.items():
+        if (v['output_value'] > node_max_value):
+            node_max_value = v['output_value']
+        if (v['input_value'] > node_max_value):
+            node_max_value = v['input_value']
+
+    max_val_col = 0
+    # compute Value per column
+    for k, nodes_list in nodes_per_horizontal_indexes.items():
+        col_val = sankeymatic_utils.sum_node_value_from_list_node_dict(
+            nodes_list)
+        # Update max col value if current col has bigger balue
+        max_val_col = col_val if col_val > max_val_col else max_val_col
+
+    # To compute DA scale use processed var from open source sankeymatic code
+    node_spacing = float(setting['node_spacing'])/100
+    greatestNodeCount = max([len(v)
+                            for k, v in nodes_per_horizontal_indexes.items()])
+    vert_space = DA_height-DA_margin_top-DA_margin_bottom
+    allAvailablePadding = max(2, vert_space - greatestNodeCount)
+    maximumNodeSpacing = ((1 - node_height/100) *
+                          allAvailablePadding) / (greatestNodeCount - 1)
+    actualNodeSpacing = maximumNodeSpacing * node_spacing
+
+    ky = min([(vert_space-(len(v)-1)*maximumNodeSpacing) /
+             sankeymatic_utils.sum_node_value_from_list_node_dict(v)
+              for k, v in nodes_per_horizontal_indexes.items()])
+    DA_scale = node_max_value/(node_max_value*ky)
+    length_of_horiz_index = len(nodes_per_horizontal_indexes.items())
+    stagesMidpoint = (length_of_horiz_index-1)/2
+    horizontal_col_shift = float(
+        setting['size_width'])/length_of_horiz_index
+
+    # var for node label pos if label_pos_scheme is per_stage
+    first_stage = 'left' if label_pos_first == 'before' else 'right'
+    opposite_stage = 'left' if first_stage == 'right' else 'left'
+
+    # Column height (sum of node height of the col)
+    height_cumul_per_indexes = [(len(v)-1)*actualNodeSpacing
+                                for k, v in nodes_per_horizontal_indexes.items()]
+    # Tallest colmun height
+    max_height_cumul = max(height_cumul_per_indexes)
+    # Place node according the horizontal index
+    for k, ndes_list in nodes_per_horizontal_indexes.items():
+        x_shift = (k+1) * horizontal_col_shift
+
+        # Compute starting y_shift
+        uniqueSrc = [node['inputLinksId'] for node in ndes_list]
+        n_set = set([x for xs in uniqueSrc for x in xs])
+        uniqueSrc = list(n_set)
+        uniqueNodesInPrevCol = [nodes[links[idLink]['idSource']]
+                                for idLink in uniqueSrc]
+        if (len(uniqueNodesInPrevCol) > 0):
+            y_shift = min([node['y'] for node in uniqueNodesInPrevCol]
+                          )-(height_cumul_per_indexes[k]/2)
+        else:
+            y_shift = actualNodeSpacing + \
+                (max_height_cumul - height_cumul_per_indexes[k]) / 2
+
+        for node in ndes_list:
+            node['x'] = x_shift
+            node['y'] = y_shift
+            # Update y_shift for next node in col
+            y_shift += (max(node["input_value"],
+                        node["output_value"]) / DA_scale)+actualNodeSpacing
+            # Set label position
+            node['local']['label_vert'] = 'middle'
+            node['local']['label_vert_valeur'] = 'middle'
+
+            if (label_pos_scheme == 'auto'):
+                if (len(node['inputLinksId']) == 0):
+                    node['local']['label_horiz'] = 'left'
+                    node['local']['label_horiz_valeur'] = 'left'
+                elif (len(node['outputLinksId']) == 0):
+                    node['local']['label_horiz'] = 'right'
+                    node['local']['label_horiz_valeur'] = 'right'
+                else:
+                    if (label_pos_autoalign == -1):
+                        node['local']['label_horiz'] = 'left'
+                        node['local']['label_horiz_valeur'] = 'left'
+                    elif (label_pos_autoalign == 0):
+                        node['local']['label_horiz'] = 'middle'
+                        node['local']['label_horiz_valeur'] = 'middle'
+                    elif (label_pos_autoalign == 1):
+                        node['local']['label_horiz'] = 'right'
+                        node['local']['label_horiz_valeur'] = 'right'
+            elif (label_pos_scheme == 'per_stage'):
+                if (((k+1) < label_pos_breakpoint) or
+                        (label_pos_breakpoint == 5)):
+                    node['local']['label_horiz'] = first_stage
+                    node['local']['label_vert_valeur'] = first_stage
+                elif ((k+1) >= label_pos_breakpoint):
+                    node['local']['label_horiz'] = opposite_stage
+                    node['local']['label_vert_valeur'] = opposite_stage
+
+    # Go throught all node & set some var
+    for k, node in nodes.items():
+        node['local']['value_label_vert_shift'] = fontSize + \
+            (fontSize*label_linespaceing)
+        # Set random color to node if they haven't one define in sankeymatic file
+        if ('color' not in node['local']):
+            node['local']['color'] = sankeymatic_utils.generate_hexa_color()
+        # Reorganize node IO links if setting var is at true
+        if (setting['layout_order'] == 'automatic'):
+            node['inputLinksId'].sort(
+                reverse=False, key=lambda k: nodes[links[k]['idSource']]['y'])
+            node['outputLinksId'].sort(
+                key=lambda k: nodes[links[k]['idTarget']]['y'])
+            node['links_order'] = node['inputLinksId']+node['outputLinksId']
+
+    # If link doesn't have a color defined in source file
+    # then color of link depend of node source/target
+    for k, link in links.items():
+        if ('color' not in link['local']):
+            if (flowInheritance == 'source'):
+                link['local']['color'] = nodes[link['idSource']]['local']['color']
+            elif (flowInheritance == 'target'):
+                link['local']['color'] = nodes[link['idTarget']]['local']['color']
+            elif (flowInheritance == 'outside-in'):
+                flowMidpoint = (
+                    horizontal_indexes_per_nodes_ids[link['idSource']] +
+                    horizontal_indexes_per_nodes_ids[link['idTarget']])/2
+                sourceColor = nodes[link['idSource']]['local']['color']
+                lMidInftoStageMid = flowMidpoint <= stagesMidpoint
+                link['local']['color'] = sourceColor if lMidInftoStageMid else nodes[link['idTarget']]['local']['color']
+
+    return DA_scale*100
 
 
 def parse_sankeymatic_file(filename: str):
@@ -54,8 +348,58 @@ def parse_sankeymatic_text(lines: str):
 
     # Dictionnaire pour stocker les nœuds et leurs attributs
     nodes = {}
-    edges = {}
-    setting = {}
+    links = {}
+    setting = {'size_width': '1000',
+               'size_height': '600',
+               'margin_left': '0',
+               'margin_right': '0',
+               'margin_top': '0',
+               'margin_bottom': '0',
+               'bg_color': '#ce2222',
+               'bg_transparent': 'N',
+               'node_width': '20',
+               'node_height': '50',
+               'node_spacing': '50',
+               'node_border': '0',
+               'node_theme': 'none',
+               'node_color': '#888888',
+               'node_opacity': '1',
+               'flow_curvature': '0.5',
+               'flow_inheritfrom': 'outside-in',
+               'flow_color': '#999999',
+               'flow_opacity': '0.45',
+               'layout_order': 'automatic',
+               'layout_justifyorigins': 'N',
+               'layout_justifyends': 'N',
+               'layout_reversegraph': 'N',
+               'layout_attachincompletesto': 'nearest',
+               'labels_color': '#000000',
+               'labels_hide': 'N',
+               'labels_highlight': '0.8',
+               'labels_fontface': 'sans-serif',
+               'labels_linespacing': '0.2',
+               'labels_relativesize': '100',
+               'labels_magnify': '120',
+               'label_name_appears': 'Y',
+               'label_name_size': '25',
+               'label_name_weight': '400',
+               'label_value_appears': 'Y',
+               'label_value_fullprecision': 'Y',
+               'label_value_position': 'below',
+               'label_value_weight': '400',
+               'label_position_autoalign': '0',
+               'label_position_scheme': 'auto',
+               'label_position_first': 'before',
+               'label_position_breakpoint': '3',
+               'value_format': '",."',
+               'value_prefix': '',
+               'value_suffix': '',
+               'theme_a': '5',
+               'theme_b': '9',
+               'theme_c': '0',
+               'theme_d': '0',
+               'meta_mentionsankeymatic': 'Y',
+               'meta_listimbalances': 'Y'}
 
     # Netoyage
     lines_cleared = lines.replace('&\n', '')
@@ -64,25 +408,149 @@ def parse_sankeymatic_text(lines: str):
     for line in lines_cleared.split('\n'):
         ok, res = parse_sankeymatic_flow(line)
         if ok:
-            orig, dest, value = res
-            nodes[orig] = {}
-            nodes[dest] = {}
-            if orig not in edges:
-                edges[orig] = {}
-            edges[orig][dest] = value
+            orig, dest, value, color = res
+
+            org_id = sankeymatic_utils.normalizeStringToValidId(orig)
+            dest_id = sankeymatic_utils.normalizeStringToValidId(dest)
+
+            if (org_id not in nodes):
+                node_org = sankeymatic_utils.create_json_node(org_id, orig)
+                nodes[node_org['id']] = node_org
+            else:
+                node_org = nodes[org_id]
+
+            if (dest_id not in nodes):
+                node_dest = sankeymatic_utils.create_json_node(dest_id, dest)
+                nodes[node_dest['id']] = node_dest
+            else:
+                node_dest = nodes[dest_id]
+
+            new_flow = sankeymatic_utils.create_json_flow(
+                node_org['id'], node_dest['id'], value, color)
+            links[new_flow['id']] = new_flow
+
+            node_org['outputLinksId'].append(new_flow['id'])
+            node_org['output_value'] += new_flow['value']['data_value']
+            node_org['links_order'].append(new_flow['id'])
+
+            node_dest['inputLinksId'].append(new_flow['id'])
+            node_dest['input_value'] += new_flow['value']['data_value']
+            node_dest['links_order'].append(new_flow['id'])
 
         ok_color, res_color = parse_sankeymatic_node_color(line)
         if (ok_color):
             if (res_color[0] in nodes):
-                nodes[res_color[0]]['color'] = res_color[1]
+                nodes[res_color[0]]['local']['color'] = res_color[1]
 
         parse_sankeymatic_setting(line, setting)
 
+    if (setting['layout_reversegraph'] == 'Y'):
+        for k, link in links.items():
+            curr_org = link['idSource']
+            curr_dest = link['idTarget']
+            value = link['value']['data_value']
+            color = link['local']['color']
+            new_flow_inv = sankeymatic_utils.create_json_flow(
+                curr_dest, curr_org, value, color)
+            del links[link['id']]
+            links[new_flow_inv['id']] = new_flow_inv
+
+    # Some var from setting used to process some nodes and nodes label var
+    baseLabelSize = float(setting['label_name_size'])
+    relativeLAbelSize = float(setting['labels_relativesize'])
+    labelNameWeight = float(setting['label_name_weight'])
+    labelValueWeight = float(setting['label_value_weight'])
+    labels_highlight = float(setting['labels_highlight'])
+
+    default_node_style = {
+        "shape_visible": float(setting['node_opacity']) > 0.5,
+        "shape": "rect",
+        "node_width": float(setting['node_width']),
+        "node_height": 0,
+        "color": "#888888",
+        "colorSustainable": False,
+        "node_arrow_angle_factor": 30,
+        "node_arrow_angle_direction": "right",
+        "label_visible": setting['label_name_appears'] == 'Y',
+        "font_family": "Arial,sans-serif",
+        "font_size": baseLabelSize*(100/relativeLAbelSize),
+        "uppercase": False,
+        # in snakeymatic file the weight correspond to font-weight (100 & 400 are normal font and 700 is bold)
+        "bold": labelNameWeight == 700,
+        "italic": False,
+        "label_box_width": 150,
+        "label_color": False,
+        "label_vert": "bottom",
+        "name_label_vert_shift": 0,
+        "label_horiz": "middle",
+        "name_label_horiz_shift": 0,
+        "show_value": setting['label_value_appears'] == 'Y',
+        "value_label_font_family": "Arial,sans-serif",
+        "value_font_size": baseLabelSize/(100/relativeLAbelSize),
+        "value_label_uppercase": False,
+        # in snakeymatic file the weight correspond to font-weight (100 & 400 are normal font and 700 is bold)
+        "value_label_bold": labelValueWeight == 700,
+        "value_label_italic": False,
+        "value_label_box_width": 150,
+        "value_label_color": False,
+        "label_vert_valeur": "top",
+        "value_label_vert_shift": 0,
+        "label_horiz_valeur": "middle",
+        "value_label_horiz_shift": 0,
+        "value_label_background": labels_highlight > 0.5,
+        "position": "absolute",
+        "label_background": labels_highlight > 0.5,
+        "name": "Style par default"
+    }
+    # Some var from setting used to process link var
+    flowCurvature = float(setting['flow_curvature'])
+
+    default_link_style = {
+        "orientation": "hh",
+        "left_horiz_shift": 0.05,
+        "starting_tangeant": flowCurvature/2,
+        "ending_tangeant": flowCurvature/2,
+        "right_horiz_shift": 0.05,
+        "curvature": 0.5,
+        "curved": flowCurvature != 0,
+        "recycling": False,
+        "is_structur": False,
+        "arrow_size": 10,
+        "label_position": "middle",
+        "orthogonal_label_position": "middle",
+        "label_on_path": True,
+        "label_pos_auto": False,
+        "arrow": False,
+        "color": "#999999",
+        "opacity": float(setting['flow_opacity']),
+        "dashed": False,
+        "label_visible": False,
+        "label_font_size": 20,
+        "text_color": "black",
+        "font_family": "Arial,sans-serif",
+        "label_unit_visible": False,
+        "label_unit": "",
+        "label_unit_factor": 1,
+        "to_precision": False,
+        "scientific_precision": False,
+        "nb_scientific_precision": 3,
+        "custom_digit": True,
+        "nb_digit": 2,
+        "name": "Style par default"
+    }
+
+    # Compute nodes position
+    DA_scale = computeSankeyPosition(nodes, links, setting)
     return {
+        'version': '0.9',
         'nodes': nodes,
-        'flows': edges,
-        'setting': setting
-        }
+        'links': links,
+        'user_scale': DA_scale,
+        'couleur_fond_sankey': setting['bg_color'],
+        'style_node': {'default': default_node_style},
+        'style_link': {'default': default_link_style},
+        'grid_visible': False,
+    }
 
 
 def parse_sankeymatic_node_color(line: str):
@@ -90,7 +558,9 @@ def parse_sankeymatic_node_color(line: str):
         node_pat = color_node_pattern.findall(line)
         color_pat = color_hexa_pattern.findall(line)
         if len(node_pat) == 1 and len(color_pat) == 1:
-            node_id = node_pat[0].replace(' #', '').replace(':', '').replace('\\n', ' ')
+            node_id = node_pat[0].replace(' #', '').replace(
+                ':', '').replace('\\n', ' ')
+            node_id = sankeymatic_utils.normalizeStringToValidId(node_id)
             color = color_pat[0].replace('<<', ' ').replace(' ', '')
             return True, [node_id, color]
     return False, None
@@ -108,11 +578,19 @@ def parse_sankeymatic_flow(line: str):
         origs = orig_pattern.findall(line)
         dests = dest_pattern.findall(line)
         values = value_pattern.findall(line)
+        color = color_hexa_pattern.findall(line)
         if len(origs) == 1 and len(dests) == 1 and len(values) == 1:
-            orig = origs[0].replace('[', ' ').replace('  ', '').replace('\\n', ' ')
-            dest = dests[0].replace(']', ' ').replace('  ', '').replace('\\n', ' ')
+            orig = origs[0].replace('[', ' ').replace(
+                '  ', '').replace('\\n', ' ')
+            dest = dests[0].replace(']', ' ').replace(
+                '  ', '').replace('\\n', ' ')
+            orig = re.sub(r'\s{0,1}#[A-Za-z0-9]{3,6}', '', orig)
+            dest = re.sub(r'\s{0,1}#[A-Za-z0-9]{3,6}', '', dest)
             valeur = values[0].replace('[', '').replace(']', '')
-            return True, [orig, dest, valeur]
+            color_flow = None
+            if (len(color) == 1):
+                color_flow = color[0]
+            return True, [orig, dest, valeur, color_flow]
     return False, None
 
 
@@ -137,7 +615,7 @@ def test_parse_sankeymatic_flows():
         C\\nRound 2 [50000] A\\nRound 3\\n(Winner)\n\
         C\\nRound 2 [95000] B\\nRound 3\n\
         \n\
-        // This line sets a custom gray color:\n\
+        # This line sets a custom gray color:\n\
         :No further votes #777 <<\n\
         D\\nRound 1 [20000] No further votes\n\
         C\\nRound 2 [75000] No further votes"
@@ -169,373 +647,24 @@ def clean_list_setting(lst: list):
     return lst
 
 
-def parse_setting_line_size(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract stting of background size
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'w'):
-        obj['size_width'] = lst[1]
-    elif (lst[0] == 'h'):
-        obj['size_height'] = lst[1]
-
-
-def parse_setting_line_margin(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract stting of background margin
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'l'):
-        obj['margin_left'] = lst[1]
-    elif (lst[0] == 'r'):
-        obj['margin_right'] = lst[1]
-    elif (lst[0] == 't'):
-        obj['margin_top'] = lst[1]
-    elif (lst[0] == 'b'):
-        obj['margin_bottom'] = lst[1]
-
-
-def parse_setting_line_bg(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract stting of background
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'color'):
-        obj['bg_color'] = lst[1]
-    elif (lst[0] == 'transparent'):
-        obj['bg_transparent'] = lst[1]
-
-
-def parse_setting_line_node(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of node general attributes
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'color'):
-        obj['node_color'] = lst[1]
-    elif (lst[0] == 'w'):
-        obj['node_width'] = lst[1]
-    elif (lst[0] == 'h'):
-        obj['node_height'] = lst[1]
-    elif (lst[0] == 'spacing'):
-        obj['node_spacing'] = lst[1]
-    elif (lst[0] == 'border'):
-        obj['node_border'] = lst[1]
-    elif (lst[0] == 'theme'):
-        obj['node_theme'] = lst[1]
-    elif (lst[0] == 'opacity'):
-        obj['node_opacity'] = lst[1]
-
-
-def parse_setting_line_flow(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of flow general attributes
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'color'):
-        obj['flow_color'] = lst[1]
-    elif (lst[0] == 'inheritfrom'):
-        obj['flow_inheritfrom'] = lst[1]
-    elif (lst[0] == 'opacity'):
-        obj['flow_opacity'] = lst[1]
-    elif (lst[0] == 'curvature'):
-        obj['flow_curvature'] = lst[1]
-
-
-def parse_setting_line_layout(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of layout attributes
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'order'):
-        obj['layout_order'] = lst[1]
-    elif (lst[0] == 'justifyorigins'):
-        obj['layout_justifyorigins'] = lst[1]
-    elif (lst[0] == 'justifyends'):
-        obj['layout_justifyends'] = lst[1]
-    elif (lst[0] == 'reversegraph'):
-        obj['layout_reversegraph'] = lst[1]
-    elif (lst[0] == 'attachincompletesto'):
-        obj['layout_attachincompletesto'] = lst[1]
-
-
-def parse_setting_line_labels(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of label attributes
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'color'):
-        obj['labels_color'] = lst[1]
-    elif (lst[0] == 'hide'):
-        obj['labels_hide'] = lst[1]
-    elif (lst[0] == 'highlight'):
-        obj['labels_highlight'] = lst[1]
-    elif (lst[0] == 'fontface'):
-        obj['labels_fontface'] = lst[1]
-    elif (lst[0] == 'linespacing'):
-        obj['labels_linespacing'] = lst[1]
-    elif (lst[0] == 'relativesize'):
-        obj['labels_relativesize'] = lst[1]
-    elif (lst[0] == 'magnify'):
-        obj['labels_magnify'] = lst[1]
-
-
-def parse_setting_line_label_name(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of label name
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'appears'):
-        obj['label_name_appears'] = lst[1]
-    elif (lst[0] == 'size'):
-        obj['label_name_size'] = lst[1]
-    elif (lst[0] == 'weight'):
-        obj['label_name_weight'] = lst[1]
-
-
-def parse_setting_line_label_value(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of label value
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'appears'):
-        obj['label_value_appears'] = lst[1]
-    elif (lst[0] == 'fullprecision'):
-        obj['label_value_fullprecision'] = lst[1]
-    elif (lst[0] == 'position'):
-        obj['label_value_position'] = lst[1]
-    elif (lst[0] == 'weight'):
-        obj['label_value_weight'] = lst[1]
-
-
-def parse_setting_line_label_position(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of label position
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'autoalign'):
-        obj['label_position_autoalign'] = lst[1]
-    elif (lst[0] == 'scheme'):
-        obj['label_position_scheme'] = lst[1]
-    elif (lst[0] == 'first'):
-        obj['label_position_first'] = lst[1]
-    elif (lst[0] == 'breakpoint'):
-        obj['label_position_breakpoint'] = lst[1]
-
-
-def parse_setting_line_value(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of value
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'format'):
-        obj['value_format'] = lst[1]
-    elif (lst[0] == 'prefix'):
-        obj['value_prefix'] = lst[1]
-    elif (lst[0] == 'suffix'):
-        obj['value_suffix'] = lst[1]
-
-
-def parse_setting_line_themeoffset(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of theme
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'a'):
-        obj['theme_a'] = lst[1]
-    elif (lst[0] == 'b'):
-        obj['theme_b'] = lst[1]
-    elif (lst[0] == 'c'):
-        obj['theme_c'] = lst[1]
-    elif (lst[0] == 'd'):
-        obj['theme_d'] = lst[1]
-
-
-def parse_setting_line_meta(lst: list, obj: dict):
-    """
-    Extract setting from a sankeymatic formatted text,
-    we extract setting of meta
-
-    Parameters
-    ----------
-
-    lines : list[string]
-        text splitted by blank space
-    obj : dict
-        dict where we set setting attributes
-
-    Returns
-    -------
-    - Nothing, it modify obj passed in parametter
-    """
-    if (lst[0] == 'mentionsankeymatic'):
-        obj['meta_mentionsankeymatic'] = lst[1]
-    elif (lst[0] == 'listimbalances'):
-        obj['meta_listimbalances'] = lst[1]
-
-
 """
 Dict contianing token & setting parser,
  it use the parser for each subgroup of setting (node attributes, flow attributes, layout ... )
 """
 dict_setting_keyword = {
-    "size": {'token': False, 'parser': parse_setting_line_size},
-    "margin": {'token': False, 'parser': parse_setting_line_margin},
-    "bg": {'token': False, 'parser': parse_setting_line_bg},
-    "node": {'token': False, 'parser': parse_setting_line_node},
-    "flow": {'token': False, 'parser': parse_setting_line_flow},
-    "layout": {'token': False, 'parser': parse_setting_line_layout},
-    "labels": {'token': False, 'parser': parse_setting_line_labels},
-    "labelname": {'token': False, 'parser': parse_setting_line_label_name},
-    "labelvalue": {'token': False, 'parser': parse_setting_line_label_value},
-    "labelposition": {'token': False, 'parser': parse_setting_line_label_position},
-    "value": {'token': False, 'parser': parse_setting_line_value},
-    "themeoffset": {'token': False, 'parser': parse_setting_line_themeoffset},
-    "meta": {'token': False, 'parser': parse_setting_line_meta}
+    "size": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_size},
+    "margin": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_margin},
+    "bg": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_bg},
+    "node": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_node},
+    "flow": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_flow},
+    "layout": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_layout},
+    "labels": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_labels},
+    "labelname": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_label_name},
+    "labelvalue": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_label_value},
+    "labelposition": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_label_position},
+    "value": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_value},
+    "themeoffset": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_themeoffset},
+    "meta": {'token': False, 'parser': sankeymatic_utils.parse_setting_line_meta}
 }
 
 
@@ -660,8 +789,76 @@ def test_parse_sankeymatic_setting():
     assert dict_of_setting['meta_listimbalances'] == "Y"
 
 
+full_file = 'Wages [1500] Budget\n\
+Other [250] Budget\n\
+\n\
+Budget [450] Taxes\n\
+Budget [420] Housing\n\
+Budget [400] Food\n\
+Budget [295] Transportation\n\
+Budget [35] Other Necessities\n\
+Budget [150] Savings\n\
+\n\
+:Taxes #d74\n\
+:Savings #197\n\
+\n\
+// === Settings ===\n\
+\n\
+size w 1000\n\
+  h 600\n\
+margin l 12\n\
+  r 12\n\
+  t 18\n\
+  b 20\n\
+bg color #ce2222\n\
+  transparent N\n\
+node w 20\n\
+  h 63\n\
+  spacing 100\n\
+  border 0\n\
+  theme none\n\
+  color #888888\n\
+  opacity 1\n\
+flow curvature 0.42\n\
+  inheritfrom outside-in\n\
+  color #999999\n\
+  opacity 0.45\n\
+layout order automatic\n\
+  justifyorigins N\n\
+  justifyends N\n\
+  reversegraph N\n\
+  attachincompletesto nearest\n\
+labels color #000000\n\
+  hide N\n\
+  highlight 0.8\n\
+  fontface sans-serif\n\
+  linespacing 0.2\n\
+  relativesize 100\n\
+  magnify 120\n\
+labelname appears Y\n\
+  size 25\n\
+  weight 400\n\
+labelvalue appears Y\n\
+  fullprecision Y\n\
+  position below\n\
+  weight 400\n\
+labelposition autoalign 0\n\
+  scheme auto\n\
+  first before\n\
+  breakpoint 3\n\
+value format ",."\n\
+  prefix ''\n\
+  suffix ''\n\
+themeoffset a 5\n\
+  b 9\n\
+  c 0\n\
+  d 0\n\
+meta mentionsankeymatic Y\n\
+  listimbalances Y'
+
 if __name__ == '__main__':
-    test_parse_sankeymatic_flow()
-    test_parse_sankeymatic_node_color()
-    test_parse_sankeymatic_flows()
-    test_parse_sankeymatic_setting()
+    # test_parse_sankeymatic_flow()
+    # test_parse_sankeymatic_node_color()
+    # test_parse_sankeymatic_flows()
+    # test_parse_sankeymatic_setting()
+    parse_sankeymatic_text(full_file)
