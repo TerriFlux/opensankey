@@ -51,7 +51,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
               placement='bottom'
               label={'Pour tracer un flux, cliquez, faites glisser sans relâcher, puis relâchez.'}
               isAlwaysOpen={show_documentation}>
-                <Button size='lg' variant='ghost' onClick={() => set_show_documentation(false)}>
+                <Button size='lg' variant={'secondary'} onClick={() => set_show_documentation(false)}>
                 Démarrer
 
               </Button></OSTooltip></Box>
@@ -61,7 +61,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
               placement='top'
               label={'Diaporama de présentation'}
               isAlwaysOpen={show_documentation}
-            ><Button size='lg' variant='ghost' onClick={() => {
+            ><Button size='lg' variant={'secondary'} onClick={() => {
               app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
               set_show_documentation(false)
             }}>
