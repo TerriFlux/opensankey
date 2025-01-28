@@ -11,7 +11,8 @@ import {
   ModalCloseButton,
   ModalFooter,
   ModalOverlay,
-  Center
+  Center,
+  Checkbox
 } from '@chakra-ui/react'
 import { Type_GenericApplicationData } from '../../types/Types';
 import { useTour } from '@reactour/tour'
@@ -33,9 +34,10 @@ type FCType_ModalDocumentation = {
 export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = (
   { show_documentation, set_show_documentation, app_data }: FCType_ModalDocumentation
 ) => {
+  const { never_see_again } = app_data.menu_configuration
 
   return <Modal
-    isOpen={show_documentation}
+    isOpen={show_documentation && never_see_again.current == false}
     onClose={() => set_show_documentation(false)}
     scrollBehavior='inside'
     variant='modal_documentation'
@@ -44,6 +46,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
     <ModalContent>
       <ModalBody marginLeft='40vw' >
         <Center>
+          <Box>
           <Box as='span' layerStyle='options_2cols'>
 
 
@@ -51,7 +54,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
               placement='bottom'
               label={'Pour tracer un flux, cliquez, faites glisser sans relâcher, puis relâchez.'}
               isAlwaysOpen={show_documentation}>
-                <Button size='lg' variant={'secondary'} onClick={() => set_show_documentation(false)}>
+              <Button size='lg' variant={'secondary'} onClick={() => set_show_documentation(false)}>
                 Démarrer
 
               </Button></OSTooltip></Box>
@@ -68,6 +71,20 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
                 Présentation
               </Button></OSTooltip></Box>
 
+          </Box>
+
+          <Box layerStyle='box_footer_welcome' style={{marginTop:'200px'}}>
+            <Checkbox
+              variant='checkbox_dont_show_again'
+              isChecked={never_see_again.current} onChange={evt => {
+                never_see_again.current = evt.target.checked
+                localStorage.setItem('dontSeeAggainWelcome', '1')
+                set_show_documentation(false)
+              }}
+            >
+              {app_data.t('dontSeeAgain')}
+            </Checkbox>
+          </Box>
           </Box>
         </Center>
       </ModalBody>
