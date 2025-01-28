@@ -24,7 +24,8 @@ import {
 } from './FormControl'
 import {
   modal_account,
-  modal_sankeytheque
+  modal_sankeytheque,
+  modal_documentation
 } from './ModalStyle'
 import { accordion_sankeytheque } from './AccordionStyles'
 
@@ -68,7 +69,8 @@ export const Theme_SA = {
     Modal: {
       variants: {
         modal_account,
-        modal_sankeytheque
+        modal_sankeytheque,
+        modal_documentation
       }
     }
   },

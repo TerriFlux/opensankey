@@ -164,6 +164,14 @@ export const resources_app_elements = {
         'to_app': 'Back to the application',
         'to_acc': 'My account',
         'to_dbd': 'Dashboard',
+        tooltip:{
+          'to_con': 'Log in or create an account',
+          'to_reg': 'Sign up',
+          'to_buy': 'Try OpenSankey+',
+          'to_app': 'Back to the application',
+          'to_acc': 'My account',
+          'to_dbd': 'Dashboard'         
+        }
       },
       Register: {
         presentation: {
@@ -665,6 +673,14 @@ export const resources_app_elements = {
         'to_app': 'Retour à l\'application',
         'to_acc': 'Mon compte',
         'to_dbd': 'Dashboard',
+        tooltip: {
+          'to_con': 'Connectez vous ou créez un compte',
+          'to_reg': 'Créer un compte',
+          'to_buy': 'Essayer OpenSankey+',
+          'to_app': 'Retour à l\'application',
+          'to_acc': 'Mon compte',
+          'to_dbd': 'Dashboard'          
+        }
       },
       Register: {
         presentation: {

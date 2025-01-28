@@ -56,3 +56,32 @@ export const modal_sankeytheque = definePartsStyle({
   footer: {
   }
 })
+
+export const modal_documentation = definePartsStyle({
+  dialogContainer: {
+    background: 'blackAlpha.500',
+    opacity: 0.5
+  },
+  dialog:{
+    display: 'inherit',
+    width: '100vw',
+    height:'90vh',
+    alignSelf: 'center',
+    //opacity: 0.3
+  },
+  header: {
+    minWidth: 'inherit',
+    maxWidth: 'inherit',
+    width: 'max-content'
+  },
+  body: {
+    display: 'grid',
+    gridTemplateColumns:'2fr 10fr',
+    // gridAutoFlow: 'row',
+    // gridRowGap: '6px !important',
+    minWidth: 'inherit',
+    maxWidth: 'inherit'
+  },
+  footer: {
+  }
+})

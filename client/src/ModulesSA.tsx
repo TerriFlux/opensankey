@@ -32,7 +32,7 @@ import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 // OpenSankey imports
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
-import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { OSTooltip, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
 import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyPersistence'
 
@@ -183,12 +183,16 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
     >
       {t('UserNav.to_buy')}
     </Button>
+    <OSTooltip
+    label={t('UserNav.tooltip.to_con')}
+    isAlwaysOpen={new_data_app.show_documentation}>
     <Button
       variant='btn_lone_navigation_secondary'
       onClick={() => navigate('/login')}
     >
       {t('UserNav.to_con')}
     </Button>
+    </OSTooltip>
   </Box>
 
   const user_navigation_bar_connected = <Box
