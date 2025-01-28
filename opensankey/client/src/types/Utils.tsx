@@ -319,6 +319,7 @@ export const OSTooltip: FunctionComponent<OSTooltpFuncType> = (
     label,
     delay = 500,
     placement = 'top',
+    isAlwaysOpen = false,
     children
   }
 ) => {
@@ -326,15 +327,29 @@ export const OSTooltip: FunctionComponent<OSTooltpFuncType> = (
     return <>{children}</>
   }
   const element_key = label.split(' ').join('_')
-  return <Tooltip
-    key={element_key}
-    openDelay={delay}
-    placement={placement}
-    label={label}
-    closeDelay={100}
-  >
-    {children}
-  </Tooltip>
+  if (isAlwaysOpen) {
+    return <Tooltip
+      key={element_key}
+      openDelay={delay}
+      placement={placement}
+      label={label}
+      closeDelay={100}
+      isOpen={true}
+      hasArrow={true}
+    >
+      {children}
+    </Tooltip>
+  } else {
+    return <Tooltip
+      key={element_key}
+      openDelay={delay}
+      placement={placement}
+      label={label}
+      closeDelay={100}
+    >
+      {children}
+    </Tooltip>    
+  }
 }
 
 export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {

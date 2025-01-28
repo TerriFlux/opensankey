@@ -346,6 +346,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
       <OSTooltip
         placement='bottom'
         label={t('Menu.tooltips.new')}
+        isAlwaysOpen={new_data.show_documentation}
       >
         <Button
           variant='menutop_button'
@@ -358,7 +359,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
               gridRow='1'
             >
               <FontAwesomeIcon
-                style={{ 'height': '2rem', 'width': '3rem' }}
+                style={{ 'height': '2rem', 'width': '3rem'}}
                 icon={faPlus}
               />
             </Box>
@@ -457,7 +458,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             }}
           >
             {/* TODO : find a better icon when we'll use FontAwesome pro */}
-              <FontAwesomeIcon icon={faChartSimple} />
+            <FontAwesomeIcon icon={faChartSimple} />
             {t('Menu.open_sankeymatic')}
           </MenuItem>
           <Input
@@ -483,7 +484,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
                   fetch(url, {
                     method: 'POST',
                     body: form_data
-                  })  .then(response => {
+                  }).then(response => {
                     response
                       .text()
                       .then(text => {
@@ -892,34 +893,34 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
 }
 
 const ButtonLaunchGuide: FunctionComponent<FCType_ButtonLaunchGuide> = ({ new_data }) => {
-  //const { setIsOpen } = useTour()
-  return <Button
+  const { setIsOpen } = useTour()
+  return <OSTooltip
+    label={'Commencer la visite guidée'}
+    isAlwaysOpen={new_data.show_documentation}
+  ><Button
     variant='menutop_button'
     onClick={() => {
       new_data.setSteps()
-      //setIsOpen(true)
+      setIsOpen(true)
     }}
   >
-    <Box
-      layerStyle='menutop_button_style'
-    >
       <Box
-        gridRow='1'
-        padding='0.1rem 0 0.15rem 0'
+        layerStyle='menutop_button_style'
       >
-        {logo_tour}
+        <Box
+          gridRow='1'
+          padding='0.1rem 0 0.15rem 0'
+        >
+          {logo_tour}
+        </Box>
+        <Box
+          gridRow='2'
+        >
+
+          {new_data.t('guide.guide')}
+        </Box>
       </Box>
-      <Box
-        gridRow='2'
-      >
-        <OSTooltip
-        placement='top'
-        label={'Commencer la visite guidée'}
-      >
-        {new_data.t('guide.guide')}</OSTooltip>
-      </Box>
-    </Box>
-  </Button>
+    </Button></OSTooltip>
 }
 
 
@@ -1461,7 +1462,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             isOpen={show_nav}
             placement='right'
             onClose={() => set_show_nav(false)}
-            onEsc={()=>{
+            onEsc={() => {
               // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
               const ev = document
               const tmp = new KeyboardEvent('keydown', { key: 'Escape' })

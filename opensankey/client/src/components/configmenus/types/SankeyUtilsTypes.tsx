@@ -6,5 +6,5 @@ export type OSTooltpFuncType={
   label:string,
   placement?:PlacementWithLogical
   children:ReactNode,
-  defaultIsOpen?:boolean
+  isAlwaysOpen?:boolean
 }
