@@ -22,7 +22,6 @@ import {
   faImage,
   faPenToSquare,
   faPlus,
-  faChartSimple,
   faSliders,
   faShapes,
   faShareNodes,
