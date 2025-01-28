@@ -57,7 +57,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   const new_data = initializeApplicationData(
     initial_data
   )
-  new_data.show_documentation = show_documentation
+
 
   /*************************************************************************************************/
 
@@ -75,7 +75,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   ) {
     menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
   }
-
+  new_data.show_documentation = show_documentation && !menu_config.never_see_again.current
   /*************************************************************************************************/
 
   const reinitialization = initializeReinitialization(new_data)
