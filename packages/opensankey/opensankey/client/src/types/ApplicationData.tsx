@@ -57,12 +57,6 @@ const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
 const toast_bypass: boolean = false
 
-function normalizeName(s:string){
-  return s.replaceAll(' ','_')
-    .replaceAll('(','')
-    .replaceAll(')','')
-}
-
 // CLASS APPLICATION DATA **************************************************************/
 
 /**
