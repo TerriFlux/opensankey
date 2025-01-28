@@ -32,7 +32,7 @@ import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 // OpenSankey imports
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
-import { OSTooltip, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
 import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyPersistence'
 
