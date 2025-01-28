@@ -2097,13 +2097,13 @@ export abstract class ClassTemplate_LinkElement
       }
 
       // Center point
-      let k_fwd = 0.5
+      const k_fwd = 0.5
       // Experimental code - kept for memory
       // if (Math.abs(x4_fwd - x5_fwd) > 0) {
       //   k_fwd = Math.abs((x2_fwd - x1_fwd)/(x4_fwd - x5_fwd))
       //   k_fwd = k_fwd / (1 + k_fwd)
       // }
-      let k_bwd = 0.5
+      const k_bwd = 0.5
       // Experimental code - kept for memory
       // if (Math.abs(x4_bwd - x5_bwd) > 0) {
       //   k_bwd = Math.abs((x2_bwd - x1_bwd)/(x4_bwd - x5_bwd))
