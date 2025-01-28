@@ -44,27 +44,31 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
     <ModalContent>
       <ModalBody marginLeft='40vw' >
         <Center>
-          <OSTooltip
-            placement='left'
-            label={'Pour tracer un flux, cliquez, faites glisser sans relâcher, puis relâchez.'}
-            isAlwaysOpen={show_documentation}
-          >
-            <Button colorScheme='blue' mr={3} onClick={() => set_show_documentation(false)}>
-              Démarrer
-            </Button>
-          </OSTooltip>
-          <OSTooltip
-            placement='right'
-            label={'Diaporama de présentation'}
-            isAlwaysOpen={show_documentation}
-          >
-            <Button colorScheme='blue' mr={3} onClick={() => {
+          <Box as='span' layerStyle='options_2cols'>
+
+
+            <Box><OSTooltip
+              placement='bottom'
+              label={'Pour tracer un flux, cliquez, faites glisser sans relâcher, puis relâchez.'}
+              isAlwaysOpen={show_documentation}>
+                <Button size='lg' variant='ghost' onClick={() => set_show_documentation(false)}>
+                Démarrer
+
+              </Button></OSTooltip></Box>
+
+
+            <Box><OSTooltip
+              placement='top'
+              label={'Diaporama de présentation'}
+              isAlwaysOpen={show_documentation}
+            ><Button size='lg' variant='ghost' onClick={() => {
               app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
               set_show_documentation(false)
             }}>
-              Présentation
-            </Button>
-          </OSTooltip>
+                Présentation
+              </Button></OSTooltip></Box>
+
+          </Box>
         </Center>
       </ModalBody>
     </ModalContent>
