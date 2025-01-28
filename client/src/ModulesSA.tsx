@@ -183,16 +183,16 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
     >
       {t('UserNav.to_buy')}
     </Button>
-    <OSTooltip
+    {/* <OSTooltip
     label={t('UserNav.tooltip.to_con')}
-    isAlwaysOpen={new_data_app.show_documentation}>
+    isAlwaysOpen={new_data_app.show_documentation}> */}
     <Button
       variant='btn_lone_navigation_secondary'
       onClick={() => navigate('/login')}
     >
       {t('UserNav.to_con')}
     </Button>
-    </OSTooltip>
+    {/* </OSTooltip> */}
   </Box>
 
   const user_navigation_bar_connected = <Box
