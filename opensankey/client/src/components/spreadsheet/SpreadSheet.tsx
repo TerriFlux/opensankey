@@ -163,7 +163,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           const fieldName = change.columnId as 'value'
           const l = new_data.drawing_area.sankey.links_list[fluxIndex]
           if (l) {
-            l.data_value = (change.newCell as NumberCell).value
+            if (isNaN((change.newCell as NumberCell).value)) {
+              l.data_value = null
+            } else {
+              l.data_value = (change.newCell as NumberCell).value
+            }
             new_data.drawing_area.updateScaleAtLinkValueSetting()
           }
           spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as NumberCell).value
