@@ -23,6 +23,7 @@ import {
   faPenToSquare,
   faPlus,
   faRightFromBracket,
+  faChartSimple,
   faSliders,
   faShapes,
   faShareNodes,
@@ -460,7 +461,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             }}
           >
             {/* TODO : find a better icon when we'll use FontAwesome pro */}
-              <FontAwesomeIcon icon={faChartSimple} />
+            <FontAwesomeIcon icon={faChartSimple} />
             {t('Menu.open_sankeymatic')}
           </MenuItem>
           <Input
@@ -486,7 +487,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
                   fetch(url, {
                     method: 'POST',
                     body: form_data
-                  })  .then(response => {
+                  }).then(response => {
                     response
                       .text()
                       .then(text => {
@@ -863,7 +864,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
   return ui
 }
 
-const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }:FCType_ButtonLaunchGuide) => {
+const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }: FCType_ButtonLaunchGuide) => {
   const { setIsOpen } = useTour()
   return <Button
     variant='menutop_button'
@@ -1054,17 +1055,17 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     additionalMenus,
     apply_transformation_additional_elements,
     diagramSelector,
-  }:FCType_Menu
+  }: FCType_Menu
 ) => {
   const { t, logo, app_name, logo_terriflux } = new_data
   const { ref_setter_show_modal_tuto } = new_data.menu_configuration.dict_setter_show_dialog
   const [show_nav, set_show_nav] = useState(false)
   const [show_tuto, set_show_tuto] = useState(false)
   const [, setCount] = useState(0)
-  const [spreadsheet,setSpreadSheet] = useState(true)
+  const [spreadsheet, setSpreadSheet] = useState(true)
   ref_setter_show_modal_tuto.current = set_show_tuto
   new_data.menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
-  new_data.menu_configuration.ref_menu_opened.current = [show_nav,()=>set_show_nav(true)]
+  new_data.menu_configuration.ref_menu_opened.current = [show_nav, () => set_show_nav(true)]
   new_data.menu_configuration.positionToolBar(menu_config_width)
 
   //Switch the variable value that handle opening and closing the configuration menu
@@ -1430,7 +1431,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             isOpen={show_nav}
             placement='right'
             onClose={() => set_show_nav(false)}
-            onEsc={()=>{
+            onEsc={() => {
               // Override drawer onEscape() to use Class_applicationData 'escape' keyEvent & not the one by default from the <Drawer> component
               const ev = document
               const tmp = new KeyboardEvent('keydown', { key: 'Escape' })
@@ -1454,22 +1455,30 @@ export const Menu: FunctionComponent<FCType_Menu> = (
               }}
             >
               <DrawerFooter>
-                <Button variant='toolbar_button_5' style={{marginRight:'10px'}} onClick={()=>setSpreadSheet(true)}>
-                  <FontAwesomeIcon icon={faTable} />
-                </Button>
-                <Button variant='toolbar_button_5' style={{marginLeft:'10px'}} onClick={()=>setSpreadSheet(false)}>
-                  <FontAwesomeIcon icon={faSliders} />
-                </Button>
+                <OSTooltip
+                  placement='bottom'
+                  label={t('Menu.tooltips.SpreadSheet')}>
+                  <Button variant='toolbar_button_5' style={{ marginRight: '10px' }} onClick={() => setSpreadSheet(true)}>
+                    <FontAwesomeIcon icon={faTable} />
+                  </Button>
+                </OSTooltip>
+                <OSTooltip
+                  placement='bottom'
+                  label={t('Menu.tooltips.ConfigMenu')}>
+                  <Button variant='toolbar_button_5' style={{ marginLeft: '10px' }} onClick={() => setSpreadSheet(false)}>
+                    <FontAwesomeIcon icon={faSliders} />
+                  </Button>
+                </OSTooltip>
               </DrawerFooter>
-            {spreadsheet?
-              (<DrawerBody className='drawer_menu_config_body' zIndex={2}>
+              {spreadsheet ?
+                (<DrawerBody className='drawer_menu_config_body' zIndex={2}>
                   <SpreadSheet
-                      new_data={new_data}
-                    />
-              </DrawerBody>):
-              (<DrawerBody className='drawer_menu_config_body' zIndex={2}>
-              {configurations_menus}
-              </DrawerBody>)}
+                    new_data={new_data}
+                  />
+                </DrawerBody>) :
+                (<DrawerBody className='drawer_menu_config_body' zIndex={2}>
+                  {configurations_menus}
+                </DrawerBody>)}
 
             </DrawerContent>
           </Drawer> :

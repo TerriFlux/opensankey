@@ -254,6 +254,8 @@ export const resources_app_elements = {
           LegBgBorder: 'Add a border to the legend area',
           LegBgColor: 'Choose background color opacity',
           old_app: 'Redirect to the legacy version of OpenSankey',
+          SpreadSheet:'Representation and editing of the diagram in a spreadsheet',
+          ConfigMenu: 'Editing the diagram through a configuration menu'
         },
       },
       SpreadSheet: {
@@ -1049,6 +1051,8 @@ export const resources_app_elements = {
           LegBgBorder: 'Ajoute une bordure à la légende',
           LegBgColor: 'Moddifie la couleur de fond de la légende',
           old_app: 'Redirige vers la version précédente de OpenSankey',
+          SpreadSheet: 'Représentation et édition du diagramme dans une spreadsheet',
+          ConfigMenu: 'Edition du diagramme dans un menu de configuration'
         },
       },
       SpreadSheet: {
