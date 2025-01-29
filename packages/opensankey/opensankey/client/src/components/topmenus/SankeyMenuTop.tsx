@@ -657,36 +657,36 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
 
       <ButtonLaunchGuide new_data={new_data} />,
 
-      <OSTooltip
-        placement='bottom'
-        label={t('Menu.tooltips.old_app')}>
-        <Box>
-          <Button
-            variant='menutop_button'
-            onClick={() => {
-              window.open('https://legacy.open-sankey.fr')
-            }}
-          >
-            <Box
-              layerStyle='menutop_button_style'
-            >
-              <Box
-                gridRow='1'
-              >
-                <FontAwesomeIcon
-                  style={{ 'height': '2rem', 'width': '3rem' }}
-                  icon={faRightFromBracket}
-                />
-              </Box>
-              <Box
-                gridRow='2'
-              >
-                {t('Menu.old_app')}
-              </Box>
-            </Box>
-          </Button>
-        </Box>
-      </OSTooltip>
+      // <OSTooltip
+      //   placement='bottom'
+      //   label={t('Menu.tooltips.old_app')}>
+      //   <Box>
+      //     <Button
+      //       variant='menutop_button'
+      //       onClick={() => {
+      //         window.open('https://legacy.open-sankey.fr')
+      //       }}
+      //     >
+      //       <Box
+      //         layerStyle='menutop_button_style'
+      //       >
+      //         <Box
+      //           gridRow='1'
+      //         >
+      //           <FontAwesomeIcon
+      //             style={{ 'height': '2rem', 'width': '3rem' }}
+      //             icon={faRightFromBracket}
+      //           />
+      //         </Box>
+      //         <Box
+      //           gridRow='2'
+      //         >
+      //           {t('Menu.old_app')}
+      //         </Box>
+      //       </Box>
+      //     </Button>
+      //   </Box>
+      // </OSTooltip>
     ]
 
     ui['edition'] = [
@@ -895,7 +895,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
 const ButtonLaunchGuide: FunctionComponent<FCType_ButtonLaunchGuide> = ({ new_data }) => {
   const { setIsOpen } = useTour()
   return <OSTooltip
-    label={'Commencer la visite guidée'}
+    label={'Commencer la visite guidée dans les différentes zones de l\'application.'}
     isAlwaysOpen={new_data.show_documentation}
   ><Button
     variant='menutop_button'
@@ -1506,6 +1506,11 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       >
         {toolbarComponent}
         {!(new_data.is_static ? new_data.is_static : false) ? (
+          <OSTooltip
+            placement='left'
+            label={t('Banner.open_configuration_menu')}
+            isAlwaysOpen={new_data.show_documentation}
+          >
           <Button
             ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
             id='toggle-check'
@@ -1513,7 +1518,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             variant='toolbar_main_button'
             onClick={toggleShow}
             value='menuConfigButton'>{menuButton()}
-          </Button>
+          </Button></OSTooltip>
         ) : (<></>)}
       </ButtonGroup>
 

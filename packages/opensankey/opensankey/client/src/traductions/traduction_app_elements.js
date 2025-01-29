@@ -727,6 +727,7 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Filter nodes and apply color of tagds',
         hlp_link_tag_filter: 'Filter link and apply color of tagds',
         hlp_data_tag_filter: 'Choose data and apply color of tagds',
+        open_configuration_menu: 'Open configuration menu.'
       },
       welcome: {
         welcome: 'Welcome to OpenSankey web application',
@@ -1519,7 +1520,7 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Filtrer les noeuds et appliquer la couleur des étiquettes',
         hlp_link_tag_filter: 'Filtrer les flux et appliquer la couleur des étiquettes',
         hlp_data_tag_filter: 'Choisir les données et appliquer la couleur des étiquettes',
-
+        open_configuration_menu: 'Ouvre le menu de configuration.'
       },
       welcome: {
         welcome: 'Bienvenue sur l\'application web OpenSankey',
