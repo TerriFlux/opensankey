@@ -46,45 +46,39 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
     <ModalContent>
       <ModalBody marginLeft='40vw' >
         <Center>
-          <Box>
-          <Box as='span' layerStyle='options_2cols'>
-
-
-            <Box><OSTooltip
+          <Box layerStyle='menuconfigpanel_grid'>
+            <Box layerStyle='options_2cols' >
+            <OSTooltip
               placement='bottom'
               label={'Pour tracer un flux, cliquez, faites glisser sans relâcher, puis relâchez.'}
               isAlwaysOpen={show_documentation}>
-              <Button size='lg' variant={'secondary'} onClick={() => set_show_documentation(false)}>
+                              <Button width='500px' height='200px' onClick={() => set_show_documentation(false)}>
                 Démarrer
-
-              </Button></OSTooltip></Box>
-
-
-            <Box><OSTooltip
+              </Button></OSTooltip>
+              <OSTooltip
               placement='top'
               label={'Diaporama de présentation'}
-              isAlwaysOpen={show_documentation}
-            ><Button size='lg' variant={'secondary'} onClick={() => {
-              app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
-              set_show_documentation(false)
-            }}>
-                Présentation
-              </Button></OSTooltip></Box>
-
-          </Box>
-
-          <Box layerStyle='box_footer_welcome' style={{marginTop:'200px'}}>
-            <Checkbox
-              variant='checkbox_dont_show_again'
-              isChecked={never_see_again.current} onChange={evt => {
-                never_see_again.current = evt.target.checked
-                localStorage.setItem('dontSeeAggainWelcome', '1')
+              isAlwaysOpen={show_documentation}>
+              <Button size='lg' variant='btn_lone_navigation_tertiary' onClick={() => {
+                app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
                 set_show_documentation(false)
-              }}
-            >
-              {app_data.t('dontSeeAgain')}
-            </Checkbox>
-          </Box>
+              }}>
+                Présentation
+              </Button>
+              </OSTooltip>
+            </Box>
+            <Box layerStyle='box_footer_welcome' style={{ marginTop: '200px' }}>
+              <Checkbox
+                variant='checkbox_dont_show_again'
+                isChecked={never_see_again.current} onChange={evt => {
+                  never_see_again.current = evt.target.checked
+                  localStorage.setItem('dontSeeAggainWelcome', '1')
+                  set_show_documentation(false)
+                }}
+              >
+                {app_data.t('dontSeeAgain')}
+              </Checkbox>
+            </Box>
           </Box>
         </Center>
       </ModalBody>
