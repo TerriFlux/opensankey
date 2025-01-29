@@ -38,7 +38,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
 
   return <Modal
     isOpen={show_documentation && never_see_again.current == false}
-    onClose={() => set_show_documentation(false)}
+    onClose={() =>null}
     scrollBehavior='inside'
     variant='modal_documentation'
     size={'sm'}>
@@ -54,6 +54,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
                 isAlwaysOpen={show_documentation}>
                 <Button size='lg' /*width='500px' height='200px'*/ variant='btn_lone_navigation_tertiary' onClick={() => {
                   set_show_documentation(false)
+                  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current!(true)
                 }}>
                   {'Démarrer'}
                 </Button></OSTooltip>
