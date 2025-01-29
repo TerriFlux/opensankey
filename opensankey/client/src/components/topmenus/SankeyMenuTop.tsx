@@ -1060,7 +1060,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   const [show_nav, set_show_nav] = useState(false)
   const [show_tuto, set_show_tuto] = useState(false)
   const [, setCount] = useState(0)
-  const [spreadsheet, setSpreadSheet] = useState(true)
+  const [spreadsheet, setSpreadSheet] = useState(false)
   ref_setter_show_modal_tuto.current = set_show_tuto
   new_data.menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   new_data.menu_configuration.ref_menu_opened.current = [show_nav, () => set_show_nav(true)]
