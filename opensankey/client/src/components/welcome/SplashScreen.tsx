@@ -41,33 +41,35 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
     onClose={() => set_show_documentation(false)}
     scrollBehavior='inside'
     variant='modal_documentation'
-    size={'full'}>
+    size={'sm'}>
     <ModalOverlay />
     <ModalContent>
-      <ModalBody marginLeft='40vw' >
+      <ModalBody >
         <Center>
           <Box layerStyle='menuconfigpanel_grid'>
             <Box layerStyle='options_2cols' >
-            <OSTooltip
-              placement='bottom'
-              label={'Pour tracer un flux, cliquez, faites glisser sans relâcher, puis relâchez.'}
-              isAlwaysOpen={show_documentation}>
-                              <Button width='500px' height='200px' onClick={() => set_show_documentation(false)}>
-                Démarrer
-              </Button></OSTooltip>
               <OSTooltip
-              placement='top'
-              label={'Diaporama de présentation'}
-              isAlwaysOpen={show_documentation}>
-              <Button size='lg' variant='btn_lone_navigation_tertiary' onClick={() => {
-                app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
-                set_show_documentation(false)
-              }}>
-                Présentation
-              </Button>
+                placement='top'
+                label={'Commencer à tracer vos flux. Pour cela cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'}
+                isAlwaysOpen={show_documentation}>
+                <Button size='lg' /*width='500px' height='200px'*/ variant='btn_lone_navigation_tertiary' onClick={() => {
+                  set_show_documentation(false)
+                }}>
+                  {'Démarrer'}
+                </Button></OSTooltip>
+              <OSTooltip
+                placement='bottom'
+                label={'Diaporama présentant les différentes fonctionnalités de l\'outil des plus basiques aux plus avancées.'}
+                isAlwaysOpen={show_documentation}>
+                <Button size='lg' variant='btn_lone_navigation_tertiary' onClick={() => {
+                  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
+                  set_show_documentation(false)
+                }}>
+                  {'Diaporama'}
+                </Button>
               </OSTooltip>
             </Box>
-            <Box layerStyle='box_footer_welcome' style={{ marginTop: '200px' }}>
+            <Box layerStyle='box_footer_welcome' style={{ marginTop: '100px' }}>
               <Checkbox
                 variant='checkbox_dont_show_again'
                 isChecked={never_see_again.current} onChange={evt => {
