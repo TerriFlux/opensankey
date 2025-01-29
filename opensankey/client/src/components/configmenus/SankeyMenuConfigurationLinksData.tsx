@@ -159,7 +159,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
               link.data_value = (_ ?? null)
             })
             // Update scaling if only one link
-            new_data.drawing_area.updateScaleAtLinkValueSetting(_)
+            new_data.drawing_area.updateScaleAtLinkValueSetting()
             // Update this menu
             refreshThisAndUpdateRelatedComponents()
           }}
@@ -229,6 +229,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update data menu for link
     new_data.menu_configuration.updateComponentRelatedToLinksData()
+    new_data.ref_to_spreadsheet.current()
     // And update this menu also
     setCount(a => a + 1)
     updateInputsValues()
@@ -243,7 +244,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
         link.data_value = (_ ?? null)
       })
       // Update scaling if only one link
-      new_data.drawing_area.updateScaleAtLinkValueSetting(_)
+      new_data.drawing_area.updateScaleAtLinkValueSetting()
       // Update this menu
       refreshThisAndUpdateRelatedComponents()
     }}
