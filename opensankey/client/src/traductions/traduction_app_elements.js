@@ -1526,12 +1526,12 @@ export const resources_app_elements = {
         welcome: 'Bienvenue sur l\'application web OpenSankey',
         breadcrumbs: {
           intro: 'Fonctionnalités',
-          interface: 'Boutons et Menus',
-          rc: 'Raccourcis',
-          licence: 'Licences',
+          //interface: 'Boutons et Menus',
+          //rc: 'Raccourcis',
+          //licence: 'Licences',
         },
         read_me: 'Lisez moi',
-        intro: 'Présentation rapide de l\'outils et de ses fonctionnalités',
+        intro: 'Présentation des fonctionnalités de l\'outil',
         caroussel: {
           Image1: 'Comprenez vos flux, Représentez les avec des diagrammes de Sankey',
           Image2: 'Importez rapidement vos données ou tracez directement vos diagrammes',
