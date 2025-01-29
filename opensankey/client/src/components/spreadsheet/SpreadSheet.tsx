@@ -280,7 +280,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
               const current_row = selectedRanges[0][0].rowId as number
               const current_col = columnsId.indexOf(selectedRanges[0][0].columnId) as number
               const linksToRemove = []
-              if (current_row<spreadSheetFlux.length-1) {
+              if (current_col == 0 && current_row<spreadSheetFlux.length-1) {
                 for (let i = spreadSheetFlux.length-2; i>=current_row; i--) {
                   const l =  new_data.drawing_area.sankey.links_list[i]
                   linksToRemove.push(l)
