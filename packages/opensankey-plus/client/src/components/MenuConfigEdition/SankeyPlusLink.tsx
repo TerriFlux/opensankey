@@ -27,14 +27,11 @@ import {
 import {
   isAttributeOverloaded} from '../../deps/OpenSankey/Elements/Link'
 import {
-  default_shape_is_dashed,
-  default_value_label_significant_digits,
-  default_value_label_nb_significant_digits,
-  default_value_label_scientific_notation
-} from '../../deps/OpenSankey/Elements/LinkAttributes'
-import { LinkAttributes } from '../../deps/OpenSankey/Elements/LinkAttributes'
-import {
-  ConfigMenuNumberInput} from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
+  default_link_value_label_nb_significant_digits,
+  default_link_value_label_scientific_notation,
+  default_link_value_label_significant_digits,
+  default_shape_is_dashed} from '../../deps/OpenSankey/Elements/LinkAttributes'
+import { Class_LinkStyle } from '../../deps/OpenSankey/Elements/LinkAttributes'
 import {
   icon_open_modal
 
@@ -58,6 +55,7 @@ import type {
   Type_GenericLinkElementOSP,
   Type_GenericNodeElementOSP
 } from '../../types/TypesOSP'
+import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
 
 export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConfLinkApparenceGradientOSP> = ({
@@ -214,18 +212,18 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
     selected_links = drawing_area.visible_and_selected_links_list_sorted
   }
   // Elements on which menu modification applies
-  let elements: LinkAttributes[] | Type_GenericLinkElementOSP[]
+  let elements: Class_LinkStyle[] | Type_GenericLinkElementOSP[]
   if (menu_for_style) {
     elements = [new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
   }
-  else {
+  else {Class_LinkStyle
     elements = selected_links
   }
 
 
-  const value_label_scientific_notation = (elements[0]?.value_label_scientific_notation ?? default_value_label_scientific_notation)
-  const value_label_significant_digits = (elements[0]?.value_label_significant_digits ?? default_value_label_significant_digits)
-  const value_label_nb_significant_digits = (elements[0]?.value_label_nb_significant_digits ?? default_value_label_nb_significant_digits)
+  const value_label_scientific_notation = (elements[0]?.value_label_scientific_notation ?? default_link_value_label_scientific_notation)
+  const value_label_significant_digits = (elements[0]?.value_label_significant_digits ?? default_link_value_label_significant_digits)
+  const value_label_nb_significant_digits = (elements[0]?.value_label_nb_significant_digits ?? default_link_value_label_nb_significant_digits)
 
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
   ref_set_number_inputs.current(String(value_label_nb_significant_digits))

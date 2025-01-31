@@ -10,7 +10,7 @@
 // OpenSankey imports
 import {
   Class_LinkAttribute,
-  LinkAttributes
+  Class_LinkStyle
 } from '../deps/OpenSankey/Elements/LinkAttributes'
 import {
   getBooleanFromJSON,
@@ -380,7 +380,7 @@ export class Class_LinkAttributeOSP extends Class_LinkAttribute {
  * @class LinkAttributes
  * @extends {Class_LinkAttribute}
  */
-export class Class_LinkStyleOSP extends LinkAttributes {
+export class Class_LinkStyleOSP extends Class_LinkStyle {
 
   // PRIVATE ATTRIBUTES =================================================================
   private _shape_is_gradient: boolean
