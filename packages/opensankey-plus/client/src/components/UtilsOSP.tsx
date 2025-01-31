@@ -420,7 +420,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
               onChange={(evt) => {
                 new_data_plus.drawing_area.filter_label = +evt
                 setCount(a => a + 1)
-                new_data_plus.drawing_area.sankey.visible_links_list.forEach(link => link.drawLabel())
+                new_data_plus.drawing_area.sankey.visible_links_list.forEach(link => link.drawValue())
               }}
             >
               <SliderTrack>
@@ -439,7 +439,7 @@ export const ToolBarLinkVisualFilter: FunctionComponent<FCType_ToolBarLinkVisual
                   }
                   new_data_plus.drawing_area.filter_label = value
                   setCount(a => a + 1)
-                  new_data_plus.drawing_area.sankey.links_list.forEach(link => link.drawLabel())
+                  new_data_plus.drawing_area.sankey.links_list.forEach(link => link.drawValue())
                 }
 
                 ref.current?.focus() //avoid closure of popover

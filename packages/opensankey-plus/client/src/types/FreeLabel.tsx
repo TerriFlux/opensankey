@@ -10,10 +10,10 @@
 // OpenSankey imports
 import {
   ClassTemplate_Element
-} from '../deps/OpenSankey/types/Element'
+} from '../deps/OpenSankey/Elements/Element'
 import {
   ClassTemplate_Handler
-} from '../deps/OpenSankey/types/Handler'
+} from '../deps/OpenSankey/Elements/Handler'
 import {
   Type_ElementPosition,
   Type_JSON,
