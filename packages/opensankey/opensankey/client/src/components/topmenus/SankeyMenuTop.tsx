@@ -348,6 +348,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
       <OSTooltip
         placement='bottom'
         label={t('Menu.tooltips.new')}
+        isAlwaysOpen={new_data.show_documentation}
       >
         <Button
           variant='menutop_button'
@@ -360,7 +361,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
               gridRow='1'
             >
               <FontAwesomeIcon
-                style={{ 'height': '2rem', 'width': '3rem' }}
+                style={{ 'height': '2rem', 'width': '3rem'}}
                 icon={faPlus}
               />
             </Box>
@@ -864,29 +865,33 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
 
 const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }: FCType_ButtonLaunchGuide) => {
   const { setIsOpen } = useTour()
-  return <Button
+  return <OSTooltip
+    label={'Commencer la visite guidée dans les différentes zones de l\'application.'}
+    isAlwaysOpen={new_data.show_documentation}
+  ><Button
     variant='menutop_button'
     onClick={() => {
       new_data.setSteps()
       setIsOpen(true)
     }}
   >
-    <Box
-      layerStyle='menutop_button_style'
-    >
       <Box
-        gridRow='1'
-        padding='0.1rem 0 0.15rem 0'
+        layerStyle='menutop_button_style'
       >
-        {logo_tour}
+        <Box
+          gridRow='1'
+          padding='0.1rem 0 0.15rem 0'
+        >
+          {logo_tour}
+        </Box>
+        <Box
+          gridRow='2'
+        >
+
+          {new_data.t('guide.guide')}
+        </Box>
       </Box>
-      <Box
-        gridRow='2'
-      >
-        {new_data.t('guide.guide')}
-      </Box>
-    </Box>
-  </Button>
+    </Button></OSTooltip>
 }
 
 
@@ -1496,6 +1501,11 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       >
         {toolbarComponent}
         {!(new_data.is_static ? new_data.is_static : false) ? (
+          <OSTooltip
+            placement='left'
+            label={t('Banner.open_configuration_menu')}
+            isAlwaysOpen={new_data.show_documentation}
+          >
           <Button
             ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
             id='toggle-check'
@@ -1503,7 +1513,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             variant='toolbar_main_button'
             onClick={toggleShow}
             value='menuConfigButton'>{menuButton()}
-          </Button>
+          </Button></OSTooltip>
         ) : (<></>)}
       </ButtonGroup>
 

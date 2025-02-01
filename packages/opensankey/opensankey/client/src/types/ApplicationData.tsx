@@ -162,6 +162,7 @@ export abstract class ClassTemplate_ApplicationData
 
   // Guided visite steps to show app
   private _steps: StepType[] = []
+  private _show_documentation : boolean = false
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -906,6 +907,8 @@ export abstract class ClassTemplate_ApplicationData
   public get t(): TFunction { return this._t }
   public get is_static(): boolean { return this._drawing_area.static }
   public get steps(): StepType[] { return this._steps }
+  public get show_documentation() { return this._show_documentation }
+  public set show_documentation(_:boolean) { this._show_documentation = _ }
 
   public get drawing_area(): Type_GenericDrawingArea { return this._drawing_area }
   protected set drawing_area(value: Type_GenericDrawingArea) { this._drawing_area = value } // Only extended ClassTemplate_ApplicationData instance can modify these parameter (for sub-module)
