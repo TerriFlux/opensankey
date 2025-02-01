@@ -56,18 +56,3 @@ export const modal_sankeytheque = definePartsStyle({
   footer: {
   }
 })
-
-export const modal_documentation = definePartsStyle({
-  overlay: {
-    opacity: 0.3
-  },
-  // dialogContainer: {
-  //   background: 'blackAlpha.500'
-  // },
-  dialog:{
-    alignSelf: 'center',
-  },
-  body: {
-    minWidth: 0,
-  }
-})
