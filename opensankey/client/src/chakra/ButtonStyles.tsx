@@ -415,3 +415,23 @@ export const welcome_button_license_description = defineStyle({
     bgColor: 'primaire.2',
   },
 })
+
+export const btn_documentation = defineStyle({
+  height: '3rem',
+  maxW: '11rem',
+  marginLeft: '1rem',
+  marginRight: '1rem',
+  paddingTop: '1rem',
+  paddingBottom: '1rem',
+  alignSelf: 'center',
+  justifySelf: 'center',
+  textAlign: 'center',
+  bg: 'primaire.5',
+  bgColor: 'primaire.5',
+  borderColor: 'primaire.5',
+  _hover: {
+    bg: 'secondaire.5',
+    bgColor: 'secondaire.5',
+    borderColor: 'secondaire.5',
+  },
+})
