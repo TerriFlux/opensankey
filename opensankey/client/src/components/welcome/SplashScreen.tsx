@@ -49,7 +49,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
                 placement='top'
                 label={app_data.t('tooltip.start')}
                 isAlwaysOpen={show_documentation}>
-                <Button size='lg' /*width='500px' height='200px'*/ variant='btn_lone_navigation_tertiary' onClick={() => {
+                <Button size='lg' variant='btn_documentation' onClick={() => {
                   set_show_documentation(false)
                   app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current!(true)
                 }}>
@@ -59,7 +59,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
                 placement='bottom'
                 label={app_data.t('tooltip.diaporama')}
                 isAlwaysOpen={show_documentation}>
-                <Button size='lg' variant='btn_lone_navigation_tertiary' onClick={() => {
+                <Button size='lg' variant='btn_documentation' onClick={() => {
                   app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
                   set_show_documentation(false)
                 }}>
