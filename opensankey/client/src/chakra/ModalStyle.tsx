@@ -30,7 +30,7 @@ export const modal_welcome = definePartsStyle({
   },
   body: {
     maxHeight:'70vh',
-    overflowY:'scroll'
+    // overflowY:'scroll'
   },
   footer: {
     height: '3rem',

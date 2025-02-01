@@ -733,14 +733,15 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Filter nodes and apply color of tagds',
         hlp_link_tag_filter: 'Filter link and apply color of tagds',
         hlp_data_tag_filter: 'Choose data and apply color of tagds',
+        open_configuration_menu: 'Open configuration menu.'
       },
       welcome: {
         welcome: 'Welcome to OpenSankey web application',
         breadcrumbs: {
           intro: 'Overview',
-          interface: 'Interface',
+          //interface: 'Interface',
           rc: 'Shortcuts',
-          licence: 'Licences',
+          //licence: 'Licences',
         },
         read_me: 'Read me',
         intro: 'Quick overview of the application\'s functionalities',
@@ -793,6 +794,13 @@ export const resources_app_elements = {
       Avancé: 'Advanced',
       separator_interval: ',',
       sep_decimal: '.',
+      diaporama: 'Presentation',
+        start: 'Start',
+        tooltip: {
+          dontSeeAgain: 'By checking this box, the welcome screen will no longer appear on the next page load. To display this welcome screen again, go to Help->Home.',
+          diaporama: 'Presentation of the various features of the tool, from the most basic to the most advanced as well as mouse/keyboard combination for edition.',
+          start: 'Start drawing your flows. To do this, click in the drawing area, drag without releasing, then release.'
+        }
     }
   },
   //=======================================================
@@ -1037,7 +1045,7 @@ export const resources_app_elements = {
           fontSize: 'Modifie la taille de la police pour la légende',
           node_label_sep: 'Chaine de caractère qui permettra de masquer une partie d\'un label de noeud, exemple : le séparateur est " - " et le nom du noeud est " noeud1 - sousinfo" alors le label du noeud affiché dans la zone de dessin sera "noeud1"',
           node_label_sep_pos: 'Choisir si l\'on affiche le label des noeuds qui ce situe avant ou après le séparateur',
-          new: 'Créer un nouveau diagramme de Sankey',
+          new: 'Créez un nouveau diagramme de Sankey à partir de zéro ou en utilisant un modèle.',
           ouvrir: 'Ouvrir un fichier',
           enregistrer: 'Enregistrer sous',
           preference: 'Choisir les paramètres de l\'application',
@@ -1524,25 +1532,25 @@ export const resources_app_elements = {
         tooltipStructure: 'Paramétrage visuel de la structure du diagramme',
         tooltipSelection: 'Sélectionner ou déplacer un élément',
         tooltipHelp: 'Affiche le dialogue d\'aide',
-        tooltipLiason: 'Créer un noeud ou un flux',
+        tooltipLiason: 'Permet de sélectionner le mode édition pour dessiner noeuds et flux ou le mode sélection pour sélectionner noeuds et flux afin de changer leurs attributs.',
         select_sibling: 'Selectionner ses frères ',
         fullscreen: 'Passer en mode mode plein écran',
         quit_fullscreen: 'Quitter le mode plein écran',
         hlp_node_tag_filter: 'Filtrer les noeuds et appliquer la couleur des étiquettes',
         hlp_link_tag_filter: 'Filtrer les flux et appliquer la couleur des étiquettes',
         hlp_data_tag_filter: 'Choisir les données et appliquer la couleur des étiquettes',
-
+        open_configuration_menu: 'Ouvre le menu de configuration.'
       },
       welcome: {
         welcome: 'Bienvenue sur l\'application web OpenSankey',
         breadcrumbs: {
           intro: 'Fonctionnalités',
-          interface: 'Boutons et Menus',
+          //interface: 'Boutons et Menus',
           rc: 'Raccourcis',
-          licence: 'Licences',
+          //licence: 'Licences',
         },
         read_me: 'Lisez moi',
-        intro: 'Présentation rapide de l\'outils et de ses fonctionnalités',
+        intro: 'Présentation des fonctionnalités de l\'outil',
         caroussel: {
           Image1: 'Comprenez vos flux, Représentez les avec des diagrammes de Sankey',
           Image2: 'Importez rapidement vos données ou tracez directement vos diagrammes',
@@ -1592,6 +1600,13 @@ export const resources_app_elements = {
       Avancé: 'Avancé',
       separator_interval: ';',
       sep_decimal: ',',
+      diaporama: 'Présentation',
+      start: 'Démarrer',
+      tooltip: {
+        dontSeeAgain: 'En cochant cette case il n\'y aura plus d\'écran d\'accueil au prochaine chargement de la page. Pour réafficher cet accueil aller dans Aide->Accueil.',
+        diaporama: 'Présentation des différentes fonctionnalités de l\'outil des plus basiques aux plus avancées, ainsi que les combinaisons souris/claviers d\'édition.',
+        start: 'Commencer à tracer vos flux. Pour cela cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
+      }
     }
   }
 }

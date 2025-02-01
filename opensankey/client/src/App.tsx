@@ -1,6 +1,6 @@
 import React, {
   FunctionComponent,
-  useEffect,
+  useEffect, useState
 } from 'react'
 import LZString from 'lz-string'
 import * as d3 from 'd3'
@@ -26,6 +26,7 @@ import { ModalPreference } from './components/dialogs/SankeyMenuPreferences'
 import { Type_JSON } from './types/Utils'
 import { Type_AdditionalMenus } from './types/Types'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
+import { ModalDocumentation } from './components/welcome/SplashScreen'
 
 /*************************************************************************************************/
 
@@ -39,6 +40,9 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   ModalWelcome,
   ClickSaveDiagram,
 }) => {
+
+  const [show_documentation, set_show_documentation] = useState(false)
+
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
   let initial_data: Type_JSON | undefined = undefined
@@ -53,6 +57,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   const new_data = initializeApplicationData(
     initial_data
   )
+
 
   /*************************************************************************************************/
 
@@ -70,7 +75,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   ) {
     menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
   }
-
+  new_data.show_documentation = show_documentation && !menu_config.never_see_again.current
   /*************************************************************************************************/
 
   const reinitialization = initializeReinitialization(new_data)
@@ -169,12 +174,11 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   )
 
   // // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
-  // useEffect(() => {
-  //   // Setup logic here
-  //   return () => {
-  //     localStorage.setItem('data', LZString.compress(JSON.stringify(data)))
-  //   }
-  // }, [])
+  useEffect(() => {
+
+    set_show_documentation(true)
+
+  }, [])
 
   /*************************************************************************************************/
 
@@ -182,7 +186,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     // Delete potential duplicat
     d3.select('#draw_zoom').remove()
     new_data.draw()
-  },[new_data.language])
+  }, [new_data.language])
 
   /*************************************************************************************************/
   return <TourProvider steps={new_data.steps}>
@@ -195,6 +199,13 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
             menu_configuration_nodes_attributes,
             new_data.processFunction
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
+        }
+        {
+          <ModalDocumentation
+            show_documentation={show_documentation}
+            set_show_documentation={set_show_documentation}
+            app_data={new_data}
+          />
         }
         {
           <ModalWelcome

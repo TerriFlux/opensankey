@@ -51,7 +51,7 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
 }) => {
   const { t } = new_data
   const { never_see_again } = new_data.menu_configuration
-  const [show_welcome, set_show_welcome] = useState(!never_see_again.current)
+  const [show_welcome, set_show_welcome] = useState(false)
 
 
 
@@ -137,20 +137,6 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
         </Box>
 
       </ModalBody>
-      <ModalFooter style={{ justifyContent: 'center' }}>
-        <Box layerStyle='box_footer_welcome'>
-          <Checkbox
-            variant='checkbox_dont_show_again'
-            isChecked={never_see_again.current} onChange={evt => {
-              never_see_again.current = evt.target.checked
-              localStorage.setItem('dontSeeAggainWelcome', '1')
-              set_show_welcome(false)
-            }}
-          >
-            {t('dontSeeAgain')}
-          </Checkbox>
-        </Box>
-      </ModalFooter>
     </ModalContent>
   </Modal>
 
@@ -277,102 +263,102 @@ export const ModalWelcomeContent = (
   </div>
 
   // Interface explained
-  page_links['interface'] = <BreadcrumbLink onClick={() => { set_active_page('interface') }}>
-    {t('welcome.breadcrumbs.interface')}
-  </BreadcrumbLink>
-  page_content['interface'] = <>
-    <Table variant='table_welcome_buttons'>
-      <Tbody>
-        {
-          !new_data.is_static ?
-            <>
-              {/* Info account button */}
-              <Tr>
-                <Td>
-                  <Button variant={'menutop_button_goto_dashboard'}>
-                    <FaUser />
-                  </Button>
-                </Td>
-                <Td>{t('welcome.9')}</Td>
-              </Tr>
-              {/* Infos selection / edition buttons */}
-              <Tr>
-                <Td>
-                  <ButtonGroup>
-                    <Button variant={'toolbar_button_1'}>
-                      <FontAwesomeIcon icon={faArrowPointer} />
-                    </Button>
-                    <Button variant={'toolbar_button_1'}>
-                      <FontAwesomeIcon icon={faShareNodes} />
-                    </Button>
-                  </ButtonGroup>
-                </Td>
-                <Td>{t('welcome.1')}</Td>
-              </Tr>
-            </> :
-            <> </>
-        }
-        {/* Info level buttons */}
-        <Tr>
-          <Td>
-            <ButtonGroup>
-              <Button variant={'toolbar_button_2'}>
-                <FontAwesomeIcon icon={faFolderTree} />
-              </Button>
-            </ButtonGroup>
-          </Td>
-          <Td>{t('welcome.3')}</Td>
-        </Tr>
-        {/* Infos filter button */}
-        <Tr>
-          <Td>
-            <ButtonGroup>
-              <Button variant={'toolbar_button_3'}>
-                <FontAwesomeIcon icon={faSliders} />
-              </Button>
-            </ButtonGroup>
-          </Td>
-          <Td>{t('welcome.4')}</Td>
-        </Tr>
-        {/* Info resize drawing area buttons */}
-        <Tr>
-          <Td>
-            <ButtonGroup>
-              <Button variant={'toolbar_button_6'}>
-                <FontAwesomeIcon icon={faArrowsUpDown} />
-              </Button>
-              <Button variant={'toolbar_button_6'}>
-                <FontAwesomeIcon icon={faArrowsLeftRight} />
-              </Button>
-            </ButtonGroup>
-          </Td>
-          <Td>{t('welcome.5')}</Td>
-        </Tr>
-        {/* Info data choice button */}
-        <Tr>
-          <Td>
-            <ButtonGroup>
-              <Button variant={'toolbar_button_5'}>
-                <FontAwesomeIcon icon={faDiagramProject} />
-              </Button>
-            </ButtonGroup>
-          </Td>
-          <Td>{t('welcome.6')}</Td>
-        </Tr>
-        {/* Info config menu button */}
-        <Tr>
-          <Td>
-            <ButtonGroup>
-              <Button variant={'toolbar_main_button'}>
-                <FaAngleDoubleLeft />
-              </Button>
-            </ButtonGroup>
-          </Td>
-          <Td>{t('welcome.10')}</Td>
-        </Tr>
-      </Tbody>
-    </Table>
-  </>
+  // page_links['interface'] = <BreadcrumbLink onClick={() => { set_active_page('interface') }}>
+  //   {t('welcome.breadcrumbs.interface')}
+  // </BreadcrumbLink>
+  // page_content['interface'] = <>
+  //   <Table variant='table_welcome_buttons'>
+  //     <Tbody>
+  //       {
+  //         !new_data.is_static ?
+  //           <>
+  //             {/* Info account button */}
+  //             <Tr>
+  //               <Td>
+  //                 <Button variant={'menutop_button_goto_dashboard'}>
+  //                   <FaUser />
+  //                 </Button>
+  //               </Td>
+  //               <Td>{t('welcome.9')}</Td>
+  //             </Tr>
+  //             {/* Infos selection / edition buttons */}
+  //             <Tr>
+  //               <Td>
+  //                 <ButtonGroup>
+  //                   <Button variant={'toolbar_button_1'}>
+  //                     <FontAwesomeIcon icon={faArrowPointer} />
+  //                   </Button>
+  //                   <Button variant={'toolbar_button_1'}>
+  //                     <FontAwesomeIcon icon={faShareNodes} />
+  //                   </Button>
+  //                 </ButtonGroup>
+  //               </Td>
+  //               <Td>{t('welcome.1')}</Td>
+  //             </Tr>
+  //           </> :
+  //           <> </>
+  //       }
+  //       {/* Info level buttons */}
+  //       <Tr>
+  //         <Td>
+  //           <ButtonGroup>
+  //             <Button variant={'toolbar_button_2'}>
+  //               <FontAwesomeIcon icon={faFolderTree} />
+  //             </Button>
+  //           </ButtonGroup>
+  //         </Td>
+  //         <Td>{t('welcome.3')}</Td>
+  //       </Tr>
+  //       {/* Infos filter button */}
+  //       <Tr>
+  //         <Td>
+  //           <ButtonGroup>
+  //             <Button variant={'toolbar_button_3'}>
+  //               <FontAwesomeIcon icon={faSliders} />
+  //             </Button>
+  //           </ButtonGroup>
+  //         </Td>
+  //         <Td>{t('welcome.4')}</Td>
+  //       </Tr>
+  //       {/* Info resize drawing area buttons */}
+  //       <Tr>
+  //         <Td>
+  //           <ButtonGroup>
+  //             <Button variant={'toolbar_button_6'}>
+  //               <FontAwesomeIcon icon={faArrowsUpDown} />
+  //             </Button>
+  //             <Button variant={'toolbar_button_6'}>
+  //               <FontAwesomeIcon icon={faArrowsLeftRight} />
+  //             </Button>
+  //           </ButtonGroup>
+  //         </Td>
+  //         <Td>{t('welcome.5')}</Td>
+  //       </Tr>
+  //       {/* Info data choice button */}
+  //       <Tr>
+  //         <Td>
+  //           <ButtonGroup>
+  //             <Button variant={'toolbar_button_5'}>
+  //               <FontAwesomeIcon icon={faDiagramProject} />
+  //             </Button>
+  //           </ButtonGroup>
+  //         </Td>
+  //         <Td>{t('welcome.6')}</Td>
+  //       </Tr>
+  //       {/* Info config menu button */}
+  //       <Tr>
+  //         <Td>
+  //           <ButtonGroup>
+  //             <Button variant={'toolbar_main_button'}>
+  //               <FaAngleDoubleLeft />
+  //             </Button>
+  //           </ButtonGroup>
+  //         </Td>
+  //         <Td>{t('welcome.10')}</Td>
+  //       </Tr>
+  //     </Tbody>
+  //   </Table>
+  // </>
 
   // Shortcuts
   page_links['rc'] = <BreadcrumbLink onClick={() => { set_active_page('rc') }}>
@@ -437,29 +423,29 @@ export const ModalWelcomeContent = (
     </AccordionPanel>
   </AccordionItem>
 
-  if (!new_data.is_static) {
-    page_links['licence'] = <BreadcrumbLink onClick={() => { set_active_page('licence') }}>
-      {t('welcome.breadcrumbs.licence')}
-    </BreadcrumbLink>
-    page_content['licence'] = <Box layerStyle='welcome_license_row'>
-      <Box>
-        <img
-          src={new_data.logo_opensankey}
-          alt='logo_OS'
-          style={{ 'objectFit': 'contain', 'width': '225px' }}
-        />
-      </Box>
-      <Box layerStyle='welcome_license_desc'>
-        <span>{t('Menu.presentation_OS')}</span>
-        <Button variant='welcome_button_license_description'
-          onClick={() => {
-            window.open('https://terriflux.com/downloads/open-sankey/')
-          }}>
-          {t('contribute_to_os')}
-        </Button>
-      </Box>
-    </Box>
-  }
+  // if (!new_data.is_static) {
+  //   page_links['licence'] = <BreadcrumbLink onClick={() => { set_active_page('licence') }}>
+  //     {t('welcome.breadcrumbs.licence')}
+  //   </BreadcrumbLink>
+  //   page_content['licence'] = <Box layerStyle='welcome_license_row'>
+  //     <Box>
+  //       <img
+  //         src={new_data.logo_opensankey}
+  //         alt='logo_OS'
+  //         style={{ 'objectFit': 'contain', 'width': '225px' }}
+  //       />
+  //     </Box>
+  //     <Box layerStyle='welcome_license_desc'>
+  //       <span>{t('Menu.presentation_OS')}</span>
+  //       <Button variant='welcome_button_license_description'
+  //         onClick={() => {
+  //           window.open('https://terriflux.com/downloads/open-sankey/')
+  //         }}>
+  //         {t('contribute_to_os')}
+  //       </Button>
+  //     </Box>
+  //   </Box>
+  // }
 
   return [
     page_links,
