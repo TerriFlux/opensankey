@@ -134,7 +134,8 @@ import {
   modal_base_style,
   modal_select_unit_from_data,
   modal_select_unit_from_excel,
-  modal_welcome
+  modal_welcome,
+  modal_documentation
 } from './ModalStyle'
 import {
   spinner_base_style
@@ -233,6 +234,7 @@ export const opensankey_theme = extendTheme({
       baseStyle: modal_base_style,
       variants: {
         modal_welcome,
+        modal_documentation,
         modal_select_unit_from_data,
         modal_select_unit_from_excel
       }
