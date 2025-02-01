@@ -90,7 +90,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
 
   // Full app ------------------------------------------------------------------------------------
 
-  const video_src = "media/catch_phrase_OpenSankey.v" + String(Math.round(Math.random() * 3)) + ".webm"
+  const video_src = 'media/catch_phrase_OpenSankey.v' + String(Math.round(Math.random() * 3)) + '.webm'
   const [app, setApp] = useState(
     <HelmetProvider>
       <MetaTags

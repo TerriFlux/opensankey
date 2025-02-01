@@ -674,9 +674,9 @@ export const resources_app_elements = {
         'to_acc': 'Mon compte',
         'to_dbd': 'Dashboard',
         tooltip: {
-          'to_con': 'Connectez vous ou créez un compte',
+          'to_con': 'Se connecter',
           'to_reg': 'Créer un compte',
-          'to_buy': 'Essayer OpenSankey+',
+          'to_buy': 'Accéder à des fonctionnalités avancés parmis lesquelles: utilisation d\'icônes, de zone de textes, et édition de vues.',
           'to_app': 'Retour à l\'application',
           'to_acc': 'Mon compte',
           'to_dbd': 'Dashboard'          
