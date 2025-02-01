@@ -37,6 +37,21 @@ export const modal_welcome = definePartsStyle({
   }
 })
 
+export const modal_documentation = definePartsStyle({
+  overlay: {
+    opacity: 0.3
+  },
+  // dialogContainer: {
+  //   background: 'blackAlpha.500'
+  // },
+  dialog:{
+    alignSelf: 'center',
+  },
+  body: {
+    minWidth: 0,
+  }
+})
+
 export const modal_select_unit_from_data = definePartsStyle({
   body :{
     '.rd3t-tree-container':{
