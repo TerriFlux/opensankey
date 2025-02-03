@@ -86,7 +86,9 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
     />
 
   if (new_data_app.is_static)
-    return sankeyApp
+    return <ChakraProvider
+      theme={Theme_SankeyApplication}
+    >{sankeyApp}</ChakraProvider>
 
   // Full app ------------------------------------------------------------------------------------
 
