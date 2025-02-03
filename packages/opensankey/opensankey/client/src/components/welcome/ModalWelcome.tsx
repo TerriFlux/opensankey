@@ -206,11 +206,7 @@ export const ModalWelcomeContent = (
           alt='intro carousel'
           style={{ 'objectFit': 'contain', 'width': '100%' }}
         /> :
-        <Carousel
-          controls
-          prevLabel={null}
-          nextLabel={null}
-          interval={null}
+        <Carousel variant='dark'
         >
           {
             (images_paths as string[]).map((_, idx) => {
