@@ -9,30 +9,30 @@
 // Local imports
 import {
   Class_MenuConfig
-} from './MenuConfig'
+} from '../types/MenuConfig'
 import {
   ClassAbstract_DrawingArea,
   ClassAbstract_Sankey
-} from './Abstract'
+} from '../types/Abstract'
 import {
   ClassTemplate_LinkElement,
-  Class_LinkStyle,
   defaultLinkId,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
-} from './Link'
+} from'../Elements/Link'
+import { Class_LinkStyle } from'../Elements/LinkAttributes'
 import {
   ClassTemplate_NodeElement,
-  Class_NodeStyle,
   sortNodesElements
-} from './Node'
+} from'../Elements/Node'
+import { Class_NodeStyle } from '../Elements/NodeAttributes'
 import {
   Class_NodeTagGroup,
   Class_FluxTagGroup,
   Class_DataTag,
   Class_DataTagGroup,
   Class_LevelTagGroup,
-} from './Tag'
+} from '../types/Tag'
 import {
   Type_JSON,
   getJSONFromJSON,
@@ -42,7 +42,7 @@ import {
   default_style_id,
   Type_MacroTagGroup,
   randomId
-} from './Utils'
+} from '../types/Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
 import { DefaultLinkExportStyle, DefaultLinkImportStyle, DefaultNodeExportStyle, DefaultNodeImportStyle, DefaultNodeProductStyle, DefaultNodeSectorStyle } from './Legacy'
 
@@ -1348,7 +1348,7 @@ export abstract class ClassTemplate_Sankey
    * Create a new style for link
    * @param {string} id
    * @param {string} name
-   * @return {*}  {Class_LinkStyle}
+   * @return {*}  {LinkAttributes}
    * @memberof ClassTemplate_Sankey
    */
   public addNewLinkStyle(

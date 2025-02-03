@@ -39,7 +39,7 @@ import {
   default_dy,
   default_relative_dx,
   default_relative_dy
-} from './Node'
+} from '../Elements/NodeAttributes'
 
 const default_element_color = '#a9a9a9'
 
@@ -2570,4 +2570,62 @@ const has_not_converted_nodeTags_as_levelTags = (data: SankeyData) => {
 const normalizeName = (name: string) => {
   const new_name = name.split('\\n').join('').split(' ').join('')
   return new_name
+}
+
+
+/**
+ * Convert JSON from App that are previous to 0.91,
+ * 
+ * Since 0.91 :
+ *  - link attribute/style label_position & orthogonal_label_position  value have changed :
+ * 
+ *    - start -> left
+ * 
+ *    - end -> right
+ * 
+ *    - above -> top
+ * 
+ *    - below -> bottom
+ * 
+ * This is due to the creation of a component to modify value attriubtes for nodes AND links so we have normalised some attributes values
+ *
+ * @param {Type_JSON} data
+ * @return {*} 
+ */
+export const convert_pre_v_0_91 = (data: Type_JSON) => {
+  Object.values(data.links).forEach(link => {
+    if (link.local !== undefined) {
+      if (link.local['label_position'] !== undefined) {
+        if (link.local['label_position'] == 'start') {
+          link.local['label_position'] = 'left'
+        } else if (link.local['label_position'] == 'end') {
+          link.local['label_position'] = 'right'
+        }
+      }
+      if (link.local['orthogonal_label_position'] !== undefined) {
+        if (link.local['orthogonal_label_position'] == 'above') {
+          link.local['orthogonal_label_position'] = 'top'
+        } else if (link.local['orthogonal_label_position'] == 'below') {
+          link.local['orthogonal_label_position'] = 'bottom'
+        }
+      }
+    }
+  })
+
+  Object.values(data.style_link).forEach(style_link => {
+    if (style_link !== undefined) {
+      if (style_link['label_position'] == 'start') {
+        style_link['label_position'] = 'left'
+      } else if (style_link['label_position'] == 'end') {
+        style_link['label_position'] = 'right'
+      }
+      if (style_link['orthogonal_label_position'] == 'above') {
+        style_link['orthogonal_label_position'] = 'top'
+      } else if (style_link['orthogonal_label_position'] == 'below') {
+        style_link['orthogonal_label_position'] = 'bottom'
+      }
+    }
+  })
+
+  return data
 }

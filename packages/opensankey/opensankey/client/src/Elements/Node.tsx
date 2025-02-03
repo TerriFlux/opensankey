@@ -12,11 +12,9 @@ import { textwrap } from 'd3-textwrap'
 import type {
   ClassAbstract_DrawingArea,
   ClassAbstract_Sankey
-} from './Abstract'
-import type {
-  Class_LinkStyle,
-  Type_Side
-} from './Link'
+} from '../types/Abstract'
+import type { Type_Side } from './LinkAttributes'
+import type { Class_LinkStyle } from './LinkAttributes'
 import {
   Class_NodeDimension
 } from './NodeDimension'
@@ -25,10 +23,10 @@ import type {
   Class_TagGroup,
   Class_LevelTagGroup,
   Class_LevelTag
-} from './Tag'
+} from '../types/Tag'
 import type {
   Class_MenuConfig
-} from './MenuConfig'
+} from '../types/MenuConfig'
 
 // Local modules imports
 import {
@@ -39,73 +37,33 @@ import {
   ClassTemplate_GhostLinkElement,
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
+
 import {
   ClassAbstract_NodeElement
-} from './AbstractNode'
+} from '../types/AbstractNode'
 import {
   Type_ElementPosition,
   Type_Position,
   default_element_position,
   default_element_color,
-  default_font,
   default_style_id,
   getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
-  getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringListFromJSON,
   getStringListOrUndefinedFromJSON,
   getStringOrUndefinedFromJSON,
   Type_JSON,
-} from './Utils'
+} from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
-
-// SPECIFIC TYPES ***********************************************************************
-
-type Type_Shape = 'ellipse' | 'rect' | 'arrow'
-type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
-type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
+import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy,  default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible } from './NodeAttributes'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
-type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
-
-// SPECIFIC CONSTANTS *******************************************************************
-
-export const default_position_type = 'absolute'
-export const default_dx = 100
-export const default_dy = 50
-export const default_relative_dx = 100
-export const default_relative_dy = 50
-
-export const default_shape_type: Type_Shape = 'rect'
-export const default_shape_arrow_angle_factor = 30
-export const default_shape_arrow_angle_direction: Type_Side = 'right'
-export const default_shape_visible = true
-export const default_shape_min_width = 40
-export const default_shape_min_height = 40
-export const default_shape_color = default_element_color
-export const default_shape_color_sustainable = false
-export const default_label_font_family = default_font
-export const default_label_font_size = 14
-export const default_label_color = false
-export const default_label_uppercase = false
-export const default_label_bold = false
-export const default_label_italic = false
-export const default_name_label_visible = true
-export const default_name_label_vert: Type_TextVPos = 'bottom'
-export const default_name_label_vert_shift = 0
-export const default_name_label_horiz: Type_TextHPos = 'middle'
-export const default_name_label_horiz_shift = 0
-export const default_value_label_visible = false
-export const default_value_label_vert: Type_TextVPos = 'top'
-export const default_value_label_vert_shift = 0
-export const default_value_label_horiz: Type_TextHPos = 'middle'
-export const default_value_label_horiz_shift = 0
-export const default_label_box_width = 150
+export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
 
 export const default_selected_stroke_width = 3
-
+export const label_margin = 5  //Create a margin so the label don't stick to shape when the label is on the right or left of the shape
 // SPECIFIC FUNCTIONS *******************************************************************
 
 export function sortNodesElements(
@@ -352,8 +310,8 @@ export abstract class ClassTemplate_NodeElement
           this._links_order.push(link)
       })
     // after copying node_to_copy._link_orders add the remaining links
-    const to_keep = prev_links_order.filter(l=>!this._links_order.includes(l))
-    to_keep.forEach(l=>this._links_order.push(l))
+    const to_keep = prev_links_order.filter(l => !this._links_order.includes(l))
+    to_keep.forEach(l => this._links_order.push(l))
 
   }
 
@@ -382,7 +340,7 @@ export abstract class ClassTemplate_NodeElement
     node_to_copy.tags_list
       .forEach(tag_to_copy => {
         const revert_matching_tags_id: { [id: string]: string } = {}
-        Object.entries(matching_tags[revert_matching_taggs_id[tag_to_copy.group.id]??tag_to_copy.group.id]??[]).forEach(([k, v]) => revert_matching_tags_id[v] = k)
+        Object.entries(matching_tags[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id] ?? []).forEach(([k, v]) => revert_matching_tags_id[v] = k)
 
         const tagg = this.sankey.node_taggs_dict[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id]
         if (tagg !== undefined) {
@@ -467,7 +425,7 @@ export abstract class ClassTemplate_NodeElement
               const tag = level_tagg.tags_dict[dim_to_copy.child_level_tag.id]
 
               // Create new dim if everything is ok
-              if ((children.length > 0) && tag != undefined ) {
+              if ((children.length > 0) && tag != undefined) {
                 const new_dim = new Class_NodeDimension(this, children, parent_tag, tag, dim_to_copy.id)
                 all_existing_dim[dim_to_copy.id] = new_dim
               }
@@ -527,12 +485,12 @@ export abstract class ClassTemplate_NodeElement
     if (this.is_child) {
       //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
       //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
-      const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim=>dim.related_level_tagg.id))]
-      all_child_taggs.forEach(tagg_id=>{
-        Object.values(this._dimensions_as_child).filter(dim=>dim.related_level_tagg.id == tagg_id)
+      const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim => dim.related_level_tagg.id))]
+      all_child_taggs.forEach(tagg_id => {
+        Object.values(this._dimensions_as_child).filter(dim => dim.related_level_tagg.id == tagg_id)
           .forEach(dimension => {
             if (!(dimension.related_level_tagg.id in dimensions)) {
-              dimensions[dimension.related_level_tagg.id] ={
+              dimensions[dimension.related_level_tagg.id] = {
                 'parent_name': dimension.parent.id,
                 'parent_tag': dimension.parent_level_tag.id,
                 'children_tags': [dimension.child_level_tag.id],
@@ -542,7 +500,7 @@ export abstract class ClassTemplate_NodeElement
               }
             } else {
               const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
-              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags,dimension.child_level_tag.id]
+              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags, dimension.child_level_tag.id]
             }
           }
           )
@@ -726,7 +684,7 @@ export abstract class ClassTemplate_NodeElement
                     if (children_tags && parent_tag) {
                       let cur_parent_tag = parent_tag
                       let cur_parent = parent
-                      children_tags.forEach(child_tag=>{
+                      children_tags.forEach(child_tag => {
                         const childDim = cur_parent_tag.getOrCreateLowerDimension(cur_parent, this, child_tag)
                         if (dimension_as_json.force_show_children) {
                           const nodeDimParent = parent.nodeDimensionAsParent(cur_parent_tag.group)!
@@ -883,7 +841,7 @@ export abstract class ClassTemplate_NodeElement
         .forEach(input_link => {
           const input_node = input_link.source
           if (input_node.hasGivenTag(echangeTag)) {
-            const new_id = level_tagg_id+'_'+input_node.id+'_'+parent_level_tag_id+'_'+child_level_tag_id
+            const new_id = level_tagg_id + '_' + input_node.id + '_' + parent_level_tag_id + '_' + child_level_tag_id
             input_node.drawChildren(new_id)
           }
         })
@@ -893,7 +851,7 @@ export abstract class ClassTemplate_NodeElement
         .forEach(output_link => {
           const output_node = output_link.target
           if (output_node.hasGivenTag(echangeTag)) {
-            const new_id = level_tagg_id+'_'+output_node.id+'_'+parent_level_tag_id+'_'+child_level_tag_id
+            const new_id = level_tagg_id + '_' + output_node.id + '_' + parent_level_tag_id + '_' + child_level_tag_id
             output_node.drawChildren(new_id)
           }
         })
@@ -1004,7 +962,7 @@ export abstract class ClassTemplate_NodeElement
       return false
     }
 
-    if (this.value_label_visible !== _.value_label_visible) {
+    if (this.value_label_is_visible !== _.value_label_is_visible) {
       return false
     }
     if (this.value_label_vert !== _.value_label_vert) {
@@ -1086,7 +1044,7 @@ export abstract class ClassTemplate_NodeElement
     const sum_of_right_thickness = this.getSumOfLinksThickness('right')
     // Return max thickness
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-    if (echangeTag && this.hasGivenTag(echangeTag) ) {
+    if (echangeTag && this.hasGivenTag(echangeTag)) {
       // TODO code to be rewritten when rearchitecturing code for Import Export
       return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
     }
@@ -1712,11 +1670,12 @@ export abstract class ClassTemplate_NodeElement
     // Clean previous label
     this.d3_selection_g_name_label?.remove()
     // Add name label
+    // ============== Draw Name Label ===================
     if (this.name_label_visible) {
       const label_to_display = this.name_label
       // Box position is set by label position. For text / shape ref point is not the same
-      // - Text : ref point is bottom of text + right/middle/left depending on anchor
-      // - Shape : ref point if top-left corner
+      // - Text : ref point is below of text + right/middle/left depending on anchor
+      // - Shape : ref point if above-left corner
       const box_width = Math.min(
         label_to_display.length * this.name_label_font_size,
         this.name_label_box_width)
@@ -1734,7 +1693,7 @@ export abstract class ClassTemplate_NodeElement
       const label_text = this.d3_selection_g_name_label?.append('text')
         .classed('name_label', true)
         .classed('name_label_text', true)
-        .attr('fill', this.name_label_color ? 'white' : 'black')
+        .attr('fill', this.name_label_color)
         .attr('id', 'name_label_text_' + this.id)
         .attr('font-weight', this.name_label_bold ? 'bold' : 'normal')
         .attr('font-style', this.name_label_italic ? 'italic' : 'normal')
@@ -1764,6 +1723,33 @@ export abstract class ClassTemplate_NodeElement
         box_pos_x = box_pos_x - box_width / 2
       }
 
+      // ============== Draw Name Label Background ===================
+      this.d3_selection_g_name_label?.select('.name_label_background').remove()
+      if (this.name_label_visible && this.name_label_background && this.d3_selection_g_name_label) {
+
+        // Get bounding box
+        const name_label_bounding_box = (this.d3_selection_g_name_label.select('.name_label_text').node() as SVGGElement)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 }
+
+        // Create svg element
+        this.d3_selection_g_name_label?.append('rect')
+          .attr('class', 'name_label_bg')
+          .classed('name_label', true)
+          .classed('name_label_background', true)
+          .attr('id', 'name_label_background_' + this.id)
+          .attr('x', (name_label_bounding_box.x - 5) + 'px')
+          .attr('y', name_label_bounding_box.y + 'px')
+          .attr('width', (name_label_bounding_box.width + 10) + 'px')
+          .attr('height', name_label_bounding_box.height + 'px')
+          .attr('fill', 'white')
+          .attr('fill-opacity', 0.55)
+          .attr('rx', 4)
+          .style('stroke', 'none')
+
+        // Lower label to have it on background
+        this.d3_selection_g_name_label?.select('.name_label_background').lower()
+      }
+
+      // ============== Draw Name Label Input ===================
       // Add an input to change the name of the node
       // The input appear when we double click on the label
       if (!this.drawing_area.static) {
@@ -1796,6 +1782,7 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
+
   /**
    * Draw node label on D3 svg
    * @private
@@ -1807,8 +1794,9 @@ export abstract class ClassTemplate_NodeElement
       return
     // Clean previous label
     this.d3_selection_g_value_label?.remove()
+    // ============== Draw Value Label ===================
     // Add name label
-    if (this.value_label_visible) {
+    if (this.value_label_is_visible) {
       // Create group
       this.d3_selection_g_value_label = this.d3_selection?.append('g')
         .attr('id', 'g_value_label')
@@ -1816,11 +1804,11 @@ export abstract class ClassTemplate_NodeElement
       const shape_width = this.getShapeWidthToUse()
       const shape_height = this.getShapeHeightToUse()
       // Label X position is set by text relative position / shape + text anchor
-      let label_pos_x = shape_width + this.value_label_horiz_shift
+      let label_pos_x = shape_width + label_margin + this.value_label_horiz_shift
       let label_anchor = 'start'
       let label_align = 'start'
       if (this.value_label_horiz === 'left') {
-        label_pos_x = 0 + this.value_label_horiz_shift
+        label_pos_x = 0 - label_margin + this.value_label_horiz_shift
         label_anchor = 'end'
         label_align = 'end'
       }
@@ -1841,36 +1829,12 @@ export abstract class ClassTemplate_NodeElement
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is bottom of text + right/middle/left depending on anchor
       // - Shape : ref point if top-left corner
-      const box_width = this.value_label.length * this.value_label_font_size
-      const box_height = this.value_label_font_size
-      const box_pos_y = label_pos_y - this.value_label_font_size
-      let box_pos_x = label_pos_x
-      if (label_anchor === 'end') {
-        box_pos_x = box_pos_x - box_width
-      }
-      else if (label_anchor === 'middle') {
-        box_pos_x = box_pos_x - box_width / 2
-      }
-      // Add value label background
-      if (this.value_label_background) {
-        this.d3_selection_g_value_label?.append('rect')
-          .classed('value_label', true)
-          .classed('value_label_background', true)
-          .attr('id', 'value_label_background_' + this.id)
-          .attr('x', box_pos_x)
-          .attr('y', box_pos_y)
-          .attr('width', box_width)
-          .attr('height', box_height)
-          .attr('fill', 'white')
-          .attr('fill-opacity', 0.55)
-          .attr('rx', 4)
-          .attr('stroke', 'none')
-      }
+
       // Add name label text
       this.d3_selection_g_value_label?.append('text')
         .classed('value_label', true)
         .classed('value_label_text', true)
-        .attr('fill', this.value_label_color ? 'white' : 'black')
+        .attr('fill', this.value_label_color)
         .attr('id', 'value_label_text_' + this.id)
         .attr('x', label_pos_x)
         .attr('y', label_pos_y)
@@ -1883,6 +1847,34 @@ export abstract class ClassTemplate_NodeElement
         .style('text-transform', this.value_label_uppercase ? 'uppercase' : 'none')
         .attr('stroke', 'none')
         .text(this.value_label)
+
+
+      // ============== Draw Value Label Background ===================
+      // Add value label background
+      if (this.value_label_background) {
+
+        // Get bounding box
+        const value_label_bounding_box = (this.d3_selection_g_value_label.select('.value_label_text').node() as SVGGElement)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 }
+
+        // Create svg element
+        this.d3_selection_g_value_label?.append('rect')
+          .attr('class', 'value_label_bg')
+          .classed('value_label', true)
+          .classed('value_label_background', true)
+          .attr('id', 'value_label_background_' + this.id)
+          .attr('x', (value_label_bounding_box.x - 5) + 'px')
+          .attr('y', value_label_bounding_box.y + 'px')
+          .attr('width', (value_label_bounding_box.width + 10) + 'px')
+          .attr('height', value_label_bounding_box.height + 'px')
+          .attr('fill', 'white')
+          .attr('fill-opacity', 0.55)
+          .attr('rx', 4)
+          .style('stroke', 'none')
+
+        // Lower label to have it on background
+        this.d3_selection_g_value_label?.select('.value_label_background').lower()
+
+      }
     }
   }
 
@@ -1954,29 +1946,29 @@ export abstract class ClassTemplate_NodeElement
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2186,7 +2178,7 @@ export abstract class ClassTemplate_NodeElement
     super.eventMouseDragEnd(event)
 
     // Move all elements so none of them are outside the DA
-    this.drawing_area.sankey.nodes_list.forEach(n=>n.position_v = -1)
+    this.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
     this.drawing_area.computeParametricV()
     this.drawing_area.checkAndUpdateAreaSize()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -2298,9 +2290,9 @@ export abstract class ClassTemplate_NodeElement
     } else {
       const shape_width = this.getShapeWidthToUse()
       const label_pos_dx = this.is_selected ? default_selected_stroke_width : 0
-      label_pos_x = shape_width + label_pos_dx + this.name_label_horiz_shift
+      label_pos_x = shape_width + label_pos_dx + label_margin + this.name_label_horiz_shift
       if (this.name_label_horiz === 'left') {
-        label_pos_x = 0 + this.name_label_horiz_shift
+        label_pos_x = 0 - label_margin + this.name_label_horiz_shift
         label_anchor = 'end'
         label_align = 'end'
       }
@@ -2776,12 +2768,12 @@ export abstract class ClassTemplate_NodeElement
         ((handle_src_or_trgt === 'source') && (link_dragged.is_horizontal || link_dragged.is_horizontal_vertical)))
 
       // If we move the mouse horizontally then this variable should be true ,
-      // it will allow to swap dragged link with previous/next link coming/going on the same side (bottom/top) to the node_ref
+      // it will allow to swap dragged link with previous/next link coming/going on the same side (below/above) to the node_ref
       const is_handler_on_vert_side = (
         ((handle_src_or_trgt === 'target') && (link_dragged.is_vertical || link_dragged.is_horizontal_vertical)) ||
         ((handle_src_or_trgt === 'source') && (link_dragged.is_vertical || link_dragged.is_vertical_horizontal)))
 
-      // Move link to the top / left
+      // Move link to the above / left
       if ((
         (move_to_the_top && is_handler_on_horiz_side) ||
         (move_to_the_left && is_handler_on_vert_side)) &&
@@ -2791,7 +2783,7 @@ export abstract class ClassTemplate_NodeElement
         const prev_link = list_links_node_side[idx_drgd_link - 1]
         node_ref.moveLinkToPositionInOrderBefore(link_dragged, prev_link)
       }
-      // Move link to the bottom / right
+      // Move link to the below / right
       else if ((
         (!move_to_the_top && is_handler_on_horiz_side) ||
         (!move_to_the_left && is_handler_on_vert_side)) &&
@@ -2872,9 +2864,9 @@ export abstract class ClassTemplate_NodeElement
   public get is_visible() {
     return (
       super.is_visible &&
-        this.are_related_node_tags_selected &&
-        this.are_related_dimensions_selected &&
-        this.are_links_visibilities_ok
+      this.are_related_node_tags_selected &&
+      this.are_related_dimensions_selected &&
+      this.are_links_visibilities_ok
     )
   }
 
@@ -3092,15 +3084,14 @@ export abstract class ClassTemplate_NodeElement
    * @memberof ClassTemplate_NodeElement
    */
   public get value_label() {
+    // ===============PROCESS VALUE====================
     let input_val = 0
     let output_val = 0
-
     // To avoid float problem (sometime when we add float we have additional not wanted digit)
     // we multiply float by a power of 10 to have an Interger then addition these Integer between them to avoid previous problem
     // & finally we divide the sum by the power of 10 used to get Integer out of Float.
 
     // It's probably not the most optimized way to resolve this problem but it work for now
-
 
     let max_digit_in = 0 //var to stock the maximum number of digit after decimal in link value visible linked to node
     const link_in = this.input_links_list.filter(link => link.is_visible).map(link => {
@@ -3114,7 +3105,6 @@ export abstract class ClassTemplate_NodeElement
     const pow_in = Math.pow(10, max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value
     link_in.forEach(link => input_val += (link.value?.data_value ?? 0) * pow_in)
 
-
     // Do the same we did for input links to output links
     let max_digit_out = 0
     const link_out = this.output_links_list.filter(link => link.is_visible).map(link => {
@@ -3127,7 +3117,13 @@ export abstract class ClassTemplate_NodeElement
 
     const pow_out = Math.pow(10, max_digit_out)
     link_out.forEach(link => output_val += (link.value?.data_value ?? 0) * pow_out)
-    return String(Math.max(input_val / pow_in, output_val / pow_out))
+    const display_unit = this.value_label_unit_visible && this.value_label_unit != ''
+    const factor_unit = display_unit && this.value_label_unit_factor > 1 ? this.value_label_unit_factor : 1
+    const label_unit = display_unit ? this.value_label_unit : ''
+
+    // value is the final processed value
+    const value = Math.max(input_val / pow_in, output_val / pow_out) / factor_unit
+    return String(value) + label_unit
   }
 
   /**
@@ -3312,6 +3308,8 @@ export abstract class ClassTemplate_NodeElement
     this.applyPosition()
   }
 
+  // Shape related --------------------------------------------------------------------
+
   /**
    * TODO Description
    * @memberof ClassTemplate_NodeElement
@@ -3489,6 +3487,8 @@ export abstract class ClassTemplate_NodeElement
     this.drawShape()
   }
 
+  // Name label related --------------------------------------------------------------------
+
   /**
    * TODO Description
    * @memberof ClassTemplate_NodeElement
@@ -3499,7 +3499,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_visible !== undefined) {
       return this._display.style.name_label_visible
     }
-    return default_name_label_visible
+    return default_node_name_label_visible
   }
 
   /**
@@ -3521,7 +3521,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_font_family !== undefined) {
       return this._display.style.name_label_font_family
     }
-    return default_label_font_family
+    return default_node_name_label_font_family
   }
 
   /**
@@ -3543,7 +3543,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_font_size !== undefined) {
       return this._display.style.name_label_font_size
     }
-    return default_label_font_size
+    return default_node_name_label_font_size
   }
 
   /**
@@ -3565,7 +3565,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_uppercase !== undefined) {
       return this._display.style.name_label_uppercase
     }
-    return default_label_uppercase
+    return default_node_name_label_uppercase
   }
 
   /**
@@ -3587,7 +3587,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_bold !== undefined) {
       return this._display.style.name_label_bold
     }
-    return default_label_bold
+    return default_node_name_label_bold
   }
 
   /**
@@ -3609,7 +3609,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_italic !== undefined) {
       return this._display.style.name_label_italic
     }
-    return default_label_italic
+    return default_node_name_label_italic
   }
 
   /**
@@ -3631,7 +3631,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_box_width !== undefined) {
       return this._display.style.name_label_box_width
     }
-    return default_label_box_width
+    return default_node_name_label_box_width
   }
 
   /**
@@ -3653,14 +3653,14 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_color !== undefined) {
       return this._display.style.name_label_color
     }
-    return default_label_color
+    return default_node_name_label_color
   }
 
   /**
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
-  public set name_label_color(_: boolean) {
+  public set name_label_color(_: string) {
     this._display.attributes.name_label_color = _
     this.drawNameLabel()
   }
@@ -3675,7 +3675,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_vert !== undefined) {
       return this._display.style.name_label_vert
     }
-    return default_name_label_vert
+    return default_node_name_label_vert
   }
 
   /**
@@ -3698,7 +3698,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_vert_shift !== undefined) {
       return this._display.style.name_label_vert_shift
     }
-    return default_name_label_vert_shift
+    return default_node_name_label_vert_shift
   }
 
   /**
@@ -3720,7 +3720,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_horiz !== undefined) {
       return this._display.style.name_label_horiz
     }
-    return default_name_label_horiz
+    return default_node_name_label_horiz
   }
 
   /**
@@ -3743,7 +3743,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_horiz_shift !== undefined) {
       return this._display.style.name_label_horiz_shift
     }
-    return default_name_label_horiz_shift
+    return default_node_name_label_horiz_shift
   }
 
   /**
@@ -3755,25 +3755,51 @@ export abstract class ClassTemplate_NodeElement
     this.drawNameLabel()
   }
 
+
+  /**
+ * TODO Description
+ * @memberof ClassTemplate_NodeElement
+ */
+  public get name_label_background() {
+    if (this._display.attributes.name_label_background !== undefined) {
+      return this._display.attributes.name_label_background
+    } else if (this._display.style.name_label_background !== undefined) {
+      return this._display.style.name_label_background
+    }
+    return default_node_name_label_background
+  }
+
+  /**
+ * TODO Description
+ * @memberof ClassTemplate_NodeElement
+ */
+  public set name_label_background(_: boolean) {
+    this._display.attributes.name_label_background = _
+    this.drawNameLabel()
+  }
+
+  // Value label related --------------------------------------------------------------------
+
+
   /**
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
-  public get value_label_visible() {
-    if (this._display.attributes.value_label_visible !== undefined) {
-      return this._display.attributes.value_label_visible
-    } else if (this._display.style.value_label_visible !== undefined) {
-      return this._display.style.value_label_visible
+  public get value_label_is_visible() {
+    if (this._display.attributes.value_label_is_visible !== undefined) {
+      return this._display.attributes.value_label_is_visible
+    } else if (this._display.style.value_label_is_visible !== undefined) {
+      return this._display.style.value_label_is_visible
     }
-    return default_value_label_visible
+    return default_node_value_label_is_visible
   }
 
   /**
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
-  public set value_label_visible(_: boolean) {
-    this._display.attributes.value_label_visible = _
+  public set value_label_is_visible(_: boolean) {
+    this._display.attributes.value_label_is_visible = _
     this.drawValueLabel()
   }
 
@@ -3787,7 +3813,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_vert !== undefined) {
       return this._display.style.value_label_vert
     }
-    return default_value_label_vert
+    return default_node_value_label_vert
   }
 
   /** Set value for value_label_vert
@@ -3809,7 +3835,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_vert_shift !== undefined) {
       return this._display.style.value_label_vert_shift
     }
-    return default_value_label_vert_shift
+    return default_node_value_label_vert_shift
   }
 
   /** Set value for value_label_vert
@@ -3831,7 +3857,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_horiz !== undefined) {
       return this._display.style.value_label_horiz
     }
-    return default_value_label_horiz
+    return default_node_value_label_horiz
   }
 
   /**
@@ -3853,7 +3879,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_horiz_shift !== undefined) {
       return this._display.style.value_label_horiz_shift
     }
-    return default_value_label_horiz_shift
+    return default_node_value_label_horiz_shift
   }
 
   /**
@@ -3875,7 +3901,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_font_size !== undefined) {
       return this._display.style.value_label_font_size
     }
-    return default_label_font_size
+    return default_node_name_label_font_size
   }
 
   /**
@@ -3885,6 +3911,19 @@ export abstract class ClassTemplate_NodeElement
   public set value_label_font_size(_: number) {
     this._display.attributes.value_label_font_size = _
     this.drawValueLabel()
+  }
+
+  /**
+ * TODO Description
+ * @memberof ClassTemplate_NodeElement
+ */
+  public get value_label_background() {
+    if (this._display.attributes.value_label_background !== undefined) {
+      return this._display.attributes.value_label_background
+    } else if (this._display.style.value_label_background !== undefined) {
+      return this._display.style.value_label_background
+    }
+    return default_node_value_label_background
   }
 
   /**
@@ -3906,14 +3945,14 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_color !== undefined) {
       return this._display.style.value_label_color
     }
-    return default_label_color
+    return default_node_name_label_color
   }
 
   /**
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
-  public set value_label_color(_: boolean) {
+  public set value_label_color(_: string) {
     this._display.attributes.value_label_color = _
     this.drawValueLabel()
   }
@@ -3928,7 +3967,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_uppercase !== undefined) {
       return this._display.style.value_label_uppercase
     }
-    return default_label_uppercase
+    return default_node_name_label_uppercase
   }
 
   /**
@@ -3950,7 +3989,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_bold !== undefined) {
       return this._display.style.value_label_bold
     }
-    return default_label_bold
+    return default_node_name_label_bold
   }
 
   /**
@@ -3972,7 +4011,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_italic !== undefined) {
       return this._display.style.value_label_italic
     }
-    return default_label_italic
+    return default_node_name_label_italic
   }
 
   /**
@@ -3994,7 +4033,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.value_label_font_family !== undefined) {
       return this._display.style.value_label_font_family
     }
-    return default_label_font_family
+    return default_node_name_label_font_family
   }
 
   /**
@@ -4005,6 +4044,159 @@ export abstract class ClassTemplate_NodeElement
     this._display.attributes.value_label_font_family = _
     this.drawValueLabel()
   }
+
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get value_label_scientific_notation() {
+    if (this._display.attributes.value_label_scientific_notation !== undefined) {
+      return this._display.attributes.value_label_scientific_notation
+    } else if (this._display.style.value_label_scientific_notation !== undefined) {
+      return this._display.style.value_label_scientific_notation
+    }
+    return default_node_value_label_scientific_notation
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set value_label_scientific_notation(_: boolean) { this._display.attributes.value_label_scientific_notation = _; this.drawValueLabel() }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get value_label_significant_digits() {
+    if (this._display.attributes.value_label_significant_digits !== undefined) {
+      return this._display.attributes.value_label_significant_digits
+    } else if (this._display.style.value_label_significant_digits !== undefined) {
+      return this._display.style.value_label_significant_digits
+    }
+    return default_node_value_label_significant_digits
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get value_label_nb_significant_digits() {
+    if (this._display.attributes.value_label_nb_significant_digits !== undefined) {
+      return this._display.attributes.value_label_nb_significant_digits
+    } else if (this._display.style.value_label_nb_significant_digits !== undefined) {
+      return this._display.style.value_label_nb_significant_digits
+    }
+    return default_node_value_label_nb_significant_digits
+  }
+
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_significant_digits(_: boolean) { this._display.attributes.value_label_significant_digits = _; this.drawValueLabel() }
+  /**
+   * TODO Description
+   * @memberof Class_LinkElement
+   */
+  public set value_label_nb_significant_digits(_: number | undefined) { this._display.attributes.value_label_nb_significant_digits = _; this.drawValueLabel() }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get value_label_unit_visible() {
+    if (this._display.attributes.value_label_unit_visible !== undefined) {
+      return this._display.attributes.value_label_unit_visible
+    } else if (this._display.style.value_label_unit_visible !== undefined) {
+      return this._display.style.value_label_unit_visible
+    }
+    return default_node_value_label_unit_visible
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawValueLabel() }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get value_label_unit() {
+    if (this._display.attributes.value_label_unit !== undefined) {
+      return this._display.attributes.value_label_unit
+    } else if (this._display.style.value_label_unit !== undefined) {
+      return this._display.style.value_label_unit
+    }
+    return default_node_value_label_unit
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawValueLabel() }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get value_label_unit_factor() {
+    if (this._display.attributes.value_label_unit_factor !== undefined) {
+      return this._display.attributes.value_label_unit_factor
+    } else if (this._display.style.value_label_unit_factor !== undefined) {
+      return this._display.style.value_label_unit_factor
+    }
+    return default_node_value_label_unit_factor
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set value_label_unit_factor(_: number) { this._display.attributes.value_label_unit_factor = _; this.drawValueLabel() }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get value_label_custom_digit() {
+    if (this._display.attributes.value_label_custom_digit !== undefined) {
+      return this._display.attributes.value_label_custom_digit
+    } else if (this._display.style.value_label_custom_digit !== undefined) {
+      return this._display.style.value_label_custom_digit
+    }
+    return default_node_value_label_custom_digit
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set value_label_custom_digit(_: boolean) { this._display.attributes.value_label_custom_digit = _; this.drawValueLabel() }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get value_label_nb_digit() {
+    if (this._display.attributes.value_label_nb_digit !== undefined) {
+      return this._display.attributes.value_label_nb_digit
+    } else if (this._display.style.value_label_nb_digit !== undefined) {
+      return this._display.style.value_label_nb_digit
+    }
+    return default_node_value_label_nb_digit
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawValueLabel() }
+
 
   // Tooltip related --------------------------------------------------------------------
 
@@ -4065,7 +4257,7 @@ export abstract class ClassTemplate_NodeElement
    * @memberof ClassTemplate_NodeElement
    */
   private get are_related_dimensions_selected(): boolean {
-    if ( this._are_related_dimensions_selected === undefined ) {
+    if (this._are_related_dimensions_selected === undefined) {
       // Recompute value
       const are_related_dimensions_selected = this.checkIfRelatedDimensionsAreSelected()
       // Update  fingerprint if needed
@@ -4107,18 +4299,18 @@ export abstract class ClassTemplate_NodeElement
     let has_forced_dimensions: boolean = false
     let ok_forced_dimensions: boolean = true
     // Check dimensions where node is tagged as a child
-    const group_to_children_dim : {[_:string] : Class_NodeDimension[]} = {}
+    const group_to_children_dim: { [_: string]: Class_NodeDimension[] } = {}
     const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child)
-      .filter(dim=>dim.related_level_tagg.activated || dim.force_show_children)
-      .map(dim=>{
-        if (group_to_children_dim[dim.related_level_tagg.id] == undefined ) {
+      .filter(dim => dim.related_level_tagg.activated || dim.force_show_children)
+      .map(dim => {
+        if (group_to_children_dim[dim.related_level_tagg.id] == undefined) {
           group_to_children_dim[dim.related_level_tagg.id] = [dim]
         } else {
           group_to_children_dim[dim.related_level_tagg.id].push(dim)
         }
         return dim.related_level_tagg.id
       }))]
-    all_child_taggs.forEach(child_tagg=>{
+    all_child_taggs.forEach(child_tagg => {
       let child_tag_activated_dimensions = false
       let child_ok_forced_dimensions = true
       group_to_children_dim[child_tagg]
@@ -4186,8 +4378,8 @@ export abstract class ClassTemplate_NodeElement
     // Check if links visibilies have somehow changed
     const links_visibilities_fingerprint = this.getLinksVisibilitiesFingerprint()
     if (
-      (this._are_links_visibilities_ok === undefined||
-       links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
+      (this._are_links_visibilities_ok === undefined ||
+        links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
     ) {
       // Recompute value
       const are_links_visibilities_ok = this.checkIfLinksVisibilitiesAreOK()
@@ -4224,7 +4416,7 @@ export abstract class ClassTemplate_NodeElement
       link.source.are_related_node_tags_selected &&
       link.source.are_related_dimensions_selected
     )
-    if (input_links_visible.length>0) {
+    if (input_links_visible.length > 0) {
       return true
     }
     const output_links_visible = this.output_links_list.filter(link =>
@@ -4233,7 +4425,7 @@ export abstract class ClassTemplate_NodeElement
       link.target.are_related_node_tags_selected &&
       link.target.are_related_dimensions_selected
     )
-    if (output_links_visible.length>0) {
+    if (output_links_visible.length > 0) {
       return true
     }
     return false
@@ -4248,8 +4440,8 @@ export abstract class ClassTemplate_NodeElement
   private getLinksVisibilitiesFingerprint() {
     let links_visibilities_fingerprint = ''
     this._links_order
-      .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint+link.source.visibility_fingerprint+link.target.visibility_fingerprint)
-    return links_visibilities_fingerprint+'_'+this.sankey.data_tags_fingerprint
+      .forEach(link => links_visibilities_fingerprint = links_visibilities_fingerprint + link.visibility_fingerprint + link.source.visibility_fingerprint + link.target.visibility_fingerprint)
+    return links_visibilities_fingerprint + '_' + this.sankey.data_tags_fingerprint
   }
 
   private get tooltip_html() {
@@ -4462,492 +4654,6 @@ export abstract class ClassTemplate_NodeElement
         })
     })
   }
-}
-
-// CLASS NODE ATTRIBUTES ****************************************************************
-
-/**
- * Define all attributes that can be apply to a node
- *
- * @export
- * @class Class_NodeAttribute
- */
-export class Class_NodeAttribute {
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  // Parameters for geometry
-  protected _dx?: number
-  protected _dy?: number
-  protected _relative_dx?: number
-  protected _relative_dy?: number
-
-  // Parameters for shape
-  protected _shape_visible?: boolean
-  protected _shape_type?: Type_Shape
-  protected _shape_min_width?: number
-  protected _shape_min_height?: number
-  protected _shape_color?: string
-  protected _shape_color_sustainable?: boolean
-  protected _shape_arrow_angle_factor?: number
-  protected _shape_arrow_angle_direction?: Type_Side
-
-  // Parameter of node label
-  protected _name_label_visible?: boolean
-  protected _name_label_font_family?: string
-  protected _name_label_font_size?: number
-  protected _name_label_uppercase?: boolean
-  protected _name_label_bold?: boolean
-  protected _name_label_italic?: boolean
-  protected _name_label_box_width?: number
-  protected _name_label_color?: boolean
-  protected _name_label_vert?: Type_TextVPos
-  protected _name_label_vert_shift?: number
-  protected _name_label_horiz?: Type_TextHPos
-  protected _name_label_horiz_shift?: number
-
-  // Parameter of node value label
-  protected _value_label_visible?: boolean
-  protected _value_label_font_family?: string
-  protected _value_label_font_size?: number
-  protected _value_label_uppercase?: boolean
-  protected _value_label_bold?: boolean
-  protected _value_label_italic?: boolean
-  protected _value_label_box_width?: number
-  protected _value_label_color?: boolean
-  protected _value_label_vert?: Type_TextVPos
-  protected _value_label_vert_shift?: number
-  protected _value_label_horiz?: Type_TextHPos
-  protected _value_label_horiz_shift?: number
-  protected _value_label_background?: boolean
-
-  // CONSTRUCTOR ========================================================================
-
-  constructor() { }
-
-  // PUBLIC METHODS =====================================================================
-
-  public toJSON() {
-    const json_object = {} as Type_JSON
-
-    // One line 'if' to add local attribute to json object if they're not undefined
-    // TODO delete code as comment when saved variable name will be defined (old vs new)
-
-    // Parameters for shape
-    if (this._shape_visible !== undefined) json_object['shape_visible'] = this._shape_visible
-    // if (this._shape_type !== undefined) json_object['shape_type'] = this._shape_type
-    if (this._shape_type !== undefined) json_object['shape'] = this._shape_type
-    // if (this._shape_min_width !== undefined) json_object['shape_min_width'] = this._shape_min_width
-    if (this._shape_min_width !== undefined) json_object['node_width'] = this._shape_min_width
-    // if (this._shape_min_height !== undefined) json_object['shape_min_height'] = this._shape_min_height
-    if (this._shape_min_height !== undefined) json_object['node_height'] = this._shape_min_height
-    // if (this._shape_color !== undefined) json_object['shape_color'] = this._shape_color
-    if (this._shape_color !== undefined) json_object['color'] = this._shape_color
-    // if (this._shape_color_sustainable !== undefined) json_object['shape_color_sustainable'] = this._shape_color_sustainable
-    if (this._shape_color_sustainable !== undefined) json_object['colorSustainable'] = this._shape_color_sustainable
-    // if (this._shape_arrow_angle_factor !== undefined) json_object['shape_arrow_angle_factor'] = this._shape_arrow_angle_factor
-    if (this._shape_arrow_angle_factor !== undefined) json_object['node_arrow_angle_factor'] = this._shape_arrow_angle_factor
-    // if (this._shape_arrow_angle_direction !== undefined) json_object['shape_arrow_angle_direction'] = this._shape_arrow_angle_direction
-    if (this._shape_arrow_angle_direction !== undefined) json_object['node_arrow_angle_direction'] = this._shape_arrow_angle_direction
-
-    // Parameter of node label
-    // if (this._name_label_visible !== undefined) json_object['name_label_visible'] = this._name_label_visible
-    if (this._name_label_visible !== undefined) json_object['label_visible'] = this._name_label_visible
-    // if (this._name_label_font_family !== undefined) json_object['name_label_font_family'] = this._name_label_font_family
-    if (this._name_label_font_family !== undefined) json_object['font_family'] = this._name_label_font_family
-    // if (this._name_label_font_size !== undefined) json_object['name_label_font_size'] = this._name_label_font_size
-    if (this._name_label_font_size !== undefined) json_object['font_size'] = this._name_label_font_size
-    // if (this._name_label_uppercase !== undefined) json_object['name_label_uppercase'] = this._name_label_uppercase
-    if (this._name_label_uppercase !== undefined) json_object['uppercase'] = this._name_label_uppercase
-    // if (this._name_label_bold !== undefined) json_object['name_label_bold'] = this._name_label_bold
-    if (this._name_label_bold !== undefined) json_object['bold'] = this._name_label_bold
-    // if (this._name_label_italic !== undefined) json_object['name_label_italic'] = this._name_label_italic
-    if (this._name_label_italic !== undefined) json_object['italic'] = this._name_label_italic
-    // if (this._name_label_box_width !== undefined) json_object['name_label_box_width'] = this._name_label_box_width
-    if (this._name_label_box_width !== undefined) json_object['label_box_width'] = this._name_label_box_width
-    // if (this._name_label_color !== undefined) json_object['name_label_color'] = this._name_label_color
-    if (this._name_label_color !== undefined) json_object['label_color'] = this._name_label_color
-    // if (this._name_label_vert !== undefined) json_object['name_label_vert'] = this._name_label_vert
-    if (this._name_label_vert !== undefined) json_object['label_vert'] = this._name_label_vert
-    if (this._name_label_vert_shift !== undefined) json_object['name_label_vert_shift'] = this._name_label_vert_shift
-    // if (this._name_label_horiz !== undefined) json_object['name_label_horiz'] = this._name_label_horiz
-    if (this._name_label_horiz !== undefined) json_object['label_horiz'] = this._name_label_horiz
-    if (this._name_label_horiz_shift !== undefined) json_object['name_label_horiz_shift'] = this._name_label_horiz_shift
-
-    // Parameter of node value label
-    // if (this._value_label_visible !== undefined) json_object['value_label_visible'] = this._value_label_visible
-    if (this._value_label_visible !== undefined) json_object['show_value'] = this._value_label_visible
-    if (this._value_label_font_family !== undefined) json_object['value_label_font_family'] = this._value_label_font_family
-    // if (this._value_label_font_size !== undefined) json_object['value_label_font_size'] = this._value_label_font_size
-    if (this._value_label_font_size !== undefined) json_object['value_font_size'] = this._value_label_font_size
-    if (this._value_label_uppercase !== undefined) json_object['value_label_uppercase'] = this._value_label_uppercase
-    if (this._value_label_bold !== undefined) json_object['value_label_bold'] = this._value_label_bold
-    if (this._value_label_italic !== undefined) json_object['value_label_italic'] = this._value_label_italic
-    if (this._value_label_box_width !== undefined) json_object['value_label_box_width'] = this._value_label_box_width
-    if (this._value_label_color !== undefined) json_object['value_label_color'] = this._value_label_color
-    // if (this._value_label_vert !== undefined) json_object['value_label_vert'] = this._value_label_vert
-    if (this._value_label_vert !== undefined) json_object['label_vert_valeur'] = this._value_label_vert
-    if (this._value_label_vert_shift !== undefined) json_object['value_label_vert_shift'] = this._value_label_vert_shift
-    // if (this._value_label_horiz !== undefined) json_object['value_label_horiz'] = this._value_label_horiz
-    if (this._value_label_horiz !== undefined) json_object['label_horiz_valeur'] = this._value_label_horiz
-    if (this._value_label_horiz_shift !== undefined) json_object['value_label_horiz_shift'] = this._value_label_horiz_shift
-    if (this._value_label_background !== undefined) json_object['value_label_background'] = this._value_label_background
-
-    return json_object
-  }
-
-  public fromJSON(json_local_object: Type_JSON) {
-    // if attribute object has these variable then add it to local
-    // this function is also called when creating style from json and should trigger all if, because in style all attribute are defined
-
-    if (json_local_object['shape_visible'] !== undefined) this._shape_visible = getBooleanFromJSON(json_local_object, 'shape_visible', default_shape_visible)
-    if (json_local_object['shape'] !== undefined) this._shape_type = getStringFromJSON(json_local_object, 'shape', default_shape_type) as Type_Shape
-    if (json_local_object['node_width'] !== undefined) this._shape_min_width = getNumberFromJSON(json_local_object, 'node_width', default_shape_min_width)
-    if (json_local_object['node_height'] !== undefined) this._shape_min_height = getNumberFromJSON(json_local_object, 'node_height', default_shape_min_height)
-    if (json_local_object['color'] !== undefined) this._shape_color = getStringFromJSON(json_local_object, 'color', default_shape_color)
-    if (json_local_object['colorSustainable'] !== undefined) this._shape_color_sustainable = getBooleanFromJSON(json_local_object, 'colorSustainable', default_shape_color_sustainable)
-    if (json_local_object['node_arrow_angle_factor'] !== undefined) this._shape_arrow_angle_factor = getNumberFromJSON(json_local_object, 'node_arrow_angle_factor', default_shape_arrow_angle_factor)
-    if (json_local_object['node_arrow_angle_direction'] !== undefined) this._shape_arrow_angle_direction = getStringFromJSON(json_local_object, 'node_arrow_angle_direction', default_shape_arrow_angle_direction) as Type_Side
-
-    if (json_local_object['label_visible'] !== undefined) this._name_label_visible = getBooleanFromJSON(json_local_object, 'label_visible', default_name_label_visible)
-    if (json_local_object['font_family'] !== undefined) this._name_label_font_family = getStringFromJSON(json_local_object, 'font_family', default_label_font_family)
-    if (json_local_object['font_size'] !== undefined) this._name_label_font_size = getNumberFromJSON(json_local_object, 'font_size', default_label_font_size)
-    if (json_local_object['uppercase'] !== undefined) this._name_label_uppercase = getBooleanFromJSON(json_local_object, 'uppercase', default_label_uppercase)
-    if (json_local_object['bold'] !== undefined) this._name_label_bold = getBooleanFromJSON(json_local_object, 'bold', default_label_bold)
-    if (json_local_object['italic'] !== undefined) this._name_label_italic = getBooleanFromJSON(json_local_object, 'italic', default_label_italic)
-    if (json_local_object['label_box_width'] !== undefined) this._name_label_box_width = getNumberFromJSON(json_local_object, 'label_box_width', default_label_box_width)
-    if (json_local_object['label_color'] !== undefined) this._name_label_color = getBooleanFromJSON(json_local_object, 'label_color', default_label_color)
-    if (json_local_object['label_vert'] !== undefined) this._name_label_vert = getStringFromJSON(json_local_object, 'label_vert', default_name_label_vert) as Type_TextVPos
-    if (json_local_object['label_horiz'] !== undefined) this._name_label_horiz = getStringFromJSON(json_local_object, 'label_horiz', default_name_label_horiz) as Type_TextHPos
-    if (json_local_object['name_label_vert_shift'] !== undefined) this._name_label_vert_shift = getNumberFromJSON(json_local_object, 'name_label_vert_shift', default_name_label_vert_shift) as number
-    if (json_local_object['name_label_horiz_shift'] !== undefined) this._name_label_horiz_shift = getNumberFromJSON(json_local_object, 'name_label_horiz_shift', default_name_label_horiz_shift) as number
-
-    if (json_local_object['show_value'] !== undefined) this._value_label_visible = getBooleanFromJSON(json_local_object, 'show_value', default_value_label_visible)
-    if (json_local_object['value_label_font_family'] !== undefined) this._value_label_font_family = getStringFromJSON(json_local_object, 'value_label_font_family', default_label_font_family)
-    if (json_local_object['value_font_size'] !== undefined) this._value_label_font_size = getNumberFromJSON(json_local_object, 'value_font_size', default_label_font_size)
-    if (json_local_object['value_label_uppercase'] !== undefined) this._value_label_uppercase = getBooleanFromJSON(json_local_object, 'value_label_uppercase', default_label_uppercase)
-    if (json_local_object['value_label_bold'] !== undefined) this._value_label_bold = getBooleanFromJSON(json_local_object, 'value_label_bold', default_label_bold)
-    if (json_local_object['value_label_italic'] !== undefined) this._value_label_italic = getBooleanFromJSON(json_local_object, 'value_label_italic', default_label_italic)
-    if (json_local_object['value_label_box_width'] !== undefined) this._value_label_box_width = getNumberFromJSON(json_local_object, 'value_label_box_width', default_label_box_width)
-    if (json_local_object['value_label_color'] !== undefined) this._value_label_color = getBooleanFromJSON(json_local_object, 'value_label_color', default_label_color)
-    if (json_local_object['label_vert_valeur'] !== undefined) this._value_label_vert = getStringFromJSON(json_local_object, 'label_vert_valeur', default_value_label_vert) as Type_TextVPos
-    if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = getStringFromJSON(json_local_object, 'label_horiz_valeur', default_value_label_horiz) as Type_TextHPos
-    if (json_local_object['value_label_vert_shift'] !== undefined) this._value_label_vert_shift = getNumberFromJSON(json_local_object, 'value_label_vert_shift', default_value_label_vert_shift) as number
-    if (json_local_object['value_label_horiz_shift'] !== undefined) this._value_label_horiz_shift = getNumberFromJSON(json_local_object, 'value_label_horiz_shift', default_value_label_horiz_shift) as number
-    if (json_local_object['value_label_background'] !== undefined) this._value_label_background = getBooleanFromJSON(json_local_object, 'value_label_background', false)
-  }
-
-  public copyFrom(element: Class_NodeAttribute) {
-    this._shape_visible = element._shape_visible
-    this._shape_type = element._shape_type
-    this._shape_min_width = element._shape_min_width
-    this._shape_min_height = element._shape_min_height
-    this._shape_color = element._shape_color
-    this._shape_color_sustainable = element._shape_color_sustainable
-    this._shape_arrow_angle_factor = element._shape_arrow_angle_factor
-    this._shape_arrow_angle_direction = element._shape_arrow_angle_direction
-    this._name_label_visible = element._name_label_visible
-    this._name_label_font_family = element._name_label_font_family
-    this._name_label_font_size = element._name_label_font_size
-    this._name_label_uppercase = element._name_label_uppercase
-    this._name_label_bold = element._name_label_bold
-    this._name_label_italic = element._name_label_italic
-    this._name_label_box_width = element._name_label_box_width
-    this._name_label_color = element._name_label_color
-    this._name_label_vert = element._name_label_vert
-    this._name_label_horiz = element._name_label_horiz
-    this._name_label_vert_shift = element._name_label_vert_shift
-    this._name_label_horiz_shift = element._name_label_horiz_shift
-
-    this._value_label_visible = element._value_label_visible
-    this._value_label_font_family = element._value_label_font_family
-    this._value_label_font_size = element._value_label_font_size
-    this._value_label_uppercase = element._value_label_uppercase
-    this._value_label_bold = element._value_label_bold
-    this._value_label_italic = element._value_label_italic
-    this._value_label_box_width = element._value_label_box_width
-    this._value_label_color = element._value_label_color
-    this._value_label_vert = element._value_label_vert
-    this._value_label_horiz = element._value_label_horiz
-    this._value_label_vert_shift = element._value_label_vert_shift
-    this._value_label_horiz_shift = element._value_label_horiz_shift
-    this._value_label_background = element._value_label_background
-  }
-
-  // PROTECTED METHODS ==================================================================
-
-  protected update() { }
-
-  // GETTERS ============================================================================
-
-  // Parameters for shape
-  public get shape_visible() { return this._shape_visible }
-  public get shape_type() { return this._shape_type }
-  public get shape_min_width() { return this._shape_min_width }
-  public get shape_min_height() { return this._shape_min_height }
-  public get shape_color() { return this._shape_color }
-  public get shape_color_sustainable() { return this._shape_color_sustainable }
-  public get shape_arrow_angle_factor() { return this._shape_arrow_angle_factor }
-  public get shape_arrow_angle_direction() { return this._shape_arrow_angle_direction }
-
-  // Parameter of node label
-  public get name_label_visible() { return this._name_label_visible }
-  public get name_label_font_family() { return this._name_label_font_family }
-  public get name_label_font_size() { return this._name_label_font_size }
-  public get name_label_uppercase() { return this._name_label_uppercase }
-  public get name_label_bold() { return this._name_label_bold }
-  public get name_label_italic() { return this._name_label_italic }
-  public get name_label_box_width() { return this._name_label_box_width }
-  public get name_label_color() { return this._name_label_color }
-  public get name_label_vert() { return this._name_label_vert }
-  public get name_label_horiz() { return this._name_label_horiz }
-  public get name_label_vert_shift() { return this._name_label_vert_shift }
-  public get name_label_horiz_shift() { return this._name_label_horiz_shift }
-
-  // Parameter of node value label
-  public get value_label_visible() { return this._value_label_visible }
-  public get value_label_font_family() { return this._value_label_font_family }
-  public get value_label_font_size() { return this._value_label_font_size }
-  public get value_label_uppercase() { return this._value_label_uppercase }
-  public get value_label_bold() { return this._value_label_bold }
-  public get value_label_italic() { return this._value_label_italic }
-  public get value_label_box_width() { return this._value_label_box_width }
-  public get value_label_color() { return this._value_label_color }
-  public get value_label_vert() { return this._value_label_vert }
-  public get value_label_horiz() { return this._value_label_horiz }
-  public get value_label_background() { return this._value_label_background }
-  public get value_label_vert_shift() { return this._value_label_vert_shift }
-  public get value_label_horiz_shift() { return this._value_label_horiz_shift }
-
-  // SETTERS ============================================================================
-
-  // Parameters for shape
-  public set shape_visible(_: boolean | undefined) { this._shape_visible = _; this.update() }
-  public set shape_type(_: Type_Shape | undefined) { this._shape_type = _; this.update() }
-  public set shape_min_width(_: number | undefined) { this._shape_min_width = _; this.update() }
-  public set shape_min_height(_: number | undefined) { this._shape_min_height = _; this.update() }
-  public set shape_color(_: string | undefined) { this._shape_color = _; this.update() }
-  public set shape_color_sustainable(_: boolean | undefined) { this._shape_color_sustainable = _; this.update() }
-  public set shape_arrow_angle_factor(_: number | undefined) { this._shape_arrow_angle_factor = _; this.update() }
-  public set shape_arrow_angle_direction(_: Type_Side | undefined) { this._shape_arrow_angle_direction = _; this.update() }
-
-  // Parameter of node label
-  public set name_label_visible(_: boolean | undefined) { this._name_label_visible = _; this.update() }
-  public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _; this.update() }
-  public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _; this.update() }
-  public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _; this.update() }
-  public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _; this.update() }
-  public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _; this.update() }
-  public set name_label_box_width(_: number | undefined) { this._name_label_box_width = _; this.update() }
-  public set name_label_color(_: boolean | undefined) { this._name_label_color = _; this.update() }
-  public set name_label_vert(_: Type_TextVPos | undefined) { this._name_label_vert = _; this.update() }
-  public set name_label_horiz(_: Type_TextHPos | undefined) { this._name_label_horiz = _; this.update() }
-  public set name_label_vert_shift(_: number | undefined) { this._name_label_vert_shift = _; this.update() }
-  public set name_label_horiz_shift(_: number | undefined) { this._name_label_horiz_shift = _; this.update() }
-
-  // Parameter of node value label
-  public set value_label_visible(_: boolean | undefined) { this._value_label_visible = _; this.update() }
-  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _; this.update() }
-  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _; this.update() }
-  public set value_label_uppercase(_: boolean | undefined) { this._value_label_uppercase = _; this.update() }
-  public set value_label_bold(_: boolean | undefined) { this._value_label_bold = _; this.update() }
-  public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _; this.update() }
-  public set value_label_box_width(_: number | undefined) { this._value_label_box_width = _; this.update() }
-  public set value_label_color(_: boolean | undefined) { this._value_label_color = _; this.update() }
-  public set value_label_vert(_: Type_TextVPos | undefined) { this._value_label_vert = _; this.update() }
-  public set value_label_horiz(_: Type_TextHPos | undefined) { this._value_label_horiz = _; this.update() }
-  public set value_label_vert_shift(_: number | undefined) { this._value_label_vert_shift = _; this.update() }
-  public set value_label_horiz_shift(_: number | undefined) { this._value_label_horiz_shift = _; this.update() }
-  public set value_label_background(_: boolean | undefined) { this._value_label_background = _; this.update() }
-}
-
-// CLASS NODE STYLE *********************************************************************
-
-/**
- * Define style for nodes
- *
- * @export
- * @class Class_NodeStyle
- * @extends {Class_NodeAttribute}
- */
-export class Class_NodeStyle extends Class_NodeAttribute {
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  private _id: string
-
-  private _name: string
-
-  private _is_deletable: boolean
-
-  private _references: { [_: string]: Type_AnyNodeElement } = {}
-
-  private _position: Type_ElementPosition
-
-  // CONSTRUCTOR ========================================================================
-
-  constructor(
-    id: string,
-    name: string,
-    is_deletable: boolean = true
-  ) {
-    // Instantiate super class
-    super()
-
-    // Set id
-    this._id = id
-
-    // Set name
-    this._name = name
-
-    // Set as deletable or not
-    this._is_deletable = is_deletable
-
-    // Parameters for geometry
-    this._position = {
-      type: 'absolute',
-      x: 10,
-      y: 10,
-      u: 0,
-      v: 0,
-      dx: default_dx,
-      dy: default_dy,
-      relative_dx: default_relative_dx,
-      relative_dy: default_relative_dy
-    }
-
-    // Parameters for shape
-    this._shape_visible = default_shape_visible
-    this._shape_type = default_shape_type
-    this._shape_min_width = default_shape_min_width
-    this._shape_min_height = default_shape_min_height
-    this._shape_color = default_shape_color
-    this._shape_color_sustainable = default_shape_color_sustainable
-    this._shape_arrow_angle_factor = default_shape_arrow_angle_factor
-    this._shape_arrow_angle_direction = default_shape_arrow_angle_direction
-
-    // Parameter of node label
-    this._name_label_visible = default_name_label_visible
-    this._name_label_font_family = default_label_font_family
-    this._name_label_font_size = default_label_font_size
-    this._name_label_uppercase = default_label_uppercase
-    this._name_label_bold = default_label_bold
-    this._name_label_italic = default_label_italic
-    this._name_label_box_width = default_label_box_width
-    this._name_label_color = default_label_color
-    this._name_label_vert = default_name_label_vert
-    this._name_label_horiz = default_name_label_horiz
-    this._name_label_vert_shift = default_name_label_vert_shift
-    this._name_label_horiz_shift = default_name_label_horiz_shift
-
-    // Parameter of node value label
-    this._value_label_visible = default_value_label_visible
-    this._value_label_font_family = default_label_font_family
-    this._value_label_font_size = default_label_font_size
-    this._value_label_uppercase = default_label_uppercase
-    this._value_label_bold = default_label_bold
-    this._value_label_italic = default_label_italic
-    this._value_label_box_width = default_label_box_width
-    this._value_label_color = default_label_color
-    this._value_label_vert = default_value_label_vert
-    this._value_label_horiz = default_value_label_horiz
-    this._value_label_vert_shift = default_value_label_vert_shift
-    this._value_label_horiz_shift = default_value_label_horiz_shift
-    this._value_label_background = false
-  }
-
-  /**
-   * Assign to node implementation values from json,
-   * Does not assign links -> need to read links from JSON before
-   *
-   * @param {Type_JSON} json_node_object
-   * @memberof ClassTemplate_NodeElement
-   */
-  public fromJSON(
-    json_node_object: Type_JSON
-  ) {
-    super.fromJSON(json_node_object)
-
-    this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-    this._position.relative_dx = getNumberFromJSON(json_node_object, 'relative_dx', default_relative_dx)
-    this._position.relative_dy = getNumberFromJSON(json_node_object, 'relative_dy', default_relative_dy)
-    this._position.dx = getNumberFromJSON(json_node_object, 'dx',default_dx)
-    this._position.dy = getNumberFromJSON(json_node_object, 'dy',default_dy)
-  }
-
-  public toJSON(
-  ) {
-    const json_object = super.toJSON()
-    if (this.position.type) json_object['position'] = this.position.type
-    return json_object
-  }
-
-  // CLEANING ===========================================================================
-
-  public delete() {
-    if (this._is_deletable) {
-      // Switch all refs to default style
-      Object.values(this._references)
-        .forEach(ref => {
-          ref.useDefaultStyle()
-        })
-      this._references = {}
-      // Garbage collector will do the rest....
-    }
-  }
-
-  // PUBLIC METHODS =======================================================================
-
-  public addReference(_: Type_AnyNodeElement) {
-    if (!this._references[_.id]) {
-      this._references[_.id] = _
-    }
-  }
-
-  public removeReference(_: Type_AnyNodeElement) {
-    if (this._references[_.id] !== undefined) {
-      delete this._references[_.id]
-    }
-  }
-
-  // PROTECTED METHODS ==================================================================
-
-  protected update() {
-    this.updateReferencesDraw()
-  }
-
-  // PRIVATE METHODS ======================================================================
-
-  private updateReferencesDraw() {
-    Object.values(this._references)
-      .forEach(ref => ref.draw())
-  }
-
-  // GETTERS ============================================================================
-
-  /**
-   * get id of style
-   * @readonly
-   * @memberof Class_NodeStyle
-   */
-  public get id() { return this._id }
-
-  /**
-   * Get name of style != id
-   * @memberof Class_NodeStyle
-   */
-  public get name() { return this._name }
-
-  // SETTERS =============================================================================
-
-  /**
-   * Set name of style != id
-   * @memberof Class_NodeStyle
-   */
-  public set name(_: string) { this._name = _ }
-
-  public get position() { return this._position }
-  public set position(_) { this._position = _ }
 }
 
 

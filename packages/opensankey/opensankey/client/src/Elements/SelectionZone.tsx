@@ -7,18 +7,18 @@
 // Local types definitions
 import type {
   Class_MenuConfig
-} from './MenuConfig'
+} from '../types/MenuConfig'
 import type {
   ClassAbstract_DrawingArea,
   ClassAbstract_Sankey
-} from './Abstract'
+} from '../types/Abstract'
 
 // Local modules imports
 import {
   ClassTemplate_Element
-} from './Element'
-import { Type_ElementPosition } from './Utils'
-import { default_element_position } from './Utils'
+} from '../Elements/Element'
+import { Type_ElementPosition } from '../types/Utils'
+import { default_element_position } from '../types/Utils'
 
 // SPECIFIC TYPES ***********************************************************************
 

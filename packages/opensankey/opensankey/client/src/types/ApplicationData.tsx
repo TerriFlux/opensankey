@@ -17,12 +17,12 @@ import { StepType } from '@reactour/tour'
 import { useToast } from '@chakra-ui/react'
 
 // Local imports
-import { Class_MenuConfig } from './MenuConfig'
-import { ClassAbstract_ApplicationData } from './Abstract'
+import { Class_MenuConfig } from '../types/MenuConfig'
+import { ClassAbstract_ApplicationData } from '../types/Abstract'
 import { ClassTemplate_DrawingArea } from './DrawingArea'
 import { randomId, Type_JSON } from './Utils'
-import { ClassTemplate_NodeElement } from './Node'
-import { ClassTemplate_LinkElement } from './Link'
+import { ClassTemplate_NodeElement } from '../Elements/Node'
+import { ClassTemplate_LinkElement } from '../Elements/Link'
 import { ClassTemplate_Sankey } from './Sankey'
 import { FType_ProcessFunctions } from './FunctionTypes'
 import { DataSuiteType } from './LegacyType'
@@ -76,7 +76,7 @@ export abstract class ClassTemplate_ApplicationData
   // PUBLIC ATTRIBUTES =================================================================
 
   // App
-  public version: string = '0.9'
+  public version: string = '0.91'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
