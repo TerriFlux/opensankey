@@ -200,12 +200,12 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
             new_data.processFunction
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
-        {
+        {!new_data.is_static ?
           <ModalDocumentation
             show_documentation={show_documentation}
             set_show_documentation={set_show_documentation}
             app_data={new_data}
-          />
+          />:<></>
         }
         {
           <ModalWelcome

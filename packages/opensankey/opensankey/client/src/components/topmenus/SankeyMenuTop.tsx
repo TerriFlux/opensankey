@@ -1152,7 +1152,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   />
 
   // Create the menu nav that can be slightly different if it in static
-  const menu_nav = <Box className='TopMenuNav'>
+  const menu_nav = !new_data.is_static ? <Box className='TopMenuNav'>
     <Tabs isLazy variant={'tabs_navbar'}>
       <TabList>
         {Object.keys(ordered_menu).map((m, i) => {
@@ -1190,8 +1190,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         })}
       </TabPanels>
     </Tabs>
-
-  </Box>
+  </Box>:<></>
 
 
   const content_support = <>
@@ -1546,8 +1545,8 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         processFunctions={processFunctions}
       />
 
-      <ModalTemplate new_data={new_data} additionalMenu={additionalMenus} Reinitialization={reinitialization} />
-      {modal_tuto}
+      {(!new_data.is_static) ? <ModalTemplate new_data={new_data} additionalMenu={additionalMenus} Reinitialization={reinitialization} />:<></>}
+      {(!new_data.is_static) ? modal_tuto : <></>}
       {modal_support}
       {modal_resolution_png}
     </>
