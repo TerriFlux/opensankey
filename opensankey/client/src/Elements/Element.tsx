@@ -570,7 +570,7 @@ export abstract class ClassTemplate_ProtoElement
 
   // Svg Group
   public get svg_parent_group() { return this._svg_parent_group }
-  public get svg_group() { return 'gg_' + this._id.replaceAll(' ', '').replaceAll('\'', '') }
+  public get svg_group() { return 'gg_' +  this._id.replace(/[^a-zA-Z0-9]/g, "") }
 
   // Selection
   public setSelected() { this._is_selected = true; this.drawAsSelected() }
