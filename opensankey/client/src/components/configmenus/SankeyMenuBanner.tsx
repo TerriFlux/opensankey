@@ -704,7 +704,7 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
       {/* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */}
       <OSTooltip
         placement='left'
-        label={(new_data.drawing_area.isInEditionMode()) ? t('Banner.tooltipLiason') : t('Banner.tooltipSelection')}
+        label={t('Banner.tooltipLiason')}
         isAlwaysOpen={new_data.show_documentation}
       >
         <Button
