@@ -7,7 +7,7 @@ import {
 } from './Types'
 import {
   Type_JSON
-} from './Utils'
+} from '../types/Utils'
 import {
   FType_ClickSaveDiagram,
   FType_RetrieveExcelResults,

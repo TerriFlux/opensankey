@@ -1,8 +1,5 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import {
-  FaAlignLeft,
-  FaAlignCenter,
-  FaAlignRight,
   FaChevronDown,
   FaUndo
 } from 'react-icons/fa'
@@ -23,13 +20,14 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
-  Select,
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
 
 import {
-  Class_LinkStyle,
+  isAttributeOverloaded,
+} from '../../Elements/Link'
+import {
   default_shape_arrow_size,
   default_shape_color,
   default_shape_ending_curve,
@@ -43,29 +41,21 @@ import {
   default_shape_orientation,
   default_shape_starting_curve,
   default_shape_starting_tangeant,
-  default_value_label_color,
-  default_value_label_custom_digit,
-  default_value_label_font_family,
-  default_value_label_font_size,
-  default_value_label_is_visible,
-  default_value_label_nb_digit,
-  default_value_label_on_path,
-  default_value_label_orthogonal_position,
-  default_value_label_pos_auto,
-  default_value_label_position,
-  default_value_label_unit,
-  default_value_label_unit_factor,
-  default_value_label_unit_visible,
-  isAttributeOverloaded,
-} from '../../types/Link'
+  default_link_value_label_font_size,
+  default_link_value_label_is_visible,
+  default_link_value_label_nb_digit,
+  default_link_value_label_on_path,
+  default_link_value_label_pos_auto,
+  default_link_value_label_unit_factor,
+  default_link_name_label_visible
+} from '../../Elements/LinkAttributes'
+import { Class_LinkStyle } from '../../Elements/LinkAttributes'
 import {
   Type_GenericLinkElement
 } from '../../types/Types'
 import {
   default_style_id,
-  CustomFaEyeCheckIcon,
-  font_families
-} from '../../types/Utils'
+  CustomFaEyeCheckIcon} from '../../types/Utils'
 import {
   FCType_MenuConfigurationLinksAppearence,
 } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
@@ -78,6 +68,7 @@ import {
   CutName
 } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
+import { SankeyMenuLabelComponent, SankeyMenuValueLabelComponent } from './SankeyMenuComponents'
 
 /*************************************************************************************************/
 
@@ -193,24 +184,20 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   const shape_is_curved = (elements[0]?.shape_is_curved ?? default_shape_is_curved)
   const shape_is_recycling = (elements[0]?.shape_is_recycling ?? default_shape_is_recycling)
   const shape_arrow_size = (elements[0]?.shape_arrow_size ?? default_shape_arrow_size)
-  const value_label_position = (elements[0]?.value_label_position ?? default_value_label_position)
-  const value_label_orthogonal_position = (elements[0]?.value_label_orthogonal_position ?? default_value_label_orthogonal_position)
-  const value_label_on_path = (elements[0]?.value_label_on_path ?? default_value_label_on_path)
-  const value_label_pos_auto = (elements[0]?.value_label_pos_auto ?? default_value_label_pos_auto)
+  const value_label_on_path = (elements[0]?.value_label_on_path ?? default_link_value_label_on_path)
+  const value_label_pos_auto = (elements[0]?.value_label_pos_auto ?? default_link_value_label_pos_auto)
   const shape_is_arrow = (elements[0]?.shape_is_arrow ?? default_shape_is_arrow)
   const shape_color = (elements[0]?.shape_color ?? default_shape_color)
   const shape_opacity = (elements[0]?.shape_opacity ?? default_shape_opacity)
   const shape_is_structure = (elements[0]?.shape_is_structure ?? default_shape_is_structure)
-  const value_label_is_visible = (elements[0]?.value_label_is_visible ?? default_value_label_is_visible)
-  const value_label_font_size = (elements[0]?.value_label_font_size ?? default_value_label_font_size)
-  const value_label_color = (elements[0]?.value_label_color ?? default_value_label_color)
-  const value_label_font_family = (elements[0]?.value_label_font_family ?? default_value_label_font_family)
-  const value_label_unit_visible = (elements[0]?.value_label_unit_visible ?? default_value_label_unit_visible)
-  const value_label_unit = (elements[0]?.value_label_unit ?? default_value_label_unit)
-  const value_label_unit_factor = (elements[0]?.value_label_unit_factor ?? default_value_label_unit_factor)
-  const value_label_custom_digit = (elements[0]?.value_label_custom_digit ?? default_value_label_custom_digit)
-  const value_label_nb_digit = (elements[0]?.value_label_nb_digit ?? default_value_label_nb_digit)
+  const value_label_is_visible = (elements[0]?.value_label_is_visible ?? default_link_value_label_is_visible)
+  const value_label_font_size = (elements[0]?.value_label_font_size ?? default_link_value_label_font_size)
+  const value_label_unit_factor = (elements[0]?.value_label_unit_factor ?? default_link_value_label_unit_factor)
+  const value_label_nb_digit = (elements[0]?.value_label_nb_digit ?? default_link_value_label_nb_digit)
   const shape_local_scale = (elements[0]?.local_link_scale ?? default_shape_local_scale)
+  const name_label_visible = (elements[0]?.name_label_is_visible ?? default_link_name_label_visible)
+  const name_label_on_path = (elements[0]?.name_label_on_path ?? default_link_value_label_on_path)
+  const name_label_pos_auto = (elements[0]?.name_label_pos_auto ?? default_link_value_label_pos_auto)
 
   //Change le style des flux sélectionnés
   const style_of_selected_links = () => {
@@ -685,13 +672,155 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
     </OSTooltip></Box>
 
 
-    {additionMenus.additional_link_appearence_items.map((el, ) => el(menu_for_style)/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
+    {additionMenus.additional_link_appearence_items.map((el,) => el(menu_for_style)/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
 
   </Box>
 
-  const content_label = <Box
-    layerStyle='menuconfigpanel_grid'
-  >
+  // Content specific to link label, it us not generic so not in SankeyMenuLabelComponent 
+  const content_name_specific_flow = name_label_visible ? <>
+    {/* Orienter le texte du label le long du flux  */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={is_indeterminate}
+      isChecked={name_label_on_path}
+      onChange={(evt) => {
+        elements.forEach(element => {
+          element.name_label_on_path = evt.target.checked
+          if (element.name_label_on_path) {
+            const lab_pos = element.name_label_horiz
+            const lab_orth_pos = element.name_label_vert
+            element.name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
+            element.name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
+          }
+        })
+        refreshThisAndUpdateRelatedComponents()
+      }}>
+      <OSTooltip label={t('Flux.label.tooltips.acf')}>
+        {t('Flux.label.acf') + ' '}
+      </OSTooltip>
+      {
+        (!menu_for_style) &&
+          isAttributeOverloaded(selected_links, 'name_label_on_path') ?
+          TooltipValueSurcharge('link_var_', t) :
+          <></>
+      }
+    </Checkbox>
+
+    {/* Button to adjust label position in case the label is bigger than the link */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={is_indeterminate}
+      isChecked={name_label_pos_auto}
+      onChange={(evt) => {
+        elements.forEach(element => {
+          const orth_pos = element.name_label_vert
+          element.name_label_pos_auto = evt.target.checked
+          element.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
+        })
+        refreshThisAndUpdateRelatedComponents()
+      }}
+    >
+      <OSTooltip label={t('Flux.tooltips.ajust_label')}>
+        {t('Flux.ajust_label')}
+      </OSTooltip>
+    </Checkbox>
+  </> : <></>
+
+  const content_label_text = <Box layerStyle='menuconfigpanel_grid' >
+    {/* Checkbox visibilité label nom flux */}
+
+    <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
+      <Checkbox
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={<CustomFaEyeCheckIcon />}
+        isIndeterminate={is_indeterminate}
+        isChecked={name_label_visible}
+        onChange={(evt) => {
+          elements.forEach(element => element.name_label_is_visible = evt.target.checked)
+          refreshThisAndUpdateRelatedComponents()
+        }}
+      >
+        <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
+          {t('Noeud.labels.vdb')}
+        </OSTooltip>
+        {((!menu_for_style) &&
+          isAttributeOverloaded(selected_links, 'name_label_is_visible') ?
+          TooltipValueSurcharge('node_var', t) :
+          <></>
+        )}
+      </Checkbox>
+    </Box>
+
+    {name_label_visible ? <SankeyMenuLabelComponent
+      new_data={new_data}
+      elements={elements}
+      selectedElements={selected_links}
+      refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+      dict_decorator_name={{
+        label_horiz: 'name_label_horiz',
+        label_vert: 'name_label_vert',
+        label_font_size: 'name_label_font_size',
+        label_color: 'name_label_color',
+        label_bold: 'name_label_bold',
+        label_uppercase: 'name_label_uppercase',
+        label_italic: 'name_label_italic',
+        label_font_family: 'name_label_font_family',
+      }} /> : <></>}
+
+    {content_name_specific_flow}
+  </Box>
+
+
+  const content_value_specific_flow = value_label_is_visible ? <>
+    {/* Orienter le texte du label le long du flux  */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={is_indeterminate}
+      isChecked={value_label_on_path}
+      onChange={(evt) => {
+        elements.forEach(element => {
+          element.value_label_on_path = evt.target.checked
+          if (element.value_label_on_path) {
+            const lab_pos = element.value_label_horiz
+            const lab_orth_pos = element.value_label_vert
+            element.value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
+            element.value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
+          }
+        })
+        refreshThisAndUpdateRelatedComponents()
+      }}>
+      <OSTooltip label={t('Flux.label.tooltips.acf')}>
+        {t('Flux.label.acf') + ' '}
+      </OSTooltip>
+      {
+        (!menu_for_style) &&
+          isAttributeOverloaded(selected_links, 'value_label_on_path') ?
+          TooltipValueSurcharge('link_var_', t) :
+          <></>
+      }
+    </Checkbox>
+
+    {/* Button to adjust label position in case the label is bigger than the link */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={is_indeterminate}
+      isChecked={value_label_pos_auto}
+      onChange={(evt) => {
+        elements.forEach(element => {
+          const orth_pos = element.value_label_vert
+          element.value_label_pos_auto = evt.target.checked
+          element.value_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
+        })
+        refreshThisAndUpdateRelatedComponents()
+      }}
+    >
+      <OSTooltip label={t('Flux.tooltips.ajust_label')}>
+        {t('Flux.ajust_label')}
+      </OSTooltip>
+    </Checkbox>
+  </> : <></>
+
+  const content_label_value = <>
     <Box
       as='span'
       layerStyle='menuconfigpanel_part_title_1'
@@ -717,498 +846,36 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
         }
       </Checkbox>
     </Box>
-
-    {value_label_is_visible ?<>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        {/* Choix d'affichage du nombre de chiffre après la virgule  */}
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isIndeterminate={is_indeterminate}
-          isChecked={value_label_custom_digit}
-          onChange={(evt) => {
-            elements.forEach(element => {
-              element.value_label_custom_digit = evt.target.checked
-              if (evt.target.checked) {
-                element.value_label_scientific_notation = false
-                element.value_label_significant_digits = false
-              }
-            })
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          <OSTooltip label={t('Flux.label.tooltips.custom_digit')}>
-            {t('Flux.label.custom_digit') + ' '}
-          </OSTooltip>
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'value_label_custom_digit') ?
-              TooltipValueSurcharge('link_var_', t) :
-              <></>
-          }
-        </Checkbox>
-        {value_label_custom_digit ?
-        /* Choose number of custom digit */
-
-        /* <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Flux.label.NbDigit')}
-            </Box> */
-          <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
-            <ConfigMenuNumberInput
-              ref_to_set_value={ref_set_number_inputs[6]}
-              default_value={value_label_nb_digit}
-              menu_for_style={menu_for_style}
-              minimum_value={0}
-              stepper={true}
-              function_on_blur={(value) => {
-                elements.forEach(element =>
-                  element.value_label_nb_digit = value ?? undefined)
-                refreshThisAndUpdateRelatedComponents()
-              }}
-            />
-          </OSTooltip>
-          :<></>
-        }
-      </Box>
-
+    {value_label_is_visible ?
+      <>
       {additionMenus.additional_link_appearence_value.map(el => el(menu_for_style))}
+      <SankeyMenuValueLabelComponent
+        new_data={new_data}
+        elements={elements}
+        selectedElements={selected_links}
+        refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+        dict_decorator_name={{
+          label_horiz: 'value_label_horiz',
+          label_vert: 'value_label_vert',
+          label_font_size: 'value_label_font_size',
+          label_color: 'value_label_color',
+          label_bold: 'value_label_bold',
+          label_uppercase: 'value_label_uppercase',
+          label_italic: 'value_label_italic',
+          label_font_family: 'value_label_font_family',
+          label_unit_visible: 'value_label_unit_visible',
+          label_unit: 'value_label_unit',
+          label_unit_factor: 'value_label_unit_factor',
+          label_custom_digit: 'value_label_custom_digit',
+          label_nb_digit: 'value_label_nb_digit',
+        }}
+      />
+        {content_value_specific_flow}</> :
+      <></>}
 
-      {/* Ajout une unité au label de flux */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        icon={<CustomFaEyeCheckIcon />}
-        isChecked={value_label_unit_visible}
-        onChange={(evt) => {
-          elements.forEach(element => element.value_label_unit_visible = evt.target.checked)
-          refreshThisAndUpdateRelatedComponents()
-        }}>
-        <OSTooltip label={t('Flux.label.tooltips.l_u_v')}>
-          {t('Flux.label.l_u_v') + ' '}
-        </OSTooltip>
-        {
-          (!menu_for_style) &&
-            isAttributeOverloaded(selected_links, 'value_label_unit_visible') ?
-            TooltipValueSurcharge('link_var_', t) :
-            <></>
-        }
-      </Checkbox>
+  </>
 
-      {/* Modifie l'unité du label de flux */}
-      {
-        value_label_unit_visible ?
-          <>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Flux.label.l_u')}
-                {
-                  (!menu_for_style) &&
-                    isAttributeOverloaded(selected_links, 'value_label_unit') ?
-                    <>{TooltipValueSurcharge('link_var_', t)}</> :
-                    <></>
-                }
-              </Box>
-              <OSTooltip label={t('Flux.label.tooltips.l_u')}>
-                <Input
-                  variant='menuconfigpanel_option_input'
-                  value={value_label_unit}
-                  onChange={evt => {
-                    elements.forEach(element => element.value_label_unit = evt.target.value)
-                    refreshThisAndUpdateRelatedComponents()
-                  }}
-                />
-              </OSTooltip>
-            </Box>
-            {/* Change unit factor*/}
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Flux.label.unit_factor')}
-                {
-                  (
-                    (!menu_for_style) &&
-                    isAttributeOverloaded(selected_links, 'value_label_unit_factor')
-                  ) ?
-                    <>{TooltipValueSurcharge('link_var_', t)}</> :
-                    <></>
-                }
-              </Box>
-              <OSTooltip label={t('Flux.label.tooltips.unit_factor')}>
-                <ConfigMenuNumberInput
-                  ref_to_set_value={ref_set_number_inputs[8]}
-                  default_value={value_label_unit_factor}
-                  function_on_blur={(value) => {
-                    elements.forEach(element =>
-                      element.value_label_unit_factor = (value ? value : undefined))
-                    refreshThisAndUpdateRelatedComponents()
-                  }}
-                  menu_for_style={menu_for_style}
-                  minimum_value={1}
-                  maximum_value={value_label_unit_factor}
-                  step={1}
-                  stepper={true}
-                />
-              </OSTooltip>
-            </Box>
-          </> :
-          <></>
-      }
 
-      <Box
-        layerStyle='menuconfigpanel_grid'
-      >
-        <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-          {t('Menu.edition')}
-        </Box>
-
-        {/* Couleur des Labels  */}
-        <Box layerStyle='options_3cols' >
-
-          {/* Label en noir  */}
-          <OSTooltip label={t('Flux.label.tooltips.len')}>
-            <Button
-              variant={
-                (!is_indeterminate && (value_label_color === 'black')) ?
-                  'menuconfigpanel_option_button_activated_left' :
-                  'menuconfigpanel_option_button_left'
-              }
-              onClick={() => {
-                elements.forEach(element => element.value_label_color = 'black')
-                refreshThisAndUpdateRelatedComponents()
-              }}
-            >
-              {t('Flux.label.len')}
-              {
-                (!menu_for_style) &&
-                  isAttributeOverloaded(selected_links, 'value_label_color') ?
-                  <>{TooltipValueSurcharge('link_var_', t)}</> :
-                  <></>
-              }
-            </Button>
-          </OSTooltip>
-
-          {/* Label en blanc  */}
-          <OSTooltip label={t('Flux.label.tooltips.lb')}>
-            <Button
-              variant={
-                (!is_indeterminate && (value_label_color === 'white')) ?
-                  'menuconfigpanel_option_button_activated_center' :
-                  'menuconfigpanel_option_button_center'
-              }
-              onClick={() => {
-                elements.forEach(element => element.value_label_color = 'white')
-                refreshThisAndUpdateRelatedComponents()
-              }}
-            >
-              {t('Flux.label.lb')}
-              {
-                (!menu_for_style) &&
-                  isAttributeOverloaded(selected_links, 'value_label_color') ?
-                  <>{TooltipValueSurcharge('link_var_', t)}</> :
-                  <></>
-              }
-            </Button>
-          </OSTooltip>
-
-          {/* Label en couleur  */}
-          <OSTooltip label={t('Flux.label.tooltips.lec')}>
-            <Button
-              variant={
-                (!is_indeterminate && (value_label_color === 'color')) ?
-                  'menuconfigpanel_option_button_activated_right' :
-                  'menuconfigpanel_option_button_right'
-              }
-              onClick={() => {
-                elements.forEach(element => element.value_label_color = 'color')
-                refreshThisAndUpdateRelatedComponents()
-              }}
-            >
-              {t('Flux.label.lec')}
-              {
-                (!menu_for_style) &&
-                  isAttributeOverloaded(selected_links, 'value_label_color') ?
-                  <>{TooltipValueSurcharge('link_var_', t)}</> :
-                  <></>
-              }
-            </Button>
-          </OSTooltip>
-        </Box>
-
-        {/* Police des labels de flux  */}
-        <Box as='span' layerStyle='menuconfigpanel_part_title_3' >
-          Police
-        </Box>
-        <Box layerStyle='options_2cols' >
-          <Select
-            variant='menuconfigpanel_option_select'
-            value={value_label_font_family}
-            onChange={
-              (evt: React.ChangeEvent<HTMLSelectElement>) => {
-                elements.forEach(element => element.value_label_font_family = evt.target.value)
-                refreshThisAndUpdateRelatedComponents()
-              }}
-          >
-            {
-              font_families
-                .map((d) => {
-                  return <option
-                    style={{ fontFamily: d }}
-                    key={'ff-' + d}
-                    value={d}
-                  >
-                    {d}
-                  </option>
-                })
-            }
-          </Select>
-
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[7]}
-            default_value={value_label_font_size}
-            menu_for_style={menu_for_style}
-            minimum_value={11}
-            stepper={true}
-            unit_text='pixels'
-            function_on_blur={(value) => {
-              elements.forEach(element =>
-                element.value_label_font_size = value ?? undefined)
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          />
-        </Box>
-
-        {/* Button to adjust label position in case the label is bigger than the link */}
-        <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-          Position
-        </Box>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isIndeterminate={is_indeterminate}
-          isChecked={value_label_pos_auto}
-          onChange={(evt) => {
-            elements.forEach(element => {
-              const orth_pos = element.value_label_orthogonal_position
-              element.value_label_pos_auto = evt.target.checked
-              element.value_label_orthogonal_position = (orth_pos === 'dragged') ? 'middle' : orth_pos
-            })
-            selected_links.forEach(link => link.deleteRelativeLabelPos())
-            refreshThisAndUpdateRelatedComponents()
-          }}
-        >
-          <OSTooltip label={t('Flux.tooltips.ajust_label')}>
-            {t('Flux.ajust_label')}
-          </OSTooltip>
-        </Checkbox>
-
-        {/* Positionnement lateral des label */}
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t('Flux.label.pos')}
-            {
-              (!menu_for_style) &&
-                isAttributeOverloaded(selected_links, 'value_label_position') ?
-                <>{TooltipValueSurcharge('link_var_', t)}</> :
-                <></>
-            }
-          </Box>
-          <Box
-            layerStyle='options_2cols'
-          >
-            <Box layerStyle='options_3cols' >
-              {/* Vers le début  */}
-              <OSTooltip label={t('Flux.label.tooltips.deb')}>
-                <Button
-                  paddingStart='0'
-                  paddingEnd='0'
-                  minWidth='0'
-                  variant={
-                    (!is_indeterminate && (value_label_position === 'start')) ?
-                      'menuconfigpanel_option_button_activated_left' :
-                      'menuconfigpanel_option_button_left'
-                  }
-                  onClick={
-                    () => {
-                      elements.forEach(element => {
-                        const orth_pos = element.value_label_orthogonal_position
-                        element.value_label_position = 'start'
-                        element.value_label_orthogonal_position = (orth_pos == 'dragged') ? 'middle' : orth_pos
-                      })
-                      selected_links.forEach(link => link.deleteRelativeLabelPos())
-                      refreshThisAndUpdateRelatedComponents()
-                    }}>
-                  <FaAlignLeft />
-                </Button>
-              </OSTooltip>
-
-              {/* Vers le milieu  */}
-              <OSTooltip label={t('Flux.label.tooltips.milieu_h')}>
-                <Button
-                  paddingStart='0'
-                  paddingEnd='0'
-                  minWidth='0'
-                  variant={
-                    (!is_indeterminate && (value_label_position === 'middle')) ?
-                      'menuconfigpanel_option_button_activated_center' :
-                      'menuconfigpanel_option_button_center'
-                  }
-                  onClick={
-                    () => {
-                      elements.forEach(element => {
-                        const orth_pos = element.value_label_orthogonal_position
-                        element.value_label_position = 'middle'
-                        element.value_label_orthogonal_position = (orth_pos == 'dragged') ? 'middle' : orth_pos
-                      })
-                      selected_links.forEach(link => link.deleteRelativeLabelPos())
-                      refreshThisAndUpdateRelatedComponents()
-                    }}>
-                  <FaAlignCenter />
-                </Button>
-              </OSTooltip>
-
-              {/* Vers la fin du flux  */}
-              <OSTooltip label={t('Flux.label.tooltips.fin')}>
-                <Button
-                  paddingStart='0'
-                  paddingEnd='0'
-                  minWidth='0'
-                  variant={
-                    (!is_indeterminate && (value_label_position === 'end')) ?
-                      'menuconfigpanel_option_button_activated_right' :
-                      'menuconfigpanel_option_button_right'}
-                  onClick={
-                    () => {
-                      elements.forEach(element => {
-                        const orth_pos = element.value_label_orthogonal_position
-                        element.value_label_position = 'end'
-                        element.value_label_orthogonal_position = (orth_pos == 'dragged') ? 'middle' : orth_pos
-                      })
-                      selected_links.forEach(link => link.deleteRelativeLabelPos())
-                      refreshThisAndUpdateRelatedComponents()
-                    }}>
-                  <FaAlignRight />
-                </Button>
-              </OSTooltip>
-            </Box>
-
-            {/* Positionnement vertical des label  */}
-            <Box layerStyle='options_3cols' >
-              {/* Positionnement au dessous  */}
-              <OSTooltip label={t('Flux.label.tooltips.dessous')}>
-                <Button
-                  paddingStart='0'
-                  paddingEnd='0'
-                  minWidth='0'
-                  variant={
-                    (
-                      !value_label_pos_auto &&
-                      !is_indeterminate &&
-                      (value_label_orthogonal_position === 'below')
-                    ) ?
-                      'menuconfigpanel_option_button_activated_left' :
-                      'menuconfigpanel_option_button_left'}
-                  onClick={() => {
-                    elements.forEach(element => {
-                      element.value_label_pos_auto = false
-                      const lab_pos = element.value_label_position
-                      element.value_label_position = (lab_pos == 'dragged') ? 'middle' : lab_pos
-                      element.value_label_orthogonal_position = 'below'
-                    })
-                    selected_links.forEach(link => link.deleteRelativeLabelPos())
-                    refreshThisAndUpdateRelatedComponents()
-                  }}
-                >
-                  {svg_label_bottom}
-                </Button>
-              </OSTooltip>
-
-              {/* Positionnement au milieu  */}
-              <OSTooltip label={t('Flux.label.tooltips.milieu_v')}>
-                <Button
-                  paddingStart='0'
-                  paddingEnd='0'
-                  minWidth='0'
-                  variant={
-                    (
-                      !value_label_pos_auto &&
-                      !is_indeterminate &&
-                      (value_label_orthogonal_position === 'middle')
-                    ) ?
-                      'menuconfigpanel_option_button_activated_center' :
-                      'menuconfigpanel_option_button_center'}
-                  onClick={() => {
-                    elements.forEach(element => {
-                      element.value_label_pos_auto = false
-                      const lab_pos = element.value_label_position
-                      element.value_label_position = (lab_pos == 'dragged') ? 'middle' : lab_pos
-                      element.value_label_orthogonal_position = 'middle'
-                    })
-                    selected_links.forEach(link => link.deleteRelativeLabelPos())
-                    refreshThisAndUpdateRelatedComponents()
-                  }}
-                >
-                  {svg_label_center}
-                </Button>
-              </OSTooltip>
-
-              {/* Positionnement au dessus  */}
-              <OSTooltip label={t('Flux.label.tooltips.dessus')}>
-                <Button
-                  paddingStart='0'
-                  paddingEnd='0'
-                  minWidth='0'
-                  variant={
-                    (
-                      !value_label_pos_auto &&
-                      !is_indeterminate &&
-                      (value_label_orthogonal_position === 'above')
-                    ) ?
-                      'menuconfigpanel_option_button_activated_right' :
-                      'menuconfigpanel_option_button_right'}
-                  onClick={
-                    () => {
-                      elements.forEach(element => {
-                        element.value_label_pos_auto = false
-                        const lab_pos = element.value_label_position
-                        element.value_label_position = (lab_pos == 'dragged') ? 'middle' : lab_pos
-                        element.value_label_orthogonal_position = 'above'
-                      })
-                      selected_links.forEach(link => link.deleteRelativeLabelPos())
-                      refreshThisAndUpdateRelatedComponents()
-                    }}>
-                  {svg_label_top}
-                </Button>
-              </OSTooltip>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-
-      {/* Orienter le texte du label le long du flux  */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminate}
-        isChecked={value_label_on_path}
-        onChange={(evt) => {
-          elements.forEach(element => {
-            element.value_label_on_path = evt.target.checked
-            if (element.value_label_on_path) {
-              const lab_pos = element.value_label_position
-              const lab_orth_pos = element.value_label_orthogonal_position
-              element.value_label_position = (lab_pos == 'dragged') ? 'middle' : lab_pos
-              element.value_label_orthogonal_position = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
-            }
-          })
-          selected_links.forEach(link => link.deleteRelativeLabelPos())
-          refreshThisAndUpdateRelatedComponents()
-        }}>
-        <OSTooltip label={t('Flux.label.tooltips.acf')}>
-          {t('Flux.label.acf') + ' '}
-        </OSTooltip>
-        {
-          (!menu_for_style) &&
-            isAttributeOverloaded(selected_links, 'value_label_on_path') ?
-            TooltipValueSurcharge('link_var_', t) :
-            <></>
-        }
-      </Checkbox>
-    </> : <></>}
-  </Box>
 
   const content_style = (!menu_for_style) ? <Box
     layerStyle='menuconfigpanel_grid'
@@ -1362,7 +1029,15 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       backgroundColor: 'grey',
       height: 2
     }} />
-    {content_label}
+    {content_label_value}
+    <hr style={{
+      borderStyle: 'none',
+      margin: '10px',
+      color: 'grey',
+      backgroundColor: 'grey',
+      height: 2
+    }} />
+    {content_label_text}
   </Box>
 
   /* Formattage de l'affichage du menu attribut de flux */
