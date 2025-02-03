@@ -78,8 +78,7 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
               >
                 <OSTooltip
                   placement='bottom'
-                  label={app_data.t('tooltip.dontSeeAgain')}
-                  isAlwaysOpen={show_documentation}>
+                  label={app_data.t('tooltip.dontSeeAgain')}>
                   {app_data.t('dontSeeAgain')}
                 </OSTooltip>
               </Checkbox>
