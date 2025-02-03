@@ -247,7 +247,8 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     </OSTooltip>
   </>
 
-  const content_menu_zdt = <Box layerStyle='menuconfigpanel_grid'>
+  const content_menu_zdt = <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
+    <Box layerStyle='menuconfigpanel_grid'>
     <Box
       as='span'
       layerStyle='menuconfigpanel_zdt_row_droplist'
@@ -555,6 +556,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
       </Box>
     </Box>
   </Box>
+  </OSTooltip>
 
   return content_menu_zdt
 }

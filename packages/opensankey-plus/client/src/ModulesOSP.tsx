@@ -353,11 +353,8 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   //Add data sequence in footer
   additionalMenus.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus} />)
 
-  // More template
-  if (new_data_plus.has_sankey_plus) {
-    additionalMenus.template_module_key.push('intermediary')
-    additionalMenus.template_module_key.push('advanced')
-  }
+  additionalMenus.template_module_key.push('intermediary')
+  additionalMenus.template_module_key.push('advanced')
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
