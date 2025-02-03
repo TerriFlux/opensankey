@@ -1531,7 +1531,7 @@ export const resources_app_elements = {
         tooltipAdjustV: 'Réajuster verticalement la zone de dessin à la taille de l\'écran',
         tooltipStructure: 'Paramétrage visuel de la structure du diagramme',
         tooltipSelection: 'Sélectionner ou déplacer un élément',
-        tooltipHelp: 'Affiche le dialogue d\'aide',
+        tooltipHelp: 'Affichez le dialogue d\'aide',
         tooltipLiason: 'Permet de sélectionner le mode édition pour dessiner noeuds et flux ou le mode sélection pour sélectionner noeuds et flux afin de changer leurs attributs.',
         select_sibling: 'Selectionner ses frères ',
         fullscreen: 'Passer en mode mode plein écran',
@@ -1539,7 +1539,7 @@ export const resources_app_elements = {
         hlp_node_tag_filter: 'Filtrer les noeuds et appliquer la couleur des étiquettes',
         hlp_link_tag_filter: 'Filtrer les flux et appliquer la couleur des étiquettes',
         hlp_data_tag_filter: 'Choisir les données et appliquer la couleur des étiquettes',
-        open_configuration_menu: 'Ouvre le menu de configuration.'
+        open_configuration_menu: 'Ouvrez le menu de configuration.'
       },
       welcome: {
         welcome: 'Bienvenue sur l\'application web OpenSankey',
@@ -1605,7 +1605,7 @@ export const resources_app_elements = {
       tooltip: {
         dontSeeAgain: 'En cochant cette case il n\'y aura plus d\'écran d\'accueil au prochaine chargement de la page. Pour réafficher cet accueil aller dans Aide->Accueil.',
         diaporama: 'Présentation des différentes fonctionnalités de l\'outil des plus basiques aux plus avancées, ainsi que les combinaisons souris/claviers d\'édition.',
-        start: 'Commencer à tracer vos flux. Pour cela cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
+        start: 'Commencez à tracer vos flux. Pour cela cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
       }
     }
   }
