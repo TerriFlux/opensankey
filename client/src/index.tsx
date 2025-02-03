@@ -31,6 +31,7 @@ import i18next from './traductions/traduction'
 
 import { SankeyApp } from './AppSA'
 import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
+import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 // Global variables ==============================================================================
 
@@ -61,7 +62,10 @@ let dataApp: Class_ApplicationDataSA
 const App: FunctionComponent = () => {
   if (initialRender) {
     initialRender = false
-    dataApp = new Class_ApplicationDataSA(false)
+    dataApp = new Class_ApplicationDataSA(window.SankeyToolsStatic == true)
+    if (window.sankey && window.sankey.filiere) {
+      dataApp.fromJSON(window.sankey.filiere as unknown as Type_JSON)
+    }
   }
   return <SankeyApp
     new_data_app={dataApp}

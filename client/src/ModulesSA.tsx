@@ -42,6 +42,7 @@ import { initializeAdditionalMenusOSP, moduleDialogsOSP } from './deps/OpenSanke
 // Local imports
 import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
 import { LoginOutButton } from './components/Login/Login'
+import { DrawerSequenceDataTagg } from './deps/OpenSankey+/components/UtilsOSP'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -122,6 +123,8 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   // No initialisation if static --------------------------------------------------------
 
   if (new_data_app.is_static) {
+  //Add data sequence in footer
+    additionalMenus.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
     return
   }
 
