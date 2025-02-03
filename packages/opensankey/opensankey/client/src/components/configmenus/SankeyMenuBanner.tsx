@@ -743,15 +743,19 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
       </Button>
     </OSTooltip>
 
-
-  const btn_show_help_in_static = new_data.is_static ? <OSTooltip placement='left' label={t('Banner.tooltipHelp')}>
-    <Button variant='info' onClick={() => { new_data.menu_configuration.never_see_again.current = false; localStorage.removeItem('dontSeeAggainWelcome'), new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true) }} >
-      ?
+  const btn_show_help_in_static = <OSTooltip 
+    placement='left' 
+    label={t('Banner.tooltipHelp')}
+    isAlwaysOpen={new_data.show_documentation}
+  >
+    <Button variant='info' onClick={() => { 
+      new_data.menu_configuration.never_see_again.current = false; 
+      localStorage.removeItem('dontSeeAggainWelcome'), 
+      new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true) 
+      }} 
+    >?
     </Button>
-  </OSTooltip> : <></>
-
-
-
+  </OSTooltip>
 
   const init_toolbar_elements: { [_: string]: JSX.Element } = {
 

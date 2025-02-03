@@ -271,7 +271,12 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           id: 'paste',
           label: new_data.t('SpreadSheet.paste'),
           handler: () => {
+            if (window.navigator.userAgent.includes('Firefox')) {
+              alert('Cette fonctionnalité ne fonctionne pas sur Firefox.')
+              return 
+            }
             getCellsFromClipboardPlainText().then((rows) => {
+
               // Paste and handle clipboard data
               if (rows.length == 1) {
                 return
