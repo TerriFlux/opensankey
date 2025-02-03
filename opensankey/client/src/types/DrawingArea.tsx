@@ -49,6 +49,11 @@ import { ClassTemplate_ProtoElement } from './Element'
 import { ClassAbstract_NodeElement } from './AbstractNode'
 import { Class_ApplicationData } from './Types'
 
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+  }
+
 // CONSTANTS ****************************************************************************
 
 const initial_show_structure = 'reconciled'
@@ -166,7 +171,7 @@ export abstract class ClassTemplate_DrawingArea
    * @type {boolean}
    * @memberof ClassTemplate_DrawingArea
    */
-  public static: boolean = false
+  public static: boolean = window.SankeyToolsStatic
 
   public bypass_redraws: boolean = false
 
@@ -382,6 +387,7 @@ export abstract class ClassTemplate_DrawingArea
 
   protected _copyAttrFrom(drawing_area_to_copy: ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     // Copy All attributes
+    this.static = drawing_area_to_copy.static
     this._color = drawing_area_to_copy._color
     this._filter_label = drawing_area_to_copy._filter_label
     this._filter_link_value = drawing_area_to_copy._filter_link_value
