@@ -866,7 +866,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
 const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }: FCType_ButtonLaunchGuide) => {
   const { setIsOpen } = useTour()
   return <OSTooltip
-    label={'Commencer la visite guidée dans les différentes zones de l\'application.'}
+    label={new_data.t('guide.tooltip.guide')}
     isAlwaysOpen={new_data.show_documentation}
   ><Button
     variant='menutop_button'
