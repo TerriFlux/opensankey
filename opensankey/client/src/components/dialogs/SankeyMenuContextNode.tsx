@@ -28,7 +28,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
 import { Type_GenericApplicationData } from '../../types/Types'
-import { Class_NodeDimension } from '../../types/NodeDimension'
+import { Class_NodeDimension } from '../../Elements/NodeDimension'
 
 /*************************************************************************************************/
 
@@ -81,6 +81,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const contextualised_node_shape_visible = contextualised_node !== undefined ? contextualised_node.shape_visible : false
   const contextualised_node_label_visible = contextualised_node !== undefined ? contextualised_node.name_label_visible : false
+  const contextualised_node_value_visible = contextualised_node !== undefined ? contextualised_node.value_label_is_visible : false
 
   const selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list
 
@@ -575,6 +576,20 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     {t('Menu.suppr')}
   </Button>
 
+  const btn_mask_value=<Button
+      variant='contextmenu_button'
+      onClick={() => {
+        selected_nodes.forEach(n => n.value_label_is_visible = !contextualised_node_value_visible)
+        refreshThisAndToggleSaving()
+      }}
+    >
+      {
+        contextualised_node_value_visible ?
+          t('Noeud.apparence.hide_value') :
+          t('Noeud.apparence.display_value')
+      }
+    </Button>
+
   const context_content: { [_: string]: JSX.Element } = {
     'aggregate': btn_aggregate,
     'desaggregate': btn_desagregate,
@@ -588,6 +603,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     'style': dropdown_c_n_style,
     'mask_shape': btn_mask_shape,
     'mask_label': btn_mask_label,
+    'mask_value':btn_mask_value,
     'sep_3': sep,
 
     'reorg': btn_reorganise_link_io,

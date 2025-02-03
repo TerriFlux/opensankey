@@ -348,7 +348,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     return
   // Extract JSON struct
   const data_as_json = JSON.parse(text) as Type_JSON
-  data_as_json['version'] = '0.9' // Avoid converter process
+  data_as_json['version'] = new_data.version // Avoid converter process
   // Extract sankey datas from JSON
   new_data.fromJSON(data_as_json, false)
   // Case 1 : Apply extracted layout if present -> contains positions

@@ -7,7 +7,7 @@
 // Local types
 import {
   Class_NodeDimension
-} from './NodeDimension'
+} from '../Elements/NodeDimension'
 import {
   ClassAbstract_DrawingArea,
   ClassAbstract_ProtoLevelTag,
@@ -15,10 +15,10 @@ import {
   ClassAbstract_Sankey,
   ClassAbstract_ProtoTag,
   ClassAbstract_ProtoTagGroup
-} from './Abstract'
+} from '../types/Abstract'
 import {
   ClassAbstract_NodeElement
-} from './AbstractNode'
+} from '../types/AbstractNode'
 import {
   ClassAbstract_LinkElement,
   ClassAbstract_LinkValue
@@ -30,7 +30,7 @@ import {
   getStringFromJSON,
   getStringListFromJSON,
   makeId
-} from './Utils'
+} from '../types/Utils'
 import colormap from 'colormap'
 
 // SPECIFIC TYPES ***********************************************************************

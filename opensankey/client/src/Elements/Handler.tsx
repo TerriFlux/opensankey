@@ -10,19 +10,19 @@ import * as d3 from 'd3'
 // Local types imports
 import type {
   Class_MenuConfig
-} from './MenuConfig'
+} from '../types/MenuConfig'
 import type {
   ClassAbstract_DrawingArea,
   ClassAbstract_Sankey
-} from './Abstract'
+} from '../types/Abstract'
 
 // Local modules imports
 import {
   ClassTemplate_Element,
   ClassTemplate_ProtoElement
-} from './Element'
-import { Type_ElementPosition } from './Utils'
-import { default_element_position } from './Utils'
+} from '../Elements/Element'
+import { Type_ElementPosition } from '../types/Utils'
+import { default_element_position } from '../types/Utils'
 
 // CLASS HANDLER ************************************************************************
 

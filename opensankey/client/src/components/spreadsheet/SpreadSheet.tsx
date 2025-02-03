@@ -3,13 +3,13 @@ import React, { FunctionComponent, useState } from 'react'
 import {
   ReactGrid, Column, Row, CellChange, TextCell, NumberCell, Id, MenuOption,
   SelectionMode, DefaultCellTypes, Cell, Compatible, CellLocation
-} from '@silevis/reactgrid'
+} from '@silevis/reactgrid' 
 import '@silevis/reactgrid/styles.css'
 import { Type_GenericApplicationData, Type_GenericDrawingArea, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
 import { parseLocaleNumber } from '../../types/Utils'
 import { ClassTemplate_Sankey } from '../../types/Sankey'
-import { ClassTemplate_NodeElement } from '../../types/Node'
-import { defaultLinkId } from '../../types/Link'
+import { ClassTemplate_NodeElement } from '../../Elements/Node'
+import { defaultLinkId } from '../../Elements/Link'
 
 // Define a type for generic abstract node elements
 type Type_AnyAbstractNodeElement = ClassTemplate_NodeElement<

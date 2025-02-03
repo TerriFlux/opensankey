@@ -14,9 +14,7 @@ import {
   Tr,
 } from '@chakra-ui/react'
 
-/*************************************************************************************************/
-
-import type { Type_Side } from '../../types/Link'
+import type { Type_Side } from '../../Elements/LinkAttributes'
 import type {
   Type_GenericNodeElement,
   Type_GenericLinkElement

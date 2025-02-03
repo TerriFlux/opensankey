@@ -13,15 +13,15 @@ import { MouseEvent } from 'react'
 import type {
   ClassAbstract_DrawingArea,
   ClassAbstract_Sankey
-} from './Abstract'
+} from '../types/Abstract'
 import type {
   Class_MenuConfig
-} from './MenuConfig'
+} from '../types/MenuConfig'
 
 // Local modules imports
 import {
   ClassTemplate_Element
-} from './Element'
+} from '../Elements/Element'
 import {
   Type_ElementPosition,
   default_element_color,
@@ -32,10 +32,10 @@ import {
   getStringListFromJSON,
   getJSONFromJSON,
   const_default_position_x,
-} from './Utils'
+} from '../types/Utils'
 import {
   Type_GenericNodeElement
-} from './Types'
+} from '../types/Types'
 import {
   ClassTemplate_Handler
 } from './Handler'

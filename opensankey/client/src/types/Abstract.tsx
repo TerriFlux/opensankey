@@ -9,9 +9,9 @@
 import * as d3 from 'd3'
 import type { TFunction } from 'i18next'
 import type { ClassAbstract_LinkElement, ClassAbstract_LinkStyle } from './AbstractLink'
-import type { ClassAbstract_NodeElement, ClassAbstract_NodeStyle, ClassAbstract_NodeDimension } from './AbstractNode'
-import type { Class_MenuConfig } from './MenuConfig'
-import { ClassTemplate_Legend } from './Legend'
+import type { ClassAbstract_NodeElement, ClassAbstract_NodeStyle, ClassAbstract_NodeDimension } from '../types/AbstractNode'
+import type { Class_MenuConfig } from '../types/MenuConfig'
+import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Type_GenericSankey } from './Types'
 
 type TypeAbstract_LinkElement = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
