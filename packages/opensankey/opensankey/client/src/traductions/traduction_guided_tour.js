@@ -12,7 +12,10 @@ export const resources_guided_tour = {
         save_in_cache: 'This button allow you to save your progress in your browser\'s cache so you can exit the app and return later and continue your current diagram.',
         menu_config: 'The configuration menu. Set everything on your Sankey diagram from here, such as data values, names, and many more options.',
         tutorials_button: 'You will find some useful tutorials here that will explain to you everything you need to know to master OpenSankey',
-        settings_button: 'You can select more advanced menus and options from here.'
+        settings_button: 'You can select more advanced menus and options from here.',
+        tooltip:{
+          guide:'Start the guided tour through the different areas of the application.'
+        }
       },
     }
   },
@@ -30,7 +33,10 @@ export const resources_guided_tour = {
         save_in_cache: 'Ce bouton vous permet de sauvegarder votre progression dans le cache de votre navigateur. Ainsi si vous quittez l\'application vous pourrez revenir plus tard et continuer votre projet à partir de cette sauvegarde.',
         menu_config: 'Le menu de configuration. C\'est à partir d\'ici que vous pouvez tout paramétrer sur votre diagramme Sankey, comme les valeurs des données, les noms, et bien d\'autres options encore',
         tutorials_button: 'Vous trouverez ici des tutoriels utiles qui vous expliqueront tout ce que vous devez savoir pour maîtriser OpenSankey.',
-        settings_button: 'Vous pouvez sélectionner des menus et des options plus avancés à partir d\'ici.'
+        settings_button: 'Vous pouvez sélectionner des menus et des options plus avancés à partir d\'ici.',
+        tooltip:{
+          guide:'Commencez la visite guidée dans les différentes zones de l\'application.'
+        }
       },
     }
   }
