@@ -1,4 +1,4 @@
-import { ClassTemplate_ZoneSelection } from '../deps/OpenSankey/types/SelectionZone'
+import { ClassTemplate_ZoneSelection } from '../deps/OpenSankey/Elements/SelectionZone'
 import { ClassAbstract_DrawingAreaOSP, ClassAbstract_SankeyOSP } from './AbstractOSP'
 import { Class_ContainerElement } from './FreeLabel'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'

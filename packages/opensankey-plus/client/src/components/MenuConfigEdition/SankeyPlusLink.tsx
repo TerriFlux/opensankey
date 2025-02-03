@@ -25,17 +25,13 @@ import {
   TooltipValueSurcharge
 } from '../../deps/OpenSankey/types/Utils'
 import {
-  default_shape_is_dashed,
-  default_value_label_significant_digits, 
-  default_value_label_nb_significant_digits, 
-  default_value_label_scientific_notation,
-  Class_LinkStyle,
-  isAttributeOverloaded
-} from '../../deps/OpenSankey/types/Link'
+  isAttributeOverloaded} from '../../deps/OpenSankey/Elements/Link'
 import {
-  ConfigMenuNumberInput,
-  ConfigMenuTextInput
-} from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
+  default_link_value_label_nb_significant_digits,
+  default_link_value_label_scientific_notation,
+  default_link_value_label_significant_digits,
+  default_shape_is_dashed} from '../../deps/OpenSankey/Elements/LinkAttributes'
+import { Class_LinkStyle } from '../../deps/OpenSankey/Elements/LinkAttributes'
 import {
   icon_open_modal
 
@@ -49,7 +45,6 @@ import {
 import type {
   FCType_MenuConfLinkApparenceDashedOSP,
   FCType_MenuConfLinkApparenceGradientOSP,
-  FCType_MenuConfLinkDataTextOSP,
   FCType_MenuConfLinkScientificPrecision,
   FCType_MenuContextLink
 } from './types/SankeyPlusGradientTypes'
@@ -60,6 +55,7 @@ import type {
   Type_GenericLinkElementOSP,
   Type_GenericNodeElementOSP
 } from '../../types/TypesOSP'
+import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
 
 export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConfLinkApparenceGradientOSP> = ({
@@ -197,82 +193,6 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
   </Checkbox>
 }
 
-
-export const MenuConfLinkDataText: FunctionComponent<FCType_MenuConfLinkDataTextOSP> = ({ new_data_plus }) => {
-  {/* Afficher ou non les donnée sur le Sankey  */ }
-  const { drawing_area, menu_configuration, t } = new_data_plus
-
-  // Function used to force this component to reload
-  const [, setCount] = useState(0)
-
-  // Ref to input displayed value
-  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
-
-  let selected_links: Type_GenericLinkElementOSP[]
-  if (!menu_configuration.is_selector_only_for_visible_links) {
-    // All availables links
-    selected_links = drawing_area.selected_links_list_sorted
-  }
-  else {
-    // Only visible links
-    selected_links = drawing_area.visible_and_selected_links_list_sorted
-  }
-
-  const updateInputsValues = () => {
-    // Recreate a updated_selected_links list in the function because it can be called before re-rendering <MenuConfigurationLinksData/>
-    // so selected_links can have the list of previous selected links wich can lead to incorrect links value
-    const updated_selected_links = !menu_configuration.is_selector_only_for_visible_links ?
-      drawing_area.selected_links_list_sorted : drawing_area.visible_and_selected_links_list_sorted
-
-    const value_update = updated_selected_links[0]?.value
-
-    // Update input data value
-    ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
-  }
-
-  // Current Link value
-  const value = selected_links[0]?.value
-
-  // Save current component updater to a variable
-  menu_configuration.ref_to_menu_config_link_data_text_updater.current = () => {
-    updateInputsValues()
-    setCount(a => a + 1)
-  }
-
-  // Updater of component related to link data
-  const refreshThisAndUpdateRelatedComponents = () => {
-    menu_configuration.updateComponentRelatedToLinksData()
-  }
-
-
-  return <OSTooltip
-    label={
-      !new_data_plus.has_sankey_plus ?
-        t('Menu.sankeyOSPDisabled') :
-        t('Flux.data.tooltips.affichage')}
-  >
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name' >
-        {t('Flux.data.affichage')}
-      </Box>
-      <ConfigMenuTextInput
-        disabled={!new_data_plus.has_sankey_plus}
-        ref_to_set_value={ref_set_text_value_input}
-        function_get_value={() => { return value?.text_value }}
-        function_on_blur={(_) => {
-          // Update text for links
-          selected_links.forEach(link => {
-            link.text_value = (_ ?? '')
-          })
-          // Update this menu
-          refreshThisAndUpdateRelatedComponents()
-        }}
-      />
-    </Box>
-  </OSTooltip>
-}
-
-
 export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfLinkScientificPrecision> = ({ new_data_plus,menu_for_style }) => {
   {/* Afficher ou non les donnée sur le Sankey  */ }
   const { drawing_area, menu_configuration, t } = new_data_plus
@@ -296,14 +216,14 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
   if (menu_for_style) {
     elements = [new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
   }
-  else {
+  else {Class_LinkStyle
     elements = selected_links
   }
 
 
-  const value_label_scientific_notation = (elements[0]?.value_label_scientific_notation ?? default_value_label_scientific_notation)
-  const value_label_significant_digits = (elements[0]?.value_label_significant_digits ?? default_value_label_significant_digits)
-  const value_label_nb_significant_digits = (elements[0]?.value_label_nb_significant_digits ?? default_value_label_nb_significant_digits)
+  const value_label_scientific_notation = (elements[0]?.value_label_scientific_notation ?? default_link_value_label_scientific_notation)
+  const value_label_significant_digits = (elements[0]?.value_label_significant_digits ?? default_link_value_label_significant_digits)
+  const value_label_nb_significant_digits = (elements[0]?.value_label_nb_significant_digits ?? default_link_value_label_nb_significant_digits)
 
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
   ref_set_number_inputs.current(String(value_label_nb_significant_digits))

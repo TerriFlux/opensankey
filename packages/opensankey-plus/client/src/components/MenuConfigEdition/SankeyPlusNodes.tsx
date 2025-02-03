@@ -1,10 +1,7 @@
 // External lib
-import React, { ChangeEvent, useState, useRef, FunctionComponent, MutableRefObject } from 'react'
+import React, { ChangeEvent, useState, useRef, FunctionComponent } from 'react'
 
 import {
-  FaAlignCenter,
-  FaAlignLeft,
-  FaAlignRight,
   FaEyeSlash,
   FaFileImport,
   FaLock,
@@ -25,50 +22,24 @@ import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 // Local imports
 import {
   FCType_ButtonNodeContextShowTagMenu,
-  FCType_NodeBgLabelOSP,
   FCType_NodeHyperLinkOSP,
-  FCType_NodeIconOSP,
-  FCType_NodeValueOSP,
+  FCType_NodeIconOSP
 } from './types/SankeyPlusNodesTypes'
 
 // OpenSankey ts-code
 import {
-  default_label_font_size,
-  default_shape_visible,
-  default_value_label_horiz,
-  default_value_label_horiz_shift,
-  default_value_label_vert,
-  default_value_label_vert_shift,
-  default_value_label_visible,
   isAttributeOverloaded
-} from '../../deps/OpenSankey/types/Node'
+} from '../../deps/OpenSankey/Elements/Node'
 import {
-  isAttributeOverloaded as isAttributeOverloadedPlus
-} from '../../types/NodeOSP'
+  default_shape_visible} from '../../deps/OpenSankey/Elements/NodeAttributes'
 import {
-  CustomFaEyeCheckIcon,
   OSTooltip,
   TooltipValueSurcharge
 } from '../../deps/OpenSankey/types/Utils'
 import {
-  Type_GenericNodeElementOSP
-} from '../../types/TypesOSP'
-import {
-  Class_NodeStyleOSP
-} from '../../types/NodeOSP'
-import {
-  ConfigMenuNumberInput
-} from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
-import {
-  svg_label_top,
-  svg_label_center,
-  svg_label_bottom
-} from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodesAttributes'
-import {
   icon_open_modal
 } from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextNode'
 
-export const default_label_background = true
 
 
 declare const window: Window &
@@ -474,366 +445,6 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
   </TabPanel>
 }
 
-export const NodeBgLabel: FunctionComponent<FCType_NodeBgLabelOSP> = ({ new_data, menu_for_style }) => {
-  {/* Ajout fond coloré pour meilleur visibilité si label sur flux */ }
-
-  const { drawing_area, t } = new_data
-  const selected_nodes = drawing_area.selected_nodes_list
-
-  const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_menu_config_node_name_label_bg_updater.current = () => setCount(a => a + 1)
-
-  // Elements on which menu modification applies
-  let elements: Class_NodeStyleOSP[] | Type_GenericNodeElementOSP[]
-  if (menu_for_style) {
-    elements = [new_data.drawing_area.sankey.node_styles_dict[new_data.menu_configuration.ref_selected_style_node.current]]
-  }
-  else {
-    elements = selected_nodes
-  }
-
-  const name_label_background = (elements[0]?.name_label_background ?? default_label_background)
-
-  /**
-   * Function used to reset menu UI
-   */
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    if (menu_for_style) {
-      // Update menus for node's apparence in case we use this for style
-      new_data.menu_configuration.updateComponentRelatedToNodesStyles()
-      // Redraw all visible nodes if we modifie node style
-      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-    }
-    // And update this menu also
-    setCount(a => a + 1)
-  }
-
-  return <Checkbox
-    variant='menuconfigpanel_option_checkbox'
-    isIndeterminate={false}
-    isChecked={name_label_background}
-    onChange={(evt) => {
-      elements.forEach(element => element.name_label_background = evt.target.checked)
-      refreshThisAndUpdateRelatedComponents()
-    }}
-  >
-    <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
-      {t('Noeud.labels.l_bg')}
-    </OSTooltip>
-    {
-      (!menu_for_style) &&
-        isAttributeOverloadedPlus(selected_nodes, 'name_label_background') ?
-        TooltipValueSurcharge('node_var', t) :
-        <></>
-    }
-  </Checkbox>
-}
-
-export const NodeValue: FunctionComponent<FCType_NodeValueOSP> = ({ new_data, menu_for_style }) => {
-
-  const { drawing_area, t } = new_data
-  const selected_nodes = drawing_area.selected_nodes_list
-
-
-  const [, setCount] = useState(0)
-
-  // Elements on which menu modification applies
-  let elements: Class_NodeStyleOSP[] | Type_GenericNodeElementOSP[]
-  if (menu_for_style) {
-    elements = [new_data.drawing_area.sankey.node_styles_dict[new_data.menu_configuration.ref_selected_style_node.current]]
-  }
-  else {
-    elements = selected_nodes
-  }
-
-  const value_label_visible = (elements[0]?.value_label_visible ?? default_value_label_visible)
-  const value_label_vert = (elements[0]?.value_label_vert ?? default_value_label_vert)
-  const value_label_vert_shift = (elements[0]?.value_label_vert_shift ?? default_value_label_vert_shift)
-  const value_label_horiz = (elements[0]?.value_label_horiz ?? default_value_label_horiz)
-  const value_label_horiz_shift = (elements[0]?.value_label_horiz_shift ?? default_value_label_horiz_shift)
-  const value_label_font_size = (elements[0]?.value_label_font_size ?? default_label_font_size)
-
-
-  // Node to ConfigMenuNumberInput state variable
-  const number_of_input = 3
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-  ref_set_number_inputs[0].current(String(value_label_font_size))
-  ref_set_number_inputs[1].current(String(value_label_horiz_shift))
-  ref_set_number_inputs[2].current(String(value_label_vert_shift))
-
-  /**
-   *
-   * function that go throught all Type_GenericNodeElement of an array & check if they're all equals
-   * (to the first )
-   *
-   * @param {Type_GenericNodeElement} curr
-   * @return {*}
-   */
-  const check_indeterminate = (curr: Type_GenericNodeElementOSP,) => {
-    return (selected_nodes[0].isEqual(curr))
-  }
-  const is_indeterminated = !selected_nodes.every(check_indeterminate)
-
-  /**
-   * Function used to reset menu UI
-   */
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    if (menu_for_style) {
-      // Update menus for node's apparence in case we use this for style
-      new_data.menu_configuration.updateComponentRelatedToNodesStyles()
-      // Redraw all visible nodes if we modifie node style
-      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-    }
-    // And update this menu also
-    setCount(a => a + 1)
-  }
-
-  return <Box layerStyle='menuconfigpanel_grid' >
-
-    <Box as='span' layerStyle='menuconfigpanel_part_title_1' >
-      <Checkbox
-        variant='menuconfigpanel_part_title_1_checkbox'
-        icon={<CustomFaEyeCheckIcon />}
-        isIndeterminate={is_indeterminated}
-        isChecked={value_label_visible}
-        onChange={(evt) => {
-          elements.forEach(element => element.value_label_visible = evt.target.checked)
-          refreshThisAndUpdateRelatedComponents()
-        }}
-      >
-        <OSTooltip label={t('Noeud.labels.tooltips.vdv')}>
-          {t('Noeud.labels.vdv')}
-        </OSTooltip>
-      </Checkbox>
-    </Box>
-
-    {
-      value_label_visible ?
-        <Box layerStyle='menuconfigpanel_grid' >
-          <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-            {t('Menu.edition')}
-          </Box>
-
-          {/* Taille de la police du texte de la valeur */}
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name' >
-              Police
-            </Box>
-            <ConfigMenuNumberInput
-              ref_to_set_value={ref_set_number_inputs[0]}
-              default_value={value_label_font_size}
-              function_on_blur={(value) => {
-                elements.forEach(element =>
-                  element.value_label_font_size = (value ?? undefined))
-                refreshThisAndUpdateRelatedComponents()
-              }}
-              menu_for_style={menu_for_style}
-              minimum_value={0}
-              step={1}
-              stepper={true}
-              unit_text='pixels'
-            />
-          </Box>
-
-          {/* Position de l'affichage des données par rapport au noeud */}
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name' >
-              {t('Noeud.node_value.anchor')}
-            </Box>
-            <Box layerStyle='options_2cols' >
-              {/* Horizontale */}
-              <Box layerStyle='options_3cols' >
-                {/* A gauche */}
-                <OSTooltip label={t('Noeud.labels.tooltips.gauche_val')}>
-                  <Button
-                    variant={
-                      value_label_horiz === 'left' ?
-                        'menuconfigpanel_option_button_activated_left' :
-                        'menuconfigpanel_option_button_left'
-                    }
-                    paddingStart='0'
-                    paddingEnd='0'
-                    minWidth='0'
-                    onClick={() => {
-                      elements.forEach(element => element.value_label_horiz = 'left')
-                      refreshThisAndUpdateRelatedComponents()
-                    }}
-                  >
-                    <FaAlignRight />
-                  </Button>
-                </OSTooltip>
-
-                {/* Au milieu */}
-                <OSTooltip label={t('Noeud.labels.tooltips.Milieu_ph_val')}>
-                  <Button
-                    variant={
-                      value_label_horiz === 'middle' ?
-                        'menuconfigpanel_option_button_activated_center' :
-                        'menuconfigpanel_option_button_center'
-                    }
-                    paddingStart='0'
-                    paddingEnd='0'
-                    minWidth='0'
-                    onClick={() => {
-                      elements.forEach(element => element.value_label_horiz = 'middle')
-                      refreshThisAndUpdateRelatedComponents()
-                    }}
-                  >
-                    <FaAlignCenter />
-                  </Button>
-                </OSTooltip>
-
-                {/* A droite */}
-                <OSTooltip label={t('Noeud.labels.tooltips.droite_val')}>
-                  <Button
-                    variant={
-                      value_label_horiz === 'right' ?
-                        'menuconfigpanel_option_button_activated_right' :
-                        'menuconfigpanel_option_button_right'
-                    }
-                    paddingStart='0'
-                    paddingEnd='0'
-                    minWidth='0'
-                    onClick={() => {
-                      elements.forEach(element => element.value_label_horiz = 'right')
-                      refreshThisAndUpdateRelatedComponents()
-                    }}
-                  >
-                    <FaAlignLeft />
-                  </Button>
-                </OSTooltip>
-              </Box>
-
-              {/* Verticale */}
-              <Box layerStyle='options_3cols' >
-                {/* en haut */}
-                <OSTooltip label={t('Noeud.labels.tooltips.haut_val')}>
-                  <Button
-                    variant={
-                      value_label_vert === 'top' ?
-                        'menuconfigpanel_option_button_activated_left' :
-                        'menuconfigpanel_option_button_left'
-                    }
-                    paddingStart='0'
-                    paddingEnd='0'
-                    minWidth='0'
-                    onClick={() => {
-                      elements.forEach(element => element.value_label_vert = 'top')
-                      refreshThisAndUpdateRelatedComponents()
-                    }}
-                  >
-                    {svg_label_top}
-                  </Button>
-                </OSTooltip>
-
-                {/* Au milieu */}
-                <OSTooltip label={t('Noeud.labels.tooltips.Milieu_pv_val')}>
-                  <Button
-                    variant={
-                      value_label_vert === 'middle' ?
-                        'menuconfigpanel_option_button_activated_center' :
-                        'menuconfigpanel_option_button_center'
-                    }
-                    paddingStart='0'
-                    paddingEnd='0'
-                    minWidth='0'
-                    onClick={() => {
-                      elements.forEach(element => element.value_label_vert = 'middle')
-                      refreshThisAndUpdateRelatedComponents()
-                    }}
-                  >
-                    {svg_label_center}
-                  </Button>
-                </OSTooltip>
-
-                {/* En bas */}
-                <OSTooltip label={t('Noeud.labels.tooltips.Bas_val')}>
-                  <Button
-                    variant={
-                      value_label_vert === 'bottom' ?
-                        'menuconfigpanel_option_button_activated_right' :
-                        'menuconfigpanel_option_button_right'
-                    }
-                    minWidth='0'
-                    paddingStart='0'
-                    paddingEnd='0'
-                    onClick={() => {
-                      elements.forEach(element => element.value_label_vert = 'bottom')
-                      refreshThisAndUpdateRelatedComponents()
-                    }}
-                  >
-                    {svg_label_bottom}
-                  </Button>
-                </OSTooltip>
-              </Box>
-            </Box>
-            {/* {additional_menus.advanced_label_value_content} */}
-          </Box>
-          {/* Position de la valeur du noeud par rapport à l'ancre*/}
-          <OSTooltip label={t('Noeud.node_value.tooltips.anchor_dx')}>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name' >
-                {t('Noeud.node_value.anchor_dx')}
-                {(!menu_for_style) &&
-                  isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift') ?
-                  TooltipValueSurcharge('node_var', t) :
-                  <></>}
-              </Box>
-
-              <ConfigMenuNumberInput
-                ref_to_set_value={ref_set_number_inputs[1]}
-                default_value={value_label_horiz_shift}
-                function_on_blur={(value) => {
-                  elements.forEach(element =>
-                    element.value_label_horiz_shift = (value ?? undefined))
-                  refreshThisAndUpdateRelatedComponents()
-                }}
-                menu_for_style={menu_for_style}
-                step={1}
-                stepper={true}
-                unit_text='pixels'
-              />
-            </Box>
-          </OSTooltip>
-
-          {/* Position de la valeur du noeud par rapport à l'ancre*/}
-          <OSTooltip label={t('Noeud.node_value.tooltips.anchor_dy')}>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name' >
-                {t('Noeud.node_value.anchor_dy')}
-                {(!menu_for_style) &&
-                  isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
-                  TooltipValueSurcharge('node_var', t) :
-                  <></>}
-              </Box>
-
-              <ConfigMenuNumberInput
-                ref_to_set_value={ref_set_number_inputs[2]}
-                default_value={value_label_vert_shift}
-                function_on_blur={(value) => {
-                  elements.forEach(element =>
-                    element.value_label_vert_shift = (value ?? undefined))
-                  refreshThisAndUpdateRelatedComponents()
-                }}
-                menu_for_style={menu_for_style}
-                step={1}
-                stepper={true}
-                unit_text='pixels'
-              />
-            </Box>
-          </OSTooltip>
-        </Box> :
-        <></>
-    }
-  </Box>
-}
-
 export const ButtonNodeContextShowTagMenu: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
   const { t } = new_data
   const { ref_setter_show_menu_node_tags } = new_data.menu_configuration.dict_setter_show_dialog
@@ -854,6 +465,7 @@ export const ButtonNodeContextShowTagMenu: FunctionComponent<FCType_ButtonNodeCo
     {t('Menu.Etiquettes')}
     {icon_open_modal}
   </Button>
+
 }
 
 export const ButtonNodeContextShowTooltipMenu: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
@@ -879,35 +491,6 @@ export const ButtonNodeContextShowTooltipMenu: FunctionComponent<FCType_ButtonNo
   </Button>
 }
 
-export const ButtonNodeContextMaskValue: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
-  const { t } = new_data
-  const [, setCount] = useState(0)
-  const contextualised_node = new_data.drawing_area.node_contextualised
-  const contextualised_node_value_visible = contextualised_node !== undefined ? contextualised_node.value_label_visible : false
-
-  const selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list
-
-  const refreshThisAndToggleSaving = () => {
-    // Toogle saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // Refresh this menu
-    setCount(a => a + 1)
-  }
-
-  return <Button
-    variant='contextmenu_button'
-    onClick={() => {
-      selected_nodes.forEach(n => n.value_label_visible = !contextualised_node_value_visible)
-      refreshThisAndToggleSaving()
-    }}
-  >
-    {
-      contextualised_node_value_visible ?
-        t('Noeud.apparence.hide_value') :
-        t('Noeud.apparence.display_value')
-    }
-  </Button>
-}
 
 export const ButtonNodeContextStartAnimation: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
   const { t } = new_data

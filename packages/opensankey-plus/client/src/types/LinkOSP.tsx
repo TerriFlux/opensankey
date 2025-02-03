@@ -11,7 +11,7 @@
 import {
   Class_LinkAttribute,
   Class_LinkStyle
-} from '../deps/OpenSankey/types/Link'
+} from '../deps/OpenSankey/Elements/LinkAttributes'
 import {
   getBooleanFromJSON,
   Type_ElementPosition,
@@ -377,7 +377,7 @@ export class Class_LinkAttributeOSP extends Class_LinkAttribute {
  * Define style for links
  *
  * @export
- * @class Class_LinkStyle
+ * @class LinkAttributes
  * @extends {Class_LinkAttribute}
  */
 export class Class_LinkStyleOSP extends Class_LinkStyle {

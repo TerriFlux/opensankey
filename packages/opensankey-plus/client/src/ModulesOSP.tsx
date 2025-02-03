@@ -49,14 +49,11 @@ import {
   MenuPreferenceLabelsOSP
 } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLabels'
 import {
-  ButtonNodeContextMaskValue,
   ButtonNodeContextShowTagMenu,
   ButtonNodeContextShowTooltipMenu,
   ButtonNodeContextStartAnimation,
-  NodeBgLabel,
   NodeHyperLinkOSP,
-  NodeIconOSP,
-  NodeValue
+  NodeIconOSP
 } from './components/MenuConfigEdition/SankeyPlusNodes'
 
 import {
@@ -82,7 +79,6 @@ import {
   ButtonLinkContextShowTooltipMenu,
   MenuConfLinkApparenceDashedOSP,
   MenuConfLinkApparenceGradientOSP,
-  MenuConfLinkDataText,
   MenuConfLinkScientificPrecision
 } from './components/MenuConfigEdition/SankeyPlusLink'
 import {
@@ -227,29 +223,17 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus={new_data_plus}
     is_activated={new_data_plus.has_sankey_plus}
   />
-  additionalMenus.additional_node_label_layout_content.push(
-    (menu_for_style: boolean) => <NodeBgLabel
-      new_data={new_data_plus}
-      menu_for_style={menu_for_style}
-    />
-  )
 
-  additionalMenus.additional_node_apparence_content.push(
-    (menu_for_style: boolean) => <NodeValue
-      new_data={new_data_plus}
-      menu_for_style={menu_for_style}
-    />
-  )
+
   //Context node
   additionalMenus.context_node_order.push('drag_tag', 'drag_tooltip')
   additionalMenus.additional_context_node_element['drag_tag'] = <ButtonNodeContextShowTagMenu new_data={new_data_plus} />
   additionalMenus.additional_context_node_element['drag_tooltip'] = <ButtonNodeContextShowTooltipMenu new_data={new_data_plus} />
-  additionalMenus.additional_context_node_element['mask_value'] = <ButtonNodeContextMaskValue new_data={new_data_plus} />
   additionalMenus.additional_context_node_element['animate'] = <ButtonNodeContextStartAnimation new_data={new_data_plus} />
 
   // Get index of seprator in context node that come after masking node shape/label so we can then insert a button to mask value (OSP functionality)
   const idx_sep_3 = additionalMenus.context_node_order.indexOf('sep_3')
-  additionalMenus.context_node_order.splice(idx_sep_3, 0, 'mask_value', 'animate')
+  additionalMenus.context_node_order.splice(idx_sep_3, 0, 'animate')
 
   //Links
   additionalMenus.additional_menu_configuration_links['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
@@ -278,12 +262,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     menu_for_style={menu_for_style}
   />)
 
-  // Add config link data text value
-  additionalMenus.additional_data_element.push(
-    <MenuConfLinkDataText
-      new_data_plus={new_data_plus}
-    />
-  )
 
   additionalMenus.context_link_order.push('drag_tooltip')
   additionalMenus.additional_context_link_element['drag_tooltip'] = <ButtonLinkContextShowTooltipMenu new_data={new_data_plus} />
