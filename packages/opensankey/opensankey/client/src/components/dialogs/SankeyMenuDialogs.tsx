@@ -41,7 +41,7 @@ import {
   FCType_ApplySaveJSONDialog,
   FCType_ExcelModal
 } from '../../types/FunctionTypes'
-import { isPositionOverloaded } from '../../types/Node'
+import { isPositionOverloaded } from '../../Elements/Node'
 
 import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 
@@ -94,7 +94,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeImportStyle'].shape_visible = false
       node_styles_dict['NodeImportStyle'].shape_min_height = 40
       node_styles_dict['NodeImportStyle'].name_label_visible = false
-      node_styles_dict['NodeImportStyle'].value_label_visible = false
+      node_styles_dict['NodeImportStyle'].value_label_is_visible = false
       // node_styles_dict['NodeImportStyle'].value_label_horiz = 'middle'
       // node_styles_dict['NodeImportStyle'].value_label_vert = 'top'
 
@@ -102,7 +102,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeExportStyle'].shape_visible = false
       node_styles_dict['NodeExportStyle'].shape_min_height = 40
       node_styles_dict['NodeExportStyle'].name_label_visible = false
-      node_styles_dict['NodeExportStyle'].value_label_visible = false
+      node_styles_dict['NodeExportStyle'].value_label_is_visible = false
       // node_styles_dict['NodeExportStyle'].value_label_horiz = 'middle'
       // node_styles_dict['NodeExportStyle'].value_label_vert = 'bottom'
 
@@ -115,7 +115,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeImportStyle'].name_label_visible = true
       node_styles_dict['NodeImportStyle'].name_label_horiz = 'left'
       node_styles_dict['NodeImportStyle'].name_label_horiz_shift = -200
-      node_styles_dict['NodeImportStyle'].value_label_visible = true
+      node_styles_dict['NodeImportStyle'].value_label_is_visible = true
       node_styles_dict['NodeImportStyle'].value_label_horiz = 'left'
       node_styles_dict['NodeImportStyle'].value_label_vert = 'middle'
       node_styles_dict['NodeImportStyle'].value_label_horiz_shift = -10
@@ -126,7 +126,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeExportStyle'].name_label_visible = true
       node_styles_dict['NodeExportStyle'].name_label_horiz = 'right'
       node_styles_dict['NodeExportStyle'].name_label_horiz_shift = 200
-      node_styles_dict['NodeExportStyle'].value_label_visible = true
+      node_styles_dict['NodeExportStyle'].value_label_is_visible = true
       node_styles_dict['NodeExportStyle'].value_label_horiz = 'right'
       node_styles_dict['NodeExportStyle'].value_label_vert = 'middle'
       node_styles_dict['NodeExportStyle'].value_label_horiz_shift = 10

@@ -9,11 +9,11 @@ import {
   ClassAbstract_ProtoLevelTag,
   ClassAbstract_DrawingArea,
   ClassAbstract_Sankey
-} from './Abstract'
+} from '../types/Abstract'
 import {
   ClassAbstract_NodeElement,
   ClassAbstract_NodeDimension
-} from './AbstractNode'
+} from '../types/AbstractNode'
 
 // SPECIFIC TYPES ***********************************************************************
 

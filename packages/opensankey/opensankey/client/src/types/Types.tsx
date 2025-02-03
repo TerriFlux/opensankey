@@ -7,11 +7,13 @@
 import { ClassTemplate_ApplicationData } from './ApplicationData'
 import { ClassTemplate_DrawingArea } from './DrawingArea'
 import { ClassTemplate_Sankey } from './Sankey'
-import { Class_LinkAttribute, ClassTemplate_LinkElement, Class_LinkStyle } from './Link'
-import { ClassTemplate_NodeElement, Class_NodeStyle } from './Node'
-import { Class_MenuConfig } from './MenuConfig'
-import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from './Utils'
-import { ClassTemplate_ZoneSelection } from './SelectionZone'
+import { ClassTemplate_LinkElement } from'../Elements/Link'
+import { Class_LinkAttribute, Class_LinkStyle } from'../Elements/LinkAttributes'
+import { ClassTemplate_NodeElement } from'../Elements/Node'
+import { Class_NodeStyle } from '../Elements/NodeAttributes'
+import { Class_MenuConfig } from '../types/MenuConfig'
+import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from '../types/Utils'
+import { ClassTemplate_ZoneSelection } from'../Elements/SelectionZone'
 
 // STANDARD TYPES FOR OPENSANKEY AND MORE *********************************************************
 
