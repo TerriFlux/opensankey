@@ -9,7 +9,7 @@ import * as d3 from 'd3'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 
 // Local imports
-import { Type_MacroTagGroup } from './Utils'
+import { Type_MacroTagGroup } from '../types/Utils'
 
 // SPECIFIC TYPES **********************************************************************/
 

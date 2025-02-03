@@ -19,8 +19,8 @@ import type {
 import {
   OSTooltip
 } from '../../types/Utils'
-import { default_value_label_unit } from '../../types/Link'
-import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+import { default_link_value_label_unit } from '../../Elements/LinkAttributes'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 
 /*************************************************************************************************/
 
@@ -53,6 +53,8 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
   // Refs used to trigger refreshing of number & text inputs
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+
   const updateInputsValues = () => {
     // Recreate a updated_selected_links list in the function because it can be called before re-rendering <MenuConfigurationLinksData/>
     // so selected_links can have the list of previous selected links wich can lead to incorrect links value
@@ -63,7 +65,12 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
     // Update input data value
     ref_set_data_value_input.current(String(value_update?.data_value??''))
+    // Update input text value
+    ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
+
   }
+
+
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
@@ -169,7 +176,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
           unit_text={
             (
               selected_links[0]?.value_label_unit_visible &&
-              selected_links[0]?.value_label_unit !== default_value_label_unit
+              selected_links[0]?.value_label_unit !== default_link_value_label_unit
             ) ?
               selected_links[0]?.value_label_unit :
               undefined
@@ -178,9 +185,27 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       </Box>
     </OSTooltip>
 
-
-    {additional_data_element.map((content, idx) => <React.Fragment key={idx}>{content}</React.Fragment>)}
-
+    <OSTooltip
+    label={t('Flux.data.tooltips.affichage')}
+  >
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name' >
+        {t('Flux.data.affichage')}
+      </Box>
+      <ConfigMenuTextInput
+        ref_to_set_value={ref_set_text_value_input}
+        function_get_value={() => { return value?.text_value }}
+        function_on_blur={(_) => {
+          // Update text for links
+          selected_links.forEach(link => {
+            link.text_value = (_ ?? '')
+          })
+          // Update this menu
+          refreshThisAndUpdateRelatedComponents()
+        }}
+      />
+    </Box>
+  </OSTooltip>
   </Box>
 
 
@@ -254,7 +279,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
     unit_text={
       (
         selected_links[0]?.value_label_unit_visible &&
-        selected_links[0]?.value_label_unit !== default_value_label_unit
+        selected_links[0]?.value_label_unit !== default_link_value_label_unit
       ) ?
         selected_links[0]?.value_label_unit :
         undefined
