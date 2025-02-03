@@ -16,11 +16,11 @@ import {
   ClassAbstract_DrawingArea,
   ClassAbstract_ProtoLevelTag,
   ClassAbstract_ProtoLevelTagGroup
-} from './Abstract'
-import { ClassTemplate_Element } from './Element'
-import { Class_LevelTagGroup } from './Tag'
-import { Class_NodeDimension } from './NodeDimension'
-import { Class_Tag, Class_TagGroup } from './Tag'
+} from '../types/Abstract'
+import { ClassTemplate_Element } from '../Elements/Element'
+import { Class_LevelTagGroup } from '../types/Tag'
+import { Class_NodeDimension } from '../Elements/NodeDimension'
+import { Class_Tag, Class_TagGroup } from '../types/Tag'
 
 type TypeAbstract_LinkElement = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>

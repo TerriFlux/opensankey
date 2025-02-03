@@ -23,30 +23,30 @@ import {
   getStringFromJSON,
   getStringOrUndefinedFromJSON,
   list_palette_color
-} from './Utils'
+} from '../types/Utils'
 import {
   ClassTemplate_Sankey
 } from './Sankey'
 import {
   ClassTemplate_NodeElement,
   sortNodesElements
-} from './Node'
+} from'../Elements/Node'
 import {
   ClassTemplate_GhostLinkElement,
   ClassTemplate_LinkElement,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
-} from './Link'
-import { ClassTemplate_Legend } from './Legend'
-import { ClassTemplate_ZoneSelection } from './SelectionZone'
-import { convert_data_legacy } from './Legacy'
+} from'../Elements/Link'
+import { ClassTemplate_Legend } from '../Elements/Legend'
+import { ClassTemplate_ZoneSelection } from'../Elements/SelectionZone'
+import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 import {
   ClassAbstract_DrawingArea,
   ClassAbstract_ApplicationData,
   ClassAbstract_Sankey,
-} from './Abstract'
-import { ClassTemplate_ProtoElement } from './Element'
-import { ClassAbstract_NodeElement } from './AbstractNode'
+} from '../types/Abstract'
+import { ClassTemplate_ProtoElement } from '../Elements/Element'
+import { ClassAbstract_NodeElement } from '../types/AbstractNode'
 import { Class_ApplicationData } from './Types'
 
 declare const window: Window &
@@ -484,6 +484,14 @@ export abstract class ClassTemplate_DrawingArea
     ) {
       convert_data_legacy(json_object) // FIXME
     }
+
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.91)
+    ) {
+      convert_pre_v_0_91(json_object)
+    }
+
 
     // Set node label separator attribute from json
     this.application_data.node_label_separator = getStringFromJSON(json_object, 'node_label_separator', ' - ')

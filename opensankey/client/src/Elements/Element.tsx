@@ -11,11 +11,11 @@ import { MouseEvent } from 'react'
 // Local types imports
 import type {
   Class_MenuConfig
-} from './MenuConfig'
+} from '../types/MenuConfig'
 import type {
   ClassAbstract_DrawingArea,
   ClassAbstract_Sankey
-} from './Abstract'
+} from '../types/Abstract'
 
 // LOcal constants
 import {
@@ -29,7 +29,7 @@ import {
   Type_Position,
   getStringOrUndefinedFromJSON,
   randomId
-} from './Utils'
+} from '../types/Utils'
 
 
 // CLASS PROTO ELEMENT ******************************************************************

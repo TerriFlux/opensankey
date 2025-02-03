@@ -10,9 +10,9 @@ import {
   ClassAbstract_DrawingArea,
   ClassAbstract_Sankey,
   ClassAbstract_ProtoTag
-} from './Abstract'
-import { ClassAbstract_NodeElement } from './AbstractNode'
-import { ClassTemplate_ProtoElement } from './Element'
+} from '../types/Abstract'
+import { ClassAbstract_NodeElement } from '../types/AbstractNode'
+import { ClassTemplate_ProtoElement } from '../Elements/Element'
 
 
 type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
