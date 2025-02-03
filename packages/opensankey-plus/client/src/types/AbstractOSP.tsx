@@ -10,9 +10,9 @@ import * as d3 from 'd3'
 
 import { ClassTemplate_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { ClassTemplate_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
-import { ClassTemplate_Element } from '../deps/OpenSankey/types/Element'
-import { ClassTemplate_LinkElement } from '../deps/OpenSankey/types/Link'
-import { ClassTemplate_NodeElement } from '../deps/OpenSankey/types/Node'
+import { ClassTemplate_Element } from '../deps/OpenSankey/Elements/Element'
+import { ClassTemplate_LinkElement } from '../deps/OpenSankey/Elements/Link'
+import { ClassTemplate_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { ClassTemplate_Sankey } from '../deps/OpenSankey/types/Sankey'
 
 import { Class_MenuConfigOSP } from './MenuConfigOSP'

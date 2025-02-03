@@ -27,9 +27,6 @@ import {
   Type_GenericLinkElementOSP,
   Type_GenericNodeElementOSP
 } from './TypesOSP'
-import {
-  default_label_background
-} from '../components/MenuConfigEdition/SankeyPlusNodes'
 
 // OpenSankey imports
 import {
@@ -39,11 +36,11 @@ import {
   getStringFromJSON,
   getStringOrUndefinedFromJSON
 } from '../deps/OpenSankey/types/Utils'
+import { default_shape_color } from '../deps/OpenSankey/Elements/NodeAttributes'
 import {
   Class_NodeAttribute,
-  Class_NodeStyle,
-  default_shape_color
-} from '../deps/OpenSankey/types/Node'
+  Class_NodeStyle
+} from '../deps/OpenSankey/Elements/NodeAttributes'
 
 // SPECIFIC FUNCTIONS *******************************************************************
 
@@ -292,14 +289,6 @@ export abstract class ClassTemplate_NodeElementOSP
   // New --------------------------------------------------------------------------------
 
   /**
-   * Draw background on node name label
-   * @memberof ClassTemplate_NodeElementOSP
-   */
-  public drawNodeLabelBg() {
-    this._process_or_bypass(() => this._drawNameLabelBackground())
-  }
-
-  /**
    * Draw foreign object on node
    * @memberof ClassTemplate_NodeElementOSP
    */
@@ -411,43 +400,8 @@ export abstract class ClassTemplate_NodeElementOSP
     this._drawFO()
   }
 
-  protected _drawNameLabel() {
-    super._drawNameLabel()
-    this._drawNameLabelBackground()
-  }
 
-  /**
-   * Draw a background to the name label to highlight the name label
-   * @private
-   * @memberof ClassTemplate_NodeElementOSP
-   */
-  protected _drawNameLabelBackground() {
-    this.d3_selection_g_name_label?.select('.name_label_background').remove()
-    // Draw label BG if attr is at true but also if we display label
-    if (this.name_label_visible && this.name_label_background && this.d3_selection_g_name_label) {
 
-      // Get bounding box
-      const name_label_bounding_box = (this.d3_selection_g_name_label.select('.name_label_text').node() as SVGGElement)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 }
-
-      // Create svg element
-      this.d3_selection_g_name_label?.append('rect')
-        .attr('class', 'name_label_bg')
-        .classed('name_label', true)
-        .classed('name_label_background', true)
-        .attr('id', 'name_label_background_' + this.id)
-        .attr('x', (name_label_bounding_box.x-5)+'px')
-        .attr('y', name_label_bounding_box.y+'px')
-        .attr('width', (name_label_bounding_box.width+10)+'px')
-        .attr('height', name_label_bounding_box.height+'px')
-        .attr('fill', 'white')
-        .attr('fill-opacity', 0.55)
-        .attr('rx', 4)
-        .style('stroke', 'none')
-
-      // Lower label to have it on background
-      this.d3_selection_g_name_label?.select('.name_label_background').lower()
-    }
-  }
 
   protected _drawFO() {
     if(!this.d3_selection)
@@ -682,27 +636,7 @@ export abstract class ClassTemplate_NodeElementOSP
     return default_shape_color
   }
 
-  /**
-   * Getter of attribute name_label_background, get it either from display attribute if it exist else use value from related node style
-   * @memberof ClassTemplate_NodeElement
-   */
-  public get name_label_background() {
-    if (this._display.attributes.name_label_background !== undefined) {
-      return this._display.attributes.name_label_background
-    } else if (this._display.style.name_label_background !== undefined) {
-      return this._display.style.name_label_background
-    }
-    return default_label_background
-  }
-
-  /**
-   * Set name_label_background value to node display attribute
-   * @memberof ClassTemplate_NodeElement
-   */
-  public set name_label_background(_: boolean) {
-    this._display.attributes.name_label_background = _
-    this.drawNodeLabelBg()
-  }
+  
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************
@@ -717,36 +651,16 @@ export class Class_NodeAttributeOSP extends Class_NodeAttribute {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  protected _name_label_background?: boolean | undefined
 
   // PUBLIC METHODES ====================================================================
-
-  public toJSON() {
-    const json_object = super.toJSON()
-    if (this._name_label_background !== undefined) json_object['label_background'] = this._name_label_background
-
-    return json_object
-  }
-
-  public fromJSON(json_local_object: Type_JSON) {
-    super.fromJSON(json_local_object)
-    if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_label_background)
-  }
-
-  public copyFrom(element: Class_NodeAttributeOSP) {
-    super.copyFrom(element)
-    this._name_label_background = element._name_label_background
-  }
 
   // PROTECTED METHODS ==================================================================
 
   // GETTERS ============================================================================
 
-  public get name_label_background(): boolean | undefined { return this._name_label_background }
 
   // SETTERS ============================================================================
 
-  public set name_label_background(_: boolean | undefined) { this._name_label_background = _; this.update() }
 }
 
 // CLASS NODE STYLE *********************************************************************
@@ -762,7 +676,6 @@ export class Class_NodeStyleOSP extends Class_NodeStyle {
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  private _name_label_background: boolean
 
   // CONSTRUCTOR ========================================================================
 
@@ -774,33 +687,15 @@ export class Class_NodeStyleOSP extends Class_NodeStyle {
     // Instantiate super class
     super(id, name, is_deletable)
     // Update new attributes
-    this._name_label_background = default_label_background
   }
 
   // PUBLIC METHODS ======================================================================
 
-  public toJSON() {
-    const json_object = super.toJSON()
-    if (this._name_label_background !== undefined) json_object['label_background'] = this._name_label_background
 
-    return json_object
-  }
-
-  public fromJSON(json_local_object: Type_JSON) {
-    super.fromJSON(json_local_object)
-    if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_label_background)
-  }
-
-  public copyFrom(element: Class_NodeStyleOSP) {
-    super.copyFrom(element)
-    this._name_label_background = element._name_label_background
-  }
 
   // PROTECTED METHODS ==================================================================
 
   // PRIVATE METHODS ====================================================================
 
   // GETTERS ============================================================================
-  public get name_label_background(): boolean { return this._name_label_background }
-  public set name_label_background(value: boolean) { this._name_label_background = value }
 }
