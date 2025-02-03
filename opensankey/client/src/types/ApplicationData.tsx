@@ -764,18 +764,22 @@ export abstract class ClassTemplate_ApplicationData
       if (evt.key == 'ArrowUp') {
         app_ref.drawing_area.selected_nodes_list.forEach(node => {
           node.position_y -= app_ref.drawing_area.grid_size
+          node.draw()
         })
       } else if (evt.key == 'ArrowDown') {
         app_ref.drawing_area.selected_nodes_list.forEach(node => {
           node.position_y += app_ref.drawing_area.grid_size
+          node.draw()
         })
       } else if (evt.key == 'ArrowLeft') {
         app_ref.drawing_area.selected_nodes_list.forEach(node => {
           node.position_x -= app_ref.drawing_area.grid_size
+          node.draw()
         })
       } else if (evt.key == 'ArrowRight') {
         app_ref.drawing_area.selected_nodes_list.forEach(node => {
           node.position_x += app_ref.drawing_area.grid_size
+          node.draw()
         })
       }
       // Update drawing area size so none of elements are outside the DA
