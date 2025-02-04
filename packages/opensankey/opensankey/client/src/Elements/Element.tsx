@@ -32,6 +32,8 @@ import {
 } from '../types/Utils'
 
 
+type Type_AnyProtoElement = ClassTemplate_ProtoElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+
 // CLASS PROTO ELEMENT ******************************************************************
 
 /**
@@ -424,6 +426,22 @@ export abstract class ClassTemplate_ProtoElement
   protected abstract drawAsSelected(): void
 
   /**
+   * History saving
+   * @param f
+   */
+  protected saveUndo(f: (_: Type_AnyProtoElement) => void) {
+    this.drawing_area.application_data.history.saveUndo(() => {f(this)})
+  }
+
+  /**
+  * History saving
+  * @param f
+  */
+  protected saveRedo(f: (_: Type_AnyProtoElement) => void) {
+    this.drawing_area.application_data.history.saveRedo(() => {f(this)})
+  }
+
+  /**
    * Deal with simple left Mouse Button (LMB) click on given element
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
@@ -753,7 +771,6 @@ export abstract class ClassTemplate_Element
       'transform',
       'translate(' + this.position_x + ', ' + this.position_y + ')')
   }
-
 
   // GETTERS / SETTERS ==================================================================
 
