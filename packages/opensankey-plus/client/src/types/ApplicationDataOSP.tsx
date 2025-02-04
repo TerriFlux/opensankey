@@ -303,16 +303,16 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * @return {*}
    * @memberof ClassTemplate_ApplicationDataOSP
    */
-  protected keyboardEventProcessing(
+  protected _keyboardEventProcessing(
     evt: KeyboardEvent,
     app_ref: ClassTemplate_ApplicationDataOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
   ) {
     // Apply first default OS key processing
-    super.keyboardEventProcessing(evt, app_ref)
+    super._keyboardEventProcessing(evt, app_ref)
 
     // Events booleans ----------------------------------------------------------------
 
-    const evtOnDrawingArea = this.isDrawingAreaActive() // Avoid using hotkeys in text-inputs
+    const evtOnDrawingArea = this._isDrawingAreaActive() // Avoid using hotkeys in text-inputs
     const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
     const evtKeyF7 = (evt.key === 'F7')
     const evtKeyF8 = (evt.key === 'F8')
@@ -399,8 +399,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
   // SPECIFIC FUNCTIONS ******************************************************************/
 
-  protected override isDrawingAreaActive() {
-    const superVal = super.isDrawingAreaActive()
+  protected override _isDrawingAreaActive() {
+    const superVal = super._isDrawingAreaActive()
     const inputs = ['ql-editor']
     if (
       document.activeElement &&
