@@ -98,7 +98,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   const refreshThisAndToggleSaving = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    new_data.ref_to_spreadsheet.current()
+    new_data.menu_configuration.ref_to_spreadsheet.current()
     // Refresh this menu
     refreshThis.toggle()
   }
