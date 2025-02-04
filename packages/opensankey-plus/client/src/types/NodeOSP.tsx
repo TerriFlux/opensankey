@@ -408,7 +408,9 @@ export abstract class ClassTemplate_NodeElementOSP
       return
 
     this.d3_selection?.select('.node_fo').remove()
-
+    if (!this.has_FO) {
+      return
+    }
     this.d3_selection_g_FO_illustration=this.d3_selection?.append('foreignObject')
       .attr('id', this.id + '_fo')
       .attr('class', 'node_fo')
@@ -421,6 +423,7 @@ export abstract class ClassTemplate_NodeElementOSP
   }
 
   protected _drawIllustration() {
+    this.d3_selection?.select('.illustration').remove()
     if (this._is_image) {
       this._drawIllustrationImage()
     }
@@ -430,6 +433,7 @@ export abstract class ClassTemplate_NodeElementOSP
   }
 
   protected _drawIllustrationImage() {
+
     if(!this.d3_selection)
       return
     this.d3_selection_g_image= this.d3_selection?.append('image')
