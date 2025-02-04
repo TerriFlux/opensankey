@@ -2057,6 +2057,24 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
+  // History saving ----------------------------------------------------------------------
+
+  /**
+   * History saving
+   * @param f
+   */
+  protected saveUndo(f: (_: Type_AnyNodeElement) => void) {
+    this.drawing_area.application_data.history.saveUndo(() => {f(this)})
+  }
+
+  /**
+  * History saving
+  * @param f
+  */
+  protected saveRedo(f: (_: Type_AnyNodeElement) => void) {
+    this.drawing_area.application_data.history.saveRedo(() => {f(this)})
+  }
+
   // Events methods ---------------------------------------------------------------------
 
   /**
@@ -2120,6 +2138,14 @@ export abstract class ClassTemplate_NodeElement
     if (event.sourceEvent.shiftKey) {
       return
     }
+    // Memorize for undo
+    const old_x = this._display.position.x
+    const old_y = this._display.position.y
+    // Undo function
+    function undo(_: Type_AnyNodeElement) {
+      _.setPosXY(old_x, old_y)
+    }
+    this.saveUndo(undo)
     this._drag = true
   }
 
@@ -2176,13 +2202,21 @@ export abstract class ClassTemplate_NodeElement
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Apply parent behavior first
     super.eventMouseDragEnd(event)
-
     // Move all elements so none of them are outside the DA
     this.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
     this.drawing_area.computeParametricV()
     this.drawing_area.checkAndUpdateAreaSize()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // End of drag
     this._drag = false
+    // Memorize for undo
+    const new_x = this._display.position.x
+    const new_y = this._display.position.y
+    // Undo function
+    function redo(_: Type_AnyNodeElement) {
+      _.setPosXY(new_x, new_y)
+    }
+    this.saveRedo(redo)
   }
 
   /**

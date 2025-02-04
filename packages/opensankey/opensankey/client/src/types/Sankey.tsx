@@ -811,7 +811,6 @@ export abstract class ClassTemplate_Sankey
       )
     }
 
-
     // First read styles
     if (json_object['style_node'] !== undefined) {
       // Set node styles from json data
@@ -839,6 +838,7 @@ export abstract class ClassTemplate_Sankey
           this._link_styles[style_id] = new_style
         })
     }
+
     // Then read tag groups
     let json_entry: string = 'levelTags'
     if (json_object[json_entry] !== undefined) {
@@ -936,11 +936,12 @@ export abstract class ClassTemplate_Sankey
     }
 
     // Then read links
-    Object.entries(json_object['links'])
+    const json_link_object = getJSONFromJSON(json_object, 'links', {})
+    Object.entries(json_link_object)
       .forEach(([_, link_json]) => {
         // Get related nodes id
-        let source_node_id = getStringOrUndefinedFromJSON(link_json, 'idSource')
-        let target_node_id = getStringOrUndefinedFromJSON(link_json, 'idTarget')
+        let source_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idSource')
+        let target_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idTarget')
         if (source_node_id && target_node_id) {
           // Get or create related nodes
           source_node_id = matching_nodes_id[source_node_id] ?? source_node_id

@@ -5,6 +5,7 @@ import {
   SelectionMode, DefaultCellTypes, Cell, Compatible, CellLocation
 } from '@silevis/reactgrid' 
 import '@silevis/reactgrid/styles.css'
+
 import { Type_GenericApplicationData, Type_GenericDrawingArea, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
 import { parseLocaleNumber } from '../../types/Utils'
 import { ClassTemplate_Sankey } from '../../types/Sankey'
@@ -62,7 +63,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   const synchronizeSpreadSheetWithSankey = () => setSpreadSheetFlux(getFluxFromSankey())
 
   // Provide a reference to update the spreadsheet externally
-  new_data.ref_to_spreadsheet.current = () => {
+  new_data.menu_configuration.ref_to_spreadsheet.current = () => {
     synchronizeSpreadSheetWithSankey()
   }
 
