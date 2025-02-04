@@ -64,7 +64,12 @@ const default_vertical_spacing = 50
 const default_scale = 50
 const default_DA_marging = 50
 
-type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+// CONSTANTS ****************************************************************************
+
+type Type_AnyLinkElement = ClassTemplate_LinkElement<Type_AnyDrawingArea, Type_AnySankey, Type_AnyNodeElement>
+type Type_AnyNodeElement = ClassTemplate_NodeElement<Type_AnyDrawingArea, Type_AnySankey, Type_AnyLinkElement>
+type Type_AnySankey = ClassTemplate_Sankey<Type_AnyDrawingArea, Type_AnyNodeElement, Type_AnyLinkElement>
+type Type_AnyDrawingArea = ClassTemplate_DrawingArea<Type_AnySankey, Type_AnyNodeElement, Type_AnyLinkElement>
 
 // CLASS DRAWING AREA *******************************************************************
 /**
@@ -555,8 +560,7 @@ export abstract class ClassTemplate_DrawingArea
     this.setEventsListeners()
 
     // Unset saving indicator
-    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true);
-    (this.application_data as Class_ApplicationData).ref_to_spreadsheet.current()
+    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   /**
@@ -989,8 +993,44 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public deleteSelection() {
+    // Save undo --------------------------------------
+    // --- Init
+    const json_hist_nodes: {[_: string]: Type_JSON} = {}
+    const json_hist_links: {[_: string]: Type_JSON} = {}
+    // --- Selected nodes
+    this.selected_nodes_list
+      .forEach(node => {
+        json_hist_nodes[node.id] = node.toJSON()
+        node.input_links_list.forEach(link => json_hist_links[link.id] = link.toJSON())
+        node.output_links_list.forEach(link => json_hist_links[link.id] = link.toJSON())
+      })
+    // --- Selected links
+    this.selected_links_list.forEach(link => json_hist_links[link.id] = link.toJSON())
+    // --- Undo function
+    function undo(_: Type_AnyDrawingArea) {
+      const json_hist: Type_JSON = {
+        'nodes': json_hist_nodes,
+        'links': json_hist_links
+      }
+      _.sankey.fromJSON(json_hist)
+      _.sankey.draw()
+    }
+    this.saveUndo(undo)
+    // End Save undo -----------------------------------
+
     this.deleteSelectedNodes()
     this.deleteSelectedLinks()
+
+    // Save Redo ---------------------------------------
+    // -- Redo function
+    function redo(_: Type_AnyDrawingArea) {
+      Object.keys(json_hist_links)
+        .forEach(link_id => _.deleteLink(_.sankey.links_dict[link_id]))
+      Object.keys(json_hist_nodes)
+        .forEach(node_id => _.deleteNode(_.sankey.nodes_dict[node_id]))
+    }
+    this.saveRedo(redo)
+    // End Save Redo -----------------------------------
   }
 
   /**
@@ -1789,7 +1829,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public computeParametricV() {
-    const columns: { [_: number]: TypeAbstract_NodeElement[]}  = {}
+    const columns: { [_: number]: Type_AnyNodeElement[]}  = {}
     this.sankey.visible_nodes_list.forEach(n => {
       if (n.position_type === 'relative') {
         return
@@ -1830,7 +1870,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public apply_v_agregate(
-    node:TypeAbstract_NodeElement
+    node:Type_AnyNodeElement
   ) {
     let agregated_nodes : Type_GenericNodeElement[] = []
     this.sankey.level_taggs_list.forEach(tagGroup => {
@@ -1860,7 +1900,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public apply_v_desagregate(
-    node:TypeAbstract_NodeElement,
+    node:Type_AnyNodeElement,
     current_v:number
   ) {
     if (node.display.position.v == -1) {
@@ -1995,6 +2035,22 @@ export abstract class ClassTemplate_DrawingArea
       .style('stroke-width', 5)
       .style('stroke', default_black_color)
     this.drawCursor()
+  }
+
+  /**
+   * History saving
+   * @param f
+   */
+  protected saveUndo(f: (_: Type_AnyDrawingArea) => void) {
+    this.application_data.history.saveUndo(() => {f(this)})
+  }
+
+  /**
+  * History saving
+  * @param f
+  */
+  protected saveRedo(f: (_: Type_AnyDrawingArea) => void) {
+    this.application_data.history.saveRedo(() => {f(this)})
   }
 
   /**
@@ -2350,7 +2406,7 @@ export abstract class ClassTemplate_DrawingArea
         target.setPosXY(
           mouse_position[0] - (target.getShapeWidthToUse() / 2),
           mouse_position[1] - (target.getShapeHeightToUse() / 2))
-          
+
         this.checkAndUpdateAreaSize()
       }
     } else if (this.isInSelectionMode()) {
@@ -2442,6 +2498,7 @@ export abstract class ClassTemplate_DrawingArea
   // GETTERS / SETTERS ==================================================================
 
   // Mode
+
   public isInSelectionMode() { return this._mode === 'selection' }
   protected setSelectionMode() { this._mode = 'selection'; this.drawCursor() }
   public isInEditionMode() { return this._mode === 'edition' }

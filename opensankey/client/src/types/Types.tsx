@@ -93,9 +93,12 @@ export class Class_ApplicationData
     Class_DrawingArea, Class_Sankey, Class_NodeElement, Class_LinkElement
   > {
 
+  // PUBLIC METHODS ====================================================================
+
   public createNewMenuConfiguration(): Class_MenuConfig {
     return new Class_MenuConfig()
   }
+
   public createNewDrawingArea(id?: string): Class_DrawingArea {
     const drawing_area = new Class_DrawingArea(
       this,
@@ -104,6 +107,7 @@ export class Class_ApplicationData
     return drawing_area
   }
 }
+
 
 // DRAWING AREA ===================================================================================
 

@@ -28,13 +28,19 @@ export abstract class ClassAbstract_ApplicationData {
   public abstract version: string
   // Mandatory getters
   public abstract get t(): TFunction
+  public abstract get history(): ClassAbstract_ApplicationHistory
   public abstract get menu_configuration(): Class_MenuConfig
   public abstract get node_label_separator(): string
-  public abstract set node_label_separator(_:string)
-  public abstract get node_label_separator_part() : 'before' | 'after'
-  public abstract set node_label_separator_part(_:'before' | 'after')
-  public abstract set language(_:string| undefined)
-  public abstract get language():string| undefined
+  public abstract set node_label_separator(_: string)
+  public abstract get node_label_separator_part(): 'before' | 'after'
+  public abstract set node_label_separator_part(_: 'before' | 'after')
+  public abstract set language(_: string | undefined)
+  public abstract get language(): string | undefined
+}
+
+export abstract class ClassAbstract_ApplicationHistory {
+  public abstract saveUndo(f: () => void): void
+  public abstract saveRedo(f: () => void): void
 }
 
 export abstract class ClassAbstract_DrawingArea {
@@ -63,7 +69,7 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract draw(): void
   public abstract orderElements(): void
   public abstract computeParametricV(): void
-  public abstract getNavBarHeight():number
+  public abstract getNavBarHeight(): number
   // Mandatory getters
   public abstract get sankey(): ClassAbstract_Sankey
   public abstract get legend(): ClassTemplate_Legend<Type_GenericDrawingArea, Type_GenericSankey>
