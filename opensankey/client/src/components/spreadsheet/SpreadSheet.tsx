@@ -122,13 +122,15 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     })
 
     // Parse the clipboard text into rows and columns
-    return text.split('\n').map((line) =>
+    const lines = text.split('\n')
+    const new_lines =  lines.map((line) =>
       line.split('\t').map((textValue) => ({
         type: 'text',
         text: textValue,
         value: parseLocaleNumber(textValue),
       }))
     )
+    return new_lines
   }
 
   // Render the ReactGrid component
@@ -324,18 +326,18 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
                 if (flux.value) {
                   flux.value = +flux.value
                 }
-                if (!name2id[source_name] || !name2id[target_name]) {
+                //if (!name2id[source_name] || !name2id[target_name]) {
                   addLink(flux)
                   redraw = true
-                } else {
-                  const sourceNode = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
-                  const targetNode = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
-                  const l = new_data.drawing_area.sankey.links_dict[name2id[defaultLinkId(sourceNode, targetNode)]]
-                  if (l && flux.value) {
-                    l.data_value = flux.value
-                  }
+                //} else {
+                  // const sourceNode = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
+                  // const targetNode = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
+                  // const l = new_data.drawing_area.sankey.links_dict[name2id[defaultLinkId(sourceNode, targetNode)]]
+                  // if (l && flux.value) {
+                  //   l.data_value = flux.value
+                  // }
                   synchronizeSpreadSheet = true
-                }
+                //}
               })
               if (redraw) {
                 new_data.drawing_area.computeAutoSankey(true)
