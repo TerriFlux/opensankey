@@ -29,6 +29,7 @@ import { DataSuiteType } from './LegacyType'
 
 import { Type_SaveDiagramOptions } from '../components/dialogs/types/SankeyPersistenceTypes'
 import { JSONtoExcel, retrieveExcelResults } from '../components/dialogs/SankeyPersistence'
+import { Class_ApplicationHistory } from './ApplicationHistory'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -86,12 +87,11 @@ export abstract class ClassTemplate_ApplicationData
 
   // Attributes to transfer between sankeys
   public data_var_to_update: MutableRefObject<string[]> = React.useRef([])
-  public ref_to_spreadsheet: MutableRefObject<(() => void)> = useRef(() => null)
 
   // PROTECTED ATTRIBUTES ==============================================================
 
   /**
-   *Drawing area
+   * Drawing area
    *
    * @protected
    * @type {ClassTemplate_DrawingArea}
@@ -100,7 +100,16 @@ export abstract class ClassTemplate_ApplicationData
   protected _drawing_area: Type_GenericDrawingArea
 
   /**
-   *Configuration Menu
+   * History of all actions
+   *
+   * @protected
+   * @type {Class_ApplicationHistory}
+   * @memberof ClassTemplate_ApplicationData
+   */
+  protected _history: Class_ApplicationHistory
+
+  /**
+   * Configuration Menu
    *
    * @protected
    * @type {Class_MenuConfig}
@@ -118,51 +127,158 @@ export abstract class ClassTemplate_ApplicationData
 
   /**
    * All possible attr to update in copyFrom
-   *
    * @protected
    * @type {string[]}
    * @memberof ClassTemplate_ApplicationData
    */
-  protected _transform_layout_all_attr: string[] = ['addNode', 'addFlux', 'removeNode', 'removeFlux', 'posNode', 'Values', 'attrNode', 'posFlux', 'attrFlux', 'tagNode', 'tagFlux', 'tagData', 'tagLevel', 'attrDrawingArea']
+  protected _transform_layout_all_attr: string[] = [
+    'addNode',
+    'addFlux',
+    'removeNode',
+    'removeFlux',
+    'posNode',
+    'Values',
+    'attrNode',
+    'posFlux',
+    'attrFlux',
+    'tagNode',
+    'tagFlux',
+    'tagData',
+    'tagLevel',
+    'attrDrawingArea']
 
-  // All item selectable in SankeyMenuPreference
+  /**
+   * All item selectable in SankeyMenuPreference
+   * @protected
+   * @type {string[]}
+   * @memberof ClassTemplate_ApplicationData
+   */
   protected _preference_menu_all_item: string[] = []
 
   // PRIVATE ATTRIBUTES =================================================================
-  // General attributes for the application
+
+  /**
+   * Traduction function
+   * @private
+   * @type {TFunction}
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _t: TFunction = useTranslation('translation', { useSuspense: false }).t //traductor
 
+  /**
+   * i18n saved
+   * @private
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _i18n = useTranslation('translation', { useSuspense: false }).i18n //traductor
 
-  private _logo_opensankey: string // path to logo
-  private _logo_terriflux: string  //path to logo_terriflux
-  private _logo_width: number = 100
-  private _app_name: string = 'SankeySuite'
-  private _url_prefix: string = '/opensankey/' // path for server call
+  /**
+   * Path to OpenSankey logo
+   * @private
+   * @type {string}
+   * @memberof ClassTemplate_ApplicationData
+   */
+  private _logo_opensankey: string
 
-  // Variable to modify node name label displayed,
-  // it can contain separator (special caracter) that split label between what we want tot display and what not
+  /**
+   * Path to Terriflux logo
+   * @private
+   * @type {string}
+   * @memberof ClassTemplate_ApplicationData
+   */
+  private _logo_terriflux: string
+
+  /**
+   * Width of logo
+   * @private
+   * @type {number}
+   * @memberof ClassTemplate_ApplicationData
+   */
+  private _logo_width: number = 100
+
+  /**
+   * Application name
+   * @private
+   * @type {string}
+   * @memberof ClassTemplate_ApplicationData
+   */
+  private _app_name: string = 'SankeySuite'
+
+  /**
+   * Path prefix for backend server requests
+   * @private
+   * @type {string}
+   * @memberof ClassTemplate_ApplicationData
+   */
+  private _url_prefix: string = '/opensankey/'
+
+  /**
+   * Variable to modify node name label displayed,
+   * it can contain separator (special caracter) that split label between what we want tot display and what not
+   * @private
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _node_label_separator = '-'
+
+  /**
+   * Variable to modify node name label displayed,
+   * it can contain separator (special caracter) that split label between what we want tot display and what not
+   * @private
+   * @type {('before' | 'after')}
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _node_label_separator_part: 'before' | 'after' = 'before'
 
-  // Varaible to save language selected
+  /**
+   * Varaible to save language selected
+   * @private
+   * @type {(string | undefined)}
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _language?: string | undefined
 
-
-  // Ref to checkbox of displayed menu in SankeyMenuPreference
+  /**
+   * Ref to checkbox of displayed menu in SankeyMenuPreference
+   * @private
+   * @type {{ [_: string]: RefObject<HTMLInputElement> }}
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
 
   // TODO ???
   private _processFunction: FType_ProcessFunctions
 
-  // Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
+  /**
+   * Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
+   * @private
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _toast = useToast()
+
+  /**
+   * Queue of waiting processes for toast
+   * @private
+   * @type {string[]}
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _toast_processes: string[] = []
+
+  /**
+   * Force bypassing waiting toast
+   * @private
+   * @type {boolean}
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _toast_bypass: boolean = toast_bypass
 
-  // Guided visite steps to show app
+  /**
+   * Guided visite steps to show app
+   * @private
+   * @type {StepType[]}
+   * @memberof ClassTemplate_ApplicationData
+   */
   private _steps: StepType[] = []
-  private _show_documentation : boolean = false
+  private _show_documentation: boolean = false
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -185,6 +301,8 @@ export abstract class ClassTemplate_ApplicationData
     this.options = options
     // Deals with UI menu updates / each modifications
     this._menu_configuration = this.createNewMenuConfiguration()
+    // Init history
+    this._history = new Class_ApplicationHistory(this._menu_configuration)
     // Contains all drawn objects
     this._drawing_area = this.createNewDrawingArea()
     // For published mode only
@@ -217,7 +335,7 @@ export abstract class ClassTemplate_ApplicationData
       }
     }
     // Link keyboard listener with app key down detection
-    document.onkeydown = this.keyboardEventListener(this)
+    document.onkeydown = this._keyboardEventListener(this)
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -422,7 +540,7 @@ export abstract class ClassTemplate_ApplicationData
     // Create json struct
     const json_object = {} as Type_JSON
     // App language
-    if(this._language!==undefined)
+    if (this._language !== undefined)
       json_object['language'] = this._language
     // Node label separator attribute
     json_object['node_label_separator'] = this._node_label_separator
@@ -489,7 +607,7 @@ export abstract class ClassTemplate_ApplicationData
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.arrangeTrade(false)
-    if(this._language!==undefined && i18next.language !==this.language)
+    if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 
     this.menu_configuration.updateAllMenuComponents()
@@ -527,19 +645,6 @@ export abstract class ClassTemplate_ApplicationData
         ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux',/*'tagLevel',*/'icon_catalog']
       )
     }
-  }
-
-  // SPECIFIC FUNCTIONS ******************************************************************/
-
-  protected isDrawingAreaActive() {
-    const inputs = ['input', 'textarea']
-    if (
-      document.activeElement &&
-      inputs.indexOf(document.activeElement.tagName.toLowerCase()) !== -1
-    ) {
-      return false
-    }
-    return true
   }
 
   // PUBLIC METHODS =====================================================================
@@ -606,99 +711,6 @@ export abstract class ClassTemplate_ApplicationData
       this._sendWaitingToast(funct, funct_id, intake)
   }
 
-  /**
-   * Allows to create a waiting toast for given function.
-   * Use a functions queue to ensure that all function that call always run in the calling order.
-   *
-   * @protected
-   * @param {() => void} funct
-   * @param {string} funct_id
-   * @param {Type_TextForToastPromise} [intake]
-   * @memberof ClassTemplate_ApplicationData
-   */
-  protected _sendWaitingToast(
-    funct: () => void,
-    funct_id: string,
-    intake?: Type_TextForToastPromise
-  ) {
-    // Check if process has to wait
-    if (this._toast_processes[0] !== funct_id) {
-      // Create a recursive timeout as delaying method to ensure that
-      // all functions are called with respect to their creation order
-      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
-    }
-    // Otherwise send
-    else {
-      this._toast.promise(
-        new Promise((resolve) => {
-          setTimeout(() => {
-            funct() // run
-            this._toast_processes.splice(0, 1) // pop process from processes list
-            resolve(200) // end
-          },
-          500) // Leave 500ms of delay in order to give enough time to load spinner component
-        }),
-        {
-          success: {
-            title: intake?.success?.title ?? this.t('toast.default.success.title'),
-            description: intake?.success?.desc ?? this.t('toast.default.success.desc'),
-            duration: default_toast_duration
-          },
-          loading: {
-            title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
-            description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
-            duration: default_toast_duration
-          },
-          error: {
-            title: intake?.error?.title ?? this.t('toast.default.error.title'),
-            description: intake?.error?.desc ?? this.t('toast.default.error.desc'),
-            duration: default_toast_duration
-          },
-        }
-      )
-
-    }
-
-  }
-
-  /**
-   * Some pre-process to correct html we will send to converter
-   * because there is some difference between what our code produce
-   * & what the converter wait to correctly produce an image
-   *
-   * @protected
-   * @return {*}
-   * @memberof Class_ApplicationData
-   */
-  protected _pre_process_export_svg() {
-    this.drawing_area.purgeSelection()
-    this.drawing_area.areaAutoFit()
-
-    const svg = this.drawing_area.d3_selection_zoom_area
-    const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
-    const scale_da = this.drawing_area.getZoomScale()
-
-    // Legend width (if present)
-    const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
-
-    svg_clone?.select('#g_drawing').attr('transform', 'translate(' + legend_w + ',0' + ') scale(' + scale_da + ')')
-    svg_clone?.select('#grp_legend .gg_legend').attr('transform', 'translate(0,0)')
-    svg_clone?.selectAll('input').remove()
-
-    // For some reason when attr 'dominant-baseline' is 'text-after-edge',
-    // at the export to image the text is shifted to the bottom by half the font size of the text.
-    // So before the convertion to image modify the svg clone to correct the error
-    svg_clone?.selectAll('.name_label_text').nodes().forEach(el => {
-      if (d3.select(el).attr('dominant-baseline') == 'text-after-edge') {
-        const fontSize = +d3.select(el).attr('font-size').replace('px', '')
-        const yPos = +d3.select(el).attr('y').replace('px', '')
-        d3.select(el).attr('y', yPos - (fontSize / 2))
-      }
-    })
-
-    return svg_clone
-  }
-
   public pre_process_export_svg() {
     const d3_select = this._pre_process_export_svg()
     const scale_da = this.drawing_area.getZoomScale()
@@ -714,31 +726,100 @@ export abstract class ClassTemplate_ApplicationData
     return svg_with_header
   }
 
-  // PRIVATE METHODS ====================================================================
+  public setSteps() {
+    this._steps.splice(0, this._steps.length) // Reset list
+    const steps = [
+      {
+        selector: '#g_drawing',
+        content: this.t('guide.drawing_area'),
+      },
+      {
+        selector: '.sideToolBar',
+        content: this.t('guide.toolbar'),
+        actionAfter: () => {
+          this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+          setTimeout(() => { }, 500)
+        }
+      },
+      {
+        selector: '.drawer_menu_config ',
+        content: this.t('guide.menu_config'),
+        actionAfter: () => this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+      },
+      {
+        selector: '.menutop_button_save_in_cache',
+        content: this.t('guide.save_in_cache'),
+      },
+      {
+        selector: '.TopMenuNav',
+        content: this.t('guide.nav_menu'),
+      },
+      {
+        selector: '.settings_button',
+        content: this.t('guide.settings_button'),
+        action: () => this.menu_configuration.refs_to_btn_toogle_top_menus['file'].current?.click(),
+      },
+      {
+        selector: '.tutorials_button',
+        content: this.t('guide.tutorials_button'),
+        action: () => this.menu_configuration.refs_to_btn_toogle_top_menus['aide'].current?.click(),
+      },
+    ]
+    steps.forEach(step => this._steps.push(step))
+  }
+
+  /**
+   * Generatric function used to save undo/redo of some basic attribute mutation
+   * (exemple : the color of the DA background),
+   * it generate types of key, value and func according to model passed has parameter
+   *
+   * @template TModel
+   * @template TKey
+   * @param {TModel} model
+   * @param {TKey} key
+   * @param {TModel[TKey]} value
+   * @param {(_:TModel[TKey])=>void} func
+   * @memberof ClassTemplate_ApplicationData
+   */
+  public setValueAndSaveHistory<TModel, TKey extends keyof TModel>(
+    model: TModel,
+    key: TKey,
+    value: TModel[TKey],
+    func:(_:TModel[TKey])=>void
+  ) {
+    const old_val = model[key]
+    this._history.saveUndo(() => { func(old_val)})
+    this._history.saveRedo(() => { func(value) })
+    func(value)
+  }
+  // PROTECTED METHODS ==================================================================
 
   /**
    * Function to create custom application behavior when we press a key,
    *
    * Note : even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
    *
-   * @private
+   * @protected
    * @param {ClassTemplate_ApplicationData} app_ref
    * @return {*}
    * @memberof ClassTemplate_ApplicationData
    */
-  private keyboardEventListener(
+  protected _keyboardEventListener(
     app_ref: ClassTemplate_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
   ) {
-    return (evt: KeyboardEvent) => { this.keyboardEventProcessing(evt, app_ref) }
+    return (evt: KeyboardEvent) => { this._keyboardEventProcessing(evt, app_ref) }
   }
 
-  // PROTECTED METHODS ==================================================================
-
-  protected keyboardEventProcessing(
+  /**
+   * Process all keyboard events on application
+   * @param evt
+   * @param app_ref
+   */
+  protected _keyboardEventProcessing(
     evt: KeyboardEvent,
     app_ref: ClassTemplate_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
     // Events booleans ----------------------------------------------------------------
-    const evtOnDrawingArea = this.isDrawingAreaActive() // Avoid using hotkeys in text-inputs
+    const evtOnDrawingArea = this._isDrawingAreaActive() // Avoid using hotkeys in text-inputs
     const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
     const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
     const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
@@ -806,7 +887,6 @@ export abstract class ClassTemplate_ApplicationData
     else if (evtKeyDel) {
       // Delete selected elements
       app_ref.drawing_area.deleteSelection()
-      app_ref.ref_to_spreadsheet.current()
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -864,55 +944,123 @@ export abstract class ClassTemplate_ApplicationData
     }
   }
 
-  public setSteps() {
-    this._steps.splice(0, this._steps.length) // Reset list
-    const steps = [
-      {
-        selector: '#g_drawing',
-        content: this.t('guide.drawing_area'),
-      },
-      {
-        selector: '.sideToolBar',
-        content: this.t('guide.toolbar'),
-        actionAfter: () => {
-          this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
-          setTimeout(() => { }, 500)
+  /**
+   * Check if focus is on drawing area or not.
+   * Avoid colisions between text inputs in menu & keyboard events on drawing area
+   * @returns
+   */
+  protected _isDrawingAreaActive() {
+    const inputs = ['input', 'textarea']
+    if (
+      document.activeElement &&
+      inputs.indexOf(document.activeElement.tagName.toLowerCase()) !== -1
+    ) {
+      return false
+    }
+    return true
+  }
+
+  /**
+   * Allows to create a waiting toast for given function.
+   * Use a functions queue to ensure that all function that call always run in the calling order.
+   *
+   * @protected
+   * @param {() => void} funct
+   * @param {string} funct_id
+   * @param {Type_TextForToastPromise} [intake]
+   * @memberof ClassTemplate_ApplicationData
+   */
+  protected _sendWaitingToast(
+    funct: () => void,
+    funct_id: string,
+    intake?: Type_TextForToastPromise
+  ) {
+    // Check if process has to wait
+    if (this._toast_processes[0] !== funct_id) {
+      // Create a recursive timeout as delaying method to ensure that
+      // all functions are called with respect to their creation order
+      setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
+    }
+    // Otherwise send
+    else {
+      this._toast.promise(
+        new Promise((resolve) => {
+          setTimeout(() => {
+            funct() // run
+            this._toast_processes.splice(0, 1) // pop process from processes list
+            resolve(200) // end
+          },
+            500) // Leave 500ms of delay in order to give enough time to load spinner component
+        }),
+        {
+          success: {
+            title: intake?.success?.title ?? this.t('toast.default.success.title'),
+            description: intake?.success?.desc ?? this.t('toast.default.success.desc'),
+            duration: default_toast_duration
+          },
+          loading: {
+            title: intake?.loading?.title ?? this.t('toast.default.loading.title'),
+            description: intake?.loading?.desc ?? this.t('toast.default.loading.desc'),
+            duration: default_toast_duration
+          },
+          error: {
+            title: intake?.error?.title ?? this.t('toast.default.error.title'),
+            description: intake?.error?.desc ?? this.t('toast.default.error.desc'),
+            duration: default_toast_duration
+          },
         }
-      },
-      {
-        selector: '.drawer_menu_config ',
-        content: this.t('guide.menu_config'),
-        actionAfter: () => this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
-      },
-      {
-        selector: '.menutop_button_save_in_cache',
-        content: this.t('guide.save_in_cache'),
-      },
-      {
-        selector: '.TopMenuNav',
-        content: this.t('guide.nav_menu'),
-      },
-      {
-        selector: '.settings_button',
-        content: this.t('guide.settings_button'),
-        action: () => this.menu_configuration.refs_to_btn_toogle_top_menus['file'].current?.click(),
-      },
-      {
-        selector: '.tutorials_button',
-        content: this.t('guide.tutorials_button'),
-        action: () => this.menu_configuration.refs_to_btn_toogle_top_menus['aide'].current?.click(),
-      },
-    ]
-    steps.forEach(step => this._steps.push(step))
+      )
+    }
+  }
+
+  /**
+   * Some pre-process to correct html we will send to converter
+   * because there is some difference between what our code produce
+   * & what the converter wait to correctly produce an image
+   *
+   * @protected
+   * @return {*}
+   * @memberof Class_ApplicationData
+   */
+  protected _pre_process_export_svg() {
+    this.drawing_area.purgeSelection()
+    this.drawing_area.areaAutoFit()
+
+    const svg = this.drawing_area.d3_selection_zoom_area
+    const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
+    const scale_da = this.drawing_area.getZoomScale()
+
+    // Legend width (if present)
+    const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
+
+    svg_clone?.select('#g_drawing').attr('transform', 'translate(' + legend_w + ',0' + ') scale(' + scale_da + ')')
+    svg_clone?.select('#grp_legend .gg_legend').attr('transform', 'translate(0,0)')
+    svg_clone?.selectAll('input').remove()
+
+    // For some reason when attr 'dominant-baseline' is 'text-after-edge',
+    // at the export to image the text is shifted to the bottom by half the font size of the text.
+    // So before the convertion to image modify the svg clone to correct the error
+    svg_clone?.selectAll('.name_label_text').nodes().forEach(el => {
+      if (d3.select(el).attr('dominant-baseline') == 'text-after-edge') {
+        const fontSize = +d3.select(el).attr('font-size').replace('px', '')
+        const yPos = +d3.select(el).attr('y').replace('px', '')
+        d3.select(el).attr('y', yPos - (fontSize / 2))
+      }
+    })
+
+    return svg_clone
   }
 
   // GETTERS / SETTERS ==================================================================
 
   public get t(): TFunction { return this._t }
   public get is_static(): boolean { return this._drawing_area.static }
+
+  public get history(): Class_ApplicationHistory { return this._history }
+
   public get steps(): StepType[] { return this._steps }
   public get show_documentation() { return this._show_documentation }
-  public set show_documentation(_:boolean) { this._show_documentation = _ }
+  public set show_documentation(_: boolean) { this._show_documentation = _ }
 
   public get drawing_area(): Type_GenericDrawingArea { return this._drawing_area }
   protected set drawing_area(value: Type_GenericDrawingArea) { this._drawing_area = value } // Only extended ClassTemplate_ApplicationData instance can modify these parameter (for sub-module)
