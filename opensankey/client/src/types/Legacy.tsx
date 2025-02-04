@@ -1650,6 +1650,25 @@ const convert_nodes: convert_nodesFuncType = (
       })
     }
 
+    type OSP_type = {
+      FO_content: string,
+      has_FO: boolean,
+      is_FO_raw: boolean,
+
+      image?: string
+      is_image: boolean,
+      image_src: string,
+    } 
+
+    const nn = n as unknown as OSP_type
+    if ( nn.image != undefined && nn.FO_content == nn.image ) {
+      nn.has_FO = false
+      nn.FO_content = ''
+      nn.is_image = true
+      nn.image_src = nn.image.split('\'')[1]
+      delete nn.image
+    }
+
     //remove tags which are not in data.NodeTags
     const tags_to_remove: string[] = []
     for (const tag in n.tags) {
