@@ -9,7 +9,9 @@ import Draggable from 'react-draggable'
 import FileSaver from 'file-saver'
 
 import {
+  faBackward,
   faBars,
+  faChartSimple,
   faCheck,
   faCloudArrowUp,
   faDownload,
@@ -18,6 +20,7 @@ import {
   faFileExport,
   faFileInvoice,
   faFolderOpen,
+  faForward,
   faGears,
   faImage,
   faPenToSquare,
@@ -26,7 +29,6 @@ import {
   faShapes,
   faShareNodes,
   faTable,
-  faChartSimple
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -625,6 +627,64 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
       </ChakraMenu>,
 
       <>{additionanl_menu.external_file_item}</>,
+
+      <OSTooltip
+        placement='bottom'
+        label='Retour en arriere'
+      >
+        <Button
+          variant='menutop_button'
+          isDisabled={!new_data.history.can_undo}
+          onClick={() => new_data.history.applyUndo()}
+        >
+          <Box
+            layerStyle='menutop_button_style'
+          >
+            <Box
+              gridRow='1'
+            >
+              <FontAwesomeIcon
+                style={{ 'height': '2rem', 'width': '3rem' }}
+                icon={faBackward}
+              />
+            </Box>
+            <Box
+              gridRow='2'
+            >
+              {'Undo'}
+            </Box>
+          </Box>
+        </Button>
+      </OSTooltip>,
+
+      <OSTooltip
+        placement='bottom'
+        label={'Refaire action'}
+      >
+        <Button
+          variant='menutop_button'
+          isDisabled={!new_data.history.can_redo}
+          onClick={() => new_data.history.applyRedo()}
+        >
+          <Box
+            layerStyle='menutop_button_style'
+          >
+            <Box
+              gridRow='1'
+            >
+              <FontAwesomeIcon
+                style={{ 'height': '2rem', 'width': '3rem' }}
+                icon={faForward}
+              />
+            </Box>
+            <Box
+              gridRow='2'
+            >
+              {'Redo'}
+            </Box>
+          </Box>
+        </Button>
+      </OSTooltip>,
 
       <OSTooltip
         placement='bottom'

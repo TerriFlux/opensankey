@@ -82,6 +82,7 @@ export class Class_MenuConfig {
   // Update component Menu
   private _ref_to_menu_updater: MutableRefObject<() => void>
   private _ref_to_submenu_updater: MutableRefObject<() => void>
+  private _ref_to_spreadsheet: MutableRefObject<(() => void)>
 
   // Ref to state if configuration is opened
   private _ref_menu_opened: MutableRefObject<[boolean,() => void]>
@@ -250,6 +251,7 @@ export class Class_MenuConfig {
 
     this._ref_to_menu_updater = useRef(() => null)
     this._ref_to_submenu_updater = useRef(() => null)
+    this._ref_to_spreadsheet = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
     this._ref_menu_opened = useRef([false,() => null])
 
@@ -736,6 +738,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToNodes() {
+    this.ref_to_spreadsheet.current()
     this.updateComponentRelatedToNodesSelection()
     this.updateAllComponentsRelatedToNodesConfig()
     this.updateComponentRelatedToNodesStyles()
@@ -765,6 +768,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToLinks() {
+    this.ref_to_spreadsheet.current()
     this.updateComponentRelatedToLinksSelection()
     this.updateAllComponentsRelatedToLinksConfig()
     this.updateComponentRelatedToLinksStyles()
@@ -937,6 +941,10 @@ export class Class_MenuConfig {
     return this._ref_to_submenu_updater
   }
 
+  public get ref_to_spreadsheet(): MutableRefObject<(() => void)> {
+    return this._ref_to_spreadsheet
+  }
+
   public get ref_menu_opened(): MutableRefObject<[boolean,() => void]> {
     return this._ref_menu_opened
   }
@@ -1048,7 +1056,7 @@ export class Class_MenuConfig {
   public get ref_to_menu_config_links_data_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_links_data_updater
   }
-  
+
   public get ref_to_menu_contextual_config_links_data_updater():MutableRefObject<()=>void>{
     return this._ref_to_menu_contextual_config_links_data_updater
   }
