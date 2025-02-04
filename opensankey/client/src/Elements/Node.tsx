@@ -730,6 +730,14 @@ export abstract class ClassTemplate_NodeElement
   }
 
   public drawAsSelected() {
+    if (!this.shape_visible && this.is_selected) {
+      // if selected border is highlighted even if shape is not visible
+      this._display.attributes.shape_visible = true
+      this._drawShape()
+      this._display.attributes.shape_visible = false
+      this.d3_selection_g_shape?.selectAll('.node_shape')
+        .attr('fill-opacity',0)
+    }
     // Change stroke
     this.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
