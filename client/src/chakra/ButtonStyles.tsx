@@ -19,6 +19,11 @@ export const menutop_button_goto_dashboard = defineStyle({
     bg: 'secondaire.2',
     bgColor: 'secondaire.2',
   },
+  _active: {
+    borderColor: 'secondaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
 })
 
 export const menutop_button_logout = defineStyle({
@@ -35,6 +40,11 @@ export const menutop_button_logout = defineStyle({
   color: 'white',
   fill: 'white',
   _hover: {
+    borderColor: 'secondaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+  },
+  _active: {
     borderColor: 'secondaire.1',
     bg: 'secondaire.1',
     bgColor: 'secondaire.1',
@@ -65,6 +75,11 @@ export const btn_lone_navigation_primary = defineStyle({
     bgColor: 'secondaire.1',
     borderColor: 'secondaire.1',
   },
+  _active: {
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+    borderColor: 'secondaire.1',
+  },
 })
 
 export const btn_lone_navigation_secondary = defineStyle({
@@ -73,6 +88,11 @@ export const btn_lone_navigation_secondary = defineStyle({
   bgColor: 'primaire.2',
   borderColor: 'primaire.2',
   _hover: {
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+    borderColor: 'secondaire.2',
+  },
+  _active: {
     bg: 'secondaire.2',
     bgColor: 'secondaire.2',
     borderColor: 'secondaire.2',

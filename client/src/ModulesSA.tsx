@@ -181,14 +181,14 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
     gridTemplateColumns='11rem 11rem'
   >
     <OSTooltip
-    label={t('UserNav.tooltip.to_buy')}
-    isAlwaysOpen={new_data_app.show_documentation}>
-    <Button
-      variant='btn_lone_navigation_primary'
-      onClick={() => navigate('/register')}
-    >
-      {t('UserNav.to_buy')}
-    </Button></OSTooltip>
+      label={t('UserNav.tooltip.to_buy')}
+      isAlwaysOpen={new_data_app.show_documentation}>
+      <Button
+        variant='btn_lone_navigation_primary'
+        onClick={() => navigate('/register')}
+      >
+        {t('UserNav.to_buy')}
+      </Button></OSTooltip>
 
     {/* <OSTooltip
     label={t('UserNav.tooltip.to_con')}
@@ -342,8 +342,6 @@ export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({
       })
   }
 
-
-
   return <Modal
     isOpen={show_sankeytheque}
     onClose={() => set_show_sankeytheque(false)}
@@ -390,10 +388,10 @@ const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccor
             {ent[0]}
           </Button>
         </AccordionItem>
-      } 
+      }
     }
     const child_files = Object.entries(ent[1]).filter(e=>e[0] =='Files')
-    if (child_files.length>0 && Object.keys(ent[1]).length==1) { 
+    if (child_files.length>0 && Object.keys(ent[1]).length==1) {
       return <AccordionItem>
         <Button
           variant='button_open_card_sankeytheque'
