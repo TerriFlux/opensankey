@@ -1,6 +1,6 @@
-import { Class_LinkStyle } from '../../../Elements/LinkAttributes';
-import { Class_NodeStyle } from '../../../Elements/NodeAttributes';
-import { Type_GenericApplicationData, Type_AdditionalMenus, Type_GenericLinkElement, Type_GenericNodeElement } from "../../../types/Types";
+import { Class_LinkStyle } from '../../../Elements/LinkAttributes'
+import { Class_NodeStyle } from '../../../Elements/NodeAttributes'
+import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../../types/Types'
 
 
 export type possibleDecoratorName = 'value_label_horiz'

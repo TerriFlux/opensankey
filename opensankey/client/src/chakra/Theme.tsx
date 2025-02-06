@@ -135,6 +135,7 @@ import {
   modal_base_style,
   modal_select_unit_from_data,
   modal_select_unit_from_excel,
+  modal_dialog,
   modal_welcome,
   modal_documentation
 } from './ModalStyle'
@@ -236,6 +237,7 @@ export const opensankey_theme = extendTheme({
       baseStyle: modal_base_style,
       variants: {
         modal_welcome,
+        modal_dialog,
         modal_documentation,
         modal_select_unit_from_data,
         modal_select_unit_from_excel
@@ -317,9 +319,6 @@ export const opensankey_theme = extendTheme({
     }
   },
   layerStyles: {
-    box_footer_welcome: {
-      display: 'grid'
-    },
     context_menu: {
       display: 'grid',
       rowGap: '0.1rem',

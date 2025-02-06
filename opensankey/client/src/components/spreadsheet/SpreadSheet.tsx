@@ -3,7 +3,7 @@ import React, { FunctionComponent, useState } from 'react'
 import {
   ReactGrid, Column, Row, CellChange, TextCell, NumberCell, Id, MenuOption,
   SelectionMode, DefaultCellTypes, Cell, Compatible, CellLocation
-} from '@silevis/reactgrid' 
+} from '@silevis/reactgrid'
 import '@silevis/reactgrid/styles.css'
 
 import { Type_GenericApplicationData, Type_GenericDrawingArea, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
@@ -276,7 +276,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           handler: () => {
             if (window.navigator.userAgent.includes('Firefox')) {
               alert('Cette fonctionnalité ne fonctionne pas sur Firefox.')
-              return 
+              return
             }
             getCellsFromClipboardPlainText().then((rows) => {
 
@@ -318,8 +318,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
               let redraw = false
               let synchronizeSpreadSheet = false
               spreadSheetFlux.forEach(flux => {
-                const source_name = flux.source
-                const target_name = flux.target
+                // const source_name = flux.source
+                // const target_name = flux.target
                 if (flux.value && isNaN(flux.value)) {
                   flux.value = (flux.value as unknown as string).replace(' ', '').replace('\r', '') as unknown as number
                 }
@@ -327,16 +327,16 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
                   flux.value = +flux.value
                 }
                 //if (!name2id[source_name] || !name2id[target_name]) {
-                  addLink(flux)
-                  redraw = true
+                addLink(flux)
+                redraw = true
                 //} else {
-                  // const sourceNode = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
-                  // const targetNode = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
-                  // const l = new_data.drawing_area.sankey.links_dict[name2id[defaultLinkId(sourceNode, targetNode)]]
-                  // if (l && flux.value) {
-                  //   l.data_value = flux.value
-                  // }
-                  synchronizeSpreadSheet = true
+                // const sourceNode = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
+                // const targetNode = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
+                // const l = new_data.drawing_area.sankey.links_dict[name2id[defaultLinkId(sourceNode, targetNode)]]
+                // if (l && flux.value) {
+                //   l.data_value = flux.value
+                // }
+                synchronizeSpreadSheet = true
                 //}
               })
               if (redraw) {

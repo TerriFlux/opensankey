@@ -675,6 +675,7 @@ export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> 
   return <Modal
     isOpen={show_save_json_modal}
     onClose={() => set_show_save_json_modal(false)}
+    variant='modal_dialog'
   >
     <ModalContent
       maxWidth='inherit'
@@ -685,7 +686,6 @@ export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> 
       <ModalCloseButton />
       <ModalBody>
         <Box layerStyle='menuconfigpanel_grid' >
-
           <Checkbox
             variant='menuconfigpanel_option_checkbox'
             isChecked={new_data.options_save_json.mode_save}
@@ -703,9 +703,7 @@ export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> 
       </ModalBody>
       <ModalFooter>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <span />
           <Box layerStyle='options_2cols' >
-
             <Button
               variant='menuconfigpanel_option_button'
               onClick={
