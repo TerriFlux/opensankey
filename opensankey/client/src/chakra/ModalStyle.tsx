@@ -5,32 +5,56 @@ const { definePartsStyle } =
   createMultiStyleConfigHelpers(modalAnatomy.keys)
 
 export const modal_base_style = definePartsStyle({
+  header: {
+    height: 'fit-content',
+    textStyle: 'h1',
+    color: 'white',
+    background: 'primaire.2',
+    borderRadius: '6px',
+    paddingRight: '5rem'
+  },
+  closeButton: {
+    right: '1rem',
+    top: '1rem'
+  },
   dialog: {
-    width: 'fit-content',
-    maxWidth: 'inherit',
+    width: '75vw',
+    height: '75vh',
     display: 'grid',
     gridGap: '1rem',
     padding: '0.25rem',
+    gridTemplateRows: '3rem auto'
   },
   body: {
-    width: 'fit-content',
-    maxWidth:'75vw',
-    minWidth:'30vw',
-    display: 'grid',
-    gridGap: '1rem',
+    display: 'block',
+    width: '100%',
+    height: 'calc(75vh - 5rem)',
     padding: '0.25rem',
   }
 })
 
-export const modal_welcome = definePartsStyle({
+export const modal_dialog = definePartsStyle({
   dialog:{
-    width:'max-content',
-    top:'3rem',
-    maxWidth: 'inherit',
+    width: 'fit-content',
+    height: 'fit-content',
   },
-  body: {
-    maxHeight:'70vh',
-    overflowY:'scroll'
+  body:{
+    width: 'fit-content',
+    height: 'fit-content',
+    margin: '1rem'
+  },
+  header: {
+    width: '100%'
+  },
+  footer: {
+    justifyContent: 'center',
+  }
+})
+
+export const modal_welcome = definePartsStyle({
+  closeButton: {
+    right: '0.65rem',
+    top: '0.65rem'
   },
   footer: {
     height: '3rem',
@@ -45,10 +69,18 @@ export const modal_documentation = definePartsStyle({
   //   background: 'blackAlpha.500'
   // },
   dialog:{
+    width:'max-content',
+    height:'max-content',
     alignSelf: 'center',
   },
   body: {
+    width:'max-content',
+    height:'max-content',
     minWidth: 0,
+  },
+  footer: {
+    height: 'fit-content',
+    padding: '0'
   }
 })
 
