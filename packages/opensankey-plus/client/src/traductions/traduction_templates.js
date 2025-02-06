@@ -4,15 +4,11 @@ export const resources_template = {
   //=======================================================
   en: {
     translation: {
-      template:{
-        intermediary: {
-          title: 'Intermediary',
+      templates:{
+        ids: {
           commercial_pipe_monthly_report: 'Business pipe monthly report',
           personal_budget_with_tags: 'Tagged personal expenses',
-          cocoa_logistics: 'Cocoa logistics'
-        },
-        advanced: {
-          title: 'Advanced',
+          cocoa_logistics: 'Cocoa logistics',
           tolkien: 'Wood production - Lord of the Rings',
           flux_verticaux: 'Vertical diagram',
           flux_de_matiere_economie: 'Economic sector',
@@ -30,15 +26,11 @@ export const resources_template = {
   //=======================================================
   fr: {
     translation: {
-      template:{
-        intermediary: {
-          title: 'Intermédiaire',
+      templates:{
+        ids: {
           commercial_pipe_monthly_report: 'Pipe commercial mensualisé',
           personal_budget_with_tags: 'Dépenses personnelles étiquetées',
-          cocoa_logistics: 'Logistique du cacao'
-        },
-        advanced: {
-          title: 'Avancé',
+          cocoa_logistics: 'Logistique du cacao',
           tolkien: 'Production de bois - Seigneur des Anneaux',
           flux_verticaux: 'Diagramme vertical',
           flux_de_matiere_economie: 'Filière économique',
