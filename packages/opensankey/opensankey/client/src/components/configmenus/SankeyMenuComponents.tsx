@@ -16,7 +16,22 @@ import { svg_label_bottom, svg_label_center, svg_label_top, svg_label_upper } fr
 import { FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, possibleDecoratorName } from './types/SankeyMenuComponentsType'
 import { Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
 import { ClassTemplate_NodeElement } from '../../Elements/Node'
-import { Class_NodeStyle, default_node_value_label_bold, default_node_value_label_color, default_node_value_label_custom_digit, default_node_value_label_font_family, default_node_value_label_font_size, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_italic, default_node_value_label_nb_digit, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_uppercase, default_node_value_label_vert, default_node_value_label_vert_shift } from '../../Elements/NodeAttributes'
+import {
+  Class_NodeStyle,
+  default_node_value_label_bold,
+  default_node_value_label_color,
+  default_node_value_label_custom_digit,
+  default_node_value_label_font_family,
+  default_node_value_label_font_size,
+  default_node_value_label_horiz,
+  default_node_value_label_italic,
+  default_node_value_label_nb_digit,
+  default_node_value_label_unit,
+  default_node_value_label_unit_factor,
+  default_node_value_label_unit_visible,
+  default_node_value_label_uppercase,
+  default_node_value_label_vert,
+} from '../../Elements/NodeAttributes'
 
 
 function isElementAttributeOverloaded(
@@ -31,7 +46,7 @@ function getValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
   model: TModel,
   key: TKey
 ) {
-  return model[key];
+  return model[key]
 }
 
 function setValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
@@ -39,7 +54,7 @@ function setValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
   key: TKey,
   value: TModel[TKey]
 ) {
-  model[key] = value;
+  model[key] = value
 }
 
 export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelComponent> = ({

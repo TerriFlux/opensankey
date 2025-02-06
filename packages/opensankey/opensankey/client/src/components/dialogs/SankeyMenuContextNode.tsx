@@ -516,7 +516,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.menu_configuration.ref_to_updater_node_disagregate.current(true)
         } else {
           contextualised_node.drawChildren(
-            contextualised_node.dimensions_as_parent[contextualised_node.dimensions_as_parent.length-1].id
+            contextualised_node.dimensions_as_parent[contextualised_node.dimensions_as_parent.length - 1].id
           )
           new_data.drawing_area.draw()//Redraw all node visible because some link position where not computed before disaggregation
           new_data.drawing_area.purgeSelection()
@@ -576,19 +576,19 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     {t('Menu.suppr')}
   </Button>
 
-  const btn_mask_value=<Button
-      variant='contextmenu_button'
-      onClick={() => {
-        selected_nodes.forEach(n => n.value_label_is_visible = !contextualised_node_value_visible)
-        refreshThisAndToggleSaving()
-      }}
-    >
-      {
-        contextualised_node_value_visible ?
-          t('Noeud.apparence.hide_value') :
-          t('Noeud.apparence.display_value')
-      }
-    </Button>
+  const btn_mask_value = <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      selected_nodes.forEach(n => n.value_label_is_visible = !contextualised_node_value_visible)
+      refreshThisAndToggleSaving()
+    }}
+  >
+    {
+      contextualised_node_value_visible ?
+        t('Noeud.apparence.hide_value') :
+        t('Noeud.apparence.display_value')
+    }
+  </Button>
 
   const context_content: { [_: string]: JSX.Element } = {
     'aggregate': btn_aggregate,
@@ -603,7 +603,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     'style': dropdown_c_n_style,
     'mask_shape': btn_mask_shape,
     'mask_label': btn_mask_label,
-    'mask_value':btn_mask_value,
+    'mask_value': btn_mask_value,
     'sep_3': sep,
 
     'reorg': btn_reorganise_link_io,
@@ -667,6 +667,7 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
       <Modal
         isOpen={show_agregation}
         onClose={closeModal}
+        variant='modal_dialog'
       >
         <ModalOverlay />
         <ModalContent
@@ -676,8 +677,15 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
             {new_data.t('Noeud.title_desaggreg')}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <Box>
+          <ModalBody
+            width='100%'
+          >
+            <Box
+              display='grid'
+              gridAutoFlow='row'
+              gridRowGap='0.25rem'
+              width='calc(100% - 2rem)'
+            >
               <Select
                 onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                   const idx_new_selected_grp = list_child_dim.map(dim => dim.id).indexOf(evt.target.value)
@@ -685,6 +693,7 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
                   setForce(a => a + 1)
                 }}
                 value={selected_grp.current?.id}
+                width='100%'
               >
                 {list_child_dim.map(
                   (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.child_level_tagg.name}</option>
@@ -695,17 +704,26 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
             </Box>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="menuconfigpanel_option_button_secondary"
-              onClick={() => {
-                new_data.drawing_area.node_contextualised?.drawChildren((selected_grp.current?.id ?? ''))
-                // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
-                closeModal()
-              }}
-            >{new_data.t('Noeud.desaggreg')}</Button>
-            <Button variant="menuconfigpanel_del_button" onClick={() => {
-              closeModal()
-            }}>{new_data.t('Menu.annuler')}</Button>
+            <ButtonGroup>
+              <Button
+                variant="menuconfigpanel_option_button_secondary"
+                onClick={() => {
+                  new_data.drawing_area.node_contextualised?.drawChildren((selected_grp.current?.id ?? ''))
+                  // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+                  closeModal()
+                }}
+              >
+                {new_data.t('Noeud.desaggreg')}
+              </Button>
+              <Button
+                variant="menuconfigpanel_del_button"
+                onClick={() => {
+                  closeModal()
+                }}
+              >
+                {new_data.t('Menu.annuler')}
+              </Button>
+            </ButtonGroup>
           </ModalFooter>
         </ModalContent>
       </Modal>
@@ -738,6 +756,7 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
       <Modal
         isOpen={show_agregation}
         onClose={closeModal}
+        variant='modal_dialog'
       >
         <ModalOverlay />
         <ModalContent
@@ -747,8 +766,15 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
             {new_data.t('Noeud.title_aggreg')}
           </ModalHeader>
           <ModalCloseButton />
-          <ModalBody>
-            <Box>
+          <ModalBody
+            width='100%'
+          >
+            <Box
+              display='grid'
+              gridAutoFlow='row'
+              gridRowGap='0.25rem'
+              width='calc(100% - 2rem)'
+            >
               <Select
                 onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
                   const idx_new_selected_grp = list_parent_dim.map(dim => dim.id).indexOf(evt.target.value)
@@ -756,6 +782,7 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
                   setForce(a => a + 1)
                 }}
                 value={selected_grp.current?.id}
+                width='100%'
               >
                 {list_parent_dim.map(
                   (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.child_level_tagg.name}</option>
@@ -766,17 +793,26 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
             </Box>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="menuconfigpanel_option_button_secondary"
-              onClick={() => {
-                new_data.drawing_area.node_contextualised?.drawParent((selected_grp.current?.id ?? ''))
-                // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
-                closeModal()
-              }}
-            >{new_data.t('Noeud.aggreg')}</Button>
-            <Button variant="menuconfigpanel_del_button" onClick={() => {
-              closeModal()
-            }}>{new_data.t('Menu.annuler')}</Button>
+            <ButtonGroup>
+              <Button
+                variant="menuconfigpanel_option_button_secondary"
+                onClick={() => {
+                  new_data.drawing_area.node_contextualised?.drawParent((selected_grp.current?.id ?? ''))
+                  // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
+                  closeModal()
+                }}
+              >
+                {new_data.t('Noeud.aggreg')}
+              </Button>
+              <Button
+                variant="menuconfigpanel_del_button"
+                onClick={() => {
+                  closeModal()
+                }}
+              >
+                {new_data.t('Menu.annuler')}
+              </Button>
+            </ButtonGroup>
           </ModalFooter>
         </ModalContent>
       </Modal>
