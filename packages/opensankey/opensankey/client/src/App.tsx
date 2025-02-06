@@ -154,7 +154,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
 
   const config_link_data = <MenuConfigurationLinksData
     new_data={new_data}
-    additional_data_element={additionalMenus.additional_data_element}
     contextual={false}
   />
 

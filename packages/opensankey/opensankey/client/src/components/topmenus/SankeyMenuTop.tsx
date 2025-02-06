@@ -68,7 +68,6 @@ import {
   NumberInputField,
   NumberInputStepper,
   Select,
-  Stack,
   Tab,
   TabList,
   TabPanel,
@@ -102,7 +101,6 @@ import {
   FCtype_ModalTemplate,
 } from './types/SankeyMenuTopTypes'
 import {
-  Dict_templates_type,
   OSTooltip,
   Type_JSON
 } from '../../types/Utils'
@@ -363,7 +361,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
               gridRow='1'
             >
               <FontAwesomeIcon
-                style={{ 'height': '2rem', 'width': '3rem'}}
+                style={{ 'height': '2rem', 'width': '3rem' }}
                 icon={faPlus}
               />
             </Box>
@@ -929,12 +927,12 @@ const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }: FCT
     label={new_data.t('guide.tooltip.guide')}
     isAlwaysOpen={new_data.show_documentation}
   ><Button
-    variant='menutop_button'
-    onClick={() => {
-      new_data.setSteps()
-      setIsOpen(true)
-    }}
-  >
+      variant='menutop_button'
+      onClick={() => {
+        new_data.setSteps()
+        setIsOpen(true)
+      }}
+    >
       <Box
         layerStyle='menutop_button_style'
       >
@@ -1250,7 +1248,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         })}
       </TabPanels>
     </Tabs>
-  </Box>:<></>
+  </Box> : <></>
 
 
   const content_support = <>
@@ -1565,14 +1563,14 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             label={t('Banner.open_configuration_menu')}
             isAlwaysOpen={new_data.show_documentation}
           >
-          <Button
-            ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
-            id='toggle-check'
-            className='openMenu'
-            variant='toolbar_main_button'
-            onClick={toggleShow}
-            value='menuConfigButton'>{menuButton()}
-          </Button></OSTooltip>
+            <Button
+              ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
+              id='toggle-check'
+              className='openMenu'
+              variant='toolbar_main_button'
+              onClick={toggleShow}
+              value='menuConfigButton'>{menuButton()}
+            </Button></OSTooltip>
         ) : (<></>)}
       </ButtonGroup>
 
@@ -1605,14 +1603,13 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         processFunctions={processFunctions}
       />
 
-      {(!new_data.is_static) ? <ModalTemplate new_data={new_data} additionalMenu={additionalMenus} Reinitialization={reinitialization} />:<></>}
+      {(!new_data.is_static) ? <ModalTemplate new_data={new_data} additionalMenu={additionalMenus} Reinitialization={reinitialization} /> : <></>}
       {(!new_data.is_static) ? modal_tuto : <></>}
       {modal_support}
       {modal_resolution_png}
     </>
   )
 }
-
 
 export const MenuDraggable: FunctionComponent<FCType_MenuDraggable> = ({
   dict_hook_ref_setter_show_dialog_components,
@@ -1770,7 +1767,6 @@ const clickSavePDF = (new_data: Type_GenericApplicationData) => {
 }
 
 
-
 export const post_process_export_svg = () => {
   d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity', '1')
   d3.select(' .opensankey#svg-container svg').style('border', '2px')
@@ -1785,9 +1781,6 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
   const [firstRender, setFirstRender] = useState(true)
   const [formation, setFormation] = useState<ExempleMenuTypes>({})
   const { t } = new_data
-
-
-
 
   // At first render init formation object with data from server
   if (firstRender) {
@@ -1813,8 +1806,6 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
           })
       })
   }
-
-
 
   // Pré-traitement du menu tuto pour trier les groupes
   const n_a = new Array(50)
@@ -1842,18 +1833,32 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
     }
     tuto_sub_nav[d[0]] = <>
       {(d[1] as { ['Files']: string[] })['Files'].filter((f: string) => !f.includes('.xlsx')).map((dd: string, idx: number) => {
-        return <Card key={dd + '-' + idx} variant='card_icon_not_selected'>
+        return <Card
+          key={dd + '-' + idx}
+          variant='cards_template'
+        >
+          <CardHeader>
+            <Heading variant='heading_template_sankey'>
+              {dd.replace('_layout.json', '').replaceAll('_', ' ')}
+            </Heading>
+            <Divider />
+          </CardHeader>
           <CardBody>
-            <Stack>
-              <Image className='img-card'
-                src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('_layout.json', '')) + '.png'}
-                style={{ 'objectFit': 'contain' }}
-              />
-              <Heading>{dd.replace('_layout.json', '').replaceAll('_', ' ')}</Heading>
-            </Stack>
+            <Image
+              className='img-card'
+              src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('_layout.json', '')) + '.png'}
+              style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
+            />
           </CardBody>
-          <CardFooter>
-            <ButtonGroup>
+          <CardFooter
+            justifyItems='center'
+            width='100%'
+          >
+            <ButtonGroup
+              style={{
+                width: '100%'
+              }}
+            >
               {/* Button to open directly the JSON file */}
               <Button variant='toolbar_button_6'
                 onClick={() => {
@@ -1866,42 +1871,49 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
 
               {/* Button to open the Excel file */}
               {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '.xlsx')) ?
-                <Button variant='toolbar_button_6'
+                <Button
+                  variant='toolbar_button_6'
                   onClick={() => {
                     processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'))
                     UploadExemple(
                       'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), new_data
                     )
                     set_show_tuto(false)
-                  }
-                  }
-                >{t('useTutoExcel')}</Button>
+                  }}
+                >
+                  {t('useTutoExcel')}
+                </Button>
                 : <></>}
 
               {/* Button to open the Excel file reconcilied */}
               {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '_reconciled.xlsx')) ?
-                <Button variant='toolbar_button_6'
+                <Button
+                  variant='toolbar_button_6'
                   onClick={() => {
                     processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
                     UploadExemple(
                       'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), new_data
                     )
                     set_show_tuto(false)
-                  }
-                  }
-                >{t('useTutoExcel')}</Button>
+                  }}
+                >
+                  {t('useTutoExcel')}
+                </Button>
                 : <></>}
 
             </ButtonGroup>
           </CardFooter>
         </Card>
       })}
-
     </>
-
   })
 
-  return <Modal size='full' id='modal_tutoriel' isOpen={show_tuto} onClose={() => set_show_tuto(false)}>
+  return <Modal
+    id='modal_tutoriel'
+    blockScrollOnMount={false}
+    isOpen={show_tuto}
+    onClose={() => set_show_tuto(false)}
+  >
     <ModalContent
       maxWidth='inherit'
       display='flex'
@@ -1909,7 +1921,12 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
       <ModalHeader>{t('Menu.formation')}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>
-        <Tabs variant='tabs_navbar'>
+        <Tabs
+          orientation='vertical'
+          align='start'
+          variant='tabs_variant_template'
+          height='100%'
+        >
           <TabList>
             {Object.keys(tuto_sub_nav).map((m, idx) => {
               return <Tab key={'tab_' + idx}>
@@ -1920,8 +1937,18 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
           <TabPanels>
             {Object.keys(tuto_sub_nav).map((m, idx) => {
               return <TabPanel key={'tabpane_' + idx}>
-                <Box layerStyle='options_4cols' >
-                  {tuto_sub_nav[m]}
+                <Box
+                  display="block"
+                  overflow='scroll'
+                  height='100%'
+                >
+                  <Box
+                    layerStyle='options_3cols'
+                    gridColumnGap='0.5rem'
+                    gridRowGap='0.5rem'
+                  >
+                    {tuto_sub_nav[m]}
+                  </Box>
                 </Box>
               </TabPanel>
             })}
@@ -1932,7 +1959,6 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
   </Modal>
 }
 
-
 /**
  * Modal containing templates to create sankey
  *
@@ -1940,9 +1966,24 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
  * @return {*}
  */
 const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, additionalMenu, Reinitialization }) => {
+
+  type Type_TemplateInfos = {
+    'file_path': string,
+    'img_path': string,
+    'themes': string[],
+    'difficulty': string
+  }
+  type Type_TemplatesInfos = { [id: string]: Type_TemplateInfos }
+  type Type_TemplateIndex = { [difficulty: string]: string[] }
+  type Type_TemplatesIndexes = { [theme: string]: Type_TemplateIndex }
+
   const [show_template, set_show_template] = useState(false)
   const [firstRender, setFirstRender] = useState(true)
-  const [template, setTemplate] = useState<Dict_templates_type>({})
+  const [templates, setTemplates] = useState<Type_TemplatesInfos>({})
+  const [indexes, setIndexes] = useState<Type_TemplatesIndexes>({})
+  const [, setThemes] = useState<string[]>([])
+  const [difficulties, setDifficulties] = useState<string[]>([])
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('')
 
   const { ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
   ref_setter_show_modal_templates_lib.current = set_show_template
@@ -1965,118 +2006,181 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
           .text()
           .then(text => {
             const json_data = JSON.parse(text)
-            // Sort json with order in template_module_key
-            const sorted_json: Dict_templates_type = {}
-            additionalMenu.template_module_key.forEach(k => { sorted_json[k] = json_data[k] })
-
-            setTemplate(sorted_json)
+            const new_indexes: Type_TemplatesIndexes = {}
+            if ('themes' in json_data) {
+              setThemes(json_data['themes'])
+            }
+            if ('difficulties' in json_data) {
+              setDifficulties(json_data['difficulties'])
+              setSelectedDifficulty(json_data['difficulties'][0])
+            }
+            if ('templates' in json_data) {
+              Object.entries(json_data['templates'] as Type_TemplatesInfos)
+                .forEach(([id, template]) => {
+                  const themes = template['themes']
+                  const difficulty = template['difficulty']
+                  themes.forEach(theme => {
+                    if (!(theme in new_indexes))
+                      new_indexes[theme] = {}
+                    if (!(difficulty in new_indexes[theme]))
+                      new_indexes[theme][difficulty] = []
+                    new_indexes[theme][difficulty].push(id)
+                  })
+                })
+              setTemplates(json_data['templates'] as Type_TemplatesInfos)
+            }
+            setIndexes(new_indexes)
             setFirstRender(false)
           })
           .catch((error) => {
             console.error('Error in fetchExamples - ' + error.toString())
             setFirstRender(false)
           })
-      }).catch((err) => {
-        console.error('Error in fetchExamples - ' + err.toString())
-
+      })
+      .catch((err) => {
+        console.error('Error in fetch templates - ' + err.toString())
       })
   }
 
-  // Special card that create an empty DA to start a sankey
-  const card_empty_sankey = <Card variant='cards_empty_template'
-    onClick={() => {
-      Reinitialization()
-      set_show_template(false)
-    }}>
-    <CardHeader>
-      <Heading variant='heading_template_sankey'>{new_data.t('Menu.from_new')}</Heading>
-      <Divider />
-    </CardHeader>
-    <CardBody>
-      <Image
-        className='img-card'
-        src={'illustrations/empty_sankey.png'}
-        style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
-      />
-
-    </CardBody>
-  </Card>
-
   // Tabs for each entries of the template_module_key
-  const tabs_of_cards = <Tabs orientation='vertical' variant='tabs_variant_template'>
-    <TabList >{Object.keys(template).map((v, idx) => {
-      return <Tab key={idx}>{new_data.t('template.' + v + '.title')}</Tab>
-    })}</TabList>
+  const tabs_of_cards = <Tabs
+    orientation='vertical'
+    align='start'
+    variant='tabs_variant_template'
+    height='100%'
+  >
+    <TabList >
+      {
+        Object.keys(indexes)
+          .map((theme, idx) => {
+            return <Tab key={idx}> {new_data.t('templates.themes.' + theme)} </Tab>
+          })
+      }
+    </TabList>
     <TabPanels>
+      {
+        Object.values(indexes)
+          .map((index, idx) => {
 
-      {Object.entries(template).map((v, idx) => {
-        // Create a card for each template of each entries
-        const cards = v[1] !== undefined ? v[1].image.map((image_str, idx) => {
+            return <TabPanel key={idx}>
+              <Box
+                display='grid'
+                gridAutoFlow='row'
+                gridRowGap='1rem'
+                height='100%'
+              >
+                <Box
+                  display='grid'
+                  gridAutoFlow='column'
+                  gridTemplateColumns='1fr 2fr'
+                  gridColumnGap='1rem'
+                  height='100%'
+                >
+                  <Button
+                    variant='menuconfigpanel_del_button'
+                    onClick={() => {
+                      Reinitialization()
+                      set_show_template(false)
+                    }}
+                  >
+                    {new_data.t('Menu.from_new')}
+                  </Button>
+                  <ButtonGroup>
+                    {
+                      difficulties
+                        .map(difficulty => {
+                          return <Button
+                            variant='menuconfigpanel_option_button_secondary'
+                            isActive={difficulty == selectedDifficulty}
+                            isDisabled={!(difficulty in index)}
+                            onClick={() => setSelectedDifficulty(difficulty)}
+                          >
+                            {new_data.t('templates.difficulties.' + difficulty)}
+                          </Button>
+                        })
+                    }
+                  </ButtonGroup>
+                </Box>
+                <Box
+                  display="block"
+                  overflow='scroll'
+                  height='100%'
+                >
+                  <Box
+                    display='grid'
+                    gridTemplateColumns='1fr 1fr 1fr'
+                    gridTemplateRows='0.5fr'
+                    gridRowGap='0.25rem'
+                    gridColumnGap='0.25rem'
+                    height='100%'
+                  >
+                    {
+                      (selectedDifficulty in index) ?
+                        Object.values(index[selectedDifficulty])
+                          .map((id, idx) => {
+                            return <Card
+                              key={idx}
+                              variant='cards_template'
+                              onClick={() => {
+                                // Draw template by downloading data from server
+                                UploadExemple(templates[id].file_path, new_data)
+                                set_show_template(false)
+                              }}
+                            >
+                              <CardHeader>
+                                <Heading variant='heading_template_sankey'>
+                                  {new_data.t('templates.ids.' + id)}
+                                </Heading>
+                                <Divider />
+                              </CardHeader>
 
-          const title_card = image_str.replaceAll('.png', '')
+                              <CardBody>
+                                {/* Get the image from the server */}
+                                <Image
+                                  className='img-card'
+                                  src={'/fm/userfiles/' + templates[id].img_path}
+                                  style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
+                                />
+                              </CardBody>
 
-          return <Card key={idx} variant='cards_template'
-            onClick={() => {
-              // Draw template by downloading data from server
-              UploadExemple(
-                ('Modèles/Template/' + (v[0]) + '/data/' + v[1].data[idx]), new_data
-              )
-              set_show_template(false)
-            }}
-          >
-            <CardHeader>
-              <Heading variant='heading_template_sankey'>
-                {new_data.t('template.' + v[0] + '.' + title_card)}
-              </Heading>
-              <Divider />
-            </CardHeader>
+                              <CardFooter>
+                                <ButtonGroup
+                                  //ButtonGroup don't have variants theming so we modify directly the style
+                                  style={{
+                                    margin: 'auto'
+                                  }}>
+                                  <Button variant='menuconfigpanel_option_button'
+                                    onClick={() => {
+                                      // Draw template by downloading data from server
+                                      UploadExemple(templates[id].file_path, new_data)
+                                      new_data.menu_configuration.ref_menu_opened.current[1]()
+                                      set_show_template(false)
+                                    }}>
+                                    {new_data.t('useTemplate')}
+                                  </Button>
 
-            <CardBody>
-              {/* Get the image from the server */}
-              <Image
-                className='img-card'
-                src={'/fm/userfiles/Modèles/Template/' + (v[0]) + '/image/' + image_str}
-                style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
-              />
+                                </ButtonGroup>
+                              </CardFooter>
+                            </Card>
+                          })
+                        :
+                        <></>
+                    }
 
-            </CardBody>
-
-            <CardFooter>
-              <ButtonGroup
-                //ButtonGroup don't have variants theming so we modify directly the style
-                style={{
-                  margin: 'auto'
-                }}>
-                <Button variant='menuconfigpanel_option_button'
-                  onClick={() => {
-                    // Draw template by downloading data from server
-                    UploadExemple(
-                      ('Modèles/Template/' + (v[0]) + '/data/' + v[1].data[idx]), new_data
-                    )
-                    new_data.menu_configuration.ref_menu_opened.current[1]()
-                    set_show_template(false)
-                  }}>
-                  {new_data.t('useTemplate')}
-                </Button>
-
-              </ButtonGroup>
-            </CardFooter>
-          </Card>
-        }) : <></>
-
-        return <TabPanel key={idx}>
-          {v[0] == 'essential' ? card_empty_sankey : <></>}
-          {cards}
-        </TabPanel>
-      })}
+                  </Box>
+                </Box>
+              </Box>
+            </TabPanel>
+          })
+      }
     </TabPanels>
   </Tabs>
 
 
   return <Modal
     isOpen={show_template}
+    blockScrollOnMount={false}
     onClose={() => set_show_template(false)}
-    scrollBehavior='inside'
   >
     <ModalOverlay />
     <ModalContent
@@ -2085,7 +2189,6 @@ const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, addi
       <ModalHeader>{new_data.t('Menu.templates')}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>
-
         {tabs_of_cards}
       </ModalBody>
     </ModalContent>
