@@ -12,6 +12,11 @@ export const button_base_style = defineStyle({
   borderColor: 'primaire.3',
   bg: 'primaire.3',
   bgColor: 'primaire.3',
+  _active: {
+    borderColor: 'tertiaire.3',
+    bg: 'tertiaire.3',
+    bgColor: 'tertiaire.3',
+  },
   _hover: {
     borderColor: 'secondaire.3',
     bg: 'secondaire.3',
@@ -123,6 +128,11 @@ export const menuconfigpanel_add_button = defineStyle({
     bgColor: 'secondaire.2',
     borderColor: 'secondaire.2',
   },
+  _active: {
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+    borderColor: 'secondaire.2',
+  },
 })
 
 export const menuconfigpanel_del_button = defineStyle({
@@ -133,6 +143,11 @@ export const menuconfigpanel_del_button = defineStyle({
   bg: 'primaire.1',
   bgColor: 'primaire.1',
   _hover: {
+    borderColor: 'secondaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+  },
+  _active: {
     borderColor: 'secondaire.1',
     bg: 'secondaire.1',
     bgColor: 'secondaire.1',
@@ -155,6 +170,11 @@ export const menuconfigpanel_del_button_in_table = defineStyle({
     bg: 'secondaire.1',
     bgColor: 'secondaire.1',
   },
+  _active: {
+    borderColor: 'secondaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+  },
 })
 
 export const menuconfigpanel_option_button_secondary = defineStyle({
@@ -169,6 +189,11 @@ export const menuconfigpanel_option_button_secondary = defineStyle({
     bg: 'secondaire.2',
     bgColor: 'secondaire.2',
     borderColor: 'secondaire.2',
+  },
+  _active: {
+    bg: 'tertiaire.2',
+    bgColor: 'tertiaire.2',
+    borderColor: 'tertiaire.2',
   },
 })
 
@@ -187,6 +212,11 @@ export const menuconfigpanel_option_button_secondary_activated = defineStyle({
     bgColor: 'secondaire.2',
     borderColor: 'secondaire.2',
   },
+  _active: {
+    bg: 'primaire.2',
+    bgColor: 'primaire.2',
+    borderColor: 'primaire.2',
+  },
 })
 
 export const menuconfigpanel_option_button_tertiary = defineStyle({
@@ -201,6 +231,11 @@ export const menuconfigpanel_option_button_tertiary = defineStyle({
     bg: 'secondaire.4',
     bgColor: 'secondaire.4',
     borderColor: 'primaire.4',
+  },
+  _active: {
+    bg: 'tertiaire.4',
+    bgColor: 'tertiaire.4',
+    borderColor: 'tertiaire.4',
   },
 })
 
@@ -219,12 +254,21 @@ export const menuconfigpanel_option_button_tertiary_activated = defineStyle({
     bgColor: 'secondaire.4',
     borderColor: 'secondaire.4',
   },
+  _active: {
+    bg: 'primaire.4',
+    bgColor: 'primaire.4',
+    borderColor: 'primaire.4',
+  },
 })
 
 export const toolbar_button_1 = defineStyle({
   bgColor: 'primaire.1',
   borderColor: 'secondaire.1',
   _hover: {
+    bgColor: 'tertiaire.1',
+    borderColor: 'secondaire.1',
+  },
+  _active: {
     bgColor: 'tertiaire.1',
     borderColor: 'secondaire.1',
   },
@@ -237,12 +281,20 @@ export const toolbar_button_2 = defineStyle({
     bgColor: 'tertiaire.2',
     borderColor: 'secondaire.2',
   },
+  _active: {
+    bgColor: 'tertiaire.2',
+    borderColor: 'secondaire.2',
+  },
 })
 
 export const toolbar_button_3 = defineStyle({
   bgColor: 'primaire.3',
   borderColor: 'secondaire.3',
   _hover: {
+    bgColor: 'tertiaire.3',
+    borderColor: 'secondaire.3',
+  },
+  _active: {
     bgColor: 'tertiaire.3',
     borderColor: 'secondaire.3',
   },
@@ -255,12 +307,20 @@ export const toolbar_button_5 = defineStyle({
     bgColor: 'tertiaire.5',
     borderColor: 'secondaire.5',
   },
+  _active: {
+    bgColor: 'tertiaire.5',
+    borderColor: 'secondaire.5',
+  },
 })
 
 export const toolbar_button_6 = defineStyle({
   bgColor: 'primaire.6',
   borderColor: 'secondaire.6',
   _hover: {
+    bgColor: 'tertiaire.6',
+    borderColor: 'secondaire.6',
+  },
+  _active: {
     bgColor: 'tertiaire.6',
     borderColor: 'secondaire.6',
   },
@@ -271,6 +331,10 @@ export const toolbar_main_button = defineStyle({
   bgColor: 'primaire.1',
   borderColor: 'primaire.1',
   _hover: {
+    bgColor: 'tertiaire.1',
+    borderColor: 'tertiaire.1',
+  },
+  _active: {
     bgColor: 'tertiaire.1',
     borderColor: 'tertiaire.1',
   },
@@ -289,6 +353,12 @@ export const menutop_button = defineStyle({
   bg: 'transparent',
   bgColor: 'transparent',
   _hover: {
+    color: 'gray.600',
+    borderColor: 'transparent',
+    bg: 'transparent',
+    bgColor: 'transparent',
+  },
+  _active: {
     color: 'gray.600',
     borderColor: 'transparent',
     bg: 'transparent',
@@ -315,7 +385,11 @@ export const menutop_button_datatags = defineStyle({
     bg: 'lightgrey',
     bgColor: 'lightgrey',
   },
-
+  _active: {
+    borderColor: 'lightgrey',
+    bg: 'lightgrey',
+    bgColor: 'lightgrey',
+  },
 })
 
 // Style for menu list in the subnav
@@ -343,6 +417,10 @@ export const menutop_button_with_dropdown = defineStyle({
   _hover: {
     bg: 'transparent',
     bgColor: 'transparent',
+  },
+  _active: {
+    bg: 'transparent',
+    bgColor: 'transparent',
   }
 })
 
@@ -360,6 +438,11 @@ export const menutop_button_save_in_cache = defineStyle({
   color: 'white',
   fill: 'white',
   _hover: {
+    borderColor: 'secondaire.3',
+    bg: 'secondaire.3',
+    bgColor: 'secondaire.3',
+  },
+  _active: {
     borderColor: 'secondaire.3',
     bg: 'secondaire.3',
     bgColor: 'secondaire.3',
@@ -401,6 +484,11 @@ export const contextmenu_button = defineStyle({
     bg: 'secondaire.2',
     bgColor: 'secondaire.2',
   },
+  _active: {
+    color: 'white',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
 })
 
 export const welcome_button_license_description = defineStyle({
@@ -411,6 +499,10 @@ export const welcome_button_license_description = defineStyle({
   textDecoration: 'underline',
   maxW: '20vw',
   _hover: {
+    bg: 'primaire.2',
+    bgColor: 'primaire.2',
+  },
+  _active: {
     bg: 'primaire.2',
     bgColor: 'primaire.2',
   },
@@ -430,6 +522,11 @@ export const btn_documentation = defineStyle({
   bgColor: 'primaire.5',
   borderColor: 'primaire.5',
   _hover: {
+    bg: 'secondaire.5',
+    bgColor: 'secondaire.5',
+    borderColor: 'secondaire.5',
+  },
+  _active: {
     bg: 'secondaire.5',
     bgColor: 'secondaire.5',
     borderColor: 'secondaire.5',

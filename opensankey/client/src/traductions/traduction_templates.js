@@ -4,9 +4,24 @@ export const resources_template = {
   //=======================================================
   en: {
     translation: {
-      template:{
-        essential: {
-          title: 'Essential',
+      templates: {
+        themes: {
+          energy: 'Energy',
+          enviro: 'Environment',
+          mat: 'Materials',
+          industry: 'Industry',
+          economy: 'Economics',
+          ress: 'Ressources',
+          commercial: 'Commercial',
+          supply: 'Supply chain',
+          agri: 'Agriculture'
+        },
+        difficulties: {
+          basic: 'Essential',
+          intermediary: 'Advanced',
+          advanced: 'Expert',
+        },
+        ids: {
           personnal_budget: 'Personal expenses',
           business_simple: 'Simple business accounting',
           commercial_pipe: 'Business pipe',
@@ -20,9 +35,24 @@ export const resources_template = {
   //=======================================================
   fr: {
     translation: {
-      template:{
-        essential: {
-          title: 'Basique',
+      templates:{
+        themes: {
+          energy: 'Energie',
+          enviro: 'Environnement',
+          mat: 'Matières',
+          industry: 'Industrie',
+          economy: 'Economique',
+          ress: 'Ressources',
+          commercial: 'Commercial',
+          supply: 'Logistique',
+          agri: 'Agriculture'
+        },
+        difficulties: {
+          basic: 'Basique',
+          intermediary: 'Avancé',
+          advanced: 'Expert',
+        },
+        ids: {
           personnal_budget: 'Dépenses personnelles',
           business_simple: 'Bilan comptable simple',
           commercial_pipe: 'Pipe commercial',

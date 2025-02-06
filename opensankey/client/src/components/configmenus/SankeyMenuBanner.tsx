@@ -749,10 +749,10 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     isAlwaysOpen={new_data.show_documentation}
   >
     <Button variant='info' onClick={() => { 
-      new_data.menu_configuration.never_see_again.current = false; 
+      new_data.menu_configuration.never_see_again.current = false 
       localStorage.removeItem('dontSeeAggainWelcome'), 
       new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true) 
-      }} 
+    }} 
     >?
     </Button>
   </OSTooltip>

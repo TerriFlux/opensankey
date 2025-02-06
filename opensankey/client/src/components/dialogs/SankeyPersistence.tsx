@@ -110,6 +110,7 @@ const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
     <Modal
       isOpen={show_load_dialog}
       onClose={() => set_show_load_dialog(false)}
+      variant='modal_dialog'
     >
       <ModalOverlay />
       <ModalContent

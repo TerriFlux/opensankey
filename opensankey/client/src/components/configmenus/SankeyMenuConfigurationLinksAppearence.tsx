@@ -120,10 +120,6 @@ const logo_hh = <svg xmlns="http://www.w3.org/2000/svg"
   </g>
 </svg>
 
-const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
-const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
-const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z" /></svg>
-
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConfigurationLinksAppearence> = ({
@@ -676,7 +672,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
 
   </Box>
 
-  // Content specific to link label, it us not generic so not in SankeyMenuLabelComponent 
+  // Content specific to link label, it us not generic so not in SankeyMenuLabelComponent
   const content_name_specific_flow = name_label_visible ? <>
     {/* Orienter le texte du label le long du flux  */}
     <Checkbox
@@ -848,28 +844,28 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
     </Box>
     {value_label_is_visible ?
       <>
-      {additionMenus.additional_link_appearence_value.map(el => el(menu_for_style))}
-      <SankeyMenuValueLabelComponent
-        new_data={new_data}
-        elements={elements}
-        selectedElements={selected_links}
-        refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-        dict_decorator_name={{
-          label_horiz: 'value_label_horiz',
-          label_vert: 'value_label_vert',
-          label_font_size: 'value_label_font_size',
-          label_color: 'value_label_color',
-          label_bold: 'value_label_bold',
-          label_uppercase: 'value_label_uppercase',
-          label_italic: 'value_label_italic',
-          label_font_family: 'value_label_font_family',
-          label_unit_visible: 'value_label_unit_visible',
-          label_unit: 'value_label_unit',
-          label_unit_factor: 'value_label_unit_factor',
-          label_custom_digit: 'value_label_custom_digit',
-          label_nb_digit: 'value_label_nb_digit',
-        }}
-      />
+        {additionMenus.additional_link_appearence_value.map(el => el(menu_for_style))}
+        <SankeyMenuValueLabelComponent
+          new_data={new_data}
+          elements={elements}
+          selectedElements={selected_links}
+          refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+          dict_decorator_name={{
+            label_horiz: 'value_label_horiz',
+            label_vert: 'value_label_vert',
+            label_font_size: 'value_label_font_size',
+            label_color: 'value_label_color',
+            label_bold: 'value_label_bold',
+            label_uppercase: 'value_label_uppercase',
+            label_italic: 'value_label_italic',
+            label_font_family: 'value_label_font_family',
+            label_unit_visible: 'value_label_unit_visible',
+            label_unit: 'value_label_unit',
+            label_unit_factor: 'value_label_unit_factor',
+            label_custom_digit: 'value_label_custom_digit',
+            label_nb_digit: 'value_label_nb_digit',
+          }}
+        />
         {content_value_specific_flow}</> :
       <></>}
 
