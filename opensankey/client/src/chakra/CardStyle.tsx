@@ -79,7 +79,10 @@ export const cards_template = definePartsStyle({
     borderWidth: '1px',
     borderStyle:'solid',
     borderColor: 'grey'
-  }
+  },
+  header: {
+    textStyle: 'h3',
+  },
 })
 
 export const cards_empty_template = definePartsStyle({

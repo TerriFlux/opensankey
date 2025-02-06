@@ -43,11 +43,8 @@ import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 import {
   ClassAbstract_DrawingArea,
   ClassAbstract_ApplicationData,
-  ClassAbstract_Sankey,
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
-import { ClassAbstract_NodeElement } from '../types/AbstractNode'
-import { Class_ApplicationData } from './Types'
 
 declare const window: Window &
   typeof globalThis & {

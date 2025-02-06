@@ -145,48 +145,49 @@ export const tabs_variant_template = definePartsStyle({
     'user-select': 'none',
   },
   tab: {
-    border: 'solid 1px !important',
-    borderRadius: '6px',
-    borderColor: 'primaire.6',
-    margin: '0 !important',
+    borderRight: '0px !important',
+    borderLeft: '0px !important',
+    borderBottom: '0px !important',
+    borderTop: '0px !important',
+    borderRadius: '0px',
+    margin: '0 -1px 0 0 !important',
     padding: '0 !important',
     height: '2rem !important',
-    backgroundColor: 'none',
-    width: '6rem',
-
+    color: 'primaire.3',
+    fill: 'primaire.3',
+    path: 'primaire.3',
+    width: '10rem',
+    textStyle: 'h3',
     _selected: {
-      border: 'solid 1px !important',
-      borderRadius: '6px',
-      color: 'primaire.3',
-      borderColor: 'primaire.6',
-      backgroundColor: ' openSankey.200',
-
+      background: 'white',
+      borderRight: '0px !important',
+      borderLeft: 'solid 1px !important',
+      borderBottom: 'solid 1px !important',
+      borderTop: 'solid 1px !important',
+      borderRadius: '6px 0px 0px 6px',
+      borderRightColor: 'white',
+      borderLeftColor: 'primaire.2',
+      borderBottomColor: 'primaire.2',
+      borderTopColor: 'primaire.2',
+      color: 'primaire.2',
+      fill: 'primaire.2',
+      path: 'primaire.2',
     }
   },
   tablist: {
     display: 'inherit',
     gridTemplateColumns: '1fr',
     gridTemplateRows: '1fr',
-    gridRowGap: '0.25rem',
-    border: '0 !important',
-    margin: '0.5rem !important'
+    borderRight: '1px !important',
+    borderColor: 'primaire.2 !important',
+    padding: '3rem 0 0 0 !important'
   },
   tabpanels: {
-    borderTop: 'solid 1px !important',
-    borderTopColor: 'gray.100 !important',
-
+    border: '0px !important',
   },
   tabpanel: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    gridTemplateRows: '0.5fr',
-    gridRowGap: '0.25rem',
-    gridColumnGap: '0.25rem',
-
-    width: '60vw',
-    height: '70vh',
-    overflow: 'auto'
+    display: 'block',
+    height: '100%',
+    width: '100%',
   }
-  // tabpanel: {
-  // },
 })
