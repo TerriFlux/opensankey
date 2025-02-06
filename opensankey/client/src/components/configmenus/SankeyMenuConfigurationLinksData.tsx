@@ -26,7 +26,6 @@ import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfigur
 
 export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurationLinksData> = ({
   new_data,
-  additional_data_element,
   contextual
 }) => {
 
@@ -64,13 +63,10 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     const value_update = updated_selected_links[0]?.value
 
     // Update input data value
-    ref_set_data_value_input.current(String(value_update?.data_value??''))
+    ref_set_data_value_input.current(String(value_update?.data_value ?? ''))
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
-
   }
-
-
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
@@ -87,9 +83,11 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     // And update this menu also
     new_data.menu_configuration.updateComponentRelatedToLinksData()
   }
-  if(contextual){
+
+  if (contextual) {
     new_data.menu_configuration.ref_to_menu_contextual_config_links_data_updater.current = refreshThis
-  }else{
+  }
+  else {
     new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = refreshThis
   }
 
@@ -186,28 +184,27 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     </OSTooltip>
 
     <OSTooltip
-    label={t('Flux.data.tooltips.affichage')}
-  >
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name' >
-        {t('Flux.data.affichage')}
+      label={t('Flux.data.tooltips.affichage')}
+    >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Flux.data.affichage')}
+        </Box>
+        <ConfigMenuTextInput
+          ref_to_set_value={ref_set_text_value_input}
+          function_get_value={() => { return value?.text_value }}
+          function_on_blur={(_) => {
+            // Update text for links
+            selected_links.forEach(link => {
+              link.text_value = (_ ?? '')
+            })
+            // Update this menu
+            refreshThisAndUpdateRelatedComponents()
+          }}
+        />
       </Box>
-      <ConfigMenuTextInput
-        ref_to_set_value={ref_set_text_value_input}
-        function_get_value={() => { return value?.text_value }}
-        function_on_blur={(_) => {
-          // Update text for links
-          selected_links.forEach(link => {
-            link.text_value = (_ ?? '')
-          })
-          // Update this menu
-          refreshThisAndUpdateRelatedComponents()
-        }}
-      />
-    </Box>
-  </OSTooltip>
+    </OSTooltip>
   </Box>
-
 
   // Return JSX component
   return content
