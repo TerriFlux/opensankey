@@ -125,7 +125,6 @@ export const moduleDialogs: FType_ModuleDialogs = (
       dialog_name={'ref_setter_show_menu_link_data'}
       content={<MenuConfigurationLinksData
         new_data={new_data}
-        additional_data_element={additional_menus.additional_data_element}
         contextual={true}
       />}
       title={t('Menu.flux') + ' ' + t('Flux.data.données')}
