@@ -7,6 +7,10 @@ export const toolbar_button_4 = defineStyle({
     bgColor: 'tertiaire.4',
     borderColor: 'secondaire.4',
   },
+  _active: {
+    bgColor: 'tertiaire.4',
+    borderColor: 'secondaire.4',
+  },
 })
 
 export const button_dataTagg_sequence_play = defineStyle({
@@ -14,6 +18,10 @@ export const button_dataTagg_sequence_play = defineStyle({
   borderColor: 'primaire.3',
   margin:'0',
   _hover: {
+    bgColor: 'secondaire.3',
+    borderColor: 'secondaire.3',
+  },
+  _active: {
     bgColor: 'secondaire.3',
     borderColor: 'secondaire.3',
   },
@@ -25,6 +33,10 @@ export const button_dataTagg_sequence_pause = defineStyle({
   borderColor: 'secondaire.3',
   margin:'0',
   _hover: {
+    bgColor: 'secondaire.3',
+    borderColor: 'secondaire.3',
+  },
+  _active: {
     bgColor: 'secondaire.3',
     borderColor: 'secondaire.3',
   },
@@ -40,6 +52,10 @@ export const button_dataTagg_sequence_menu_play = defineStyle({
     bgColor: 'secondaire.3',
     borderColor: 'secondaire.3',
   },
+  _active: {
+    bgColor: 'secondaire.3',
+    borderColor: 'secondaire.3',
+  },
 })
 
 export const button_dataTagg_sequence_menu_pause = defineStyle({
@@ -50,6 +66,10 @@ export const button_dataTagg_sequence_menu_pause = defineStyle({
   color:'primaire.3',
   borderColor: 'secondaire.3',
   _hover: {
+    bgColor: 'secondaire.3',
+    borderColor: 'secondaire.3',
+  },
+  _active: {
     bgColor: 'secondaire.3',
     borderColor: 'secondaire.3',
   },
