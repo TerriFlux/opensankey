@@ -795,12 +795,12 @@ export const resources_app_elements = {
       separator_interval: ',',
       sep_decimal: '.',
       diaporama: 'Presentation',
-        start: 'Start',
-        tooltip: {
-          dontSeeAgain: 'By checking this box, the welcome screen will no longer appear on the next page load. To display this welcome screen again, go to Help->Home.',
-          diaporama: 'Presentation of the various features of the tool, from the most basic to the most advanced as well as mouse/keyboard combination for edition.',
-          start: 'Start drawing your flows. To do this, click in the drawing area, drag without releasing, then release.'
-        }
+      start: 'Start',
+      tooltip: {
+        dontSeeAgain: 'By checking this box, the welcome screen will no longer appear on the next page load. To display this welcome screen again, go to Help->Home.',
+        diaporama: 'Presentation of the various features of the tool, from the most basic to the most advanced as well as mouse/keyboard combination for edition.',
+        start: 'Start drawing your flows. To do this, click in the drawing area, drag without releasing, then release.'
+      }
     }
   },
   //=======================================================
