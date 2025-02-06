@@ -315,6 +315,8 @@ export abstract class ClassTemplate_ApplicationData
     this._logo_terriflux = 'logos/logo_terriflux.png'
     // Default logo for app
     this._logo = this._logo_opensankey
+    this._language = navigator.language
+    i18next.changeLanguage(this.language)
 
     // Excel processing function
     this._processFunction = {
