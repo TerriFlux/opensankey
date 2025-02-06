@@ -13,6 +13,7 @@ export const modal_account = definePartsStyle({
     minWidth: '33vw',
     maxWidth: '66vw',
     width: 'fit-content',
+    height: 'fit-content',
     alignSelf: 'center'
   },
   header: {
