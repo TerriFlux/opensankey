@@ -196,9 +196,12 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
       <ModalHeader>{t(('Menu.import_icon'))}</ModalHeader>
       <ModalCloseButton />
       <ModalBody>
-        {/* {modale_sub_icon!=='import'?<InputGroup><InputGroup.Text>{t('Menu.filter_by_name')}</InputGroup.Text><Form.Control type='text' value={filter_name} onChange={(evt)=>set_filter_name(evt.target.value)}></Form.Control></InputGroup>:<></>} */}
-
-        <Tabs variant='tabs_variant_lib_cion'>
+        <Tabs
+          orientation='vertical'
+          align='start'
+          variant='tabs_variant_template'
+          height='100%'
+        >
           <TabList>
             {
               Object.keys(tuto_sub_nav).map((m, i) => {
@@ -210,26 +213,43 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
             {Object.keys(tuto_sub_nav).map((modale_sub_icon, i) => {
 
               return <TabPanel key={'panel_icon_catalog_' + i}>
-                {modale_sub_icon !== 'import' ? <Box
-                  as='span'
-                  layerStyle='menuconfigpanel_row_2cols'
-                >
-                  <Box
-                    layerStyle='menuconfigpanel_option_name'
-                  >
-                    {t('Menu.filter_by_name')}
-                  </Box>
-                  <Input
-                    placeholder='start typing to filter displayed icon'
-                    variant='menuconfigpanel_option_input'
-                    value={filter_name}
-                    onChange={evt => set_filter_name(evt.target.value)}
-                  />
-                </Box> : <></>}
                 <Box
-                  layerStyle='options_cards'
+                  display='grid'
+                  gridAutoFlow='row'
+                  gridRowGap='1rem'
+                  height='100%'
                 >
-                  {tuto_sub_nav[modale_sub_icon]}
+                  {
+                    modale_sub_icon !== 'import' ?
+                      <Box
+                        as='span'
+                        layerStyle='menuconfigpanel_row_2cols'
+                      >
+                        <Box
+                          layerStyle='menuconfigpanel_option_name'
+                        >
+                          {t('Menu.filter_by_name')}
+                        </Box>
+                        <Input
+                          placeholder='start typing to filter displayed icon'
+                          variant='menuconfigpanel_option_input'
+                          value={filter_name}
+                          onChange={evt => set_filter_name(evt.target.value)}
+                        />
+                      </Box> :
+                      <></>
+                  }
+                  <Box
+                    display="block"
+                    overflow='scroll'
+                    height='100%'
+                  >
+                    <Box
+                      layerStyle='options_cards'
+                    >
+                      {tuto_sub_nav[modale_sub_icon]}
+                    </Box>
+                  </Box>
                 </Box>
               </TabPanel>
             })}

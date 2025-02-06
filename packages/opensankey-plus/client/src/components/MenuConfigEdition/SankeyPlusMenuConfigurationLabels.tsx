@@ -249,313 +249,313 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 
   const content_menu_zdt = <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
     <Box layerStyle='menuconfigpanel_grid'>
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_zdt_row_droplist'
-    >
-      <Button
-        isDisabled={!new_data_plus.has_sankey_plus}
-        variant='menuconfigpanel_add_button'
-        onClick={() => {
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_zdt_row_droplist'
+      >
+        <Button
+          isDisabled={!new_data_plus.has_sankey_plus}
+          variant='menuconfigpanel_add_button'
+          onClick={() => {
           // Create default node
-          const new_node = new_data_plus.drawing_area.sankey.addNewDefaultFreeLabel()
-          //Deselect previously selected container
-          new_data_plus.drawing_area.purgeSelectionOfContainer()
-          // Add node to selection
-          new_data_plus.drawing_area.addContainerToSelection(new_node)
-          // Update menus
-          redrawAndRefresh()
-        }
-        }><FaPlus /></Button>
+            const new_node = new_data_plus.drawing_area.sankey.addNewDefaultFreeLabel()
+            //Deselect previously selected container
+            new_data_plus.drawing_area.purgeSelectionOfContainer()
+            // Add node to selection
+            new_data_plus.drawing_area.addContainerToSelection(new_node)
+            // Update menus
+            redrawAndRefresh()
+          }
+          }><FaPlus /></Button>
 
-      {dropdownMultiLabel()}
+        {dropdownMultiLabel()}
 
-      <Button
-        variant='menuconfigpanel_del_button'
-        isDisabled={disable_options}
-        onClick={() => {
+        <Button
+          variant='menuconfigpanel_del_button'
+          isDisabled={disable_options}
+          onClick={() => {
           // Delete all selected nodes
-          new_data_plus.drawing_area.sankey.deleteSelectedFreeLabels()
-          // Update all menus
-          redrawAndRefresh()
-        }
-        }><FaMinus /></Button>
-
-      {//Boutton pour monter le label sélctionné
-      }
-
-      <Button
-        variant='menuconfigpanel_option_button'
-        isDisabled={disable_options}
-        onClick={() => {
-          selected_zdt.map(l => {
-            l.increaseDisplayOrder()
-          })
-          setForceUpdate(a => !a)
-        }}><FaAngleUp /></Button>
-
-      <Button
-        variant='menuconfigpanel_option_button'
-        isDisabled={disable_options}
-        onClick={() => {
-          selected_zdt.map(l => {
-            l.decreaseDisplayOrder()
-          })
-          setForceUpdate(a => !a)
-        }}><FaAngleDown /></Button>
-
-    </Box>
-
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-      gridTemplateColumns='1fr 9fr'
-    >
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        textStyle='h3'
-      >
-        {t('LL.title')}
-      </Box>
-      <InputGroup
-        variant='menuconfigpanel_option_input'
-      >
-        <Input
-          variant='menuconfigpanel_option_input'
-          max={100}
-          disabled={disable_options}
-          style={{
-            color: (disable_options) ? '#666666' : '',
-            backgroundColor: (disable_options) ? '#cccccc' : ''
-          }}
-          value={allLabelTitle()}
-          onChange={evt => {
-            const value = evt.target.value
-            selected_zdt.map(d => d.title = value)
-            setForceUpdate(!forceUpdate)
-          }}
-        />
-      </InputGroup>
-    </Box>
-
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-    >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Noeud.illustration_type')}
-      </Box>
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Button
-          isDisabled={disable_options}
-          variant='menuconfigpanel_option_button'
-          onClick={() => {
-            selected_zdt.forEach(n => n.is_image = false)
-            set_button_icon_or_image('zdt')
+            new_data_plus.drawing_area.sankey.deleteSelectedFreeLabels()
+            // Update all menus
             redrawAndRefresh()
-          }}>Texte</Button>
+          }
+          }><FaMinus /></Button>
+
+        {//Boutton pour monter le label sélctionné
+        }
 
         <Button
-          disabled={disable_options}
           variant='menuconfigpanel_option_button'
-          onClick={() => {
-            selected_zdt.forEach(n => n.is_image = true)
-
-            set_button_icon_or_image('image')
-            redrawAndRefresh()
-          }}>Image</Button></Box>
-    </Box>
-
-    {button_icon_or_image === 'zdt' ? <Box style={{ 'height': '300px' }}><ReactQuill
-      className='quill_editor'
-      value={selected_zdt.length > 0 ? selected_zdt[0].content : ''}
-      ref={r_editor_ZDT}
-      onChange={(evt, _, src) => {
-        if (src == 'user') {
-          selected_zdt.forEach(n => n.content = evt)
-          redrawAndRefresh()
-        }
-      }}
-      theme="snow"
-      modules={modules}
-      formats={formats}
-      readOnly={disable_options}
-      style={{
-        'height': '300px',
-        color: (disable_options) ? '#666666' : '',
-        backgroundColor: (disable_options) ? '#cccccc' : '',
-        overflowY: 'scroll'
-      }}
-    /></Box> : content_image}
-
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-    >
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('LL.hl')}
-        </Box>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
-            min={0}
-            isDisabled={disable_options}
-            value={allLabelHeight()}
-            onChange={evt => {
-              selected_zdt.map(d => d.label_height = +evt)
-
-              redrawAndRefresh()
-            }}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput></InputGroup>
-      </Box>
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('LL.ll')}
-        </Box>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput'
-            min={0}
-            isDisabled={disable_options}
-            value={allLabelWidth()}
-            onChange={evt => {
-              selected_zdt.map(d => d.label_width = +evt)
-
-              redrawAndRefresh()
-            }}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
-        </InputGroup>
-      </Box>
-    </Box>
-
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-    >
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('LL.cfl')}
-        </Box>
-        <Input
-          variant='menuconfigpanel_option_input_color'
-          type='color'
-          id='form_color_zdt'
-          name='form_color_zdt'
           isDisabled={disable_options}
-          value={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
-          onChange={evt => {
-            const val = evt.target.value
-            selected_zdt.map(d => d.color = val)
+          onClick={() => {
+            selected_zdt.map(l => {
+              l.increaseDisplayOrder()
+            })
+            setForceUpdate(a => !a)
+          }}><FaAngleUp /></Button>
 
-            redrawAndRefresh()
-          }}
-        />
+        <Button
+          variant='menuconfigpanel_option_button'
+          isDisabled={disable_options}
+          onClick={() => {
+            selected_zdt.map(l => {
+              l.decreaseDisplayOrder()
+            })
+            setForceUpdate(a => !a)
+          }}><FaAngleDown /></Button>
+
       </Box>
+
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
+        gridTemplateColumns='1fr 9fr'
       >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('LL.ft')}
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          textStyle='h3'
+        >
+          {t('LL.title')}
         </Box>
         <InputGroup
           variant='menuconfigpanel_option_input'
         >
-          <NumberInput
-            variant='menuconfigpanel_option_numberinput_with_right_addon'
+          <Input
+            variant='menuconfigpanel_option_input'
             max={100}
-            min={0}
-            step={1}
-            isDisabled={disable_options}
-            value={allLabelTransparent()}
-            onChange={evt => {
-              const value = +evt
-              selected_zdt.map(d => d.opacity = value)
-
-              redrawAndRefresh()
+            disabled={disable_options}
+            style={{
+              color: (disable_options) ? '#666666' : '',
+              backgroundColor: (disable_options) ? '#cccccc' : ''
             }}
-          >
-            <NumberInputField />
-            <NumberInputStepper>
-              <NumberIncrementStepper />
-              <NumberDecrementStepper />
-            </NumberInputStepper>
-          </NumberInput>
+            value={allLabelTitle()}
+            onChange={evt => {
+              const value = evt.target.value
+              selected_zdt.map(d => d.title = value)
+              setForceUpdate(!forceUpdate)
+            }}
+          />
         </InputGroup>
       </Box>
-    </Box>
 
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-    >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('LL.cbl')}
-      </Box>
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
       >
-        <Input
-          variant='menuconfigpanel_option_input_color'
-          type='color'
-          id='form_color_border_zdt'
-          name='form_color_border_zdt'
-          disabled={!new_data_plus.has_sankey_plus && !valAllLabelBorderTransparent}
-          value={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
-          onChange={evt => {
-            const val = evt.target.value
-            selected_zdt.map(d => d.color_border = val)
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Noeud.illustration_type')}
+        </Box>
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Button
+            isDisabled={disable_options}
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              selected_zdt.forEach(n => n.is_image = false)
+              set_button_icon_or_image('zdt')
+              redrawAndRefresh()
+            }}>Texte</Button>
 
+          <Button
+            disabled={disable_options}
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              selected_zdt.forEach(n => n.is_image = true)
+
+              set_button_icon_or_image('image')
+              redrawAndRefresh()
+            }}>Image</Button></Box>
+      </Box>
+
+      {button_icon_or_image === 'zdt' ? <Box style={{ 'height': '300px' }}><ReactQuill
+        className='quill_editor'
+        value={selected_zdt.length > 0 ? selected_zdt[0].content : ''}
+        ref={r_editor_ZDT}
+        onChange={(evt, _, src) => {
+          if (src == 'user') {
+            selected_zdt.forEach(n => n.content = evt)
             redrawAndRefresh()
-          }}
-        />
+          }
+        }}
+        theme="snow"
+        modules={modules}
+        formats={formats}
+        readOnly={disable_options}
+        style={{
+          'height': '300px',
+          color: (disable_options) ? '#666666' : '',
+          backgroundColor: (disable_options) ? '#cccccc' : '',
+          overflowY: 'scroll'
+        }}
+      /></Box> : content_image}
 
-        <Checkbox
-          variant='menuconfigpanel_part_title_1_checkbox'
-          iconColor={valAllLabelBorderTransparentIndeterminate ? '#78C2AD' : 'white'}
-          isDisabled={disable_options}
-          isIndeterminate={valAllLabelBorderTransparentIndeterminate}
-          isChecked={valAllLabelBorderTransparent}
-          onChange={(evt) => {
-            selected_zdt.map(d => d.transparent_border = evt.target.checked)
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('LL.hl')}
+          </Box>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              min={0}
+              isDisabled={disable_options}
+              value={allLabelHeight()}
+              onChange={evt => {
+                selected_zdt.map(d => d.label_height = +evt)
 
-            redrawAndRefresh()
-          }}>
-          {t('LL.bt')}
-        </Checkbox>
+                redrawAndRefresh()
+              }}
+            >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput></InputGroup>
+        </Box>
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('LL.ll')}
+          </Box>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput'
+              min={0}
+              isDisabled={disable_options}
+              value={allLabelWidth()}
+              onChange={evt => {
+                selected_zdt.map(d => d.label_width = +evt)
+
+                redrawAndRefresh()
+              }}
+            >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </InputGroup>
+        </Box>
+      </Box>
+
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('LL.cfl')}
+          </Box>
+          <Input
+            variant='menuconfigpanel_option_input_color'
+            type='color'
+            id='form_color_zdt'
+            name='form_color_zdt'
+            isDisabled={disable_options}
+            value={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
+            onChange={evt => {
+              const val = evt.target.value
+              selected_zdt.map(d => d.color = val)
+
+              redrawAndRefresh()
+            }}
+          />
+        </Box>
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('LL.ft')}
+          </Box>
+          <InputGroup
+            variant='menuconfigpanel_option_input'
+          >
+            <NumberInput
+              variant='menuconfigpanel_option_numberinput_with_right_addon'
+              max={100}
+              min={0}
+              step={1}
+              isDisabled={disable_options}
+              value={allLabelTransparent()}
+              onChange={evt => {
+                const value = +evt
+                selected_zdt.map(d => d.opacity = value)
+
+                redrawAndRefresh()
+              }}
+            >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </InputGroup>
+        </Box>
+      </Box>
+
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('LL.cbl')}
+        </Box>
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Input
+            variant='menuconfigpanel_option_input_color'
+            type='color'
+            id='form_color_border_zdt'
+            name='form_color_border_zdt'
+            disabled={!new_data_plus.has_sankey_plus && !valAllLabelBorderTransparent}
+            value={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
+            onChange={evt => {
+              const val = evt.target.value
+              selected_zdt.map(d => d.color_border = val)
+
+              redrawAndRefresh()
+            }}
+          />
+
+          <Checkbox
+            variant='menuconfigpanel_part_title_1_checkbox'
+            iconColor={valAllLabelBorderTransparentIndeterminate ? '#78C2AD' : 'white'}
+            isDisabled={disable_options}
+            isIndeterminate={valAllLabelBorderTransparentIndeterminate}
+            isChecked={valAllLabelBorderTransparent}
+            onChange={(evt) => {
+              selected_zdt.map(d => d.transparent_border = evt.target.checked)
+
+              redrawAndRefresh()
+            }}>
+            {t('LL.bt')}
+          </Checkbox>
+        </Box>
       </Box>
     </Box>
-  </Box>
   </OSTooltip>
 
   return content_menu_zdt
