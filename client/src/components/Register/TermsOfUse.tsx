@@ -12,7 +12,6 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
-  Heading,
 } from '@chakra-ui/react'
 
 /**
@@ -70,18 +69,17 @@ const TermsOfUse: FunctionComponent<{
         <ModalOverlay />
         <ModalContent
           maxWidth='80vw'
-          bg='white'
         >
           <ModalHeader >
-            <Heading variant='heading_welcome_style' >
-              {t('terms_of_uses.title')}
-            </Heading>
+            {t('terms_of_uses.title')}
           </ModalHeader>
           <ModalCloseButton />
 
           <ModalBody>
             <Box
               padding='1rem'
+              overflowY='scroll'
+              height='calc(65vh - 3rem)'
             >
               <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
             </Box>

@@ -27,20 +27,20 @@ export const resources_app_elements = {
         'sankeyPlusDisabled': 'Parameter disabled because you don\'t have OpenSankey+',
         'featureLocked': 'Locked',
         'featureBeta': 'Beta-test',
-  
+
         'home': 'Master',
         'addView': 'Add',
         'updateView': 'Update',
         'precView': 'Prev.',
         'nextView': 'Next',
-  
+
         'toBeautify': 'Beautify JSON file',
         'updateFOZdd': 'Update Foreign object on drawing area',
-  
+
         'import_icon': 'Select icon',
         'import_icon_from_pack': 'Import icons from pack',
         'filter_by_name': 'Filter by name',
-  
+
         'presentation_OS': 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge and includes simple functions for creating nodes, flows, and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
         'presentation_OS_limit_node': 'The 15-node limit for use without an account can be lifted by creating a free account.\n\n',
         'presentation_OSP': 'OpenSankey+ is a paid license that unlocks new features for creating beautiful Sankey diagrams for presentations.\n\nThis license includes advanced formatting features such as the addition of illustrative images or icons for nodes, the addition of color gradients on flows and animations, and more.\n\n But above all, OpenSankey+ lets you generate slideshows to explain your Sankey diagrams, thanks to the "Views" mechanism, which records their visual states (with / without certain filters activated, for example) to simplify navigation between them.\n\n',
@@ -143,7 +143,7 @@ export const resources_app_elements = {
           'fla': 'Display free links',
           'astr': 'Display structure',
         },
-  
+
       },
       LL: {
         'hl': 'Height',
@@ -156,7 +156,7 @@ export const resources_app_elements = {
         'cbl': 'Border Color',
         'labels': 'Labels',
         'title': 'Title'
-      },  
+      },
       UserNav: {
         'to_con': 'Sign in',
         'to_reg': 'Sign up',
@@ -170,7 +170,7 @@ export const resources_app_elements = {
           'to_buy': 'Access advanced features, including the use of icons, text areas, and view editing.',
           'to_app': 'Back to the application',
           'to_acc': 'My account',
-          'to_dbd': 'Dashboard'         
+          'to_dbd': 'Dashboard'
         }
       },
       Register: {
@@ -401,7 +401,6 @@ export const resources_app_elements = {
         'template_unitary_zdt_content': 'Unitary Sankey build from:',
         'template_unitary_zdt_content_of_node': 'Unitary node:',
         'keep_master_var': 'Master variable',
-        'setTransparentAttr': 'Choose variables value inherited from Master',
         'updateViewWithMasterVar': 'Update current view with selected parameter',
         'edit_name': 'Edit name',
         'modify_name_view': 'Modify the name of the view',
@@ -428,11 +427,11 @@ export const resources_app_elements = {
         unit_sankey_percent_links: 'Display link values as percent',
         unit_sankey_normalize_links: 'Display link values normalized by one or more link values',
         default_unit_view_name: 'Unitary view of node ',
-  
+
         tooltips: {
           keep_master_var: 'Allow choosing variable value of the Sankey view to be from the Sankey master',
           catalog_data: 'Generate a catalog of views: gather views from different files',
-  
+
           PrevViewButton: 'Display previous view',
           NextViewButton: 'Display next view',
           saveView: 'Save the modification of the view in master data',
@@ -679,7 +678,7 @@ export const resources_app_elements = {
           'to_buy': 'Accédez à des fonctionnalités avancés parmis lesquelles: utilisation d\'icônes, de zone de textes, et édition de vues.',
           'to_app': 'Retour à l\'application',
           'to_acc': 'Mon compte',
-          'to_dbd': 'Dashboard'          
+          'to_dbd': 'Dashboard'
         }
       },
       Register: {
@@ -898,7 +897,6 @@ export const resources_app_elements = {
         'template_unitary_zdt_content': 'Vue unitaire construite à partir de :',
         'template_unitary_zdt_content_of_node': 'Noeud unitaire :',
         'keep_master_var': 'M.à.j',
-        'setTransparentAttr': 'Choisir attributs hérité du sankey maître',
         'updateViewWithMasterVar': 'Mettre à jour la vue actuelle avec les paramètres sélectionnés',
         'edit_name': 'Editer le nom',
         'modify_name_view': 'Modifier le nom de la vue',
