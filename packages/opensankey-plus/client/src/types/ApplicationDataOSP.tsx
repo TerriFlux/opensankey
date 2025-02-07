@@ -333,18 +333,22 @@ export abstract class ClassTemplate_ApplicationDataOSP
       if (evt.key == 'ArrowUp') {
         app_ref.drawing_area.selected_containers_list.forEach(container => {
           container.position_y -= app_ref.drawing_area.grid_size
+          container.draw()
         })
       } else if (evt.key == 'ArrowDown') {
         app_ref.drawing_area.selected_containers_list.forEach(container => {
           container.position_y += app_ref.drawing_area.grid_size
+          container.draw()
         })
       } else if (evt.key == 'ArrowLeft') {
         app_ref.drawing_area.selected_containers_list.forEach(container => {
           container.position_x -= app_ref.drawing_area.grid_size
+          container.draw()
         })
       } else if (evt.key == 'ArrowRight') {
         app_ref.drawing_area.selected_containers_list.forEach(container => {
           container.position_x += app_ref.drawing_area.grid_size
+          container.draw()
         })
       }
       // Move all elements so none of them are outside the DA
