@@ -91,6 +91,84 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = refreshThis
   }
 
+  /**
+   * Method to mutate link value & save it's undoing in data history
+   *
+   * @param {(number | null | undefined)} _
+   */
+  const updateValueAndHistory = (_: number | null | undefined) => {
+    // Save old values in dict so the undo reset value for previous value of each link
+    const dict_old_val: { [x: string]: number | null } = {}
+    selected_links.forEach(l => dict_old_val[l.id] = l.data_value)
+    // Undo link value
+    const inv_updateDataLinks = () => {
+      // Update data for links
+      selected_links.forEach(link => {
+        link.data_value = dict_old_val[link.id]
+      })
+      // Update scaling if only one link
+      new_data.drawing_area.updateScaleAtLinkValueSetting()
+      // Update this menu
+      refreshThisAndUpdateRelatedComponents()
+    }
+    // Mutate link value 
+    const _updateDataLinks = () => {
+      // Update data for links
+      selected_links.forEach(link => {
+        link.data_value = (_ ?? null)
+      })
+      // Update scaling if only one link
+      new_data.drawing_area.updateScaleAtLinkValueSetting()
+      // Update this menu
+      refreshThisAndUpdateRelatedComponents()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateDataLinks)
+    new_data.history.saveRedo(_updateDataLinks)
+    // Execute original attr mutation
+    _updateDataLinks()
+  }
+
+  /**
+   * Method to mutate link text & save it's undoing in data history
+   *
+   * @param {(number | null | undefined)} _
+   */
+  const updateTextLinks = (_: string | undefined | null) => {
+    // Save old values in dict so the undo reset value for previous value of each link
+    const dict_old_val: { [x: string]: string } = {}
+    selected_links.forEach(l => dict_old_val[l.id] = l.text_value)
+    // Undo link value
+    const inv_updateTextLinks = () => {
+      // Update data for links
+      selected_links.forEach(link => {
+        link.text_value = dict_old_val[link.id]
+      })
+      // Update scaling if only one link
+      new_data.drawing_area.updateScaleAtLinkValueSetting()
+      // Update this menu
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    // Mutate link value 
+    const _updateTextLinks = () => {
+      // Update data for links
+      selected_links.forEach(link => {
+        link.text_value = (_ ?? '')
+      })
+      // Update scaling if only one link
+      new_data.drawing_area.updateScaleAtLinkValueSetting()
+      // Update this menu
+      refreshThisAndUpdateRelatedComponents()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateTextLinks)
+    new_data.history.saveRedo(_updateTextLinks)
+    // Execute original attr mutation
+    _updateTextLinks()
+  }
+
+
   // JSX -------------------------------------------------------------------------------
 
   const content = <Box
@@ -158,16 +236,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
           ref_to_set_value={ref_set_data_value_input}
           default_value={value?.data_value as number | undefined}
           fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
-          function_on_blur={(_) => {
-            // Update data for links
-            selected_links.forEach(link => {
-              link.data_value = (_ ?? null)
-            })
-            // Update scaling if only one link
-            new_data.drawing_area.updateScaleAtLinkValueSetting()
-            // Update this menu
-            refreshThisAndUpdateRelatedComponents()
-          }}
+          function_on_blur={updateValueAndHistory}
           minimum_value={0}
           stepper={true}
           step={1}
@@ -193,14 +262,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         <ConfigMenuTextInput
           ref_to_set_value={ref_set_text_value_input}
           function_get_value={() => { return value?.text_value }}
-          function_on_blur={(_) => {
-            // Update text for links
-            selected_links.forEach(link => {
-              link.text_value = (_ ?? '')
-            })
-            // Update this menu
-            refreshThisAndUpdateRelatedComponents()
-          }}
+          function_on_blur={updateTextLinks}
         />
       </Box>
     </OSTooltip>
@@ -257,10 +319,23 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
     updateInputsValues()
   }
 
-  return <ConfigMenuNumberInput
-    ref_to_set_value={ref_set_data_value_input}
-    default_value={value?.data_value ?? null}
-    function_on_blur={(_) => {
+  const updateDataLinks = (_: number | null | undefined) => {
+    // Save old values in dict so the undo reset value for previous value of each link
+    const dict_old_val: { [x: string]: number | null } = {}
+    selected_links.forEach(l => dict_old_val[l.id] = l.data_value)
+    // Undo link value
+    const inv_updateDataLinks = () => {
+      // Update data for links
+      selected_links.forEach(link => {
+        link.data_value = dict_old_val[link.id]
+      })
+      // Update scaling if only one link
+      new_data.drawing_area.updateScaleAtLinkValueSetting()
+      // Update this menu
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    const _updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
         link.data_value = (_ ?? null)
@@ -269,7 +344,18 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
       new_data.drawing_area.updateScaleAtLinkValueSetting()
       // Update this menu
       refreshThisAndUpdateRelatedComponents()
-    }}
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateDataLinks)
+    new_data.history.saveRedo(_updateDataLinks)
+    // Execute original attr mutation
+    _updateDataLinks()
+  }
+
+  return <ConfigMenuNumberInput
+    ref_to_set_value={ref_set_data_value_input}
+    default_value={value?.data_value ?? null}
+    function_on_blur={updateDataLinks}
     minimum_value={0}
     stepper={true}
     step={1}

@@ -47,7 +47,8 @@ import {
   default_link_value_label_on_path,
   default_link_value_label_pos_auto,
   default_link_value_label_unit_factor,
-  default_link_name_label_visible
+  default_link_name_label_visible,
+  Class_LinkAttribute
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
 import {
@@ -59,9 +60,6 @@ import {
 import {
   FCType_MenuConfigurationLinksAppearence,
 } from './types/SankeyMenuConfigurationLinksAppearenceTypes'
-
-/*************************************************************************************************/
-
 import {
   TooltipValueSurcharge,
   OSTooltip,
@@ -71,7 +69,7 @@ import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './Sanke
 import { SankeyMenuLabelComponent, SankeyMenuValueLabelComponent } from './SankeyMenuComponents'
 
 /*************************************************************************************************/
-
+// Declare custom logo used for some button 
 const logo_hv = <svg xmlns="http://www.w3.org/2000/svg"
   width="16"
   height="16"
@@ -121,6 +119,15 @@ const logo_hh = <svg xmlns="http://www.w3.org/2000/svg"
 </svg>
 
 /*************************************************************************************************/
+// Declare type used for generics functions
+
+type keyStyle = keyof Class_LinkStyle
+type valStyle = Class_LinkStyle[keyStyle]
+type keyLink = keyof Type_GenericLinkElement
+type valLink = Type_GenericLinkElement[keyLink]
+
+
+/*************************************************************************************************/
 
 export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConfigurationLinksAppearence> = ({
   new_data,
@@ -151,15 +158,70 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
 
   // Elements on which menu modification applies
   let elements: Class_LinkStyle[] | Type_GenericLinkElement[]
+
+  const updateValueForListElements = <TModel, TKey extends keyof TModel>(
+    model: TModel[],
+    key: TKey,
+    value: TModel[TKey]
+  ) => {
+    model.forEach(el => updateValueForElement(el, key, value))
+  }
+
+  const updateValueForElement = <TModel, TKey extends keyof TModel>(
+    model: TModel,
+    key: TKey,
+    value: TModel[TKey]
+  ) => {
+    model[key] = value
+  }
+ 
+
+  // Define a type of function that will be used to update elements and save unde/redo in data history
+  // We can't directly define 1 function to treat Style & Links because they don't have exactly the same Class functions
+  // And generic function setValueWithDecoratorRetriever don't like it
+  let updateElements: (((k: keyStyle, value: valStyle) => void) | ((k: keyLink, value: valLink) => void))
+
   if (menu_for_style) {
     elements = [new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
+    updateElements = (k: keyStyle, value: valStyle) => {
+      // Save old value
+      const old_val = new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current][k]
+      // Define fucntion that will mutate value of 'k' attribute in Style 
+      const _updateElements = (_: valStyle) => {
+        updateValueForListElements([new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]], k, _)
+        refreshThisAndUpdateRelatedComponents()
+      }
+      // Save undo/redo in data history
+      new_data.history.saveUndo(() => _updateElements(old_val))
+      new_data.history.saveRedo(() => _updateElements(value))
+      // Execute original attr mutation
+      _updateElements(value)
+    }
   }
   else {
     elements = selected_links
+    updateElements = (k: keyLink, value: valLink) => {
+      // Save old values in dict so the undo reset value for previous value of each link
+      const dict_old_val: { [x: string]: valLink } = {}
+      selected_links.forEach(l => dict_old_val[l.id] = l[k])
+      // Define fucntion that will mutate value of 'k' attribute in Link 
+      const _updateElements = (_: valLink) => {
+        updateValueForListElements(selected_links, k, _)
+        refreshThisAndUpdateRelatedComponents()
+      }
+      const inv_updateElements = () => {
+        selected_links.forEach(l=>updateValueForElement(l,k,dict_old_val[l.id]))
+        refreshThisAndUpdateRelatedComponents()
+      }
+      // Save undo/redo in data history
+      new_data.history.saveUndo(inv_updateElements)
+      new_data.history.saveRedo(() => _updateElements(value))
+      // Execute original attr mutation
+      _updateElements(value)
+    }
   }
 
   // Elements attributes ----------------------------------------------------------------
-
 
   /**
    * function that go throught all links of an array & check if they're all equals
@@ -172,28 +234,29 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
 
-  const shape_orientation = (elements[0]?.shape_orientation ?? default_shape_orientation)
-  const shape_starting_curve = (elements[0]?.shape_starting_curve ?? default_shape_starting_curve)
-  const shape_ending_curve = (elements[0]?.shape_ending_curve ?? default_shape_ending_curve)
-  const shape_starting_tangeant = (elements[0]?.shape_starting_tangeant ?? default_shape_starting_tangeant)
-  const shape_ending_tangeant = (elements[0]?.shape_ending_tangeant ?? default_shape_ending_tangeant)
-  const shape_is_curved = (elements[0]?.shape_is_curved ?? default_shape_is_curved)
-  const shape_is_recycling = (elements[0]?.shape_is_recycling ?? default_shape_is_recycling)
-  const shape_arrow_size = (elements[0]?.shape_arrow_size ?? default_shape_arrow_size)
-  const value_label_on_path = (elements[0]?.value_label_on_path ?? default_link_value_label_on_path)
-  const value_label_pos_auto = (elements[0]?.value_label_pos_auto ?? default_link_value_label_pos_auto)
-  const shape_is_arrow = (elements[0]?.shape_is_arrow ?? default_shape_is_arrow)
-  const shape_color = (elements[0]?.shape_color ?? default_shape_color)
-  const shape_opacity = (elements[0]?.shape_opacity ?? default_shape_opacity)
-  const shape_is_structure = (elements[0]?.shape_is_structure ?? default_shape_is_structure)
-  const value_label_is_visible = (elements[0]?.value_label_is_visible ?? default_link_value_label_is_visible)
-  const value_label_font_size = (elements[0]?.value_label_font_size ?? default_link_value_label_font_size)
-  const value_label_unit_factor = (elements[0]?.value_label_unit_factor ?? default_link_value_label_unit_factor)
-  const value_label_nb_digit = (elements[0]?.value_label_nb_digit ?? default_link_value_label_nb_digit)
-  const shape_local_scale = (elements[0]?.local_link_scale ?? default_shape_local_scale)
-  const name_label_visible = (elements[0]?.name_label_is_visible ?? default_link_name_label_visible)
-  const name_label_on_path = (elements[0]?.name_label_on_path ?? default_link_value_label_on_path)
-  const name_label_pos_auto = (elements[0]?.name_label_pos_auto ?? default_link_value_label_pos_auto)
+  const element_ref = elements[0]
+  const shape_orientation = (element_ref?.shape_orientation ?? default_shape_orientation)
+  const shape_starting_curve = (element_ref?.shape_starting_curve ?? default_shape_starting_curve)
+  const shape_ending_curve = (element_ref?.shape_ending_curve ?? default_shape_ending_curve)
+  const shape_starting_tangeant = (element_ref?.shape_starting_tangeant ?? default_shape_starting_tangeant)
+  const shape_ending_tangeant = (element_ref?.shape_ending_tangeant ?? default_shape_ending_tangeant)
+  const shape_is_curved = (element_ref?.shape_is_curved ?? default_shape_is_curved)
+  const shape_is_recycling = (element_ref?.shape_is_recycling ?? default_shape_is_recycling)
+  const shape_arrow_size = (element_ref?.shape_arrow_size ?? default_shape_arrow_size)
+  const value_label_on_path = (element_ref?.value_label_on_path ?? default_link_value_label_on_path)
+  const value_label_pos_auto = (element_ref?.value_label_pos_auto ?? default_link_value_label_pos_auto)
+  const shape_is_arrow = (element_ref?.shape_is_arrow ?? default_shape_is_arrow)
+  const shape_color = (element_ref?.shape_color ?? default_shape_color)
+  const shape_opacity = (element_ref?.shape_opacity ?? default_shape_opacity)
+  const shape_is_structure = (element_ref?.shape_is_structure ?? default_shape_is_structure)
+  const value_label_is_visible = (element_ref?.value_label_is_visible ?? default_link_value_label_is_visible)
+  const value_label_font_size = (element_ref?.value_label_font_size ?? default_link_value_label_font_size)
+  const value_label_unit_factor = (element_ref?.value_label_unit_factor ?? default_link_value_label_unit_factor)
+  const value_label_nb_digit = (element_ref?.value_label_nb_digit ?? default_link_value_label_nb_digit)
+  const shape_local_scale = (element_ref?.local_link_scale ?? default_shape_local_scale)
+  const name_label_visible = (element_ref?.name_label_is_visible ?? default_link_name_label_visible)
+  const name_label_on_path = (element_ref?.name_label_on_path ?? default_link_value_label_on_path)
+  const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? default_link_value_label_pos_auto)
 
   //Change le style des flux sélectionnés
   const style_of_selected_links = () => {
@@ -280,10 +343,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       isIndeterminate={is_indeterminate}
       isChecked={shape_is_recycling}
       onChange={
-        (evt) => {
-          elements.forEach(element => { element.shape_is_recycling = evt.target.checked })
-          refreshThisAndUpdateRelatedComponents()
-        }}>
+        (evt) => updateElements('shape_is_recycling', evt.target.checked)}>
       <OSTooltip label={t('Flux.apparence.tooltips.recy')}>{t('Flux.apparence.recy')}
       </OSTooltip>
     </Checkbox>
@@ -311,10 +371,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
                 'menuconfigpanel_option_button_left'
             }
             onClick={
-              () => {
-                elements.forEach(element => element.shape_orientation = 'hh')
-                refreshThisAndUpdateRelatedComponents()
-              }
+              () => { updateElements('shape_orientation', 'hh') }
             }
           >
             {logo_hh}
@@ -328,10 +385,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
             value='vv'
             variant={(shape_orientation === 'vv') ? 'menuconfigpanel_option_button_activated_center' :
               'menuconfigpanel_option_button_center'}
-            onClick={() => {
-              elements.forEach(element => element.shape_orientation = 'vv')
-              refreshThisAndUpdateRelatedComponents()
-            }}
+            onClick={() => { updateElements('shape_orientation', 'vv') }}
           >
             {logo_vv}
           </Button>
@@ -347,10 +401,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
                 'menuconfigpanel_option_button_activated_center' :
                 'menuconfigpanel_option_button_center'
             }
-            onClick={() => {
-              elements.forEach(element => element.shape_orientation = 'vh')
-              refreshThisAndUpdateRelatedComponents()
-            }}
+            onClick={() => { updateElements('shape_orientation', 'vh') }}
+
           >
             {logo_vh}
           </Button>
@@ -366,10 +418,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
                 'menuconfigpanel_option_button_activated_right' :
                 'menuconfigpanel_option_button_right'
             }
-            onClick={() => {
-              elements.forEach(element => element.shape_orientation = 'hv')
-              refreshThisAndUpdateRelatedComponents()
-            }}
+            onClick={() => { updateElements('shape_orientation', 'hv') }}
           >
             {logo_hv}
           </Button>
@@ -382,11 +431,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       variant='menuconfigpanel_option_checkbox'
       isIndeterminate={is_indeterminate}
       isChecked={shape_is_structure}
-      onChange={(evt) => {
-        elements.forEach(element => element.shape_is_structure = evt.target.checked)
-        refreshThisAndUpdateRelatedComponents()
-      }}
-    >
+      onChange={(evt) => { updateElements('shape_is_structure', evt.target.checked) }}>
       <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
         {t('Flux.apparence.structure')}
       </OSTooltip>
@@ -397,11 +442,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       variant='menuconfigpanel_option_checkbox'
       isIndeterminate={is_indeterminate}
       isChecked={shape_is_arrow}
-      onChange={(evt) => {
-        elements.forEach(element => element.shape_is_arrow = evt.target.checked)
-        refreshThisAndUpdateRelatedComponents()
-      }}
-    >
+      onChange={(evt) => { updateElements('shape_is_arrow', evt.target.checked) }}>
       <OSTooltip label={t('Flux.apparence.tooltips.fleche')}>
         {t('Flux.apparence.fleche')}
       </OSTooltip>
@@ -425,11 +466,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
             menu_for_style={menu_for_style}
             minimum_value={1}
             stepper={true}
-            function_on_blur={(value) => {
-              elements.forEach(element => element.shape_arrow_size = value ?? undefined)
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          />
+            function_on_blur={(value) => { updateElements('shape_arrow_size', value ?? undefined) }} />
         </OSTooltip>
       </InputGroup>
     </Box>
@@ -439,11 +476,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       variant='menuconfigpanel_option_checkbox'
       isIndeterminate={is_indeterminate}
       isChecked={shape_is_curved}
-      onChange={(evt) => {
-        elements.forEach(element => element.shape_is_curved = evt.target.checked)
-        refreshThisAndUpdateRelatedComponents()
-      }}
-    >
+      onChange={(evt) => { updateElements('shape_is_curved', evt.target.checked) }}>
       <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
         {t('Flux.apparence.courbe')}
       </OSTooltip>
@@ -466,11 +499,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
         <ConfigMenuNumberInput
           ref_to_set_value={ref_set_number_inputs[1]}
           default_value={shape_starting_curve * 100}
-          function_on_blur={(value) => {
-            elements.forEach(element =>
-              element.shape_starting_curve = (value ? value / 100 : undefined))
-            refreshThisAndUpdateRelatedComponents()
-          }}
+          function_on_blur={(value) => { updateElements('shape_starting_curve', (value ? value / 100 : undefined)) }}
           menu_for_style={menu_for_style}
           minimum_value={0}
           maximum_value={shape_ending_curve * 100}
@@ -504,11 +533,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
           step={1}
           stepper={true}
           unit_text='%'
-          function_on_blur={(value) => {
-            elements.forEach(element =>
-              element.shape_ending_curve = (value ? value / 100 : undefined))
-            refreshThisAndUpdateRelatedComponents()
-          }}
+          function_on_blur={(value) => { updateElements('shape_ending_curve', (value ? value / 100 : undefined)) }}
         />
       </OSTooltip>
     </Box>
@@ -535,13 +560,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
             step={1}
             stepper={true}
             unit_text='%'
-            function_on_blur={(value) => {
-              elements.forEach(element =>
-                element.shape_starting_tangeant = (value ? value / 100 : undefined))
-              refreshThisAndUpdateRelatedComponents()
-            }
-            }
-
+            function_on_blur={(value) => { updateElements('shape_starting_tangeant', (value ? value / 100 : undefined)) }}
           />
         </OSTooltip>
       </InputGroup>
@@ -569,12 +588,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
             step={1}
             stepper={true}
             unit_text='%'
-            function_on_blur={(value) => {
-              elements.forEach(element =>
-                element.shape_ending_tangeant = (value ? value / 100 : undefined))
-              refreshThisAndUpdateRelatedComponents()
-            }
-            }
+            function_on_blur={(value) => { updateElements('shape_ending_tangeant', (value ? value / 100 : undefined)) }}
+
           />
         </OSTooltip>
       </InputGroup>
@@ -595,11 +610,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
         variant='menuconfigpanel_option_input_color'
         type='color'
         value={shape_color}
-        onChange={evt => {
-          elements.forEach(element => element.shape_color = evt.target.value)
-          refreshThisAndUpdateRelatedComponents()
-        }}
-      />
+        onChange={evt => { updateElements('shape_color', evt.target.value) }} />
     </Box>
 
     {/* Opacité */}
@@ -623,12 +634,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
             maximum_value={1}
             step={0.1}
             stepper={true}
-            function_on_blur={(value) => {
-              elements.forEach(element =>
-                element.shape_opacity = value ?? undefined)
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          />
+            function_on_blur={(value) => { updateElements('shape_opacity', value ?? undefined) }} />
         </OSTooltip>
       </InputGroup>
     </Box>
@@ -651,13 +657,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
           <ConfigMenuNumberOrUndefinedInput
             ref_to_set_value={ref_set_link_scale_inputs}
             default_value={selected_links[0]?.local_link_scale ?? undefined}
-            function_on_blur={(_) => {
-              elements.forEach(link => {
-                link.local_link_scale = ((_ !== undefined && _ <= 0) ? undefined : _)
-              })
-              // Update this menu
-              refreshThisAndUpdateRelatedComponents()
-            }}
+            function_on_blur={(_) => { updateElements('local_link_scale', (_ !== undefined && _ <= 0) ? undefined : _) }}
             minimum_value={0}
             stepper={true}
             step={1}
@@ -679,18 +679,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       variant='menuconfigpanel_option_checkbox'
       isIndeterminate={is_indeterminate}
       isChecked={name_label_on_path}
-      onChange={(evt) => {
-        elements.forEach(element => {
-          element.name_label_on_path = evt.target.checked
-          if (element.name_label_on_path) {
-            const lab_pos = element.name_label_horiz
-            const lab_orth_pos = element.name_label_vert
-            element.name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
-            element.name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
-          }
-        })
-        refreshThisAndUpdateRelatedComponents()
-      }}>
+      onChange={(evt) => { updateElements('name_label_on_path', evt.target.checked) }}
+    >
       <OSTooltip label={t('Flux.label.tooltips.acf')}>
         {t('Flux.label.acf') + ' '}
       </OSTooltip>
@@ -707,14 +697,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       variant='menuconfigpanel_option_checkbox'
       isIndeterminate={is_indeterminate}
       isChecked={name_label_pos_auto}
-      onChange={(evt) => {
-        elements.forEach(element => {
-          const orth_pos = element.name_label_vert
-          element.name_label_pos_auto = evt.target.checked
-          element.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
-        })
-        refreshThisAndUpdateRelatedComponents()
-      }}
+      onChange={(evt) => { updateElements('name_label_pos_auto', evt.target.checked) }}
     >
       <OSTooltip label={t('Flux.tooltips.ajust_label')}>
         {t('Flux.ajust_label')}
@@ -731,10 +714,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
         icon={<CustomFaEyeCheckIcon />}
         isIndeterminate={is_indeterminate}
         isChecked={name_label_visible}
-        onChange={(evt) => {
-          elements.forEach(element => element.name_label_is_visible = evt.target.checked)
-          refreshThisAndUpdateRelatedComponents()
-        }}
+        onChange={(evt) => { updateElements('name_label_is_visible', evt.target.checked) }}
       >
         <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
           {t('Noeud.labels.vdb')}
@@ -773,18 +753,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       variant='menuconfigpanel_option_checkbox'
       isIndeterminate={is_indeterminate}
       isChecked={value_label_on_path}
-      onChange={(evt) => {
-        elements.forEach(element => {
-          element.value_label_on_path = evt.target.checked
-          if (element.value_label_on_path) {
-            const lab_pos = element.value_label_horiz
-            const lab_orth_pos = element.value_label_vert
-            element.value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
-            element.value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
-          }
-        })
-        refreshThisAndUpdateRelatedComponents()
-      }}>
+      onChange={(evt) => { updateElements('value_label_on_path', evt.target.checked) }}>
       <OSTooltip label={t('Flux.label.tooltips.acf')}>
         {t('Flux.label.acf') + ' '}
       </OSTooltip>
@@ -801,14 +770,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       variant='menuconfigpanel_option_checkbox'
       isIndeterminate={is_indeterminate}
       isChecked={value_label_pos_auto}
-      onChange={(evt) => {
-        elements.forEach(element => {
-          const orth_pos = element.value_label_vert
-          element.value_label_pos_auto = evt.target.checked
-          element.value_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
-        })
-        refreshThisAndUpdateRelatedComponents()
-      }}
+      onChange={(evt) => { updateElements('value_label_vert', evt.target.checked) }}
     >
       <OSTooltip label={t('Flux.tooltips.ajust_label')}>
         {t('Flux.ajust_label')}
@@ -827,10 +789,8 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
         icon={<CustomFaEyeCheckIcon />}
         isIndeterminate={is_indeterminate}
         isChecked={value_label_is_visible}
-        onChange={(evt) => {
-          elements.forEach(element => element.value_label_is_visible = evt.target.checked)
-          refreshThisAndUpdateRelatedComponents()
-        }}>
+        onChange={(evt) => { updateElements('value_label_is_visible', evt.target.checked) }}
+      >
         <OSTooltip label={t('Flux.label.tooltips.label')}>
           {t('Flux.label.vdb') + ' '}
         </OSTooltip>
@@ -897,15 +857,35 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
           {
             new_data.drawing_area.sankey.link_styles_list_sorted
               .map(style => {
+
+                const curr_style: { [x: string]: Class_LinkStyle } = {}
+                selected_links.map(link => {
+                  curr_style[link.id] = link.style
+                })
+                // Method to get old style via undo
+                const switch_old_style = () => {
+                  selected_links.map(link => {
+                    link.style = curr_style[link.id]
+                  })
+                  refreshThisAndUpdateRelatedComponents()
+                }
+
+                // Method to get new style via redo
+                const switch_style = () => {
+                  ref_selected_style_link.current = style.id
+                  selected_links.map(link => {
+                    link.style = style
+                  })
+                  refreshThisAndUpdateRelatedComponents()
+                }
+
                 return (
                   <MenuItem
                     key={style.id}
                     onClick={() => {
-                      ref_selected_style_link.current = style.id
-                      selected_links.map(link => {
-                        link.style = style
-                      })
-                      refreshThisAndUpdateRelatedComponents()
+                      new_data.history.saveUndo(switch_old_style)
+                      new_data.history.saveUndo(switch_style)
+                      switch_style()
                     }}
                   >
                     {style.name}
@@ -919,8 +899,26 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
         <Button
           variant='menuconfigpanel_option_button'
           onClick={() => {
-            selected_links.forEach(link => link.resetAttributes())
-            refreshThisAndUpdateRelatedComponents()
+            const curr_attr: { [x: string]: Class_LinkAttribute } = {}
+            selected_links.map(link => {
+              curr_attr[link.id] = link.display.attributes
+            })
+            // Method to get old attr via undo
+            const switch_old_attr = () => {
+              selected_links.map(link => {
+                link.display.attributes = curr_attr[link.id]
+              })
+              refreshThisAndUpdateRelatedComponents()
+            }
+            // Method to get new attr via redo
+            const switch_attr = () => {
+              selected_links.map(link => link.resetAttributes())
+              refreshThisAndUpdateRelatedComponents()
+            }
+
+            new_data.history.saveUndo(switch_old_attr)
+            new_data.history.saveUndo(switch_attr)
+            switch_attr()
           }}
         >
           <FaUndo />
@@ -953,8 +951,19 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
             variant={'menuconfigpanel_option_button_left'}
             isDisabled={selected_links.length === 0}
             onClick={() => {
-              selected_links.forEach(link => link.increaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
+              const func = () => {
+                selected_links.forEach(link => link.increaseDisplayOrder())
+                refreshThisAndUpdateRelatedComponents()
+              }
+              const inv_func = () => {
+                selected_links.forEach(link => link.decreaseDisplayOrder())
+                refreshThisAndUpdateRelatedComponents()
+              }
+
+              new_data.history.saveUndo(inv_func)
+              new_data.history.saveUndo(func)
+
+              func()
             }}>
             <FaAngleUp />
           </Button>
@@ -980,8 +989,19 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
             isDisabled={selected_links.length === 0}
             className='btn_menu_config'
             onClick={() => {
-              selected_links.forEach(link => link.decreaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
+              const inv_func = () => {
+                selected_links.forEach(link => link.increaseDisplayOrder())
+                refreshThisAndUpdateRelatedComponents()
+              }
+              const func = () => {
+                selected_links.forEach(link => link.decreaseDisplayOrder())
+                refreshThisAndUpdateRelatedComponents()
+              }
+
+              new_data.history.saveUndo(inv_func)
+              new_data.history.saveUndo(func)
+
+              func()
             }}>
             <FaAngleDown />
           </Button>
