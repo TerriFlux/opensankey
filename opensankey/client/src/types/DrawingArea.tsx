@@ -45,6 +45,7 @@ import {
   ClassAbstract_ApplicationData,
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
+import { Class_Tag } from './Tag'
 
 declare const window: Window &
   typeof globalThis & {
@@ -960,11 +961,40 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public deleteSelectedLinks() {
-    // Get copy of selected nodes
-    const selected_links = this.selected_links_list
-    // Delete each one of them
-    selected_links.forEach(link => { this.deleteLink(link) })
-    // Then let garbage collector do the rest...
+
+    // dict containing  [link order in source node,link order in target node  ]
+    const dict_old_val: { [x: string]: [string[], string[]] } = {}
+
+    const list_old_link = [...this.selected_links_list].map(l => {
+      const order_o_s = l.source.output_links_list.map(l => l.id)
+      const order_i_t = l.target.input_links_list.map(l => l.id)
+      dict_old_val[l.id] = [order_o_s, order_i_t]
+      return l
+    })
+    const selected_links = list_old_link
+
+    const _deleteSelectedLinks = () => {
+      // Delete each one of them
+      selected_links.forEach(link => { this.deleteLink(link) })
+      // Then let garbage collector do the rest...
+    }
+
+    const inv_deleteSelectedLinks = () => {
+      // Reintroduce deleted link + order them correctly in source/target
+      list_old_link.forEach(l => {
+        const new_l = this.sankey.addNewLinkWithId(l.id, l.source, l.target)
+        new_l.source.reorganizeIOFromListIds(dict_old_val[l.id][0])
+        new_l.target.reorganizeIOFromListIds(dict_old_val[l.id][1])
+        new_l.copyFrom(l)
+        l.drawWithNodes()
+      })
+    }
+    // Save undo/redo in data history
+    this.application_data.history.saveUndo(inv_deleteSelectedLinks)
+    this.application_data.history.saveRedo(_deleteSelectedLinks)
+    // Execute original attr mutation
+    _deleteSelectedLinks()
+
   }
 
   /**
@@ -1349,6 +1379,71 @@ export abstract class ClassTemplate_DrawingArea
       (node as Type_GenericNodeElement).setTradeDimensions(false)
     })
   }
+
+  /**
+   *Inverse selected links and save undoing
+   *
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public inverseSelectedLinks = () => {
+    const _inverseSelectedLinks = () => {
+      // Inverse link source & target
+      this.selected_links_list.forEach(link => link.inverse())
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    // Save undo/redo in data history
+    this.application_data.history.saveUndo(_inverseSelectedLinks)
+    this.application_data.history.saveRedo(_inverseSelectedLinks)
+    // Execute original attr mutation
+    _inverseSelectedLinks()
+  }
+
+  /**
+   * Update tag selected for selected links and save it undoing
+   *
+   * @param {boolean} val
+   * @param {Class_Tag} flux_tag
+   */
+  public updateSelectedLinksTagAssignation = (val: boolean, flux_tag: Class_Tag) => {
+    const visible = val
+    const dict_old_val: { [x: string]: boolean } = {}
+    this.selected_links_list.forEach(l => {
+      dict_old_val[l.id] = l.hasGivenTag(flux_tag)
+    })
+
+    const _updateSelectedLinksTagAssignation = () => {
+      this.selected_links_list.forEach(link => {
+        if (visible) {
+          link.addTag(flux_tag)
+        }
+        else {
+          link.removeTag(flux_tag)
+        }
+      })
+      // Full update
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    const inv_updateSelectedLinksTagAssignation = () => {
+      this.selected_links_list.forEach(link => {
+        if (dict_old_val[link.id]) {
+          link.addTag(flux_tag)
+        }
+        else {
+          link.removeTag(flux_tag)
+        }
+      })
+      // Full update
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    this.application_data.history.saveUndo(inv_updateSelectedLinksTagAssignation)
+    this.application_data.history.saveRedo(_updateSelectedLinksTagAssignation)
+    _updateSelectedLinksTagAssignation()
+  }
+
+
 
   /**
    * Compute the position of the nodes which are not trade nodes
