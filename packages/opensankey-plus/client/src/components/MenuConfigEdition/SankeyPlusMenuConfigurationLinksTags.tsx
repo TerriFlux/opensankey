@@ -187,16 +187,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
                         isIndeterminate={!allTrue && !allFalse}
                         onChange={(evt) => {
                           const visible = evt.target.checked
-                          selected_links.forEach(link => {
-                            if (visible) {
-                              link.addTag(flux_tag)
-                            }
-                            else {
-                              link.removeTag(flux_tag)
-                            }
-                          })
-                          // Full update
-                          refreshThisAndUpdateRelatedComponents()
+                          new_data.drawing_area.updateSelectedLinksTagAssignation(visible, flux_tag)
                         }}>
                         {flux_tag.name}
                       </Checkbox>
@@ -210,7 +201,7 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
     }</>
 
 
-  return <OSTooltip label={new_data.has_sankey_plus?'':t('Menu.sankeyOSPDisabled')}>{menu_for_modal ?
+  return <OSTooltip label={new_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>{menu_for_modal ?
     content :
     <TabPanel >
       {content}
