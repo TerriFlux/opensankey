@@ -16,7 +16,7 @@ cache:
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  TESTS_DIR: /home/ubuntu/dev_opensankey/sankeysuitemanager/Tests
+  TESTS_DIR: /home/ubuntu/Tests
 
 build:
   stage: build
