@@ -1197,16 +1197,24 @@ export abstract class Class_ProtoTagGroup extends ClassAbstract_ProtoTagGroup {
   public selectTagsFromId(
     id: string
   ) {
-    this.tags_list
-      .forEach(tag => {
-        if (tag.id === id) {
-          tag.setSelected(false)
-        }
-        else {
-          tag.setUnSelected(false)
-        }
-      })
-    this.updateTagsReferences()
+    const _selectTagsFromId = (_: string) => {
+      this.tags_list
+        .forEach(tag => {
+          if (tag.id === _) {
+            tag.setSelected()
+          }
+          else {
+            tag.setUnSelected()
+          }
+        })
+      this.updateTagsReferences()
+      this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
+    }
+
+    const old_selected = this.selected_tags_list[0].id
+    this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected))
+    this._ref_sankey.drawing_area.application_data.history.saveRedo(() => _selectTagsFromId(id))
+    _selectTagsFromId(id)
   }
 
   public selectTagsFromIds(
@@ -1358,7 +1366,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
     super._fromJSON(json_object, kwargs)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
     const nb_tags = Object.values(this._tags).length
-    if (Object.values(this._tags).filter(tag=>tag.color != '').length==0) {
+    if (Object.values(this._tags).filter(tag => tag.color != '').length == 0) {
       // if tags has no colors they are generated from the defaut color map
       const colors = colormap({
         colormap: 'jet',
@@ -1371,7 +1379,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
         // colormap is sampled uniformly between the first index and the last
         step = Math.round(11 / nb_tags)
       }
-      Object.values(this._tags).forEach((tag,i)=>tag.color = colors[i*step])
+      Object.values(this._tags).forEach((tag, i) => tag.color = colors[i * step])
     }
   }
 
@@ -1612,17 +1620,26 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public selectTagsFromId(
     id: string
   ) {
-    this.tags_list
-      .forEach(tag => {
-        if (tag.id === id) {
-          tag.setSelected()
-        }
-        else {
-          tag.setUnSelected()
-        }
-      })
-    this.checkSelectionCoherence()
-    this.updateTagsReferences()
+
+    const old_selected = this.selected_tags_list[0].id
+    const _selectTagsFromId = (_: string) => {
+      this.tags_list
+        .forEach(tag => {
+          if (tag.id === _) {
+            tag.setSelected()
+          }
+          else {
+            tag.setUnSelected()
+          }
+        })
+      this.checkSelectionCoherence()
+      this.updateTagsReferences()
+      this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+    }
+
+    this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected))
+    this._ref_sankey.drawing_area.application_data.history.saveRedo(() => _selectTagsFromId(id))
+    _selectTagsFromId(id)
   }
 
   public selectTagsFromIds(
@@ -1895,15 +1912,22 @@ export abstract class Class_ProtoLevelTagGroup extends ClassAbstract_ProtoLevelT
     id: string
   ) {
     // Change selection but do not redraw
-    this.tags_list
-      .forEach(tag => {
-        if (tag.id === id) {
-          tag.setSelected()
-        }
-        else {
-          tag.setUnSelected()
-        }
-      })
+    const _selectTagsFromId = (_: string) => {
+      this.tags_list
+        .forEach(tag => {
+          if (tag.id === _) {
+            tag.setSelected()
+          }
+          else {
+            tag.setUnSelected()
+          }
+        })
+      this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
+    }
+    const old_selected = this.selected_tags_list[0].id
+    this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected))
+    this._ref_sankey.drawing_area.application_data.history.saveRedo(() => _selectTagsFromId(id))
+    _selectTagsFromId(id)
   }
 
   public selectTagsFromIds(

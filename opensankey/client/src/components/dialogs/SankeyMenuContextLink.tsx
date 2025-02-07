@@ -18,6 +18,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { FCType_ContextMenuLink } from './types/SankeyMenuContextLinkTypes'
 import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
+import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
 
 /*************************************************************************************************/
 
@@ -73,7 +74,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
   const [, setCount] = useState(0)
 
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_context_links_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_menu_context_links_updater.current = () => setCount(a => a + 1)
 
   // Functions used to reset menu UI ----------------------------------------------------
 
@@ -81,7 +82,89 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Refresh this menu
-    setCount(a=>a+1)
+    setCount(a => a + 1)
+  }
+
+  // Functions that mutate attribute & save it's undoing ----------------------------------------------------
+
+  const updateStyle = (sl: Class_LinkStyle) => {
+    const dict_old_value: { [x: string]: Class_LinkStyle } = {}
+    selected_links.forEach(l => {
+      dict_old_value[l.id] = l.style
+    })
+    const _updateStyle = () => {
+      selected_links.forEach(l => {
+        l.style = sl
+      })
+      refreshThisAndToggleSaving()
+
+    }
+
+    const inv_updateStyle = () => {
+      selected_links.forEach(l => {
+        l.style = dict_old_value[l.id]
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateStyle)
+    new_data.history.saveRedo(_updateStyle)
+    // Execute original attr mutation
+    _updateStyle()
+  }
+
+  const resetAttr = () => {
+    const dict_old_value: { [x: string]: Class_LinkAttribute } = {}
+    selected_links.forEach(l => {
+      dict_old_value[l.id] = l.display.attributes
+    })
+    const _resetAttr = () => {
+      selected_links.forEach(l => {
+        l.resetAttributes()
+      })
+      refreshThisAndToggleSaving()
+
+    }
+
+    const inv_resetAttr = () => {
+      selected_links.forEach(l => {
+        l.display.attributes = dict_old_value[l.id]
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_resetAttr)
+    new_data.history.saveRedo(_resetAttr)
+    // Execute original attr mutation
+    _resetAttr()
+  }
+
+  const updateValueVisibility = () => {
+    const dict_old_value: { [x: string]: Class_LinkAttribute } = {}
+    // Clone Class_attribute of links so in the undo it's doens't affect a value if the original value came from style
+    selected_links.forEach(l => {
+      dict_old_value[l.id] = Object.assign(Object.create(Object.getPrototypeOf(l.display.attributes)), l.display.attributes)
+    })
+    const _updateValueVisibility = () => {
+      selected_links
+        .forEach(link => {
+          link.value_label_is_visible = !context_link_label_visible
+        })
+      refreshThisAndToggleSaving()
+    }
+
+    const inv_updateValueVisibility = () => {
+      selected_links.forEach(l => {
+        l.display.attributes = dict_old_value[l.id]
+        l.draw()
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateValueVisibility)
+    new_data.history.saveRedo(_updateValueVisibility)
+    // Execute original attr mutation
+    _updateValueVisibility()
   }
 
   // JSX Components ---------------------------------------------------------------------
@@ -116,8 +199,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
             .map(sl => {
               return <MenuItem
                 onClick={() => {
-                  contextualised_link!.style = sl
-                  refreshThisAndToggleSaving()
+                  updateStyle(sl)
                 }}
               >
                 {sl.name}
@@ -144,10 +226,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
         <MenuItem
           as={Button}
           variant='contextmenu_button'
-          onClick={() => {
-            selected_links.forEach(l => l.resetAttributes())
-            refreshThisAndToggleSaving()
-          }}
+          onClick={resetAttr}
         >
           {t('Noeud.AS')}
         </MenuItem>
@@ -209,14 +288,8 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     <></>
 
   const button_mask_link_label = (contextualised_link !== undefined) ?
-    <Button onClick={() => {
-      selected_links
-        .forEach(link => {
-          link.value_label_is_visible = !context_link_label_visible
-        })
-      refreshThisAndToggleSaving()
-    }}
-    variant='contextmenu_button'
+    <Button onClick={updateValueVisibility}
+      variant='contextmenu_button'
     >
       {
         context_link_label_visible ?
@@ -247,25 +320,22 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
 
   const btn_inverse_io = <Button
     variant='contextmenu_button'
-    onClick={() => {
-      selected_links.forEach(l => l.inverse())
-      refreshThisAndToggleSaving()
-    }}
+    onClick={new_data.drawing_area.inverseSelectedLinks}
   >
     {t('Flux.if')}
   </Button>
 
-  const content_context_link: { [_: string]: JSX.Element }={
-    'inverse':btn_inverse_io,
-    'sep_1':sep,
-    'style':dropdown_c_l_style,
-    'sep_2':sep,
-    'zIndex':dropdown_c_l_layout,
-    'mask_label':button_mask_link_label,
-    'edit_value':btn_edit_value,
-    'sep_4':sep,
-    'drag_link_data':button_open_link_data,
-    'drag_apparence':button_open_link_appearence,
+  const content_context_link: { [_: string]: JSX.Element } = {
+    'inverse': btn_inverse_io,
+    'sep_1': sep,
+    'style': dropdown_c_l_style,
+    'sep_2': sep,
+    'zIndex': dropdown_c_l_layout,
+    'mask_label': button_mask_link_label,
+    'edit_value': btn_edit_value,
+    'sep_4': sep,
+    'drag_link_data': button_open_link_data,
+    'drag_apparence': button_open_link_appearence,
 
     ...additionalMenus.additional_context_link_element
   }
