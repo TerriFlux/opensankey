@@ -431,7 +431,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
       if (this._shape_ending_curve !== undefined) this._shape_ending_curve = this._shape_ending_curve / 2
     }
     this._shape_orientation = _
-    this.update()
+    this.updateLinkAndSourceTarget()
   }
   public set shape_starting_curve(_: number | undefined) {
     if (_ !== undefined) {
