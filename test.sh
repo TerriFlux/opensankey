@@ -9,4 +9,4 @@ exit_if_error() {
     }
 }
 
-python -m unittest discover opensankey.tests || exit_if_error $?
+python -m unittest discover opensankey.tests "$@" || exit_if_error $?
