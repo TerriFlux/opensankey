@@ -2564,6 +2564,22 @@ export abstract class ClassTemplate_LinkElement
   private dragHandleStart() {
     return () => {
       this._control_points.is_dragged = true
+
+      // Save current attribute val before mutating them in dragHandlers events
+      const ghost = {
+        'shape_starting_curve': this.shape_starting_curve,
+        'shape_ending_curve': this.shape_ending_curve,
+        'shape_starting_tangeant': this.shape_starting_tangeant,
+        'shape_ending_tangeant': this.shape_ending_tangeant,
+      }
+      // Save undo to reposition handler to save pos
+      this.display.drawing_area.application_data.history.saveUndo(() => {
+        this.shape_starting_curve = ghost['shape_starting_curve']
+        this.shape_ending_curve = ghost['shape_ending_curve']
+        this.shape_starting_tangeant = ghost['shape_starting_tangeant']
+        this.shape_ending_tangeant = ghost['shape_ending_tangeant']
+      })
+
     }
   }
   /**
@@ -2575,6 +2591,22 @@ export abstract class ClassTemplate_LinkElement
   private dragHandleEnd() {
     return () => {
       this._control_points.is_dragged = false
+
+      // Save current attribute val after mutating them in dragHandlers events
+      const ghost = {
+        'shape_starting_curve': this.shape_starting_curve,
+        'shape_ending_curve': this.shape_ending_curve,
+        'shape_starting_tangeant': this.shape_starting_tangeant,
+        'shape_ending_tangeant': this.shape_ending_tangeant,
+      }
+      // Save redo to reposition handler to current pos
+      this.display.drawing_area.application_data.history.saveRedo(() => {
+        this._display.attributes.shape_starting_curve = ghost['shape_starting_curve']
+        this._display.attributes.shape_ending_curve = ghost['shape_ending_curve']
+        this._display.attributes.shape_starting_tangeant = ghost['shape_starting_tangeant']
+        this._display.attributes.shape_ending_tangeant = ghost['shape_ending_tangeant']
+      })
+      
       this.drawControlPoint()
       this.menu_config.updateComponentRelatedToLinksApparence()
       this.drawing_area.checkAndUpdateAreaSize()
@@ -3765,7 +3797,16 @@ export abstract class ClassTemplate_LinkElement
    * TODO Description
    * @memberof ClassTemplate_LinkElement
    */
-  public set value_label_on_path(_: boolean) { this._display.attributes.value_label_on_path = _; this.drawValue() }
+  public set value_label_on_path(_: boolean) {
+    this._display.attributes.value_label_on_path = _;
+    if (_) {
+      const lab_pos = this._display.attributes.value_label_horiz
+      const lab_orth_pos = this._display.attributes.value_label_vert
+      this._display.attributes.value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
+      this._display.attributes.value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
+    }
+    this.drawValue()
+  }
 
   /**
    * TODO Description
@@ -3784,7 +3825,11 @@ export abstract class ClassTemplate_LinkElement
    * TODO Description
    * @memberof ClassTemplate_LinkElement
    */
-  public set value_label_pos_auto(_: boolean) { this._display.attributes.value_label_pos_auto = _; this.drawValue() }
+  public set value_label_pos_auto(_: boolean) {
+    this._display.attributes.value_label_pos_auto = _;
+    this._display.attributes.value_label_vert = (this._display.attributes.value_label_vert === 'dragged') ? 'middle' : this._display.attributes.value_label_vert
+    this.drawValue()
+  }
 
 
   /**
@@ -4207,7 +4252,12 @@ export abstract class ClassTemplate_LinkElement
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
-  public set name_label_pos_auto(_: boolean) { this._display.attributes.name_label_pos_auto = _; this.drawLabel() }
+  public set name_label_pos_auto(_: boolean) {
+    this._display.attributes.name_label_pos_auto = _;
+    const orth_pos = this.name_label_vert
+    this._display.attributes.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
+    this.drawLabel()
+  }
 
 
   /**
@@ -4227,7 +4277,16 @@ export abstract class ClassTemplate_LinkElement
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
-  public set name_label_on_path(_: boolean) { this._display.attributes.name_label_on_path = _; this.drawLabel() }
+  public set name_label_on_path(_: boolean) {
+    this._display.attributes.name_label_on_path = _;
+    if (_) {
+      const lab_pos = this.name_label_horiz
+      const lab_orth_pos = this.name_label_vert
+      this._display.attributes.name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
+      this._display.attributes.name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
+    }
+    this.drawLabel()
+  }
 
   /**
    * TODO Description

@@ -246,7 +246,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
     return (String(new_fixed_value))
   }
   const fixed_value = getFixedVal(default_value)
-  const [value, setValue] = useState<string | null | undefined>(String((fixed_value) ?? ''))
+  const [value, setValue] = useState<string | null | undefined>(default_value ? String(fixed_value) : '')
   ref_to_set_value.current = (val: string | null | undefined) => setValue(getFixedVal(val))
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
@@ -261,7 +261,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
     <NumberInput
       allowMouseWheel
       variant={variant}
-      min={minimum_value}
+      min={minimum_value??undefined}
       max={maximum_value}
       step={step}
       value={value ?? ''}
@@ -384,7 +384,7 @@ export type FCType_ConfigMenuNumberInput = {
   ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
   function_on_blur: (val: number | null | undefined) => void,
   menu_for_style?: boolean,
-  minimum_value?: number,
+  minimum_value?: number|null,
   maximum_value?: number,
   stepper?: boolean,
   step?: number,
