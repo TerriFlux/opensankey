@@ -4,7 +4,7 @@ import React, { FunctionComponent, useState } from 'react'
 // OpenSankey libs
 import { ModalWelcome, ModalWelcomeContent } from '../../deps/OpenSankey/components/welcome/ModalWelcome'
 import { FCType_ModalWelcomeBuilder } from '../../deps/OpenSankey/components/welcome/types/ModalWelcome'
-
+import { AccordionItem,AccordionButton,Box,AccordionIcon,AccordionPanel, Table, Tbody, Td, Th, Thead, Tr} from '@chakra-ui/react'
 // Local libs
 import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 
