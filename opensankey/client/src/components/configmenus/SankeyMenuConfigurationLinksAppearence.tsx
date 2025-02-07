@@ -866,6 +866,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
                 const switch_old_style = () => {
                   selected_links.map(link => {
                     link.style = curr_style[link.id]
+                    link.drawWithNodes() //redraw nodes too because the style can change link shape (that can modify nodes shape too)
                   })
                   refreshThisAndUpdateRelatedComponents()
                 }
@@ -875,6 +876,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
                   ref_selected_style_link.current = style.id
                   selected_links.map(link => {
                     link.style = style
+                    link.drawWithNodes() //redraw nodes too because the style can change link shape (that can modify nodes shape too)
                   })
                   refreshThisAndUpdateRelatedComponents()
                 }
