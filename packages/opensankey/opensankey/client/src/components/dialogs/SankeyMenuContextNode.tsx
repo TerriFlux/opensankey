@@ -160,6 +160,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         else { // if (pos === 'a')
           n[attr] = (pos_ref + wORh_ref) - wORh_to_shift
         }
+        n.draw()
       })
     // Refresh and toggle saving
     refreshThisAndToggleSaving()
