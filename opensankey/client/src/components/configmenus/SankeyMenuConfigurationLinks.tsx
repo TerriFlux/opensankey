@@ -45,7 +45,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
   // Data -------------------------------------------------------------------------------
 
   // Traduction
-  const { t } =new_data
+  const { t } = new_data
 
   // Links to display in selection menus ------------------------------------------------
 
@@ -93,7 +93,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
   // Boolean used to force this component to reload
   const [, setCount] = useState(0)
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_links_selection_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_menu_config_links_selection_updater.current = () => setCount(a => a + 1)
 
   // Function used to reset menu UI -----------------------------------------------------
 
@@ -101,7 +101,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Refresh this menu
-    setCount(a=>a+1)
+    setCount(a => a + 1)
   }
 
   const refreshThisAndUpdateRelatedComponents = () => {
@@ -127,7 +127,31 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
     ...additionalMenus.additional_menu_configuration_links
   }
 
+  /**
+   * Create new link
+   *
+   */
+  const addLinkConfig = () => {
+    const _addLinkConfig = () => {
+      const new_link = new_data.drawing_area.addNewDefaultLinkToSankey()
+      //Deselect previously selected links
+      new_data.drawing_area.purgeSelectionOfLinks()
+      // Add link to selection
+      new_data.drawing_area.addLinkToSelection(new_link)
+      // Toogle saving indicator
+      refreshThisAndUpdateRelatedComponents()
+    }
 
+    const inv_addLinkConfig = () => {
+      new_data.drawing_area.deleteLink(new_data.drawing_area.sankey.links_list[new_data.drawing_area.sankey.links_list.length - 1])
+      // Toogle saving indicator
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    new_data.history.saveUndo(inv_addLinkConfig)
+    new_data.history.saveRedo(_addLinkConfig)
+    _addLinkConfig()
+  }
 
   // Selection menu for links -----------------------------------------------------------
 
@@ -183,17 +207,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
         label={t('Menu.tooltips.flux.plus')}>
         <Button
           variant='menuconfigpanel_add_button'
-          onClick={
-            () => {
-              // Create new link
-              const new_link = new_data.drawing_area.addNewDefaultLinkToSankey()
-              //Deselect previously selected links
-              new_data.drawing_area.purgeSelectionOfLinks()
-              // Add link to selection
-              new_data.drawing_area.addLinkToSelection(new_link)
-              // Toogle saving indicator
-              refreshThisAndUpdateRelatedComponents()
-            }}>
+          onClick={addLinkConfig}>
           <FaPlus />
         </Button>
       </OSTooltip>
@@ -304,12 +318,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
         <OSTooltip label={t('Flux.tooltips.inv')}>
           <Button
             height='100%'
-            onClick={() => {
-              // Inverse link source & target
-              selected_links.forEach(link => link.inverse())
-              // Toogle saving indicator
-              refreshThisAndToggleSaving()
-            }}
+            onClick={new_data.drawing_area.inverseSelectedLinks}
           >
             <FontAwesomeIcon style={{ transform: 'rotate(90deg)' }} icon={faRotate} />
           </Button>
@@ -326,8 +335,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
             {
               Object
                 .keys(ui)
-                .map((key,i) => {
-                  return <Tab key={'submenuconfig_tab'+i}>
+                .map((key, i) => {
+                  return <Tab key={'submenuconfig_tab' + i}>
                     <Box layerStyle='submenuconfig_tab' >
                       {t(key)}
                     </Box>
@@ -340,7 +349,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
             {
               Object
                 .values(ui)
-                .map((c,i) =>  <React.Fragment key={'panel_'+i}>{c}</React.Fragment>)
+                .map((c, i) => <React.Fragment key={'panel_' + i}>{c}</React.Fragment>)
             }
           </TabPanels>
         </Tabs> :

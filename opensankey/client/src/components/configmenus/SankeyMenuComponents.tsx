@@ -12,9 +12,9 @@ import { ClassTemplate_LinkElement } from '../../Elements/Link'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
-import { svg_label_bottom, svg_label_center, svg_label_top, svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
-import { FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, possibleDecoratorName } from './types/SankeyMenuComponentsType'
-import { Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
+import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
+import { FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName } from './types/SankeyMenuComponentsType'
+import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
 import { ClassTemplate_NodeElement } from '../../Elements/Node'
 import {
   Class_NodeStyle,
@@ -33,7 +33,17 @@ import {
   default_node_value_label_vert,
 } from '../../Elements/NodeAttributes'
 
+const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
+const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
+const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z" /></svg>
 
+/**
+ * Check if element attribute is from local attr
+ *
+ * @param {(Type_GenericLinkElement[] | Type_GenericNodeElement[])} elements
+ * @param {possibleDecoratorName} attr
+ * @return {boolean} 
+ */
 function isElementAttributeOverloaded(
   elements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
   attr: possibleDecoratorName) {
@@ -42,6 +52,15 @@ function isElementAttributeOverloaded(
   return overloaded
 }
 
+/**
+ * Generic function to call getter decorator of model
+ *
+ * @template TModel
+ * @template TKey
+ * @param {TModel} model
+ * @param {TKey} key
+ * @return {TModel[TKey]} 
+ */
 function getValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
   model: TModel,
   key: TKey
@@ -49,12 +68,68 @@ function getValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
   return model[key]
 }
 
-function setValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
+type elementsType = Class_LinkStyle | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
+type valueType = labelValueAttribute[valueKeu]
+type valueKeu = keyof labelValueAttribute
+type valueElementsType = elementsType[valueType]
+
+
+/**
+ * Generic function to call setter decorator of model
+ *
+ * @template TModel
+ * @template TKey
+ * @template Tvalue
+ * @param {TModel} model
+ * @param {TKey} key
+ * @param {Tvalue} value
+ */
+function setValueWithDecoratorRetriever<TModel, TKey extends keyof TModel, Tvalue extends TModel[TKey]>(
   model: TModel,
   key: TKey,
-  value: TModel[TKey]
+  value: Tvalue
 ) {
   model[key] = value
+}
+
+/**
+ * Upate attribute value via it's decorator & save it's possible undoing in data history
+ *
+ * @param {Type_GenericApplicationData} data
+ * @param {elementsType[]} elements
+ * @param {(labelValueAttribute | labelAttributeType)} _dict_decorator_name
+ * @param {keyof labelValueAttribute} k
+ * @param {valueElementsType} val
+ * @param {() => void} refreshParentComponent
+ */
+const updateElements = (data: Type_GenericApplicationData,
+  elements: elementsType[],
+  _dict_decorator_name: labelValueAttribute | labelAttributeType, // declare var can be both type so we can use the function in SankeyMenuLabelComponent & SankeyMenuValueLabelComponent 
+  k: keyof labelValueAttribute, // key of labelValueAttribute also contain key of labelAttributeType (since labelValueAttribute is a composite type with labelAttributeType)
+  val: valueElementsType,
+  refreshParentComponent: () => void
+) => {
+  const dict_decorator_name = _dict_decorator_name as labelValueAttribute
+  // Create a dict of old val for each elements 
+  const dict_old_val: { [x: string]: valueElementsType } = {}
+  elements.forEach(element => dict_old_val[element.id] = getValueWithDecoratorRetriever(element, dict_decorator_name[k]))
+
+  // Original function
+  const _updateElements = () => {
+    elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name[k], val))
+    refreshParentComponent()
+  }
+
+  // Undo function
+  const inv_updateElements = () => {
+    elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name[k], dict_old_val[element.id]))
+    refreshParentComponent()
+  }
+
+  data.history.saveUndo(inv_updateElements)//save undo
+  data.history.saveRedo(_updateElements)//save original func for a redo
+
+  _updateElements() // execute function
 }
 
 export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelComponent> = ({
@@ -78,7 +153,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
     }
   }
   const is_indeterminate = !selectedElements.every(check_indeterminate)
-
+  // Declare var used to set default attribute value in inputs 
   let get_label_horiz = default_node_value_label_horiz
   let get_label_vert = default_node_value_label_vert
   let get_label_font_size = default_node_value_label_font_size
@@ -136,8 +211,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
           type='color'
           value={get_label_color}
           onChange={evt => {
-            elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name['label_color'], evt.target.value))
-            refreshParentComponent()
+            updateElements(new_data, elements, dict_decorator_name, 'label_color', evt.target.value, refreshParentComponent)
           }}
         />
       </Box>
@@ -160,8 +234,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
             paddingEnd='0'
             minWidth='0'
             onClick={() => {
-              elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name['label_bold'], !get_label_bold))
-              refreshParentComponent()
+              updateElements(new_data, elements, dict_decorator_name, 'label_bold', !get_label_bold, refreshParentComponent)
             }}
           >
             <FaBold />
@@ -178,8 +251,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
             paddingEnd='0'
             minWidth='0'
             onClick={() => {
-              elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name['label_uppercase'], !get_label_uppercase))
-              refreshParentComponent()
+              updateElements(new_data, elements, dict_decorator_name, 'label_uppercase', !get_label_uppercase, refreshParentComponent)
             }}
           >
             {svg_label_upper}
@@ -196,8 +268,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
             paddingEnd='0'
             minWidth='0'
             onClick={() => {
-              elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name['label_italic'], !get_label_italic))
-              refreshParentComponent()
+              updateElements(new_data, elements, dict_decorator_name, 'label_italic', !get_label_italic, refreshParentComponent)
             }}
           >
             <FaItalic />
@@ -208,8 +279,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
           value={get_label_font_family}
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name['label_font_family'], evt.target.value))
-              refreshParentComponent()
+              updateElements(new_data, elements, dict_decorator_name, 'label_font_family', evt.target.value, refreshParentComponent)
             }}
         >
           {
@@ -234,9 +304,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
           stepper={true}
           unit_text='pixels'
           function_on_blur={(value) => {
-            elements.forEach(element =>
-              setValueWithDecoratorRetriever(element, dict_decorator_name['label_font_size'], value ?? undefined))
-            refreshParentComponent()
+            updateElements(new_data, elements, dict_decorator_name, 'label_font_size', value ?? undefined, refreshParentComponent)
           }}
         />
       </Box>
@@ -272,12 +340,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
                 }
                 onClick={
                   () => {
-                    elements.forEach(element => {
-                      const orth_pos = getValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'])
-                      setValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'], 'left')
-                      setValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'], (orth_pos == 'dragged') ? 'middle' : orth_pos)
-                    })
-                    refreshParentComponent()
+                    updateElements(new_data, elements, dict_decorator_name, 'label_horiz', 'left', refreshParentComponent)
                   }}>
                 <FaAlignLeft />
               </Button>
@@ -296,12 +359,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
                 }
                 onClick={
                   () => {
-                    elements.forEach(element => {
-                      const orth_pos = getValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'])
-                      setValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'], 'middle')
-                      setValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'], (orth_pos == 'dragged') ? 'middle' : orth_pos)
-                    })
-                    refreshParentComponent()
+                    updateElements(new_data, elements, dict_decorator_name, 'label_horiz', 'middle', refreshParentComponent)
                   }}>
                 <FaAlignCenter />
               </Button>
@@ -319,12 +377,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
                     'menuconfigpanel_option_button_right'}
                 onClick={
                   () => {
-                    elements.forEach(element => {
-                      const orth_pos = getValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'])
-                      setValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'], 'right')
-                      setValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'], (orth_pos == 'dragged') ? 'middle' : orth_pos)
-                    })
-                    refreshParentComponent()
+                    updateElements(new_data, elements, dict_decorator_name, 'label_horiz', 'right', refreshParentComponent)
                   }}>
                 <FaAlignRight />
               </Button>
@@ -347,13 +400,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
                     'menuconfigpanel_option_button_activated_left' :
                     'menuconfigpanel_option_button_left'}
                 onClick={() => {
-                  elements.forEach(element => {
-                    const lab_pos = getValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'])
-                    getValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'])
-                    setValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'], (lab_pos == 'dragged') ? 'middle' : lab_pos)
-                    setValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'], 'bottom')
-                  })
-                  refreshParentComponent()
+                  updateElements(new_data, elements, dict_decorator_name, 'label_vert', 'bottom', refreshParentComponent)
                 }}
               >
                 {svg_label_bottom}
@@ -375,12 +422,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
                     'menuconfigpanel_option_button_activated_center' :
                     'menuconfigpanel_option_button_center'}
                 onClick={() => {
-                  elements.forEach(element => {
-                    const lab_pos = getValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'])
-                    setValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'], (lab_pos == 'dragged') ? 'middle' : lab_pos)
-                    setValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'], 'middle')
-                  })
-                  refreshParentComponent()
+                  updateElements(new_data, elements, dict_decorator_name, 'label_vert', 'middle', refreshParentComponent)
                 }}
               >
                 {svg_label_center}
@@ -402,12 +444,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
                     'menuconfigpanel_option_button_right'}
                 onClick={
                   () => {
-                    elements.forEach(element => {
-                      const lab_pos = getValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'])
-                      setValueWithDecoratorRetriever(element, dict_decorator_name['label_horiz'], (lab_pos == 'dragged') ? 'middle' : lab_pos)
-                      setValueWithDecoratorRetriever(element, dict_decorator_name['label_vert'], 'top')
-                    })
-                    refreshParentComponent()
+                    updateElements(new_data, elements, dict_decorator_name, 'label_vert', 'top', refreshParentComponent)
                   }}>
                 {svg_label_top}
               </Button>
@@ -443,7 +480,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
     }
   }
   const is_indeterminate = !selectedElements.every(check_indeterminate)
-
+  // Declare var used to set default attribute value in inputs 
   let get_label_unit_visible = default_node_value_label_unit_visible
   let get_label_unit = default_node_value_label_unit
   let get_label_unit_factor = default_node_value_label_unit_factor
@@ -471,7 +508,6 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
   ref_set_number_inputs[1].current(String(get_label_unit_factor))
 
 
-
   return <Box
     layerStyle='menuconfigpanel_grid'
   >
@@ -482,11 +518,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
         isIndeterminate={is_indeterminate}
         isChecked={get_label_custom_digit}
         onChange={(evt) => {
-          elements.forEach(element => {
-            setValueWithDecoratorRetriever(element, dict_decorator_name['label_custom_digit'], evt.target.checked)
-
-          })
-          refreshParentComponent()
+          updateElements(new_data, elements, dict_decorator_name, 'label_custom_digit', evt.target.checked, refreshParentComponent)
         }}>
         <OSTooltip label={t('Flux.label.tooltips.custom_digit')}>
           {t('Flux.label.custom_digit') + ' '}
@@ -508,9 +540,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
             minimum_value={0}
             stepper={true}
             function_on_blur={(value) => {
-              elements.forEach(element =>
-                setValueWithDecoratorRetriever(element, dict_decorator_name['label_nb_digit'], value ?? undefined))
-              refreshParentComponent()
+              updateElements(new_data, elements, dict_decorator_name, 'label_nb_digit', value ?? undefined, refreshParentComponent)
             }}
           />
         </OSTooltip>
@@ -524,8 +554,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
       icon={<CustomFaEyeCheckIcon />}
       isChecked={get_label_unit_visible}
       onChange={(evt) => {
-        elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name['label_unit_visible'], evt.target.checked))
-        refreshParentComponent()
+        updateElements(new_data, elements, dict_decorator_name, 'label_unit_visible', evt.target.checked, refreshParentComponent)
       }}>
       <OSTooltip label={t('Flux.label.tooltips.l_u_v')}>
         {t('Flux.label.l_u_v') + ' '}
@@ -557,8 +586,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
                 variant='menuconfigpanel_option_input'
                 value={get_label_unit}
                 onChange={evt => {
-                  elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name['label_unit'], evt.target.value))
-                  refreshParentComponent()
+                  updateElements(new_data, elements, dict_decorator_name, 'label_unit', evt.target.value, refreshParentComponent)
                 }}
               />
             </OSTooltip>
@@ -581,9 +609,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
                 ref_to_set_value={ref_set_number_inputs[1]}
                 default_value={get_label_unit_factor}
                 function_on_blur={(value) => {
-                  elements.forEach(element =>
-                    setValueWithDecoratorRetriever(element, dict_decorator_name['label_unit_factor'], (value ? value : undefined)))
-                  refreshParentComponent()
+                  updateElements(new_data, elements, dict_decorator_name, 'label_unit_factor', (value ? value : undefined), refreshParentComponent)
                 }}
                 menu_for_style={menu_for_style}
                 minimum_value={1}
