@@ -2279,107 +2279,105 @@ export abstract class ClassTemplate_DrawingArea
     event: MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     event.preventDefault()
-    if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
-      // EDITION MODE =============================================================
-      // event.button==0 check if we use LMB
-      if (this.isInEditionMode() && event.button == 0) {
-        // No more elements must be in selection
-        this.purgeSelection()
-        // Close all menus
-        this.closeAllMenus()
+    // Clear tooltips presents
+    d3.selectAll('.sankey-tooltip').remove()
+    // EDITION MODE =============================================================
+    // event.button==0 check if we use LMB
+    if (this.isInEditionMode() && event.button == 0 && this.eventsEnabled()) {
+      // No more elements must be in selection
+      this.purgeSelection()
+      // Close all menus
+      this.closeAllMenus()
 
-        if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
+      if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
 
-          // Get relative mouse position
-          const mouse_position = d3.pointer(event)
-          mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-          mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
-          // Create default source node
-          const source = this.sankey.addNewDefaultNode()
-          // Position center of source node to pointer pos
-          source.setPosXY(
-            mouse_position[0] - (source.getShapeWidthToUse() / 2),
-            mouse_position[1] - (source.getShapeHeightToUse() / 2))
-          // Create default target node
-          const target = this.sankey.addNewDefaultNode()
-          target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
-          // Make target a 'ghost' node
-          target.setInvisible()
-          // Ref newly created link this var to be used in other mouse event
-          this._ghost_link = new ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
-            'ghost_link',
-            source,
-            target,
-            this,
-            this.application_data.menu_configuration)
-          this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+        // Get relative mouse position
+        const mouse_position = d3.pointer(event)
+        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        // Create default source node
+        const source = this.sankey.addNewDefaultNode()
+        // Position center of source node to pointer pos
+        source.setPosXY(
+          mouse_position[0] - (source.getShapeWidthToUse() / 2),
+          mouse_position[1] - (source.getShapeHeightToUse() / 2))
+        // Create default target node
+        const target = this.sankey.addNewDefaultNode()
+        target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
+        // Make target a 'ghost' node
+        target.setInvisible()
+        // Ref newly created link this var to be used in other mouse event
+        this._ghost_link = new ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
+          'ghost_link',
+          source,
+          target,
+          this,
+          this.application_data.menu_configuration)
+        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
 
-        } else {
-          // If by any means we have already a ghost link but we start clicking the DA
-          // (It can occur when we relase the mouse out of DA while we have a ghost link & restart clicking in DA
+      } else {
+        // If by any means we have already a ghost link but we start clicking the DA
+        // (It can occur when we relase the mouse out of DA while we have a ghost link & restart clicking in DA
 
-          // Mouse released on source node
-          if (this._ghost_link.source.isMouseOver()) {
-            // If we release the mouse on the source of the link
-            // then delete the link & target to keep only the source
-            // So we only created 1 node
-            this.deleteNode(this._ghost_link.target as Type_GenericNodeElement)
-          }
-          else if (this.isMouseOverAnExistingNode() === true) {
-            let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
-            for (node_id in this.sankey.nodes_dict) {
-              if (this.sankey.nodes_dict[node_id].isMouseOver())
-                break //stop the loop when we fint the node hovered
-            }
-            // Create new link
-            this.sankey.addNewLink(
-              this._ghost_link.source as Type_GenericNodeElement,
-              this.sankey.nodes_dict[node_id]
-            )
-            this.purgeSelectionOfLinks(false)
-            this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
-            this.application_data.menu_configuration.openConfigMenuElementsLinks()
-            // Delete old target node
-            this.deleteNode(this._ghost_link?.target as Type_GenericNodeElement)
-          }
-          else {
-            // Make ghost target visible
-            this._ghost_link.target.setVisible()
-
-            // Create new link
-            this.sankey.addNewLink(
-              this._ghost_link.source as Type_GenericNodeElement,
-              this._ghost_link.target as Type_GenericNodeElement
-            )
-            this.purgeSelectionOfLinks(false)
-            this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
-            this.application_data.menu_configuration.openConfigMenuElementsLinks()
-          }
-          // In case we get there still deref ghost link
-          this._ghost_link.delete()
-          this._ghost_link = null
-          this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-          this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+        // Mouse released on source node
+        if (this._ghost_link.source.isMouseOver()) {
+          // If we release the mouse on the source of the link
+          // then delete the link & target to keep only the source
+          // So we only created 1 node
+          this.deleteNode(this._ghost_link.target as Type_GenericNodeElement)
         }
+        else if (this.isMouseOverAnExistingNode() === true) {
+          let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
+          for (node_id in this.sankey.nodes_dict) {
+            if (this.sankey.nodes_dict[node_id].isMouseOver())
+              break //stop the loop when we fint the node hovered
+          }
+          // Create new link
+          this.sankey.addNewLink(
+            this._ghost_link.source as Type_GenericNodeElement,
+            this.sankey.nodes_dict[node_id]
+          )
+          this.purgeSelectionOfLinks(false)
+          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.application_data.menu_configuration.openConfigMenuElementsLinks()
+          // Delete old target node
+          this.deleteNode(this._ghost_link?.target as Type_GenericNodeElement)
+        }
+        else {
+          // Make ghost target visible
+          this._ghost_link.target.setVisible()
 
+          // Create new link
+          this.sankey.addNewLink(
+            this._ghost_link.source as Type_GenericNodeElement,
+            this._ghost_link.target as Type_GenericNodeElement
+          )
+          this.purgeSelectionOfLinks(false)
+          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.application_data.menu_configuration.openConfigMenuElementsLinks()
+        }
+        // In case we get there still deref ghost link
+        this._ghost_link.delete()
+        this._ghost_link = null
+        this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
-      // SELECTION MODE ===========================================================
-      else if (this.isInSelectionMode()) {
-        if (event.button === 0) {
-          // Close context menus
-          this.closeAllContextMenus()
-          // Get relative mouse position
-          const mouse_position = d3.pointer(event)
-          mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-          mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
-          // Display the selection zone & set it starting position
-          this._selection_zone.setVisible()
-          this._selection_zone.starting_x_point = mouse_position[0]
-          this._selection_zone.starting_y_point = mouse_position[1]
-          this._selection_zone.draw()
-        }
+
+    }
+    // SELECTION MODE ===========================================================
+    else if (this.isInSelectionMode()) {
+      if (event.button === 0) {
+        // Close context menus
+        this.closeAllContextMenus()
+        // Get relative mouse position
+        const mouse_position = d3.pointer(event)
+        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        // Display the selection zone & set it starting position
+        this._selection_zone.setVisible()
+        this._selection_zone.starting_x_point = mouse_position[0]
+        this._selection_zone.starting_y_point = mouse_position[1]
+        this._selection_zone.draw()
       }
     }
   }
