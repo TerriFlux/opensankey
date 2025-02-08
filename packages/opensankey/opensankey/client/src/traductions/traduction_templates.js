@@ -22,6 +22,9 @@ export const resources_template = {
           advanced: 'Expert',
         },
         ids: {
+          power_grid: 'Power grid with productions & uses disagregation',
+          waste_recycling: 'Household packaging waste recycling',
+          water_usage: 'Water ressource systeme',
           personnal_budget: 'Personal expenses',
           business_simple: 'Simple business accounting',
           commercial_pipe: 'Business pipe',
@@ -53,6 +56,9 @@ export const resources_template = {
           advanced: 'Expert',
         },
         ids: {
+          power_grid: 'Réseau électrique avec désagrégation des productions et des utilisations',
+          waste_recycling: 'Recyclage des déchets d\'emballages',
+          water_usage: 'Usage des ressources en eau',
           personnal_budget: 'Dépenses personnelles',
           business_simple: 'Bilan comptable simple',
           commercial_pipe: 'Pipe commercial',
