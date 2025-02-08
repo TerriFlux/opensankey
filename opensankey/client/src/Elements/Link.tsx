@@ -3079,10 +3079,21 @@ export abstract class ClassTemplate_LinkElement
     if (this.drawing_area.show_structure === 'structure')
       return null
 
-    const value = this.value
-    // Cast as number
-    if (value !== null) return value.data_value
-    else return null
+    if (this.drawing_area.show_structure === 'data') {
+      const value = this.value
+      // Cast as number
+      if (value !== null && value.result_value) return value.data_value
+      else return null
+    }
+
+    if (this.drawing_area.show_structure === 'reconciled') {
+      const value = this.value
+      // Cast as number
+      if (value !== null && value.result_value) return value.result_value
+      if (value !== null && value.data_value) return value.data_value
+      else return null
+    }
+    return null
   }
 
   /**
@@ -4960,6 +4971,8 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public data_value: number | null = null
   public text_value: string | null = null
 
+  public result_value: number | null = null
+
   // PRIVATE ATTRIBUTES ==================================================================
 
   /**
@@ -5073,7 +5086,12 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       this.fromJSONLegacy(json_object)
     }
     else {
-      this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
+      if ('extension' in json_object && (json_object['extension'] as Type_JSON).data_value) {
+        this.data_value = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'data_value')
+        this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
+      } else {
+        this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
+      }
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
     }
     // Get Flux tags
