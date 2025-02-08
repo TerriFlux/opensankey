@@ -29,7 +29,7 @@ export type labelAttributeType = {
     label_italic: 'value_label_italic' | 'name_label_italic',
     label_uppercase: 'value_label_uppercase' | 'name_label_uppercase',
     label_color: 'value_label_color' | 'name_label_color',
-    label_font_family: 'value_label_font_family' | 'name_label_font_family',
+    label_font_family: 'value_label_font_family' | 'name_label_font_family'
 }
 
 export type labelValueAttribute = labelAttributeType & {
