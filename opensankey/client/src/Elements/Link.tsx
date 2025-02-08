@@ -1130,7 +1130,13 @@ export abstract class ClassTemplate_LinkElement
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
-        const label_to_display = link_val
+        let label_to_display = link_val as unknown as string
+        //console.log(this.drawing_area.show_structure)
+        if (this.drawing_area.show_structure === 'free_interval' ) {
+          if ( this.value!.free_mini != undefined ) {
+            label_to_display = '['+this.value!.free_mini+','+this.value!.free_maxi+']'
+          }
+        }
         // If label is undefined or null, do nothing
         if (label_to_display) {
           // Create text object
@@ -3085,6 +3091,20 @@ export abstract class ClassTemplate_LinkElement
       if (value !== null && value.result_value) return value.data_value
       else return null
     }
+    if (this.drawing_area.show_structure === 'free_interval') {
+      const value = this.value
+      // Cast as number
+      if (value !== null && value.result_value) return value.result_value
+      if (value !== null && value.data_value) return value.data_value
+      else return null
+    }
+    if (this.drawing_area.show_structure === 'free_value') {
+      const value = this.value
+      // Cast as number
+      if (value !== null && value.result_value) return value.result_value
+      if (value !== null && value.data_value) return value.data_value
+      else return null
+    }    
 
     if (this.drawing_area.show_structure === 'reconciled') {
       const value = this.value
@@ -4971,7 +4991,10 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public data_value: number | null = null
   public text_value: string | null = null
 
+  // TODO moved in a derived class in MFASankey
   public result_value: number | null = null
+  public free_mini: number | null = null
+  public free_maxi: number | null = null
 
   // PRIVATE ATTRIBUTES ==================================================================
 
@@ -5088,6 +5111,11 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     else {
       if ('extension' in json_object && (json_object['extension'] as Type_JSON).data_value) {
         this.data_value = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'data_value')
+        this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
+      } else if ('extension' in json_object && (json_object['extension'] as Type_JSON).free_mini !== undefined) {
+        console.log('tututu')
+        this.free_mini = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_mini')
+        this.free_maxi = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_maxi')
         this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
       } else {
         this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
