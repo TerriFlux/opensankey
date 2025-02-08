@@ -413,14 +413,7 @@ export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLin
                           const has_tag = contextualised_link.hasGivenTag(tag)
                           return <MenuItem
                             onClick={() => {
-                            // Assign tag to selected links
-                              if (has_tag) {
-                                selected_links.forEach(l => l.addTag(tag))
-                              }
-                              else {
-                                selected_links.forEach(l => l.removeTag(tag))
-                              }
-                              refreshThisAndToggleSaving()
+                              new_data.drawing_area.updateSelectedLinksTagAssignation(has_tag,tag)
                             }}
                           >
                             {t.name}

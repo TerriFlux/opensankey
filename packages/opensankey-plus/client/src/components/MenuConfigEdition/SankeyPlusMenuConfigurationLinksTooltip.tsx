@@ -62,6 +62,27 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
     }
   }
 
+  const applyEditor=()=>{
+    const dict_old_value:{[x:string]:string}={}
+    selected_links.map(link => dict_old_value[link.id] =link.tooltip_text)
+
+    const _applyEditor=()=>{
+      selected_links.map(link => link.tooltip_text = tmp_editor_content_tooltip)
+          setEditorContentTooltip(tmp_editor_content_tooltip)
+          // Toogle saving indicator
+          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+    const inv_applyEditor=()=>{
+      selected_links.map(link => link.tooltip_text = dict_old_value[link.id])
+      setEditorContentTooltip(selected_links[0].tooltip_text)
+    }
+
+    new_data.history.saveUndo(inv_applyEditor)
+    new_data.history.saveRedo(_applyEditor)
+
+    _applyEditor()
+  }
+
   // Components updaters ---------------------------------------------------------------
 
   // Update what is displayed in text editor
@@ -146,12 +167,7 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
       <Button
         variant='menuconfigpanel_option_button_right'
         isDisabled={!s_tmp_editor_content_changed}
-        onClick={() => {
-          selected_links.map(link => link.tooltip_text = tmp_editor_content_tooltip)
-          setEditorContentTooltip(tmp_editor_content_tooltip)
-          // Toogle saving indicator
-          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-        }}
+        onClick={applyEditor}
       >
         {t('Menu.submit')}
       </Button>
