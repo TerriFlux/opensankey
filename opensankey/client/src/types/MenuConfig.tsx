@@ -769,6 +769,7 @@ export class Class_MenuConfig {
    */
   public updateAllComponentsRelatedToLinks() {
     this.ref_to_spreadsheet.current()
+    this._ref_to_menu_context_links_updater.current()
     this.updateComponentRelatedToLinksSelection()
     this.updateAllComponentsRelatedToLinksConfig()
     this.updateComponentRelatedToLinksStyles()
