@@ -1130,7 +1130,8 @@ export abstract class ClassTemplate_LinkElement
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
-        const label_to_display = link_val
+        let label_to_display = link_val as unknown as string
+
         // If label is undefined or null, do nothing
         if (label_to_display) {
           // Create text object
@@ -3079,10 +3080,35 @@ export abstract class ClassTemplate_LinkElement
     if (this.drawing_area.show_structure === 'structure')
       return null
 
-    const value = this.value
-    // Cast as number
-    if (value !== null) return value.data_value
-    else return null
+    if (this.drawing_area.show_structure === 'data') {
+      const value = this.value
+      // Cast as number
+      if (value !== null && value.result_value) return value.data_value
+      else return null
+    }
+    if (this.drawing_area.show_structure === 'free_interval') {
+      const value = this.value
+      // Cast as number
+      if (value !== null && value.result_value) return value.result_value
+      if (value !== null && value.data_value) return value.data_value
+      else return null
+    }
+    if (this.drawing_area.show_structure === 'free_value') {
+      const value = this.value
+      // Cast as number
+      if (value !== null && value.result_value) return value.result_value
+      if (value !== null && value.data_value) return value.data_value
+      else return null
+    }    
+
+    if (this.drawing_area.show_structure === 'reconciled') {
+      const value = this.value
+      // Cast as number
+      if (value !== null && value.result_value) return value.result_value
+      if (value !== null && value.data_value) return value.data_value
+      else return null
+    }
+    return null
   }
 
   /**
@@ -3128,6 +3154,11 @@ export abstract class ClassTemplate_LinkElement
 
   public get data_label() {
     // Init
+    if (this.drawing_area.show_structure === 'free_interval' ) {
+      if ( this.value!.free_mini != undefined ) {
+        return '['+this.value!.free_mini+','+this.value!.free_maxi+']'           
+      }
+    }
     let data_value = this.data_value
     let text_value = '-'
     // Create data label
@@ -3255,6 +3286,11 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public get thickness() {
+    if (this.drawing_area.show_structure === 'reconciled' ) {
+      if (this.value?.free_mini != undefined) {
+        return 2
+      }
+    }
     // Get link value for current dataTaggs selected
     const data_value = this.data_value
     // Scale this value for the drawing area
@@ -3581,6 +3617,11 @@ export abstract class ClassTemplate_LinkElement
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this.drawControlPoint() }
 
   public get shape_is_structure() {
+    if (this.sankey.drawing_area.show_structure == 'reconciled') {
+      if (this.value?.free_mini != undefined) {
+        return true
+      }
+    }
     if (this._display.attributes.shape_is_structure !== undefined) {
       return this._display.attributes.shape_is_structure
     } else if (this._display.style.shape_is_structure !== undefined) {
@@ -5079,13 +5120,16 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     }
     else {
       if ('extension' in json_object && (json_object['extension'] as Type_JSON).data_value) {
+        console.log('tatatat')
         this.data_value = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'data_value')
         this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
       } else if ('extension' in json_object && (json_object['extension'] as Type_JSON).free_mini !== undefined) {
+        console.log('tututu')
         this.free_mini = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_mini')
         this.free_maxi = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_maxi')
         this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
       } else {
+        console.log('titititi')
         this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
       }
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
