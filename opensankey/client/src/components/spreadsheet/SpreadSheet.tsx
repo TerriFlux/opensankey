@@ -76,8 +76,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
   // Function to add a new link (flux) between two nodes
   const addLink = (cur_flux: SpreadSheetFluxType) => {
-    const source_name = cur_flux.source
-    const target_name = cur_flux.target
+    const source_name = cur_flux.source.trim()
+    const target_name = cur_flux.target.trim()
 
     // Skip if source or target is empty
     if (source_name === '' || target_name === '') {
