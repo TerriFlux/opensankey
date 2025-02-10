@@ -50,10 +50,72 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
     return selected_icon
   }
   const allSelectedNodeHasSameicon = isAllIconVisible()
-  // const icon_visible = (list_nodes_selected[0].iconVisible)
-
 
   list_nodes_selected.length > 0 ? list_nodes_selected[0].iconName : 'None'
+
+  // Functions we can undo ====================================================
+
+  const updateNodeIcon = (iconName: string) => {
+    const dict_old_value: { [x: string]: [name: string, color: string, viewBox: string | undefined] } = {}
+    list_nodes_selected.forEach(n => {
+      dict_old_value[n.id] = [n.iconName, n.iconColor, n.iconViewBox]
+    })
+    const _updateNodeIcon = () => {
+      list_nodes_selected.forEach(n => {
+        n.iconName = iconName
+        if (!n.iconColor) n.iconColor = '#000000'
+        delete n.iconViewBox
+        n.draw()
+      })
+      setForceUpdate(!forceUpdate)
+    }
+
+    const inv_updateNodeIcon = () => {
+      list_nodes_selected.forEach(n => {
+        n.iconName = dict_old_value[n.id][0]
+        n.iconColor = dict_old_value[n.id][1]
+        n.iconViewBox = dict_old_value[n.id][2]
+        n.draw()
+      })
+      setForceUpdate(!forceUpdate)
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateNodeIcon)
+    new_data_plus.history.saveRedo(_updateNodeIcon)
+    // Execute original attr mutation
+    _updateNodeIcon()
+  }
+
+  const updateNodeIconImported = (ki: string) => {
+    const dict_old_value: { [x: string]: [name: string, color: string, viewBox: string | undefined] } = {}
+    list_nodes_selected.forEach(n => {
+      dict_old_value[n.id] = [n.iconName, n.iconColor, n.iconViewBox]
+    })
+    const _updateNodeIconImported = () => {
+      list_nodes_selected.forEach(n => {
+        n.iconName = 'icon_imported_' + ki
+        n.iconViewBox = import_svg.current[ki].Vb
+        n.iconColor = '#000000'
+        n.draw()
+      })
+      setForceUpdate(!forceUpdate)
+    }
+
+    const inv_updateNodeIconImported = () => {
+      list_nodes_selected.forEach(n => {
+        n.iconName = dict_old_value[n.id][0]
+        n.iconColor = dict_old_value[n.id][1]
+        n.iconViewBox = dict_old_value[n.id][2]
+        n.draw()
+      })
+      setForceUpdate(!forceUpdate)
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateNodeIconImported)
+    new_data_plus.history.saveRedo(_updateNodeIconImported)
+    // Execute original attr mutation
+    _updateNodeIconImported()
+  }
 
   // Create object containing list of card elements regrouped by the icon themes
   const tuto_sub_nav: { [s: string]: JSX.Element } = {}
@@ -66,22 +128,18 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
       }).sort(([a,], [b,]) => (t(ki + '.' + a) > t(ki + '.' + b)) ? 1 : ((t(ki + '.' + b) > t(ki + '.' + a)) ? -1 : 0)).map((icon, i) => {
         // icon[0]:Name of the icon
         // icon[1]:Path of the icon
+        const NameIcon = ki + '_' + icon[0]
+
         return <Card
           key={'card_' + icon[0] + '_' + i}
-          variant={allSelectedNodeHasSameicon === ki + '_' + icon[0] ? 'card_icon_selected' : 'card_icon_not_selected'}
+          variant={allSelectedNodeHasSameicon === NameIcon ? 'card_icon_selected' : 'card_icon_not_selected'}
           onClick={() => {
-            new_data_plus.drawing_area.sankey.icon_catalog[ki + '_' + icon[0]] = icon[1]
-            list_nodes_selected.forEach(d => {
-              d.iconName = ki + '_' + icon[0]
-              if (!d.iconColor) d.iconColor = '#000000'
-              delete d.iconViewBox
-            })
-            list_nodes_selected.forEach(node => node.draw())
+            new_data_plus.drawing_area.sankey.icon_catalog[NameIcon] = icon[1]
+            updateNodeIcon(NameIcon)
             sShowModal(false)
           }}
         >
           <CardBody>
-
             <Heading>{t(ki + '.' + icon[0])}</Heading>
             <Divider />
             <svg viewBox='0 0 1000 1000' width={50} height={50}><g><path fill='black' d={icon[1]}></path></g></svg>
@@ -165,12 +223,7 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
       variant={allSelectedNodeHasSameicon === 'icon_imported_' + ki ? 'card_icon_selected' : 'card_icon_not_selected'}
       onClick={() => {
         new_data_plus.drawing_area.sankey.icon_catalog['icon_imported_' + ki] = import_svg.current[ki].path
-        list_nodes_selected.forEach(d => {
-          d.iconName = 'icon_imported_' + ki
-          d.iconViewBox = import_svg.current[ki].Vb
-          d.iconColor = '#000000'
-        })
-        list_nodes_selected.forEach(node => node.draw())
+        updateNodeIconImported(ki)
         sShowModal(false)
       }}
     >
@@ -260,7 +313,7 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
       </ModalBody>
     </ModalContent>
   </Modal>
-  {file_import}
+    {file_import}
   </>
 }
 
