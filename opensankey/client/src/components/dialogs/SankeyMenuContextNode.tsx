@@ -29,6 +29,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
 import { Type_GenericApplicationData } from '../../types/Types'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
+import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
 
 /*************************************************************************************************/
 
@@ -110,7 +111,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     refreshThis.toggle()
   }
 
-  // Local utils functions --------------------------------------------------------------
+  // Functions we can undo --------------------------------------------------------------
 
   /**
    * Deal with node horizontal / vertical alignement
@@ -124,48 +125,202 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     attr: 'position_x' | 'position_y',
     pos: 'b' | 'm' | 'a'
   ) => {
-    // Reference position
-    const node_ref = selected_nodes
-      .filter(nf => nf.position_type != 'relative')
-      .sort((n1, n2) => {
-        return ref == 'min' ? n1[attr] - n2[attr] : n2[attr] - n1[attr]
-      })[0]
-    const pos_ref = node_ref[attr]
-    // Deal with ellipses shapes
-    const is_circle = (node_ref.shape_type === 'ellipse')
-    let wORh_ref = is_circle ? node_ref.getShapeWidthToUse() / 2 : node_ref.getShapeWidthToUse()
-    if (attr === 'position_y') {
-      wORh_ref = is_circle ? node_ref.getShapeHeightToUse() / 2 : node_ref.getShapeHeightToUse()
-    }
-    let center_ref = 0
-    if (pos === 'm') {
-      center_ref = pos_ref + (wORh_ref / 2)
-    }
-    // Update positions of all selected nodes
-    selected_nodes
-      .filter(n => n != node_ref && n.position_type != 'relative')
-      .forEach(n => {
-        const is_circle_to_shift = (n.shape_type === 'ellipse')
-        let wORh_to_shift = is_circle_to_shift ? n.getShapeWidthToUse() / 2 : n.getShapeWidthToUse()
-        if (attr === 'position_y') {
-          wORh_to_shift = is_circle_to_shift ? n.getShapeHeightToUse() / 2 : n.getShapeHeightToUse()
-        }
+    // Save old value that can be used in undo
+    const dict_old_pos: { [x: string]: [number, number] } = {}
+    selected_nodes.forEach(n => dict_old_pos[n.id] = [n.position_x, n.position_y])
 
-        if (pos === 'm') {
-          n[attr] = center_ref - ((wORh_to_shift) / 2)
-        }
-        else if (pos === 'b') {
-          n[attr] = pos_ref
-        }
-        else { // if (pos === 'a')
-          n[attr] = (pos_ref + wORh_ref) - wORh_to_shift
-        }
-        n.draw()
-      })
-    // Refresh and toggle saving
-    refreshThisAndToggleSaving()
+    // Function undo
+    const inv_align_node = () => {
+      selected_nodes.forEach(n => n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1]))
+    }
+    // Function original
+    const _align_node = () => {
+      // Reference position
+      const node_ref = selected_nodes
+        .filter(nf => nf.position_type != 'relative')
+        .sort((n1, n2) => {
+          return ref == 'min' ? n1[attr] - n2[attr] : n2[attr] - n1[attr]
+        })[0]
+      const pos_ref = node_ref[attr]
+      // Deal with ellipses shapes
+      const is_circle = (node_ref.shape_type === 'ellipse')
+      let wORh_ref = is_circle ? node_ref.getShapeWidthToUse() / 2 : node_ref.getShapeWidthToUse()
+      if (attr === 'position_y') {
+        wORh_ref = is_circle ? node_ref.getShapeHeightToUse() / 2 : node_ref.getShapeHeightToUse()
+      }
+      let center_ref = 0
+      if (pos === 'm') {
+        center_ref = pos_ref + (wORh_ref / 2)
+      }
+      // Update positions of all selected nodes
+      selected_nodes
+        .filter(n => n != node_ref && n.position_type != 'relative')
+        .forEach(n => {
+          const is_circle_to_shift = (n.shape_type === 'ellipse')
+          let wORh_to_shift = is_circle_to_shift ? n.getShapeWidthToUse() / 2 : n.getShapeWidthToUse()
+          if (attr === 'position_y') {
+            wORh_to_shift = is_circle_to_shift ? n.getShapeHeightToUse() / 2 : n.getShapeHeightToUse()
+          }
+
+          if (pos === 'm') {
+            n[attr] = center_ref - ((wORh_to_shift) / 2)
+          }
+          else if (pos === 'b') {
+            n[attr] = pos_ref
+          }
+          else { // if (pos === 'a')
+            n[attr] = (pos_ref + wORh_ref) - wORh_to_shift
+          }
+          n.draw()
+        })
+      // Refresh and toggle saving
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo
+    new_data.history.saveUndo(inv_align_node)
+    new_data.history.saveRedo(_align_node)
+    // Execute original function
+    _align_node()
   }
 
+  const updateStyle = (sn: Class_NodeStyle) => {
+
+    const dict_old_value: { [x: string]: Class_NodeStyle } = {}
+
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.style
+    })
+    const _updateStyle = () => {
+      selected_nodes.forEach(n => {
+        n.style = sn
+      })
+      refreshThisAndToggleSaving()
+
+    }
+
+    const inv_updateStyle = () => {
+      selected_nodes.forEach(n => {
+        n.style = dict_old_value[n.id]
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateStyle)
+    new_data.history.saveRedo(_updateStyle)
+    // Execute original attr mutation
+    _updateStyle()
+  }
+
+  const resetAttr = () => {
+    const dict_old_value: { [x: string]: Class_NodeAttribute } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.display.attributes
+    })
+    const _resetAttr = () => {
+      selected_nodes.forEach(n => {
+        n.resetAttributes()
+      })
+      refreshThisAndToggleSaving()
+
+    }
+
+    const inv_resetAttr = () => {
+      selected_nodes.forEach(n => {
+        n.display.attributes = dict_old_value[n.id]
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_resetAttr)
+    new_data.history.saveRedo(_resetAttr)
+    // Execute original attr mutation
+    _resetAttr()
+  }
+
+
+  const updateNameVisibility = () => {
+    const dict_old_value: { [x: string]: boolean } = {}
+    // Clone Class_attribute of links so in the undo it's doens't affect a value if the original value came from style
+    selected_nodes.forEach(node => {
+      dict_old_value[node.id] =node.name_label_visible
+    })
+    const _updateNameVisibility = () => {
+      selected_nodes
+        .forEach(node => {
+          node.name_label_visible = !contextualised_node_label_visible
+        })
+      refreshThisAndToggleSaving()
+    }
+
+    const inv_updateNameVisibility = () => {
+      selected_nodes.forEach(node => {
+        node.name_label_visible = dict_old_value[node.id]
+        node.draw()
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateNameVisibility)
+    new_data.history.saveRedo(_updateNameVisibility)
+    // Execute original attr mutation
+    _updateNameVisibility()
+  }
+
+  const updateValueVisibility = () => {
+    const dict_old_value: { [x: string]: boolean } = {}
+    // Clone Class_attribute of links so in the undo it's doens't affect a value if the original value came from style
+    selected_nodes.forEach(node => {
+      dict_old_value[node.id] = node.value_label_is_visible
+    })
+    const _updateValueVisibility = () => {
+      selected_nodes
+        .forEach(node => {
+          node.value_label_is_visible = !contextualised_node_value_visible
+        })
+      refreshThisAndToggleSaving()
+    }
+
+    const inv_updateValueVisibility = () => {
+      selected_nodes.forEach(node => {
+        node.value_label_is_visible = dict_old_value[node.id]
+        node.draw()
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateValueVisibility)
+    new_data.history.saveRedo(_updateValueVisibility)
+    // Execute original attr mutation
+    _updateValueVisibility()
+  }
+
+  const updateShapeVisibility = () => {
+    const dict_old_value: { [x: string]: boolean } = {}
+    // Clone Class_attribute of links so in the undo it's doens't affect a value if the original value came from style
+    selected_nodes.forEach(node => {
+      dict_old_value[node.id] = node.shape_visible
+    })
+    const _updateShapeVisibility = () => {
+      selected_nodes
+        .forEach(node => {
+          node.shape_visible = !contextualised_node_shape_visible
+        })
+      refreshThisAndToggleSaving()
+    }
+
+    const inv_updateShapeVisibility = () => {
+      selected_nodes.forEach(node => {
+        node.shape_visible = dict_old_value[node.id]
+        node.draw()
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateShapeVisibility)
+    new_data.history.saveRedo(_updateShapeVisibility)
+    // Execute original attr mutation
+    _updateShapeVisibility()
+  }
   // JSX Components ---------------------------------------------------------------------
 
   const dropdown_c_n_apparence = <Button
@@ -195,10 +350,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           .map((sn, i) => {
             return <MenuItem key={'context_node_item_' + i} onClick={() => {
               if (contextualised_node) {
-                selected_nodes.map(node => {
-                  node.style = sn
-                })
-                refreshThisAndToggleSaving()
+                updateStyle(sn)
+
               }
             }}>
               {sn.name}
@@ -220,10 +373,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     <MenuList>
       <Button
         variant='contextmenu_button'
-        onClick={() => {
-          selected_nodes.forEach(node => node.resetAttributes())
-          refreshThisAndToggleSaving()
-        }}
+        onClick={resetAttr}
       >
         {t('Noeud.AS')}
       </Button>
@@ -450,6 +600,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             n.output_links_list.forEach(l => new_data.drawing_area.addLinkToSelection(l))
           })
           new_data.drawing_area.node_contextualised = undefined
+          refreshThisAndToggleSaving()
+
         }}>
         {t('Noeud.SlctOL')}
       </MenuItem>
@@ -460,6 +612,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             n.input_links_list.forEach(l => new_data.drawing_area.addLinkToSelection(l))
           })
           new_data.drawing_area.node_contextualised = undefined
+          refreshThisAndToggleSaving()
+
         }}>
         {t('Noeud.SlctIL')}
       </MenuItem>
@@ -534,13 +688,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const btn_mask_shape = <Button
     variant='contextmenu_button'
-    onClick={() => {
-      selected_nodes
-        .forEach(n => {
-          n.shape_visible = !contextualised_node_shape_visible
-        })
-      refreshThisAndToggleSaving()
-    }}
+    onClick={updateShapeVisibility}
   >
     {
       contextualised_node_shape_visible ?
@@ -551,12 +699,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const btn_mask_label = <Button
     variant='contextmenu_button'
-    onClick={() => {
-      selected_nodes.forEach(n => {
-        n.name_label_visible = !contextualised_node_label_visible
-      })
-      refreshThisAndToggleSaving()
-    }}
+    onClick={updateNameVisibility}
   >
     {
       contextualised_node_label_visible ?
@@ -579,10 +722,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const btn_mask_value = <Button
     variant='contextmenu_button'
-    onClick={() => {
-      selected_nodes.forEach(n => n.value_label_is_visible = !contextualised_node_value_visible)
-      refreshThisAndToggleSaving()
-    }}
+    onClick={ updateValueVisibility}
   >
     {
       contextualised_node_value_visible ?
