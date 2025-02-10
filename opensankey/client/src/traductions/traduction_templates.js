@@ -22,7 +22,8 @@ export const resources_template = {
           advanced: 'Expert',
         },
         ids: {
-          power_grid: 'Power grid with productions & uses disagregation',
+          power_grid_with_disagregation: 'Power grid with productions & uses disaggregation',
+          power_grid: 'Power grid',
           waste_recycling: 'Household packaging waste recycling',
           water_usage: 'Water ressource systeme',
           personnal_budget: 'Personal expenses',
@@ -56,7 +57,8 @@ export const resources_template = {
           advanced: 'Expert',
         },
         ids: {
-          power_grid: 'Réseau électrique avec désagrégation des productions et des utilisations',
+          power_grid_with_disagregation: 'Réseau électrique avec désagrégation des productions et des utilisations',
+          power_grid: 'Réseau électrique',
           waste_recycling: 'Recyclage des déchets d\'emballages',
           water_usage: 'Usage des ressources en eau',
           personnal_budget: 'Dépenses personnelles',
