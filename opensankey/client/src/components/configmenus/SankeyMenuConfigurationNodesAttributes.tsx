@@ -58,7 +58,8 @@ import {
   default_node_value_label_horiz_shift,
   default_node_value_label_vert_shift,
   default_node_name_label_horiz_shift,
-  default_node_name_label_vert_shift
+  default_node_name_label_vert_shift,
+  Class_NodeAttribute
 } from '../../Elements/NodeAttributes'
 import { type Class_NodeStyle } from '../../Elements/NodeAttributes'
 import {
@@ -81,23 +82,24 @@ export const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox=
 export const svg_label_upper = <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12"><g><path d="M22,8V9.026A4.948,4.948,0,0,0,19,8a5,5,0,0,0,0,10,4.948,4.948,0,0,0,3-1.026V18h2V8Zm-3,8a3,3,0,1,1,3-3A3,3,0,0,1,19,16Z" /><path d="M12,18h2.236L7.118,3.764,0,18H2.236l2-4H10ZM5.236,12,7.118,8.236,9,12Z" /></g></svg>
 
 
+// Declare type used for generics functions
+
+type keyNodeStyle = keyof Class_NodeStyle
+type typeValNodeStyle = Class_NodeStyle[keyNodeStyle]
+type keyNodeAttr = keyof Type_GenericNodeElement
+type typeValNodeAttr = Type_GenericNodeElement[keyNodeAttr]
+
 /*************************************************************************************************/
 
 /**
  * Define the menu that allows to modifiy appararence for nodes / properties for a node style
  *
  * @param {*} {
- *   applicationContext,
  *   new_data,
- *   applicationState,
  *   menu_for_style,
- *   ref_selected_style_node,
- *   advanced_appearence_content,
- *   advanced_label_content,
- *   advanced_label_value_content,
- *   node_function
+ *   additional_menus,
  * }
- * @return {*}
+ * @return {*} 
  */
 export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_OpenSankeyConfigurationNodesAttributes> = ({
   new_data,
@@ -109,7 +111,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
 
   // Get traduction function
   const { t } = new_data
-
+  const { ref_selected_style_node } = new_data.menu_configuration
   // Elements on which this menu applies ------------------------------------------------
 
   let selected_nodes: Type_GenericNodeElement[]
@@ -124,11 +126,127 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
 
   // Elements on which menu modification applies
   let elements: Class_NodeStyle[] | Type_GenericNodeElement[]
+
+  const updateValueForListElements = <TModel, TKey extends keyof TModel>(
+    model: TModel[],
+    key: TKey,
+    value: TModel[TKey]
+  ) => {
+    model.forEach(el => updateValueForElement(el, key, value))
+  }
+
+  const updateValueForElement = <TModel, TKey extends keyof TModel>(
+    model: TModel,
+    key: TKey,
+    value: TModel[TKey]
+  ) => {
+    model[key] = value
+  }
+
+
+  // Define a type of function that will be used to update elements and save unde/redo in data history
+  // We can't directly define 1 function to treat Style & Links because they don't have exactly the same Class functions
+  // And generic function setValueWithDecoratorRetriever don't like it
+  let updateElements: (((k: keyNodeStyle, value: typeValNodeStyle) => void) | ((k: keyNodeAttr, value: typeValNodeAttr) => void))
+
   if (menu_for_style) {
-    elements = [new_data.drawing_area.sankey.node_styles_dict[new_data.menu_configuration.ref_selected_style_node.current]]
+    elements = [new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]]
+    updateElements = (k: keyNodeStyle, value: typeValNodeStyle) => {
+      // Save old value
+      const old_val = new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current][k]
+      // Define fucntion that will mutate value of 'k' attribute in Style 
+      const _updateElements = (_: typeValNodeStyle) => {
+        updateValueForListElements([new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]], k, _)
+        refreshThisAndUpdateRelatedComponents()
+      }
+      // Save undo/redo in data history
+      new_data.history.saveUndo(() => _updateElements(old_val))
+      new_data.history.saveRedo(() => _updateElements(value))
+      // Execute original attr mutation
+      _updateElements(value)
+    }
   }
   else {
     elements = selected_nodes
+    updateElements = (k: keyNodeAttr, value: typeValNodeAttr) => {
+      // Save old values in dict so the undo reset value for previous value of each node
+      const dict_old_val: { [x: string]: typeValNodeAttr } = {}
+      selected_nodes.forEach(l => dict_old_val[l.id] = l[k])
+      // Define fucntion that will mutate value of 'k' attribute in Node 
+      const _updateElements = (_: typeValNodeAttr) => {
+        updateValueForListElements(selected_nodes, k, _)
+        refreshThisAndUpdateRelatedComponents()
+      }
+      const inv_updateElements = () => {
+        selected_nodes.forEach(l => updateValueForElement(l, k, dict_old_val[l.id]))
+        refreshThisAndUpdateRelatedComponents()
+      }
+      // Save undo/redo in data history
+      new_data.history.saveUndo(inv_updateElements)
+      new_data.history.saveRedo(() => _updateElements(value))
+      // Execute original attr mutation
+      _updateElements(value)
+    }
+  }
+
+  /**
+   *Function to delete all local value of attribute so the value used come from the style
+   *
+   */
+  const resetAttrToStyleVal = () => {
+    const curr_attr: { [x: string]: Class_NodeAttribute } = {}
+    selected_nodes.map(node => {
+      curr_attr[node.id] = node.display.attributes
+    })
+    // Method to get old attr via undo
+    const inv_resetAttrToStyleVal = () => {
+      selected_nodes.map(node => node.display.attributes = curr_attr[node.id])
+      refreshThisAndUpdateRelatedComponents()
+    }
+    // Method to get new attr via redo
+    const _resetAttrToStyleVal = () => {
+      selected_nodes.map(node => node.resetAttributes())
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    new_data.history.saveUndo(inv_resetAttrToStyleVal)
+    new_data.history.saveRedo(_resetAttrToStyleVal)
+    _resetAttrToStyleVal()
+  }
+
+  /**
+   * Function that change selected nodes style and save undo
+   *
+   * @param {Class_NodeStyle} style
+   */
+  const switchToStyle = (style: Class_NodeStyle) => {
+    const curr_style: { [x: string]: Class_NodeStyle } = {}
+    selected_nodes.map(node => {
+      curr_style[node.id] = node.style
+    })
+    // Method to get old style via undo
+    const inv_switchToStyle = () => {
+      selected_nodes.map(node => {
+        node.style = curr_style[node.id]
+      })
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    // Method to get new style via redo
+    const _switchToStyle = () => {
+      ref_selected_style_node.current = style.id
+      selected_nodes.map(node => {
+        node.style = style
+      })
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    new_data.history.saveUndo(inv_switchToStyle)
+    new_data.history.saveRedo(_switchToStyle)
+
+
+    _switchToStyle()
+
   }
 
   // Elements attributes ----------------------------------------------------------------
@@ -207,7 +325,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
   const [, setCount] = useState(0)
   const [, setCountStyle] = useState(0)
 
-  // Link this menu's update function
+  // Node this menu's update function
   if (!menu_for_style) {
     new_data.menu_configuration.ref_to_menu_config_nodes_apparence_updater.current = () => setCount(a => a + 1)
   } else {
@@ -264,10 +382,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
           is_indeterminated
         }
         onChange={(evt) => {
-          elements.forEach(
-            element => (element.shape_visible = evt.target.checked)
-          )
-          refreshThisAndUpdateRelatedComponents()
+          updateElements('shape_visible', evt.target.checked)
         }}
       >
         <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')}>
@@ -296,10 +411,10 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         {
           (!menu_for_style) &&
             isAttributeOverloaded(selected_nodes, 'shape_color') ? (
-              <>{TooltipValueSurcharge('node_var_', t)}</>
-            ) : (
-              <></>
-            )
+            <>{TooltipValueSurcharge('node_var_', t)}</>
+          ) : (
+            <></>
+          )
         }
       </Box>
       <Box layerStyle='option_with_activation'>
@@ -309,8 +424,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
             type='color'
             value={shape_color}
             onChange={evt => {
-              elements.forEach(element => element.shape_color = evt.target.value)
-              refreshThisAndUpdateRelatedComponents()
+              updateElements('shape_color', evt.target.value)
             }}
           />
         </OSTooltip>
@@ -322,8 +436,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
-              elements.forEach(element => element.shape_color_sustainable = !shape_color_sustainable)
-              refreshThisAndUpdateRelatedComponents()
+              updateElements('shape_color_sustainable', !shape_color_sustainable)
             }}
           >
             {shape_color_sustainable ? <FaLock /> : <FaLockOpen />}
@@ -350,8 +463,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
-              elements.forEach(element => element.shape_type = 'ellipse')
-              refreshThisAndUpdateRelatedComponents()
+              updateElements('shape_type', 'ellipse')
             }}
           >
             <svg
@@ -372,8 +484,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
-              elements.forEach(element => element.shape_type = 'rect')
-              refreshThisAndUpdateRelatedComponents()
+              updateElements('shape_type', 'rect')
             }}
           >
             <svg
@@ -396,8 +507,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 'menuconfigpanel_option_button'
             }
             onClick={() => {
-              elements.forEach(element => element.shape_type = 'arrow')
-              refreshThisAndUpdateRelatedComponents()
+              updateElements('shape_type', 'arrow')
             }}
           >
             <svg
@@ -436,8 +546,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 step={5}
                 value={shape_arrow_angle_factor}
                 onChange={(value) => {
-                  elements.forEach(element => element.shape_arrow_angle_factor = value)
-                  refreshThisAndUpdateRelatedComponents()
+                  updateElements('shape_arrow_angle_factor', value)
                 }}
               >
                 <SliderMark
@@ -466,8 +575,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 }
                 minWidth={0}
                 onClick={() => {
-                  elements.forEach(element => element.shape_arrow_angle_direction = 'left')
-                  refreshThisAndUpdateRelatedComponents()
+                  updateElements('shape_arrow_angle_direction', 'left')
                 }}
               >
                 <FaArrowLeft />
@@ -480,8 +588,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 }
                 minWidth={0}
                 onClick={() => {
-                  elements.forEach(element => element.shape_arrow_angle_direction = 'right')
-                  refreshThisAndUpdateRelatedComponents()
+                  updateElements('shape_arrow_angle_direction', 'right')
                 }}
               >
                 <FaArrowRight />
@@ -494,8 +601,8 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 }
                 minWidth={0}
                 onClick={() => {
-                  elements.forEach(element => element.shape_arrow_angle_direction = 'top')
-                  refreshThisAndUpdateRelatedComponents()
+                  updateElements('shape_arrow_angle_direction', 'top')
+
                 }}
               >
                 <FaArrowUp />
@@ -508,8 +615,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 }
                 minWidth={0}
                 onClick={() => {
-                  elements.forEach(element => element.shape_arrow_angle_direction = 'bottom')
-                  refreshThisAndUpdateRelatedComponents()
+                  updateElements('shape_arrow_angle_direction', 'bottom')
                 }}
               >
                 <FaArrowDown />
@@ -534,9 +640,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
           ref_to_set_value={ref_set_number_inputs[1]}
           default_value={shape_min_width}
           function_on_blur={(value) => {
-            elements.forEach(element =>
-              element.shape_min_width = (value ?? undefined))
-            refreshThisAndUpdateRelatedComponents()
+            updateElements('shape_min_width', (value ?? undefined))
           }}
           menu_for_style={menu_for_style}
           minimum_value={0}
@@ -557,9 +661,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
           ref_to_set_value={ref_set_number_inputs[0]}
           default_value={shape_min_height}
           function_on_blur={(value) => {
-            elements.forEach(element =>
-              element.shape_min_height = (value ?? undefined))
-            refreshThisAndUpdateRelatedComponents()
+            updateElements('shape_min_height', (value ?? undefined))
           }}
           menu_for_style={menu_for_style}
           minimum_value={0}
@@ -753,8 +855,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         isIndeterminate={is_indeterminated}
         isChecked={name_label_visible}
         onChange={(evt) => {
-          elements.forEach(element => element.name_label_visible = evt.target.checked)
-          refreshThisAndUpdateRelatedComponents()
+          updateElements('name_label_visible', evt.target.checked)
         }}
       >
         <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
@@ -783,106 +884,101 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         label_font_family: 'name_label_font_family',
       }} />
 
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isIndeterminate={is_indeterminated}
-      isChecked={name_label_background}
-      onChange={(evt) => {
-        elements.forEach(element => element.name_label_background = evt.target.checked)
-        refreshThisAndUpdateRelatedComponents()
-      }}
-    >
-      <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
-        {t('Noeud.labels.l_bg')}
-      </OSTooltip>
-      {
-        (!menu_for_style) &&
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isIndeterminate={is_indeterminated}
+        isChecked={name_label_background}
+        onChange={(evt) => {
+          updateElements('name_label_background', evt.target.checked)
+        }}
+      >
+        <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
+          {t('Noeud.labels.l_bg')}
+        </OSTooltip>
+        {
+          (!menu_for_style) &&
             isAttributeOverloaded(selected_nodes, 'name_label_background') ?
-          TooltipValueSurcharge('node_var', t) :
-          <></>
-      }
-    </Checkbox>
-    {/* Largeur de la zone de texte du label */}
-    <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Menu.larg')}
-          {
-            (!menu_for_style) &&
+            TooltipValueSurcharge('node_var', t) :
+            <></>
+        }
+      </Checkbox>
+      {/* Largeur de la zone de texte du label */}
+      <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Menu.larg')}
+            {
+              (!menu_for_style) &&
                 isAttributeOverloaded(selected_nodes, 'name_label_box_width') ?
-              <>{TooltipValueSurcharge('node_var_', t)}</> :
-              <></>
-          }
+                <>{TooltipValueSurcharge('node_var_', t)}</> :
+                <></>
+            }
+          </Box>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[2]}
+            default_value={name_label_box_width}
+            function_on_blur={(value) => {
+              updateElements('name_label_box_width', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+          />
         </Box>
-        <ConfigMenuNumberInput
-          ref_to_set_value={ref_set_number_inputs[2]}
-          default_value={name_label_box_width}
-          function_on_blur={(value) => {
-            elements.forEach(element =>
-              element.name_label_box_width = (value ?? undefined))
-            refreshThisAndUpdateRelatedComponents()
-          }}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          step={1}
-          stepper={true}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip>
+      </OSTooltip>
 
-    {/* Position horizontal du label par rapport à l'ancre*/}
-    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.labels.anchor_dx')}
-          {(!menu_for_style) &&
+      {/* Position horizontal du label par rapport à l'ancre*/}
+      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.labels.anchor_dx')}
+            {(!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift') ?
-            TooltipValueSurcharge('node_var', t) :
-            <></>}
+              TooltipValueSurcharge('node_var', t) :
+              <></>}
+          </Box>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[7]}
+            default_value={name_label_horiz_shift}
+            function_on_blur={(value) => {
+              updateElements('name_label_horiz_shift', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+          />
         </Box>
-        <ConfigMenuNumberInput
-          ref_to_set_value={ref_set_number_inputs[7]}
-          default_value={name_label_horiz_shift}
-          function_on_blur={(value) => {
-            elements.forEach(element => element.name_label_horiz_shift = (value ?? undefined))
-            refreshThisAndUpdateRelatedComponents()
-          }}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          step={1}
-          stepper={true}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip>
+      </OSTooltip>
 
-    {/* Position vertical du label par rapport à l'ancre*/}
-    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.labels.anchor_dy')}
-          {(!menu_for_style) &&
+      {/* Position vertical du label par rapport à l'ancre*/}
+      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.labels.anchor_dy')}
+            {(!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
-            TooltipValueSurcharge('node_var', t) :
-            <></>}
-        </Box>
+              TooltipValueSurcharge('node_var', t) :
+              <></>}
+          </Box>
 
-        <ConfigMenuNumberInput
-          ref_to_set_value={ref_set_number_inputs[8]}
-          default_value={name_label_vert_shift}
-          function_on_blur={(value) => {
-            elements.forEach(element => element.name_label_vert_shift = (value ?? undefined))
-            refreshThisAndUpdateRelatedComponents()
-          }}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          step={1}
-          stepper={true}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[8]}
+            default_value={name_label_vert_shift}
+            function_on_blur={(value) => {
+              updateElements('name_label_vert_shift', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+          />
+        </Box>
+      </OSTooltip>
     </> : <></>}
 
   </Box>
@@ -898,8 +994,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
       isIndeterminate={is_indeterminated}
       isChecked={value_label_visible}
       onChange={(evt) => {
-        elements.forEach(element => element.value_label_is_visible = evt.target.checked)
-        refreshThisAndUpdateRelatedComponents()
+        updateElements('value_label_is_visible', evt.target.checked)
       }}>
       <OSTooltip label={t('Flux.label.tooltips.label')}>
         {t('Flux.label.vdb') + ' '}
@@ -912,98 +1007,95 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
       }
     </Checkbox>
   </Box>
-  {value_label_visible ? <><SankeyMenuValueLabelComponent
-    new_data={new_data}
-    elements={elements}
-    selectedElements={selected_nodes}
-    refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-    dict_decorator_name={{
-      label_horiz: 'value_label_horiz',
-      label_vert: 'value_label_vert',
-      label_font_size: 'value_label_font_size',
-      label_color: 'value_label_color',
-      label_font_family: 'value_label_font_family',
-      label_unit_visible: 'value_label_unit_visible',
-      label_unit: 'value_label_unit',
-      label_bold: 'value_label_bold',
-      label_uppercase: 'value_label_uppercase',
-      label_italic: 'value_label_italic',
-      label_unit_factor: 'value_label_unit_factor',
-      label_custom_digit: 'value_label_custom_digit',
-      label_nb_digit: 'value_label_nb_digit',
-    }}
-  /> <Checkbox
-    variant='menuconfigpanel_option_checkbox'
-    isIndeterminate={is_indeterminated}
-    isChecked={value_label_background}
-    onChange={(evt) => {
-      elements.forEach(element => element.value_label_background = evt.target.checked)
-      refreshThisAndUpdateRelatedComponents()
-    }}
-  >
-    <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
-      {t('Noeud.labels.l_bg')}
-    </OSTooltip>
-    {
-      (!menu_for_style) &&
+    {value_label_visible ? <><SankeyMenuValueLabelComponent
+      new_data={new_data}
+      elements={elements}
+      selectedElements={selected_nodes}
+      refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+      dict_decorator_name={{
+        label_horiz: 'value_label_horiz',
+        label_vert: 'value_label_vert',
+        label_font_size: 'value_label_font_size',
+        label_color: 'value_label_color',
+        label_font_family: 'value_label_font_family',
+        label_unit_visible: 'value_label_unit_visible',
+        label_unit: 'value_label_unit',
+        label_bold: 'value_label_bold',
+        label_uppercase: 'value_label_uppercase',
+        label_italic: 'value_label_italic',
+        label_unit_factor: 'value_label_unit_factor',
+        label_custom_digit: 'value_label_custom_digit',
+        label_nb_digit: 'value_label_nb_digit',
+      }}
+    /> <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={is_indeterminated}
+      isChecked={value_label_background}
+      onChange={(evt) => {
+        updateElements('value_label_background', evt.target.checked)
+      }}
+    >
+        <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
+          {t('Noeud.labels.l_bg')}
+        </OSTooltip>
+        {
+          (!menu_for_style) &&
             isAttributeOverloaded(selected_nodes, 'value_label_background') ?
-        TooltipValueSurcharge('node_var', t) :
-        <></>
-    }
-  </Checkbox>
-  {/* Position horizontal du label par rapport à l'ancre*/}
-  <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name' >
-        {t('Noeud.labels.anchor_dx')}
-        {(!menu_for_style) &&
+            TooltipValueSurcharge('node_var', t) :
+            <></>
+        }
+      </Checkbox>
+      {/* Position horizontal du label par rapport à l'ancre*/}
+      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.labels.anchor_dx')}
+            {(!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift') ?
-          TooltipValueSurcharge('node_var', t) :
-          <></>}
-      </Box>
-      <ConfigMenuNumberInput
-        ref_to_set_value={ref_set_number_inputs[9]}
-        default_value={value_label_horiz_shift}
-        function_on_blur={(value) => {
-          elements.forEach(element => element.value_label_horiz_shift = (value ?? undefined))
-          refreshThisAndUpdateRelatedComponents()
-        }}
-        menu_for_style={menu_for_style}
-        minimum_value={0}
-        step={1}
-        stepper={true}
-        unit_text='pixels'
-      />
-    </Box>
-  </OSTooltip>
+              TooltipValueSurcharge('node_var', t) :
+              <></>}
+          </Box>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[9]}
+            default_value={value_label_horiz_shift}
+            function_on_blur={(value) => {
+              updateElements('value_label_horiz_shift', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+          />
+        </Box>
+      </OSTooltip>
 
-  {/* Position vertical du label par rapport à l'ancre*/}
-  <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name' >
-        {t('Noeud.labels.anchor_dy')}
-        {(!menu_for_style) &&
+      {/* Position vertical du label par rapport à l'ancre*/}
+      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.labels.anchor_dy')}
+            {(!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'value_label_vert_shift') ?
-          TooltipValueSurcharge('node_var', t) :
-          <></>}
-      </Box>
+              TooltipValueSurcharge('node_var', t) :
+              <></>}
+          </Box>
 
-      <ConfigMenuNumberInput
-        ref_to_set_value={ref_set_number_inputs[10]}
-        default_value={value_label_vert_shift}
-        function_on_blur={(value) => {
-          elements.forEach(element => element.value_label_vert_shift = (value ?? undefined))
-          refreshThisAndUpdateRelatedComponents()
-        }}
-        menu_for_style={menu_for_style}
-        minimum_value={0}
-        step={1}
-        stepper={true}
-        unit_text='pixels'
-      />
-    </Box>
-  </OSTooltip>
-  </> : <></>}
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[10]}
+            default_value={value_label_vert_shift}
+            function_on_blur={(value) => {
+              updateElements('value_label_vert_shift', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+          />
+        </Box>
+      </OSTooltip>
+    </> : <></>}
 
   </>
 
@@ -1029,11 +1121,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
                 <MenuItem
                   key={style.id}
                   onClick={() => {
-                    new_data.menu_configuration.ref_selected_style_node.current = style.id
-                    selected_nodes.forEach(node => {
-                      node.style = style
-                    })
-                    refreshThisAndUpdateRelatedComponents()
+                    switchToStyle(style)
                   }}
                 >
                   {style.name}
@@ -1047,8 +1135,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
       <Button
         variant='menuconfigpanel_option_button'
         onClick={() => {
-          selected_nodes.forEach(node => node.resetAttributes())
-          refreshThisAndUpdateRelatedComponents()
+          resetAttrToStyleVal()
         }}
       >
         <FaUndo />
