@@ -151,16 +151,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
                   isChecked={allTrue}
                   onChange={(evt) => {
                     const visible = evt.target.checked
-                    selected_nodes.forEach(node => {
-                      if (visible) {
-                        node.addTag(node_tag)
-                      }
-                      else {
-                        node.removeTag(node_tag)
-                      }
-                    })
-                    // Full update
-                    refreshThisAndUpdateRelatedComponents()
+                    new_data.drawing_area.updateSelectedNodesTagAssignation(visible,node_tag)
                   }}
                 >
                   {node_tag.name}
