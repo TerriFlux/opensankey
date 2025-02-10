@@ -6,6 +6,7 @@ export const resources_template = {
     translation: {
       templates:{
         ids: {
+          transport_dispatch_with_tags: 'Transport flows with labels',
           commercial_pipe_monthly_report: 'Business pipe monthly report',
           personal_budget_with_tags: 'Tagged personal expenses',
           cocoa_logistics: 'Cocoa logistics',
@@ -28,6 +29,7 @@ export const resources_template = {
     translation: {
       templates:{
         ids: {
+          transport_dispatch_with_tags: 'Flux de transport avec étiquettes de flux et données',
           commercial_pipe_monthly_report: 'Pipe commercial mensualisé',
           personal_budget_with_tags: 'Dépenses personnelles étiquetées',
           cocoa_logistics: 'Logistique du cacao',
