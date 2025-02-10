@@ -14,7 +14,8 @@ export const resources_template = {
           ress: 'Ressources',
           commercial: 'Commercial',
           supply: 'Supply chain',
-          agri: 'Agriculture'
+          agri: 'Agriculture',
+          transport: 'Transports'
         },
         difficulties: {
           basic: 'Essential',
@@ -22,6 +23,7 @@ export const resources_template = {
           advanced: 'Expert',
         },
         ids: {
+          transport_dispatch: 'Transport flows',
           power_grid_with_disagregation: 'Power grid with productions & uses disaggregation',
           power_grid: 'Power grid',
           waste_recycling: 'Household packaging waste recycling',
@@ -49,7 +51,8 @@ export const resources_template = {
           ress: 'Ressources',
           commercial: 'Commercial',
           supply: 'Logistique',
-          agri: 'Agriculture'
+          agri: 'Agriculture',
+          transport: 'Transports'
         },
         difficulties: {
           basic: 'Basique',
@@ -57,6 +60,7 @@ export const resources_template = {
           advanced: 'Expert',
         },
         ids: {
+          transport_dispatch: 'Flux de transports',
           power_grid_with_disagregation: 'Réseau électrique avec désagrégation des productions et des utilisations',
           power_grid: 'Réseau électrique',
           waste_recycling: 'Recyclage des déchets d\'emballages',
