@@ -183,7 +183,7 @@ export abstract class ClassTemplate_NodeElement
   private _link_dragged: Type_GenericLinkElement | undefined
 
   // Tooltips
-  private _tooltip_text?: string
+  private _tooltip_text: string = ''
 
   // CONSTRUCTOR ========================================================================
 
@@ -736,7 +736,7 @@ export abstract class ClassTemplate_NodeElement
       this._drawShape()
       this._display.attributes.shape_visible = false
       this.d3_selection_g_shape?.selectAll('.node_shape')
-        .attr('fill-opacity',0)
+        .attr('fill-opacity', 0)
     }
     // Change stroke
     this.d3_selection_g_shape?.selectAll('.node_shape')
@@ -1965,29 +1965,29 @@ export abstract class ClassTemplate_NodeElement
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2083,7 +2083,7 @@ export abstract class ClassTemplate_NodeElement
    * @param f
    */
   protected saveUndo(f: (_: Type_AnyNodeElement) => void) {
-    this.drawing_area.application_data.history.saveUndo(() => {f(this)})
+    this.drawing_area.application_data.history.saveUndo(() => { f(this) })
   }
 
   /**
@@ -2091,7 +2091,7 @@ export abstract class ClassTemplate_NodeElement
   * @param f
   */
   protected saveRedo(f: (_: Type_AnyNodeElement) => void) {
-    this.drawing_area.application_data.history.saveRedo(() => {f(this)})
+    this.drawing_area.application_data.history.saveRedo(() => { f(this) })
   }
 
   // Events methods ---------------------------------------------------------------------
@@ -2157,15 +2157,34 @@ export abstract class ClassTemplate_NodeElement
     if (event.sourceEvent.shiftKey) {
       return
     }
-    // Memorize for undo
-    const old_x = this._display.position.x
-    const old_y = this._display.position.y
-    // Undo function
-    function undo(_: Type_AnyNodeElement) {
-      _.setPosXY(old_x, old_y)
-    }
-    this.saveUndo(undo)
     this._drag = true
+
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    const nodes_selected = drawing_area.selected_nodes_list
+    if (nodes_selected.includes(this)) {
+      const dict_old_pos: { [x: string]: [number, number] } = {}
+      // Memorize for undo
+      nodes_selected.forEach(n => {
+        dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
+      })
+      // Undo function
+      function undo(_: Type_AnyNodeElement) {
+        nodes_selected.forEach(n => {
+          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
+        })
+      }
+      this.saveUndo(undo)
+    } else {
+      // Memorize for undo
+      const old_x = this._display.position.x
+      const old_y = this._display.position.y
+      // Undo function
+      function undo(_: Type_AnyNodeElement) {
+        _.setPosXY(old_x, old_y)
+      }
+      this.saveUndo(undo)
+    }
   }
 
   /**
@@ -2228,14 +2247,34 @@ export abstract class ClassTemplate_NodeElement
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // End of drag
     this._drag = false
-    // Memorize for undo
-    const new_x = this._display.position.x
-    const new_y = this._display.position.y
-    // Undo function
-    function redo(_: Type_AnyNodeElement) {
-      _.setPosXY(new_x, new_y)
+
+
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    const nodes_selected = drawing_area.selected_nodes_list
+    if (nodes_selected.includes(this)) {
+      const dict_old_pos: { [x: string]: [number, number] } = {}
+      // Memorize for redo
+      nodes_selected.forEach(n => {
+        dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
+      })
+      // Redo function
+      function redo(_: Type_AnyNodeElement) {
+        nodes_selected.forEach(n => {
+          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
+        })
+      }
+      this.saveRedo(redo)
+    } else {
+      // Memorize for redo
+      const old_x = this._display.position.x
+      const old_y = this._display.position.y
+      // Redo function
+      function redo(_: Type_AnyNodeElement) {
+        _.setPosXY(old_x, old_y)
+      }
+      this.saveRedo(redo)
     }
-    this.saveRedo(redo)
   }
 
   /**
@@ -2855,6 +2894,12 @@ export abstract class ClassTemplate_NodeElement
     const link_ref = (handler.ref_element as this).getLinkFromHandler(handler)
     if (link_ref && link_ref instanceof ClassTemplate_LinkElement) {
       node_ref_handler.link_dragged = link_ref as Type_GenericLinkElement
+
+      const saveCurrOder = node_ref_handler._links_order.map(l => l.id)
+      node_ref_handler.drawing_area.application_data.history.saveUndo(() => {
+        node_ref_handler.reorganizeIOFromListIds(saveCurrOder)
+        node_ref_handler.draw()
+      })
     }
   }
 
@@ -2862,6 +2907,12 @@ export abstract class ClassTemplate_NodeElement
     const handler = this as unknown as ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>
     const node_ref_handler = handler.ref_element as this
     node_ref_handler.link_dragged = undefined
+
+    const saveCurrOder = node_ref_handler._links_order.map(l => l.id)
+    node_ref_handler.drawing_area.application_data.history.saveRedo(() => {
+      node_ref_handler.reorganizeIOFromListIds(saveCurrOder)
+      node_ref_handler.draw()
+    })
   }
 
   private getLinkFromHandler(handler: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
@@ -2908,6 +2959,7 @@ export abstract class ClassTemplate_NodeElement
   }
 
   // GETTERS / SETTERS ==================================================================
+  public get display() { return this._display }
 
   /**
    * Node visibility check
@@ -4257,7 +4309,7 @@ export abstract class ClassTemplate_NodeElement
     return this._tooltip_text
   }
 
-  public set tooltip_text(_: string | undefined) {
+  public set tooltip_text(_: string) {
     this._tooltip_text = _
   }
 
