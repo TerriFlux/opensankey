@@ -3798,7 +3798,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public set value_label_on_path(_: boolean) {
-    this._display.attributes.value_label_on_path = _;
+    this._display.attributes.value_label_on_path = _
     if (_) {
       const lab_pos = this._display.attributes.value_label_horiz
       const lab_orth_pos = this._display.attributes.value_label_vert
@@ -3826,7 +3826,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public set value_label_pos_auto(_: boolean) {
-    this._display.attributes.value_label_pos_auto = _;
+    this._display.attributes.value_label_pos_auto = _
     this._display.attributes.value_label_vert = (this._display.attributes.value_label_vert === 'dragged') ? 'middle' : this._display.attributes.value_label_vert
     this.drawValue()
   }
@@ -4253,7 +4253,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_NodeElement
    */
   public set name_label_pos_auto(_: boolean) {
-    this._display.attributes.name_label_pos_auto = _;
+    this._display.attributes.name_label_pos_auto = _
     const orth_pos = this.name_label_vert
     this._display.attributes.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
     this.drawLabel()
@@ -4278,7 +4278,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_NodeElement
    */
   public set name_label_on_path(_: boolean) {
-    this._display.attributes.name_label_on_path = _;
+    this._display.attributes.name_label_on_path = _
     if (_) {
       const lab_pos = this.name_label_horiz
       const lab_orth_pos = this.name_label_vert

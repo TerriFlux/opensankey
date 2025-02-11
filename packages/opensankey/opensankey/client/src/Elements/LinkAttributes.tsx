@@ -543,31 +543,31 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
   // Geometry link labels
   public set value_label_horiz(_: Type_PathLabelHPosition | undefined) {
-    this._value_label_horiz = _;
+    this._value_label_horiz = _
     this._value_label_vert = this._value_label_vert == 'dragged' ? 'middle' : this._value_label_vert
-    this.update();
+    this.update()
   }
 
   public set value_label_vert(_: Type_PathLabelVPosition | undefined) {
-    this._value_label_vert = _;
+    this._value_label_vert = _
     this._value_label_horiz = this._value_label_horiz == 'dragged' ? 'middle' : this._value_label_horiz
-    this.update();
+    this.update()
   }
 
   public set value_label_on_path(_: boolean | undefined) {
-    this._value_label_on_path = _;
+    this._value_label_on_path = _
     if (_) {
       const lab_pos = this._value_label_horiz
       const lab_orth_pos = this._value_label_vert
       this._value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
       this._value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
     }
-    this.update();
+    this.update()
   }
   public set value_label_pos_auto(_: boolean | undefined) {
-    this._value_label_pos_auto = _;
+    this._value_label_pos_auto = _
     this._value_label_vert = (this._value_label_vert === 'dragged') ? 'middle' : this._value_label_vert
-    this.update();
+    this.update()
   }
 
   // Value label display
@@ -588,42 +588,42 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _; this.update() }
 
   // Parameter of flow label
-  public set name_label_is_visible(_: boolean | undefined) { this._name_label_is_visible = _; this.update(); }
-  public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _; this.update(); }
-  public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _; this.update(); }
-  public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _; this.update(); }
-  public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _; this.update(); }
-  public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _; this.update(); }
-  public set name_label_color(_: string | undefined) { this._name_label_color = _; this.update(); }
+  public set name_label_is_visible(_: boolean | undefined) { this._name_label_is_visible = _; this.update() }
+  public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _; this.update() }
+  public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _; this.update() }
+  public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _; this.update() }
+  public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _; this.update() }
+  public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _; this.update() }
+  public set name_label_color(_: string | undefined) { this._name_label_color = _; this.update() }
 
   public set name_label_vert(_: Type_TextVPos | undefined) {
-    this._name_label_vert = _;
+    this._name_label_vert = _
     this._name_label_horiz = this._name_label_horiz == 'dragged' ? 'middle' : this._name_label_horiz
-    this.update();
+    this.update()
   }
 
   public set name_label_horiz(_: Type_TextHPos | undefined) {
-    this._name_label_horiz = _;
+    this._name_label_horiz = _
     this._name_label_vert = this._name_label_vert == 'dragged' ? 'middle' : this._name_label_vert
-    this.update();
+    this.update()
   }
 
   public set name_label_on_path(_: boolean | undefined) {
-    this._name_label_on_path = _;
+    this._name_label_on_path = _
     if (_) {
       const lab_pos = this.name_label_horiz
       const lab_orth_pos = this.name_label_vert
       this._name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
       this._name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
     }
-    this.update();
+    this.update()
   }
   
   public set name_label_pos_auto(_: boolean | undefined) {
-    this._name_label_pos_auto = _;
+    this._name_label_pos_auto = _
     const orth_pos = this.name_label_vert
     this._name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
-    this.update();
+    this.update()
   }
 }
 // CLASS LINK STYLE *********************************************************************
