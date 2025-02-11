@@ -313,7 +313,7 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
       </ModalBody>
     </ModalContent>
   </Modal>
-    {file_import}
+  {file_import}
   </>
 }
 

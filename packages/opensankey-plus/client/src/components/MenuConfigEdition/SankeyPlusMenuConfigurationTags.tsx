@@ -44,7 +44,6 @@ import type {
 } from '../../deps/OpenSankey/types/Tag'
 
 // Local functions / components
-
 import {
   default_grey_color,
   GetRandomInt,
@@ -81,6 +80,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   new_data,
   elementTagNameProp,
 }) => {
+
   // Data -------------------------------------------------------------------------------
 
   const { t } = new_data

@@ -68,9 +68,9 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
 
     const _applyEditor=()=>{
       selected_links.map(link => link.tooltip_text = tmp_editor_content_tooltip)
-          setEditorContentTooltip(tmp_editor_content_tooltip)
-          // Toogle saving indicator
-          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      setEditorContentTooltip(tmp_editor_content_tooltip)
+      // Toogle saving indicator
+      new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     }
     const inv_applyEditor=()=>{
       selected_links.map(link => link.tooltip_text = dict_old_value[link.id])

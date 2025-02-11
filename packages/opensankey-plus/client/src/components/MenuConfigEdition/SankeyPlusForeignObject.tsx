@@ -142,9 +142,9 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
 
     const _applyEditor=()=>{
       selected_nodes.map(node => node.FO_content = s_tmp_editor_content_fo_node)
-          sEditorContentFoNode(s_tmp_editor_content_fo_node)
-          // Toogle saving indicator
-          new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      sEditorContentFoNode(s_tmp_editor_content_fo_node)
+      // Toogle saving indicator
+      new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     }
     const inv_applyEditor=()=>{
       selected_nodes.map(node => node.FO_content = dict_old_value[node.id])
