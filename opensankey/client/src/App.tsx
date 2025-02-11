@@ -1,6 +1,6 @@
 import React, {
   FunctionComponent,
-  useEffect, useState
+  useEffect
 } from 'react'
 import LZString from 'lz-string'
 import * as d3 from 'd3'
@@ -8,9 +8,7 @@ import { TourProvider } from '@reactour/tour'
 
 /*************************************************************************************************/
 
-import {
-  Menu
-} from './components/topmenus/SankeyMenuTop'
+import { Menu } from './components/topmenus/SankeyMenuTop'
 
 import { MenuConfigurationLinksAppearence } from './components/configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationLinksData } from './components/configmenus/SankeyMenuConfigurationLinksData'
@@ -41,7 +39,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   ClickSaveDiagram,
 }) => {
 
-  const [show_documentation, set_show_documentation] = useState(false)
+  // Datas init -------------------------------------------------------------------------
 
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
@@ -54,10 +52,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   }
 
   // Initialize data
-  const new_data = initializeApplicationData(
-    initial_data
-  )
-
+  const new_data = initializeApplicationData(initial_data)
 
   /*************************************************************************************************/
 
@@ -75,7 +70,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   ) {
     menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
   }
-  new_data.show_documentation = show_documentation && !menu_config.never_see_again.current
+
   /*************************************************************************************************/
 
   const reinitialization = initializeReinitialization(new_data)
@@ -100,7 +95,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     additional_menu_configuration_nodes: {},
     additional_node_label_layout_content: [],
     additional_node_apparence_content: [],
-    context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label','mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
     additional_context_node_element: {},
     // Links
     additional_menu_configuration_links: {},
@@ -144,8 +139,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     new_data
   )
 
-
-
   const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
     new_data={new_data}
     menu_for_style={false}
@@ -163,7 +156,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     menu_for_style={false}
   />
 
-
   const menu_configuration = initializeMenuConfiguration(
     new_data,
     additionalMenus,
@@ -172,11 +164,10 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     menu_configuration_nodes_attributes,
   )
 
-  // // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
+  // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
   useEffect(() => {
-
-    set_show_documentation(true)
-
+    if (!menu_config.never_see_again.current)
+      menu_config.show_splashscreen = true
   }, [])
 
   /*************************************************************************************************/
@@ -199,18 +190,16 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
             new_data.processFunction
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
-        {!new_data.is_static ?
-          <ModalDocumentation
-            show_documentation={show_documentation}
-            set_show_documentation={set_show_documentation}
-            app_data={new_data}
-          />:<></>
-        }
         {
-          <ModalWelcome
-            new_data={new_data}
-          />
+          !new_data.is_static ?
+            <ModalDocumentation
+              app_data={new_data}
+            /> :
+            <></>
         }
+        <ModalWelcome
+          new_data={new_data}
+        />
         <>
           <Menu
             new_data={new_data}

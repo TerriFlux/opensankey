@@ -121,10 +121,10 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
         }
       })
       
-      const sideWithLinks=Object.keys(links_to_reorganize).filter((k)=>links_to_reorganize[k as Type_Side].length>0) as Type_Side[]
-      if(!sideWithLinks.includes(side_selected)){
-        setSelectedSide(sideWithLinks[0])
-      }
+    const sideWithLinks=Object.keys(links_to_reorganize).filter((k)=>links_to_reorganize[k as Type_Side].length>0) as Type_Side[]
+    if(!sideWithLinks.includes(side_selected)){
+      setSelectedSide(sideWithLinks[0])
+    }
   }
 
   // Boolean to color or not link table ------------------------------------------------

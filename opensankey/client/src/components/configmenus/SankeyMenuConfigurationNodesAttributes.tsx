@@ -411,10 +411,10 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         {
           (!menu_for_style) &&
             isAttributeOverloaded(selected_nodes, 'shape_color') ? (
-            <>{TooltipValueSurcharge('node_var_', t)}</>
-          ) : (
-            <></>
-          )
+              <>{TooltipValueSurcharge('node_var_', t)}</>
+            ) : (
+              <></>
+            )
         }
       </Box>
       <Box layerStyle='option_with_activation'>
@@ -884,101 +884,101 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
         label_font_family: 'name_label_font_family',
       }} />
 
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminated}
-        isChecked={name_label_background}
-        onChange={(evt) => {
-          updateElements('name_label_background', evt.target.checked)
-        }}
-      >
-        <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
-          {t('Noeud.labels.l_bg')}
-        </OSTooltip>
-        {
-          (!menu_for_style) &&
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={is_indeterminated}
+      isChecked={name_label_background}
+      onChange={(evt) => {
+        updateElements('name_label_background', evt.target.checked)
+      }}
+    >
+      <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
+        {t('Noeud.labels.l_bg')}
+      </OSTooltip>
+      {
+        (!menu_for_style) &&
             isAttributeOverloaded(selected_nodes, 'name_label_background') ?
-            TooltipValueSurcharge('node_var', t) :
-            <></>
-        }
-      </Checkbox>
-      {/* Largeur de la zone de texte du label */}
-      <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Menu.larg')}
-            {
-              (!menu_for_style) &&
+          TooltipValueSurcharge('node_var', t) :
+          <></>
+      }
+    </Checkbox>
+    {/* Largeur de la zone de texte du label */}
+    <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Menu.larg')}
+          {
+            (!menu_for_style) &&
                 isAttributeOverloaded(selected_nodes, 'name_label_box_width') ?
-                <>{TooltipValueSurcharge('node_var_', t)}</> :
-                <></>
-            }
-          </Box>
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[2]}
-            default_value={name_label_box_width}
-            function_on_blur={(value) => {
-              updateElements('name_label_box_width', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-          />
+              <>{TooltipValueSurcharge('node_var_', t)}</> :
+              <></>
+          }
         </Box>
-      </OSTooltip>
+        <ConfigMenuNumberInput
+          ref_to_set_value={ref_set_number_inputs[2]}
+          default_value={name_label_box_width}
+          function_on_blur={(value) => {
+            updateElements('name_label_box_width', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip>
 
-      {/* Position horizontal du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.anchor_dx')}
-            {(!menu_for_style) &&
+    {/* Position horizontal du label par rapport à l'ancre*/}
+    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.labels.anchor_dx')}
+          {(!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>}
-          </Box>
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[7]}
-            default_value={name_label_horiz_shift}
-            function_on_blur={(value) => {
-              updateElements('name_label_horiz_shift', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-          />
+            TooltipValueSurcharge('node_var', t) :
+            <></>}
         </Box>
-      </OSTooltip>
+        <ConfigMenuNumberInput
+          ref_to_set_value={ref_set_number_inputs[7]}
+          default_value={name_label_horiz_shift}
+          function_on_blur={(value) => {
+            updateElements('name_label_horiz_shift', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip>
 
-      {/* Position vertical du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.anchor_dy')}
-            {(!menu_for_style) &&
+    {/* Position vertical du label par rapport à l'ancre*/}
+    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.labels.anchor_dy')}
+          {(!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>}
-          </Box>
-
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[8]}
-            default_value={name_label_vert_shift}
-            function_on_blur={(value) => {
-              updateElements('name_label_vert_shift', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-          />
+            TooltipValueSurcharge('node_var', t) :
+            <></>}
         </Box>
-      </OSTooltip>
+
+        <ConfigMenuNumberInput
+          ref_to_set_value={ref_set_number_inputs[8]}
+          default_value={name_label_vert_shift}
+          function_on_blur={(value) => {
+            updateElements('name_label_vert_shift', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip>
     </> : <></>}
 
   </Box>
@@ -1007,95 +1007,95 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
       }
     </Checkbox>
   </Box>
-    {value_label_visible ? <><SankeyMenuValueLabelComponent
-      new_data={new_data}
-      elements={elements}
-      selectedElements={selected_nodes}
-      refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-      dict_decorator_name={{
-        label_horiz: 'value_label_horiz',
-        label_vert: 'value_label_vert',
-        label_font_size: 'value_label_font_size',
-        label_color: 'value_label_color',
-        label_font_family: 'value_label_font_family',
-        label_unit_visible: 'value_label_unit_visible',
-        label_unit: 'value_label_unit',
-        label_bold: 'value_label_bold',
-        label_uppercase: 'value_label_uppercase',
-        label_italic: 'value_label_italic',
-        label_unit_factor: 'value_label_unit_factor',
-        label_custom_digit: 'value_label_custom_digit',
-        label_nb_digit: 'value_label_nb_digit',
-      }}
-    /> <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isIndeterminate={is_indeterminated}
-      isChecked={value_label_background}
-      onChange={(evt) => {
-        updateElements('value_label_background', evt.target.checked)
-      }}
-    >
-        <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
-          {t('Noeud.labels.l_bg')}
-        </OSTooltip>
-        {
-          (!menu_for_style) &&
+  {value_label_visible ? <><SankeyMenuValueLabelComponent
+    new_data={new_data}
+    elements={elements}
+    selectedElements={selected_nodes}
+    refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+    dict_decorator_name={{
+      label_horiz: 'value_label_horiz',
+      label_vert: 'value_label_vert',
+      label_font_size: 'value_label_font_size',
+      label_color: 'value_label_color',
+      label_font_family: 'value_label_font_family',
+      label_unit_visible: 'value_label_unit_visible',
+      label_unit: 'value_label_unit',
+      label_bold: 'value_label_bold',
+      label_uppercase: 'value_label_uppercase',
+      label_italic: 'value_label_italic',
+      label_unit_factor: 'value_label_unit_factor',
+      label_custom_digit: 'value_label_custom_digit',
+      label_nb_digit: 'value_label_nb_digit',
+    }}
+  /> <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isIndeterminate={is_indeterminated}
+    isChecked={value_label_background}
+    onChange={(evt) => {
+      updateElements('value_label_background', evt.target.checked)
+    }}
+  >
+    <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
+      {t('Noeud.labels.l_bg')}
+    </OSTooltip>
+    {
+      (!menu_for_style) &&
             isAttributeOverloaded(selected_nodes, 'value_label_background') ?
-            TooltipValueSurcharge('node_var', t) :
-            <></>
-        }
-      </Checkbox>
-      {/* Position horizontal du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.anchor_dx')}
-            {(!menu_for_style) &&
+        TooltipValueSurcharge('node_var', t) :
+        <></>
+    }
+  </Checkbox>
+  {/* Position horizontal du label par rapport à l'ancre*/}
+  <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name' >
+        {t('Noeud.labels.anchor_dx')}
+        {(!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>}
-          </Box>
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[9]}
-            default_value={value_label_horiz_shift}
-            function_on_blur={(value) => {
-              updateElements('value_label_horiz_shift', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-          />
-        </Box>
-      </OSTooltip>
+          TooltipValueSurcharge('node_var', t) :
+          <></>}
+      </Box>
+      <ConfigMenuNumberInput
+        ref_to_set_value={ref_set_number_inputs[9]}
+        default_value={value_label_horiz_shift}
+        function_on_blur={(value) => {
+          updateElements('value_label_horiz_shift', (value ?? undefined))
+        }}
+        menu_for_style={menu_for_style}
+        minimum_value={0}
+        step={1}
+        stepper={true}
+        unit_text='pixels'
+      />
+    </Box>
+  </OSTooltip>
 
-      {/* Position vertical du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.anchor_dy')}
-            {(!menu_for_style) &&
+  {/* Position vertical du label par rapport à l'ancre*/}
+  <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name' >
+        {t('Noeud.labels.anchor_dy')}
+        {(!menu_for_style) &&
               isAttributeOverloaded(selected_nodes, 'value_label_vert_shift') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>}
-          </Box>
+          TooltipValueSurcharge('node_var', t) :
+          <></>}
+      </Box>
 
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[10]}
-            default_value={value_label_vert_shift}
-            function_on_blur={(value) => {
-              updateElements('value_label_vert_shift', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-          />
-        </Box>
-      </OSTooltip>
-    </> : <></>}
+      <ConfigMenuNumberInput
+        ref_to_set_value={ref_set_number_inputs[10]}
+        default_value={value_label_vert_shift}
+        function_on_blur={(value) => {
+          updateElements('value_label_vert_shift', (value ?? undefined))
+        }}
+        menu_for_style={menu_for_style}
+        minimum_value={0}
+        step={1}
+        stepper={true}
+        unit_text='pixels'
+      />
+    </Box>
+  </OSTooltip>
+  </> : <></>}
 
   </>
 

@@ -27,7 +27,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Layout
   ref_setter_show_menu_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Modal - Welcome
-  ref_setter_modal_welcome_active_page: MutableRefObject<Dispatch<SetStateAction<string>>>
+  ref_setter_modal_welcome_active_page: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -80,6 +80,7 @@ export class Class_MenuConfig {
   // PRIVATE ATTRIBUTES =================================================================
 
   // Update component Menu
+  private _ref_to_splashscreen_updater: MutableRefObject<() => void>
   private _ref_to_menu_updater: MutableRefObject<() => void>
   private _ref_to_submenu_updater: MutableRefObject<() => void>
   private _ref_to_spreadsheet: MutableRefObject<(() => void)>
@@ -228,9 +229,9 @@ export class Class_MenuConfig {
   private _ref_to_updater_node_disagregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
   private _ref_to_updater_node_agregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
 
-
   // Var to hide welcome menu when we relaucnh application
-  private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAggainWelcome') === '1'))
+  private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAgainWelcome') === '1'))
+  private _show_splashscreen: boolean = false
 
   // CONSTRUCTOR ========================================================================
 
@@ -249,6 +250,7 @@ export class Class_MenuConfig {
 
     // Init menu component updater ------------------------------------------------------
 
+    this._ref_to_splashscreen_updater = useRef(() => null)
     this._ref_to_menu_updater = useRef(() => null)
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_spreadsheet = useRef(() => null)
@@ -330,7 +332,7 @@ export class Class_MenuConfig {
       // Config menu - Layout
       ref_setter_show_menu_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Modal - Welcome
-      ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<string>>>(() => null),
+      ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_tuto: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -721,7 +723,6 @@ export class Class_MenuConfig {
 
   public updateComponentPref() {
     this._ref_to_modal_pref_updater.current()
-
   }
 
   public updateMenuConfigComponent() {
@@ -934,6 +935,7 @@ export class Class_MenuConfig {
 
   // Main menu component ----------------------------------------------------------------
 
+
   public get ref_to_menu_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_updater
   }
@@ -948,6 +950,26 @@ export class Class_MenuConfig {
 
   public get ref_menu_opened(): MutableRefObject<[boolean,() => void]> {
     return this._ref_menu_opened
+  }
+
+  public get ref_to_splashscreen_updater(): MutableRefObject<() => void> {
+    return this._ref_to_splashscreen_updater
+  }
+
+  public get never_see_again(): MutableRefObject<boolean> {
+    return this._never_see_again
+  }
+
+  public get show_splashscreen(): boolean {
+    return this._show_splashscreen
+  }
+
+  public set show_splashscreen(_: boolean) {
+    this._show_splashscreen = _
+    this._ref_to_splashscreen_updater?.current()
+    this._ref_to_toolbar_updater?.current()
+    this._ref_to_submenu_updater?.current()
+    this._ref_to_menu_updater?.current()
   }
 
   // Top menu components ----------------------------------------------------------------
@@ -1152,15 +1174,11 @@ export class Class_MenuConfig {
   public get ref_selected_style_link(): MutableRefObject<string> {
     return this._ref_selected_style_link
   }
-  public get never_see_again(): MutableRefObject<boolean> {
-    return this._never_see_again
-  }
 
   // Get ref updater of save diagram JSON
   public get ref_to_save_diagram_updater(): MutableRefObject<() => void> {
     return this._ref_to_save_diagram_updater
   }
-
 
   // Getter ref updater ApplyLayoutDialog OS component
   public get ref_to_updater_modal_apply_layout(): MutableRefObject<() => void> {
