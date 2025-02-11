@@ -97,7 +97,6 @@ import {
   FCType_ModalTuto,
   FType_ModalResolutionPNG,
   FType_OpenSankeyMenusDictBuilder,
-  FCType_ButtonLaunchGuide,
   FCtype_ModalTemplate,
 } from './types/SankeyMenuTopTypes'
 import {
@@ -246,7 +245,6 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
     ref_setter_show_modal_png_saver,
     ref_setter_show_modal_preference,
     ref_setter_show_modal_apply_layout,
-    ref_setter_show_modal_welcome,
     ref_setter_show_modal_tuto,
     ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
@@ -348,7 +346,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
       <OSTooltip
         placement='bottom'
         label={t('Menu.tooltips.new')}
-        isAlwaysOpen={new_data.show_documentation}
+        isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
       >
         <Button
           variant='menutop_button'
@@ -715,7 +713,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
         </Button>
       </OSTooltip>,
 
-      <ButtonLaunchGuide new_data={new_data} />,
+      <>{ buttonLaunchGuide(new_data) }</>,
     ]
 
     ui['edition'] = [
@@ -815,9 +813,8 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
         <Button
           variant='menutop_button'
           onClick={() => {
-            ref_setter_show_modal_welcome.current!(true)
-            new_data.menu_configuration.never_see_again.current = false
-            localStorage.setItem('dontSeeAggainWelcome', '0')
+            new_data.menu_configuration.refs_to_btn_toogle_top_menus['file'].current?.click() // Be sure that "file" top menu is displayed for splashscreen
+            new_data.menu_configuration.show_splashscreen = true
           }}>
           <Box
             layerStyle='menutop_button_style'
@@ -921,12 +918,13 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
   return ui
 }
 
-const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }: FCType_ButtonLaunchGuide) => {
+const buttonLaunchGuide = ( new_data: Type_GenericApplicationData ): JSX.Element => {
   const { setIsOpen } = useTour()
   return <OSTooltip
     label={new_data.t('guide.tooltip.guide')}
-    isAlwaysOpen={new_data.show_documentation}
-  ><Button
+    isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
+  >
+    <Button
       variant='menutop_button'
       onClick={() => {
         new_data.setSteps()
@@ -945,11 +943,11 @@ const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }: FCT
         <Box
           gridRow='2'
         >
-
           {new_data.t('guide.guide')}
         </Box>
       </Box>
-    </Button></OSTooltip>
+    </Button>
+  </OSTooltip>
 }
 
 
@@ -1185,7 +1183,8 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         content_menu = <React.Fragment>{(menu_curr).map((el, i) => {
           return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
         })}</React.Fragment>
-      } else {
+      }
+      else {
         content_menu = <React.Fragment key={'content_ui_pref'}>{menu_curr}</React.Fragment>
       }
       ordered_menu[key] = content_menu
@@ -1561,7 +1560,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
           <OSTooltip
             placement='left'
             label={t('Banner.open_configuration_menu')}
-            isAlwaysOpen={new_data.show_documentation}
+            isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
           >
             <Button
               ref={new_data.menu_configuration.ref_to_btn_toogle_menu}

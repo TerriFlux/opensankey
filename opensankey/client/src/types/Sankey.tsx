@@ -991,19 +991,19 @@ export abstract class ClassTemplate_Sankey
       })
     //if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
       // Change style if node has default style & 'Type de noeud' tags
-      this.nodes_list.forEach(n=>{
-        const tagg = this.node_taggs_dict['type de noeud']
-        if (!tagg) {
-          return
-        }
-        const product_tag = tagg.tags_dict['produit']
-        const sector_tag = tagg.tags_dict['secteur']
-        if(n.hasGivenTag(product_tag) && n.style.id ==='default'){
-          n.style= this.node_styles_dict['NodeProductStyle']
-        }  else if(n.hasGivenTag(sector_tag) && n.style.id ==='default'){
-          n.style=this.node_styles_dict['NodeSectorStyle']
-        }
-      })
+    this.nodes_list.forEach(n=>{
+      const tagg = this.node_taggs_dict['type de noeud']
+      if (!tagg) {
+        return
+      }
+      const product_tag = tagg.tags_dict['produit']
+      const sector_tag = tagg.tags_dict['secteur']
+      if(n.hasGivenTag(product_tag) && n.style.id ==='default'){
+        n.style= this.node_styles_dict['NodeProductStyle']
+      }  else if(n.hasGivenTag(sector_tag) && n.style.id ==='default'){
+        n.style=this.node_styles_dict['NodeSectorStyle']
+      }
+    })
     //}
   }
 

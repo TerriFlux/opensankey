@@ -382,54 +382,54 @@ export class Class_NodeAttribute {
   public set shape_arrow_angle_factor(_: number | undefined) { this._shape_arrow_angle_factor = _; this.update() }
   public set shape_arrow_angle_direction(_: Type_Side | undefined) { this._shape_arrow_angle_direction = _; this.update() }
 
-    // Parameter of node label
-    public set name_label_visible(_: boolean | undefined) { this._name_label_visible = _; this.update() }
-    public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _; this.update() }
-    public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _; this.update() }
-    public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _; this.update() }
-    public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _; this.update() }
-    public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _; this.update() }
-    public set name_label_box_width(_: number | undefined) { this._name_label_box_width = _; this.update() }
-    public set name_label_color(_: string | undefined) { this._name_label_color = _; this.update() }
-    public set name_label_vert(_: Type_TextVPos | undefined) {
-        this._name_label_vert = _;
-        this._name_label_horiz = this._name_label_horiz == 'dragged' ? 'middle' : this._name_label_horiz
-        this.update();
-    }
+  // Parameter of node label
+  public set name_label_visible(_: boolean | undefined) { this._name_label_visible = _; this.update() }
+  public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _; this.update() }
+  public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _; this.update() }
+  public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _; this.update() }
+  public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _; this.update() }
+  public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _; this.update() }
+  public set name_label_box_width(_: number | undefined) { this._name_label_box_width = _; this.update() }
+  public set name_label_color(_: string | undefined) { this._name_label_color = _; this.update() }
+  public set name_label_vert(_: Type_TextVPos | undefined) {
+    this._name_label_vert = _
+    this._name_label_horiz = this._name_label_horiz == 'dragged' ? 'middle' : this._name_label_horiz
+    this.update()
+  }
 
-    public set name_label_horiz(_: Type_TextHPos | undefined) {
-        this._name_label_horiz = _;
-        this._name_label_vert = this._name_label_vert == 'dragged' ? 'middle' : this._name_label_vert
-        this.update();
-    }
+  public set name_label_horiz(_: Type_TextHPos | undefined) {
+    this._name_label_horiz = _
+    this._name_label_vert = this._name_label_vert == 'dragged' ? 'middle' : this._name_label_vert
+    this.update()
+  }
 
-    public set name_label_vert_shift(_: number | undefined) { this._name_label_vert_shift = _; this.update() }
-    public set name_label_horiz_shift(_: number | undefined) { this._name_label_horiz_shift = _; this.update() }
-    public set name_label_background(_: boolean | undefined) { this._name_label_background = _; this.update() }
+  public set name_label_vert_shift(_: number | undefined) { this._name_label_vert_shift = _; this.update() }
+  public set name_label_horiz_shift(_: number | undefined) { this._name_label_horiz_shift = _; this.update() }
+  public set name_label_background(_: boolean | undefined) { this._name_label_background = _; this.update() }
 
-    // Parameter of node value label
-    public set value_label_is_visible(_: boolean | undefined) { this._value_label_visible = _; this.update() }
-    public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _; this.update() }
-    public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _; this.update() }
-    public set value_label_uppercase(_: boolean | undefined) { this._value_label_uppercase = _; this.update() }
-    public set value_label_bold(_: boolean | undefined) { this._value_label_bold = _; this.update() }
-    public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _; this.update() }
-    public set value_label_box_width(_: number | undefined) { this._value_label_box_width = _; this.update() }
-    public set value_label_color(_: string | undefined) { this._value_label_color = _; this.update() }
-    public set value_label_horiz(_: Type_TextHPos | undefined) {
-        this._value_label_horiz = _;
-        this._value_label_vert = this._value_label_vert == 'dragged' ? 'middle' : this._value_label_vert
-        this.update();
-    }
+  // Parameter of node value label
+  public set value_label_is_visible(_: boolean | undefined) { this._value_label_visible = _; this.update() }
+  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _; this.update() }
+  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _; this.update() }
+  public set value_label_uppercase(_: boolean | undefined) { this._value_label_uppercase = _; this.update() }
+  public set value_label_bold(_: boolean | undefined) { this._value_label_bold = _; this.update() }
+  public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _; this.update() }
+  public set value_label_box_width(_: number | undefined) { this._value_label_box_width = _; this.update() }
+  public set value_label_color(_: string | undefined) { this._value_label_color = _; this.update() }
+  public set value_label_horiz(_: Type_TextHPos | undefined) {
+    this._value_label_horiz = _
+    this._value_label_vert = this._value_label_vert == 'dragged' ? 'middle' : this._value_label_vert
+    this.update()
+  }
 
-    public set value_label_vert(_: Type_TextVPos | undefined) {
-        this._value_label_vert = _;
-        this._value_label_horiz = this._value_label_horiz == 'dragged' ? 'middle' : this._value_label_horiz
-        this.update();
-    }
-    public set value_label_vert_shift(_: number | undefined) { this._value_label_vert_shift = _; this.update() }
-    public set value_label_horiz_shift(_: number | undefined) { this._value_label_horiz_shift = _; this.update() }
-    public set value_label_background(_: boolean | undefined) { this._value_label_background = _; this.update() }
+  public set value_label_vert(_: Type_TextVPos | undefined) {
+    this._value_label_vert = _
+    this._value_label_horiz = this._value_label_horiz == 'dragged' ? 'middle' : this._value_label_horiz
+    this.update()
+  }
+  public set value_label_vert_shift(_: number | undefined) { this._value_label_vert_shift = _; this.update() }
+  public set value_label_horiz_shift(_: number | undefined) { this._value_label_horiz_shift = _; this.update() }
+  public set value_label_background(_: boolean | undefined) { this._value_label_background = _; this.update() }
 
   public set value_label_scientific_notation(_: boolean | undefined) { this._value_label_scientific_notation = _; this.update() }
   public set value_label_significant_digits(_: boolean | undefined) { this._value_label_significant_digits = _; this.update() }

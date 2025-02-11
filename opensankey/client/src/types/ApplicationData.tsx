@@ -145,7 +145,8 @@ export abstract class ClassTemplate_ApplicationData
     'tagFlux',
     'tagData',
     'tagLevel',
-    'attrDrawingArea']
+    'attrDrawingArea'
+  ]
 
   /**
    * All item selectable in SankeyMenuPreference
@@ -278,7 +279,6 @@ export abstract class ClassTemplate_ApplicationData
    * @memberof ClassTemplate_ApplicationData
    */
   private _steps: StepType[] = []
-  private _show_documentation: boolean = false
 
   // OPTIONNAL ATTRIBUTES ===============================================================
 
@@ -1059,8 +1059,6 @@ export abstract class ClassTemplate_ApplicationData
   public get history(): Class_ApplicationHistory { return this._history }
 
   public get steps(): StepType[] { return this._steps }
-  public get show_documentation() { return this._show_documentation }
-  public set show_documentation(_: boolean) { this._show_documentation = _ }
 
   public get drawing_area(): Type_GenericDrawingArea { return this._drawing_area }
   protected set drawing_area(value: Type_GenericDrawingArea) { this._drawing_area = value } // Only extended ClassTemplate_ApplicationData instance can modify these parameter (for sub-module)

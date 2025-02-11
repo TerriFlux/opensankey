@@ -1443,7 +1443,7 @@ export abstract class ClassTemplate_DrawingArea
     _updateSelectedLinksTagAssignation()
   }
 
-    /**
+  /**
    * Update tag selected for selected nodes and save it undoing
    *
    * @param {boolean} val

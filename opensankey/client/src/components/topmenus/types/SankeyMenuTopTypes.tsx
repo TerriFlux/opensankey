@@ -31,10 +31,6 @@ export type FCType_ModalTuto = {
   Reinitialization: () => void
 }
 
-export type FCType_ButtonLaunchGuide={
-  new_data:Type_GenericApplicationData
-}
-
 
 export type FType_OpenSankeyMenusDictBuilder = (
   Reinitialization: () => void,
