@@ -42,7 +42,17 @@ export class Class_MenuConfigSA extends Class_MenuConfigOSP {
     super.updateAllMenuComponents()
     this.updateComponentsRelatedToSA()
   }
+
   // GETTERS / SETTERS ==================================================================
+
+  public get show_splashscreen(): boolean {
+    return super.show_splashscreen
+  }
+
+  public set show_splashscreen(_: boolean) {
+    super.show_splashscreen = _
+    this._ref_to_additional_menus_updater.current()
+  }
 
   public get ref_to_additional_menus_updater() { return this._ref_to_additional_menus_updater}
   public get dict_setter_show_dialog_SA() { return this._dict_setter_show_dialog_SA}

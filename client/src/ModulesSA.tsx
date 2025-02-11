@@ -68,6 +68,7 @@ type FType_InitializeAdditionalMenusSA = (
 type FCType_ModalSankeyTheque = {
   new_data: Class_ApplicationDataSA
 }
+
 type FCType_SankeyThequeAccordionGenerator = {
   new_data: Class_ApplicationDataSA,
   theque_tree: object,
@@ -86,7 +87,6 @@ type FCType_UserPagesButtons = {
 }
 
 // FUNCTIONCOMPONENT =============================================================
-
 
 /**
  * Overrides : OS initializeApplicationData
@@ -154,7 +154,6 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   }
 }
 
-
 const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
   { new_data_app }
 ) => {
@@ -166,12 +165,8 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
   const navigate = useNavigate()
 
   const [count, setCount] = useState(0)
-  const refreshThis = () => {
-    setCount(count + 1)
-  }
+  const refreshThis = () => { setCount(count + 1) }
   new_data_app.menu_configuration.ref_to_additional_menus_updater.current = refreshThis
-
-  // const indicateSankeyToSaveInCache = () => new_data_app.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
   // Either create a menu to select where we navigate to (login or register account)
   // or add a button to navigate to
@@ -182,24 +177,19 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
   >
     <OSTooltip
       label={t('UserNav.tooltip.to_buy')}
-      isAlwaysOpen={new_data_app.show_documentation}>
+      isAlwaysOpen={new_data_app.menu_configuration.show_splashscreen}>
       <Button
         variant='btn_lone_navigation_primary'
         onClick={() => navigate('/register')}
       >
         {t('UserNav.to_buy')}
       </Button></OSTooltip>
-
-    {/* <OSTooltip
-    label={t('UserNav.tooltip.to_con')}
-    isAlwaysOpen={new_data_app.show_documentation}> */}
     <Button
       variant='btn_lone_navigation_secondary'
       onClick={() => navigate('/login')}
     >
       {t('UserNav.to_con')}
     </Button>
-    {/*</Box></OSTooltip>*/}
   </Box>
 
   const user_navigation_bar_connected = <Box
@@ -229,7 +219,6 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
 
   return (!new_data_app.has_account ? user_navigation_bar_free : user_navigation_bar_connected)
 }
-
 
 
 export const moduleDialogsSA: FType_ModuleDialogs = (
@@ -429,7 +418,6 @@ const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccor
     {sub_acc_item}
   </Accordion> : <></>
 }
-
 
 
 const table_replace: [string, string][] = [
