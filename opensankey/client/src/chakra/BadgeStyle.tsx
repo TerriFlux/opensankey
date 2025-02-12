@@ -13,3 +13,17 @@ export const badge_base_style = defineStyle({
   borderRadius: '3px',
   fontSize: '0.5rem'
 })
+
+export const badge_on_template_img = defineStyle({
+  display: 'inline-grid',
+  justifyContent: 'center',
+  alignContent: 'center',
+  position: 'absolute',
+  width: 'fit-content',
+  height: 'fit-content',
+  margin: '0.5rem',
+  padding: '0.5rem',
+  textStyle: 'h3',
+  bgColor: 'primaire.2',
+  bb: 'primaire.2',
+})
