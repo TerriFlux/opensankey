@@ -1,7 +1,7 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
 // Date : 28/01/2025
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 // ==================================================================================================
 
 // External imports
