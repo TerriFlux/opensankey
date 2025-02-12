@@ -1,7 +1,7 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
 // Date : 03/09/2024
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 //
 // This file is used to avoid cycling dependancies inside each Class definition files.
 // ==================================================================================================

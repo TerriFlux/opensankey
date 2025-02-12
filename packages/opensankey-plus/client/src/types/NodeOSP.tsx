@@ -4,7 +4,7 @@
 //  - Julien ALAPETITE
 //  - Vincent LE DOZE
 // Date : 28/08/2024
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -640,7 +640,7 @@ export abstract class ClassTemplate_NodeElementOSP
     return default_shape_color
   }
 
-  
+
 }
 
 // CLASS NODE ATTRIBUTES ****************************************************************
