@@ -1,7 +1,7 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
 // Date : 29/05/2024
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -2353,7 +2353,7 @@ export abstract class ClassTemplate_LinkElement
       return ''
     }
   }
-  
+
 
   // =========== Method about control points ==============
 
@@ -2606,7 +2606,7 @@ export abstract class ClassTemplate_LinkElement
         this._display.attributes.shape_starting_tangeant = ghost['shape_starting_tangeant']
         this._display.attributes.shape_ending_tangeant = ghost['shape_ending_tangeant']
       })
-      
+
       this.drawControlPoint()
       this.menu_config.updateComponentRelatedToLinksApparence()
       this.drawing_area.checkAndUpdateAreaSize()
