@@ -5,6 +5,9 @@ export const resources_template = {
   en: {
     translation: {
       templates: {
+        need_osp: 'OpenSankey+ needed',
+        fr: 'Diagram template in french',
+        en: 'Diagram template in english',
         themes: {
           energy: 'Energy',
           enviro: 'Environment',
@@ -41,7 +44,10 @@ export const resources_template = {
   //=======================================================
   fr: {
     translation: {
-      templates:{
+      templates: {
+        need_osp: 'OpenSankey+ necessaire',
+        fr: 'Modèle de diagramme en français',
+        en: 'Modèle de diagramme en anglais',
         themes: {
           energy: 'Energie',
           enviro: 'Environnement',
