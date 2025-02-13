@@ -57,7 +57,7 @@ import {
   Type_JSON,
 } from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
-import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible } from './NodeAttributes'
+import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_is_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible } from './NodeAttributes'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -3604,7 +3604,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_visible !== undefined) {
       return this._display.style.name_label_visible
     }
-    return default_node_name_label_visible
+    return default_node_name_label_is_visible
   }
 
   /**

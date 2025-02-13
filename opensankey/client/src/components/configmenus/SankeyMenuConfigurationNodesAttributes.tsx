@@ -40,7 +40,7 @@ import {
 } from '../../Elements/Node'
 import {
   default_node_name_label_box_width,
-  default_node_name_label_visible,
+  default_node_name_label_is_visible,
   default_shape_arrow_angle_direction,
   default_shape_arrow_angle_factor,
   default_shape_color,
@@ -99,7 +99,7 @@ type typeValNodeAttr = Type_GenericNodeElement[keyNodeAttr]
  *   menu_for_style,
  *   additional_menus,
  * }
- * @return {*} 
+ * @return {*}
  */
 export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_OpenSankeyConfigurationNodesAttributes> = ({
   new_data,
@@ -154,7 +154,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
     updateElements = (k: keyNodeStyle, value: typeValNodeStyle) => {
       // Save old value
       const old_val = new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current][k]
-      // Define fucntion that will mutate value of 'k' attribute in Style 
+      // Define fucntion that will mutate value of 'k' attribute in Style
       const _updateElements = (_: typeValNodeStyle) => {
         updateValueForListElements([new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]], k, _)
         refreshThisAndUpdateRelatedComponents()
@@ -172,7 +172,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
       // Save old values in dict so the undo reset value for previous value of each node
       const dict_old_val: { [x: string]: typeValNodeAttr } = {}
       selected_nodes.forEach(l => dict_old_val[l.id] = l[k])
-      // Define fucntion that will mutate value of 'k' attribute in Node 
+      // Define fucntion that will mutate value of 'k' attribute in Node
       const _updateElements = (_: typeValNodeAttr) => {
         updateValueForListElements(selected_nodes, k, _)
         refreshThisAndUpdateRelatedComponents()
@@ -266,7 +266,7 @@ export const OpenSankeyConfigurationNodesAttributes: FunctionComponent<FCType_Op
 
   // Get values or default values
   const shape_visible = (elements[0]?.shape_visible ?? default_shape_visible)
-  const name_label_visible = (elements[0]?.name_label_visible ?? default_node_name_label_visible)
+  const name_label_visible = (elements[0]?.name_label_visible ?? default_node_name_label_is_visible)
   const shape_min_width = (elements[0]?.shape_min_width ?? default_shape_min_width)
   const shape_min_height = (elements[0]?.shape_min_height ?? default_shape_min_height)
   const shape_color = (elements[0]?.shape_color ?? default_shape_color)
