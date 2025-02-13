@@ -299,7 +299,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
             </ChakraProvider>
           </HelmetProvider>
         ))
-    }, 500)
+    }, 1000)
   }, [])
 
   return app
