@@ -17,6 +17,7 @@ from flask import send_from_directory
 
 # ---------------------------------------------------------------
 # Local imports
+from .models import update_metrics
 
 # ---------------------------------------------------------------
 # Create sankey_app app blueprint
@@ -53,6 +54,11 @@ sankeyapp = Blueprint(
 
 @sankeyapp.route('/')
 def index():
+    # Update website frequentation metrics
+    update_metrics(request.environ.get(
+        'HTTP_X_FORWARDED_FOR',
+        request.remote_addr))
+    # Render site
     return render_template(
         'index.html',
         filename='',

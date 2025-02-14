@@ -5,11 +5,13 @@
 
 # ---------------------------------------------------------------
 # External imports
+import os
 import requests
+import time
+import hashlib
 
 # System
 from datetime import datetime
-# from datetime import timedelta
 from functools import wraps
 
 # Flask imports
@@ -441,6 +443,33 @@ class License(db.Model):
         db.session.commit()
 
 
+class Metrics(db.Model):
+    """
+    Define the site metrics model
+
+    Parameters
+    ----------
+    :param db: _description_
+    :type db: _type_
+    """
+    __tablename__ = 'metrics'
+    # primary keys are required by SQLAlchemy
+    id = db.Column(db.String(64), primary_key=True)
+    nb_visits = db.Column(db.Integer())
+    last_visit = db.Column(db.Integer())
+
+    def new_visit(self):
+        epoch = int(time.time()/(24*60*60)) - int(os.environ['REF_EPOCH'])
+        if (epoch != self.last_visit):
+            # Increase number of visits for given id
+            if self.nb_visits:
+                self.nb_visits = self.nb_visits + 1
+            else:
+                self.nb_visits = 1
+            # Update last visits time
+            self.last_visit = epoch
+
+
 # ---------------------------------------------------------------
 # Define decorators
 
@@ -495,6 +524,27 @@ def license_required(f):
 
 # ---------------------------------------------------------------
 # Functions
+
+def update_metrics(ip: str):
+    """
+    Update metrics table
+
+    Parameters
+    ----------
+    :param ip: Ip of visitor
+    :type ip: str
+
+    Optional parameters
+    -------------------
+    """
+    id = hashlib.sha256(ip.encode()).hexdigest()
+    metric = Metrics.query.filter_by(id=id).first()
+    if metric is None:
+        metric = Metrics(id=id)
+        db.session.add(metric)
+    metric.new_visit()
+    db.session.commit()
+
 
 def create_user_from_stripe(
     user_email: str,
