@@ -1,12 +1,28 @@
 // External imports
 import React, { FunctionComponent, useState } from 'react'
 import {
-  ReactGrid, Column, Row, CellChange, TextCell, NumberCell, Id, MenuOption,
-  SelectionMode, DefaultCellTypes, Cell, Compatible, CellLocation
+  ReactGrid,
+  Column,
+  Row,
+  CellChange,
+  TextCell,
+  NumberCell,
+  Id,
+  MenuOption,
+  SelectionMode,
+  DefaultCellTypes,
+  Cell,
+  Compatible,
+  CellLocation
 } from '@silevis/reactgrid'
 import '@silevis/reactgrid/styles.css'
 
-import { Type_GenericApplicationData, Type_GenericDrawingArea, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
+import {
+  Type_GenericApplicationData,
+  Type_GenericDrawingArea,
+  Type_GenericLinkElement,
+  Type_GenericNodeElement
+} from '../../types/Types'
 import { parseLocaleNumber } from '../../types/Utils'
 import { ClassTemplate_Sankey } from '../../types/Sankey'
 import { ClassTemplate_NodeElement } from '../../Elements/Node'
@@ -19,35 +35,61 @@ type Type_AnyAbstractNodeElement = ClassTemplate_NodeElement<
   Type_GenericLinkElement
 >;
 
-// Main SpreadSheet component
-export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationData }> = (
-  { new_data }: { new_data: Type_GenericApplicationData }
-) => {
-  // Define the structure of a flux (flow) row in the spreadsheet
-  interface SpreadSheetFluxType {
-    source: string // Source node of the flow
-    target: string // Target node of the flow
-    value?: number // Value of the flow (optional)
-  }
+// Define the structure of a flux (flow) row in the spreadsheet
+interface IType_SpreadSheetFlux {
+  source: string // Source node of the flow
+  target: string // Target node of the flow
+  value?: number // Value of the flow (optional)
+}
 
-  // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
-  const getFluxFromSankey = (): SpreadSheetFluxType[] => {
-    const a: SpreadSheetFluxType[] = new_data.drawing_area.sankey.links_list.map((l) => {
+// Extract flux data from the Sankey diagram and prepare it for the spreadsheet
+const getFluxFromSankey = (new_data: Type_GenericApplicationData): IType_SpreadSheetFlux[] => {
+  const a: IType_SpreadSheetFlux[] = new_data.drawing_area.sankey.links_list
+    .map((l) => {
       return {
         source: l.source.name, // Get source node name
         target: l.target.name, // Get target node name
         value: l.data_value!,  // Get the value of the link
       }
     })
-    // Add an empty row for new flux input
-    a.push({ source: '', target: '' })
-    return a
+  // Add an empty row for new flux input
+  a.push({ source: '', target: '' })
+  return a
+}
+
+// Main SpreadSheet component
+export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationData }> = (
+  { new_data }: { new_data: Type_GenericApplicationData }
+) => {
+
+  // Table header
+  const headerRow: Row = {
+    rowId: 'header', // Header row
+    cells: [
+      { type: 'header', text: new_data.t('Flux.src') },
+      { type: 'header', text: new_data.t('Flux.trgt') },
+      { type: 'header', text: new_data.t('Flux.value') },
+    ]
   }
 
-  // Map node and link names to their IDs for quick lookups
-  const name2id: { [_: string]: string } = {}
-  new_data.drawing_area.sankey.nodes_list.forEach(n => { name2id[n.name] = n.id })
-  new_data.drawing_area.sankey.links_list.forEach(l => { name2id[defaultLinkId(l.source, l.target)] = l.id })
+  // Get all table rows
+  const getRows = (all_flux: IType_SpreadSheetFlux[]): Row[] => [
+    headerRow as Row,
+    ...all_flux.map<Row>((flux, idx) => {
+      return {
+        rowId: idx,
+        cells: [
+          { type: 'text', text: flux.source },
+          { type: 'text', text: flux.target },
+          { type: 'number', value: flux.value as number }
+        ]
+      }
+    })
+  ]
+
+  // Define the spreadsheet rows
+  const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey(new_data))
+  const rows = getRows(spreadSheetFlux)
 
   // Define the spreadsheet columns and their properties
   const [columns, setColumns] = useState<Column[]>([
@@ -56,11 +98,14 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     { columnId: 'value', width: 150, resizable: true }
   ])
 
-  // State to hold the flux data displayed in the spreadsheet
-  const [spreadSheetFlux, setSpreadSheetFlux] = useState<SpreadSheetFluxType[]>(getFluxFromSankey())
+  // Map node and link names to their IDs for quick lookups
+  const name2id: { [_: string]: string } = {}
+  new_data.drawing_area.sankey.nodes_list.forEach(n => { name2id[n.name] = n.id })
+  new_data.drawing_area.sankey.links_list.forEach(l => { name2id[defaultLinkId(l.source, l.target)] = l.id })
+
 
   // Function to synchronize spreadsheet data with Sankey data
-  const synchronizeSpreadSheetWithSankey = () => setSpreadSheetFlux(getFluxFromSankey())
+  const synchronizeSpreadSheetWithSankey = () => setSpreadSheetFlux(getFluxFromSankey(new_data))
 
   // Provide a reference to update the spreadsheet externally
   new_data.menu_configuration.ref_to_spreadsheet.current = () => {
@@ -75,7 +120,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   }
 
   // Function to add a new link (flux) between two nodes
-  const addLink = (cur_flux: SpreadSheetFluxType) => {
+  const addLink = (cur_flux: IType_SpreadSheetFlux) => {
     const source_name = cur_flux.source
     const target_name = cur_flux.target
 
@@ -88,7 +133,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     let source_node: Type_AnyAbstractNodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]) {
       source_node = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
-    } else {
+    }
+    else {
       source_node = addNode(source_name)
       name2id[source_name] = source_node.id
     }
@@ -97,7 +143,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     let target_node: Type_AnyAbstractNodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]) {
       target_node = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
-    } else {
+    }
+    else {
       target_node = addNode(target_name)
       name2id[target_name] = target_node.id
     }
@@ -123,7 +170,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
     // Parse the clipboard text into rows and columns
     const lines = text.split('\n')
-    const new_lines =  lines.map((line) =>
+    const new_lines = lines.map((line) =>
       line.split('\t').map((textValue) => ({
         type: 'text',
         text: textValue,
@@ -135,47 +182,14 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
   // Render the ReactGrid component
   return <ReactGrid
-    rows={[
-      {
-        rowId: 'header', // Header row
-        cells: [
-          { type: 'header', text: new_data.t('Flux.src') },
-          { type: 'header', text: new_data.t('Flux.trgt') },
-          { type: 'header', text: new_data.t('Flux.value') },
-        ]
-      },
-      ...spreadSheetFlux.map<Row>((flux, idx) => (
-        {
-          rowId: idx, // Unique ID for each row
-          cells: [
-            { type: 'text' as const, text: flux.source } as DefaultCellTypes,
-            { type: 'text' as const, text: flux.target } as DefaultCellTypes,
-            { type: 'number', value: flux.value as number }
-          ]
-        }
-      ))
-    ] as Row<Cell>[]}
+    rows={rows}
     columns={columns}
     onCellsChanged={
       (changes: CellChange[]) => {
         let redraw = false
-        let updateTable = false
+        let updateSpreadSheetFlux = false
+        let syncSpreadSheetFlux = false
 
-        changes.filter(change => change.type === 'number').forEach(change => {
-          const fluxIndex = change.rowId as number
-          const fieldName = change.columnId as 'value'
-          const l = new_data.drawing_area.sankey.links_list[fluxIndex]
-          if (l) {
-            if (isNaN((change.newCell as NumberCell).value)) {
-              l.data_value = null
-            } else {
-              l.data_value = (change.newCell as NumberCell).value
-            }
-            new_data.drawing_area.updateScaleAtLinkValueSetting()
-          }
-          spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as NumberCell).value
-          updateTable = true
-        })
         // Three possible actions
         // - new link with two new node
         // - new link with two existing nodes
@@ -184,71 +198,112 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         // - rename node
 
         // 1. New Flux
-        changes.filter(change => change.type === 'text' && change.rowId == spreadSheetFlux.length - 1).forEach(change => {
-          const fluxIndex = change.rowId as number
-          const fieldName = change.columnId as 'source' | 'target'
-          spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as TextCell).text
-          const otherfieldName = change.columnId == 'source' ? 'target' : 'source'
-          if (spreadSheetFlux[fluxIndex][otherfieldName] != '' && spreadSheetFlux[fluxIndex][fieldName] != '') {
-            addLink(spreadSheetFlux[fluxIndex])
-            redraw = true
-          } else {
-            updateTable = true
-          }
-        })
+        changes
+          .filter(change => (
+            (change.type === 'text') &&
+            (change.rowId === (spreadSheetFlux.length - 1))))
+          .forEach(change => {
+            const fluxIndex = change.rowId as number
+            const fieldName = change.columnId as 'source' | 'target'
+            spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as TextCell).text
+            if (
+              (spreadSheetFlux[fluxIndex]['target'] !== '') &&
+              (spreadSheetFlux[fluxIndex]['source'] !== '')
+            ) {
+              addLink(spreadSheetFlux[fluxIndex])
+              redraw = true
+              syncSpreadSheetFlux = true
+            }
+            else {
+              updateSpreadSheetFlux = true
+            }
+          })
 
         // 2. Modify flux
-        changes.filter(change =>
-          change.type === 'text' && change.rowId !== spreadSheetFlux.length - 1 && name2id[(change.newCell as TextCell).text!] != undefined
-        ).forEach(change => {
-          const fluxIndex = change.rowId as number
-          const fieldName = change.columnId as 'source' | 'target'
-          const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+        changes
+          .filter(change =>
+            (change.type === 'text') &&
+            (change.rowId !== (spreadSheetFlux.length - 1)) &&
+            (name2id[(change.newCell as TextCell).text!] !== undefined))
+          .forEach(change => {
+            const fluxIndex = change.rowId as number
+            const fieldName = change.columnId as 'source' | 'target'
+            const l = new_data.drawing_area.sankey.links_list[fluxIndex]
 
-          if (fieldName == 'source') {
-            const prevSource = l.source
-            l.source = new_data.drawing_area.sankey.nodes_dict[name2id[(change.newCell as TextCell).text]]
-            if (!prevSource.hasInputLinks() && !prevSource.hasOutputLinks()) {
-              // Remove lone nodes
-              new_data.drawing_area.deleteNode(prevSource)
+            if (fieldName == 'source') {
+              const prevSource = l.source
+              l.source = new_data.drawing_area.sankey.nodes_dict[name2id[(change.newCell as TextCell).text]]
+              if (!prevSource.hasInputLinks() && !prevSource.hasOutputLinks()) {
+                // Remove lone nodes
+                new_data.drawing_area.deleteNode(prevSource)
+              }
             }
-          } else {
-            const prevTarget = l.target
-            l.target = new_data.drawing_area.sankey.nodes_dict[name2id[(change.newCell as TextCell).text]]
-            if (!prevTarget.hasInputLinks() && !prevTarget.hasOutputLinks()) {
-              // Remove lone nodes
-              new_data.drawing_area.deleteNode(prevTarget)
+            else {
+              const prevTarget = l.target
+              l.target = new_data.drawing_area.sankey.nodes_dict[name2id[(change.newCell as TextCell).text]]
+              if (!prevTarget.hasInputLinks() && !prevTarget.hasOutputLinks()) {
+                // Remove lone nodes
+                new_data.drawing_area.deleteNode(prevTarget)
+              }
             }
-          }
-
-          synchronizeSpreadSheetWithSankey()
-        })
+            syncSpreadSheetFlux = true
+          })
 
         // 3. Change node name
-        changes.filter(change =>
-          change.type === 'text' && change.rowId !== spreadSheetFlux.length - 1 && name2id[(change.newCell as TextCell).text] == undefined
-        ).forEach(change => {
-          const fluxIndex = change.rowId as number
-          const fieldName = change.columnId as 'source' | 'target'
-          const _prev_node_name = (change.previousCell as TextCell).text
-          const new_node_name = (change.newCell as TextCell).text
-          spreadSheetFlux[fluxIndex][fieldName] = new_node_name
-          const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+        changes
+          .filter(change =>
+            (change.type === 'text') &&
+            (change.rowId !== spreadSheetFlux.length - 1) &&
+            (name2id[(change.newCell as TextCell).text] === undefined))
+          .forEach(change => {
+            const fluxIndex = change.rowId as number
+            const fieldName = change.columnId as 'source' | 'target'
+            const new_node_name = (change.newCell as TextCell).text
+            const l = new_data.drawing_area.sankey.links_list[fluxIndex]
 
-          if (fieldName == 'source') {
-            l.source.name = new_node_name
-          } else {
-            l.target.name = new_node_name
-          }
-          synchronizeSpreadSheetWithSankey()
-        })
+            if (fieldName == 'source') {
+              l.source.name = new_node_name
+            }
+            else {
+              l.target.name = new_node_name
+            }
+            syncSpreadSheetFlux = true
+          })
 
+        // 4. Update value
+        changes
+          .filter(change => change.type === 'number')
+          .forEach(change => {
+            const fluxIndex = change.rowId as number
+            const fieldName = change.columnId as 'value'
+            const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+            if (l) {
+              if (isNaN((change.newCell as NumberCell).value)) {
+                l.data_value = null
+              }
+              else {
+                l.data_value = (change.newCell as NumberCell).value
+              }
+              new_data.drawing_area.updateScaleAtLinkValueSetting()
+            }
+            spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as NumberCell).value
+            updateSpreadSheetFlux = true
+          })
+
+        // Do we need to redraw
         if (redraw) {
           new_data.drawing_area.computeAutoSankey(true)
           new_data.draw()
         }
-        if (updateTable) {
+
+        // Do we need to update table
+        if (updateSpreadSheetFlux) {
           setSpreadSheetFlux([...spreadSheetFlux])
+        }
+
+        // Do we need to resync table with sankey
+        if (syncSpreadSheetFlux) {
+          synchronizeSpreadSheetWithSankey()
         }
       }
     }
@@ -288,14 +343,14 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
               const current_row = selectedRanges[0][0].rowId as number
               const current_col = columnsId.indexOf(selectedRanges[0][0].columnId) as number
               const linksToRemove = []
-              if (current_col == 0 && current_row<spreadSheetFlux.length-1) {
-                for (let i = spreadSheetFlux.length-2; i>=current_row; i--) {
-                  const l =  new_data.drawing_area.sankey.links_list[i]
+              if (current_col == 0 && current_row < spreadSheetFlux.length - 1) {
+                for (let i = spreadSheetFlux.length - 2; i >= current_row; i--) {
+                  const l = new_data.drawing_area.sankey.links_list[i]
                   linksToRemove.push(l)
                 }
               }
-              linksToRemove.forEach(l=>new_data.drawing_area.deleteLink(l))
-              new_data.drawing_area.sankey.nodes_list.forEach(n=>{
+              linksToRemove.forEach(l => new_data.drawing_area.deleteLink(l))
+              new_data.drawing_area.sankey.nodes_list.forEach(n => {
                 if (!n.hasInputLinks() && !n.hasOutputLinks()) {
                   // Remove lone nodes
                   new_data.drawing_area.deleteNode(n)
