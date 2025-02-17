@@ -1,7 +1,7 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
 // Date : 29/05/2024
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -46,7 +46,7 @@ import {
   getStringOrNullFromJSON,
   makeId,
 } from '../types/Utils'
-import { Class_LinkStyle, Class_LinkAttribute, default_shape_arrow_size, default_shape_color, default_shape_curvature, default_shape_ending_curve, default_shape_ending_tangeant, default_shape_is_arrow, default_shape_is_curved, default_shape_is_dashed, default_shape_is_recycling, default_shape_is_structure, default_shape_middle_recyling, default_shape_opacity, default_shape_orientation, default_shape_starting_curve, default_shape_starting_tangeant, Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side, default_link_value_label_horiz, default_link_name_label_horiz, default_link_name_label_vert, default_link_name_label_visible, default_link_value_label_color, default_link_value_label_custom_digit, default_link_value_label_font_family, default_link_value_label_font_size, default_link_value_label_is_visible, default_link_value_label_nb_digit, default_link_value_label_nb_significant_digits, default_link_value_label_on_path, default_link_value_label_pos_auto, default_link_value_label_scientific_notation, default_link_value_label_significant_digits, default_link_value_label_unit, default_link_value_label_unit_factor, default_link_value_label_unit_visible, default_link_value_label_vert, default_link_value_label_uppercase, default_link_name_label_color, default_link_name_label_bold, default_link_name_label_font_family, default_link_name_label_font_size, default_link_name_label_italic, default_link_name_label_uppercase, default_link_value_label_bold, default_link_value_label_italic } from './LinkAttributes'
+import { Class_LinkStyle, Class_LinkAttribute, default_shape_arrow_size, default_shape_color, default_shape_curvature, default_shape_ending_curve, default_shape_ending_tangeant, default_shape_is_arrow, default_shape_is_curved, default_shape_is_dashed, default_shape_is_recycling, default_shape_is_structure, default_shape_middle_recyling, default_shape_opacity, default_shape_orientation, default_shape_starting_curve, default_shape_starting_tangeant, Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side, default_link_value_label_horiz, default_link_name_label_horiz, default_link_name_label_vert, default_link_name_label_is_visible, default_link_value_label_color, default_link_value_label_custom_digit, default_link_value_label_font_family, default_link_value_label_font_size, default_link_value_label_is_visible, default_link_value_label_nb_digit, default_link_value_label_nb_significant_digits, default_link_value_label_on_path, default_link_value_label_pos_auto, default_link_value_label_scientific_notation, default_link_value_label_significant_digits, default_link_value_label_unit, default_link_value_label_unit_factor, default_link_value_label_unit_visible, default_link_value_label_vert, default_link_value_label_uppercase, default_link_name_label_color, default_link_name_label_bold, default_link_name_label_font_family, default_link_name_label_font_size, default_link_name_label_italic, default_link_name_label_uppercase, default_link_value_label_bold, default_link_value_label_italic } from './LinkAttributes'
 
 export type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyAbstractNodeElement>
 type Type_AnyAbstractNodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
@@ -589,8 +589,6 @@ export abstract class ClassTemplate_LinkElement
     this._display.position_y_value = getNumberOrUndefinedFromJSON(json_object, 'position_y_label')
     this._display.position_x_name = getNumberOrUndefinedFromJSON(json_object, 'position_x_name')
     this._display.position_y_name = getNumberOrUndefinedFromJSON(json_object, 'position_y_name')
-
-
     // Get value
     this._values.fromJSON(
       getJSONFromJSON(json_object, 'value', {}),
@@ -2354,7 +2352,7 @@ export abstract class ClassTemplate_LinkElement
       return ''
     }
   }
-  
+
 
   // =========== Method about control points ==============
 
@@ -2607,7 +2605,7 @@ export abstract class ClassTemplate_LinkElement
         this._display.attributes.shape_starting_tangeant = ghost['shape_starting_tangeant']
         this._display.attributes.shape_ending_tangeant = ghost['shape_ending_tangeant']
       })
-      
+
       this.drawControlPoint()
       this.menu_config.updateComponentRelatedToLinksApparence()
       this.drawing_area.checkAndUpdateAreaSize()
@@ -3839,7 +3837,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public set value_label_on_path(_: boolean) {
-    this._display.attributes.value_label_on_path = _;
+    this._display.attributes.value_label_on_path = _
     if (_) {
       const lab_pos = this._display.attributes.value_label_horiz
       const lab_orth_pos = this._display.attributes.value_label_vert
@@ -3867,7 +3865,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public set value_label_pos_auto(_: boolean) {
-    this._display.attributes.value_label_pos_auto = _;
+    this._display.attributes.value_label_pos_auto = _
     this._display.attributes.value_label_vert = (this._display.attributes.value_label_vert === 'dragged') ? 'middle' : this._display.attributes.value_label_vert
     this.drawValue()
   }
@@ -4152,7 +4150,7 @@ export abstract class ClassTemplate_LinkElement
     } else if (this._display.style.name_label_is_visible !== undefined) {
       return this._display.style.name_label_is_visible
     }
-    return default_link_name_label_visible
+    return default_link_name_label_is_visible
   }
 
   /**
@@ -4294,7 +4292,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_NodeElement
    */
   public set name_label_pos_auto(_: boolean) {
-    this._display.attributes.name_label_pos_auto = _;
+    this._display.attributes.name_label_pos_auto = _
     const orth_pos = this.name_label_vert
     this._display.attributes.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
     this.drawLabel()
@@ -4319,7 +4317,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_NodeElement
    */
   public set name_label_on_path(_: boolean) {
-    this._display.attributes.name_label_on_path = _;
+    this._display.attributes.name_label_on_path = _
     if (_) {
       const lab_pos = this.name_label_horiz
       const lab_orth_pos = this.name_label_vert

@@ -1,4 +1,9 @@
-import * as d3 from 'd3'
+// ==================================================================================================
+// Author : Julien ALAPETITE & Vincent LE DOZE & Vincent CLAVEL for TerriFlux
+// All rights reserved for TerriFlux
+//
+// ==================================================================================================
+
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 
 import {
@@ -6,7 +11,6 @@ import {
   FaAngleDoubleRight,
 } from 'react-icons/fa'
 import Draggable from 'react-draggable'
-import FileSaver from 'file-saver'
 
 import {
   faBackward,
@@ -40,33 +44,18 @@ import {
   Box,
   Button,
   ButtonGroup,
-  Card,
-  CardBody,
-  CardFooter,
   CloseButton,
   Drawer,
   DrawerBody,
   DrawerContent,
   DrawerFooter,
   FormControl,
-  Heading,
   Image,
   Input,
-  InputGroup,
   Menu as ChakraMenu,
   MenuButton,
   MenuItem,
   MenuList,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   Select,
   Tab,
   TabList,
@@ -82,9 +71,6 @@ import {
   PopoverContent,
   PopoverHeader,
   PopoverArrow,
-  CardHeader,
-  ModalOverlay,
-  Divider,
 } from '@chakra-ui/react'
 
 import { useTour } from '@reactour/tour'
@@ -94,11 +80,7 @@ import { useTour } from '@reactour/tour'
 import {
   FCType_OpenSankeySaveButton,
   FCType_MenuDraggable,
-  FCType_ModalTuto,
-  FType_ModalResolutionPNG,
   FType_OpenSankeyMenusDictBuilder,
-  FCType_ButtonLaunchGuide,
-  FCtype_ModalTemplate,
 } from './types/SankeyMenuTopTypes'
 import {
   OSTooltip,
@@ -107,7 +89,7 @@ import {
 
 /*************************************************************************************************/
 
-import SankeyLoad, { UploadExemple } from '../dialogs/SankeyPersistence'
+import SankeyLoad from '../dialogs/SankeyPersistence'
 import {
   ExcelModal,
   ApplyLayoutDialog
@@ -126,13 +108,15 @@ import {
 } from '../configmenus/SankeyMenuBanner'
 import { Type_GenericApplicationData } from '../../types/Types'
 import { FCType_Menu } from '../../types/FunctionTypes'
-import { ExempleMenuTypes } from '../welcome/MenuExamples'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
+import { ModalTemplate } from './SankeyTemplates'
+import { clickSavePDF, modalResolutionPNG } from './SankeyExports'
+import { ModalTuto } from './SankeyTutorials'
 
 
 /*************************************************************************************************/
 
-declare const window: Window &
+export declare const window: Window &
   typeof globalThis & {
     sankey: {
       header?: string
@@ -223,7 +207,15 @@ const logo_tour = <svg
 </svg>
 
 /*************************************************************************************************/
-
+/**
+ *
+ *
+ * @param {*} Reinitialization
+ * @param {*} new_data
+ * @param {*} additionanl_menu
+ * @param {*} setDiagram
+ * @return {*}
+ */
 export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
   Reinitialization,
   new_data,
@@ -246,7 +238,6 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
     ref_setter_show_modal_png_saver,
     ref_setter_show_modal_preference,
     ref_setter_show_modal_apply_layout,
-    ref_setter_show_modal_welcome,
     ref_setter_show_modal_tuto,
     ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
@@ -348,7 +339,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
       <OSTooltip
         placement='bottom'
         label={t('Menu.tooltips.new')}
-        isAlwaysOpen={new_data.show_documentation}
+        isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
       >
         <Button
           variant='menutop_button'
@@ -715,7 +706,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
         </Button>
       </OSTooltip>,
 
-      <ButtonLaunchGuide new_data={new_data} />,
+      <>{ buttonLaunchGuide(new_data) }</>,
     ]
 
     ui['edition'] = [
@@ -815,9 +806,8 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
         <Button
           variant='menutop_button'
           onClick={() => {
-            ref_setter_show_modal_welcome.current!(true)
-            new_data.menu_configuration.never_see_again.current = false
-            localStorage.setItem('dontSeeAggainWelcome', '0')
+            new_data.menu_configuration.refs_to_btn_toogle_top_menus['file'].current?.click() // Be sure that "file" top menu is displayed for splashscreen
+            new_data.menu_configuration.show_splashscreen = true
           }}>
           <Box
             layerStyle='menutop_button_style'
@@ -921,12 +911,19 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
   return ui
 }
 
-const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }: FCType_ButtonLaunchGuide) => {
+/**
+ *
+ *
+ * @param {Type_GenericApplicationData} new_data
+ * @return {*}  {JSX.Element}
+ */
+const buttonLaunchGuide = ( new_data: Type_GenericApplicationData ): JSX.Element => {
   const { setIsOpen } = useTour()
   return <OSTooltip
     label={new_data.t('guide.tooltip.guide')}
-    isAlwaysOpen={new_data.show_documentation}
-  ><Button
+    isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
+  >
+    <Button
       variant='menutop_button'
       onClick={() => {
         new_data.setSteps()
@@ -945,158 +942,11 @@ const ButtonLaunchGuide: React.FC<FCType_ButtonLaunchGuide> = ({ new_data }: FCT
         <Box
           gridRow='2'
         >
-
           {new_data.t('guide.guide')}
         </Box>
       </Box>
-    </Button></OSTooltip>
-}
-
-
-export const modalResolutionPNG: FType_ModalResolutionPNG = (
-  new_data
-) => {
-  const { t } = new_data
-  const [h, set_h] = useState<number>()
-  const [v, set_v] = useState<number>()
-  const valid_input = (h === undefined && v === undefined) || (v !== undefined && h !== undefined && !isNaN(+v) && !isNaN(+h))
-  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_h.current = set_h
-  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_v.current = set_v
-  const content = <>
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Menu.larg')}
-      </Box>
-      <InputGroup
-        variant='menuconfigpanel_option_input'
-      >
-        <NumberInput
-          variant='menuconfigpanel_option_numberinput'
-          allowMouseWheel
-          min={0}
-          step={1}
-          value={h}
-          onChange={
-            (_, val) => {
-              if (!isNaN(val)) {
-                set_h(val)
-              }
-            }}
-        >
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
-      </InputGroup>
-    </Box>
-
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Menu.haut')}
-      </Box>
-      <InputGroup
-        variant='menuconfigpanel_option_input'
-      >
-        <NumberInput
-          variant='menuconfigpanel_option_numberinput'
-          allowMouseWheel
-          min={0}
-          step={1}
-          value={v}
-          onChange={
-            (_, val) => {
-              if (!isNaN(val)) {
-                set_v(val)
-              }
-            }}
-        >
-          <NumberInputField />
-          <NumberInputStepper>
-            <NumberIncrementStepper />
-            <NumberDecrementStepper />
-          </NumberInputStepper>
-        </NumberInput>
-      </InputGroup>
-    </Box>
-
-    <Button
-      disabled={!valid_input}
-      onClick={() => {
-        new_data.sendWaitingToast(
-          () => {
-            clickSavePNG(h, v, new_data)
-          },
-          {
-            success: {
-              title: new_data.t('toast.save_as_png.success.title')
-            },
-            loading: {
-              title: new_data.t('toast.save_as_png.loading.title')
-            },
-            error: {
-              title: new_data.t('toast.save_as_png.error.title')
-            }
-          })
-      }}
-    >
-      Save
     </Button>
-  </>
-
-  return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_modal_png_saver'}
-    content={content}
-    title={t('Menu.setResolutionPNG')}
-  />
-}
-
-const clickSavePNG = (
-  h: number | undefined,
-  v: number | undefined,
-  new_data: Type_GenericApplicationData
-) => {
-  const svg = new_data.pre_process_export_svg()
-  const blob = new Blob([svg], { type: 'image/svg+xml' })
-  const form_data = new FormData()
-  form_data.append('html', blob)
-  let size_to_send = ''
-  const legend_w = !new_data.drawing_area.legend.masked ? new_data.drawing_area.legend.width : 0
-
-  if (h !== undefined && v !== undefined) {
-    size_to_send = parseInt(String(h + legend_w)) + ' ' + parseInt(String(v))
-  }
-
-  form_data.append('size', size_to_send)
-
-  post_process_export_svg()
-
-  const path = window.location.origin
-  let url = path + '/opensankey/save/png'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/png' })
-    FileSaver.saveAs(newBlob, 'sankey_diagram.png')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = path + '/opensankey/save/png/post_clean'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
+  </OSTooltip>
 }
 
 /**
@@ -1185,7 +1035,8 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         content_menu = <React.Fragment>{(menu_curr).map((el, i) => {
           return <React.Fragment key={'ui_pref_' + i}>{el}</React.Fragment>
         })}</React.Fragment>
-      } else {
+      }
+      else {
         content_menu = <React.Fragment key={'content_ui_pref'}>{menu_curr}</React.Fragment>
       }
       ordered_menu[key] = content_menu
@@ -1314,9 +1165,8 @@ export const Menu: FunctionComponent<FCType_Menu> = (
         </PopoverContent>
       </Popover>
     }
-
-
   }
+
   const modal_resolution_png = modalResolutionPNG(new_data)
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
@@ -1561,7 +1411,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
           <OSTooltip
             placement='left'
             label={t('Banner.open_configuration_menu')}
-            isAlwaysOpen={new_data.show_documentation}
+            isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
           >
             <Button
               ref={new_data.menu_configuration.ref_to_btn_toogle_menu}
@@ -1611,6 +1461,16 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   )
 }
 
+/**
+ *
+ *
+ * @param {*} {
+ *   dict_hook_ref_setter_show_dialog_components,
+ *   dialog_name,
+ *   content,
+ *   title }
+ * @return {*}
+ */
 export const MenuDraggable: FunctionComponent<FCType_MenuDraggable> = ({
   dict_hook_ref_setter_show_dialog_components,
   dialog_name,
@@ -1727,470 +1587,4 @@ export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton
       </Box>
     </Button>
   </OSTooltip>
-}
-
-const clickSavePDF = (new_data: Type_GenericApplicationData) => {
-  const svg = new_data.pre_process_export_svg()
-  const blob = new Blob([svg], { type: 'image/svg+xml' })
-  const form_data = new FormData()
-  form_data.append('html', blob)
-  form_data.append('width', new_data.drawing_area.width.toString())
-  form_data.append('height', new_data.drawing_area.height.toString())
-
-  post_process_export_svg()
-
-  const path = window.location.origin
-  let url = path + '/opensankey/save/pdf'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/pdf' })
-    FileSaver.saveAs(newBlob, 'sankey_diagram.pdf')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = path + '/opensankey/save/pdf/post_clean'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile)
-    .then(cleanFile)
-}
-
-
-export const post_process_export_svg = () => {
-  d3.select(' .opensankey#svg-container svg').select('#grid').style('opacity', '1')
-  d3.select(' .opensankey#svg-container svg').style('border', '2px')
-}
-
-export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
-  new_data,
-  processFunctions,
-  show_tuto,
-  set_show_tuto,
-}) => {
-  const [firstRender, setFirstRender] = useState(true)
-  const [formation, setFormation] = useState<ExempleMenuTypes>({})
-  const { t } = new_data
-
-  // At first render init formation object with data from server
-  if (firstRender) {
-    const fetchData = {
-      method: 'POST'
-    }
-    const path = window.location.origin
-    const url = path + '/opensankey/menus/tutorials'
-    fetch(url, fetchData)
-      .then(response => {
-        response
-          .text()
-          .then(text => {
-            const json_data = JSON.parse(text)
-
-            setFormation(json_data)
-            setFirstRender(false)
-          })
-          .catch((error) => {
-            console.error('Error in fetchExamples - ' + error.toString())
-            setFirstRender(false)
-
-          })
-      })
-  }
-
-  // Pré-traitement du menu tuto pour trier les groupes
-  const n_a = new Array(50)
-
-  Object.keys(formation).map(d => {
-    return d.replace('_', '__').split('__')
-  }).forEach(element => {
-    if (element.length > 1) {
-      n_a[Number(element[0])] = element[0] + '_' + element[1]
-    } else {
-      n_a[n_a.length - 1] = element[0]
-    }
-  })
-
-  // Return l'objet formation mais trier selon le numéro du groupe (quand il y en a un)
-  const new_array_for_exemple = Object.fromEntries(n_a.filter(f => f).map((d) => {
-    return [d, (formation)[d]]
-  }))
-
-  const tuto_sub_nav: { [s: string]: JSX.Element } = {}
-
-  Object.entries(new_array_for_exemple).forEach(d => {
-    if ((d[1] as { ['Files']: string[] })['Files'] == undefined) {
-      return <></>
-    }
-    tuto_sub_nav[d[0]] = <>
-      {(d[1] as { ['Files']: string[] })['Files'].filter((f: string) => !f.includes('.xlsx')).map((dd: string, idx: number) => {
-        return <Card
-          key={dd + '-' + idx}
-          variant='cards_template'
-        >
-          <CardHeader>
-            <Heading variant='heading_template_sankey'>
-              {dd.replace('_layout.json', '').replaceAll('_', ' ')}
-            </Heading>
-            <Divider />
-          </CardHeader>
-          <CardBody>
-            <Image
-              className='img-card'
-              src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('_layout.json', '')) + '.png'}
-              style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
-            />
-          </CardBody>
-          <CardFooter
-            justifyItems='center'
-            width='100%'
-          >
-            <ButtonGroup
-              style={{
-                width: '100%'
-              }}
-            >
-              {/* Button to open directly the JSON file */}
-              <Button variant='toolbar_button_6'
-                onClick={() => {
-                  UploadExemple(
-                    ('Formations/Tutoriels/' + (d[0]) + '/' + dd), new_data
-                  )
-                  set_show_tuto(false)
-                }}
-              >{t('useTutoJSON')}</Button>
-
-              {/* Button to open the Excel file */}
-              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '.xlsx')) ?
-                <Button
-                  variant='toolbar_button_6'
-                  onClick={() => {
-                    processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'))
-                    UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), new_data
-                    )
-                    set_show_tuto(false)
-                  }}
-                >
-                  {t('useTutoExcel')}
-                </Button>
-                : <></>}
-
-              {/* Button to open the Excel file reconcilied */}
-              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '_reconciled.xlsx')) ?
-                <Button
-                  variant='toolbar_button_6'
-                  onClick={() => {
-                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
-                    UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), new_data
-                    )
-                    set_show_tuto(false)
-                  }}
-                >
-                  {t('useTutoExcel')}
-                </Button>
-                : <></>}
-
-            </ButtonGroup>
-          </CardFooter>
-        </Card>
-      })}
-    </>
-  })
-
-  return <Modal
-    id='modal_tutoriel'
-    blockScrollOnMount={false}
-    isOpen={show_tuto}
-    onClose={() => set_show_tuto(false)}
-  >
-    <ModalContent
-      maxWidth='inherit'
-      display='flex'
-    >
-      <ModalHeader>{t('Menu.formation')}</ModalHeader>
-      <ModalCloseButton />
-      <ModalBody>
-        <Tabs
-          orientation='vertical'
-          align='start'
-          variant='tabs_variant_template'
-          height='100%'
-        >
-          <TabList>
-            {Object.keys(tuto_sub_nav).map((m, idx) => {
-              return <Tab key={'tab_' + idx}>
-                {(m.split('_').length > 1) ? m.split('_').filter(s => isNaN(+s)).join(' ') : m}
-              </Tab>
-            })}
-          </TabList>
-          <TabPanels>
-            {Object.keys(tuto_sub_nav).map((m, idx) => {
-              return <TabPanel key={'tabpane_' + idx}>
-                <Box
-                  display="block"
-                  overflow='scroll'
-                  height='100%'
-                >
-                  <Box
-                    layerStyle='options_3cols'
-                    gridColumnGap='0.5rem'
-                    gridRowGap='0.5rem'
-                  >
-                    {tuto_sub_nav[m]}
-                  </Box>
-                </Box>
-              </TabPanel>
-            })}
-          </TabPanels>
-        </Tabs>
-      </ModalBody>
-    </ModalContent>
-  </Modal>
-}
-
-/**
- * Modal containing templates to create sankey
- *
- * @param {*} { new_data, additionalMenu, Reinitialization }
- * @return {*}
- */
-const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, additionalMenu, Reinitialization }) => {
-
-  type Type_TemplateInfos = {
-    'file_path': string,
-    'img_path': string,
-    'themes': string[],
-    'difficulty': string
-  }
-  type Type_TemplatesInfos = { [id: string]: Type_TemplateInfos }
-  type Type_TemplateIndex = { [difficulty: string]: string[] }
-  type Type_TemplatesIndexes = { [theme: string]: Type_TemplateIndex }
-
-  const [show_template, set_show_template] = useState(false)
-  const [firstRender, setFirstRender] = useState(true)
-  const [templates, setTemplates] = useState<Type_TemplatesInfos>({})
-  const [indexes, setIndexes] = useState<Type_TemplatesIndexes>({})
-  const [, setThemes] = useState<string[]>([])
-  const [difficulties, setDifficulties] = useState<string[]>([])
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('')
-
-  const { ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
-  ref_setter_show_modal_templates_lib.current = set_show_template
-
-
-  const path = window.location.origin
-  const url = path + '/opensankey/menus/templates'
-
-  // On first render fetch template then re-render to have component with template
-  if (firstRender) {
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ module: additionalMenu.template_module_key })
-    })
-      .then(response => {
-        response
-          .text()
-          .then(text => {
-            const json_data = JSON.parse(text)
-            const new_indexes: Type_TemplatesIndexes = {}
-            if ('themes' in json_data) {
-              setThemes(json_data['themes'])
-            }
-            if ('difficulties' in json_data) {
-              setDifficulties(json_data['difficulties'])
-              setSelectedDifficulty(json_data['difficulties'][0])
-            }
-            if ('templates' in json_data) {
-              Object.entries(json_data['templates'] as Type_TemplatesInfos)
-                .forEach(([id, template]) => {
-                  const themes = template['themes']
-                  const difficulty = template['difficulty']
-                  themes.forEach(theme => {
-                    if (!(theme in new_indexes))
-                      new_indexes[theme] = {}
-                    if (!(difficulty in new_indexes[theme]))
-                      new_indexes[theme][difficulty] = []
-                    new_indexes[theme][difficulty].push(id)
-                  })
-                })
-              setTemplates(json_data['templates'] as Type_TemplatesInfos)
-            }
-            setIndexes(new_indexes)
-            setFirstRender(false)
-          })
-          .catch((error) => {
-            console.error('Error in fetchExamples - ' + error.toString())
-            setFirstRender(false)
-          })
-      })
-      .catch((err) => {
-        console.error('Error in fetch templates - ' + err.toString())
-      })
-  }
-
-  // Tabs for each entries of the template_module_key
-  const tabs_of_cards = <Tabs
-    orientation='vertical'
-    align='start'
-    variant='tabs_variant_template'
-    height='100%'
-  >
-    <TabList >
-      {
-        Object.keys(indexes)
-          .map((theme, idx) => {
-            return <Tab key={idx}> {new_data.t('templates.themes.' + theme)} </Tab>
-          })
-      }
-    </TabList>
-    <TabPanels>
-      {
-        Object.values(indexes)
-          .map((index, idx) => {
-
-            return <TabPanel key={idx}>
-              <Box
-                display='grid'
-                gridAutoFlow='row'
-                gridRowGap='1rem'
-                height='100%'
-              >
-                <Box
-                  display='grid'
-                  gridAutoFlow='column'
-                  gridTemplateColumns='1fr 2fr'
-                  gridColumnGap='1rem'
-                  height='100%'
-                >
-                  <Button
-                    variant='menuconfigpanel_del_button'
-                    onClick={() => {
-                      Reinitialization()
-                      set_show_template(false)
-                    }}
-                  >
-                    {new_data.t('Menu.from_new')}
-                  </Button>
-                  <ButtonGroup>
-                    {
-                      difficulties
-                        .map(difficulty => {
-                          return <Button
-                            variant='menuconfigpanel_option_button_secondary'
-                            isActive={difficulty == selectedDifficulty}
-                            isDisabled={!(difficulty in index)}
-                            onClick={() => setSelectedDifficulty(difficulty)}
-                          >
-                            {new_data.t('templates.difficulties.' + difficulty)}
-                          </Button>
-                        })
-                    }
-                  </ButtonGroup>
-                </Box>
-                <Box
-                  display="block"
-                  overflow='scroll'
-                  height='100%'
-                >
-                  <Box
-                    display='grid'
-                    gridTemplateColumns='1fr 1fr 1fr'
-                    gridTemplateRows='0.5fr'
-                    gridRowGap='0.25rem'
-                    gridColumnGap='0.25rem'
-                    height='100%'
-                  >
-                    {
-                      (selectedDifficulty in index) ?
-                        Object.values(index[selectedDifficulty])
-                          .map((id, idx) => {
-                            return <Card
-                              key={idx}
-                              variant='cards_template'
-                              onClick={() => {
-                                // Draw template by downloading data from server
-                                UploadExemple(templates[id].file_path, new_data)
-                                set_show_template(false)
-                              }}
-                            >
-                              <CardHeader>
-                                <Heading variant='heading_template_sankey'>
-                                  {new_data.t('templates.ids.' + id)}
-                                </Heading>
-                                <Divider />
-                              </CardHeader>
-
-                              <CardBody>
-                                {/* Get the image from the server */}
-                                <Image
-                                  className='img-card'
-                                  src={'/fm/userfiles/' + templates[id].img_path}
-                                  style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
-                                />
-                              </CardBody>
-
-                              <CardFooter>
-                                <ButtonGroup
-                                  //ButtonGroup don't have variants theming so we modify directly the style
-                                  style={{
-                                    margin: 'auto'
-                                  }}>
-                                  <Button variant='menuconfigpanel_option_button'
-                                    onClick={() => {
-                                      // Draw template by downloading data from server
-                                      UploadExemple(templates[id].file_path, new_data)
-                                      new_data.menu_configuration.ref_menu_opened.current[1]()
-                                      set_show_template(false)
-                                    }}>
-                                    {new_data.t('useTemplate')}
-                                  </Button>
-
-                                </ButtonGroup>
-                              </CardFooter>
-                            </Card>
-                          })
-                        :
-                        <></>
-                    }
-
-                  </Box>
-                </Box>
-              </Box>
-            </TabPanel>
-          })
-      }
-    </TabPanels>
-  </Tabs>
-
-
-  return <Modal
-    isOpen={show_template}
-    blockScrollOnMount={false}
-    onClose={() => set_show_template(false)}
-  >
-    <ModalOverlay />
-    <ModalContent
-      maxWidth='inherit'
-    >
-      <ModalHeader>{new_data.t('Menu.templates')}</ModalHeader>
-      <ModalCloseButton />
-      <ModalBody>
-        {tabs_of_cards}
-      </ModalBody>
-    </ModalContent>
-  </Modal>
 }

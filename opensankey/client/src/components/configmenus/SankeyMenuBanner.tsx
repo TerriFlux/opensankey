@@ -697,7 +697,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     </OSTooltip>
   </>
 
-
   // Add button for the edition of the sankey
   if (!new_data.is_static) {
     btn_mouse_mode_edition = <>
@@ -705,7 +704,7 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
       <OSTooltip
         placement='left'
         label={t('Banner.tooltipLiason')}
-        isAlwaysOpen={new_data.show_documentation}
+        isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
       >
         <Button
           variant='toolbar_button_1'
@@ -724,10 +723,6 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     </>
   }
 
-
-
-
-
   const btn_show_data_type = url_prefix !== '' ? <><OSTooltip placement='left' label={t('Banner.sdr')}>
     {struc_data_reconciled}
   </OSTooltip>
@@ -743,32 +738,29 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
       </Button>
     </OSTooltip>
 
-  const btn_show_help_in_static = <OSTooltip 
-    placement='left' 
+  const btn_show_help_in_static = <OSTooltip
+    placement='left'
     label={t('Banner.tooltipHelp')}
-    isAlwaysOpen={new_data.show_documentation}
+    isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
   >
-    <Button variant='info' onClick={() => { 
-      new_data.menu_configuration.never_see_again.current = false 
-      localStorage.removeItem('dontSeeAggainWelcome'), 
-      new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true) 
-    }} 
-    >?
+    <Button
+      variant='info'
+      onClick={() => {
+        new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
+      }}
+    >
+      ?
     </Button>
   </OSTooltip>
 
   const init_toolbar_elements: { [_: string]: JSX.Element } = {
-
     'mode_souris': btn_mouse_mode_edition,
     'node_type': btn_show_data_type,
     'strectch_zdd': stretchButtons(new_data),
     'help': btn_show_help_in_static,
     'fullscreen': button_fullscreen,
-
     ...additionalMenu.toolbar_elements // Add others toolbar functionnalities created in submodule
   }
-
-
 
   // ===================Assemble different item for the toolbar========================
   return <>
