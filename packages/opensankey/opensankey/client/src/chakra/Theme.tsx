@@ -5,7 +5,8 @@ import {
   accordion_sublevel_style
 } from './AccordionStyles'
 import {
-  badge_base_style
+  badge_base_style,
+  badge_on_template_img
 } from './BadgeStyle'
 import {
   button_base_style,
@@ -151,6 +152,7 @@ export const opensankey_theme = extendTheme({
     },
     Badge: {
       baseStyle: badge_base_style,
+      variants: { badge_on_template_img }
     },
     Button: {
       baseStyle: button_base_style,

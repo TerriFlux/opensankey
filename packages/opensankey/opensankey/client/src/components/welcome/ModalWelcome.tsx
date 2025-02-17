@@ -41,7 +41,6 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
   external_content
 }) => {
   const { t } = new_data
-  const { never_see_again } = new_data.menu_configuration
   const [show_welcome, set_show_welcome] = useState(false)
   const [current_header, setCurrentHeader] = useState<string>(Object.keys(external_pagination)[0] as string)
 
@@ -60,7 +59,7 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
   external_content['rc'] = new_data.is_static ? content_rc_static : external_content['rc']
 
   const content = <Modal
-    isOpen={show_welcome && !never_see_again.current}
+    isOpen={show_welcome}
     onClose={() => set_show_welcome(false)}
   >
     <ModalOverlay />
@@ -104,7 +103,6 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
 
   return content
 }
-
 
 export const ModalWelcomeBuilder: FunctionComponent<FCType_ModalWelcomeBuilder> = (
   { new_data }

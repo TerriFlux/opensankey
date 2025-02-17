@@ -47,7 +47,7 @@ import {
   default_link_value_label_on_path,
   default_link_value_label_pos_auto,
   default_link_value_label_unit_factor,
-  default_link_name_label_visible,
+  default_link_name_label_is_visible,
   Class_LinkAttribute
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
@@ -69,7 +69,7 @@ import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './Sanke
 import { SankeyMenuLabelComponent, SankeyMenuValueLabelComponent } from './SankeyMenuComponents'
 
 /*************************************************************************************************/
-// Declare custom logo used for some button 
+// Declare custom logo used for some button
 const logo_hv = <svg xmlns="http://www.w3.org/2000/svg"
   width="16"
   height="16"
@@ -174,7 +174,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   ) => {
     model[key] = value
   }
- 
+
 
   // Define a type of function that will be used to update elements and save unde/redo in data history
   // We can't directly define 1 function to treat Style & Links because they don't have exactly the same Class functions
@@ -186,7 +186,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
     updateElements = (k: keyStyle, value: valStyle) => {
       // Save old value
       const old_val = new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current][k]
-      // Define fucntion that will mutate value of 'k' attribute in Style 
+      // Define fucntion that will mutate value of 'k' attribute in Style
       const _updateElements = (_: valStyle) => {
         updateValueForListElements([new_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]], k, _)
         refreshThisAndUpdateRelatedComponents()
@@ -204,7 +204,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
       // Save old values in dict so the undo reset value for previous value of each link
       const dict_old_val: { [x: string]: valLink } = {}
       selected_links.forEach(l => dict_old_val[l.id] = l[k])
-      // Define fucntion that will mutate value of 'k' attribute in Link 
+      // Define fucntion that will mutate value of 'k' attribute in Link
       const _updateElements = (_: valLink) => {
         updateValueForListElements(selected_links, k, _)
         refreshThisAndUpdateRelatedComponents()
@@ -254,7 +254,7 @@ export const MenuConfigurationLinksAppearence: FunctionComponent<FCType_MenuConf
   const value_label_unit_factor = (element_ref?.value_label_unit_factor ?? default_link_value_label_unit_factor)
   const value_label_nb_digit = (element_ref?.value_label_nb_digit ?? default_link_value_label_nb_digit)
   const shape_local_scale = (element_ref?.local_link_scale ?? default_shape_local_scale)
-  const name_label_visible = (element_ref?.name_label_is_visible ?? default_link_name_label_visible)
+  const name_label_visible = (element_ref?.name_label_is_visible ?? default_link_name_label_is_visible)
   const name_label_on_path = (element_ref?.name_label_on_path ?? default_link_value_label_on_path)
   const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? default_link_value_label_pos_auto)
 

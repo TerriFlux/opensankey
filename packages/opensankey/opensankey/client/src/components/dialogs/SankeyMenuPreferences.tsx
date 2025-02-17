@@ -14,8 +14,6 @@ import { MenuDraggable } from '../topmenus/SankeyMenuTop'
 import { ConfigMenuTextInput } from '../configmenus/SankeyMenuConfiguration'
 
 // COMPONENTS ===========================================================================
-
-
 export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
   {
     new_data,
@@ -23,13 +21,10 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
   }
 ) => {
   // Data -------------------------------------------------------------------------------
-
   const { t, preference_menu_all_item, checkbox_refs } = new_data
 
   // Component updater ------------------------------------------------------------------
   const [, setUpdate] = useState(0)
-  //const menus = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
-  //const checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
   const menus = preference_menu_all_item
   menus.forEach(menu => checkbox_refs[menu] = useRef<HTMLInputElement>(null))
 
@@ -50,10 +45,11 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
     setUpdate(a => a + 1)
   }
 
-
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+
   // Update input data value
   ref_set_text_value_input.current(new_data.node_label_separator)
+
   // JSX Component ----------------------------------------------------------------------
   const node_label_sep = <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
     <Box layerStyle='menuconfigpanel_row_2cols' >
