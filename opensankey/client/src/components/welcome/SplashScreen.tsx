@@ -1,6 +1,7 @@
 // Standard lib
 import React, {
   FunctionComponent,
+  useState,
 } from 'react'
 import {
   Button,
@@ -18,8 +19,6 @@ import { OSTooltip } from '../../types/Utils'
 
 
 type FCType_ModalDocumentation = {
-  show_documentation: boolean
-  set_show_documentation: (_: boolean) => void
   app_data: Type_GenericApplicationData
 }
 
@@ -30,12 +29,20 @@ type FCType_ModalDocumentation = {
  * @return {*}
  */
 export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = (
-  { show_documentation, set_show_documentation, app_data }: FCType_ModalDocumentation
+  {
+    app_data
+  }
 ) => {
-  const { never_see_again } = app_data.menu_configuration
+  // Data -------------------------------------------------------------------------------
+  const { never_see_again, show_splashscreen } = app_data.menu_configuration
 
+  // Component updater ------------------------------------------------------------------
+  const [, setCount] = useState(0)
+  app_data.menu_configuration.ref_to_splashscreen_updater.current = () => setCount(a => a + 1)
+
+  // Component --------------------------------------------------------------------------
   return <Modal
-    isOpen={show_documentation && never_see_again.current == false}
+    isOpen={show_splashscreen}
     onClose={() => null}
     scrollBehavior='inside'
     variant='modal_documentation'
@@ -53,12 +60,12 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
               <OSTooltip
                 placement='left-end'
                 label={app_data.t('tooltip.start')}
-                isAlwaysOpen={show_documentation}>
+                isAlwaysOpen={show_splashscreen}>
                 <Button
                   variant='btn_documentation'
                   onClick={() => {
-                    set_show_documentation(false)
                     app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current!(true)
+                    app_data.menu_configuration.show_splashscreen = false
                   }}>
                   {app_data.t('start')}
                 </Button>
@@ -66,12 +73,12 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
               <OSTooltip
                 placement='right-end'
                 label={app_data.t('tooltip.diaporama')}
-                isAlwaysOpen={show_documentation}>
+                isAlwaysOpen={show_splashscreen}>
                 <Button
                   variant='btn_documentation'
                   onClick={() => {
                     app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)
-                    set_show_documentation(false)
+                    app_data.menu_configuration.show_splashscreen = false
                   }}>
                   {app_data.t('diaporama')}
                 </Button>
@@ -86,8 +93,8 @@ export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = 
           isChecked={never_see_again.current}
           onChange={evt => {
             never_see_again.current = evt.target.checked
-            localStorage.setItem('dontSeeAggainWelcome', '1')
-            set_show_documentation(false)
+            localStorage.setItem('dontSeeAgainWelcome', evt.target.checked ? '1' : '0')
+            app_data.menu_configuration.show_splashscreen = !evt.target.checked
           }}
         >
           <OSTooltip

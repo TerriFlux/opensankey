@@ -1,7 +1,7 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
 // Date : 29/05/2024
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -1441,6 +1441,50 @@ export abstract class ClassTemplate_DrawingArea
     this.application_data.history.saveUndo(inv_updateSelectedLinksTagAssignation)
     this.application_data.history.saveRedo(_updateSelectedLinksTagAssignation)
     _updateSelectedLinksTagAssignation()
+  }
+
+  /**
+   * Update tag selected for selected nodes and save it undoing
+   *
+   * @param {boolean} val
+   * @param {Class_Tag} flux_tag
+   */
+  public updateSelectedNodesTagAssignation = (val: boolean, node_tag: Class_Tag) => {
+    const visible = val
+    const dict_old_val: { [x: string]: boolean } = {}
+    this.selected_nodes_list.forEach(node => {
+      dict_old_val[node.id] = node.hasGivenTag(node_tag)
+    })
+
+    const _updateSelectedNodesTagAssignation = () => {
+      this.selected_nodes_list.forEach(node => {
+        if (visible) {
+          node.addTag(node_tag)
+        }
+        else {
+          node.removeTag(node_tag)
+        }
+      })
+      // Full update
+      this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+
+    const inv_updateSelectedNodesTagAssignation = () => {
+      this.selected_nodes_list.forEach(node => {
+        if (dict_old_val[node.id]) {
+          node.addTag(node_tag)
+        }
+        else {
+          node.removeTag(node_tag)
+        }
+      })
+      // Full update
+      this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+
+    this.application_data.history.saveUndo(inv_updateSelectedNodesTagAssignation)
+    this.application_data.history.saveRedo(_updateSelectedNodesTagAssignation)
+    _updateSelectedNodesTagAssignation()
   }
 
 

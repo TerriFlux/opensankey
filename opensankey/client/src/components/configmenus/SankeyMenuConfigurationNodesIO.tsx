@@ -77,7 +77,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   const input_direction = 'i'
   const [direction_selected, setSelectedDirection] = useState<string | undefined>(undefined)
 
-  if (!direction_selected) {
+  if (direction_selected==undefined) {
     if (has_input_links)
       setSelectedDirection(input_direction)
     else if (has_output_links)
@@ -94,13 +94,13 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
 
   const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
 
-  if (direction_selected && !side_selected) {
+  if (direction_selected && side_selected==undefined) {
     if (direction_selected === input_direction)
       setSelectedSide(unique_node_selected?.input_links_list[0]?.target_side ?? undefined)
     else
       setSelectedSide(unique_node_selected?.output_links_list[0]?.source_side ?? undefined)
   }
-  else if (!direction_selected && side_selected) {
+  else if (direction_selected==undefined && side_selected) {
     setSelectedSide(undefined)  // reset selected side
   }
 
@@ -120,6 +120,11 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
           links_to_reorganize[side] = unique_node_selected.getInputLinksForGivenSide(side)
         }
       })
+      
+    const sideWithLinks=Object.keys(links_to_reorganize).filter((k)=>links_to_reorganize[k as Type_Side].length>0) as Type_Side[]
+    if(!sideWithLinks.includes(side_selected)){
+      setSelectedSide(sideWithLinks[0])
+    }
   }
 
   // Boolean to color or not link table ------------------------------------------------
@@ -132,7 +137,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   const [, setCount] = useState(0)
 
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_nodes_io_updater.current = ()=>setCount(a=>a+1)
+  new_data.menu_configuration.ref_to_menu_config_nodes_io_updater.current = () => setCount(a => a + 1)
 
   /**
    * Local refresh function
@@ -141,7 +146,91 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    setCount(a=>a+1)
+    setCount(a => a + 1)
+  }
+
+  // Function that can be undone ---------------------------------------------------------------------
+
+  const reorgIONodeSelected = () => {
+    // Save old value that can be used in undo
+    const dict_old_io: { [x: string]: string[] } = {}
+    selected_nodes.forEach(node => dict_old_io[node.id] = [...Object.keys(node.input_links_dict), ...Object.keys(node.output_links_dict)])
+
+    // Function undo
+    const inv_reorgIONodeSelected = () => {
+      selected_nodes.forEach(n => n.reorganizeIOFromListIds(dict_old_io[n.id]))
+    }
+    // Function original
+    const _reorgIONodeSelected = () => {
+      selected_nodes.forEach(node => node.reorganizeIOLinks())
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    // Save undo/redo
+    new_data.history.saveUndo(inv_reorgIONodeSelected)
+    new_data.history.saveRedo(_reorgIONodeSelected)
+    // Execute original function
+    _reorgIONodeSelected()
+  }
+  
+  /**
+   * Move link order before node target
+   *
+   * @param {Type_GenericLinkElement} link
+   * @param {Type_GenericLinkElement} link_target
+   */
+  const moveLinkBefore = (link: Type_GenericLinkElement, link_target: Type_GenericLinkElement) => {
+    // Save old value that can be used in undo
+    const list_old_io: string[] = unique_node_selected?.links_order_visible.map(l => l.id) ?? []
+    // Function undo
+    const inv_moveLinkBefore = () => {
+      unique_node_selected?.reorganizeIOFromListIds(list_old_io)
+      unique_node_selected?.draw()
+      refreshThisAndUpdateRelatedComponents()
+    }
+    // Function original
+    const _moveLinkBefore = () => {
+      unique_node_selected?.moveLinkToPositionInOrderBefore(
+        link,
+        link_target
+      )
+      refreshThisAndUpdateRelatedComponents()
+    }
+    // Save undo/redo
+    new_data.history.saveUndo(inv_moveLinkBefore)
+    new_data.history.saveRedo(_moveLinkBefore)
+    // Execute original function
+    _moveLinkBefore()
+  }
+
+  /**
+   * Move link order after node target
+   *
+   * @param {Type_GenericLinkElement} link
+   * @param {Type_GenericLinkElement} link_target
+   */
+  const moveLinkAfter = (link: Type_GenericLinkElement, link_target: Type_GenericLinkElement) => {
+    // Save old value that can be used in undo
+    const list_old_io: string[] = unique_node_selected?.links_order_visible.map(l => l.id) ?? []
+    // Function undo
+    const inv_moveLinkAfter = () => {
+      unique_node_selected?.reorganizeIOFromListIds(list_old_io)
+      unique_node_selected?.draw()
+      refreshThisAndUpdateRelatedComponents()
+    }
+    // Function original
+    const _moveLinkAfter = () => {
+      unique_node_selected?.moveLinkToPositionInOrderAfter(
+        link,
+        link_target
+      )
+      refreshThisAndUpdateRelatedComponents()
+    }
+    // Save undo/redo
+    new_data.history.saveUndo(inv_moveLinkAfter)
+    new_data.history.saveRedo(_moveLinkAfter)
+    // Execute original function
+    _moveLinkAfter()
   }
 
   // JSX Components ---------------------------------------------------------------------
@@ -160,10 +249,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
       <Button
         variant='menuconfigpanel_option_button'
         isDisabled={!has_at_least_one_input_link && !has_at_least_one_output_link}
-        onClick={() => {
-          selected_nodes.forEach(node => node.reorganizeIOLinks())
-          refreshThisAndUpdateRelatedComponents()
-        }}
+        onClick={reorgIONodeSelected}
       >
         {t('Noeud.Reorg')}
       </Button>
@@ -309,12 +395,8 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                               minWidth='0'
                               onClick={() => {
                                 if (!first_link) {
-                                  unique_node_selected.moveLinkToPositionInOrderBefore(
-                                    link,
-                                    links_to_reorganize[side_selected][link_idx - 1]
-                                  )
+                                  moveLinkBefore(link, links_to_reorganize[side_selected][link_idx - 1])
                                 }
-                                refreshThisAndUpdateRelatedComponents()
                               }}
                             >
                               <FaArrowAltCircleUp />
@@ -325,12 +407,8 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                               minWidth='0'
                               onClick={() => {
                                 if (!last_link) {
-                                  unique_node_selected.moveLinkToPositionInOrderAfter(
-                                    link,
-                                    links_to_reorganize[side_selected][link_idx + 1]
-                                  )
+                                  moveLinkAfter(link, links_to_reorganize[side_selected][link_idx + 1])
                                 }
-                                refreshThisAndUpdateRelatedComponents()
                               }}
                             >
                               <FaArrowAltCircleDown />

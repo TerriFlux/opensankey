@@ -5,6 +5,9 @@ export const resources_template = {
   en: {
     translation: {
       templates: {
+        need_osp: 'OpenSankey+ needed',
+        fr: 'Diagram template in french',
+        en: 'Diagram template in english',
         themes: {
           energy: 'Energy',
           enviro: 'Environment',
@@ -14,7 +17,8 @@ export const resources_template = {
           ress: 'Ressources',
           commercial: 'Commercial',
           supply: 'Supply chain',
-          agri: 'Agriculture'
+          agri: 'Agriculture',
+          transport: 'Transports'
         },
         difficulties: {
           basic: 'Essential',
@@ -22,7 +26,9 @@ export const resources_template = {
           advanced: 'Expert',
         },
         ids: {
-          power_grid: 'Power grid with productions & uses disagregation',
+          transport_dispatch: 'Transport flows',
+          power_grid_with_disagregation: 'Power grid with productions & uses disaggregation',
+          power_grid: 'Power grid',
           waste_recycling: 'Household packaging waste recycling',
           water_usage: 'Water ressource systeme',
           personnal_budget: 'Personal expenses',
@@ -38,7 +44,10 @@ export const resources_template = {
   //=======================================================
   fr: {
     translation: {
-      templates:{
+      templates: {
+        need_osp: 'OpenSankey+ necessaire',
+        fr: 'Modèle de diagramme en français',
+        en: 'Modèle de diagramme en anglais',
         themes: {
           energy: 'Energie',
           enviro: 'Environnement',
@@ -48,7 +57,8 @@ export const resources_template = {
           ress: 'Ressources',
           commercial: 'Commercial',
           supply: 'Logistique',
-          agri: 'Agriculture'
+          agri: 'Agriculture',
+          transport: 'Transports'
         },
         difficulties: {
           basic: 'Basique',
@@ -56,7 +66,9 @@ export const resources_template = {
           advanced: 'Expert',
         },
         ids: {
-          power_grid: 'Réseau électrique avec désagrégation des productions et des utilisations',
+          transport_dispatch: 'Flux de transports',
+          power_grid_with_disagregation: 'Réseau électrique avec désagrégation des productions et des utilisations',
+          power_grid: 'Réseau électrique',
           waste_recycling: 'Recyclage des déchets d\'emballages',
           water_usage: 'Usage des ressources en eau',
           personnal_budget: 'Dépenses personnelles',

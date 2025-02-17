@@ -1,7 +1,7 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux SARL
+// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
 // Date : 29/05/2024
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -57,7 +57,7 @@ import {
   Type_JSON,
 } from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
-import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible } from './NodeAttributes'
+import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_is_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible } from './NodeAttributes'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -183,7 +183,7 @@ export abstract class ClassTemplate_NodeElement
   private _link_dragged: Type_GenericLinkElement | undefined
 
   // Tooltips
-  private _tooltip_text?: string
+  private _tooltip_text: string = ''
 
   // CONSTRUCTOR ========================================================================
 
@@ -736,7 +736,7 @@ export abstract class ClassTemplate_NodeElement
       this._drawShape()
       this._display.attributes.shape_visible = false
       this.d3_selection_g_shape?.selectAll('.node_shape')
-        .attr('fill-opacity',0)
+        .attr('fill-opacity', 0)
     }
     // Change stroke
     this.d3_selection_g_shape?.selectAll('.node_shape')
@@ -2083,7 +2083,7 @@ export abstract class ClassTemplate_NodeElement
    * @param f
    */
   protected saveUndo(f: (_: Type_AnyNodeElement) => void) {
-    this.drawing_area.application_data.history.saveUndo(() => {f(this)})
+    this.drawing_area.application_data.history.saveUndo(() => { f(this) })
   }
 
   /**
@@ -2091,7 +2091,7 @@ export abstract class ClassTemplate_NodeElement
   * @param f
   */
   protected saveRedo(f: (_: Type_AnyNodeElement) => void) {
-    this.drawing_area.application_data.history.saveRedo(() => {f(this)})
+    this.drawing_area.application_data.history.saveRedo(() => { f(this) })
   }
 
   // Events methods ---------------------------------------------------------------------
@@ -2157,15 +2157,34 @@ export abstract class ClassTemplate_NodeElement
     if (event.sourceEvent.shiftKey) {
       return
     }
-    // Memorize for undo
-    const old_x = this._display.position.x
-    const old_y = this._display.position.y
-    // Undo function
-    function undo(_: Type_AnyNodeElement) {
-      _.setPosXY(old_x, old_y)
-    }
-    this.saveUndo(undo)
     this._drag = true
+
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    const nodes_selected = drawing_area.selected_nodes_list
+    if (nodes_selected.includes(this)) {
+      const dict_old_pos: { [x: string]: [number, number] } = {}
+      // Memorize for undo
+      nodes_selected.forEach(n => {
+        dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
+      })
+      // Undo function
+      function undo(_: Type_AnyNodeElement) {
+        nodes_selected.forEach(n => {
+          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
+        })
+      }
+      this.saveUndo(undo)
+    } else {
+      // Memorize for undo
+      const old_x = this._display.position.x
+      const old_y = this._display.position.y
+      // Undo function
+      function undo(_: Type_AnyNodeElement) {
+        _.setPosXY(old_x, old_y)
+      }
+      this.saveUndo(undo)
+    }
   }
 
   /**
@@ -2228,14 +2247,34 @@ export abstract class ClassTemplate_NodeElement
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // End of drag
     this._drag = false
-    // Memorize for undo
-    const new_x = this._display.position.x
-    const new_y = this._display.position.y
-    // Undo function
-    function redo(_: Type_AnyNodeElement) {
-      _.setPosXY(new_x, new_y)
+
+
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    const nodes_selected = drawing_area.selected_nodes_list
+    if (nodes_selected.includes(this)) {
+      const dict_old_pos: { [x: string]: [number, number] } = {}
+      // Memorize for redo
+      nodes_selected.forEach(n => {
+        dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
+      })
+      // Redo function
+      function redo(_: Type_AnyNodeElement) {
+        nodes_selected.forEach(n => {
+          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
+        })
+      }
+      this.saveRedo(redo)
+    } else {
+      // Memorize for redo
+      const old_x = this._display.position.x
+      const old_y = this._display.position.y
+      // Redo function
+      function redo(_: Type_AnyNodeElement) {
+        _.setPosXY(old_x, old_y)
+      }
+      this.saveRedo(redo)
     }
-    this.saveRedo(redo)
   }
 
   /**
@@ -2855,6 +2894,12 @@ export abstract class ClassTemplate_NodeElement
     const link_ref = (handler.ref_element as this).getLinkFromHandler(handler)
     if (link_ref && link_ref instanceof ClassTemplate_LinkElement) {
       node_ref_handler.link_dragged = link_ref as Type_GenericLinkElement
+
+      const saveCurrOder = node_ref_handler._links_order.map(l => l.id)
+      node_ref_handler.drawing_area.application_data.history.saveUndo(() => {
+        node_ref_handler.reorganizeIOFromListIds(saveCurrOder)
+        node_ref_handler.draw()
+      })
     }
   }
 
@@ -2862,6 +2907,12 @@ export abstract class ClassTemplate_NodeElement
     const handler = this as unknown as ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>
     const node_ref_handler = handler.ref_element as this
     node_ref_handler.link_dragged = undefined
+
+    const saveCurrOder = node_ref_handler._links_order.map(l => l.id)
+    node_ref_handler.drawing_area.application_data.history.saveRedo(() => {
+      node_ref_handler.reorganizeIOFromListIds(saveCurrOder)
+      node_ref_handler.draw()
+    })
   }
 
   private getLinkFromHandler(handler: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
@@ -2908,6 +2959,7 @@ export abstract class ClassTemplate_NodeElement
   }
 
   // GETTERS / SETTERS ==================================================================
+  public get display() { return this._display }
 
   /**
    * Node visibility check
@@ -3552,7 +3604,7 @@ export abstract class ClassTemplate_NodeElement
     } else if (this._display.style.name_label_visible !== undefined) {
       return this._display.style.name_label_visible
     }
-    return default_node_name_label_visible
+    return default_node_name_label_is_visible
   }
 
   /**
@@ -4257,7 +4309,7 @@ export abstract class ClassTemplate_NodeElement
     return this._tooltip_text
   }
 
-  public set tooltip_text(_: string | undefined) {
+  public set tooltip_text(_: string) {
     this._tooltip_text = _
   }
 
