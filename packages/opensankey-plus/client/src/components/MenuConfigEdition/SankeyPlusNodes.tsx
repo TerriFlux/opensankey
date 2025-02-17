@@ -31,7 +31,8 @@ import {
   isAttributeOverloaded
 } from '../../deps/OpenSankey/Elements/Node'
 import {
-  default_shape_visible} from '../../deps/OpenSankey/Elements/NodeAttributes'
+  default_shape_visible
+} from '../../deps/OpenSankey/Elements/NodeAttributes'
 import {
   OSTooltip,
   TooltipValueSurcharge
@@ -71,7 +72,6 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     selected_nodes.forEach(zdt => zdt.draw())
   }
 
-
   const _load_image = useRef<HTMLInputElement>(null)
 
   const isAllNodeVisible = (selected_nodes[0]?.shape_visible ?? default_shape_visible)
@@ -96,6 +96,192 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   }
   if (all_are_none) {
     button_icon_or_image = 'none'
+  }
+
+  // Functions we can undo ========================================== 
+
+  const updateNodeIconVisibility = () => {
+    const dict_old_value: { [x: string]: [boolean, boolean] } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = [n.is_image, n.iconVisible]
+    })
+    const _updateNodeIconVisibility = () => {
+      selected_nodes.forEach(n => {
+        n.is_image = false
+        n.iconVisible = true
+
+      })
+      redrawAndRefresh()
+    }
+
+    const inv_updateNodeIconVisibility = () => {
+      selected_nodes.forEach(n => {
+        n.is_image = dict_old_value[n.id][0]
+        n.iconVisible = dict_old_value[n.id][1]
+      })
+      redrawAndRefresh()
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateNodeIconVisibility)
+    new_data_plus.history.saveRedo(_updateNodeIconVisibility)
+    // Execute original attr mutation
+    _updateNodeIconVisibility()
+  }
+
+  const updateNodeIconColor = (_: string) => {
+    const dict_old_value: { [x: string]: string } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.iconColor
+    })
+    const _updateNodeIconColor = () => {
+      selected_nodes.forEach(n => {
+        n.iconColor = _
+      })
+      redrawAndRefresh()
+    }
+
+    const inv_updateNodeIconColor = () => {
+      selected_nodes.forEach(n => {
+        n.iconColor = dict_old_value[n.id]
+      })
+      redrawAndRefresh()
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateNodeIconColor)
+    new_data_plus.history.saveRedo(_updateNodeIconColor)
+    // Execute original attr mutation
+    _updateNodeIconColor()
+  }
+
+  const updateNodeIconColorSustainable = (_: boolean) => {
+    const dict_old_value: { [x: string]: boolean } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.iconColorSustainable
+    })
+    const _updateNodeIconColorSustainable = () => {
+      selected_nodes.forEach(n => {
+        n.iconColorSustainable = _
+      })
+      redrawAndRefresh()
+    }
+
+    const inv_updateNodeIconColorSustainable = () => {
+      selected_nodes.forEach(n => {
+        n.iconColorSustainable = dict_old_value[n.id]
+      })
+      redrawAndRefresh()
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateNodeIconColorSustainable)
+    new_data_plus.history.saveRedo(_updateNodeIconColorSustainable)
+    // Execute original attr mutation
+    _updateNodeIconColorSustainable()
+  }
+
+  const setIllustrationVisibilityToNone = () => {
+    const dict_old_value: { [x: string]: [boolean, boolean] } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = [n.is_image, n.iconVisible]
+    })
+    const _setIllustrationVisibilityToNone = () => {
+      selected_nodes.forEach(n => {
+        n.is_image = false
+        n.iconVisible = false
+
+      })
+      redrawAndRefresh()
+    }
+
+    const inv_setIllustrationVisibilityToNone = () => {
+      selected_nodes.forEach(n => {
+        n.is_image = dict_old_value[n.id][0]
+        n.iconVisible = dict_old_value[n.id][1]
+      })
+      redrawAndRefresh()
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_setIllustrationVisibilityToNone)
+    new_data_plus.history.saveRedo(_setIllustrationVisibilityToNone)
+    // Execute original attr mutation
+    _setIllustrationVisibilityToNone()
+  }
+
+  const updateNodeImageVisibility = () => {
+    const dict_old_value: { [x: string]: [boolean, boolean] } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = [n.is_image, n.iconVisible]
+    })
+    const _updateNodeImageVisibility = () => {
+      selected_nodes.forEach(n => {
+        n.is_image = true
+        n.iconVisible = false
+
+      })
+      redrawAndRefresh()
+    }
+
+    const inv_updateNodeImageVisibility = () => {
+      selected_nodes.forEach(n => {
+        n.is_image = dict_old_value[n.id][0]
+        n.iconVisible = dict_old_value[n.id][1]
+      })
+      redrawAndRefresh()
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateNodeImageVisibility)
+    new_data_plus.history.saveRedo(_updateNodeImageVisibility)
+    // Execute original attr mutation
+    _updateNodeImageVisibility()
+  }
+
+  const updateNodeImageSrc = (_: string) => {
+    const dict_old_value: { [x: string]: string } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.image_src
+    })
+    const _updateNodeImageSrc = () => {
+      selected_nodes.forEach(n => {
+        n.image_src = _
+      })
+      redrawAndRefresh()
+    }
+
+    const inv_updateNodeImageSrc = () => {
+      selected_nodes.forEach(n => {
+        n.image_src = dict_old_value[n.id]
+      })
+      redrawAndRefresh()
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateNodeImageSrc)
+    new_data_plus.history.saveRedo(_updateNodeImageSrc)
+    // Execute original attr mutation
+    _updateNodeImageSrc()
+  }
+
+  const resetNodeImageSrc = () => {
+    const dict_old_value: { [x: string]: string } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.image_src
+    })
+    const _resetNodeImageSrc = () => {
+      selected_nodes.forEach(n => {
+        n.image_src = ''
+      })
+      redrawAndRefresh()
+    }
+
+    const inv_resetNodeImageSrc = () => {
+      selected_nodes.forEach(n => {
+        n.image_src = dict_old_value[n.id]
+      })
+      redrawAndRefresh()
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_resetNodeImageSrc)
+    new_data_plus.history.saveRedo(_resetNodeImageSrc)
+    // Execute original attr mutation
+    _resetNodeImageSrc()
   }
 
   // Content if we want to add icon to node
@@ -153,8 +339,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                 }
                 onChange={evt => {
                   const color = evt.target.value
-                  selected_nodes.map(d => d.iconColor = color)
-                  redrawIllustrationAndRefresh()
+                  updateNodeIconColor(color)
                 }}
               />
               <Button
@@ -164,8 +349,9 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                     'menuconfigpanel_option_button_activated' :
                     'menuconfigpanel_option_button'}
                 onClick={() => {
-                  selected_nodes.forEach(d => d.iconColorSustainable = !d.iconColorSustainable)
-                  redrawIllustrationAndRefresh()
+                  let value = false
+                  value = selected_nodes[0]?.iconColorSustainable ?? ''
+                  updateNodeIconColorSustainable(value)
                 }}
               >
                 {(selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ? <FaLock /> : <FaLockOpen />}
@@ -213,10 +399,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
               </Button>
               <Button
                 variant='menuconfigpanel_option_button_right'
-                onClick={() => {
-                  selected_nodes.forEach(n => n.image_src = '')
-                  redrawIllustrationAndRefresh()
-                }}
+                onClick={resetNodeImageSrc}
               >
                 <FontAwesomeIcon icon={faDeleteLeft} />
               </Button>
@@ -234,9 +417,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                   return (e: ProgressEvent<FileReader>) => {
                     const resultat = (e.target as FileReader).result
                     const res = resultat?.toString().replaceAll('=', '')
-                    selected_nodes.forEach(n => n.image_src = (res as string))
-                    redrawIllustrationAndRefresh()
-
+                    updateNodeImageSrc(res as string)
                   }
                 })()
                 reader.readAsDataURL(files[0])
@@ -297,13 +478,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                 'menuconfigpanel_option_button_activated_left'
             }
             isDisabled={!is_activated}
-            onClick={() => {
-              selected_nodes.forEach(d => {
-                d.iconVisible = false
-                d.is_image = false
-              })
-              redrawIllustrationAndRefresh()
-            }}
+            onClick={setIllustrationVisibilityToNone}
           >
             <FaEyeSlash />
           </Button>
@@ -314,13 +489,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                 'menuconfigpanel_option_button_activated_center'
             }
             isDisabled={!is_activated}
-            onClick={() => {
-              selected_nodes.forEach(d => {
-                d.is_image = false
-                d.iconVisible = true
-              })
-              redrawIllustrationAndRefresh()
-            }}
+            onClick={updateNodeIconVisibility}
           >
             {t('Noeud.icon.icon')}
           </Button>
@@ -331,13 +500,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                 'menuconfigpanel_option_button_activated_right'
             }
             isDisabled={!is_activated}
-            onClick={() => {
-              selected_nodes.forEach(d => {
-                d.is_image = true
-                d.iconVisible = false
-              })
-              redrawIllustrationAndRefresh()
-            }}
+            onClick={updateNodeImageVisibility}
           >
             Image
           </Button>
@@ -381,6 +544,32 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
     visible = selected_nodes[0]?.hyperlink ?? ''
     return visible
   }
+
+  const updateHyperlinkValue = (_: string) => {
+    const dict_old_value: { [x: string]: string } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.hyperlink
+    })
+    const _updateHyperlinkValue = () => {
+      selected_nodes.forEach(n => {
+        n.hyperlink = _
+      })
+      setCount(a => a + 1)
+
+    }
+
+    const inv_updateHyperlinkValue = () => {
+      selected_nodes.forEach(n => {
+        n.hyperlink = dict_old_value[n.id]
+      })
+      setCount(a => a + 1)
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateHyperlinkValue)
+    new_data_plus.history.saveRedo(_updateHyperlinkValue)
+    // Execute original attr mutation
+    _updateHyperlinkValue()
+  }
   const node_hyperlink = hasHyperLink()
   // const data_plus = data as OSPData
   const content_image_tab = selected_nodes.length > 0 ?
@@ -406,9 +595,7 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
               placeholder={node_hyperlink}
               isDisabled={!is_activated}
               onChange={(evt) => {
-                selected_nodes
-                  .forEach(d => d.hyperlink = evt.target.value)
-                setCount(a => a + 1)
+                updateHyperlinkValue(evt.target.value)
               }}
             />
           </InputGroup>

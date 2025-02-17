@@ -4,7 +4,7 @@
 //  - Julien ALAPETITE
 //  - Vincent LE DOZE
 // Date : 28/08/2024
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -30,23 +30,18 @@ import { Class_DataTag, Class_DataTagGroup } from '../deps/OpenSankey/types/Tag'
 export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   // PRIVATE ATTRIBUTES =================================================================
-
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
-
   private _ref_to_toolbar_link_visual_filter_updater: MutableRefObject<(() => void)>
+
   //Var used for the dataTagg sequence component
   private _is_playing_sequence: boolean = false
   private _is_sequence_loop: boolean = false
-
   private _ref_to_config_DA_bg_image_updater: MutableRefObject<(() => void)>
-
 
   /* ========================================
     Updater of component for containers related menus
     ========================================*/
-
   private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
-
   private _ref_to_accordion_edition_tag_updater:MutableRefObject<(() => void)>
 
   /* ========================================
@@ -60,22 +55,15 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   /* ========================================
     Updater of components for views related menus
     ========================================*/
-
   private _ref_to_banner_views_updater: MutableRefObject<() => void>
   private _ref_to_accordion_views_updater: MutableRefObject<() => void>
   private _ref_to_accordion_containers_updater: MutableRefObject<() => void>
   private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_: boolean) => void>
   private _ref_to_save_diagram_only_view_updater: MutableRefObject<(() => void)>
-
   private _ref_to_drawer_sequence_data_tag_updater: MutableRefObject<(() => void)>
-
-
   private _ref_to_checkbox_pref_view_updater: MutableRefObject<(() => void)>
   private _ref_to_checkbox_pref_edition_tags_updater: MutableRefObject<(() => void)>
-
-
   private _ref_to_checkbox_pref_container_updater: MutableRefObject<(() => void)>
-
 
   /* ========================================
   Updater of component for node plus related menus
@@ -91,7 +79,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   private _zdt_accordion_ref: RefObject<HTMLButtonElement>
   private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
   private _r_editor_content_fo_node_updater: MutableRefObject<(() => void)>
-
   private _ref_to_updater_modal_apply_layout_plus: MutableRefObject<(() => void)>
 
   // Timeout between steps in sequence (in ms)

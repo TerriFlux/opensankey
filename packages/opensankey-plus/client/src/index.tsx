@@ -3,7 +3,7 @@
 //  - Vincent CLAVEL
 //  - Julien ALAPETITE
 //  - Vincent LE DOZE
-// All rights reserved for TerriFlux SARL
+// All rights reserved for TerriFlux
 // ==================================================================================================
 
 // CSS ==============================================================================================

@@ -51,7 +51,7 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<FCType_Sank
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   let tmp_editor_content_tooltip = editor_content_tooltip
 
-  // Check if there is difference between text in editor and link tooltips
+  // Check if there is difference between text in editor and node tooltips
   let s_tmp_editor_content_changed = false
   if (selected_nodes.length>0) {
     if (selected_nodes[0].tooltip_text !== editor_content_tooltip) {
@@ -96,6 +96,29 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<FCType_Sank
       setEditorContentTooltip('')
     }
   }
+
+
+  const applyEditor=()=>{
+    const dict_old_value:{[x:string]:string}={}
+    selected_nodes.map(node => dict_old_value[node.id] =node.tooltip_text)
+
+    const _applyEditor=()=>{
+      selected_nodes.map(node => node.tooltip_text = tmp_editor_content_tooltip)
+      setEditorContentTooltip(tmp_editor_content_tooltip)
+      // Toogle saving indicator
+      new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+    const inv_applyEditor=()=>{
+      selected_nodes.map(node => node.tooltip_text = dict_old_value[node.id])
+      setEditorContentTooltip(selected_nodes[0].tooltip_text)
+    }
+
+    new_data.history.saveUndo(inv_applyEditor)
+    new_data.history.saveRedo(_applyEditor)
+
+    _applyEditor()
+  }
+
 
   // Link with new_data components updater
   new_data.menu_configuration.ref_to_menu_config_nodes_tooltips_updater.current = resetTextEditor
@@ -146,12 +169,7 @@ export const SankeyMenuConfigurationNodesTooltip : FunctionComponent<FCType_Sank
       <Button
         variant='menuconfigpanel_option_button_right'
         isDisabled={!s_tmp_editor_content_changed}
-        onClick={() => {
-          selected_nodes.map(node => node.tooltip_text = tmp_editor_content_tooltip)
-          setEditorContentTooltip(tmp_editor_content_tooltip)
-          // Toogle saving indicator
-          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-        }}
+        onClick={applyEditor}
       >
         {t('Menu.submit')}
       </Button>

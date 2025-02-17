@@ -65,6 +65,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
 
   const has_FO = (selected_nodes[0]?.has_FO ?? false)
   const is_FO_raw = (selected_nodes[0]?.is_FO_raw ?? false)
+
   /**
    *
    * function that go throught all Type_NodeElement of an array & check if they're all equals
@@ -73,11 +74,89 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
    * @param {Type_NodeElement} curr
    * @return {*}
    */
+
   const check_indeterminate = (curr: Type_GenericNodeElementOSP,) => {
     return (selected_nodes[0].isEqual(curr))
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
-  //   const value_of_key = OSPIsAllNodeNotLocalAttrSameValue(data,selected_nodes,['has_FO','is_FO_raw'])
+  // Functions we can undo ========================================
+
+  const updateFOVisibility = (_:boolean) => {
+    const dict_old_value: { [x: string]: boolean } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.has_FO
+    })
+    const _updateFOVisibility = () => {
+      selected_nodes.forEach(n => {
+        n.has_FO=_
+        n.draw()
+      })
+      setCount(a=>a+1)
+    }
+
+    const inv_updateFOVisibility = () => {
+      selected_nodes.forEach(n => {
+        n.has_FO = dict_old_value[n.id]
+        n.draw()
+      })
+      setCount(a=>a+1)
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateFOVisibility)
+    new_data_plus.history.saveRedo(_updateFOVisibility)
+    // Execute original attr mutation
+    _updateFOVisibility()
+  }
+
+  const updateFORaw = (_:boolean) => {
+    const dict_old_value: { [x: string]: boolean } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.is_FO_raw
+    })
+    const _updateFORaw = () => {
+      selected_nodes.forEach(n => {
+        n.is_FO_raw=_
+        n.draw()
+      })
+      setCount(a=>a+1)
+    }
+
+    const inv_updateFORaw = () => {
+      selected_nodes.forEach(n => {
+        n.is_FO_raw = dict_old_value[n.id]
+        n.draw()
+      })
+      setCount(a=>a+1)
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateFORaw)
+    new_data_plus.history.saveRedo(_updateFORaw)
+    // Execute original attr mutation
+    _updateFORaw()
+  }
+
+  
+  const applyEditor=()=>{
+    const dict_old_value:{[x:string]:string}={}
+    selected_nodes.map(node => dict_old_value[node.id] =node.FO_content)
+
+    const _applyEditor=()=>{
+      selected_nodes.map(node => node.FO_content = s_tmp_editor_content_fo_node)
+      sEditorContentFoNode(s_tmp_editor_content_fo_node)
+      // Toogle saving indicator
+      new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+    const inv_applyEditor=()=>{
+      selected_nodes.map(node => node.FO_content = dict_old_value[node.id])
+      sEditorContentFoNode(selected_nodes[0].FO_content)
+    }
+
+    new_data_plus.history.saveUndo(inv_applyEditor)
+    new_data_plus.history.saveRedo(_applyEditor)
+
+    _applyEditor()
+  }
+
 
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
@@ -139,12 +218,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         isIndeterminate={is_indeterminated}
         isChecked={has_FO}
         onChange={(evt) => {
-          selected_nodes
-            .forEach(d => {
-              d.has_FO = evt.target.checked
-              d.draw()
-            })
-          setCount(a => a + 1)
+          updateFOVisibility(evt.target.checked)
         }}
       >
         {is_activated ? <>{t('Noeud.foreign_object.Visibilité')}</> : <OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
@@ -155,12 +229,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         isIndeterminate={is_indeterminated}
         isChecked={is_FO_raw}
         onChange={(evt) => {
-          selected_nodes
-            .forEach(d => {
-              d.is_FO_raw = evt.target.checked
-              d.draw()
-            })
-          setCount(a => a + 1)
+          updateFORaw(evt.target.checked)
         }}
       >
         {is_activated ? <>{t('Noeud.foreign_object.raw')}</> : <OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.raw')}</OSTooltip>}
@@ -228,14 +297,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         <Button
           variant='menuconfigpanel_option_button_right'
           isDisabled={!is_activated || !s_tmp_editor_content_changed}
-          onClick={() => {
-            selected_nodes
-              .forEach(d => {
-                d.FO_content = s_tmp_editor_content_fo_node
-                d.draw()
-              })
-            sEditorContentFoNode(s_tmp_editor_content_fo_node)
-          }}
+          onClick={applyEditor}
         >
           {t('Noeud.FO.submit')}
         </Button>
