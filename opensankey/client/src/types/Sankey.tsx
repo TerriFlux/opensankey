@@ -1302,6 +1302,25 @@ export abstract class ClassTemplate_Sankey
     delete this._links[link.id]
   }
 
+
+
+  // TODO : add correct keyword in test 'if('extensions' in (l?.value??{}))' 
+  // when MFADATA will be implemented with class
+  /**
+   * Test if data is reconcilied by searching some key word in links value
+   * (keyword like : free_mini,free_maxi,data_value,data_source,...)
+   *
+   * @memberof ClassTemplate_Sankey
+   */
+  public linkValueHasReconciliedData = () => {
+    this.links_list.forEach(l => {
+      if ('extensions' in (l?.value ?? {})) {
+        return true
+      }
+    })
+    return false
+  }
+
   // Style related -----------------------------------------------------------------------
 
   /**
