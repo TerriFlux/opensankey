@@ -184,12 +184,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       />
     )
   }
-
-  if (has_views) {
+  if (new_data_plus.has_sankey_plus || new_data_plus.has_views)
     additionalMenus.externale_navbar_item['view'] = <BannerViewsOSP
       new_data_plus={new_data_plus}
     />
-  }
 
   // TODO OTHER JSX ELEMENTS -----------------------------------------------------------
 

@@ -371,6 +371,9 @@ export abstract class ClassTemplate_ApplicationDataOSP
       evt.preventDefault()
       // Create a new view from current displayed sankey
       this.createNewView()
+
+      if (!this.menu_configuration.isGivenAccordionShowed('Vis'))
+        this.menu_configuration.toggleGivenAccordion('Vis')
     }
 
     // Changing view to is_master ---------------------------------------------------------------
@@ -682,7 +685,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
   }
 
   public get has_views(): boolean {
-    return (this._views_order.length > 0)
+    //test if length of _views_order is sup. to 1 because by default there is master sankey
+    return (this._views_order.length > 1)
   }
 
   public get is_view_master(): boolean {
