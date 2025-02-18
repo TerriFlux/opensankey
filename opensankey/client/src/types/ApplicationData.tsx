@@ -149,6 +149,19 @@ export abstract class ClassTemplate_ApplicationData
   ]
 
   /**
+   * Attr to design data has reconcilied,
+   * it enable some functionality.
+   * 
+   * For now only imported file can be considered has reconcilied so value is updated in _afterFromJSON
+   *
+   * @protected
+   * @type {boolean}
+   * @memberof ClassTemplate_ApplicationData
+   */
+  protected _is_reconcilied: boolean = false
+
+
+  /**
    * All item selectable in SankeyMenuPreference
    * @protected
    * @type {string[]}
@@ -383,6 +396,7 @@ export abstract class ClassTemplate_ApplicationData
     this._drawing_area.bypass_redraws = by_pass_redraw
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
+    this._is_reconcilied = false
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
   }
@@ -609,6 +623,8 @@ export abstract class ClassTemplate_ApplicationData
     this._drawing_area.arrangeTrade(false)
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
+
+    this._is_reconcilied = this.drawing_area.sankey.linkValueHasReconciliedData()
 
     this.menu_configuration.updateAllMenuComponents()
   }
@@ -1094,5 +1110,9 @@ export abstract class ClassTemplate_ApplicationData
   public set language(value: string | undefined) { this._language = value }
 
   public get i18n() { return this._i18n }
+
+  public get is_reconcilied(): boolean {
+    return this._is_reconcilied
+  }
 }
 
