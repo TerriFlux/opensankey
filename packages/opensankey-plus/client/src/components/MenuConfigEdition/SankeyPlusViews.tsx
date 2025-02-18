@@ -724,6 +724,9 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
                         isDisabled={!is_activated || (d.id == default_main_sankey_id)}
                         onChange={evt => {
                           d.name = evt.target.value
+                          refreshThis()
+                        }}
+                        onBlur={()=>{
                           new_data_plus.menu_configuration.updateComponentRelatedToViews()
                         }}
                       />
