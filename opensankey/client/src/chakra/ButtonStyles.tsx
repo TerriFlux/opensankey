@@ -326,6 +326,33 @@ export const toolbar_button_6 = defineStyle({
   },
 })
 
+export const button_is_spreadsheet_selected = defineStyle({
+  bgColor: 'primaire.5',
+  borderColor: 'secondaire.5',
+  _hover: {
+    bgColor: 'tertiaire.5',
+    borderColor: 'secondaire.5',
+  },
+  _active: {
+    bgColor: 'tertiaire.5',
+    borderColor: 'secondaire.5',
+  },
+})
+export const button_is_spreadsheet = defineStyle({
+  bgColor: 'white',
+  borderColor: 'secondaire.5',
+  color:'primaire.5',
+  _hover: {
+    bgColor: 'tertiaire.5',
+    borderColor: 'secondaire.5',
+  },
+  _active: {
+    bgColor: 'tertiaire.5',
+    borderColor: 'secondaire.5',
+  },
+})
+
+
 export const toolbar_main_button = defineStyle({
   height: '6rem',
   bgColor: 'primaire.1',

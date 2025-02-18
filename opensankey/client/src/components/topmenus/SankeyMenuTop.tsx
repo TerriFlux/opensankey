@@ -1368,14 +1368,14 @@ export const Menu: FunctionComponent<FCType_Menu> = (
                 <OSTooltip
                   placement='bottom'
                   label={t('Menu.tooltips.SpreadSheet')}>
-                  <Button variant='toolbar_button_5' style={{ marginRight: '10px' }} onClick={() => setSpreadSheet(true)}>
+                  <Button variant={spreadsheet?'button_is_spreadsheet_selected':'button_is_spreadsheet'} style={{ marginRight: '10px' }} onClick={() => setSpreadSheet(true)}>
                     <FontAwesomeIcon icon={faTable} />
                   </Button>
                 </OSTooltip>
                 <OSTooltip
                   placement='bottom'
                   label={t('Menu.tooltips.ConfigMenu')}>
-                  <Button variant='toolbar_button_5' style={{ marginLeft: '10px' }} onClick={() => setSpreadSheet(false)}>
+                  <Button variant={spreadsheet?'button_is_spreadsheet':'button_is_spreadsheet_selected'} style={{ marginLeft: '10px' }} onClick={() => setSpreadSheet(false)}>
                     <FontAwesomeIcon icon={faSliders} />
                   </Button>
                 </OSTooltip>
