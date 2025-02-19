@@ -114,7 +114,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   // Functions we can undo --------------------------------------------------------------
 
   /**
-   * Deal with node horizontal / vertical alignement
+   * Deal with node horizontal / vertical alignement & save it's undo
    *
    * @param {('min' | 'max')} ref
    * @param {('position_x' | 'position_y')} attr
@@ -183,6 +183,11 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     _align_node()
   }
 
+  /**
+   * Update style of selected nodes & save it's undo
+   *
+   * @param {Class_NodeStyle} sn
+   */
   const updateStyle = (sn: Class_NodeStyle) => {
 
     const dict_old_value: { [x: string]: Class_NodeStyle } = {}
@@ -211,6 +216,10 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     _updateStyle()
   }
 
+  /**
+   * Rest attributes of selected nodes & save it's undo
+   *
+   */
   const resetAttr = () => {
     const dict_old_value: { [x: string]: Class_NodeAttribute } = {}
     selected_nodes.forEach(n => {
@@ -237,12 +246,15 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     _resetAttr()
   }
 
-
+  /**
+   * Update name visibility of selected nodes & save it's undo
+   *
+   */
   const updateNameVisibility = () => {
     const dict_old_value: { [x: string]: boolean } = {}
     // Clone Class_attribute of links so in the undo it's doens't affect a value if the original value came from style
     selected_nodes.forEach(node => {
-      dict_old_value[node.id] =node.name_label_visible
+      dict_old_value[node.id] = node.name_label_visible
     })
     const _updateNameVisibility = () => {
       selected_nodes
@@ -266,6 +278,10 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     _updateNameVisibility()
   }
 
+  /**
+   * Update value visibility of selected nodes & save it's undo
+   *
+   */
   const updateValueVisibility = () => {
     const dict_old_value: { [x: string]: boolean } = {}
     // Clone Class_attribute of links so in the undo it's doens't affect a value if the original value came from style
@@ -294,6 +310,10 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     _updateValueVisibility()
   }
 
+  /**
+  * Update shape visibility of selected nodes & save it's undo
+  *
+  */
   const updateShapeVisibility = () => {
     const dict_old_value: { [x: string]: boolean } = {}
     // Clone Class_attribute of links so in the undo it's doens't affect a value if the original value came from style
@@ -320,6 +340,32 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.history.saveRedo(_updateShapeVisibility)
     // Execute original attr mutation
     _updateShapeVisibility()
+  }
+  
+/**
+ * Reorganise link's IO order of selected nodes based on pos of source/target & save it's undo
+ *
+ */
+const reorgIONodeSelected = () => {
+    // Save old value that can be used in undo
+    const dict_old_io: { [x: string]: string[] } = {}
+    selected_nodes.forEach(node => dict_old_io[node.id] = [...Object.keys(node.input_links_dict), ...Object.keys(node.output_links_dict)])
+
+    // Function undo
+    const inv_reorgIONodeSelected = () => {
+      selected_nodes.forEach(n => n.reorganizeIOFromListIds(dict_old_io[n.id]))
+    }
+    // Function original
+    const _reorgIONodeSelected = () => {
+      selected_nodes.forEach(node => node.reorganizeIOLinks())
+      refreshThisAndToggleSaving()
+    }
+
+    // Save undo/redo
+    new_data.history.saveUndo(inv_reorgIONodeSelected)
+    new_data.history.saveRedo(_reorgIONodeSelected)
+    // Execute original function
+    _reorgIONodeSelected()
   }
   // JSX Components ---------------------------------------------------------------------
 
@@ -622,12 +668,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const btn_reorganise_link_io = <Button
     variant='contextmenu_button'
-    onClick={() => {
-
-      selected_nodes.forEach(node => node.reorganizeIOLinks()) // TODO : function to reorganise IO links of nodes depending on source/target position
-      refreshThisAndToggleSaving()
-
-    }}>
+    onClick={reorgIONodeSelected}>
     {t('Noeud.Reorg')}
   </Button>
 
@@ -722,7 +763,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const btn_mask_value = <Button
     variant='contextmenu_button'
-    onClick={ updateValueVisibility}
+    onClick={updateValueVisibility}
   >
     {
       contextualised_node_value_visible ?

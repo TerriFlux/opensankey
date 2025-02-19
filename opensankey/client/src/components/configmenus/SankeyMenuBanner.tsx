@@ -36,7 +36,9 @@ import {
 } from '../../types/LegacyType'
 import {
   Class_TagGroup,
-  Class_LevelTagGroup
+  Class_LevelTagGroup,
+  Class_FluxTag,
+  Class_FluxTagGroup
 } from '../../types/Tag'
 import {
   FCType_AddAllDropDownNode,
@@ -105,7 +107,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
   {
     new_data,
     level
-  }:FCType_AddAllDropDownNode
+  }: FCType_AddAllDropDownNode
 ) => {
   // Data -------------------------------------------------------------------------------
   const { t } = new_data
@@ -137,6 +139,43 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
       .filter(tagg => tagg.banner !== 'none')
   }
 
+  // Undoabl
+  // e functions ===================================================
+  /**
+   * Apply color palette of 'tagg' to nodes, show group palette in legend if visible & save it's undo
+   *
+   * @param {Class_TagGroup} tagg
+   * @param {boolean} _
+   */
+  const setApplyNodeTagGroupPalette = (tagg: Class_TagGroup, _: boolean) => {
+    const dict_old_val = Object.fromEntries(Object.values(node_taggs).map(tagg => [tagg.id, tagg.show_legend]))
+
+    const _setApplyNodeTagGroupPalette = () => {
+      // Reset values
+      Object.values(node_taggs).forEach(tagg => tagg.show_legend = false)
+      // Update this tagg group value
+      if (_) {
+        tagg.show_legend = true
+      }
+      new_data.drawing_area.legend.draw()
+      // Refresh this & related component
+      new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
+    }
+
+    const inv_setApplyNodeTagGroupPalette = () => {
+      Object.values(node_taggs).forEach(tagg => tagg.show_legend = dict_old_val[tagg.id])
+      new_data.drawing_area.legend.draw()
+      // Refresh this & related component
+      new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_setApplyNodeTagGroupPalette)
+    new_data.history.saveRedo(_setApplyNodeTagGroupPalette)
+    // Execute original attr mutation
+    _setApplyNodeTagGroupPalette()
+  }
+
   // JSX Components --------------------------------------------------------------------
   const allDD = taggs_in_banner.map(tagg => {
     // Create a btn that can either be a switch to activate tag color palette
@@ -151,17 +190,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
         alignSelf='center'
         height='1rem'
         isChecked={tagg.show_legend}
-        onChange={evt => {
-          // Reset values
-          Object.values(node_taggs).forEach(tagg => tagg.show_legend = false)
-          // Update this tagg group value
-          if (evt.target.checked) {
-            tagg.show_legend = true
-          }
-          new_data.drawing_area.legend.draw()
-          // Refresh this & related component
-          new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
-        }}
+        onChange={evt => setApplyNodeTagGroupPalette(tagg, evt.target.checked)}
       />
     }
     else if (
@@ -184,7 +213,7 @@ export const AddAllDropDownNode: FunctionComponent<FCType_AddAllDropDownNode> = 
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
-            new_data.drawing_area.sankey.nodes_list.forEach(n=>n.dimensionsUpdated())
+            new_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
             new_data.drawing_area.draw()
             // Refresh this & related component
             new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
@@ -337,6 +366,44 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
   const [, setCount] = useState(0)
   new_data.menu_configuration.ref_to_fluxtag_filter_updater.current = () => setCount(a => a + 1)
 
+  /**
+   * Apply color palette of 'tagg' to flows, show group palette in legend if visible & save it's undo
+   *
+   * @param {Class_FluxTagGroup} tagg
+   * @param {boolean} _
+   */
+  const setApplyFlowTagGroupPalette = (tagg: Class_FluxTagGroup, _: boolean) => {
+    const dict_old_val = Object.fromEntries(Object.values(flux_taggs_dict).map(tagg => [tagg.id, tagg.show_legend]))
+
+    const _setApplyFlowTagGroupPalette = () => {
+      // Reset values
+      Object.values(flux_taggs_dict).forEach(tagg => tagg.show_legend = false)
+      // Update this tagg group value
+      if (_) {
+        tagg.show_legend = true
+      }
+      new_data.drawing_area.legend.draw()
+      // Refresh this & related component
+      new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
+    }
+
+    const inv_setApplyFlowTagGroupPalette = () => {
+      Object.values(flux_taggs_dict).forEach(tagg => tagg.show_legend = dict_old_val[tagg.id])
+      new_data.drawing_area.legend.draw()
+      // Refresh this & related component
+      new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_setApplyFlowTagGroupPalette)
+    new_data.history.saveRedo(_setApplyFlowTagGroupPalette)
+    // Execute original attr mutation
+    _setApplyFlowTagGroupPalette()
+  }
+
+
+
+
   // JSX Components --------------------------------------------------------------------
   // Create drop down
   const allDD = flux_taggs_with_banner
@@ -387,7 +454,7 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
             // Set correct tags as selected
             flux_tagg.selectTagsFromIds(options_selected.map(_ => _.value))
             // TODO not optimal. Target Source nodes of redrawn link must be redrawn
-            new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.draw())
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
             // Update related components (includes this)
             new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
           }}
@@ -424,20 +491,7 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
                 <Switch
                   isChecked={flux_tagg.show_legend}
                   onChange={evt => {
-                    // Reset default colormap for all fluxtaggs
-                    Object.values(flux_taggs_dict)
-                      .forEach(flux_tagg => { flux_tagg.show_legend = false })
-                    // Update values for this fluxtagg
-                    if (evt.target.checked) {
-                      flux_tagg.show_legend = true
-                    }
-                    new_data.drawing_area.legend.draw()
-
-                    // Redraw all visible node because selectTagsFromId only update nodes directly affected by the tag updated
-                    // but it can make link appear/dissapear (with nodes (dis)apearing ) wich affect nodes not updated by tag
-                    new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.drawLinksArrow())
-                    // Update related components (includes this)
-                    new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+                    setApplyFlowTagGroupPalette(flux_tagg, evt.target.checked)
                   }}
                 />
               </Box>
@@ -445,6 +499,8 @@ export const AddAllDropDownFlux: FunctionComponent<FCType_AddAllDropDownFluxFTyp
           </Box>
         </Box>)
     })
+
+
 
   // Output -----------------------------------------------------------------------------
   return (<>{allDD.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}</>)
@@ -788,11 +844,11 @@ const stretchButtons: FType_StretchButtons = (
       <FontAwesomeIcon icon={faArrowsLeftRight} />
     </Button>
   </OSTooltip>
-  <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
-    <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
-      <FontAwesomeIcon icon={faArrowsUpDown} />
-    </Button>
-  </OSTooltip></>
+    <OSTooltip placement='left' label={t('Banner.tooltipAdjustV')} >
+      <Button variant='toolbar_button_6' onClick={() => { new_data.drawing_area.areaFitVertically() }} >
+        <FontAwesomeIcon icon={faArrowsUpDown} />
+      </Button>
+    </OSTooltip></>
 }
 
 
