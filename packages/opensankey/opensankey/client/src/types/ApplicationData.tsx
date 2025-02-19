@@ -397,6 +397,9 @@ export abstract class ClassTemplate_ApplicationData
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
     this._is_reconcilied = false
+
+    // Reset Class_DataHistory
+    this._history=new Class_ApplicationHistory(this._menu_configuration)
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
   }
@@ -846,11 +849,16 @@ export abstract class ClassTemplate_ApplicationData
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
     const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
     const evtKeyF = ((evt.key === 'f') || (evt.key === 'F')) && evtOnDrawingArea
+    const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z'))
+    const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y'))
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
     const evtCtrlAltS = evtCtrlAlt && evtKeyS
     const evtCtrlF = evtCtrl && evtKeyF
+    const evtCtrlZ = evtCtrl && evtKeyZ
+    const evtCtrlY = evtCtrl && evtKeyY
+    const evtCtrlShiftZ = evtCtrlShift && evtKeyZ
 
     // Event to move all selected nodes with keyboard arrows --------------------------
     if (
@@ -902,7 +910,7 @@ export abstract class ClassTemplate_ApplicationData
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
       // Delete selected elements
-      app_ref.drawing_area.deleteSelection()
+      app_ref.drawing_area.deleteSelection(true,true)
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -957,6 +965,16 @@ export abstract class ClassTemplate_ApplicationData
       else if (document.exitFullscreen) {
         document.exitFullscreen()
       }
+    }
+    // Undo
+    else if (evtCtrlZ){
+      evt.preventDefault()
+      this._history.applyUndo()
+    }
+    // Redo
+    else if (evtCtrlY || evtCtrlShiftZ){
+      evt.preventDefault()
+      this._history.applyRedo()
     }
   }
 
