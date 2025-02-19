@@ -1121,7 +1121,7 @@ export abstract class ClassTemplate_LinkElement
 
     // =======================DRAW VALUE LABEL ============================
     if (
-      (this.drawing_area.show_structure !== 'structure') &&
+      (this.drawing_area.type_data !== 'structure') &&
       (this.value_label_is_visible) &&
       ((link_val ?? 0) >= this.drawing_area.filter_label)
     ) {
@@ -1208,7 +1208,7 @@ export abstract class ClassTemplate_LinkElement
 
     // =======================DRAW TEXT LABEL ============================
     if (
-      (this.drawing_area.show_structure !== 'structure') &&
+      (this.drawing_area.type_data !== 'structure') &&
       (this.name_label_is_visible) &&
       ((link_text ?? '') !== '')
     ) {
@@ -3075,7 +3075,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public get data_value() {
-    if (this.drawing_area.show_structure === 'structure')
+    if (this.drawing_area.type_data === 'structure')
       return null
 
     if (this.drawing_area.show_structure === 'data') {

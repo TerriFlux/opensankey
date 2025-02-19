@@ -40,6 +40,8 @@ import {
   toolbar_main_button,
   welcome_button_license_description,
   btn_documentation,
+  button_is_spreadsheet,
+  button_is_spreadsheet_selected,
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -186,7 +188,9 @@ export const opensankey_theme = extendTheme({
         toolbar_button_6,
         toolbar_main_button,
         welcome_button_license_description,
-        btn_documentation
+        btn_documentation,
+        button_is_spreadsheet,
+        button_is_spreadsheet_selected,
       }
     },
     ButtonGroup: {
