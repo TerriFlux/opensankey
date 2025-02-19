@@ -22,6 +22,7 @@ import { ClassTemplate_LinkElementOSP } from './LinkOSP'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { ClassTemplate_NodeElementOSP } from './NodeOSP'
 import { ClassTemplate_SankeyOSP } from './SankeyOSP'
+import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 
 export interface Type_SaveDiagramOptionsOSP extends Type_SaveDiagramOptions {
   only_current_view?: boolean
@@ -517,6 +518,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
         this._drawing_area.draw()
 
         this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
+        
+        this._history=new Class_ApplicationHistory(this._menu_configuration)
 
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()

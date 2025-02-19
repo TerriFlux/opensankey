@@ -78,7 +78,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
   // Attr for views
   private _heredited_attr: string[] = []
 
-  private _number_of_containers:number=0
+  private _number_of_containers: number = 0
 
   // CONSTRUCTOR ========================================================================
 
@@ -129,7 +129,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
     this.application_data.menu_configuration.updateComponentRelatedToContainers()
   }
 
-  public addContainerElement(){
+  public addContainerElement() {
     // We increase by two, in order to easyly swap elements
     // ie : element0 order = 0, element1 order = 2, element3 order = 4
     // to increase element 0 order, juste add 3
@@ -153,7 +153,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
         cont.displaying_order = new_order
         new_order = new_order + 2
       })
-      // Update number of elements
+    // Update number of elements
     this._number_of_containers = new_order
   }
 
@@ -172,13 +172,75 @@ export abstract class ClassTemplate_DrawingAreaOSP
   }
 
   /**
-   * Delete all selected elements
+   * Delete all selected elements & save it's undo
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @param {boolean} deleteSelectedNodes
+   * @param {boolean} deleteSelectedLinks
+   * @memberof ClassTemplate_DrawingAreaOSP
    */
-  public deleteSelection() {
-    super.deleteSelection()
+  public deleteSelection(deleteSelectedNodes:boolean,deleteSelectedLinks:boolean) {
+    super.deleteSelection(deleteSelectedNodes,deleteSelectedLinks)
     this.deleteSelectedContainers()
+  }
+
+  /**
+   *Function that save in history the undo of dragging free label
+   *
+   * @memberof ClassTemplate_DrawingAreaOSP
+   */
+  public saveUndoLabelSelectedPos() {
+    const containers_selected = this.selected_containers_list
+    const nodes_selected = this.selected_nodes_list
+    const dict_old_pos_label: { [x: string]: [number, number] } = {}
+    const dict_old_pos_node: { [x: string]: [number, number] } = {}
+    // Memorize for undo
+    containers_selected.forEach(n => {
+      dict_old_pos_label[n.id] = [n.display.position.x, n.display.position.y]
+    })
+    nodes_selected.forEach(n => {
+      dict_old_pos_node[n.id] = [n.display.position.x, n.display.position.y]
+    })
+    // undo function
+    const undo = () => {
+      containers_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
+      })
+      nodes_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
+      })
+      this.checkAndUpdateAreaSize()
+    }
+    this.application_data.history.saveUndo(undo)
+  }
+
+  /**
+   *Function that save in history the redo of dragging free label
+   *
+   * @memberof ClassTemplate_DrawingAreaOSP
+   */
+  public saveRedoLabelSelectedPos() {
+    const containers_selected = this.selected_containers_list
+    const nodes_selected = this.selected_nodes_list
+    const dict_old_pos_label: { [x: string]: [number, number] } = {}
+    const dict_old_pos_node: { [x: string]: [number, number] } = {}
+    // Memorize for redo
+    containers_selected.forEach(n => {
+      dict_old_pos_label[n.id] = [n.display.position.x, n.display.position.y]
+    })
+    nodes_selected.forEach(n => {
+      dict_old_pos_node[n.id] = [n.display.position.x, n.display.position.y]
+    })
+    // redo function
+    const redo = () => {
+      containers_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
+      })
+      nodes_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
+      })
+      this.checkAndUpdateAreaSize()
+    }
+    this.application_data.history.saveRedo(redo)
   }
 
   // COPY METHODS =======================================================================
@@ -192,7 +254,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
     // Attr for views
-    this._heredited_attr =  Object.assign([], drawing_area_to_copy._heredited_attr)
+    this._heredited_attr = Object.assign([], drawing_area_to_copy._heredited_attr)
   }
 
   // SAVING METHODS =====================================================================

@@ -41,6 +41,7 @@ import {
   Class_NodeAttribute,
   Class_NodeStyle
 } from '../deps/OpenSankey/Elements/NodeAttributes'
+import { Type_AnyNodeElement } from '../deps/OpenSankey/Elements/Node'
 
 // SPECIFIC FUNCTIONS *******************************************************************
 
@@ -94,7 +95,7 @@ export abstract class ClassTemplate_NodeElementOSP
    */
   protected _menu_config: Class_MenuConfigOSP
 
-  protected d3_selection_g_FO_illustration:d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_FO_illustration: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_image: d3.Selection<SVGImageElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_icon: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown> | null = null
 
@@ -343,13 +344,13 @@ export abstract class ClassTemplate_NodeElementOSP
     // Launch animation of output links from clicked node, the rest is done recursively from there
     this.branchAnimate(this.drawing_area.application_data as Type_GenericApplicationDataOSP, [], this.drawing_area.sankey.visible_nodes_list as unknown as Type_GenericNodeElementOSP[])
 
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
-    const nodes_to_process = this.sankey.visible_nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const nodes_to_process = this.sankey.visible_nodes_list.filter(n => !echangeTag || !n.hasGivenTag(echangeTag))
 
     // Compute longest possible path from clicked node (number of link before we get to a node without output link)
     // so we can determinate a timeout before reseting the sankey
     const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-    this.drawing_area.computeHorizontalIndex(this,nodes_to_process,0, [], [], horizontal_indexes_per_nodes_ids)
+    this.drawing_area.computeHorizontalIndex(this, nodes_to_process, 0, [], [], horizontal_indexes_per_nodes_ids)
 
     // Compute time to animate the whole sankey from clicked node
     let time_to_animate = 500
@@ -404,14 +405,14 @@ export abstract class ClassTemplate_NodeElementOSP
 
 
   protected _drawFO() {
-    if(!this.d3_selection)
+    if (!this.d3_selection)
       return
 
     this.d3_selection?.select('.node_fo').remove()
     if (!this.has_FO) {
       return
     }
-    this.d3_selection_g_FO_illustration=this.d3_selection?.append('foreignObject')
+    this.d3_selection_g_FO_illustration = this.d3_selection?.append('foreignObject')
       .attr('id', this.id + '_fo')
       .attr('class', 'node_fo')
       .attr('width', this.getShapeWidthToUse())
@@ -434,23 +435,23 @@ export abstract class ClassTemplate_NodeElementOSP
 
   protected _drawIllustrationImage() {
 
-    if(!this.d3_selection)
+    if (!this.d3_selection)
       return
-    this.d3_selection_g_image= this.d3_selection?.append('image')
+    this.d3_selection_g_image = this.d3_selection?.append('image')
       .attr('id', 'image_node_' + this.id)
       .attr('class', 'illustration image')
       .attr('xlink:href', this.image_src)
-      .attr('xmlns:xlink','http://www.w3.org/1999/xlink')
-      .attr('height', this.getShapeHeightToUse()+'px')
-      .attr('width', this.getShapeWidthToUse()+'px')
-      .style('height', this.getShapeHeightToUse()+'px')
-      .style('width', this.getShapeWidthToUse()+'px')
+      .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+      .attr('height', this.getShapeHeightToUse() + 'px')
+      .attr('width', this.getShapeWidthToUse() + 'px')
+      .style('height', this.getShapeHeightToUse() + 'px')
+      .style('width', this.getShapeWidthToUse() + 'px')
   }
 
   protected _drawIllustrationIcon() {
-    if(!this.d3_selection)
+    if (!this.d3_selection)
       return
-    this.d3_selection_g_icon= this.d3_selection?.append('svg')
+    this.d3_selection_g_icon = this.d3_selection?.append('svg')
       .attr('id', 'icon_node_' + this.id)
       .attr('class', 'illustration icon_node')
       .attr('viewBox', this.iconViewBox ? this.iconViewBox : '0 0 1000 1000')
@@ -571,7 +572,7 @@ export abstract class ClassTemplate_NodeElementOSP
     }
   }
 
-  protected override _orderD3Elements(){
+  protected override _orderD3Elements() {
     super._orderD3Elements()
     this.d3_selection_g_FO_illustration?.raise()
     this.d3_selection_g_image?.raise()

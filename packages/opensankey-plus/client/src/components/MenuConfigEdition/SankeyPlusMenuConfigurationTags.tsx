@@ -1,6 +1,6 @@
 // External imports
 import * as d3 from 'd3'
-import React, { useState, FunctionComponent } from 'react'
+import React, { useState, FunctionComponent, MutableRefObject, useRef } from 'react'
 import {
   FaEye,
   FaEyeSlash,
@@ -31,7 +31,7 @@ import {
 import type {
   FType_SankeySettingsEditionElementTags
 } from './types/SankeyMenuConfigurationTagsTypes'
-import type {
+import {
   Class_Tag,
   Class_TagGroup,
   tag_banner_type,
@@ -40,7 +40,10 @@ import type {
   Class_LevelTagGroup,
   Class_DataTagGroup,
   Class_NodeTagGroup,
-  Class_FluxTagGroup
+  Class_FluxTagGroup,
+  Class_ProtoTag,
+  Class_ProtoLevelTag,
+  Class_ProtoTagGroup,
 } from '../../deps/OpenSankey/types/Tag'
 
 // Local functions / components
@@ -50,6 +53,8 @@ import {
   OSTooltip
 } from '../../deps/OpenSankey/types/Utils'
 import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
+import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Link'
+import { ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -179,10 +184,27 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
    * Button handler for tag adding in current tag group
    */
   const handleAddTagButton = () => {
-    // Create default tag in current tag group
-    tags_group_entry.addDefaultTag()
-    // Full update
-    updateThisAndRelatedComponents()
+    // Create new default tag
+    let tag: Class_ProtoTag | Class_ProtoLevelTag
+    const _handleAddTagButton = () => {
+      // Create default tag in current tag group
+      tag = tags_group_entry.addDefaultTag()
+      // Full update
+      updateThisAndRelatedComponents()
+    }
+
+    const inv_handleAddTagGrpButton = () => {
+      // Delete given tag
+      tag.delete()
+      // Update menus
+      updateThisAndRelatedComponents()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleAddTagGrpButton)
+    new_data.history.saveRedo(_handleAddTagButton)
+    // Execute original attr mutation
+    _handleAddTagButton()
   }
 
   /**
@@ -190,18 +212,34 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
    */
   const handleAddTagGrpButton = () => {
     // Create new default tag group
-    const tag_group = new_data.drawing_area.sankey.createTagGroup(elementTagNameProp)
-    // Toogle saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // Update components related to tags in menu config or toolbar
-    new_data.menu_configuration.updateAllComponentsRelatedToTags()
-    // Update this menu
-    setTagsGroupEntryId(tag_group.id)
+    let tag_group: Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup | Class_LevelTagGroup
 
-    // if we create a data_tag group then we add it selector in the navbar
-    if (elementTagNameProp === 'data_taggs') {
-      new_data.menu_configuration.ref_to_menu_updater.current()
+    const _handleAddTagGrpButton = () => {
+      tag_group = new_data.drawing_area.sankey.createTagGroup(elementTagNameProp)
+      // Toogle saving indicator
+      new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      // Update components related to tags in menu config or toolbar
+      new_data.menu_configuration.updateAllComponentsRelatedToTags()
+      // Update this menu
+      setTagsGroupEntryId(tag_group.id)
+
+      // if we create a data_tag group then we add it selector in the navbar
+      if (elementTagNameProp === 'data_taggs') {
+        new_data.menu_configuration.ref_to_menu_updater.current()
+      }
+      updateThisAndRelatedComponents()
     }
+    const inv_handleAddTagGrpButton = () => {
+      new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tag_group)
+      // Update menus
+      updateThisAndRelatedComponents()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleAddTagGrpButton)
+    new_data.history.saveRedo(_handleAddTagGrpButton)
+    // Execute original attr mutation
+    _handleAddTagGrpButton()
   }
 
   /**
@@ -209,10 +247,80 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
    * @param {Class_Tag | Class_LevelTag | Class_DataTag} tag
    */
   const handleDelTag = (tag: Class_Tag | Class_LevelTag | Class_DataTag) => {
-    // Delete given tag
-    tag.delete()
-    // Update menus
-    updateThisAndRelatedComponents()
+    const dict_ref_element = tag.references.map(el => el.id)
+    // old_val is an organised dict that contain :
+    // - 1 : Tag id
+    // - 2 : Tag Name
+    // - 3 : ids of elements Refs (nodes,links,...)
+    // - 4 : Tag Group
+    // - 5 : Tag color
+    // - 6 : if It's a dataTag then save link value associated to this of each links
+
+    type typeDictTag = {
+      id: string,
+      name: string,
+      elementsRef: string[],
+      grp: (Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup),
+      color: string,
+      dict_link_value: { [_: string]: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined]; } }
+
+    }
+
+    const old_val: typeDictTag
+      = {
+      id: tag.id,
+      name: tag.name,
+      elementsRef: dict_ref_element,
+      grp: tag.group,
+      color: tag.color,
+      dict_link_value: {}
+    }
+
+    if (tag instanceof Class_DataTag) {
+      // Save value of each links in dict
+      new_data.drawing_area.sankey.links_list.forEach(l => {
+        old_val.dict_link_value[l.id] = l.getAllValues()
+      })
+    }
+
+    const _handleDelTag = () => {
+      // Delete given tag
+      tag.delete()
+
+      // If we delete a dataTag that is selected, we select another one (the first of the remaining group)  
+      if (tag instanceof Class_DataTag && tag.is_selected) {
+        tag.group.tags_list[0].setSelected()
+      }
+      // Update menus
+      updateThisAndRelatedComponents()
+    }
+
+    const inv_handleDelTag = () => {
+      // Special treatement if its a dataTag we are restoring
+      if (tag instanceof Class_DataTag) {
+        new_data.drawing_area.sankey.links_list.forEach(l => {
+          const l_values = old_val.dict_link_value[l.id]
+          const val_to_restor = Object.values(l_values).filter(l_val => {
+            return l_val[1] !== undefined && l_val[1].includes(tag)
+          })
+          if (val_to_restor[0][1])
+            new_data.drawing_area.sankey.links_dict[l.id].setValuesForDataTags(val_to_restor[0][1], val_to_restor[0][0])
+        })
+      }
+
+      // Recreate tag deleted & associate it to ref of deleted tag
+      const grp = old_val.grp as Class_ProtoTagGroup
+      const clone_tag = grp.addTag(old_val.name, old_val.id)
+      clone_tag.setReferenceFromIds(old_val.elementsRef)
+      clone_tag.color = old_val.color
+      updateThisAndRelatedComponents()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleDelTag)
+    new_data.history.saveRedo(_handleDelTag)
+    // Execute original attr mutation
+    _handleDelTag()
   }
 
   /**
@@ -220,11 +328,89 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
    *
    * @param {Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup} tagg
    */
-  const handleDelGroupTag = (tagg: Class_NodeTagGroup | Class_FluxTagGroup | Class_LevelTagGroup | Class_DataTagGroup) => {
-    // Delete given tag group
-    new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tagg)
-    // Update menus
-    updateThisAndRelatedComponents()
+  const handleDelGroupTag = (tagg: Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup) => {
+    // old_val is an organised dict that contain :
+    // - 1 : Tagg id
+    // - 2 : Tagg Name
+    // - 3 : Tagg show_legend
+    // - 4 : Tagg banner
+    // - 5 : Dict containing all info concerning the tags of the group
+    // - 6 : if It's a dataTag then save link value associated to this of each links
+
+    type typeDictTag = {
+      id: string,
+      name: string,
+      activated: boolean,
+      banner: tag_banner_type,
+      dict_tag: { [x: string]: [id: string, name: string, color: string, elementsRef: string[]] }
+      dict_link_value: { [_: string]: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined]; } }
+    }
+
+
+    const old_val: typeDictTag
+      = {
+      id: tagg.id,
+      name: tagg.name,
+      activated: tagg.show_legend,
+      banner: tagg.banner,
+      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+      dict_link_value: {}
+    }
+
+    if (tagg instanceof Class_DataTagGroup) {
+      new_data.drawing_area.sankey.links_list.forEach(l => {
+        old_val.dict_link_value[l.id] = l.getAllValues()
+      })
+    }
+
+    const _handleDelGroupTag = () => {
+      // Delete given tag group
+      new_data.drawing_area.sankey.removeTagGroup(elementTagNameProp, tagg)
+      // Update menus
+      updateThisAndRelatedComponents()
+    }
+
+    const inv_handleDelGroupTag = () => {
+      let clone_tagg: Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup
+
+      // Recreate Group tag to correct type 
+      if (tagg instanceof Class_NodeTagGroup) {
+        clone_tagg = new_data.drawing_area.sankey.addNodeTagGroup(old_val.id, old_val.name, false)
+      } else if (tagg instanceof Class_FluxTagGroup) {
+        clone_tagg = new_data.drawing_area.sankey.addFluxTagGroup(old_val.id, old_val.name, false)
+      } else {
+        clone_tagg = new_data.drawing_area.sankey.addDataTagGroup(old_val.id, old_val.name, false)
+      }
+
+      // Special treatement if its a dataTag group we are restoring
+      if (tagg instanceof Class_DataTagGroup) {
+        new_data.drawing_area.sankey.links_list.forEach(l => {
+          const l_values = old_val.dict_link_value[l.id]
+          const val_to_restor = Object.values(l_values)
+          if (val_to_restor[0][1])
+            new_data.drawing_area.sankey.links_dict[l.id].setValuesForDataTags(val_to_restor[0][1], val_to_restor[0][0])
+        })
+      }
+
+
+
+      Object.values(old_val.dict_tag).forEach(tag => {
+        const n_tag = clone_tagg.addTag(tag[1], tag[0])
+        n_tag.setReferenceFromIds(tag[3])
+        n_tag.color = tag[2]
+      })
+      clone_tagg.banner = old_val.banner
+      clone_tagg.show_legend = old_val.activated
+
+      clone_tagg.updateTagsReferences()
+
+      updateThisAndRelatedComponents()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleDelGroupTag)
+    new_data.history.saveRedo(_handleDelGroupTag)
+    _handleDelGroupTag()
   }
 
   /**
@@ -236,10 +422,198 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     tag_group: Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup,
     new_banner_type: tag_banner_type
   ) => {
-    // UPdate banner for given tag group
-    tag_group.banner = new_banner_type
-    // Update menus
-    updateThisAndRelatedComponents()
+    const old_banner = tag_group.banner
+
+    const _handleBanner = () => {
+      // UPdate banner for given tag group
+      tag_group.banner = new_banner_type
+      // Update menus
+      updateThisAndRelatedComponents()
+    }
+
+    const inv_handleBanner = () => {
+      // UPdate banner for given tag group
+      tag_group.banner = old_banner
+      // Update menus
+      updateThisAndRelatedComponents()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleBanner)
+    new_data.history.saveRedo(_handleBanner)
+    // Execute original attr mutation
+    _handleBanner()
+  }
+
+  const handleTagColor = (tag: Class_Tag | Class_DataTag | Class_LevelTag, _: string) => {
+    const old_color = tag.color
+    const _handleTagColor = () => {
+      // Update tag color
+      tag.color = _
+      // Update only this menu
+      updateThisAndToggleSavingIndicator()
+    }
+
+    const inv_handleTagColor = () => {
+      // Update tag color
+      tag.color = old_color
+      // Update only this menu
+      updateThisAndToggleSavingIndicator()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleTagColor)
+    new_data.history.saveRedo(_handleTagColor)
+    // Execute original attr mutation
+    _handleTagColor()
+  }
+
+  const toggleTagSelected = (tag: Class_Tag | Class_DataTag | Class_LevelTag) => {
+
+    const _toggleTagSelected = () => {
+      // Inverse selection
+      tag.toogleSelected()
+      // Update only this menu
+      updateThisAndToggleSavingIndicator()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(_toggleTagSelected)
+    new_data.history.saveRedo(_toggleTagSelected)
+    // Execute original attr mutation
+    _toggleTagSelected()
+  }
+  
+  /**
+   * Button hadler for color randomised, can be undone
+   *
+   */
+  const handleRandColor = () => {
+
+    const dict_old_val = Object.fromEntries(tags_entry.map(tag => [tag.id, tag.color]))
+    const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
+    const nb_of_colors = tags_entry.length
+
+    const _handleRandColor = () => {
+      for (const i in d3.range(nb_of_colors)) {
+        tags_entry[i].color =
+          d3.color(color_selected(+i / nb_of_colors))?.formatHex() ?? default_grey_color
+      }
+      // Update only this menu
+      updateThisAndToggleSavingIndicator()
+    }
+
+    const inv_handleRandColor = () => {
+      tags_entry.forEach(tag => {
+        tag.color = dict_old_val[tag.id]
+      })
+      // Update only this menu
+      updateThisAndToggleSavingIndicator()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleRandColor)
+    new_data.history.saveRedo(_handleRandColor)
+    // Execute original attr mutation
+    _handleRandColor()
+  }
+
+  /**
+   * Button hadler for color shuffle, can be undone
+   *
+   */
+  const handleShuffleColor = () => {
+
+    const dict_old_val = Object.fromEntries(tags_entry.map(tag => [tag.id, tag.color]))
+    const colors = tags_entry.map(tag => tag.color)
+    let nb_of_colors = colors.length
+
+    const _handleShuffleColor = () => {
+      // Color swaping between tags
+      if (nb_of_colors > 2) {
+        // Algo for 3+ colors
+        for (const i in d3.range(nb_of_colors)) {
+          nb_of_colors = colors.length
+          const color_to_select_id = GetRandomInt(nb_of_colors)
+          const color_to_select = colors.splice(color_to_select_id, 1)
+          if (color_to_select != undefined && color_to_select != null) {
+            tags_entry[i].color = color_to_select[0]
+          }
+          else {
+            tags_entry[i].color = default_grey_color
+          }
+        }
+      }
+      else if (nb_of_colors > 1) {
+        // Algo for 2 colors
+        // Do nothing for 1 color
+        tags_entry[0].color = colors[1]
+        tags_entry[1].color = colors[0]
+      }
+      // Update only this menu
+      updateThisAndToggleSavingIndicator()
+    }
+
+    const inv_handleShuffleColor = () => {
+      tags_entry.forEach(tag => {
+        tag.color = dict_old_val[tag.id]
+      })
+      // Update only this menu
+      updateThisAndToggleSavingIndicator()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleShuffleColor)
+    new_data.history.saveRedo(_handleShuffleColor)
+    // Execute original attr mutation
+    _handleShuffleColor()
+  }
+
+  /**
+   * Button hadler for palette selector, can be undone
+   *
+   * @param {string} _
+   */
+  const handleUsePalette = (_: string) => {
+    // If custom color map, do nothing
+    if (_ === 'custom') {
+      return
+    }
+
+    const dict_old_val = Object.fromEntries(tags_entry.map(tag => [tag.id, tag.color]))
+
+
+    const _handleUsePalette = () => {
+      // Get random colors from color palette
+      const nb_tags = tags_entry.length
+      const colors = colormap({
+        colormap: _,
+        nshades: nb_tags,
+        format: 'hex',
+        alpha: 1
+      })
+      // Apply colors to tags
+      tags_entry.forEach(
+        (tag, i) => tag.color = colors[i]
+      )
+      // Update displayed menu
+      setColorMap(_)
+      updateThisAndToggleSavingIndicator()
+    }
+
+    const inv_handleUsePalette = () => {
+      tags_entry.forEach(tag => {
+        tag.color = dict_old_val[tag.id]
+      })
+      // Update only this menu
+      updateThisAndToggleSavingIndicator()
+    }
+
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_handleUsePalette)
+    new_data.history.saveRedo(_handleUsePalette)
+    // Execute original attr mutation
+    _handleUsePalette()
   }
 
   // Tags tables ------------------------------------------------------------------------
@@ -279,16 +653,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
         <Button
           variant='toolbar_button_3'
           height='100%'
-          onClick={() => {
-            const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-            const nb_of_colors = tags_entry.length
-            for (const i in d3.range(nb_of_colors)) {
-              tags_entry[i].color =
-                d3.color(color_selected(+i / nb_of_colors))?.formatHex() ?? default_grey_color
-            }
-            // Update only this menu
-            updateThisAndToggleSavingIndicator()
-          }}>
+          onClick={handleRandColor}>
           <FaPalette />
         </Button>
       </OSTooltip>
@@ -298,33 +663,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
         <Button
           variant='toolbar_button_4'
           height='100%'
-          onClick={() => {
-            // Color swaping between tags
-            const colors = tags_entry.map(tag => tag.color)
-            let nb_of_colors = colors.length
-            if (nb_of_colors > 2) {
-              // Algo for 3+ colors
-              for (const i in d3.range(nb_of_colors)) {
-                nb_of_colors = colors.length
-                const color_to_select_id = GetRandomInt(nb_of_colors)
-                const color_to_select = colors.splice(color_to_select_id, 1)
-                if (color_to_select != undefined && color_to_select != null) {
-                  tags_entry[i].color = color_to_select[0]
-                }
-                else {
-                  tags_entry[i].color = default_grey_color
-                }
-              }
-            }
-            else if (nb_of_colors > 1) {
-              // Algo for 2 colors
-              // Do nothing for 1 color
-              tags_entry[0].color = colors[1]
-              tags_entry[1].color = colors[0]
-            }
-            // Update only this menu
-            updateThisAndToggleSavingIndicator()
-          }}>
+          onClick={handleShuffleColor}>
           <FaRandom />
         </Button>
       </OSTooltip>
@@ -335,25 +674,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
           variant='menuconfigpanel_option_select'
           onChange={
             (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              // If custom color map, do nothing
-              if (evt.target.value === 'custom') {
-                return
-              }
-              // Get random colors from color palette
-              const nb_tags = tags_entry.length
-              const colors = colormap({
-                colormap: evt.target.value,
-                nshades: nb_tags,
-                format: 'hex',
-                alpha: 1
-              })
-              // Apply colors to tags
-              tags_entry.forEach(
-                (tag, i) => tag.color = colors[i]
-              )
-              // Update displayed menu
-              setColorMap(evt.target.value)
-              updateThisAndToggleSavingIndicator()
+              handleUsePalette(evt.target.value)
             }}
           value={color_map}
         >
@@ -404,11 +725,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
             <Th>
               {t('Tags.Couleur')}
             </Th>
-            {/* {elementNameProp === 'nodes' ?
-              <Th>
-                {t('Tags.Forme')}
-              </Th> : <></>
-            } */}
           </Tr>
         </Thead>
 
@@ -450,6 +766,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                                 updateThisAndRelatedComponents()
                               }
                             } />
+
+
                         </InputGroup>
                       </OSTooltip>
                     </Td>
@@ -464,10 +782,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                               id={tag.id}
                               onClick={
                                 () => {
-                                  // Inverse selection
-                                  tag.toogleSelected()
-                                  // Update only this menu
-                                  updateThisAndToggleSavingIndicator()
+                                  toggleTagSelected(tag)
                                 }}
                             >
                               {tag.is_selected ? <FaEye /> : <FaEyeSlash />}
@@ -484,34 +799,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                           value={tag.color}
                           onChange={
                             evt => {
-                              // Update tag color
-                              tag.color = evt.target.value
-                              // Update only this menu
-                              updateThisAndToggleSavingIndicator()
+                              handleTagColor(tag, evt.target.value)
                             }} />
                       </OSTooltip>
                     </Td>
-                    {/* Chosir la forme du noeud  */}
-                    {
-                      /* {elementNameProp === 'nodes' ?
-                        <Td>
-                          <OSTooltip label={t('Tags.tooltips.forme')}>
-                            <Select variant='menuconfigpanel_option_select_table'
-                              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                                tags_group_entry.tags_dict[tag_key].shape = evt.target.value
-                                redrawGenereal()
-                                refreshThis.toggle()
-                              }}
-                              value={tags_group_entry.tags_dict[tag_key].shape as string}
-                            >
-                              <option key={'rect' + i} id='rect' value='rect'>Rectangle</option>
-                              <option key={'circle' + i} id='circle' value='ellipse'>Circle</option>
-                            </Select>
-                          </OSTooltip>
-                        </Td> :
-                        <></>
-                      */
-                    }
+
                   </Tr>
                 )
               }) :
