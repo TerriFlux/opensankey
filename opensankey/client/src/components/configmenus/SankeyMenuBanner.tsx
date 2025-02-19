@@ -589,10 +589,10 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
 
   // ===================Create hooks used in this component========================
 
-  const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.drawing_area.show_structure))
+  const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.drawing_area.type_data))
   const [s_force_update, sforceUpdate] = useBoolean()
-  const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.drawing_area.show_structure)
-  const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.drawing_area.show_structure as 'data' | 'structure' | 'reconciled') : 'reconciled')
+  const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.drawing_area.type_data)
+  const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.drawing_area.type_data as 'data' | 'structure' | 'reconciled') : 'reconciled')
   const [, setCount] = useState(0)
   new_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
   let btn_mouse_mode_edition = <></>
@@ -634,7 +634,7 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
           <Select
             value={s_type_value}
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              new_data.drawing_area.show_structure = evt.target.value as 'data' | 'structure' | 'reconciled'
+              new_data.drawing_area.type_data = evt.target.value as 'data' | 'structure' | 'reconciled'
               sTypeValue(evt.target.value as 'data' | 'structure' | 'reconciled')
               if (evt.target.value === 'reconciled') {
                 sIsDataTypeReconcilied(true)
@@ -646,7 +646,10 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
             }}>
             <option key='structure' value='structure' >{t('Banner.t_v_s')}</option>
             <option key='data' value='data' >{t('Banner.t_v_c')}</option>
-            <option key='reconciled' value='reconciled' >{t('Banner.t_v_r')}</option>
+            {/* If data is reconcilied add option*/}
+            {new_data.is_reconcilied ?
+              <option key='reconciled' value='reconciled' >{t('Banner.t_v_r')}</option> : <></>
+            }
           </Select>
         </Box>
 
@@ -658,9 +661,9 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
             {t('Banner.indetermined_value')}
           </Box>
           <Select
-            value={new_data.drawing_area.show_structure}
+            value={new_data.drawing_area.type_data}
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              new_data.drawing_area.show_structure = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
+              new_data.drawing_area.type_data = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
               setCount(a => a + 1)
               redrawNodeLinkLegend()
             }}>
@@ -729,7 +732,7 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
   </> :
     <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
       <Button variant={'success'} onClick={() => {
-        new_data.drawing_area.show_structure = new_data.drawing_area.show_structure == 'reconciled' ? 'structure' : 'reconciled'
+        new_data.drawing_area.type_data = new_data.drawing_area.type_data == 'reconciled' ? 'structure' : 'reconciled'
         setCount(a => a + 1)
         redrawNodeLinkLegend()
 

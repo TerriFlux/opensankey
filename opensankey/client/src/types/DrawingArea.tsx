@@ -54,7 +54,7 @@ declare const window: Window &
 
 // CONSTANTS ****************************************************************************
 
-const initial_show_structure = 'reconciled'
+const initial_show_structure = 'data'
 const default_grid_size = 50
 const default_grid_visible = true
 const default_horizontal_spacing = 200
@@ -263,7 +263,7 @@ export abstract class ClassTemplate_DrawingArea
   private _filter_label: number = 0
 
   // Display
-  private _show_structure: Type_Structure = initial_show_structure
+  private _type_data: Type_Structure = initial_show_structure
 
   // Objects containeds in drawing area -------------------------------------------------
 
@@ -405,7 +405,7 @@ export abstract class ClassTemplate_DrawingArea
     this._number_of_elements = drawing_area_to_copy._number_of_elements
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
-    this._show_structure = drawing_area_to_copy._show_structure
+    this._type_data = drawing_area_to_copy._type_data
     this._vertical_spacing  = drawing_area_to_copy._vertical_spacing
     this._width = drawing_area_to_copy._width
   }
@@ -455,7 +455,7 @@ export abstract class ClassTemplate_DrawingArea
     if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
     json_object['filter_label'] = this._filter_label
     json_object['filter_link_value'] = this._filter_link_value
-    json_object['show_structure'] = this._show_structure
+    json_object['show_structure'] = this._type_data
     json_object['number_of_elements'] = this._number_of_elements
     // Dump with json of contained elements
     const out = {
@@ -515,7 +515,7 @@ export abstract class ClassTemplate_DrawingArea
     this._number_of_elements = getNumberFromJSON(json_object, 'number_of_elements', this._number_of_elements)
     this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._scaleValueToPx.domain([0, this._scale])
-    this._show_structure = getStringFromJSON(json_object, 'show_structure', this._show_structure) as Type_Structure
+    this._type_data = getStringFromJSON(json_object, 'show_structure', this._type_data) as Type_Structure
     this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
     this._width = getNumberFromJSON(json_object, 'width', this._width)
 
@@ -2839,8 +2839,8 @@ export abstract class ClassTemplate_DrawingArea
   public get filter_label(): number { return this._filter_label }
   public set filter_label(value: number) { this._filter_label = value }
 
-  public get show_structure(): Type_Structure { return this._show_structure }
-  public set show_structure(value: Type_Structure) { this._show_structure = value }
+  public get type_data(): Type_Structure { return this._type_data }
+  public set type_data(value: Type_Structure) { this._type_data = value }
 
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
