@@ -166,6 +166,9 @@ export abstract class ClassAbstract_ProtoLevelTagGroup {
 }
 
 export abstract class ClassAbstract_ProtoTag {
+
+  public abstract setReferenceFromIds(list_id:string[]):void
+
   public abstract get id(): string
   public abstract get name(): string
   public abstract get color(): string
