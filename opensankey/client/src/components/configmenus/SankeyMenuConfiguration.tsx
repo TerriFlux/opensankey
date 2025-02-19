@@ -234,7 +234,8 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   stepper = false,
   step = 1,
   unit_text = undefined,
-  fixed_dec = 2
+  fixed_dec = 2,
+  disabled=false
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
@@ -260,6 +261,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   return <InputGroup>
     <NumberInput
       allowMouseWheel
+      isDisabled={disabled}
       variant={variant}
       min={minimum_value??undefined}
       max={maximum_value}
@@ -389,7 +391,8 @@ export type FCType_ConfigMenuNumberInput = {
   stepper?: boolean,
   step?: number,
   unit_text?: string,
-  fixed_dec?: number
+  fixed_dec?: number,
+  disabled?:boolean
 }
 
 export type FCType_ConfigMenuNumberOrUndefinedInput = {

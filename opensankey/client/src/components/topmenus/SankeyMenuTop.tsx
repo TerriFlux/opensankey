@@ -640,7 +640,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             <Box
               gridRow='2'
             >
-              {'Undo'}
+              {t('Menu.undo')}
             </Box>
           </Box>
         </Button>
@@ -669,7 +669,7 @@ export const OpenSankeyMenusDictBuilder: FType_OpenSankeyMenusDictBuilder = (
             <Box
               gridRow='2'
             >
-              {'Redo'}
+              {t('Menu.redo')}
             </Box>
           </Box>
         </Button>
