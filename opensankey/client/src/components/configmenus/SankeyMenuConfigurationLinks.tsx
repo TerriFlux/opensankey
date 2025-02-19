@@ -24,7 +24,8 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import {
-  Type_GenericLinkElement
+  Type_GenericLinkElement,
+  Type_GenericNodeElement
 } from '../../types/Types'
 
 /*************************************************************************************************/
@@ -132,18 +133,32 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
    *
    */
   const addLinkConfig = () => {
+    const sankey=new_data.drawing_area.sankey
+    const nodeToDel:{list:Type_GenericNodeElement[]}={list:[]}
+    let presentNode=0
     const _addLinkConfig = () => {
+      presentNode=sankey.nodes_list.length
       const new_link = new_data.drawing_area.addNewDefaultLinkToSankey()
       //Deselect previously selected links
       new_data.drawing_area.purgeSelectionOfLinks()
       // Add link to selection
       new_data.drawing_area.addLinkToSelection(new_link)
+
+      if (presentNode == 0) {
+        nodeToDel.list.push(sankey.nodes_list[0])
+        nodeToDel.list.push(sankey.nodes_list[1])
+      }
+      else if (presentNode == 1) {
+        nodeToDel.list.push(sankey.nodes_list[1])
+      }
       // Toogle saving indicator
       refreshThisAndUpdateRelatedComponents()
     }
 
     const inv_addLinkConfig = () => {
-      new_data.drawing_area.deleteLink(new_data.drawing_area.sankey.links_list[new_data.drawing_area.sankey.links_list.length - 1])
+      nodeToDel.list.forEach(n=>sankey.drawing_area.deleteNode(n))
+      if(presentNode>1)
+        new_data.drawing_area.deleteLink(new_data.drawing_area.sankey.links_list[new_data.drawing_area.sankey.links_list.length - 1])
       // Toogle saving indicator
       refreshThisAndUpdateRelatedComponents()
     }

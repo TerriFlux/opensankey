@@ -31,6 +31,8 @@ export abstract class ClassAbstract_LinkElement
   public abstract drawWithNodes(): void;
   public abstract addDataTag(_: ClassAbstract_ProtoTag): void;
   public abstract removeDataTag(_: ClassAbstract_ProtoTag): void;
+  public abstract addTag(_: ClassAbstract_ProtoTag): void
+  public abstract removeTag(_: ClassAbstract_ProtoTag): void;
   public abstract getAllValues(): { [_: string]: [ClassAbstract_LinkValue, ClassAbstract_ProtoTag[] | undefined]; };
   public abstract hasGivenTag(tag: ClassAbstract_ProtoTag):boolean
   // Mandatory getters / setters
