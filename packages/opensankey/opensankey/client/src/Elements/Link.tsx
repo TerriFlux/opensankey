@@ -3078,20 +3078,20 @@ export abstract class ClassTemplate_LinkElement
     if (this.drawing_area.type_data === 'structure')
       return null
 
-    if (this.drawing_area.show_structure === 'data') {
+    if (this.drawing_area.type_data === 'data') {
       const value = this.value
       // Cast as number
       if (value !== null && value.result_value) return value.data_value
       else return null
     }
-    if (this.drawing_area.show_structure === 'free_interval') {
+    if (this.drawing_area.type_data === 'free_interval') {
       const value = this.value
       // Cast as number
       if (value !== null && value.result_value) return value.result_value
       if (value !== null && value.data_value) return value.data_value
       else return null
     }
-    if (this.drawing_area.show_structure === 'free_value') {
+    if (this.drawing_area.type_data === 'free_value') {
       const value = this.value
       // Cast as number
       if (value !== null && value.result_value) return value.result_value
@@ -3099,7 +3099,7 @@ export abstract class ClassTemplate_LinkElement
       else return null
     }    
 
-    if (this.drawing_area.show_structure === 'reconciled') {
+    if (this.drawing_area.type_data === 'reconciled') {
       const value = this.value
       // Cast as number
       if (value !== null && value.result_value) return value.result_value
@@ -3152,7 +3152,7 @@ export abstract class ClassTemplate_LinkElement
 
   public get data_label() {
     // Init
-    if (this.drawing_area.show_structure === 'free_interval' ) {
+    if (this.drawing_area.type_data === 'free_interval' ) {
       if ( this.value!.free_mini != undefined ) {
         return '['+this.value!.free_mini+','+this.value!.free_maxi+']'           
       }
@@ -3284,7 +3284,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public get thickness() {
-    if (this.drawing_area.show_structure === 'reconciled' ) {
+    if (this.drawing_area.type_data === 'reconciled' ) {
       if (this.value?.free_mini != undefined) {
         return 2
       }
@@ -3615,7 +3615,7 @@ export abstract class ClassTemplate_LinkElement
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this.drawControlPoint() }
 
   public get shape_is_structure() {
-    if (this.sankey.drawing_area.show_structure == 'reconciled') {
+    if (this.sankey.drawing_area.type_data == 'reconciled') {
       if (this.value?.free_mini != undefined) {
         return true
       }
