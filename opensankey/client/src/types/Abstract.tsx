@@ -90,7 +90,7 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract set pointer_pos(_: [number, number])
   public abstract get filter_label(): number
   public abstract set filter_label(_: number)
-  public abstract get show_structure(): string
+  public abstract get type_data(): string
   // MAndatory setters
   public abstract set scale(_: number)
 }
