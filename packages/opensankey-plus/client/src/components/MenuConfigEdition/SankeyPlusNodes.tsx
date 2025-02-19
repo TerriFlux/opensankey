@@ -100,6 +100,41 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
 
   // Functions we can undo ========================================== 
 
+  /**
+   *Update visibility of selected nodes & save it's undo
+   *
+   * @param {boolean} _
+   */
+  const updateNodeShapeVisibility = (_: boolean) => {
+    const dict_old_value: { [x: string]: boolean } = {}
+    selected_nodes.forEach(n => {
+      dict_old_value[n.id] = n.shape_visible
+    })
+    const _updateNodeShapeVisibility = () => {
+      selected_nodes.forEach(n => {
+        n.shape_visible = _
+
+      })
+      redrawAndRefresh()
+    }
+
+    const inv_updateNodeShapeVisibility = () => {
+      selected_nodes.forEach(n => {
+        n.shape_visible = dict_old_value[n.id]
+      })
+      redrawAndRefresh()
+    }
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateNodeShapeVisibility)
+    new_data_plus.history.saveRedo(_updateNodeShapeVisibility)
+    // Execute original attr mutation
+    _updateNodeShapeVisibility()
+  }
+
+  /**
+   *Update icon visibility of selected nodes & save it's undo
+   *
+   */
   const updateNodeIconVisibility = () => {
     const dict_old_value: { [x: string]: [boolean, boolean] } = {}
     selected_nodes.forEach(n => {
@@ -128,6 +163,11 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     _updateNodeIconVisibility()
   }
 
+  /**
+   *Update icon color of selected nodes & save it's undo
+   *
+   * @param {string} _
+   */
   const updateNodeIconColor = (_: string) => {
     const dict_old_value: { [x: string]: string } = {}
     selected_nodes.forEach(n => {
@@ -153,6 +193,11 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     _updateNodeIconColor()
   }
 
+  /**
+   *Update icon color sustainability of selected nodes & save it's undo
+   *
+   * @param {boolean} _
+   */
   const updateNodeIconColorSustainable = (_: boolean) => {
     const dict_old_value: { [x: string]: boolean } = {}
     selected_nodes.forEach(n => {
@@ -178,6 +223,11 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     _updateNodeIconColorSustainable()
   }
 
+  /**
+   *Update illustration type to none of selected nodes & save it's undo
+   *
+   *
+   */
   const setIllustrationVisibilityToNone = () => {
     const dict_old_value: { [x: string]: [boolean, boolean] } = {}
     selected_nodes.forEach(n => {
@@ -206,6 +256,11 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     _setIllustrationVisibilityToNone()
   }
 
+  /**
+   *Update image of selected nodes & save it's undo
+   *
+   *
+   */
   const updateNodeImageVisibility = () => {
     const dict_old_value: { [x: string]: [boolean, boolean] } = {}
     selected_nodes.forEach(n => {
@@ -234,6 +289,11 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     _updateNodeImageVisibility()
   }
 
+  /**
+   *Update image source of selected nodes & save it's undo
+   *
+   * @param {string} _
+   */
   const updateNodeImageSrc = (_: string) => {
     const dict_old_value: { [x: string]: string } = {}
     selected_nodes.forEach(n => {
@@ -259,6 +319,11 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     _updateNodeImageSrc()
   }
 
+  /**
+   *Delete image of selected nodes & save it's undo
+   *
+   *
+   */
   const resetNodeImageSrc = () => {
     const dict_old_value: { [x: string]: string } = {}
     selected_nodes.forEach(n => {
@@ -439,11 +504,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
       variant='menuconfigpanel_option_checkbox'
       // isIndeterminate={isAllNodeVisible[1]}
       isChecked={isAllNodeVisible}
-      onChange={(evt) => {
-        selected_nodes.forEach(element => (element.shape_visible = evt.target.checked))
-
-        redrawAndRefresh()
-      }}
+      onChange={(evt) => updateNodeShapeVisibility(evt.target.checked)}
     >
       <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')} >
         {t('Noeud.apparence.Visibilité')}
@@ -570,6 +631,7 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
     // Execute original attr mutation
     _updateHyperlinkValue()
   }
+
   const node_hyperlink = hasHyperLink()
   // const data_plus = data as OSPData
   const content_image_tab = selected_nodes.length > 0 ?

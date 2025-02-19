@@ -25,12 +25,14 @@ import {
   TooltipValueSurcharge
 } from '../../deps/OpenSankey/types/Utils'
 import {
-  isAttributeOverloaded} from '../../deps/OpenSankey/Elements/Link'
+  isAttributeOverloaded
+} from '../../deps/OpenSankey/Elements/Link'
 import {
   default_link_value_label_nb_significant_digits,
   default_link_value_label_scientific_notation,
   default_link_value_label_significant_digits,
-  default_shape_is_dashed} from '../../deps/OpenSankey/Elements/LinkAttributes'
+  default_shape_is_dashed
+} from '../../deps/OpenSankey/Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../deps/OpenSankey/Elements/LinkAttributes'
 import {
   icon_open_modal
@@ -93,6 +95,29 @@ export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConf
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
 
+  // Function that can be undone ===================================
+  const updateGradientLinks = (_: boolean) => {
+    const dict_old_val = Object.fromEntries(elements.map(el => [el.id, el.shape_is_gradient]))
+    const list_node_to_redraw_arrow = menu_for_style ? [] : selected_links.map(l => l.target)
+
+    const _updateGradientLinks = () => {
+      elements.forEach(element => element.shape_is_gradient = _);
+      [...new Set(list_node_to_redraw_arrow)].forEach(n => n.drawLinksArrow())//Remove duplicate node in array then redraw link arrow of nodes
+      setForceUpdate(!forceUpdate)
+    }
+    const inv_updateGradientLinks = () => {
+      elements.forEach(element => element.shape_is_gradient = dict_old_val[element.id]);
+      [...new Set(list_node_to_redraw_arrow)].forEach(n => n.drawLinksArrow())//Remove duplicate node in array then redraw link arrow of nodes
+      setForceUpdate(!forceUpdate)
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateGradientLinks)
+    new_data_plus.history.saveRedo(_updateGradientLinks)
+    // Execute original attr mutation
+    _updateGradientLinks()
+  }
+
   return elements.length > 0 ? (
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
@@ -100,20 +125,7 @@ export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConf
       isIndeterminate={is_indeterminate}
       isChecked={elements[0].shape_is_gradient}
       iconColor={is_indeterminate ? '#78C2AD' : 'white'}
-      onChange={(evt) => {
-        const list_node_to_redraw_arrow: Type_GenericNodeElementOSP[] = []
-        elements.forEach(element => {
-          element.shape_is_gradient = evt.target.checked
-          if (!menu_for_style) {
-            list_node_to_redraw_arrow.push((element as Type_GenericLinkElementOSP).target)
-          }
-        });
-        //Remove duplicate node in array then redraw link arrow of nodes
-        [...new Set(list_node_to_redraw_arrow)].forEach(n => n.drawLinksArrow())
-        new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-        setForceUpdate(!forceUpdate)
-      }}>
+      onChange={(evt) => updateGradientLinks(evt.target.checked)}>
       <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
         {t('Flux.apparence.grad')}
       </OSTooltip>
@@ -158,6 +170,26 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
   const shape_is_dashed = (elements[0]?.shape_is_dashed ?? default_shape_is_dashed)
 
 
+  // Function that can be undone ===================================
+  const updateDashedLinks = (_: boolean) => {
+    const dict_old_val = Object.fromEntries(elements.map(el => [el.id, el.shape_is_dashed]))
+
+    const _updateDashedLinks = () => {
+      elements.forEach(element => element.shape_is_dashed = _)
+      setForceUpdate(!forceUpdate)
+    }
+    const inv_updateDashedLinks = () => {
+      elements.forEach(element => element.shape_is_dashed = dict_old_val[element.id])
+      setForceUpdate(!forceUpdate)
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateDashedLinks)
+    new_data_plus.history.saveRedo(_updateDashedLinks)
+    // Execute original attr mutation
+    _updateDashedLinks()
+  }
+
   const check_indeterminate = (curr: Type_GenericLinkElementOSP) => {
     return (selected_links[0].shape_is_dashed == curr.shape_is_dashed)
   }
@@ -168,18 +200,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
     isDisabled={!new_data_plus.has_sankey_plus}
     isChecked={shape_is_dashed}
     onChange={(evt) => {
-      elements.forEach(element => element.shape_is_dashed = evt.target.checked)
-      const list_node_to_redraw_arrow: Type_GenericNodeElementOSP[] = []
-      elements.forEach(element => {
-        element.shape_is_dashed = evt.target.checked
-        if (!menu_for_style) {
-          list_node_to_redraw_arrow.push((element as Type_GenericLinkElementOSP).target)
-        }
-      })
-
-      new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-      setForceUpdate(!forceUpdate)
+      updateDashedLinks(evt.target.checked)
     }}>
     <OSTooltip label={t('Flux.apparence.tooltips.hach')}>
       {t('Flux.apparence.hach') + ' '}
@@ -193,7 +214,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
   </Checkbox>
 }
 
-export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfLinkScientificPrecision> = ({ new_data_plus,menu_for_style }) => {
+export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfLinkScientificPrecision> = ({ new_data_plus, menu_for_style }) => {
   {/* Afficher ou non les donnée sur le Sankey  */ }
   const { drawing_area, menu_configuration, t } = new_data_plus
   const { ref_selected_style_link } = new_data_plus.menu_configuration
@@ -216,7 +237,8 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
   if (menu_for_style) {
     elements = [new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
   }
-  else {Class_LinkStyle
+  else {
+    Class_LinkStyle
     elements = selected_links
   }
 
@@ -276,17 +298,17 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         </OSTooltip>
         {
           (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'value_label_significant_digits') ?
+            isAttributeOverloaded(selected_links, 'value_label_significant_digits') ?
             TooltipValueSurcharge('link_var_', t) :
             <></>
         }
       </Checkbox>
-      {value_label_significant_digits?
-      /* Choose number of custom digit */
+      {value_label_significant_digits ?
+        /* Choose number of custom digit */
 
-      /* <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Flux.label.NbDigit')}
-            </Box> */
+        /* <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Flux.label.NbDigit')}
+              </Box> */
         <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs}
@@ -301,7 +323,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
             }}
           />
         </OSTooltip>
-        :<></>
+        : <></>
       }
     </Box>
     <Checkbox
@@ -321,7 +343,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
       </OSTooltip>
       {
         (!menu_for_style) &&
-           isAttributeOverloaded(selected_links, 'value_label_scientific_notation') ?
+          isAttributeOverloaded(selected_links, 'value_label_scientific_notation') ?
           TooltipValueSurcharge('link_var_', t) :
           <></>
       }
@@ -381,51 +403,51 @@ export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLin
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-      {sep}
-      <Menu placement='end'>
-        <MenuButton
-          variant='contextmenu_button'
-          as={Button}
-          rightIcon={<ChevronRightIcon />}
-          className="dropdown-basic"
-        >
-          {t('Menu.Transformation.tagFlux_assign')}
-        </MenuButton>
+    {sep}
+    <Menu placement='end'>
+      <MenuButton
+        variant='contextmenu_button'
+        as={Button}
+        rightIcon={<ChevronRightIcon />}
+        className="dropdown-basic"
+      >
+        {t('Menu.Transformation.tagFlux_assign')}
+      </MenuButton>
 
-        <MenuList>
-          {
-            new_data.drawing_area.sankey.flux_taggs_list
-              .filter(tagg => tagg.has_tags)
-              .map((tagg, i) => {
-                return <Menu key={i} placement='end'>
-                  <MenuButton
-                    variant='contextmenu_button'
-                    as={Button}
-                    rightIcon={<ChevronRightIcon />}
-                    className="dropdown-basic"
-                  >
-                    {tagg.name}
-                  </MenuButton>
-                  <MenuList>
-                    {
-                      tagg.tags_list
-                        .map(tag => {
-                          const has_tag = contextualised_link.hasGivenTag(tag)
-                          return <MenuItem
-                            onClick={() => {
-                              new_data.drawing_area.updateSelectedLinksTagAssignation(has_tag,tag)
-                            }}
-                          >
-                            {t.name}
-                            {checked(has_tag)}
-                          </MenuItem>
-                        })
-                    }
-                  </MenuList>
-                </Menu>
-              })
-          }
-        </MenuList>
-      </Menu></> :
+      <MenuList>
+        {
+          new_data.drawing_area.sankey.flux_taggs_list
+            .filter(tagg => tagg.has_tags)
+            .map((tagg, i) => {
+              return <Menu key={i} placement='end'>
+                <MenuButton
+                  variant='contextmenu_button'
+                  as={Button}
+                  rightIcon={<ChevronRightIcon />}
+                  className="dropdown-basic"
+                >
+                  {tagg.name}
+                </MenuButton>
+                <MenuList>
+                  {
+                    tagg.tags_list
+                      .map(tag => {
+                        const has_tag = contextualised_link.hasGivenTag(tag)
+                        return <MenuItem
+                          onClick={() => {
+                            new_data.drawing_area.updateSelectedLinksTagAssignation(has_tag, tag)
+                          }}
+                        >
+                          {t.name}
+                          {checked(has_tag)}
+                        </MenuItem>
+                      })
+                  }
+                </MenuList>
+              </Menu>
+            })
+        }
+      </MenuList>
+    </Menu></> :
     <></>
 }

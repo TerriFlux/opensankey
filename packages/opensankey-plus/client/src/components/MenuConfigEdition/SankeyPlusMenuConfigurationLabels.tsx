@@ -1,5 +1,5 @@
 // Standard libs
-import React, { useState, ChangeEvent, FunctionComponent, useRef } from 'react'
+import React, { useState, ChangeEvent, FunctionComponent, useRef, MutableRefObject } from 'react'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import ReactQuill from 'react-quill'
@@ -29,7 +29,7 @@ import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 // OpenSankey ts-code
 import { Type_MenuSelectionEntry } from '../../deps/OpenSankey/components/topmenus/SankeyMenuTop'
-import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
+import { OSTooltip, Type_JSON } from '../../deps/OpenSankey/types/Utils'
 
 // Local libs
 import {
@@ -38,7 +38,12 @@ import {
   FCType_ContextZDTOSP,
   FCType_ZDTMenuAsAccordeonItemOSP
 } from './types/SankeyPlusMenuConfigurationLabelsTypes'
+import { Class_ContainerElement } from '../../types/FreeLabel'
+import { ClassTemplate_SankeyOSP } from '../../types/SankeyOSP'
+import { Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP } from '../../types/TypesOSP'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
+type Type_GenericFreeLabelOSP = Class_ContainerElement<Type_GenericDrawingAreaOSP, ClassTemplate_SankeyOSP<Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>>
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -79,8 +84,9 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   const selected_zdt = new_data_plus.drawing_area.selected_containers_list
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
-  const zdt_or_image = (selected_zdt.length > 0 ? (selected_zdt[0].is_image === true ? 'image' : 'zdt') : 'zdt')
-  const [button_icon_or_image, set_button_icon_or_image] = useState<'zdt' | 'image'>(zdt_or_image)
+  const zdt_or_image = (selected_zdt.length > 0 ? (selected_zdt[0].is_image === true ? 'image' : 'text') : 'text')
+  const [button_text_or_image, set_button_text_or_image] = useState<'text' | 'image'>(zdt_or_image)
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   const INITIAL_OPTIONS_label = new_data_plus.drawing_area.sankey.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
   const selected_label = selected_zdt.map((d) => { return { 'label': d.title, 'value': d.id } })
@@ -93,6 +99,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 
   const redrawAndRefresh = () => {
     selected_zdt.forEach(zdt => zdt.drawAsSelected())
+    ref_set_text_value_input.current(selected_zdt[0].title ?? '')
     setForceUpdate(!forceUpdate)
   }
 
@@ -211,6 +218,268 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 
   const disable_options = new_data_plus.has_sankey_plus ? (selected_zdt.length === 0) : true
 
+  //=================Function to Mutate container & undo function===========================
+
+  /**
+   * Add a container in the DA; & add it's undoing in history
+   *
+   */
+  const addFreeLAbel = () => {
+    let new_element: Type_GenericFreeLabelOSP
+
+    const _addFreeLAbel = () => {// Create default node
+      new_element = new_data_plus.drawing_area.sankey.addNewDefaultFreeLabel()
+      //Deselect previously selected container
+      new_data_plus.drawing_area.purgeSelectionOfContainer()
+      // Add node to selection
+      new_data_plus.drawing_area.addContainerToSelection(new_element)
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    const inv_addFreeLAbel = () => {
+      new_data_plus.drawing_area.purgeSelectionOfContainer()
+      // Delete previous element created
+      new_element.delete()
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_addFreeLAbel)
+    new_data_plus.history.saveRedo(_addFreeLAbel)
+    // Execute original attr mutation
+    _addFreeLAbel()
+  }
+
+  const deleteSelectedLabels = () => {
+    let dict_old_element: Type_JSON
+    const _deleteSelectedLabels = () => {
+      dict_old_element = Object.fromEntries(new_data_plus.drawing_area.selected_containers_list.map(cont => [cont.id, cont.toJSON()]))
+      // Delete all selected nodes
+      new_data_plus.drawing_area.sankey.deleteSelectedFreeLabels()
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_deleteSelectedLabels = () => {
+      Object.values(dict_old_element).forEach(cont => {
+        const n_id = (cont as Type_JSON)['id'] as string
+        const new_element = new_data_plus.drawing_area.sankey.addNewFreeLabel(n_id)
+        new_element.fromJSON(cont as Type_JSON)
+        new_data_plus.drawing_area.addContainerToSelection(new_element)
+
+      })
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_deleteSelectedLabels)
+    new_data_plus.history.saveRedo(_deleteSelectedLabels)
+    // Execute original attr mutation
+    _deleteSelectedLabels()
+  }
+
+  const updateTitle = (_: string | null | undefined) => {
+    if (_ == undefined || _ == null) //Failsafe
+      return
+
+    const dict_old_title = Object.fromEntries(selected_zdt.map(d => [d.id, d.title]))
+    const _updateTitle = () => {
+      selected_zdt.map(d => d.title = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateTitle = () => {
+      selected_zdt.map(d => d.title = dict_old_title[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateTitle)
+    new_data_plus.history.saveRedo(_updateTitle)
+    // Execute original attr mutation
+    _updateTitle()
+  }
+
+  const updateHeight = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) //Failsafe
+      return
+
+    const dict_old_title = Object.fromEntries(selected_zdt.map(d => [d.id, d.label_height]))
+    const _updateHeight = () => {
+      selected_zdt.map(d => d.label_height = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateHeight = () => {
+      selected_zdt.map(d => d.label_height = dict_old_title[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateHeight)
+    new_data_plus.history.saveRedo(_updateHeight)
+    // Execute original attr mutation
+    _updateHeight()
+  }
+
+  const updateWidth = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) //Failsafe
+      return
+
+    const dict_old_title = Object.fromEntries(selected_zdt.map(d => [d.id, d.label_width]))
+    const _updateWidth = () => {
+      selected_zdt.map(d => d.label_width = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateWidth = () => {
+      selected_zdt.map(d => d.label_width = dict_old_title[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateWidth)
+    new_data_plus.history.saveRedo(_updateWidth)
+    // Execute original attr mutation
+    _updateWidth()
+  }
+
+  const updateTransparent = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) //Failsafe
+      return
+
+    const dict_old_title = Object.fromEntries(selected_zdt.map(d => [d.id, d.opacity]))
+    const _updateTransparent = () => {
+      selected_zdt.map(d => d.opacity = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateTransparent = () => {
+      selected_zdt.map(d => d.opacity = dict_old_title[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateTransparent)
+    new_data_plus.history.saveRedo(_updateTransparent)
+    // Execute original attr mutation
+    _updateTransparent()
+  }
+
+  const updateTypeLabelToText = () => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.is_image]))
+    const old_type = button_text_or_image
+    const _updateTypeLabelToText = () => {
+      selected_zdt.map(d => d.is_image = false)
+      set_button_text_or_image('text')
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateTypeLabelToText = () => {
+      selected_zdt.map(d => d.is_image = dict_old_val[d.id])
+      set_button_text_or_image(old_type)
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateTypeLabelToText)
+    new_data_plus.history.saveRedo(_updateTypeLabelToText)
+    // Execute original attr mutation
+    _updateTypeLabelToText()
+  }
+
+  const updateTypeLabelToImage = () => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.is_image]))
+    const old_type = button_text_or_image
+    const _updateTypeLabelToImage = () => {
+      selected_zdt.map(d => d.is_image = true)
+      set_button_text_or_image('image')
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateTypeLabelToImage = () => {
+      selected_zdt.map(d => d.is_image = dict_old_val[d.id])
+      set_button_text_or_image(old_type)
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateTypeLabelToImage)
+    new_data_plus.history.saveRedo(_updateTypeLabelToImage)
+    // Execute original attr mutation
+    _updateTypeLabelToImage()
+  }
+
+
+  const updateLabelBorderTransparent = (_: boolean) => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.transparent_border]))
+    const _updateLabelBorderTransparent = () => {
+      selected_zdt.map(d => d.transparent_border = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateLabelBorderTransparent = () => {
+      selected_zdt.map(d => d.transparent_border = dict_old_val[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateLabelBorderTransparent)
+    new_data_plus.history.saveRedo(_updateLabelBorderTransparent)
+    // Execute original attr mutation
+    _updateLabelBorderTransparent()
+  }
+
+  const updateImageSrc = (_: string) => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.image_src]))
+    const _updateImageSrc = () => {
+      selected_zdt.map(d => d.image_src = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateImageSrc = () => {
+      selected_zdt.map(d => d.image_src = dict_old_val[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateImageSrc)
+    new_data_plus.history.saveRedo(_updateImageSrc)
+    // Execute original attr mutation
+    _updateImageSrc()
+  }
+
+
+
+
+  // Ref to number input setter --------------------------------------
+  const number_of_input = 3
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
+  for (let i = 0; i < number_of_input; i++)
+    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
+  // Be sure that values are updated in inputs when refreshing this component
+  ref_set_number_inputs[0].current(String(allLabelHeight()))
+  ref_set_number_inputs[1].current(String(allLabelWidth()))
+  ref_set_number_inputs[2].current(String(allLabelTransparent()))
 
   const content_image = <>
     {/* Import image */}
@@ -235,9 +504,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
               return (e: ProgressEvent<FileReader>) => {
                 const resultat = (e.target as FileReader).result
                 const res = resultat?.toString().replaceAll('=', '')
-                selected_zdt.forEach(n => n.image_src = (res as string))
-                redrawAndRefresh()
-
+                updateImageSrc((res as string))
               }
             })()
             reader.readAsDataURL(files[0])
@@ -256,34 +523,19 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         <Button
           isDisabled={!new_data_plus.has_sankey_plus}
           variant='menuconfigpanel_add_button'
-          onClick={() => {
-          // Create default node
-            const new_node = new_data_plus.drawing_area.sankey.addNewDefaultFreeLabel()
-            //Deselect previously selected container
-            new_data_plus.drawing_area.purgeSelectionOfContainer()
-            // Add node to selection
-            new_data_plus.drawing_area.addContainerToSelection(new_node)
-            // Update menus
-            redrawAndRefresh()
-          }
-          }><FaPlus /></Button>
+          onClick={addFreeLAbel}>
+          <FaPlus />
+        </Button>
 
         {dropdownMultiLabel()}
 
         <Button
           variant='menuconfigpanel_del_button'
           isDisabled={disable_options}
-          onClick={() => {
-          // Delete all selected nodes
-            new_data_plus.drawing_area.sankey.deleteSelectedFreeLabels()
-            // Update all menus
-            redrawAndRefresh()
-          }
-          }><FaMinus /></Button>
+          onClick={deleteSelectedLabels}><FaMinus /></Button>
 
         {//Boutton pour monter le label sélctionné
         }
-
         <Button
           variant='menuconfigpanel_option_button'
           isDisabled={disable_options}
@@ -317,25 +569,12 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         >
           {t('LL.title')}
         </Box>
-        <InputGroup
-          variant='menuconfigpanel_option_input'
-        >
-          <Input
-            variant='menuconfigpanel_option_input'
-            max={100}
-            disabled={disable_options}
-            style={{
-              color: (disable_options) ? '#666666' : '',
-              backgroundColor: (disable_options) ? '#cccccc' : ''
-            }}
-            value={allLabelTitle()}
-            onChange={evt => {
-              const value = evt.target.value
-              selected_zdt.map(d => d.title = value)
-              setForceUpdate(!forceUpdate)
-            }}
-          />
-        </InputGroup>
+        <ConfigMenuTextInput
+          disabled={disable_options}
+          ref_to_set_value={ref_set_text_value_input}
+          function_get_value={allLabelTitle}
+          function_on_blur={updateTitle}
+        />
       </Box>
 
       <Box
@@ -352,24 +591,15 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           <Button
             isDisabled={disable_options}
             variant='menuconfigpanel_option_button'
-            onClick={() => {
-              selected_zdt.forEach(n => n.is_image = false)
-              set_button_icon_or_image('zdt')
-              redrawAndRefresh()
-            }}>Texte</Button>
+            onClick={updateTypeLabelToText}>Texte</Button>
 
           <Button
             disabled={disable_options}
             variant='menuconfigpanel_option_button'
-            onClick={() => {
-              selected_zdt.forEach(n => n.is_image = true)
-
-              set_button_icon_or_image('image')
-              redrawAndRefresh()
-            }}>Image</Button></Box>
+            onClick={updateTypeLabelToImage}>Image</Button></Box>
       </Box>
 
-      {button_icon_or_image === 'zdt' ? <Box style={{ 'height': '300px' }}><ReactQuill
+      {button_text_or_image === 'text' ? <Box style={{ 'height': '300px' }}><ReactQuill
         className='quill_editor'
         value={selected_zdt.length > 0 ? selected_zdt[0].content : ''}
         ref={r_editor_ZDT}
@@ -402,26 +632,15 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           <Box layerStyle='menuconfigpanel_option_name'>
             {t('LL.hl')}
           </Box>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput_with_right_addon'
-              min={0}
-              isDisabled={disable_options}
-              value={allLabelHeight()}
-              onChange={evt => {
-                selected_zdt.map(d => d.label_height = +evt)
+          <ConfigMenuNumberInput
+            disabled={disable_options}
+            ref_to_set_value={ref_set_number_inputs[0]}
+            default_value={allLabelHeight()}
+            function_on_blur={updateHeight}
+            minimum_value={1}
+            stepper={true}
+          />
 
-                redrawAndRefresh()
-              }}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput></InputGroup>
         </Box>
         <Box
           as='span'
@@ -430,27 +649,14 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           <Box layerStyle='menuconfigpanel_option_name'>
             {t('LL.ll')}
           </Box>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput'
-              min={0}
-              isDisabled={disable_options}
-              value={allLabelWidth()}
-              onChange={evt => {
-                selected_zdt.map(d => d.label_width = +evt)
-
-                redrawAndRefresh()
-              }}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </InputGroup>
+          <ConfigMenuNumberInput
+            disabled={disable_options}
+            ref_to_set_value={ref_set_number_inputs[1]}
+            default_value={allLabelWidth()}
+            function_on_blur={updateWidth}
+            minimum_value={1}
+            stepper={true}
+          />
         </Box>
       </Box>
 
@@ -487,30 +693,15 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           <Box layerStyle='menuconfigpanel_option_name'>
             {t('LL.ft')}
           </Box>
-          <InputGroup
-            variant='menuconfigpanel_option_input'
-          >
-            <NumberInput
-              variant='menuconfigpanel_option_numberinput_with_right_addon'
-              max={100}
-              min={0}
-              step={1}
-              isDisabled={disable_options}
-              value={allLabelTransparent()}
-              onChange={evt => {
-                const value = +evt
-                selected_zdt.map(d => d.opacity = value)
 
-                redrawAndRefresh()
-              }}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </InputGroup>
+          <ConfigMenuNumberInput
+            disabled={disable_options}
+            ref_to_set_value={ref_set_number_inputs[2]}
+            default_value={allLabelTransparent()}
+            function_on_blur={updateTransparent}
+            minimum_value={0}
+            stepper={true}
+          />
         </Box>
       </Box>
 
@@ -546,11 +737,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
             isDisabled={disable_options}
             isIndeterminate={valAllLabelBorderTransparentIndeterminate}
             isChecked={valAllLabelBorderTransparent}
-            onChange={(evt) => {
-              selected_zdt.map(d => d.transparent_border = evt.target.checked)
-
-              redrawAndRefresh()
-            }}>
+            onChange={(evt) => updateLabelBorderTransparent(evt.target.checked)}>
             {t('LL.bt')}
           </Checkbox>
         </Box>

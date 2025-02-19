@@ -290,6 +290,11 @@ export class Class_ContainerElement
 
   }
 
+
+  // History saving ----------------------------------------------------------------------
+
+
+
   // PUBLIC METHODS =====================================================================
 
   protected _draw() {
@@ -414,13 +419,13 @@ export class Class_ContainerElement
   private drawContentImage() {
     this.d3_selection?.append('image')
       .classed('content', true)
-      .attr('width', this._label_width+'px')
-      .attr('height', this._label_height+'px')
-      .style('width', this._label_width+'px')
-      .style('height', this._label_height+'px')
+      .attr('width', this._label_width + 'px')
+      .attr('height', this._label_height + 'px')
+      .style('width', this._label_width + 'px')
+      .style('height', this._label_height + 'px')
       .attr('id', this.id + '_img')
       .attr('xlink:href', this._image_src)
-      .attr('xmlns:xlink','http://www.w3.org/1999/xlink')
+      .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
   }
 
   /**
@@ -432,6 +437,19 @@ export class Class_ContainerElement
    */
   private dragHandleStart() {
     return () => {
+      const old_val = {
+        x: this.position_x,
+        y: this.position_y,
+        w: this._label_width,
+        h: this._label_height,
+      }
+      this.drawing_area.application_data.history.saveUndo(() => {
+        this._label_width = old_val.w
+        this._label_height = old_val.h
+        this._display.position.x = old_val.x
+        this._display.position.y = old_val.y
+        this.draw()
+      })
     }
   }
 
@@ -444,6 +462,20 @@ export class Class_ContainerElement
   private dragHandleEnd() {
     return () => {
       this.menu_config.ref_to_menu_config_containers_updater.current()
+      
+      const old_val = {
+        x: this.position_x,
+        y: this.position_y,
+        w: this._label_width,
+        h: this._label_height,
+      }
+      this.drawing_area.application_data.history.saveRedo(() => {
+        this._label_width = old_val.w
+        this._label_height = old_val.h
+        this._display.position.x = old_val.x
+        this._display.position.y = old_val.y
+        this.draw()
+      })
     }
   }
 
@@ -688,6 +720,23 @@ export class Class_ContainerElement
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     super.eventMouseDragStart(_event)
+
+    const drawing_area = this.drawing_area
+    const containers_selected = drawing_area.selected_containers_list
+    if (containers_selected.includes(this)) {
+      drawing_area.saveUndoLabelSelectedPos()
+      drawing_area.checkAndUpdateAreaSize()
+    } else {
+      // Memorize for undo
+      const old_x = this._display.position.x
+      const old_y = this._display.position.y
+      // Undo function
+      const undo = () => {
+        this.setPosXY(old_x, old_y)
+        drawing_area.checkAndUpdateAreaSize()
+      }
+      this.drawing_area.application_data.history.saveUndo(undo)
+    }
   }
 
   /**
@@ -708,7 +757,6 @@ export class Class_ContainerElement
     if (zdt_selected.length == 0) {
       if (drawing_area.isInSelectionMode()) {
         this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
-        this.drawDragHandlers()
         this.drawing_area.checkAndUpdateAreaSize()
       }
     }
@@ -724,7 +772,6 @@ export class Class_ContainerElement
         zdt_selected
           .forEach(n => {
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-            n.drawDragHandlers()
           })
         this.drawing_area.moveSelectedNodesFromDragEvent(event)
       }
@@ -742,7 +789,30 @@ export class Class_ContainerElement
   ) {
     if (this.drawing_area.isInSelectionMode()) {
       this.drawing_area.checkAndUpdateAreaSize()
+
+
+
+      // Save redo label pos
+      const drawing_area = this.drawing_area
+      const containers_selected = drawing_area.selected_containers_list
+      if (containers_selected.includes(this)) {
+        drawing_area.saveRedoLabelSelectedPos()
+      } else {
+        // Memorize for redo
+        const old_x = this._display.position.x
+        const old_y = this._display.position.y
+        // redo function
+        const redo = () => {
+          this.setPosXY(old_x, old_y)
+        }
+        this.drawing_area.application_data.history.saveRedo(redo)
+      }
     }
+  }
+
+  protected override _applyPosition(): void {
+    super._applyPosition()
+    this.drawDragHandlers()
   }
 
 
