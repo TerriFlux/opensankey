@@ -83,6 +83,9 @@ export const resources_app_elements = {
         ajustH: 'Adjust. H',
         ajustV: 'Adjust. V',
 
+        undo:'Undo',
+        redo:'Redo',
+
         rcc_titre_princ: 'OpenSankey Application Shortcuts',
         rcc_titre_select: 'With the mouse in selection mode',
         rcc_cn_bold: 'Click (nodes)',
@@ -134,6 +137,10 @@ export const resources_app_elements = {
         rcc_F9: 'Switch to next view',
         rcc_ctrl_scrll_bold: 'CTRL+scroll (sankey draw zone)',
         rcc_ctrl_scrll: 'Zoom/Unzoom in the sankey zone',
+        rcc_ctrl_z_bold: 'CTRL+Z',
+        rcc_ctrl_z: 'Cancel last modifiaction done to the sankey',
+        rcc_ctrl_y_bold: 'CTRL+Y',
+        rcc_ctrl_y: 'Redo canceled modification to sankey',
         support: 'Contact',
         c_support: 'Contact the support',
         rth_support: 'We are here to help you',
@@ -846,6 +853,10 @@ export const resources_app_elements = {
         amp_short: 'Trans.',
         ajustH: 'Ajust. H',
         ajustV: 'Ajust. V',
+
+        undo:'Annuler',
+        redo:'Refaire',
+        
         esn: 'Édition style de noeuds',
         esf: 'Édition style de flux',
         rc: 'Raccourcis clavier',
@@ -939,6 +950,10 @@ export const resources_app_elements = {
         rcc_F9: 'Passe à la vue suivante',
         rcc_ctrl_scrll_bold: 'CTRL+scroll (zone de dessin)',
         rcc_ctrl_scrll: 'Permet de zoomer/dezomer sur la zone de dessin',
+        rcc_ctrl_z_bold: 'CTRL+Z',
+        rcc_ctrl_z: 'Permet d\'annuler la dernière modification apportée au sankey',
+        rcc_ctrl_y_bold: 'CTRL+Y',
+        rcc_ctrl_y: 'Permet de refaire la modification de sankey précédemment annulée',
         support: 'Contact',
         c_support: 'Contacter le support',
         rth_support: 'Nous sommes là pour vous aider',

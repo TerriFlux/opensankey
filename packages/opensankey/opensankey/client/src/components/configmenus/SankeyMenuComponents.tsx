@@ -11,7 +11,7 @@ import { FaAlignLeft, FaAlignCenter, FaAlignRight, FaBold, FaItalic } from 'reac
 import { ClassTemplate_LinkElement } from '../../Elements/Link'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, font_families } from '../../types/Utils'
-import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
 import { FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName } from './types/SankeyMenuComponentsType'
 import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
@@ -582,12 +582,13 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
               }
             </Box>
             <OSTooltip label={t('Flux.label.tooltips.l_u')}>
-              <Input
-                variant='menuconfigpanel_option_input'
-                value={get_label_unit}
-                onChange={evt => {
-                  updateElements(new_data, elements, dict_decorator_name, 'label_unit', evt.target.value, refreshParentComponent)
-                }}
+              <ConfigMenuTextInput
+              ref_to_set_value={ref_set_number_inputs[1]}
+              function_get_value={()=>get_label_unit}
+              function_on_blur={(value) => {
+                updateElements(new_data, elements, dict_decorator_name, 'label_unit', value?value:undefined, refreshParentComponent)
+              }}
+              menu_for_style={menu_for_style}
               />
             </OSTooltip>
           </Box>
