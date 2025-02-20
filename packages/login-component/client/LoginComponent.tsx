@@ -24,8 +24,6 @@ export class LoginComponent {
   }
 
   public async checkTokens(force=false) {
-    console.log('checkTokens')
-    console.log(this._ok_to_check_account)
     if (this._ok_to_check_account || force) {
       // Default token
       this._has_account = false
@@ -74,6 +72,7 @@ export class LoginComponent {
   }
 
   public get has_account() { return this._has_account }
+  public get has_licence() { return this._has_licence }
 }
 
 let _loginComponent : LoginComponent | undefined = undefined
