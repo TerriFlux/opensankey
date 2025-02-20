@@ -51,10 +51,11 @@ const Register: FunctionComponent<{
   logo: string,
   logo_sankey_plus: string,
   loginComponent:()=>LoginComponent,
+  setUpdate:React.MutableRefObject<() => void>,
   returnToApp: (navigate: NavigateFunction) => void,
   theme:Record<string, any>
 }> = ({
-  t, logo, logo_sankey_plus, loginComponent, returnToApp,theme
+  t, logo, logo_sankey_plus, loginComponent, setUpdate, returnToApp,theme
 }) => {
   // Step to register
   const [on_wait, setOnWait] = useState(false)
@@ -129,7 +130,8 @@ const Register: FunctionComponent<{
     userValidate(
       token,
       loginComponent,
-      navigate
+      navigate,
+      setUpdate
     )
   }
 

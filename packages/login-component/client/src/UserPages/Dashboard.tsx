@@ -39,7 +39,7 @@ export type DashboardTypes = {
   logo:string,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
-  setUpdate:React.Dispatch<React.SetStateAction<boolean>>,
+  setUpdate:React.MutableRefObject<() => void>,
   exemple_menu: object
 }
 

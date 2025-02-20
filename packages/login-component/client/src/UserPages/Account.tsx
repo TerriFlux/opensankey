@@ -108,7 +108,7 @@ export type AccountTypes = {
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
   blocker_suite_sankey: { [_: string]: JSX.Element },
-  setUpdate:React.Dispatch<React.SetStateAction<boolean>>
+  setUpdate:React.MutableRefObject<() => void>
 }
 
 const Account: FunctionComponent<AccountTypes> = ({
@@ -206,7 +206,7 @@ const Account: FunctionComponent<AccountTypes> = ({
               userData_.license_legacy_opensankeyplus_validity = ''
               setUserData(userData_)
               setReqCount(1)
-              activateLicensesTokens(loginComponent) //Update tokens
+              activateLicensesTokens(loginComponent,setUpdate) //Update tokens
               // setSuiteApplicationContext({...suiteApplicationContext})
             })
             .catch(error => {

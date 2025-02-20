@@ -26,7 +26,7 @@ export type LoginTypes = {
   logo: string,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
-  setUpdate:React.Dispatch<React.SetStateAction<boolean>>
+  setUpdate:React.MutableRefObject<() => void>
 }
 
 // Login
@@ -35,7 +35,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
   logo,
   returnToApp,
   loginComponent,
-  setUpdate
+  setUpdate,
 }) => {
   // States
   const [on_wait, setOnWait] = useState(false)
@@ -60,6 +60,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
       await loginUser(
         t,
         loginComponent,
+        setUpdate,
         {
           email,
           password,
@@ -236,8 +237,8 @@ export const LoginOutButton: FunctionComponent<LoginTypes> = (
       setOnWait(true)
       loginOut(
         loginComponent,
+        setUpdate,
         () => {
-          setUpdate(_=>!_)
           setOnWait(false)
           returnToApp(navigate)
         })

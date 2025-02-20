@@ -21,7 +21,8 @@ export const logError = (err: string) => {
 
 // Activate license Tokens if licenses are valid
 export function activateLicensesTokens(
-  loginComponent:()=>LoginComponent
+  loginComponent:()=>LoginComponent,
+  setUpdate:React.MutableRefObject<() => void>,
   // update: boolean,
   // set_update: (_: boolean) => void
 ) {
@@ -37,7 +38,7 @@ export function activateLicensesTokens(
   activateLicenseToken(
     app_name_opensankeyplus,
     '/user/infos/legacy/license_opensankeyplus',
-    () => { loginComponent().checkTokens() }
+    () => { loginComponent().checkTokens(setUpdate) }
   )
   // // Check if has dev acc
   // fetch('/user/infos/legacy/is_developer',)
@@ -59,6 +60,7 @@ export function activateLicensesTokens(
 export async function loginUser(
   t: TFunction,
   loginComponent:()=>LoginComponent,
+  setUpdate:React.MutableRefObject<() => void>,
   credentials: {
     email: string;
     password: string;
@@ -98,7 +100,7 @@ export async function loginUser(
       }
     })
     .then(() => {
-      return loginComponent().checkTokens(true)
+      return loginComponent().checkTokens(setUpdate,true)
     })
     .then(() => {
       callbackSuccess()
@@ -112,6 +114,7 @@ export async function loginUser(
 //Logout
 export function loginOut(
   loginComponent:()=>LoginComponent,
+  setUpdate:React.MutableRefObject<() => void>,
   callback = () => { }
 ) {
   // LogOut on server
@@ -120,7 +123,7 @@ export function loginOut(
   return fetch(url)
     .then(() => {
       // Check that we are effectivly disconnected
-      return loginComponent().checkTokens(true)
+      return loginComponent().checkTokens(setUpdate,true)
     })
     .then(callback)
 }

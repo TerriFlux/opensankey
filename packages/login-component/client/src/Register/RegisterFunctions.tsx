@@ -73,7 +73,8 @@ export async function userSignUp(
 export async function userValidate(
   token: string,
   loginComponent:()=>LoginComponent,
-  navigate: NavigateFunction
+  navigate: NavigateFunction,
+  setUpdate:React.MutableRefObject<() => void>
 ) {
   resetLogs()
 
@@ -99,7 +100,7 @@ export async function userValidate(
       logInfo(i18next.t('Register.validation.msg.' + response['message']))
     })
     .then(() => {
-      return loginComponent().checkTokens(true)
+      return loginComponent().checkTokens(setUpdate,true)
     })
     .then(() => {
       let next_page

@@ -1,4 +1,5 @@
 
+import React from 'react'
 
 export class LoginComponent {
 
@@ -23,7 +24,10 @@ export class LoginComponent {
     this._has_licence = false
   }
 
-  public async checkTokens(force=false) {
+  public async checkTokens(
+    setUpdate:React.MutableRefObject<() => void>,
+    force=false
+  ) {
     if (this._ok_to_check_account || force) {
       // Default token
       this._has_account = false
@@ -50,10 +54,9 @@ export class LoginComponent {
                 this._has_licence = has_license
               })
         })
-        // .then(() => {
-        //   this.menu_configuration.updateComponentsRelatedToSA()
-        //   this.menu_configuration.updateAllMenuComponents()
-        // })
+        .then(() => {
+          setUpdate.current()
+        })
       // Cannot check for given time
       this._ok_to_check_account = false
       if (this._ok_to_check_account_timeout)
