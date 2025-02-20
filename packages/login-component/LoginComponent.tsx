@@ -52,10 +52,10 @@ export class LoginComponent {
                 this._has_licence = has_license
               })
         })
-        .then(() => {
-          this.menu_configuration.updateComponentsRelatedToSA()
-          this.menu_configuration.updateAllMenuComponents()
-        })
+        // .then(() => {
+        //   this.menu_configuration.updateComponentsRelatedToSA()
+        //   this.menu_configuration.updateAllMenuComponents()
+        // })
       // Cannot check for given time
       this._ok_to_check_account = false
       if (this._ok_to_check_account_timeout)

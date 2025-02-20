@@ -18,8 +18,6 @@ import {
   Spinner
 } from '@chakra-ui/react'
 
-// import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
-// import { returnToApp } from '../../AppSA'
 import { loginOut, loginUser } from './LoginFunctions'
 import { LoginComponent } from '../LoginComponent'
 

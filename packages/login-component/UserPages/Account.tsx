@@ -43,6 +43,7 @@ import {
 } from '../Login/LoginFunctions'
 import { LoginOutButton } from '../Login/Login'
 import { email_regex_str, name_regex_str, pwd_regex_str } from '../Register/Register'
+import { LoginComponent } from '../LoginComponent'
 
 // Interfaces ---------------------------------------------------------------------------
 
@@ -104,7 +105,6 @@ export type AccountTypes = {
   t:TFunction,
   logo:string,
   logo_sankey_plus:string,
-  has_account:boolean,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
   blocker_suite_sankey: { [_: string]: JSX.Element },
@@ -114,9 +114,8 @@ const Account: FunctionComponent<AccountTypes> = ({
   t,
   logo,
   logo_sankey_plus,
-  has_account,
   returnToApp,
-  checkTokens,
+  loginComponent,
   blocker_suite_sankey,
 }) => {
 
@@ -124,7 +123,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   const navigate = useNavigate()
 
   //If we acces this page without being logged, it is resent to the application
-  if (!has_account) {
+  if (!loginComponent().has_account) {
     returnToApp(navigate)
   }
 
@@ -205,7 +204,7 @@ const Account: FunctionComponent<AccountTypes> = ({
               userData_.license_legacy_opensankeyplus_validity = ''
               setUserData(userData_)
               setReqCount(1)
-              activateLicensesTokens(checkTokens) //Update tokens
+              activateLicensesTokens(loginComponent) //Update tokens
               // setSuiteApplicationContext({...suiteApplicationContext})
             })
             .catch(error => {
@@ -776,7 +775,7 @@ const Account: FunctionComponent<AccountTypes> = ({
             t={t}
             logo={logo}
             returnToApp={returnToApp}
-            checkTokens={checkTokens}
+            loginComponent={loginComponent}
           />
         </Box>
       </Box>
