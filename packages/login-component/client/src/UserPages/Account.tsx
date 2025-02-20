@@ -108,6 +108,7 @@ export type AccountTypes = {
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
   blocker_suite_sankey: { [_: string]: JSX.Element },
+  setUpdate:React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const Account: FunctionComponent<AccountTypes> = ({
@@ -117,6 +118,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   returnToApp,
   loginComponent,
   blocker_suite_sankey,
+  setUpdate
 }) => {
 
   // Define navigation behaviour to return to App
@@ -776,6 +778,7 @@ const Account: FunctionComponent<AccountTypes> = ({
             logo={logo}
             returnToApp={returnToApp}
             loginComponent={loginComponent}
+            setUpdate={setUpdate}
           />
         </Box>
       </Box>

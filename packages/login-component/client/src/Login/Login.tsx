@@ -25,7 +25,8 @@ export type LoginTypes = {
   t: TFunction
   logo: string,
   returnToApp: (navigate: NavigateFunction) => void,
-  loginComponent:()=>LoginComponent
+  loginComponent:()=>LoginComponent,
+  setUpdate:React.Dispatch<React.SetStateAction<boolean>>
 }
 
 // Login
@@ -33,7 +34,8 @@ export const Login: FunctionComponent<LoginTypes> = ({
   t,
   logo,
   returnToApp,
-  loginComponent
+  loginComponent,
+  setUpdate
 }) => {
   // States
   const [on_wait, setOnWait] = useState(false)
@@ -221,7 +223,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
 }
 
 export const LoginOutButton: FunctionComponent<LoginTypes> = (
-  { t,logo,returnToApp,loginComponent }
+  { t,logo,returnToApp,loginComponent,setUpdate }
 ) => {
   const navigate = useNavigate()
 
@@ -235,6 +237,7 @@ export const LoginOutButton: FunctionComponent<LoginTypes> = (
       loginOut(
         loginComponent,
         () => {
+          setUpdate(_=>!_)
           setOnWait(false)
           returnToApp(navigate)
         })

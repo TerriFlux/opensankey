@@ -39,6 +39,7 @@ export type DashboardTypes = {
   logo:string,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
+  setUpdate:React.Dispatch<React.SetStateAction<boolean>>,
   exemple_menu: object
 }
 
@@ -47,6 +48,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
   t,logo,
   returnToApp,
   loginComponent,
+  setUpdate
 }) => {
 
   // Define navigation behaviour to return to App
@@ -115,6 +117,7 @@ const Dashboard: FunctionComponent<DashboardTypes> = ({
               logo={logo}
               returnToApp={returnToApp}
               loginComponent={loginComponent}
+              setUpdate={setUpdate}
             />
           </Box>
         </Box>
