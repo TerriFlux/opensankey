@@ -79,6 +79,11 @@ export const Login: FunctionComponent<LoginTypes> = ({
     }
   }
 
+  let template = 'minmax(7vw, 150px) auto 11rem 11rem'
+  if (compulsory_login) {
+    template = 'minmax(7vw, 150px) auto 11rem'
+  }
+
   // React output
   return (
     <div>
@@ -90,7 +95,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
       >
         <Box
           layerStyle='menutop_layout_style'
-          gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
+          gridTemplateColumns={template}
         >
           <Box
             margin='0.25rem'
