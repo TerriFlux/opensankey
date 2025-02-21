@@ -16,7 +16,7 @@ pip install -r requirements.txt | grep -v 'already satisfied'
 # Check PEP
 cd server
 flake8  || exit_if_error $?
-cd ../..
+cd ..
 
 # Install
 pip install .  || exit_if_error $?
