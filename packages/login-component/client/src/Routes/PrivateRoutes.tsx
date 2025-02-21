@@ -9,7 +9,6 @@ type FCType_PrivateRoute = {
 export const PrivateRoute: FunctionComponent<FCType_PrivateRoute> = ({
   component,
 }) => {
-  const tmp = 
   if (loginComponent().has_account) {
     return component
   }

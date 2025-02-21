@@ -3,7 +3,6 @@ import { Navigate } from 'react-router-dom'
 import { loginComponent } from '../LoginComponent'
 
 type FCType_PublicRoute = {
-    has_account: boolean,
     component: JSX.Element,
 }
 
