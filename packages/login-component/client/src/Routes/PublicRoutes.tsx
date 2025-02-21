@@ -1,5 +1,6 @@
 import React, { FunctionComponent } from 'react'
 import { Navigate } from 'react-router-dom'
+import { loginComponent } from '../LoginComponent'
 
 type FCType_PublicRoute = {
     has_account: boolean,
@@ -7,10 +8,9 @@ type FCType_PublicRoute = {
 }
 
 export const PublicRoute: FunctionComponent<FCType_PublicRoute> = ({
-  has_account,
   component,
 }) => {
-  if (!has_account) {
+  if (!loginComponent().has_account) {
     return component
   }
   return <Navigate to="/" />
