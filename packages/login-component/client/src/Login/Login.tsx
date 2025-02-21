@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useRef, useState } from 'react'
-import { useNavigate,NavigateFunction } from 'react-router-dom'
+import { useNavigate, NavigateFunction } from 'react-router-dom'
 import { FaPowerOff } from 'react-icons/fa'
 import { TFunction } from 'i18next'
 
@@ -25,8 +25,9 @@ export type LoginTypes = {
   t: TFunction
   logo: string,
   returnToApp: (navigate: NavigateFunction) => void,
-  loginComponent:()=>LoginComponent,
-  setUpdate:React.MutableRefObject<() => void>
+  loginComponent: () => LoginComponent,
+  setUpdate: React.MutableRefObject<() => void>,
+  compulsory_login?: boolean
 }
 
 // Login
@@ -36,6 +37,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
   returnToApp,
   loginComponent,
   setUpdate,
+  compulsory_login
 }) => {
   // States
   const [on_wait, setOnWait] = useState(false)
@@ -103,12 +105,13 @@ export const Login: FunctionComponent<LoginTypes> = ({
             />
           </Box>
           <Box></Box>
-          <Button
+          {!compulsory_login ? <Button
             variant='btn_lone_navigation'
             onClick={() => returnToApp(navigate)}
           >
             {t('UserNav.to_app')}
-          </Button>
+          </Button> : <></>
+          }
           <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/register')}
@@ -148,7 +151,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
                   type={show_password ? 'text' : 'password'}
                   placeholder={t('Login.pwd.placeholder')}
                   onChange={e => setPassword(e.target.value)}
-                  onBlur={() => {ref_login_btn.current?.click()}}
+                  onBlur={() => { ref_login_btn.current?.click() }}
                 />
                 <InputRightElement width='4.5rem' marginRight='0.25em'>
                   <Button
@@ -224,7 +227,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
 }
 
 export const LoginOutButton: FunctionComponent<LoginTypes> = (
-  { t,logo,returnToApp,loginComponent,setUpdate }
+  { t, logo, returnToApp, loginComponent, setUpdate }
 ) => {
   const navigate = useNavigate()
 
