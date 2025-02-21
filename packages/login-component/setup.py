@@ -70,6 +70,7 @@ setup(name='LoginComponent',
         'logincomponent': [
                 'setup.cfg',
                 'server/*.*',
+                'server/templates/*.*',
                 'server/templates/password_modification_mail/*.*',
                 'server/templates/password_reset_mail/*.*',
                 'server/templates/register_mail/*.*'
