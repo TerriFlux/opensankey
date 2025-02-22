@@ -7,42 +7,40 @@ npm install open-sankey
 
 Replace your index.js by
 
-> import React from 'react';
+>        import React from 'react';    
+>        import './index.css';   
+>        import reportWebVitals from './reportWebVitals';
+>        import { createRoot } from 'react-dom/client'
+>        import { ChakraProvider } from '@chakra-ui/react'
+>        // Local imports ====================================================================================
+>        
+>        import 'open-sankey/dist/traductions/traduction'
+>        
+>        import OpenSankeyApp from 'open-sankey/dist/App'
+>        import {
+>          initializeApplicationData,
+>          initializeReinitialization,
+>          initializeAdditionalMenus,
+>          moduleDialogs,
+>          initializeMenuConfiguration,
+>          initializeDiagrammSelector
+>        } from 'open-sankey/dist/Modules'
+>        import {
+>          ClickSaveDiagram
+>        } from 'open-sankey/dist/components/dialogs/SankeyPersistence'
+>        import {
+>          ModalWelcomeBuilder
+>       } from 'open-sankey/dist/components/welcome/ModalWelcome'
+>       import { opensankey_theme } from 'open-sankey/dist/chakra/Theme'
 >
-> import './index.css';
+>       // CONSTANTS =========================================================================================
 >
-> import reportWebVitals from './reportWebVitals';
-> import { createRoot } from 'react-dom/client'
-> import { ChakraProvider } from '@chakra-ui/react'
-> // Local imports ====================================================================================
-> 
-> import 'open-sankey/dist/traductions/traduction'
-> 
-> import OpenSankeyApp from 'open-sankey/dist/App'
-> import {
->   initializeApplicationData,
->   initializeReinitialization,
->   initializeAdditionalMenus,
->   moduleDialogs,
->   initializeMenuConfiguration,
->   initializeDiagrammSelector
-> } from 'open-sankey/dist/Modules'
-> import {
->   ClickSaveDiagram
-> } from 'open-sankey/dist/components/dialogs/SankeyPersistence'
-> import {
->   ModalWelcomeBuilder
-> } from 'open-sankey/dist/components/welcome/ModalWelcome'
-> import { opensankey_theme } from 'open-sankey/dist/chakra/Theme'
+>       // Link with React
+>       window.React = React
 >
-> // CONSTANTS =========================================================================================
->
-> // Link with React
-> window.React = React
->
-> // Application container
-> const container=document.getElementById('root')
-> const root=createRoot(container)
+>       // Application container
+>       const container=document.getElementById('root')
+>       const root=createRoot(container)
 >
 >       // RENDERING ==========================================================================================
 >       root.render(
