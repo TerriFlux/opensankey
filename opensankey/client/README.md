@@ -44,12 +44,12 @@ Replace your index.js by
 > const container=document.getElementById('root')
 > const root=createRoot(container)
 >
-> // RENDERING ==========================================================================================
-> root.render(
->   <ChakraProvider theme={opensankey_theme}>
->     <OpenSankeyApp
->      initializeReinitialization={initializeReinitialization}
-> 
+>       // RENDERING ==========================================================================================
+>       root.render(
+>       <ChakraProvider theme={opensankey_theme}>
+>       <OpenSankeyApp
+>       initializeReinitialization={initializeReinitialization}
+>
 >       //- Data
 >       initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
 > 
