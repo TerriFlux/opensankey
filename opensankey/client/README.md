@@ -44,41 +44,41 @@ Replace your index.js by
 >
 >       // RENDERING ==========================================================================================
 >       root.render(
->       <ChakraProvider theme={opensankey_theme}>
->       <OpenSankeyApp
->       initializeReinitialization={initializeReinitialization}
+>         <ChakraProvider theme={opensankey_theme}>
+>           <OpenSankeyApp
+>             initializeReinitialization={initializeReinitialization}
 >
->       //- Data
->       initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
+>             //- Data
+>             initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
 > 
->       //- UI
->       initializeMenuConfiguration={initializeMenuConfiguration} // Function to create the configuration menu
+>              //- UI
+>              initializeMenuConfiguration={initializeMenuConfiguration} // Function to create the configuration menu
 > 
->       // Ref to some key ui element in the application
->       initializeAdditionalMenus={initializeAdditionalMenus}
+>              // Ref to some key ui element in the application
+>              initializeAdditionalMenus={initializeAdditionalMenus}
 > 
->       // Input data used for updateLayout
->       // (OS only use data from imported file
->       // but OSP can use its view as imported data
->       // )
->       initializeDiagrammSelector={initializeDiagrammSelector}
+>              // Input data used for updateLayout
+>              // (OS only use data from imported file
+>              // but OSP can use its view as imported data
+>              // )
+>              initializeDiagrammSelector={initializeDiagrammSelector}
 > 
->       // Submenus to add in the application
->       moduleDialogs={moduleDialogs}
+>              // Submenus to add in the application
+>              moduleDialogs={moduleDialogs}
 > 
->       // Welcome modal
->       ModalWelcome={ModalWelcomeBuilder}
+>              // Welcome modal
+>              ModalWelcome={ModalWelcomeBuilder}
 > 
->       // BackEnd
->       ClickSaveDiagram={ClickSaveDiagram}
->     />
->   </ChakraProvider>
-> )
+>              // BackEnd
+>              ClickSaveDiagram={ClickSaveDiagram}
+>           />
+>         </ChakraProvider>
+>       )
 >
 >
-> // If you want to start measuring performance in your app, pass a function
-> // to log results (for example: reportWebVitals(console.log))
-> // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-> reportWebVitals();`
+>       // If you want to start measuring performance in your app, pass a function
+>       // to log results (for example: reportWebVitals(console.log))
+>       // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+>       reportWebVitals();`
 
 npm run start
