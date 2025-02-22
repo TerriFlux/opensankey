@@ -1,14 +1,13 @@
 {
   "name": "open-sankey",
-  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git@gitlab.com:greel/su-model.git"
+    "url": "https://gitlab.com/terriflux-public/OpenSankey"
   },
-  "author": "Alapetite Julien",
-  "version": "0.12.0dev",
+  "author": "TerriFlux",
+  "version": "0.9.9c",
   "description": "Open Sankey",
   "license": "MIT",
   "scripts": {
