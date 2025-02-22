@@ -8,7 +8,9 @@ npm install open-sankey
 Replace your index.js by
 
 > import React from 'react';
+>
 > import './index.css';
+>
 > import reportWebVitals from './reportWebVitals';
 > import { createRoot } from 'react-dom/client'
 > import { ChakraProvider } from '@chakra-ui/react'
