@@ -165,7 +165,13 @@ const Register: FunctionComponent<{
     <Box
       display="inline-grid"
     >
-      <Button
+      {noLicenceAccountRequired ? <Button
+        variant='btn_lone_navigation_tertiary'
+        maxWidth='inherit'
+        width='fit-content'
+        onClick={() => window.location.href = 'mailto:contact@terriflux.fr?subject=Demande de devis'}>
+        {t('Register.presentation.btn_next')}
+      </Button> : <Button
         variant='btn_lone_navigation_tertiary'
         maxWidth='inherit'
         width='fit-content'
@@ -173,6 +179,7 @@ const Register: FunctionComponent<{
         onClick={handleSubmit}>
         {t('Register.presentation.btn_next')}
       </Button>
+      }
     </Box>
   ]
 
