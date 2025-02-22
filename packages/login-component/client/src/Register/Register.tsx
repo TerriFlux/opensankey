@@ -51,12 +51,12 @@ const Register: FunctionComponent<{
   logo: string,
   logo_sankey_plus: string,
   loginComponent:()=>LoginComponent,
-  compulsory_login:boolean,
+  noLicenceAccountRequired:boolean,
   setUpdate:React.MutableRefObject<() => void>,
   returnToApp: (navigate: NavigateFunction) => void,
   theme:Record<string, any>
 }> = ({
-  t, logo, logo_sankey_plus, loginComponent,compulsory_login, setUpdate, returnToApp,theme
+  t, logo, logo_sankey_plus, loginComponent,noLicenceAccountRequired, setUpdate, returnToApp,theme
 }) => {
   // Step to register
   const [on_wait, setOnWait] = useState(false)
@@ -388,7 +388,7 @@ const Register: FunctionComponent<{
   }
 
   let template = 'minmax(7vw, 150px) auto 11rem 11rem'
-  if (compulsory_login) {
+  if (noLicenceAccountRequired) {
     template = 'minmax(7vw, 150px) auto 11rem'
   }
   
@@ -420,7 +420,7 @@ const Register: FunctionComponent<{
             />
           </Box>
           <Box></Box>
-          {!compulsory_login ?<Button
+          {!noLicenceAccountRequired ?<Button
             variant='btn_lone_navigation'
             onClick={() => { returnToApp(navigate) }}>
             {t('UserNav.to_app')}

@@ -27,7 +27,7 @@ export type LoginTypes = {
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent: () => LoginComponent,
   setUpdate: React.MutableRefObject<() => void>,
-  compulsory_login?: boolean
+  noLicenceAccountRequired?: boolean
 }
 
 // Login
@@ -37,7 +37,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
   returnToApp,
   loginComponent,
   setUpdate,
-  compulsory_login
+  noLicenceAccountRequired
 }) => {
   // States
   const [on_wait, setOnWait] = useState(false)
@@ -80,7 +80,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
   }
 
   let template = 'minmax(7vw, 150px) auto 11rem 11rem'
-  if (compulsory_login) {
+  if (noLicenceAccountRequired) {
     template = 'minmax(7vw, 150px) auto 11rem'
   }
 
@@ -110,7 +110,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
             />
           </Box>
           <Box></Box>
-          {!compulsory_login ? <Button
+          {!noLicenceAccountRequired ? <Button
             variant='btn_lone_navigation'
             onClick={() => returnToApp(navigate)}
           >

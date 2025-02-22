@@ -107,6 +107,7 @@ export type AccountTypes = {
   logo_sankey_plus:string,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
+  noLicenceAccountRequired: boolean,
   blocker_suite_sankey: { [_: string]: JSX.Element },
   setUpdate:React.MutableRefObject<() => void>
 }
@@ -117,6 +118,7 @@ const Account: FunctionComponent<AccountTypes> = ({
   logo_sankey_plus,
   returnToApp,
   loginComponent,
+  noLicenceAccountRequired,
   blocker_suite_sankey,
   setUpdate
 }) => {
@@ -864,8 +866,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                   </FormControl>
 
                   {/* Infos licenses --------------------------------------------------------------------  */}
-
-                  <FormControl
+                  { !noLicenceAccountRequired ? <FormControl
                     variant='form_account_page'
                   >
                     <FormLabel
@@ -949,7 +950,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         }
                       </Box>
                     </Box>
-                  </FormControl>
+                  </FormControl>:<></>}
                 </Box>
 
                 {/* Seconde colonne */}
