@@ -51,11 +51,12 @@ const Register: FunctionComponent<{
   logo: string,
   logo_sankey_plus: string,
   loginComponent:()=>LoginComponent,
+  compulsory_login:boolean,
   setUpdate:React.MutableRefObject<() => void>,
   returnToApp: (navigate: NavigateFunction) => void,
   theme:Record<string, any>
 }> = ({
-  t, logo, logo_sankey_plus, loginComponent, setUpdate, returnToApp,theme
+  t, logo, logo_sankey_plus, loginComponent,compulsory_login, setUpdate, returnToApp,theme
 }) => {
   // Step to register
   const [on_wait, setOnWait] = useState(false)
@@ -386,6 +387,11 @@ const Register: FunctionComponent<{
     content = [log]
   }
 
+  let template = 'minmax(7vw, 150px) auto 11rem 11rem'
+  if (compulsory_login) {
+    template = 'minmax(7vw, 150px) auto 11rem'
+  }
+  
   return (
     <ChakraProvider
       theme={theme}
@@ -399,7 +405,7 @@ const Register: FunctionComponent<{
       >
         <Box
           layerStyle='menutop_layout_style'
-          gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
+          gridTemplateColumns={template}
         >
           <Box
             margin='0.25rem'
@@ -414,11 +420,12 @@ const Register: FunctionComponent<{
             />
           </Box>
           <Box></Box>
-          <Button
+          {!compulsory_login ?<Button
             variant='btn_lone_navigation'
             onClick={() => { returnToApp(navigate) }}>
             {t('UserNav.to_app')}
-          </Button>
+          </Button> : <></>
+}
           <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/login')}>
