@@ -1,3 +1,4 @@
-Copyright (c) 2023 TerriFlux. All rights reserved.
+Copyright (c) 2025 TerriFlux. All rights reserved.
 
-TerriFlux is currently in the process of choosing a proper licence, please contact us if you need one in the meantime (contact@terriflux.fr).
+OpenSankey is an OPenSource code covered by an IT Licence. 
+Tou can contact us at contact@terriflux.fr.
