@@ -32,16 +32,16 @@ Replace your index.js by
 >   ModalWelcomeBuilder
 > } from 'open-sankey/dist/components/welcome/ModalWelcome'
 > import { opensankey_theme } from 'open-sankey/dist/chakra/Theme'
-
+>
 > // CONSTANTS =========================================================================================
-
+>
 > // Link with React
 > window.React = React
-
+>
 > // Application container
 > const container=document.getElementById('root')
 > const root=createRoot(container)
-
+>
 > // RENDERING ==========================================================================================
 > root.render(
 >   <ChakraProvider theme={opensankey_theme}>
@@ -74,8 +74,8 @@ Replace your index.js by
 >     />
 >   </ChakraProvider>
 > )
-
-
+>
+>
 > // If you want to start measuring performance in your app, pass a function
 > // to log results (for example: reportWebVitals(console.log))
 > // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
