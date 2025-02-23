@@ -1,6 +1,7 @@
 # Using package Open-Sankey
 
 npx create-react-app mysankey
+
 npm install open-sankey
 
 !! react and react-dom in package.json must the same version as the one in OpenSankey (18.3.1 at the time of this writing)
