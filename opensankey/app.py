@@ -1,3 +1,4 @@
+#!python
 # coding: utf-8
 
 # ---------------------------------------------------------------
@@ -7,13 +8,13 @@ import os
 
 # Local libs
 try:
+    from opensankey.server import create_app
+except Exception:
     from .server import create_app
-except Exception:
-    from server import create_app
 try:
-    from .doc import doc as doc_blueprint
+    from opensankey.doc import doc as doc_blueprint
 except Exception:
-    from doc import doc as doc_blueprint
+    from .doc import doc as doc_blueprint
 
 # --------------------------------------------------------------
 app = create_app()
