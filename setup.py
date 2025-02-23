@@ -62,36 +62,20 @@ class BDistWheelInfoPyCommand(wheel.bdist_wheel.bdist_wheel):
 
 
 setup(name='OpenSankey',
-      version='0.12.0dev',
-      description='Sankey Tools',
-      url='git@gitlab.com:su-model/opensankey.git',
-      author='Greel',
-      author_email='julien.alapetite@gmail.com',
+      version='0.9.12',
+      description='OpenSankey',
+      url='https://gitlab.com/terriflux-public/OpenSankey',
+      author='TerriFlux',
+      author_email='contact@terriflux.fr',
       license='MIT',
-      packages=['opensankey', 'opensankey.tests'],
+      packages=['opensankey'],
       package_dir={'opensankey': 'opensankey'},
       package_data={
             'opensankey': [
                   'setup.cfg',
                   'opensankey.ini',
                   'wsgi.py',
-                  'server/*.*',
-                  'doc/*.*',
-                  'tests/donnees/*.*',
-                  'tests/output_references/*.*',
-                  'server/exemples/*.*',
-                  'client/build/*.*',
-                  'client/build/static/css/*.css',
-                  'client/build/static/js/*.js',
-                  'client/build/static/media/*.*',
-                  'client/src/image'
-                  'doc/build/html/_images/*',
-                  'doc/build/html/_sources/*',
-                  'doc/build/html/_static/*',
-                  'doc/build/html/_static/css/*',
-                  'doc/build/html/_static/css/fonts/*',
-                  'doc/build/html/_static/js/*',
-                  'doc/build/html/*'
+                  'server/*.*'
             ]
       },
       cmdclass={
@@ -100,4 +84,7 @@ setup(name='OpenSankey',
           'egg_info': EggInfoPyCommand,
           'bdist_wheel': BDistWheelInfoPyCommand
       },
+        scripts=[
+            'opensankey/app.py'
+        ],
       zip_safe=False)
