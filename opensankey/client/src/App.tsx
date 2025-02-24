@@ -26,6 +26,20 @@ import { Type_AdditionalMenus } from './types/Types'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
 
+declare const window: Window &
+  typeof globalThis & {
+    SankeyToolsStatic: boolean
+    sankey: {
+      filiere?: Type_JSON,
+      header?: string,
+      has_header?: boolean,
+      footer?: boolean,
+      logo_width?: number,
+      excel?: string,
+      publish?: boolean
+      logo?: string
+    }
+  }
 /*************************************************************************************************/
 
 export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
@@ -49,6 +63,9 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   if (json_data !== null && json_data != '' && json_data != 'null') {
     const new_data = JSON.parse(json_data)
     initial_data = new_data
+  }
+  if (window.sankey && window.sankey.filiere) {
+    initial_data = window.sankey.filiere
   }
 
   // Initialize data
