@@ -368,11 +368,11 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     _updateShapeVisibility()
   }
   
-/**
+  /**
  * Reorganise link's IO order of selected nodes based on pos of source/target & save it's undo
  *
  */
-const reorgIONodeSelected = () => {
+  const reorgIONodeSelected = () => {
     // Save old value that can be used in undo
     const dict_old_io: { [x: string]: string[] } = {}
     selected_nodes.forEach(node => dict_old_io[node.id] = [...Object.keys(node.input_links_dict), ...Object.keys(node.output_links_dict)])
