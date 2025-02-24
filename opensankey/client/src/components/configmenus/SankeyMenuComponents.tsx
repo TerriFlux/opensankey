@@ -609,12 +609,12 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
             </Box>
             <OSTooltip label={t('Flux.label.tooltips.l_u')}>
               <ConfigMenuTextInput
-              ref_to_set_value={ref_set_number_inputs[1]}
-              function_get_value={()=>get_label_unit}
-              function_on_blur={(value) => {
-                updateElements(new_data, elements, dict_decorator_name, 'label_unit', value?value:undefined, refreshParentComponent)
-              }}
-              menu_for_style={menu_for_style}
+                ref_to_set_value={ref_set_number_inputs[1]}
+                function_get_value={()=>get_label_unit}
+                function_on_blur={(value) => {
+                  updateElements(new_data, elements, dict_decorator_name, 'label_unit', value?value:undefined, refreshParentComponent)
+                }}
+                menu_for_style={menu_for_style}
               />
             </OSTooltip>
           </Box>
