@@ -18,6 +18,8 @@ def get_long_description():
         with open('README.md') as f:
             long_description = f.read()
             return long_description
+
+
 class BuildPyCommand(setuptools.command.sdist.sdist):
     """Custom build command."""
     def run(self):
@@ -72,7 +74,7 @@ class BDistWheelInfoPyCommand(wheel.bdist_wheel.bdist_wheel):
 
 setup(
     name='OpenSankey',
-    version='1.0.0b2',
+    version='1.0.0b3',
     description='OpenSankey',
     url='https://gitlab.com/terriflux-public/OpenSankey',
     author='TerriFlux',
