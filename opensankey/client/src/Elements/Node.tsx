@@ -1,7 +1,27 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
-// Date : 29/05/2024
-// All rights reserved for TerriFlux
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -1968,29 +1988,29 @@ export abstract class ClassTemplate_NodeElement
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-                break
-              case 'top':
-                node_face_size = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size = sumLinkTop
-                break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size2 = sumLinkRight
-                break
-              case 'top':
-                node_face_size2 = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size2 = sumLinkTop
-                break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
