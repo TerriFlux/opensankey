@@ -666,7 +666,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
   public get logo(): string { return this._logo_sankey_plus }
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
 
-  public get has_sankey_plus(): boolean { return this._has_sankey_plus }
+  public get has_sankey_plus() { return this._has_sankey_plus }
+  public set has_sankey_plus(_) { this._has_sankey_plus = _}
 
   // Override getter & setter so we can get new type
   public get menu_configuration(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
