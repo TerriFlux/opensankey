@@ -62,16 +62,6 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
   }
   new_data.menu_configuration.ref_to_menu_config_links_tags_updater.current = updateThis
 
-  /**
-   * Function used to reset menu UI
-   */
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // And update this menu also
-    new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
-  }
-
   // Utils functions --------------------------------------------------------------------
 
   /**

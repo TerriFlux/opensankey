@@ -15,13 +15,7 @@ import {
   Box,
   Checkbox,
   Button,
-  InputGroup,
   Input,
-  NumberInput,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInputField,
-  NumberInputStepper,
   ButtonGroup
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

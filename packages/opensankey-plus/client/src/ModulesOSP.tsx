@@ -167,9 +167,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Data -------------------------------------------------------------------------------
   const new_data_plus = new_data as Type_GenericApplicationDataOSP
 
-  // Local variables --------------------------------------------------------------------
-  const has_views = new_data_plus.has_views
-
   // JSX Elements for views navbar ------------------------------------------------------
   if (new_data_plus.has_sankey_plus) {
     // Edition DataTag

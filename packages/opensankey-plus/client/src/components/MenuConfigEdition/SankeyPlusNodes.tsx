@@ -60,12 +60,6 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
   new_data_plus.menu_configuration.ref_to_menu_config_node_icon_updater.current = () => setForceUpdate(b => !b)
 
-  // Update only this component
-  const redrawIllustrationAndRefresh = () => {
-    selected_nodes.forEach(zdt => zdt.drawIllustration())
-    setForceUpdate(!forceUpdate)
-  }
-
   // Update this component & component node appareance because we modify shape visibility
   const redrawAndRefresh = () => {
     new_data_plus.menu_configuration.updateComponentRelatedToNodesApparence()
@@ -98,7 +92,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     button_icon_or_image = 'none'
   }
 
-  // Functions we can undo ========================================== 
+  // Functions we can undo ==========================================
 
   /**
    *Update visibility of selected nodes & save it's undo

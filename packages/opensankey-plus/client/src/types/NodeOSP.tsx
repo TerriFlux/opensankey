@@ -41,7 +41,6 @@ import {
   Class_NodeAttribute,
   Class_NodeStyle
 } from '../deps/OpenSankey/Elements/NodeAttributes'
-import { Type_AnyNodeElement } from '../deps/OpenSankey/Elements/Node'
 
 // SPECIFIC FUNCTIONS *******************************************************************
 

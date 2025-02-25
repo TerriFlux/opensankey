@@ -1,6 +1,6 @@
 // External imports
 import * as d3 from 'd3'
-import React, { useState, FunctionComponent, MutableRefObject, useRef } from 'react'
+import React, { useState, FunctionComponent } from 'react'
 import {
   FaEye,
   FaEyeSlash,
@@ -54,7 +54,6 @@ import {
 } from '../../deps/OpenSankey/types/Utils'
 import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Link'
-import { ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -268,13 +267,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-      id: tag.id,
-      name: tag.name,
-      elementsRef: dict_ref_element,
-      grp: tag.group,
-      color: tag.color,
-      dict_link_value: {}
-    }
+        id: tag.id,
+        name: tag.name,
+        elementsRef: dict_ref_element,
+        grp: tag.group,
+        color: tag.color,
+        dict_link_value: {}
+      }
 
     if (tag instanceof Class_DataTag) {
       // Save value of each links in dict
@@ -287,7 +286,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
       // Delete given tag
       tag.delete()
 
-      // If we delete a dataTag that is selected, we select another one (the first of the remaining group)  
+      // If we delete a dataTag that is selected, we select another one (the first of the remaining group)
       if (tag instanceof Class_DataTag && tag.is_selected) {
         tag.group.tags_list[0].setSelected()
       }
@@ -349,13 +348,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-      id: tagg.id,
-      name: tagg.name,
-      activated: tagg.show_legend,
-      banner: tagg.banner,
-      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
-      dict_link_value: {}
-    }
+        id: tagg.id,
+        name: tagg.name,
+        activated: tagg.show_legend,
+        banner: tagg.banner,
+        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+        dict_link_value: {}
+      }
 
     if (tagg instanceof Class_DataTagGroup) {
       new_data.drawing_area.sankey.links_list.forEach(l => {
@@ -373,7 +372,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     const inv_handleDelGroupTag = () => {
       let clone_tagg: Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup
 
-      // Recreate Group tag to correct type 
+      // Recreate Group tag to correct type
       if (tagg instanceof Class_NodeTagGroup) {
         clone_tagg = new_data.drawing_area.sankey.addNodeTagGroup(old_val.id, old_val.name, false)
       } else if (tagg instanceof Class_FluxTagGroup) {
@@ -483,7 +482,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     // Execute original attr mutation
     _toggleTagSelected()
   }
-  
+
   /**
    * Button hadler for color randomised, can be undone
    *

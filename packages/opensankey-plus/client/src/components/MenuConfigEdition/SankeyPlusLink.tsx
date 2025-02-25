@@ -55,7 +55,6 @@ import type {
 } from '../../types/LinkOSP'
 import type {
   Type_GenericLinkElementOSP,
-  Type_GenericNodeElementOSP
 } from '../../types/TypesOSP'
 import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
@@ -304,7 +303,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         }
       </Checkbox>
       {value_label_significant_digits ?
-        /* Choose number of custom digit */
+      /* Choose number of custom digit */
 
         /* <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.label.NbDigit')}
@@ -388,66 +387,55 @@ export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLin
   const { t } = new_data
   const contextualised_link = new_data.drawing_area.link_contextualised
   const has_flux_tags = Object.values(new_data.drawing_area.sankey.flux_taggs_dict).length > 0
-  const selected_links = new_data.drawing_area.visible_and_selected_links_list
-  const [, setCount] = useState(0)
-  const refreshThisAndToggleSaving = () => {
-    // Toogle saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-    // Refresh this menu
-    setCount(a => a + 1)
-    // Refresh context menu
-    new_data.menu_configuration.ref_to_menu_context_links_updater.current()
-  }
   return (
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-    {sep}
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {t('Menu.Transformation.tagFlux_assign')}
-      </MenuButton>
+      {sep}
+      <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {t('Menu.Transformation.tagFlux_assign')}
+        </MenuButton>
 
-      <MenuList>
-        {
-          new_data.drawing_area.sankey.flux_taggs_list
-            .filter(tagg => tagg.has_tags)
-            .map((tagg, i) => {
-              return <Menu key={i} placement='end'>
-                <MenuButton
-                  variant='contextmenu_button'
-                  as={Button}
-                  rightIcon={<ChevronRightIcon />}
-                  className="dropdown-basic"
-                >
-                  {tagg.name}
-                </MenuButton>
-                <MenuList>
-                  {
-                    tagg.tags_list
-                      .map(tag => {
-                        const has_tag = contextualised_link.hasGivenTag(tag)
-                        return <MenuItem
-                          onClick={() => {
-                            new_data.drawing_area.updateSelectedLinksTagAssignation(has_tag, tag)
-                          }}
-                        >
-                          {t.name}
-                          {checked(has_tag)}
-                        </MenuItem>
-                      })
-                  }
-                </MenuList>
-              </Menu>
-            })
-        }
-      </MenuList>
-    </Menu></> :
+        <MenuList>
+          {
+            new_data.drawing_area.sankey.flux_taggs_list
+              .filter(tagg => tagg.has_tags)
+              .map((tagg, i) => {
+                return <Menu key={i} placement='end'>
+                  <MenuButton
+                    variant='contextmenu_button'
+                    as={Button}
+                    rightIcon={<ChevronRightIcon />}
+                    className="dropdown-basic"
+                  >
+                    {tagg.name}
+                  </MenuButton>
+                  <MenuList>
+                    {
+                      tagg.tags_list
+                        .map(tag => {
+                          const has_tag = contextualised_link.hasGivenTag(tag)
+                          return <MenuItem
+                            onClick={() => {
+                              new_data.drawing_area.updateSelectedLinksTagAssignation(has_tag, tag)
+                            }}
+                          >
+                            {t.name}
+                            {checked(has_tag)}
+                          </MenuItem>
+                        })
+                    }
+                  </MenuList>
+                </Menu>
+              })
+          }
+        </MenuList>
+      </Menu></> :
     <></>
 }
