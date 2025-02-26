@@ -7,12 +7,14 @@ import { resources_opensankeyplus } from '../deps/OpenSankey+/traductions/traduc
 
 import { resources_app_elements } from './traductions_app_elements.js'
 import { resources_metatags } from './traduction_metatags.js'
+import { resources_loading_screen } from './traduction_loading_screen.js'
 
 // Increments ressources
 export const resources_sankeyapp = {}
 deep_assign_resources(resources_opensankeyplus, resources_sankeyapp)
 deep_assign_resources(resources_app_elements, resources_sankeyapp)
 deep_assign_resources(resources_metatags, resources_sankeyapp)
+deep_assign_resources(resources_loading_screen, resources_sankeyapp)
 
 // Create traductions
 const resources = resources_sankeyapp // /!\ i18next accept only var with name "resources"

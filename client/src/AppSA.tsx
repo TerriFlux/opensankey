@@ -13,10 +13,13 @@ import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-rou
 import { HelmetProvider } from 'react-helmet-async'
 
 import {
+  Box,
   Center,
   ChakraProvider,
   Spinner
 } from '@chakra-ui/react'
+
+import TextLoop from "react-text-loop"
 
 
 // OpenSankey imports ===============================================================================
@@ -47,6 +50,27 @@ import { PrivateRoute } from './components/Routes/PrivateRoutes'
 import { PublicRoute } from './components/Routes/PublicRoutes'
 import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Paiement/Paiement'
 import { MetaTags } from './components/MetaTags'
+import i18next from 'i18next'
+
+// Specific methods ==================================================================================
+
+function shuffle(array: number[]) {
+  let currentIndex = array.length;
+
+  // While there remain elements to shuffle...
+  while (currentIndex != 0) {
+
+    // Pick a remaining element...
+    let randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array
+}
 
 // OpenSankeyApp for OpenSankey+ ========================================================================
 
@@ -94,7 +118,9 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
 
   // Full app ------------------------------------------------------------------------------------
 
-  const video_src = 'media/catch_phrase_OpenSankey.v' + String(Math.round(Math.random() * 3)) + '.webm'
+  const start_sentence = shuffle([...Array(7).keys()])
+  const end_sentence = shuffle([...Array(8).keys()])
+
   const [app, setApp] = useState(
     <HelmetProvider>
       <MetaTags
@@ -103,28 +129,72 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
       <ChakraProvider
         theme={Theme_SankeyApplication}
       >
-        <Center
-          h={window.innerHeight}
-          w={window.innerWidth}
-          display="grid"
-          gridAutoFlow="row"
+        <Box
+          height="100vh"
+          backgroundImage={"url(./loading_screen/" + i18next.language + '/' + String(Math.ceil(Math.random() * 3)) + ".png)"}
+          backgroundRepeat='no-repeat'
+          backgroundPosition='center'
+          backgroundSize="contain"
         >
-          <video
-            style={{
-              'display': 'grid',
-              'width': '75vw',
-              'height': '75vh'
-            }}
-            id="Catch phrase OpenSankey"
-            autoPlay
-            muted
-            playsInline
-            loop
+          <Center
+            height="100vh"
+            display="grid"
+            gridAutoFlow="row"
           >
-            <source src={video_src} type="video/webm" />
-          </video>
-          <Spinner size='xl' />
-        </Center>
+            <Box
+              as="span"
+              textStyle="h1"
+              textColor="black"
+              fontSize="6vh"
+            >
+              {
+                i18next.language !== 'fr' ? 'Simply ' : ''
+              }
+              <TextLoop
+                springConfig={{ stiffness: 180, damping: 8 }}
+              >
+                {
+                  start_sentence.map(i => {
+                    return <Box
+                      textColor={'primaire.' + String(Math.ceil(Math.random() * 6))}
+                    >
+                      {new_data_app.t('loading_screen.start.text_' + String(i))}
+                    </Box>
+                  })
+                }
+              </TextLoop>
+              {
+                i18next.language !== 'fr' ? ' your ' : ' simplement vos flux '
+              }
+              <TextLoop
+                springConfig={{ stiffness: 180, damping: 8 }}
+              >
+                {
+                  end_sentence.map(i => {
+                    return <Box
+                      textColor={'secondaire.' + String(Math.ceil(Math.random() * 6))}
+                    >
+                      {new_data_app.t('loading_screen.end.text_' + String(i))}
+                    </Box>
+                  })
+                }
+              </TextLoop>
+              {
+                i18next.language !== 'fr' ? ' flows' : ''
+              }
+            </Box>
+          </Center>
+          <Spinner
+            width='50px'
+            height='50px'
+            borderWidth='5px'
+            color='primaire.2'
+            position='absolute'
+            zIndex='1'
+            bottom='50px'
+            right='50%'
+          />
+        </Box>
       </ChakraProvider>
     </HelmetProvider>
   )
