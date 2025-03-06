@@ -1,3 +1,29 @@
+// ==================================================================================================
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
+// ==================================================================================================
+
 import {
   Box,
   Button,
@@ -11,7 +37,7 @@ import { FaAlignLeft, FaAlignCenter, FaAlignRight, FaBold, FaItalic } from 'reac
 import { ClassTemplate_LinkElement } from '../../Elements/Link'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, font_families } from '../../types/Utils'
-import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
 import { FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName } from './types/SankeyMenuComponentsType'
 import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
@@ -582,12 +608,13 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
               }
             </Box>
             <OSTooltip label={t('Flux.label.tooltips.l_u')}>
-              <Input
-                variant='menuconfigpanel_option_input'
-                value={get_label_unit}
-                onChange={evt => {
-                  updateElements(new_data, elements, dict_decorator_name, 'label_unit', evt.target.value, refreshParentComponent)
+              <ConfigMenuTextInput
+                ref_to_set_value={ref_set_number_inputs[1]}
+                function_get_value={()=>get_label_unit}
+                function_on_blur={(value) => {
+                  updateElements(new_data, elements, dict_decorator_name, 'label_unit', value?value:undefined, refreshParentComponent)
                 }}
+                menu_for_style={menu_for_style}
               />
             </OSTooltip>
           </Box>

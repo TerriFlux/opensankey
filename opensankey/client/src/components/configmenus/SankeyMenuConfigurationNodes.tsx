@@ -1,4 +1,30 @@
-import React, { FunctionComponent, useState } from 'react'
+// ==================================================================================================
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
+// ==================================================================================================
+
+import React, { FunctionComponent, useRef, useState } from 'react'
 import { FaPlus, FaMinus, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { MultiSelect } from 'react-multi-select-component'
 
@@ -31,14 +57,15 @@ import {
 } from '../../types/Utils'
 import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
 import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
+import { ConfigMenuTextInput } from './SankeyMenuConfiguration'
 
 
 /*************************************************************************************************/
 
 type FCType_SankeyNodeEdition = {
   new_data: Type_GenericApplicationData,
-  menu_configuration_nodes_attributes:JSX.Element,
-  additionalMenus : Type_AdditionalMenus
+  menu_configuration_nodes_attributes: JSX.Element,
+  additionalMenus: Type_AdditionalMenus
 }
 
 /*************************************************************************************************/
@@ -77,20 +104,29 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
 
   // Boolean used to force this component to reload
   const [, setCount] = useState(0)
-  // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_config_nodes_selection_updater.current = ()=>setCount(a=>a+1)
+  // Link this menu's update function to ref
+  new_data.menu_configuration.ref_to_menu_config_nodes_selection_updater.current = () => {
+    const value_to_show = (new_data.drawing_area.selected_nodes_list.length != 1) ? '' : new_data.drawing_area.selected_nodes_list[0].name
+    // Update text input of node name
+    ref_set_text_value_input.current(String(value_to_show))
+    setCount(a => a + 1)
+  }
+
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   // Function used to reset menu UI -----------------------------------------------------
 
   const refreshThisAndToggleSaving = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    ref_set_text_value_input.current(String((selected_nodes.length != 1) ? '' : selected_nodes[0].name))
+
     // Refresh this menu
-    setCount(a=>a+1)
+    setCount(a => a + 1)
   }
 
   const refreshThisAndUpdateRelatedComponents = () => {
-    // Update values displayed in menus for link's configuration
+    // Update values displayed in menus for node's configuration
     new_data.menu_configuration.updateAllComponentsRelatedToNodesConfig()
     // Update and update saving indicator
     refreshThisAndToggleSaving()
@@ -248,6 +284,79 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
   // </Overlay>
 
 
+  // Funcion undo =========================
+
+  /**
+   * Create a node & save it's undo in history
+   *
+   */
+  const addNode = () => {
+    let new_node: Type_GenericNodeElement
+
+    const _addNode = () => {
+      // Create default node
+      new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
+      //Deselect previously selected nodes
+      new_data.drawing_area.purgeSelectionOfNode()
+      // Add node to selection
+      new_data.drawing_area.addNodeToSelection(new_node)
+      // Update all menus
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    const inv_addNode = () => {
+      new_data.drawing_area.deleteNode(new_node)
+      refreshThisAndUpdateRelatedComponents()
+    }
+
+    // Save undo/redo in history
+    new_data.drawing_area.application_data.history.saveUndo(inv_addNode)
+    new_data.drawing_area.application_data.history.saveRedo(_addNode)
+    // Execute original function
+    _addNode()
+  }
+
+  /**
+   * Method to mutate node name & save it's undoing in data history
+   *
+   * @param {(number | null | undefined)} _
+   */
+  const updateNameNode = (_: string | null | undefined) => {
+    if (_ == undefined || _ == null)
+      return
+    // Save old values in dict so the undo reset value for previous value of each node
+    const old_val = selected_nodes[0].name
+    // Undo node name
+
+    const inv_updateNameNode = () => {
+      // Update selected nodes' name
+      if (selected_nodes.length != 1) {
+        return
+      }
+      selected_nodes[0].name = old_val
+      // Refresh and toggle saving
+      refreshThisAndToggleSaving()
+    }
+
+    // Mutate node name
+    const _updateNameNode = () => {
+      // Update selected nodes' name
+      if (selected_nodes.length != 1) {
+        return
+      }
+      selected_nodes[0].name = _
+      // Refresh and toggle saving
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateNameNode)
+    new_data.history.saveRedo(_updateNameNode)
+    // Execute original attr mutation
+    _updateNameNode()
+  }
+
+
+
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       <Box
@@ -258,16 +367,7 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
-            onClick={() => {
-              // Create default node
-              const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
-              //Deselect previously selected nodes
-              new_data.drawing_area.purgeSelectionOfNode()
-              // Add node to selection
-              new_data.drawing_area.addNodeToSelection(new_node)
-              // Update all menus
-              refreshThisAndUpdateRelatedComponents()
-            }}>
+            onClick={addNode}>
             <FaPlus />
           </Button>
         </OSTooltip>
@@ -321,26 +421,11 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
         </Box>
         <Box>
           <OSTooltip label={t('Noeud.tooltips.Nom')}>
-            <InputGroup
-              variant='menuconfigpanel_option_input'
-            >
-              <Input
-                variant='menuconfigpanel_option_input'
-                value={
-                  (selected_nodes.length != 1) ? '' : selected_nodes[0].name
-                }
-                onChange={evt => {
-                  // Update selected nodes' name
-                  if (selected_nodes.length != 1) {
-                    return
-                  }
-                  selected_nodes[0].name = evt.target.value
-                  // Refresh and toggle saving
-                  refreshThisAndToggleSaving()
-                }}
-                isDisabled={(selected_nodes.length == 1) ? false : true}
-              />
-            </InputGroup>
+            <ConfigMenuTextInput
+              ref_to_set_value={ref_set_text_value_input}
+              function_get_value={() => (selected_nodes.length != 1) ? '' : selected_nodes[0].name}
+              function_on_blur={updateNameNode}
+            />
           </OSTooltip>
         </Box>
       </Box>
@@ -353,8 +438,8 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
               {
                 Object
                   .keys(ui)
-                  .map((key,i) => {
-                    return <Tab key={'submenuconfig_tab_'+i}>
+                  .map((key, i) => {
+                    return <Tab key={'submenuconfig_tab_' + i}>
                       <Box layerStyle='submenuconfig_tab' >
                         {t(key)}
                       </Box>
@@ -367,7 +452,7 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
               {
                 Object
                   .values(ui)
-                  .map((c,i) => <React.Fragment key={'panel'+i}>{c}</React.Fragment>)
+                  .map((c, i) => <React.Fragment key={'panel' + i}>{c}</React.Fragment>)
               }
             </TabPanels>
           </Tabs> :
