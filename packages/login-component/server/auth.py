@@ -235,8 +235,8 @@ def login_post():
             db.session.commit()
 
     # Switch automatically to new license system
-    user.replace_legacy_opensankeyplus_license()
-    user.replace_legacy_sankeysuite_license()
+    #user.replace_legacy_opensankeyplus_license()
+    #user.replace_legacy_sankeysuite_license()
     user.replace_developper_token()
 
     # Return
