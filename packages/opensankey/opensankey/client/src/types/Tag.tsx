@@ -1,7 +1,27 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
-// Date : 29/05/2024
-// All rights reserved for TerriFlux
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
 // Local types
@@ -38,7 +58,7 @@ import colormap from 'colormap'
 export type tag_banner_type = 'none' | 'one' | 'multi' | 'level'
 
 type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
-type TypeAbstract_TagReference = TypeAbstract_NodeElement | ClassAbstract_LinkValue
+export type TypeAbstract_TagReference = TypeAbstract_NodeElement | ClassAbstract_LinkValue | TypeAbstract_DataTagReference
 type TypeAbstract_DataTagReference = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS PROTO TAG ***********************************************************************
@@ -286,7 +306,7 @@ export abstract class Class_Tag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
   // List of elements that relates to this tag
-  private _references: { [_: string]: TypeAbstract_TagReference } = {}
+  protected _references: { [_: string]: TypeAbstract_TagReference } = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -376,6 +396,24 @@ export abstract class Class_Tag extends Class_ProtoTag {
  * @class Class_Tag
  */
 export class Class_NodeTag extends Class_Tag {
+  // PROTECTED METHODS ==================================================================
+
+  /**
+   * Assign tag to node from list 
+   *
+   * @param {string[]} list_id
+   * @memberof Class_NodeTag
+   */
+  public setReferenceFromIds(list_id: string[]): void {
+    // go throught list of node referenced & add this tag 
+    list_id.forEach(nid => {
+      const node_ref = this._ref_sankey.nodes_dict[nid]
+      if (!this.hasGivenReference(node_ref)) {
+        this._references[nid] = node_ref
+        node_ref.addTag(this)
+      }
+    })
+  }
 
   // PROTECTED METHODS ==================================================================
 
@@ -393,6 +431,29 @@ export class Class_NodeTag extends Class_Tag {
  */
 export class Class_FluxTag extends Class_Tag {
 
+
+  // PUBLIC METHODS =====================================================================
+
+  /**
+   * Assign tag to links from list 
+   *
+   * @param {string[]} list_id_link_val
+   * @memberof Class_FluxTag
+   */
+  public setReferenceFromIds(list_id_link_val: string[]): void {
+    // Go throught all link
+    this._ref_sankey.links_list.forEach(link => {
+      const l_values= link.getAllValues()
+      // if a link value id is in list_id_link_val then add tag to link value
+      list_id_link_val.forEach(lid=>{
+        if(lid in l_values){
+          l_values[lid][0].addTag(this)
+        }
+      })
+    })
+  }
+
+
   // PROTECTED METHODS ==================================================================
 
   protected updateFingerprint() {
@@ -404,6 +465,7 @@ export class Class_FluxTag extends Class_Tag {
 // CLASS DATATAG ************************************************************************
 
 export class Class_DataTag extends Class_ProtoTag {
+
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -465,6 +527,11 @@ export class Class_DataTag extends Class_ProtoTag {
     }
   }
 
+  // Implement function so we can use it in config tags
+  // we don't need to ref elements in this function because for DataTag it reference all links (done in constructor)
+  public setReferenceFromIds(list_id: string[]): void {
+  }
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -490,6 +557,8 @@ export class Class_DataTag extends Class_ProtoTag {
   // GETTERS ============================================================================
 
   public get group() { return this._group }
+
+  public get references() { return Object.values(this._references) }
 }
 
 // CLASS PROTO LEVEL TAG ****************************************************************
@@ -687,6 +756,8 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   // Group where it belong
 
   protected _group: Class_LevelTagGroup
+
+  private _references: { [_: string]: TypeAbstract_TagReference } = {}
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -1000,6 +1071,8 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   public get dimensions_list_as_tag_for_children() {
     return Object.values(this._dimensions_as_tag_for_children)
   }
+
+  public get references() { return Object.values(this._references) }
 }
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -1184,7 +1257,7 @@ export abstract class Class_ProtoTagGroup extends ClassAbstract_ProtoTagGroup {
   public addDefaultTag() {
     const n = String(this._tag_count)
     const name = 'Etiquette ' + n
-    this.addTag(name)
+    return this.addTag(name)
   }
 
   public removeTag(_: Class_ProtoTag) {
