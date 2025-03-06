@@ -1,5 +1,31 @@
+// ==================================================================================================
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
+// ==================================================================================================
+
 import * as d3 from 'd3'
-import React, { FunctionComponent, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
@@ -19,6 +45,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { FCType_ContextMenuZdd } from './types/SankeyMenuContextZDDTypes'
 import { GetRandomInt, list_palette_color } from '../../types/Utils'
+import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 
 const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
@@ -30,7 +57,8 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
   const { t } = new_data
   const [forceUpdate, setForceUpdate] = useState(false)
-
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
+  ref_set_number_inputs.current(String(new_data.drawing_area.scale))
   new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current = () => setForceUpdate(!forceUpdate)
 
   const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -54,6 +82,114 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     style_c_zdd = pos_y + 'px auto auto ' + pos_x + 'px'
   }
 
+  // Functions & undo ==========================================
+
+  /**
+   * Align node pos with grid lines & save it's undo
+   *
+   */
+  const arrangeNodesToGrid = () => {
+    const node_pos = Object.fromEntries(new_data.drawing_area.sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y }]))
+
+    const _arrangeNodesToGrid = () => {
+      new_data.drawing_area.arrangeNodesToGrid()
+      indicateSankeyToSaveInCache()
+    }
+
+    const inv_arrangeNodesToGrid = () => {
+      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => {
+        n.setPosXY(node_pos[n.id].x, node_pos[n.id].y)
+      })
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_arrangeNodesToGrid)
+    new_data.history.saveRedo(_arrangeNodesToGrid)
+    // Execute original attr mutation
+    _arrangeNodesToGrid()
+  }
+
+  /**
+   * Update background grid visibility & save it's undo
+   *
+   */
+  const bgGrid = () => {
+
+    const _bgGrid = () => {
+      new_data.drawing_area.grid_visible = !new_data.drawing_area.grid_visible
+      setForceUpdate(!forceUpdate)
+      indicateSankeyToSaveInCache()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(_bgGrid)
+    new_data.history.saveRedo(_bgGrid)
+    // Execute original attr mutation
+    _bgGrid()
+  }
+
+  /**
+   * Update legend visibility & save it's undo
+   *
+   */
+  const maskLegend = () => {
+
+    const _maskLegend = () => {
+      new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
+      setForceUpdate(!forceUpdate)
+      indicateSankeyToSaveInCache()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(_maskLegend)
+    new_data.history.saveRedo(_maskLegend)
+    // Execute original attr mutation
+    _maskLegend()
+  }
+
+  /**
+   * Update color of node with random palette & save it's undo
+   *
+   */
+  const randColor = () => {
+    const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
+    const size_color = new_data.drawing_area.sankey.nodes_list.length
+    const old_color = Object.fromEntries(new_data.drawing_area.sankey.nodes_list.map(n => [n.id, n.shape_color]))
+    const _randColor = () => {
+      for (const i in d3.range(size_color)) {
+        new_data.drawing_area.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / size_color))?.formatHex() as string)
+      }
+      indicateSankeyToSaveInCache()
+    }
+
+    const inv_randColor = () => {
+      new_data.drawing_area.sankey.nodes_list.forEach(n => n.shape_color = old_color[n.id])
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_randColor)
+    new_data.history.saveRedo(_randColor)
+    // Execute original attr mutation
+    _randColor()
+  }
+
+
+  /**
+   * Update DA scale & save it's undo
+   *
+   * @param {(number | null | undefined)} evt
+   */
+  const changeScale = (evt: number | null | undefined) => {
+    if (evt) {
+      const f = (_: number) => {
+        new_data.drawing_area.scale = _
+        indicateSankeyToSaveInCache()
+        setForceUpdate(!forceUpdate)
+      }
+      // Undo/redo done in setValueAndSaveHistory
+      new_data.setValueAndSaveHistory(new_data.drawing_area, 'scale', evt, f)
+    }
+  }
+
+
+  // Buttons components ==============================================================
+
   const button_bg_color = <Button variant='contextmenu_button'>
     <Input hidden type='color' id='color_bg_zdd' name='color_bg_zdd'
       onChange={(evt) => {
@@ -64,22 +200,9 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     <label htmlFor='color_bg_zdd' style={{ width: '100%', margin: 0 }}>{t('Menu.BgC')}</label>
   </Button>
 
-  const button_bg_grid = <><Button variant='contextmenu_button' onClick={() => {
-    new_data.drawing_area.grid_visible = !new_data.drawing_area.grid_visible
-    setForceUpdate(!forceUpdate)
-    indicateSankeyToSaveInCache()
-  }}>{t('MEP.TCG')}{checked(new_data.drawing_area.grid_visible)}</Button>
-  </>
-  const button_assgn_rand_node_color = <><Button variant='contextmenu_button' onClick={() => {
-    const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-    const size_color = new_data.drawing_area.sankey.nodes_list.length
+  const button_bg_grid = <Button variant='contextmenu_button' onClick={bgGrid}>{t('MEP.TCG')}{checked(new_data.drawing_area.grid_visible)}</Button>
 
-    for (const i in d3.range(size_color)) {
-      new_data.drawing_area.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / size_color))?.formatHex() as string)
-    }
-    indicateSankeyToSaveInCache()
-  }}>{t('Menu.rand_node_color')}</Button>
-  </>
+  const button_assgn_rand_node_color = <Button variant='contextmenu_button' onClick={randColor}>{t('Menu.rand_node_color')}</Button>
 
   // Item to change sankey scale
   const dropdown_c_zdd_scale = <Box>
@@ -87,18 +210,13 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
         {t('MEP.Echelle')}
       </Box>
-
-      <NumberInput
-        min={0}
-        value={new_data.drawing_area.scale}
-        onChange={evt => {
-          new_data.drawing_area.scale = +evt
-          new_data.drawing_area.sankey.nodes_list.forEach(node => node.draw())
-          indicateSankeyToSaveInCache()
-          setForceUpdate(!forceUpdate)
-        }}>
-        <NumberInputField />
-      </NumberInput>
+      <ConfigMenuNumberInput
+        ref_to_set_value={ref_set_number_inputs}
+        default_value={new_data.drawing_area.scale}
+        function_on_blur={changeScale}
+        minimum_value={1}
+        stepper={false}
+      />
     </Box>
   </Box>
 
@@ -146,7 +264,6 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         </NumberInput>
       </Box>
 
-
       <Button variant='contextmenu_button'
         onClick={() => {
           new_data.drawing_area.computeAutoSankey(false)
@@ -158,21 +275,12 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
   // Item to display or mask the legend
   const button_mask_leg = <Button variant='contextmenu_button'
-    onClick={() => {
-      new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
-      indicateSankeyToSaveInCache()
-      setForceUpdate(!forceUpdate)
-    }}>
-    {new_data.drawing_area.legend.masked ? t('MEP.hide_leg') : t('MEP.show_leg')}
+    onClick={maskLegend}>
+    {!new_data.drawing_area.legend.masked ? t('MEP.hide_leg') : t('MEP.show_leg')}
   </Button>
 
   const button_an = <Button variant='contextmenu_button'
-    onClick={() => {
-
-      new_data.drawing_area.arrangeNodesToGrid()
-      indicateSankeyToSaveInCache()
-
-    }}>
+    onClick={arrangeNodesToGrid}>
     {t('MEP.AN')}
   </Button>
 

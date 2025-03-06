@@ -1,3 +1,29 @@
+// ==================================================================================================
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
+// ==================================================================================================
+
 import React, { FunctionComponent, useState } from 'react'
 import { MultiSelect } from 'react-multi-select-component'
 import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
@@ -24,7 +50,8 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import {
-  Type_GenericLinkElement
+  Type_GenericLinkElement,
+  Type_GenericNodeElement
 } from '../../types/Types'
 
 /*************************************************************************************************/
@@ -132,18 +159,32 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
    *
    */
   const addLinkConfig = () => {
+    const sankey=new_data.drawing_area.sankey
+    const nodeToDel:{list:Type_GenericNodeElement[]}={list:[]}
+    let presentNode=0
     const _addLinkConfig = () => {
+      presentNode=sankey.nodes_list.length
       const new_link = new_data.drawing_area.addNewDefaultLinkToSankey()
       //Deselect previously selected links
       new_data.drawing_area.purgeSelectionOfLinks()
       // Add link to selection
       new_data.drawing_area.addLinkToSelection(new_link)
+
+      if (presentNode == 0) {
+        nodeToDel.list.push(sankey.nodes_list[0])
+        nodeToDel.list.push(sankey.nodes_list[1])
+      }
+      else if (presentNode == 1) {
+        nodeToDel.list.push(sankey.nodes_list[1])
+      }
       // Toogle saving indicator
       refreshThisAndUpdateRelatedComponents()
     }
 
     const inv_addLinkConfig = () => {
-      new_data.drawing_area.deleteLink(new_data.drawing_area.sankey.links_list[new_data.drawing_area.sankey.links_list.length - 1])
+      nodeToDel.list.forEach(n=>sankey.drawing_area.deleteNode(n))
+      if(presentNode>1)
+        new_data.drawing_area.deleteLink(new_data.drawing_area.sankey.links_list[new_data.drawing_area.sankey.links_list.length - 1])
       // Toogle saving indicator
       refreshThisAndUpdateRelatedComponents()
     }

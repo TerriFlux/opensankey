@@ -1,7 +1,27 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
-// Date : 29/05/2024
-// All rights reserved for TerriFlux
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -30,15 +50,15 @@ import {
 import {
   ClassTemplate_NodeElement,
   sortNodesElements
-} from'../Elements/Node'
+} from '../Elements/Node'
 import {
   ClassTemplate_GhostLinkElement,
   ClassTemplate_LinkElement,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
-} from'../Elements/Link'
+} from '../Elements/Link'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { ClassTemplate_ZoneSelection } from'../Elements/SelectionZone'
+import { ClassTemplate_ZoneSelection } from '../Elements/SelectionZone'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 import {
   ClassAbstract_DrawingArea,
@@ -288,6 +308,8 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   private _ghost_link: ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null = null
+  private _ghost_link_source: Type_GenericNodeElement | null = null
+  private _ghost_link_target: Type_GenericNodeElement | null = null
 
   /**
    *Elements that are selected in this area
@@ -322,9 +344,9 @@ export abstract class ClassTemplate_DrawingArea
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
 
-  public getZoomScale(){
-    const tmp =this.d3_selection_zoom_area?.node()
-    if(tmp && tmp !== null)
+  public getZoomScale() {
+    const tmp = this.d3_selection_zoom_area?.node()
+    if (tmp && tmp !== null)
       return d3.zoomTransform(tmp).k
     else
       return 1
@@ -385,7 +407,7 @@ export abstract class ClassTemplate_DrawingArea
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
     //create new selection zone after deleting previous in 'this.delete()'
-    this._selection_zone=this.createNewSelectionZone()
+    this._selection_zone = this.createNewSelectionZone()
   }
 
   protected _copyAttrFrom(drawing_area_to_copy: ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
@@ -406,7 +428,7 @@ export abstract class ClassTemplate_DrawingArea
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
-    this._vertical_spacing  = drawing_area_to_copy._vertical_spacing
+    this._vertical_spacing = drawing_area_to_copy._vertical_spacing
     this._width = drawing_area_to_copy._width
   }
 
@@ -873,11 +895,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public deleteSelectedNodes() {
-    // Get copy of selected nodes
-    const selected_nodes = this.selected_nodes_list
-    // Delete each one of them
-    selected_nodes.forEach(node => { this.deleteNode(node) })
-    // Then let garbage collector do the rest...
+    this.deleteSelection(true, false)
   }
 
   /**
@@ -961,40 +979,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public deleteSelectedLinks() {
-
-    // dict containing  [link order in source node,link order in target node  ]
-    const dict_old_val: { [x: string]: [string[], string[]] } = {}
-
-    const list_old_link = [...this.selected_links_list].map(l => {
-      const order_o_s = l.source.output_links_list.map(l => l.id)
-      const order_i_t = l.target.input_links_list.map(l => l.id)
-      dict_old_val[l.id] = [order_o_s, order_i_t]
-      return l
-    })
-    const selected_links = list_old_link
-
-    const _deleteSelectedLinks = () => {
-      // Delete each one of them
-      selected_links.forEach(link => { this.deleteLink(link) })
-      // Then let garbage collector do the rest...
-    }
-
-    const inv_deleteSelectedLinks = () => {
-      // Reintroduce deleted link + order them correctly in source/target
-      list_old_link.forEach(l => {
-        const new_l = this.sankey.addNewLinkWithId(l.id, l.source, l.target)
-        new_l.source.reorganizeIOFromListIds(dict_old_val[l.id][0])
-        new_l.target.reorganizeIOFromListIds(dict_old_val[l.id][1])
-        new_l.copyFrom(l)
-        l.drawWithNodes()
-      })
-    }
-    // Save undo/redo in data history
-    this.application_data.history.saveUndo(inv_deleteSelectedLinks)
-    this.application_data.history.saveRedo(_deleteSelectedLinks)
-    // Execute original attr mutation
-    _deleteSelectedLinks()
-
+    this.deleteSelection(false, true)
   }
 
   /**
@@ -1019,20 +1004,37 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @memberof ClassTemplate_DrawingArea
    */
-  public deleteSelection() {
+  public deleteSelection(deleteSelectedNodes: boolean, deleteSelectedLinks: boolean) {
+
     // Save undo --------------------------------------
     // --- Init
-    const json_hist_nodes: {[_: string]: Type_JSON} = {}
-    const json_hist_links: {[_: string]: Type_JSON} = {}
+    const json_hist_nodes: { [_: string]: Type_JSON } = {}
+    const json_hist_links: { [_: string]: Type_JSON } = {}
+    const json_hist_links_order: { [_: string]: string[] } = {}
     // --- Selected nodes
-    this.selected_nodes_list
-      .forEach(node => {
-        json_hist_nodes[node.id] = node.toJSON()
-        node.input_links_list.forEach(link => json_hist_links[link.id] = link.toJSON())
-        node.output_links_list.forEach(link => json_hist_links[link.id] = link.toJSON())
-      })
+    if (deleteSelectedNodes) {
+      this.selected_nodes_list
+        .forEach(node => {
+          json_hist_nodes[node.id] = node.toJSON()
+          node.input_links_list.forEach(link => {
+            json_hist_links[link.id] = link.toJSON()
+            json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
+          })
+          node.output_links_list.forEach(link => {
+            json_hist_links[link.id] = link.toJSON()
+            json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
+          })
+        })
+    }
     // --- Selected links
-    this.selected_links_list.forEach(link => json_hist_links[link.id] = link.toJSON())
+    if (deleteSelectedLinks) {
+      this.selected_links_list.forEach(link => {
+        json_hist_links[link.id] = link.toJSON()
+        json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
+        json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
+      })
+    }
+
     // --- Undo function
     function undo(_: Type_AnyDrawingArea) {
       const json_hist: Type_JSON = {
@@ -1040,13 +1042,15 @@ export abstract class ClassTemplate_DrawingArea
         'links': json_hist_links
       }
       _.sankey.fromJSON(json_hist)
+      Object.entries(json_hist_links_order).forEach(ent => _.sankey.nodes_dict[ent[0]].reorganizeIOFromListIds(ent[1]))//Organise correctly nodes IO
       _.sankey.draw()
     }
     this.saveUndo(undo)
     // End Save undo -----------------------------------
 
-    this.deleteSelectedNodes()
-    this.deleteSelectedLinks()
+
+    if (deleteSelectedLinks) this.selected_links_list.forEach(link => { this.deleteLink(link) })
+    if (deleteSelectedNodes) this.selected_nodes_list.forEach(node => this.deleteNode(node))
 
     // Save Redo ---------------------------------------
     // -- Redo function
@@ -1067,7 +1071,7 @@ export abstract class ClassTemplate_DrawingArea
    */
   public updateScaleAtLinkValueSetting() {
     // Update scaling if only one link
-    const links = this.sankey.links_list.filter(l=>l.value != null && l.value.data_value != null && l.value.data_value != 0)
+    const links = this.sankey.links_list.filter(l => l.value != null && l.value.data_value != null && l.value.data_value != 0)
     if (links.length == 1) {
       this.scale = links[0].value!.data_value! // will redraw everything // will redraw everything
     }
@@ -1089,7 +1093,7 @@ export abstract class ClassTemplate_DrawingArea
       return
 
     // Bounding box with no element -> default dims
-    if ((bbox.width == 0) && (bbox.height == 0)){
+    if ((bbox.width == 0) && (bbox.height == 0)) {
       // Set to fitting windows
       this.width = this.window_fitting_width
       this.height = this.window_fitting_height
@@ -1122,11 +1126,11 @@ export abstract class ClassTemplate_DrawingArea
 
     // Recenter elements
     if (recenter) {
-      this._elements_d3_groups_shift_x = -(bbox.x + bbox.width/2) + (x0 + width/2)
-      this._elements_d3_groups_shift_y = -(bbox.y + bbox.height/2) + (y0 + height/2)
+      this._elements_d3_groups_shift_x = -(bbox.x + bbox.width / 2) + (x0 + width / 2)
+      this._elements_d3_groups_shift_y = -(bbox.y + bbox.height / 2) + (y0 + height / 2)
       this.d3_selection_elements_group?.attr(
         'transform',
-        'translate(' + this._elements_d3_groups_shift_x  + ', ' + this._elements_d3_groups_shift_y + ')')
+        'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
     }
 
     // Save new dimensions
@@ -1156,8 +1160,8 @@ export abstract class ClassTemplate_DrawingArea
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_width / this.width
 
-      const x0 = this._fit_margin/2 - this._background_d3_groups_shift_x*k
-      const y0 = Math.max(this._fit_margin/2, (this.window_fitting_height - this.height*k)/2) + this.getNavBarHeight() - this._background_d3_groups_shift_y*k
+      const x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x * k
+      const y0 = Math.max(this._fit_margin / 2, (this.window_fitting_height - this.height * k) / 2) + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
@@ -1177,8 +1181,8 @@ export abstract class ClassTemplate_DrawingArea
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_height / this.height
-      const x0 = Math.max(this._fit_margin/2, (this.window_fitting_width - k*this.width)/2) - this._background_d3_groups_shift_x*k
-      const y0 = this._fit_margin/2 + this.getNavBarHeight() - this._background_d3_groups_shift_y*k
+      const x0 = Math.max(this._fit_margin / 2, (this.window_fitting_width - k * this.width) / 2) - this._background_d3_groups_shift_x * k
+      const y0 = this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
@@ -1351,17 +1355,17 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @memberof ClassTemplate_DrawingArea
    */
-  public splitTrade (
+  public splitTrade(
   ) {
     if (!this.sankey.node_taggs_dict['type de noeud']) {
       return
     }
 
-    let trade_nodes = this.sankey.nodes_list.filter(n=>
+    let trade_nodes = this.sankey.nodes_list.filter(n =>
       n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
     )
     // first split the nodes
-    trade_nodes.forEach(node=>{
+    trade_nodes.forEach(node => {
       if (node.output_links_list.length > 0) {
         (node as Type_GenericNodeElement).SplitIOrE(true)
       }
@@ -1370,11 +1374,11 @@ export abstract class ClassTemplate_DrawingArea
       }
       this.sankey.deleteNode(node)
     })
-    trade_nodes = this.sankey.nodes_list.filter(n=>
+    trade_nodes = this.sankey.nodes_list.filter(n =>
       n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
     )
     // the set dimensions. It must be done after each trade node has been split
-    trade_nodes.forEach(node=>{
+    trade_nodes.forEach(node => {
       (node as Type_GenericNodeElement).setTradeDimensions(true);
       (node as Type_GenericNodeElement).setTradeDimensions(false)
     })
@@ -1487,8 +1491,6 @@ export abstract class ClassTemplate_DrawingArea
     _updateSelectedNodesTagAssignation()
   }
 
-
-
   /**
    * Compute the position of the nodes which are not trade nodes
    *
@@ -1497,10 +1499,30 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public computeAutoSankey(
-    launched_from_process: boolean
+    launched_from_process: boolean,
   ) {
     this.application_data.sendWaitingToast(
       () => {
+        // If it's not launched_from_process then we assume it's user input so we save it undoing
+        if (!launched_from_process) {
+          const node_pos = Object.fromEntries(this._sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
+          const link_recy = Object.fromEntries(this._sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
+
+          const inv_computeAutoSankey = () => {
+            this._sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
+            // Reposition node to old pos
+            this._sankey.visible_nodes_list.forEach(n => {
+              n.display.position.x = node_pos[n.id].x
+              n.display.position.y = node_pos[n.id].y
+              // Reset old node IO order
+              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
+              n.draw()
+            })
+            this.areaAutoFit()
+
+          }
+          this.saveUndo(inv_computeAutoSankey)
+        }
         // Compute auto pos of nodes
         this._computeAutoSankey(launched_from_process)
         this.computeParametrization()
@@ -1515,7 +1537,7 @@ export abstract class ClassTemplate_DrawingArea
 
         // Defaut color + auto reorg of links
         const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-        this.sankey.visible_nodes_list.forEach((n,i,a)=> {
+        this.sankey.visible_nodes_list.forEach((n, i, a) => {
           n.reorganizeIOLinks()
           if (launched_from_process) {
             this.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
@@ -1523,10 +1545,10 @@ export abstract class ClassTemplate_DrawingArea
         })
         if (launched_from_process) {
           // Update defaut data on recycling mode
-          this.sankey.links_list.forEach(l=>{
-            if(l.shape_is_recycling){
-              l.shape_starting_tangeant=0.01
-              l.shape_ending_tangeant=0.01
+          this.sankey.links_list.forEach(l => {
+            if (l.shape_is_recycling) {
+              l.shape_starting_tangeant = 0.01
+              l.shape_ending_tangeant = 0.01
             }
           })
         }
@@ -1534,6 +1556,28 @@ export abstract class ClassTemplate_DrawingArea
         this.areaAutoFit()
         // Toggle saving indicator
         this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+        // If it's not launched_from_process then we assume it's user input so we save it undoing
+        if (!launched_from_process) {
+          const node_pos = Object.fromEntries(this._sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
+          const link_recy = Object.fromEntries(this._sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
+
+          const _computeAutoSankey = () => {
+            this._sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
+
+            // Reposition node to old pos
+            this._sankey.visible_nodes_list.forEach(n => {
+              n.display.position.x = node_pos[n.id].x
+              n.display.position.y = node_pos[n.id].y
+              // Reset old node IO order
+              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
+              n.draw()
+            })
+            this.areaAutoFit()
+
+          }
+          this.saveRedo(_computeAutoSankey)
+        }
       },
       {
         success: {
@@ -1573,8 +1617,8 @@ export abstract class ClassTemplate_DrawingArea
       this.scale = this._maximum_flux ? Math.max(this._maximum_flux, linksMaxValue) : linksMaxValue
     }
 
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud']?this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
-    const nodes_to_process = this.sankey.visible_nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const nodes_to_process = this.sankey.visible_nodes_list.filter(n => !echangeTag || !n.hasGivenTag(echangeTag))
 
     // Compute positionning indexes
     const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
@@ -1882,24 +1926,24 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public arrangeTrade(
-    compute_xy : boolean
+    compute_xy: boolean
   ) {
     if (!this.sankey.node_taggs_dict['type de noeud']) {
       return
     }
     const process_nodes = this.sankey.nodes_list
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
-    const import_nodes = process_nodes.filter(n=>
+    const import_nodes = process_nodes.filter(n =>
       n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
     )
-    const export_nodes = process_nodes.filter(n=>
-      n.hasGivenTag(echangeTag)  && n.input_links_list.length > 0
+    const export_nodes = process_nodes.filter(n =>
+      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
     )
-    const other_nodes = process_nodes.filter(n=>!n.hasGivenTag(echangeTag))
+    const other_nodes = process_nodes.filter(n => !n.hasGivenTag(echangeTag))
 
     let max_vertical_offset = 0
-    other_nodes.forEach(n=>
-      max_vertical_offset = Math.max(n.position_y+n.getShapeHeightToUse(), max_vertical_offset)
+    other_nodes.forEach(n =>
+      max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
     )
     max_vertical_offset = max_vertical_offset + 200
     // const firstNonEchangeNodeBelow = other_nodes.sort((n1,n2)=> n1.position_y-n2.position_y)[0]
@@ -1921,11 +1965,11 @@ export abstract class ClassTemplate_DrawingArea
       const source_node = input_link.source
       node.position_u = source_node.position_u
       node.position_v = source_node.position_v
-      if (node.position_x<source_node.position_x) {
-        node.position_x = source_node.position_x+1
+      if (node.position_x < source_node.position_x) {
+        node.position_x = source_node.position_x + 1
       }
       if (compute_xy) {
-        const x = source_node.position_x+this.horizontal_spacing
+        const x = source_node.position_x + this.horizontal_spacing
         node.position_x = x
         node.position_y = max_vertical_offset
       }
@@ -1939,8 +1983,8 @@ export abstract class ClassTemplate_DrawingArea
    */
   public computeParametrization() {
 
-    let smaller_x : number
-    this.sankey.visible_nodes_list.forEach(n=>{
+    let smaller_x: number
+    this.sankey.visible_nodes_list.forEach(n => {
       if (smaller_x === undefined) {
         smaller_x = n.position_x
       }
@@ -1949,11 +1993,11 @@ export abstract class ClassTemplate_DrawingArea
       }
     })
 
-    this.sankey.visible_nodes_list.forEach(n=>{
-      if (n.position_type === 'relative' ) {
+    this.sankey.visible_nodes_list.forEach(n => {
+      if (n.position_type === 'relative') {
         return
       }
-      n.display.position.u = Math.floor((n.position_x-smaller_x/3)/this.sankey.default_node_style.position.dx!)
+      n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / this.sankey.default_node_style.position.dx!)
     })
 
     this.computeParametricV()
@@ -1965,7 +2009,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public computeParametricV() {
-    const columns: { [_: number]: Type_AnyNodeElement[]}  = {}
+    const columns: { [_: number]: Type_AnyNodeElement[] } = {}
     this.sankey.visible_nodes_list.forEach(n => {
       if (n.position_type === 'relative') {
         return
@@ -2006,22 +2050,22 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public apply_v_agregate(
-    node:Type_AnyNodeElement
+    node: Type_AnyNodeElement
   ) {
-    let agregated_nodes : Type_GenericNodeElement[] = []
+    let agregated_nodes: Type_GenericNodeElement[] = []
     this.sankey.level_taggs_list.forEach(tagGroup => {
       const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
       if (!nodeDimParent) {
         return
       }
-      if ( nodeDimParent.parent.display.position.v != -1) {
+      if (nodeDimParent.parent.display.position.v != -1) {
         // v is computed at the first path
         return
       }
-      agregated_nodes = [...agregated_nodes,nodeDimParent.parent as Type_GenericNodeElement]
+      agregated_nodes = [...agregated_nodes, nodeDimParent.parent as Type_GenericNodeElement]
       agregated_nodes = [...new Set(agregated_nodes)]
     })
-    agregated_nodes.forEach(nn=>{
+    agregated_nodes.forEach(nn => {
       nn.display.position.x = node.position_x
       nn.display.position.y = node.position_y
       nn.display.position.u = node.position_u
@@ -2036,34 +2080,33 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public apply_v_desagregate(
-    node:Type_AnyNodeElement,
-    current_v:number
+    node: Type_AnyNodeElement,
+    current_v: number
   ) {
     if (node.display.position.v == -1) {
       // v is computed at the first path
       node.display.position.v = current_v
     }
     let new_current_v = current_v
-    let desagregated_nodes : Type_GenericNodeElement[] = []
+    let desagregated_nodes: Type_GenericNodeElement[] = []
     this.sankey.level_taggs_list.forEach(tagGroup => {
       const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
       if (!nodeDimParent) {
         return
       }
-      desagregated_nodes = [...desagregated_nodes,...(nodeDimParent.children as Type_GenericNodeElement[])]
+      desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
       desagregated_nodes = [...new Set(desagregated_nodes)]
     })
     let current_y = node.position_y
-    desagregated_nodes.forEach(nn=>{
+    desagregated_nodes.forEach(nn => {
       nn.display.position.x = node.position_x
       nn.display.position.u = node.position_u
       nn.display.position.y = current_y
       current_y += 20
-      new_current_v = this.apply_v_desagregate(nn,new_current_v)
+      new_current_v = this.apply_v_desagregate(nn, new_current_v)
     })
-    return new_current_v+1
+    return new_current_v + 1
   }
-
 
   /**
    * Reposition visible nodes so that their left/top side is close to a grid line
@@ -2139,6 +2182,7 @@ export abstract class ClassTemplate_DrawingArea
     })
   }
 
+
   // PRIVATE METHODS ==================================================================
 
   /**
@@ -2178,7 +2222,7 @@ export abstract class ClassTemplate_DrawingArea
    * @param f
    */
   protected saveUndo(f: (_: Type_AnyDrawingArea) => void) {
-    this.application_data.history.saveUndo(() => {f(this)})
+    this.application_data.history.saveUndo(() => { f(this) })
   }
 
   /**
@@ -2186,7 +2230,7 @@ export abstract class ClassTemplate_DrawingArea
   * @param f
   */
   protected saveRedo(f: (_: Type_AnyDrawingArea) => void) {
-    this.application_data.history.saveRedo(() => {f(this)})
+    this.application_data.history.saveRedo(() => { f(this) })
   }
 
   /**
@@ -2334,7 +2378,6 @@ export abstract class ClassTemplate_DrawingArea
       this.closeAllMenus()
 
       if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
-
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
         mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
@@ -2357,6 +2400,7 @@ export abstract class ClassTemplate_DrawingArea
           target,
           this,
           this.application_data.menu_configuration)
+        this._ghost_link_source = source
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
 
       } else {
@@ -2439,12 +2483,18 @@ export abstract class ClassTemplate_DrawingArea
     if (this.isInEditionMode()) {
       // When we are creating a link with LMB
       if (this._ghost_link !== null) {
+        let ghost_link_json: Type_JSON | undefined
+        let ghost_src_json: Type_JSON
+        let ghost_trgt_json: Type_JSON
+        let wasGhostSrc = false
+        let wasGhostTrgt = false
         // Mouse released on source node
         if (this._ghost_link.source.isMouseOver()) {
           // If we release the mouse on the source of the link
           // then delete the link & target to keep only the source
           // So we only created 1 node
           this.deleteNode(this._ghost_link.target as Type_GenericNodeElement)
+
         }
         else if (this.isMouseOverAnExistingNode() === true) {
           let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
@@ -2453,12 +2503,13 @@ export abstract class ClassTemplate_DrawingArea
               break //stop the loop when we fint the node hovered
           }
           // Create new link
-          this.sankey.addNewLink(
+          const l = this.sankey.addNewLink(
             this._ghost_link.source as Type_GenericNodeElement,
             this.sankey.nodes_dict[node_id]
           )
+          ghost_link_json = l.toJSON() //For undo/redo
           this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.addLinkToSelection(l)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Type_GenericNodeElement)
@@ -2468,17 +2519,86 @@ export abstract class ClassTemplate_DrawingArea
           this._ghost_link.target.setVisible()
 
           // Create new link
-          this.sankey.addNewLink(
+          const l = this.sankey.addNewLink(
             this._ghost_link.source as Type_GenericNodeElement,
             this._ghost_link.target as Type_GenericNodeElement
           )
+          ghost_link_json = l.toJSON() //For undo/redo
+          this._ghost_link_target = l.target //For undo/redo
+
           this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.addLinkToSelection(l)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
         }
+
+        // Undo/Redo related instructions ================================
+
+        if (this._ghost_link_source) {
+          // For undo : Set wasGhostSrc to true to delete created the node source when we created a link with the mouse on the DA
+          wasGhostSrc = true
+          // For redo : save ghost source in json to recreate it correctly at redo
+          ghost_src_json = this._ghost_link_source.toJSON()
+        }
+
+        if (this._ghost_link_target) {
+          // For undo : Set wasGhostTrgt to true to delete created the node target when we created a link with the mouse on the DA
+          wasGhostTrgt = true
+          // For redo : save ghost target in json to recreate it correctly at redo
+          ghost_trgt_json = this._ghost_link_target.toJSON()
+
+        }
+
+        if (ghost_link_json || wasGhostSrc) {
+          this.saveUndo(() => {
+            if (ghost_link_json) {
+              // Delete ghost link,source and target it they were created for ghost link
+              const g_l = this.sankey.links_dict[ghost_link_json['id'] as string]
+              const t = g_l.target
+              const s = g_l.source
+              this.deleteLink(g_l)
+              if (wasGhostTrgt) {
+                this.deleteNode(t)
+              }
+              if (wasGhostSrc) {
+                this.deleteNode(s)
+              }
+            } else if (wasGhostSrc) {
+              // If we are here it mean we relased the button on the ghost link source so if deleted GL & target but kept source
+              const g_s = this.sankey.nodes_dict[ghost_src_json['id'] as string]
+              this.deleteNode(g_s)
+            }
+          })
+
+          this.saveRedo(() => {
+            // Recreate delete element in undo
+            if (ghost_trgt_json) {
+              const new_n = this.sankey.addNewNode(ghost_trgt_json['id'] as string, ghost_trgt_json['name'] as string)
+              new_n.fromJSON(ghost_trgt_json)
+              new_n.draw()
+            }
+            if (ghost_src_json) {
+              const new_n = this.sankey.addNewNode(ghost_src_json['id'] as string, ghost_src_json['name'] as string)
+              new_n.fromJSON(ghost_src_json)
+              new_n.draw()
+            }
+            if (ghost_link_json) {
+              const src = this.sankey.nodes_dict[ghost_link_json['idSource'] as string]
+              const trgt = this.sankey.nodes_dict[ghost_link_json['idTarget'] as string]
+              const new_l = this.sankey.addNewLink(src, trgt)
+              new_l.fromJSON(ghost_link_json)
+              new_l.draw()
+            }
+          })
+        }
+
+
+        // Deref ghost links & related attr ================================
+
         // In case we get there still deref ghost link
         this._ghost_link.delete()
         this._ghost_link = null
+        this._ghost_link_source = null
+        this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }

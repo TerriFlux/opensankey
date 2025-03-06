@@ -1,7 +1,27 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
-// Date : 29/05/2024
-// All rights reserved for TerriFlux
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -981,6 +1001,14 @@ export abstract class ClassTemplate_LinkElement
       this.computeMiddleRecyclingPoint()
   }
 
+  public setValuesForDataTags(tags: Class_DataTag[], val: Class_LinkValue) {
+    if (this._values instanceof Class_LinkValueTree) {
+      this._values.setLinkValueForDataTags(tags, val)
+    } else {
+      this._values = val
+    }
+  }
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -1728,8 +1756,12 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   private dragValueStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
+
+    const old_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [this._display.position_x_value, this._display.position_y_value, this.value_label_horiz, this.value_label_vert]
+
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
     const [label_pos, label_ortho_pos,] = this.getValueXYPos()
+
     if (this._display.position_x_value === undefined) {
       this._display.position_x_value = label_pos
       this.value_label_horiz = 'dragged'
@@ -1740,6 +1772,16 @@ export abstract class ClassTemplate_LinkElement
       this.value_label_vert = 'dragged'
     }
 
+    const inv_dragValueStart = () => {
+      this.value_label_horiz = old_val[2]
+      this.value_label_vert = old_val[3]
+      this._display.position_x_value = old_val[0]
+      this._display.position_y_value = old_val[1]
+      this.drawValue()
+      this.menu_config.updateAllComponentsRelatedToLinks()
+    }
+
+    this._display.drawing_area.application_data.history.saveUndo(inv_dragValueStart)
   }
 
   /**
@@ -1757,6 +1799,19 @@ export abstract class ClassTemplate_LinkElement
 
   private dragValueEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     this.menu_config.updateAllComponentsRelatedToLinks()
+
+    const new_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [this._display.position_x_value, this._display.position_y_value, this.value_label_horiz, this.value_label_vert]
+
+    const _dragValueEnd = () => {
+      this.value_label_horiz = new_val[2]
+      this.value_label_vert = new_val[3]
+      this._display.position_x_value = new_val[0]
+      this._display.position_y_value = new_val[1]
+      this.drawValue()
+      this.menu_config.updateAllComponentsRelatedToLinks()
+    }
+
+    this._display.drawing_area.application_data.history.saveRedo(_dragValueEnd)
   }
 
   /**
@@ -1767,9 +1822,10 @@ export abstract class ClassTemplate_LinkElement
  * @memberof ClassTemplate_LinkElement
  */
   private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
+    const old_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [this._display.position_x_name, this._display.position_y_name, this.name_label_horiz, this.name_label_vert]
+
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
     const [label_pos, label_ortho_pos,] = this.getTextXYPos()
-
     if (this._display.position_x_name === undefined) {
       this._display.position_x_name = label_pos
       this.name_label_horiz = 'dragged'
@@ -1779,6 +1835,17 @@ export abstract class ClassTemplate_LinkElement
       this._display.position_y_name = label_ortho_pos
       this.name_label_vert = 'dragged'
     }
+
+    const inv_dragTextStart = () => {
+      this._display.position_x_name = old_val[0]
+      this._display.position_y_name = old_val[1]
+      this.name_label_horiz = old_val[2]
+      this.name_label_vert = old_val[3]
+      this.menu_config.updateAllComponentsRelatedToLinks()
+      this.drawValue()
+    }
+
+    this._display.drawing_area.application_data.history.saveUndo(inv_dragTextStart)
   }
 
   /**
@@ -1795,7 +1862,22 @@ export abstract class ClassTemplate_LinkElement
   }
 
   private dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
+
     this.menu_config.updateAllComponentsRelatedToLinks()
+
+    const new_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [this._display.position_x_name, this._display.position_y_name, this.name_label_horiz, this.name_label_vert]
+
+    const _dragTextEnd = () => {
+      this.name_label_horiz = new_val[2]
+      this.name_label_vert = new_val[3]
+      this._display.position_x_name = new_val[0]
+      this._display.position_y_name = new_val[1]
+      this.menu_config.updateAllComponentsRelatedToLinks()
+      this.drawValue()
+    }
+
+    this._display.drawing_area.application_data.history.saveRedo(_dragTextEnd)
+
   }
 
   /**
@@ -2591,6 +2673,9 @@ export abstract class ClassTemplate_LinkElement
     return () => {
       this._control_points.is_dragged = false
 
+      this.drawControlPoint()
+      this.menu_config.updateComponentRelatedToLinksApparence()
+      this.drawing_area.checkAndUpdateAreaSize()
       // Save current attribute val after mutating them in dragHandlers events
       const ghost = {
         'shape_starting_curve': this.shape_starting_curve,
@@ -2604,11 +2689,9 @@ export abstract class ClassTemplate_LinkElement
         this._display.attributes.shape_ending_curve = ghost['shape_ending_curve']
         this._display.attributes.shape_starting_tangeant = ghost['shape_starting_tangeant']
         this._display.attributes.shape_ending_tangeant = ghost['shape_ending_tangeant']
+        this.draw()
       })
 
-      this.drawControlPoint()
-      this.menu_config.updateComponentRelatedToLinksApparence()
-      this.drawing_area.checkAndUpdateAreaSize()
     }
   }
 
@@ -2807,6 +2890,9 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   private dragValuePathStart(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
+
+    const old_val: [number | undefined, Type_PathLabelHPosition] = [this._display.position_offset_value, this.value_label_horiz]
+
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
     if (this._display.position_offset_value === undefined) {
       const [label_offset,] = this.getValueTextPathOffset()
@@ -2814,6 +2900,13 @@ export abstract class ClassTemplate_LinkElement
       this._display.position_offset_value = label_offset
       this.value_label_horiz = 'dragged'
     }
+
+    const inv_dragValuePathStart = () => {
+      this._display.position_offset_value = old_val[0]
+      this.value_label_horiz = old_val[1]
+    }
+
+    this._display.drawing_area.application_data.history.saveUndo(inv_dragValuePathStart)
 
   }
 
@@ -2833,6 +2926,16 @@ export abstract class ClassTemplate_LinkElement
 
   private dragValuePathEnd(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     this.menu_config.updateAllComponentsRelatedToLinks()
+
+    const new_val: [number | undefined, Type_PathLabelHPosition] = [this._display.position_offset_value, this.value_label_horiz]
+    const _dragValuePathEnd = () => {
+      this._display.position_offset_value = new_val[0]
+      this.value_label_horiz = new_val[1]
+      this.menu_config.updateAllComponentsRelatedToLinks()
+
+    }
+
+    this._display.drawing_area.application_data.history.saveRedo(_dragValuePathEnd)
   }
 
 
@@ -2845,6 +2948,8 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   private dragTextPathStart(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
+    const old_val: [number | undefined, Type_PathLabelHPosition] = [this._display.position_offset_name, this.name_label_horiz]
+
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
     if (this._display.position_offset_name === undefined) {
       const [label_offset,] = this.getLabelTextPathOffset()
@@ -2852,6 +2957,12 @@ export abstract class ClassTemplate_LinkElement
       this.name_label_horiz = 'dragged'
     }
 
+    const inv_dragTextPathStart = () => {
+      this._display.position_offset_name = old_val[0]
+      this.name_label_horiz = old_val[1]
+    }
+
+    this._display.drawing_area.application_data.history.saveUndo(inv_dragTextPathStart)
   }
 
   /**
@@ -2870,6 +2981,14 @@ export abstract class ClassTemplate_LinkElement
 
   private dragTextPathEnd(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     this.menu_config.updateAllComponentsRelatedToLinks()
+
+    const new_val: [number | undefined, Type_PathLabelHPosition] = [this._display.position_offset_name, this.name_label_horiz]
+    const _dragTextPathEnd = () => {
+      this._display.position_offset_name = new_val[0]
+      this.name_label_horiz = new_val[1]
+    }
+
+    this._display.drawing_area.application_data.history.saveRedo(_dragTextPathEnd)
   }
 
 
@@ -3789,7 +3908,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public set value_label_horiz(_: Type_PathLabelHPosition) {
-    this.value_label_pos_auto = false
+    this._display.attributes.value_label_pos_auto = false
     if (_ !== 'dragged') this.deleteDraggedValuePos()
     this._display.attributes.value_label_horiz = _
     this.drawValue()
@@ -3814,7 +3933,7 @@ export abstract class ClassTemplate_LinkElement
    */
   public set value_label_vert(_: Type_PathLabelVPosition) {
     if (_ !== 'dragged') this.deleteDraggedValuePos()
-    this.value_label_pos_auto = false
+    this._display.attributes.value_label_pos_auto = false
     this._display.attributes.value_label_vert = _
     this.drawValue()
   }
@@ -4831,6 +4950,7 @@ export class Class_LinkValueTree {
     }
   }
 
+
   public setDataValueForDataTags(data_tags: Class_DataTag[], val: number | null) {
     const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
@@ -4852,6 +4972,25 @@ export class Class_LinkValueTree {
     const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
       value.text_value = val
+    }
+  }
+
+  public setLinkValueForDataTags(data_tags: Class_DataTag[], val: Class_LinkValue) {
+    // Failsafe
+    if (data_tags.length === 0) return
+    // Get value recursively
+    const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
+    const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
+    // Failsafe
+    if (matching_tags.length !== 1) return null
+    // Recursive
+    const child = this.children[matching_tags[0].id]
+    if (child == undefined) {
+      this.children[matching_tags[0].id] = val
+    }
+    else {
+      if (child instanceof Class_LinkValueTree)
+        child.setLinkValueForDataTags(remaining_tags, val)
     }
   }
 
@@ -4926,6 +5065,7 @@ export class Class_LinkValueTree {
           ..._
         }
       })
+
     Object.values(out)
       .forEach(_ => {
         if (_[1] && this.data_tag)

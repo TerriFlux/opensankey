@@ -1,7 +1,27 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
-// Date : 29/05/2024
-// All rights reserved for TerriFlux
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -184,6 +204,9 @@ export abstract class ClassTemplate_NodeElement
 
   // Tooltips
   private _tooltip_text: string = ''
+
+  // Other 
+  private _drag_start_pos: { [x: string]: [number, number] } = {} //attr used to cancel drag undo function (LMB event can trigger drag event therefore a undo function )
 
   // CONSTRUCTOR ========================================================================
 
@@ -2157,35 +2180,26 @@ export abstract class ClassTemplate_NodeElement
     if (event.sourceEvent.shiftKey) {
       return
     }
-    this._drag = true
 
+    // Memorize position of all node that will be dragged
     // Get related drawing area
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
+    const dict_old_pos: { [x: string]: [number, number] } = {}
     if (nodes_selected.includes(this)) {
-      const dict_old_pos: { [x: string]: [number, number] } = {}
       // Memorize for undo
       nodes_selected.forEach(n => {
         dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
       })
-      // Undo function
-      function undo(_: Type_AnyNodeElement) {
-        nodes_selected.forEach(n => {
-          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
-        })
-      }
-      this.saveUndo(undo)
     } else {
-      // Memorize for undo
-      const old_x = this._display.position.x
-      const old_y = this._display.position.y
       // Undo function
-      function undo(_: Type_AnyNodeElement) {
-        _.setPosXY(old_x, old_y)
-      }
-      this.saveUndo(undo)
+      dict_old_pos[this.id] = [this.display.position.x, this.display.position.y]
     }
+
+    this._drag_start_pos = dict_old_pos
+    this._drag = true
   }
+
 
   /**
    * Define event when mouse drag element
@@ -2240,6 +2254,27 @@ export abstract class ClassTemplate_NodeElement
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Apply parent behavior first
     super.eventMouseDragEnd(event)
+
+    if (event.sourceEvent.shiftKey) {
+      return
+    }
+
+    //Shallow copy of dict old pos so undo func doesn't call object attr but this dict (which don't mutate at each dragEnd) 
+    const dict_old_pos: { [x: string]: [number, number] } = {...this._drag_start_pos}
+
+    // If we moved 'this' node then we save  nodes dragged previous pos in undo & current pos in redo
+    // it is done here because we don't know in eventMouseDragStart & eventMouseDragEnd if we aren't simply selecting the node
+    if (dict_old_pos[this.id][0] !== this.position_x && (dict_old_pos[this.id][1] !== this.position_y)) {
+      function undo(_: Type_AnyNodeElement) {
+        Object.keys(dict_old_pos).forEach(k => {
+          const n = _.drawing_area.sankey.nodes_dict[k]
+          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
+        })
+      }
+      this.saveUndo(undo)
+      this.saveRedoAteventMouseDragEnd()
+    }
+
     // Move all elements so none of them are outside the DA
     this.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
     this.drawing_area.computeParametricV()
@@ -2247,8 +2282,16 @@ export abstract class ClassTemplate_NodeElement
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // End of drag
     this._drag = false
+  }
 
 
+  /**
+   * Function to save redo of nodes dragged into data history
+   *
+   * @protected
+   * @memberof ClassTemplate_NodeElement
+   */
+  protected saveRedoAteventMouseDragEnd() {
     // Get related drawing area
     const drawing_area = this.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
@@ -2263,6 +2306,8 @@ export abstract class ClassTemplate_NodeElement
         nodes_selected.forEach(n => {
           n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
         })
+        drawing_area.checkAndUpdateAreaSize()
+
       }
       this.saveRedo(redo)
     } else {
@@ -2272,6 +2317,8 @@ export abstract class ClassTemplate_NodeElement
       // Redo function
       function redo(_: Type_AnyNodeElement) {
         _.setPosXY(old_x, old_y)
+        drawing_area.checkAndUpdateAreaSize()
+
       }
       this.saveRedo(redo)
     }
@@ -2427,7 +2474,7 @@ export abstract class ClassTemplate_NodeElement
    * @memberof ClassTemplate_NodeElement
    */
   private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-
+    const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [this._display.position_x_label, this._display.position_y_label, this.name_label_horiz, this.name_label_vert]
     //if position_x_label is undefined init position_x_label pos whith current fixed x position value
     if (this._display.position_x_label === undefined) {
       const shape_width = this.getShapeWidthToUse()
@@ -2454,6 +2501,18 @@ export abstract class ClassTemplate_NodeElement
 
     this.name_label_horiz = 'dragged'
     this.name_label_vert = 'dragged'
+
+    // Undo function 
+    const inv_dragTextStart = () => {
+      this._display.position_x_label = old_val[0]
+      this._display.position_y_label = old_val[1]
+      this.name_label_horiz = old_val[2]
+      this.name_label_vert = old_val[3]
+      this.menu_config.updateAllComponentsRelatedToLinks()
+      this.drawNameLabel()
+    }
+    // Save undo
+    this._display.drawing_area.application_data.history.saveUndo(inv_dragTextStart)
   }
 
   /**
@@ -2474,6 +2533,18 @@ export abstract class ClassTemplate_NodeElement
   private dragTextend(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     this.drawNameLabel()
     this.menu_config.updateAllComponentsRelatedToNodes()
+    const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [this._display.position_x_label, this._display.position_y_label, this.name_label_horiz, this.name_label_vert]
+    // redo function 
+    const _dragTextend = () => {
+      this._display.position_x_label = old_val[0]
+      this._display.position_y_label = old_val[1]
+      this.name_label_horiz = old_val[2]
+      this.name_label_vert = old_val[3]
+      this.menu_config.updateAllComponentsRelatedToLinks()
+      this.drawNameLabel()
+    }
+    // Save redo
+    this._display.drawing_area.application_data.history.saveRedo(_dragTextend)
   }
 
   /**
@@ -3015,6 +3086,9 @@ export abstract class ClassTemplate_NodeElement
    */
   public get links_order_visible(): Type_GenericLinkElement[] {
     return this._links_order.filter(link => link.is_visible)
+  }
+  public get links_order(): Type_GenericLinkElement[] {
+    return this._links_order
   }
 
   // Tags related -----------------------------------------------------------------------

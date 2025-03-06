@@ -1,7 +1,27 @@
 // ==================================================================================================
-// Author : Vincent LE DOZE & Vincent CLAVEL for TerriFlux
-// Date : 29/05/2024
-// All rights reserved for TerriFlux
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -397,6 +417,9 @@ export abstract class ClassTemplate_ApplicationData
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
     this._is_reconcilied = false
+
+    // Reset Class_DataHistory
+    this._history=new Class_ApplicationHistory(this._menu_configuration)
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
   }
@@ -846,11 +869,16 @@ export abstract class ClassTemplate_ApplicationData
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
     const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
     const evtKeyF = ((evt.key === 'f') || (evt.key === 'F')) && evtOnDrawingArea
+    const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z'))
+    const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y'))
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
     const evtCtrlAltS = evtCtrlAlt && evtKeyS
     const evtCtrlF = evtCtrl && evtKeyF
+    const evtCtrlZ = evtCtrl && evtKeyZ
+    const evtCtrlY = evtCtrl && evtKeyY
+    const evtCtrlShiftZ = evtCtrlShift && evtKeyZ
 
     // Event to move all selected nodes with keyboard arrows --------------------------
     if (
@@ -902,7 +930,7 @@ export abstract class ClassTemplate_ApplicationData
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
       // Delete selected elements
-      app_ref.drawing_area.deleteSelection()
+      app_ref.drawing_area.deleteSelection(true,true)
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -957,6 +985,16 @@ export abstract class ClassTemplate_ApplicationData
       else if (document.exitFullscreen) {
         document.exitFullscreen()
       }
+    }
+    // Undo
+    else if (evtCtrlZ){
+      evt.preventDefault()
+      this._history.applyUndo()
+    }
+    // Redo
+    else if (evtCtrlY || evtCtrlShiftZ){
+      evt.preventDefault()
+      this._history.applyRedo()
     }
   }
 
