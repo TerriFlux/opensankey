@@ -808,20 +808,9 @@ export const ToolbarBuilder: FunctionComponent<FCType_ToolbarBuilder> = (
     </>
   }
 
-  const btn_show_data_type = url_prefix !== '' ? <><OSTooltip placement='left' label={t('Banner.sdr')}>
+  const btn_show_data_type = <OSTooltip placement='left' label={t('Banner.sdr')}>
     {struc_data_reconciled}
   </OSTooltip>
-  </> :
-    <OSTooltip placement='left' label={t('Banner.tooltipStructure')}>
-      <Button variant={'success'} onClick={() => {
-        new_data.drawing_area.type_data = new_data.drawing_area.type_data == 'reconciled' ? 'structure' : 'reconciled'
-        setCount(a => a + 1)
-        redrawNodeLinkLegend()
-
-      }} >
-        <FontAwesomeIcon icon={faCodeBranch} />
-      </Button>
-    </OSTooltip>
 
   const btn_show_help_in_static = <OSTooltip
     placement='left'
