@@ -3200,7 +3200,7 @@ export abstract class ClassTemplate_LinkElement
     if (this.drawing_area.type_data === 'data') {
       const value = this.value
       // Cast as number
-      if (value !== null && value.result_value) return value.data_value
+      if (value !== null && value.data_value) return value.data_value
       else return null
     }
     if (this.drawing_area.type_data === 'free_interval') {
