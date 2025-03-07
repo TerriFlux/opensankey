@@ -5258,17 +5258,14 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     }
     else {
       if ('extension' in json_object && (json_object['extension'] as Type_JSON).data_value) {
-        console.log('tatatat')
         this.data_value = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'data_value')
         this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
       } else if ('extension' in json_object && (json_object['extension'] as Type_JSON).free_mini !== undefined) {
-        console.log('tututu')
         this.free_mini = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_mini')
         this.free_maxi = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_maxi')
         this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
       } else {
-        console.log('titititi')
-        this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
+        this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
       }
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
     }
