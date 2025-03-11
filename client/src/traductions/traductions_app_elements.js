@@ -206,7 +206,7 @@ export const resources_app_elements = {
                       </td>\
                     </tr>\
                   </table>',
-          'btn_next': 'I want OpenSankey+ !'
+          'btn_next': 'For only 20 euros per month, I want OpenSankey+ !'
         },
         account: {
           'title': 'First create your account',
@@ -697,7 +697,7 @@ export const resources_app_elements = {
           <li>Animations des Sankey par des effets d’apparence progressive ou par une succession de « vues » montrant des évolutions</li></ul></td>\
           <td><img src="https://terriflux.com/wp-content/uploads/2023/07/FiliereColza-980x359.jpg.webp" style="margin:20px"></td><tr></table>\
           ',
-          'btn_next': 'Je veux OpenSankey+ !'
+          'btn_next': 'Pour 20 euros mensuel, je veux OpenSankey+ !'
         },
         account: {
           'title': 'Créer un compte',
