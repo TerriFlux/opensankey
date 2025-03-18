@@ -38,9 +38,9 @@ import copy
 import SankeyExcelParser.io_excel_constants as CONST_IO_XL
 
 # Local modules ---------------------------------------------------------------
-from SankeyExcelParser.sankey import Sankey
-from SankeyExcelParser.sankey import Data as SankeyData
-from SankeyExcelParser.sankey_utils.tag_group import ANTI_TAGS_NAME
+from SankeyExcelParser.classes.sankey import Sankey
+from SankeyExcelParser.classes.sankey_utils.data import Data as SankeyData
+from SankeyExcelParser.classes.sankey_utils.tag_group import ANTI_TAGS_NAME
 
 # Constants -------------------------------------------------------------------
 JSON_TO_IO_XL__TAGG_TYPES = {
