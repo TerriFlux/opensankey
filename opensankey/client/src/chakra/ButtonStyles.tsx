@@ -261,29 +261,37 @@ export const menuconfigpanel_option_button_tertiary_activated = defineStyle({
 })
 
 export const toolbar_button_mouse_mode = defineStyle({
-  bgColor: 'tertiaire.1',
-  borderColor: 'tertiaire.1',
-  color: 'lightgrey',
+  bgColor: 'primaire.1',
+  border: 'none',
+  color: 'white',
+  zIndex: 0,
   _hover: {
     bgColor: 'tertiaire.1',
-    borderColor: 'tertiaire.1',
+    border: 'none'
   },
   _active: {
-    bgColor: 'tertiaire.2',
-    borderColor: 'secondaire.2',
+    bgColor: 'secondaire.1',
+    border: 'none'
   },
 })
 
 export const toolbar_button_mouse_mode_activated = defineStyle({
-  bgColor: 'primaire.1',
-  borderColor: 'secondaire.1',
+  bgColor: 'secondaire.1',
+  border: 'none',
+  outline: '2px solid',
+  outlineColor: 'secondaire.1',
+  outlineOffset: '-1px',
+  color: 'white',
+  zIndex: 1,
   _hover: {
-    bgColor: 'tertiaire.1',
+    bgColor: 'secondaire.1',
     borderColor: 'secondaire.1',
+    border: 'none',
   },
   _active: {
-    bgColor: 'tertiaire.1',
+    bgColor: 'secondaire.1',
     borderColor: 'secondaire.1',
+    border: 'none',
   },
 })
 
@@ -728,7 +736,7 @@ export const text_menu_select = defineStyle({
   margin: '0',
   textAlign: 'left',
   gridTemplateColumns: '10fr 1fr',
-  
+
   '>span': {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
