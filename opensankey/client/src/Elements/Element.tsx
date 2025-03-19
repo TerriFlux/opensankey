@@ -794,7 +794,7 @@ export abstract class ClassTemplate_Element
 
   // GETTERS / SETTERS ==================================================================
 
-  // Position
+  // Position 
   public get position_x() { return this._display.position.x }
   public set position_x(_: number) { this._display.position.x = _ /*this.applyPosition()*/ }
   public get position_y() { return this._display.position.y }

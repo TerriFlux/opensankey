@@ -34,11 +34,9 @@ import { TourProvider } from '@reactour/tour'
 
 /*************************************************************************************************/
 
-import { Menu } from './components/topmenus/SankeyMenuTop'
+import { Menu } from './components/topmenus/SankeyMenus'
 
-import { MenuConfigurationLinksAppearence } from './components/configmenus/SankeyMenuConfigurationLinksAppearence'
-import { MenuConfigurationLinksData } from './components/configmenus/SankeyMenuConfigurationLinksData'
-import { OpenSankeyConfigurationNodesAttributes } from './components/configmenus/SankeyMenuConfigurationNodesAttributes'
+import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesAttributes'
 
 import { ContextMenuLink } from './components/dialogs/SankeyMenuContextLink'
 import { DisaggregationModal, ContextMenuNode, AggregationModal } from './components/dialogs/SankeyMenuContextNode'
@@ -70,8 +68,6 @@ declare const window: Window &
 
 export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   initializeApplicationData,
-  initializeMenuConfiguration,
-  initializeReinitialization,
   initializeAdditionalMenus,
   initializeDiagrammSelector,
   moduleDialogs,
@@ -108,25 +104,31 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   const menu_config = new_data.menu_configuration
   if (
     (mode_pref) &&
-    (mode_pref === 'expert') &&
-    menu_config.accordions_to_show.length !== 7
+    (mode_pref === 'expert')
+    // menu_config.accordions_to_show.length !== 7
   ) {
-    menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
+    // menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
   }
 
   /*************************************************************************************************/
-
-  const reinitialization = initializeReinitialization(new_data)
 
   const additionalMenus: Type_AdditionalMenus = {
 
     // Top Menu
     external_edition_item: [],
-    external_file_item: [],
     external_file_export_item: [],
     externale_save_item: [],
+    external_top_buttons_item: {},
     externale_navbar_item: {},
     footer: [],
+
+    // Menu config
+    additional_menu_type: {},
+    additional_menu_button_element_configurable: {},
+    additional_menu_config_content:{data:{},context:{},style:{}},
+    additional_new_menu_config_content:{},
+    additional_node_config_style:[],
+
     // Mise en page
     extra_background_element: <></>,
     apply_transformation_additional_elements: [<></>],
@@ -134,10 +136,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    advanced_label_value_content: [],
-    additional_menu_configuration_nodes: {},
-    additional_node_label_layout_content: [],
-    additional_node_apparence_content: [],
     context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
     additional_context_node_element: {},
     // Links
@@ -152,23 +150,14 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     // Preferences
     additional_preferences: [],
 
-    // Configuration Menu
-    additional_configuration_menus_edition_elements: [],
-    additional_configuration_menus_primary_accordion_elements: [],
 
-    additional_edition_item: [],
     additional_file_save_json_option: [],
-    additional_file_item: [],
     additional_file_export_item: [],
-
-    sankey_menus: {},
 
     additional_nav_item: [],
 
-    example_menu: {},
     formations_menu: {},
 
-    toolbar_elements: {},
     toolbar_order: ['mode_souris',
       'node_type',
       'strectch_zdd',
@@ -182,30 +171,11 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     new_data
   )
 
-  const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
+  const menu_configuration_nodes_attributes = <MenuConfigurationNodeStyle
     new_data={new_data}
     menu_for_style={false}
     additional_menus={additionalMenus}
   />
-
-  const config_link_data = <MenuConfigurationLinksData
-    new_data={new_data}
-    contextual={false}
-  />
-
-  const config_link_attr = <MenuConfigurationLinksAppearence
-    new_data={new_data}
-    additionMenus={additionalMenus}
-    menu_for_style={false}
-  />
-
-  const menu_configuration = initializeMenuConfiguration(
-    new_data,
-    additionalMenus,
-    config_link_data,
-    config_link_attr,
-    menu_configuration_nodes_attributes,
-  )
 
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
   useEffect(() => {
@@ -219,6 +189,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     // Delete potential duplicat
     d3.select('#draw_zoom').remove()
     new_data.draw()
+    new_data.menu_configuration.ref_to_toolbar_bottom_updater.current()//update bottom toolbar to place it above footer
   }, [new_data.language])
 
   /*************************************************************************************************/
@@ -246,12 +217,9 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
         <>
           <Menu
             new_data={new_data}
-            processFunctions={new_data.processFunction}
-            configurations_menus={menu_configuration}
             external_modal={[
               <></>
             ]}
-            reinitialization={reinitialization}
             additionalMenus={
               additionalMenus
             }
@@ -291,13 +259,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
       <React.Fragment key={'modale_style_node'}>
         <SankeyModalStyleNode
           new_data={new_data}
-          node_attribute_tab={
-            <OpenSankeyConfigurationNodesAttributes
-              new_data={new_data}
-              menu_for_style={true}
-              additional_menus={additionalMenus}
-            />
-          }
+          additionalMenus={additionalMenus}
         />
       </React.Fragment>
       <React.Fragment key={'modale_preference'}>

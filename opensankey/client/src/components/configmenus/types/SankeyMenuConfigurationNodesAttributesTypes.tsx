@@ -27,7 +27,7 @@
 import { TFunction } from 'i18next'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
 
-export type FCType_OpenSankeyConfigurationNodesAttributes = {
+export type FCType_MenuConfigurationNodeStyle = {
   new_data: Type_GenericApplicationData,
   menu_for_style: boolean,
   additional_menus:Type_AdditionalMenus

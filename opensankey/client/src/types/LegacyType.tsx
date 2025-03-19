@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import { MutableRefObject } from 'react'
-import { FType_SetDiagram } from '../components/configmenus/types/SankeyMenuBannerTypes'
+import { FType_SetDiagram } from '../components/topmenus/types/SankeyMenuBannerTypes'
 import { Type_GenericApplicationData } from './Types'
 import { Type_JSON } from '../types/Utils'
 

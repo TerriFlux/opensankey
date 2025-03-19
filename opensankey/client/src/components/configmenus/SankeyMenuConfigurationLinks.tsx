@@ -25,8 +25,6 @@
 // ==================================================================================================
 
 import React, { FunctionComponent, useState } from 'react'
-import { MultiSelect } from 'react-multi-select-component'
-import { FaMinus, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa'
 
 import {
   Box,
@@ -34,13 +32,7 @@ import {
   InputGroup,
   InputLeftAddon,
   Select,
-  Tab,
-  TabList,
-  TabPanels,
-  Tabs,
 } from '@chakra-ui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRotate } from '@fortawesome/free-solid-svg-icons'
 
 /*************************************************************************************************/
 import {
@@ -55,25 +47,21 @@ import {
 } from '../../types/Types'
 
 /*************************************************************************************************/
-import { Type_MenuSelectionEntry } from '../topmenus/SankeyMenuTop'
-import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
+import { OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
 
 
 /*************************************************************************************************/
-const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigurationLinks> = (
+export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurationLinks> = (
   {
     new_data,
-    menu_config_link_data,
-    menu_config_link_attr,
-    additionalMenus
   }
 ) => {
 
   // Data -------------------------------------------------------------------------------
 
   // Traduction
-  const { t } = new_data
-
+  const { t, icon_library } = new_data
+  const { icon_add_element, icon_remove_element, icon_repeat, icon_element_visible, icon_element_invisible } = icon_library
   // Links to display in selection menus ------------------------------------------------
 
   let links: Type_GenericLinkElement[]
@@ -88,8 +76,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
     links = new_data.drawing_area.sankey.visible_links_list
     selected_links = new_data.drawing_area.visible_and_selected_links_list
   }
-  const entries_for_links = links.map((d) => { return { 'label': d.name, 'value': d.id } })
-  const entries_for_selected_links = selected_links.map((d) => { return { 'label': d.name, 'value': d.id } })
+  const entries_for_links = links.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_links.includes(d) } })
 
   // Nodes to display in selection menus ------------------------------------------------
 
@@ -140,30 +127,16 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
 
   // Sub-menus --------------------------------------------------------------------------
 
-  const ui: { [s: string]: JSX.Element } = {
-    'Flux.data.données': <SankeyWrapperConfigInModalOrMenu
-      menu_to_wrap={menu_config_link_data}
-      for_modal={false}
-      idTab={'link_data_tab_id'}
-    />,
-    'Flux.apparence.apparence': <SankeyWrapperConfigInModalOrMenu
-      menu_to_wrap={menu_config_link_attr}
-      for_modal={false}
-      idTab={'link_attr_tab_id'}
-    />,
-    ...additionalMenus.additional_menu_configuration_links
-  }
-
   /**
    * Create new link
    *
    */
   const addLinkConfig = () => {
-    const sankey=new_data.drawing_area.sankey
-    const nodeToDel:{list:Type_GenericNodeElement[]}={list:[]}
-    let presentNode=0
+    const sankey = new_data.drawing_area.sankey
+    const nodeToDel: { list: Type_GenericNodeElement[] } = { list: [] }
+    let presentNode = 0
     const _addLinkConfig = () => {
-      presentNode=sankey.nodes_list.length
+      presentNode = sankey.nodes_list.length
       const new_link = new_data.drawing_area.addNewDefaultLinkToSankey()
       //Deselect previously selected links
       new_data.drawing_area.purgeSelectionOfLinks()
@@ -182,8 +155,8 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
     }
 
     const inv_addLinkConfig = () => {
-      nodeToDel.list.forEach(n=>sankey.drawing_area.deleteNode(n))
-      if(presentNode>1)
+      nodeToDel.list.forEach(n => sankey.drawing_area.deleteNode(n))
+      if (presentNode > 1)
         new_data.drawing_area.deleteLink(new_data.drawing_area.sankey.links_list[new_data.drawing_area.sankey.links_list.length - 1])
       // Toogle saving indicator
       refreshThisAndUpdateRelatedComponents()
@@ -196,46 +169,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
 
   // Selection menu for links -----------------------------------------------------------
 
-  // Renvoie le menue déroulant pour la sélection des flux
-  const dropdownMultiLinks = () => {
-    const DD = (
-      <Box
-        layerStyle='submenuconfig_droplist'
-      >
-        {/* Position custom pour MultiSelect */}
-        <Box
-          height='2rem'
-          width='14.75rem'
-        >
-          <MultiSelect
-            valueRenderer={(entries: Type_MenuSelectionEntry[]) => {
-              return entries.filter(d => d !== undefined).length ? entries.map(({ label }) => label + ', ') : 'Aucun flux sélectionné'
-            }}
-            labelledBy='TODO Change'
-            options={entries_for_links}
-            value={entries_for_selected_links}
-            overrideStrings={{
-              'selectAll': 'Tout sélectionner',
-            }}
-            onChange={(entries: Type_MenuSelectionEntry[]) => {
-              // Update selection of links
-              const entries_values = entries.map(d => d.value)
-              links.forEach(link => {
-                if (entries_values.includes(link.id)) {
-                  new_data.drawing_area.addLinkToSelection(link)
-                }
-                else {
-                  new_data.drawing_area.removeLinkFromSelection(link)
-                }
-              })
-              // Update all link menus
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          />
-        </Box>
-      </Box>)
-    return DD
-  }
+
 
   // Links upper menu -------------------------------------------------------------------
   return (<Box layerStyle='menuconfigpanel_grid'>
@@ -249,14 +183,30 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
         <Button
           variant='menuconfigpanel_add_button'
           onClick={addLinkConfig}>
-          <FaPlus />
+          {icon_add_element}
         </Button>
       </OSTooltip>
 
       {/* Selection d'un flux  */}
       <OSTooltip label={t('Menu.tooltips.flux.slct')}>
-        {dropdownMultiLinks()}
-      </OSTooltip>
+        <OSMultiSelect
+          t={new_data.t}
+          elements={entries_for_links}
+          onClick={(entries: typeElementSelectable) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            links.forEach(n => {
+              if (entries_values.includes(n.id)) {
+                new_data.drawing_area.addLinkToSelection(n)
+              }
+              else {
+                new_data.drawing_area.removeLinkFromSelection(n)
+              }
+            })
+            // Update all menus
+            refreshThisAndUpdateRelatedComponents()
+          }}
+        />      </OSTooltip>
 
       {/* Suppression d'un flux  */}
       <OSTooltip label={t('Menu.tooltips.flux.rm')}>
@@ -269,7 +219,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
               // Toogle saving indicator
               refreshThisAndUpdateRelatedComponents()
             }}>
-          <FaMinus />
+          {icon_remove_element}
         </Button>
       </OSTooltip>
 
@@ -282,7 +232,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
               // Update UI with only visible links / all links
               new_data.menu_configuration.toggle_selector_on_visible_links()
             }}>
-          {new_data.menu_configuration.is_selector_only_for_visible_links ? <FaEye /> : <FaEyeSlash />}
+          {new_data.menu_configuration.is_selector_only_for_visible_links ? icon_element_visible : icon_element_invisible}
         </Button>
       </OSTooltip>
     </Box>
@@ -304,7 +254,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
         {/* Choix du point de départ du flux  */}
         <OSTooltip label={t('Flux.tooltips.src')}>
           <InputGroup variant='menuconfigpanel_option_input' >
-            <InputLeftAddon width='5rem' >
+            <InputLeftAddon height='1.5rem' width='5rem' >
               {t('Flux.src')}
             </InputLeftAddon>
             <Select
@@ -331,6 +281,7 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
             variant='menuconfigpanel_option_input'
           >
             <InputLeftAddon
+              height='1.5rem'
               width='5rem'
             >
               {t('Flux.trgt')}
@@ -361,43 +312,108 @@ const SankeyMenuConfigurationLinks: FunctionComponent<FCType_SankeyMenuConfigura
             height='100%'
             onClick={new_data.drawing_area.inverseSelectedLinks}
           >
-            <FontAwesomeIcon style={{ transform: 'rotate(90deg)' }} icon={faRotate} />
+            {icon_repeat}
           </Button>
         </OSTooltip>
       </Box>
     </Box>
+  </Box>)
+}
+export const SankeyLinkSelectionSimple: FunctionComponent<FCType_SankeyMenuConfigurationLinks> = (
+  {
+    new_data,
+  }
+) => {
 
-    {
-      (selected_links.length !== 0) ?
-        <Tabs
-          isLazy
-        >
-          <TabList>
-            {
-              Object
-                .keys(ui)
-                .map((key, i) => {
-                  return <Tab key={'submenuconfig_tab' + i}>
-                    <Box layerStyle='submenuconfig_tab' >
-                      {t(key)}
-                    </Box>
-                  </Tab>
-                }
-                )
-            }
-          </TabList>
-          <TabPanels>
-            {
-              Object
-                .values(ui)
-                .map((c, i) => <React.Fragment key={'panel_' + i}>{c}</React.Fragment>)
-            }
-          </TabPanels>
-        </Tabs> :
-        <></>
-    }
+  // Data -------------------------------------------------------------------------------
+
+  // Traduction
+  const { t, icon_library } = new_data
+  const { icon_element_visible, icon_element_invisible } = icon_library
+  // Links to display in selection menus ------------------------------------------------
+
+  let links: Type_GenericLinkElement[]
+  let selected_links: Type_GenericLinkElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
+    // All availables links
+    links = new_data.drawing_area.sankey.links_list
+    selected_links = new_data.drawing_area.selected_links_list
+  }
+  else {
+    // Only visible links
+    links = new_data.drawing_area.sankey.visible_links_list
+    selected_links = new_data.drawing_area.visible_and_selected_links_list
+  }
+
+  const entries_for_links = links.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_links.includes(d) } })
+
+  // Components updaters ----------------------------------------------------------------
+  // Boolean used to force this component to reload
+  const [, setCount] = useState(0)
+  // Link this menu's update function
+  new_data.menu_configuration.ref_to_menu_config_links_selection_updater.current = () => setCount(a => a + 1)
+
+  // Function used to reset menu UI -----------------------------------------------------
+
+  const refreshThisAndToggleSaving = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // Refresh this menu
+    setCount(a => a + 1)
+  }
+
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Update values displayed in menus for link's configuration
+    new_data.menu_configuration.updateAllComponentsRelatedToLinksConfig()
+    // Update and update saving indicator
+    refreshThisAndToggleSaving()
+  }
+
+  // Sub-menus --------------------------------------------------------------------------
+  // Links upper menu -------------------------------------------------------------------
+  return (<Box layerStyle='menuconfigpanel_grid'>
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_droplist_simple'
+    >
+      {/* Selection d'un flux  */}
+      <OSTooltip label={t('Menu.tooltips.flux.slct')}>
+        <OSMultiSelect
+          t={new_data.t}
+          elements={entries_for_links}
+          onClick={(entries: typeElementSelectable) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            links.forEach(n => {
+              if (entries_values.includes(n.id)) {
+                new_data.drawing_area.addLinkToSelection(n)
+              }
+              else {
+                new_data.drawing_area.removeLinkFromSelection(n)
+              }
+            })
+            // Update all menus
+            refreshThisAndUpdateRelatedComponents()
+          }}
+        />
+      </OSTooltip>
+
+      {/* Activer / Désactiver selection uniquement des flux actuellement visibles */}
+      <OSTooltip label={t('Menu.tooltips.noeud.dns')}>
+        <Button
+          variant='menuconfigpanel_option_button'
+          onClick={
+            () => {
+              // Update UI with only visible links / all links
+              new_data.menu_configuration.toggle_selector_on_visible_links()
+            }}>
+          {new_data.menu_configuration.is_selector_only_for_visible_links ? icon_element_visible : icon_element_invisible}
+        </Button>
+      </OSTooltip>
+    </Box>
   </Box>)
 }
 
-export default SankeyMenuConfigurationLinks
+
+
 

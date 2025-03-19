@@ -52,8 +52,8 @@ export const checkbox_base_style = definePartsStyle({
   },
   control: {
     margin: '0.25rem',
-    width: '1rem',
-    height: '1rem',
+    width: '0.75rem',
+    height: '0.75rem',
     bg: 'gray.400',
     borderColor: 'gray.400',
     iconColor: 'white',
@@ -78,20 +78,26 @@ export const checkbox_base_style = definePartsStyle({
   label: {
     width:'100%',
     margin: '0',
-    fontSize: '12px',
-    textStyle: 'h4',
   }
 })
 
 export const menuconfigpanel_option_checkbox = definePartsStyle({
+  label:{
+    fontSize: 'unset',
+    svg:{
+      marginRight:'0.2rem',
+    }
+  },
+  control:{
+    w:'0.75rem',
+    h:'0.75rem',
+  },
   container: {
+    h:'1.5rem',
     border: '0px',
     borderRadius: '6px',
     borderColor: 'white',
   },
-  label: {
-    fontSize: '12px'
-  }
 })
 
 export const menuconfigpanel_tag_checkbox = definePartsStyle({
@@ -111,10 +117,17 @@ export const menuconfigpanel_tag_checkbox = definePartsStyle({
 
 export const menuconfigpanel_part_title_1_checkbox = definePartsStyle({
   label: {
-    padding: '0 1.5rem 0 0',
-    textStyle: 'h2',
-    fontSize: '14px',
-    textAlign: 'center'
+    textAlign: 'center',
+    // Same font as textStyle : title_sub_section
+    fontSize:'0.7rem',
+    fontWeight:'bold',
+    svg:{
+      marginRight:'0.2rem'
+    }
+  },
+  control:{
+    width: '1.25rem',
+    height: '1.25rem',
   }
 })
 

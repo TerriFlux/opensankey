@@ -36,7 +36,6 @@ import {
   Id,
   MenuOption,
   SelectionMode,
-  DefaultCellTypes,
   Cell,
   Compatible,
   CellLocation
@@ -118,12 +117,12 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   // Define the spreadsheet rows
   const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey(new_data))
   const rows = getRows(spreadSheetFlux)
-
+  const innerW=window.innerWidth
   // Define the spreadsheet columns and their properties
   const [columns, setColumns] = useState<Column[]>([
-    { columnId: 'source', width: 150, resizable: true },
-    { columnId: 'target', width: 150, resizable: true },
-    { columnId: 'value', width: 150, resizable: true }
+    { columnId: 'source', width: innerW*0.055, resizable: true },
+    { columnId: 'target', width: innerW*0.055, resizable: true },
+    { columnId: 'value', width: innerW*0.045, resizable: true }
   ])
 
   // Map node and link names to their IDs for quick lookups

@@ -173,7 +173,7 @@ export class ClassTemplate_Legend
       sankey: drawing_area.sankey as Type_GenericSankey,
       position: {
         x: const_default_position_x,
-        y: drawing_area.getNavBarHeight()+50,
+        y: drawing_area.getNavBarHeight() + 50,
         u: 0,
         v: 0
       }
@@ -377,8 +377,8 @@ export class ClassTemplate_Legend
   }
 
   protected eventMouseOut(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
-    this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', this.is_selected?'6,6':'unherit')
-    this.d3_selection?.select('.zone_for_dragging').attr('stroke', (this._legend_bg_border|| this.is_selected) ? this._legend_bg_color : 'none')
+    this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', this.is_selected ? '6,6' : 'unherit')
+    this.d3_selection?.select('.zone_for_dragging').attr('stroke', (this._legend_bg_border || this.is_selected) ? this._legend_bg_color : 'none')
   }
 
   protected eventMouseDragStart(
@@ -437,7 +437,7 @@ export class ClassTemplate_Legend
       this._drawInfoDataType()
     }
     // Draw explication for dashed links
-    const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l=>l.value!.data_value == null).length > 0
+    const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l => l.value!.data_value == null).length > 0
     if (sankey_has_dashed_links && this._info_link_value_void) {
       this._drawInfoDashedLink()
     }
@@ -480,6 +480,14 @@ export class ClassTemplate_Legend
       // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
       // Add node to selection
       drawing_area.addLegendToSelection()
+
+      // If shift key is pressed then open config menu to type config context & sub menu graph
+      if (event.shiftKey) {
+        this.drawing_area.application_data.menu_configuration.openConfigMenu()
+        this.drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'context'
+        this.drawing_area.application_data.menu_configuration.elements_configurable_selected.context = ['DA']
+        this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
+      }
     }
   }
 
@@ -758,7 +766,7 @@ export class ClassTemplate_Legend
     // Create info zone
     const dashed_link = this.d3_selection?.append('g')
       .attr('id', 'gg_legend_dashed_links')
-      .attr('transform', 'translate(0,'+ this._dy + ')')
+      .attr('transform', 'translate(0,' + this._dy + ')')
       .attr('font-size', this._legend_police + 'px')
     // Create path as exemple
     dashed_link?.append('path')

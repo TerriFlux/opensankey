@@ -31,22 +31,17 @@ import React from 'react'
 import {
   FType_InitializeAdditionalMenus,
   FType_InitializeApplicationData,
-  FType_InitializeMenuConfiguration,
-  FType_InitializeReinitialization,
   FType_ModuleDialogs,
 } from './types/FunctionTypes'
 import {
-  Class_ApplicationData,
-  Type_GenericApplicationData
-} from './types/Types'
+  Class_ApplicationData} from './types/Types'
 
-import { MenuDraggable, OpenSankeySaveButton } from './components/topmenus/SankeyMenuTop'
+import { MenuDraggable } from './components/topmenus/SankeyMenus'
 
 import { SankeyMenuConfigurationNodesIO } from './components/configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from './components/configmenus/SankeyMenuConfigurationLinksData'
-import { MenuConfigurationLinksAppearence } from './components/configmenus/SankeyMenuConfigurationLinksAppearence'
+import { MenuConfigurationLinksStyle } from './components/configmenus/SankeyMenuConfigurationLinksAppearence'
 import { OpenSankeyMenuConfigurationLayout } from './components/configmenus/SankeyMenuConfigurationLayout'
-import { OpenSankeyConfigurationsMenus } from './components/configmenus/SankeyMenuConfiguration'
 
 import { FType_InitializeDiagrammSelector } from './components/dialogs/types/SankeyMenuDialogsTypes'
 import { OpenSankeyDiagramSelector } from './components/dialogs/SankeyMenuDialogs'
@@ -75,28 +70,6 @@ export const initializeApplicationData: FType_InitializeApplicationData = (
   return application_data
 }
 
-/**
- * Réinitialise data et vide les noeud/liens sélectionnés
- * @param {Type_GenericApplicationData} new_data
- */
-export const initializeReinitialization: FType_InitializeReinitialization = (
-  new_data: Type_GenericApplicationData,
-) => (
-  () => {
-    localStorage.removeItem('diff')
-    localStorage.removeItem('data')
-    localStorage.removeItem('last_save')
-    localStorage.removeItem('initial_data')
-    localStorage.removeItem('icon_imported')
-
-    // Reset Class_ApplicationData instance
-    new_data.reset()
-    new_data.draw()
-
-    sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
-    sessionStorage.setItem('dismiss_warning_sankey_mfa', '0')
-  }
-)
 
 /**
  * Additional menus components.
@@ -107,13 +80,7 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenus = (
   additional_menus,
   new_data
 ) => {
-  if (!new_data.is_static) {
-    additional_menus.additional_nav_item.push(
-      <OpenSankeySaveButton
-        new_data={new_data}
-      />
-    )
-  }
+//  No menu is added in OS via this function 
 }
 
 export const initializeDiagrammSelector: FType_InitializeDiagrammSelector = (
@@ -136,15 +103,16 @@ export const moduleDialogs: FType_ModuleDialogs = (
       dialog_name={'ref_setter_show_menu_node_apparence'}
       content={menu_configuration_nodes_attributes}
       title={t('Menu.Noeuds') + ' ' + t('Noeud.apparence.apparence')}
+      maxW='20%'
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_node_io'}
       content={<SankeyMenuConfigurationNodesIO
         new_data={new_data}
-        menu_for_modal={true}
       />}
       title={t('Menu.Noeuds') + ' ' + t('Noeud.PF.PFM')}
+      maxW='20%'
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
@@ -154,16 +122,18 @@ export const moduleDialogs: FType_ModuleDialogs = (
         contextual={true}
       />}
       title={t('Menu.flux') + ' ' + t('Flux.data.données')}
+      maxW='20%'
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_link_appearence'}
-      content={<MenuConfigurationLinksAppearence
+      content={<MenuConfigurationLinksStyle
         new_data={new_data}
         additionMenus={additional_menus}
         menu_for_style={false}
       />}
       title={t('Menu.flux') + ' ' + t('Flux.apparence.apparence')}
+      maxW='20%'
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
@@ -174,6 +144,7 @@ export const moduleDialogs: FType_ModuleDialogs = (
         contextual={true}
       />}
       title={t('Menu.MEP')}
+      maxW='20%'
     />,
 
 
@@ -183,31 +154,6 @@ export const moduleDialogs: FType_ModuleDialogs = (
 
 /***************************************************************************************/
 
-export const initializeMenuConfiguration: FType_InitializeMenuConfiguration = (
-  new_data,
-  additional_menus,
-  config_link_data,
-  config_link_attr,
-  menu_configuration_nodes_attributes,
-) => {
-
-  return <OpenSankeyConfigurationsMenus
-    new_data={new_data}
-    menu_configuration_layout={
-      <OpenSankeyMenuConfigurationLayout
-        new_data={new_data}
-        extra_background_element={additional_menus.extra_background_element}
-        contextual={false}
-      />
-    }
-    menu_configuration_nodes_attributes={menu_configuration_nodes_attributes}
-    menu_config_link_data={config_link_data}
-    menu_config_link_attr={config_link_attr}
-    additional_menus={additional_menus}
-  />
-}
-
-/***************************************************************************************/
 
 
 

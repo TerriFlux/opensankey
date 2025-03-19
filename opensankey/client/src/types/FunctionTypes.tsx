@@ -50,8 +50,6 @@ import {
 
 export type FCType_OpenSankeyApp = {
   initializeApplicationData: FType_InitializeApplicationData,
-  initializeMenuConfiguration: FType_InitializeMenuConfiguration,
-  initializeReinitialization: FType_InitializeReinitialization,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   initializeDiagrammSelector: FType_InitializeDiagrammSelector,
   moduleDialogs: FType_ModuleDialogs,
@@ -63,7 +61,6 @@ export type FCType_ExcelModal = {
   new_data: Type_GenericApplicationData,
   uploadExcelImpl: FType_UploadExcelImpl,
   launch: (path: string) => void,
-  Reinitialization: () => void,
 }
 
 export type FCType_SankeyLoad = {
@@ -74,12 +71,14 @@ export type FCType_SankeyLoad = {
 
 export type FCType_Menu = {
   new_data: Type_GenericApplicationData,
-  processFunctions: FType_ProcessFunctions,
-  reinitialization: () => void,
   diagramSelector: FType_DiagramSelector,
-  configurations_menus: JSX.Element,
   external_modal: JSX.Element[],
   apply_transformation_additional_elements: JSX.Element[],
+  additionalMenus: Type_AdditionalMenus,
+}
+
+export type FCType_MenuTop = {
+  new_data: Type_GenericApplicationData,
   additionalMenus: Type_AdditionalMenus,
 }
 
@@ -99,23 +98,11 @@ export type FType_InitializeApplicationData = (
   initial_data: Type_JSON | undefined
 ) => Type_GenericApplicationData
 
-export type FType_InitializeReinitialization = (
-  new_data: Type_GenericApplicationData
-) => (() => void)
-
 export type FType_InitializeAdditionalMenus = (
   additional_menus: Type_AdditionalMenus,
   new_data: Type_GenericApplicationData
 ) => void
 
-
-export type FType_InitializeMenuConfiguration = (
-  new_data: Type_GenericApplicationData,
-  additional_menus: Type_AdditionalMenus,
-  config_link_data: JSX.Element,
-  config_link_attr: JSX.Element,
-  menu_configuration_nodes_attributes: JSX.Element,
-) => JSX.Element
 
 export type FType_ModuleDialogs = (
   new_data: Type_GenericApplicationData,

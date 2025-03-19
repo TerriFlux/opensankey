@@ -42,6 +42,7 @@ import { ClassTemplate_Element } from '../Elements/Element'
 import { Class_LevelTagGroup } from '../types/Tag'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_Tag, Class_TagGroup } from '../types/Tag'
+import { Class_NodeStyle } from '../Elements/NodeAttributes'
 
 type TypeAbstract_LinkElement = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
@@ -65,6 +66,8 @@ export abstract class ClassAbstract_NodeElement
   public abstract get grouped_taggs_dict(): { [x: string]: Class_Tag[] }
   public abstract get dimensions_as_parent(): ClassAbstract_NodeDimension[]
   public abstract get dimensions_as_child(): ClassAbstract_NodeDimension[]
+  public abstract get style(): Class_NodeStyle
+  public abstract set style(n:Class_NodeStyle) 
   // Mandatory methods
   public abstract addTag(_: ClassAbstract_ProtoTag): void
   public abstract hasGivenTag(_: ClassAbstract_ProtoTag): boolean
@@ -113,5 +116,6 @@ export abstract class ClassAbstract_NodeDimension {
 export abstract class ClassAbstract_NodeStyle {
   // Mandatory getters
   public abstract get id(): string
+  public abstract get name(): string
 }
 
