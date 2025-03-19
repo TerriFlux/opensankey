@@ -1,14 +1,18 @@
 import { defineStyle } from '@chakra-ui/react'
+import { sizeMenuTopButton } from '../deps/OpenSankey+/deps/OpenSankey/chakra/ButtonStyles'
 
 
-export const menutop_button_goto_dashboard = defineStyle({
-  padding: '0.25rem',
+const _btn_lone_navigation = {
   alignSelf: 'center',
   justifySelf: 'center',
-  height: '3rem',
-  width: '4rem',
-  border: 'solid 1px ',
+  textAlign: 'center',
+  margin:0,
   borderRadius: '6px',
+  border: 'solid 1px ',
+}
+
+export const menutop_button_goto_dashboard = defineStyle({
+  ..._btn_lone_navigation,
   borderColor: 'primaire.2',
   bg: 'primaire.2',
   bgColor: 'primaire.2',
@@ -27,13 +31,7 @@ export const menutop_button_goto_dashboard = defineStyle({
 })
 
 export const menutop_button_logout = defineStyle({
-  padding: '0.25rem',
-  alignSelf: 'center',
-  justifySelf: 'center',
-  height: '3rem',
-  width: '4rem',
-  border: 'solid 1px ',
-  borderRadius: '6px',
+  ..._btn_lone_navigation,
   borderColor: 'primaire.1',
   bg: 'primaire.1',
   bgColor: 'primaire.1',
@@ -51,17 +49,6 @@ export const menutop_button_logout = defineStyle({
   },
 })
 
-const _btn_lone_navigation = {
-  height: '3rem',
-  maxW: '11rem',
-  marginLeft: '1rem',
-  marginRight: '1rem',
-  paddingTop: '1rem',
-  paddingBottom: '1rem',
-  alignSelf: 'center',
-  justifySelf: 'center',
-  textAlign: 'center'
-}
 
 export const btn_lone_navigation = defineStyle(_btn_lone_navigation)
 
@@ -80,6 +67,16 @@ export const btn_lone_navigation_primary = defineStyle({
     bgColor: 'secondaire.1',
     borderColor: 'secondaire.1',
   },
+})
+
+export const sizeBtnTextLogin=defineStyle({
+  ...sizeMenuTopButton,
+  width:'unset',
+  minW:'4rem',
+  minWidth:'4rem',
+  marginLeft:0,
+  marginRight:0,
+
 })
 
 export const btn_lone_navigation_secondary = defineStyle({

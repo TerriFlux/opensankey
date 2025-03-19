@@ -16,7 +16,8 @@ import {
   button_sankey_open_excel,
   button_sankey_open_json,
   menutop_button_goto_dashboard,
-  menutop_button_logout
+  menutop_button_logout,
+  sizeBtnTextLogin
 } from './ButtonStyles'
 import {
   form_account_page,
@@ -57,6 +58,9 @@ export const Theme_SA = {
         button_open_card_sankeytheque,
         button_sankey_open_json,
         button_sankey_open_excel,
+      },
+      sizes:{
+        sizeBtnTextLogin,
       }
     },
     Form: {

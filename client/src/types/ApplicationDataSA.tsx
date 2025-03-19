@@ -1,4 +1,5 @@
 import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/TypesOSP'
+import { Class_IconLibrarySA } from './IconLibrarySA'
 import { Class_MenuConfigSA } from './MenuConfigSA'
 
 export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
@@ -9,6 +10,7 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   protected _has_account: boolean = false // token when user is connected with an account
   protected _ok_to_check_account = true
   protected _ok_to_check_account_timeout: NodeJS.Timeout | null = null
+
 
   // CONSTRUCTOR ========================================================================
 
@@ -34,6 +36,10 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
     return new Class_MenuConfigSA()
   }
 
+  public createNewIconLibrary(): Class_IconLibrarySA {
+    return new Class_IconLibrarySA()
+  }
+  
   public async checkTokens(force=false) {
     if (this._ok_to_check_account || force) {
       // Default token
@@ -99,4 +105,6 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   }
 
   public get has_account() { return this._has_account }
+
+  public get icon_library():Class_IconLibrarySA{return this._icon_library as Class_IconLibrarySA}
 }

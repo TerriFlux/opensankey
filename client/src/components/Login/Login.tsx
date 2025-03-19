@@ -1,6 +1,5 @@
 import React, { FunctionComponent, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaPowerOff } from 'react-icons/fa'
 
 import {
   Box,
@@ -85,7 +84,6 @@ export const Login: FunctionComponent<LoginTypes> = ({
           gridTemplateColumns='minmax(7vw, 150px) auto 11rem 11rem'
         >
           <Box
-            margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
           >
@@ -226,6 +224,7 @@ export const LoginOutButton: FunctionComponent<LoginTypes> = (
 
   return <Button
     variant='menutop_button_logout'
+    size='sizeBtnTextLogin'
     disabled={on_wait}
     onClick={() => {
       setOnWait(true)
@@ -240,7 +239,7 @@ export const LoginOutButton: FunctionComponent<LoginTypes> = (
     {
       on_wait ?
         <Spinner /> :
-        <FaPowerOff />
+        new_data_app.icon_library.icon_logout
     }
   </Button>
 }

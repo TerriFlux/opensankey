@@ -19,20 +19,18 @@ import {
   Spinner
 } from '@chakra-ui/react'
 
-import TextLoop from "react-text-loop"
+import TextLoop from 'react-text-loop'
 
 
 // OpenSankey imports ===============================================================================
 
 import OpenSankeyApp from './deps/OpenSankey+/deps/OpenSankey/App'
 import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyPersistence'
-import { initializeMenuConfiguration } from './deps/OpenSankey+/deps/OpenSankey/Modules'
 
 // OpenSankey+ imports ===============================================================================
 
 import {
   initializeDiagrammSelectorOSP,
-  initializeReinitializationOSP,
 } from './deps/OpenSankey+/ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/components/welcome/ModalWelcomeOSP'
 
@@ -55,18 +53,18 @@ import i18next from 'i18next'
 // Specific methods ==================================================================================
 
 function shuffle(array: number[]) {
-  let currentIndex = array.length;
+  let currentIndex = array.length
 
   // While there remain elements to shuffle...
   while (currentIndex != 0) {
 
     // Pick a remaining element...
-    let randomIndex = Math.floor(Math.random() * currentIndex);
+    const randomIndex = Math.floor(Math.random() * currentIndex)
     currentIndex--;
 
     // And swap it with the current element.
     [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
+      array[randomIndex], array[currentIndex]]
   }
 
   return array
@@ -85,7 +83,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
   // Minimal app ------------------------------------------------------------------------------------
   const sankeyApp =
     <OpenSankeyApp
-      initializeReinitialization={initializeReinitializationOSP}
       initializeApplicationData={
         (initial_data) => {
           return initializeApplicationDataSA(
@@ -94,7 +91,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
           )
         }
       }
-      initializeMenuConfiguration={initializeMenuConfiguration}
       initializeAdditionalMenus={(additionalMenus, new_data) => {
         initializeAdditionalMenusSA(
           additionalMenus,
@@ -131,7 +127,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
       >
         <Box
           height="100vh"
-          backgroundImage={"url(./loading_screen/" + i18next.language + '/' + String(Math.ceil(Math.random() * 3)) + ".png)"}
+          backgroundImage={'url(./loading_screen/' + i18next.language + '/' + String(Math.ceil(Math.random() * 3)) + '.png)'}
           backgroundRepeat='no-repeat'
           backgroundPosition='center'
           backgroundSize="contain"

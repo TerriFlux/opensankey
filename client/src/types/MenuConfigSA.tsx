@@ -6,6 +6,8 @@ type SAShowMenuComponentsVarType={
 }
 export class Class_MenuConfigSA extends Class_MenuConfigOSP {
 
+  protected override _menu_top_order=[...super.menu_top_order,['sankeytheque']]
+
   // PRIVATE ATTRIBUTES =================================================================
 
   /* ========================================
