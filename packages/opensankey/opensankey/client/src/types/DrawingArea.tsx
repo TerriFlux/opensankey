@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -345,14 +345,6 @@ export abstract class ClassTemplate_DrawingArea
     // Reset cursor in the end
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
-
-  public getZoomScale() {
-    const tmp = this.d3_selection_zoom_area?.node()
-    if (tmp && tmp !== null)
-      return d3.zoomTransform(tmp).k
-    else
-      return 1
-  }
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -607,7 +599,6 @@ export abstract class ClassTemplate_DrawingArea
       .attr('id', 'g_drawing')
       .attr('transform', 'translate(' + x + ',' + y + ')')
 
-
     // Add specific groups for drawing background
     this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
@@ -685,6 +676,14 @@ export abstract class ClassTemplate_DrawingArea
     this.selected_links_list.forEach(link => link.draw())
     // Draw nodes selected
     this.selected_nodes_list.forEach(node => node.draw())
+  }
+
+  public getZoomScale() {
+    const tmp = this.d3_selection_zoom_area?.node()
+    if (tmp && tmp !== null)
+      return d3.zoomTransform(tmp).k
+    else
+      return 1
   }
 
   public closeAllMenus() {
@@ -2885,7 +2884,7 @@ export abstract class ClassTemplate_DrawingArea
   public get height() { return this._height }
   public set height(_: number) { this._height = _; this.drawBackground(); this.drawGrid() }
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
-  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin - this.getSideBarWidth() }
+  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin }
 
   // Number of element
   public get number_of_element() { return this._number_of_elements }
