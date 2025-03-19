@@ -1,0 +1,477 @@
+// ==================================================================================================
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
+// ==================================================================================================
+
+import { faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand, faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat, faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React from 'react'
+import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaAngleDoubleDown, FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowAltCircleDown, FaArrowAltCircleUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp, FaBold, FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaEye, FaEyeSlash, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus } from 'react-icons/fa'
+
+// Hand made icon ===========================================================================
+// Logo for sub-nav 'aide'
+const logo_home = <svg
+  xmlns='http://www.w3.org/2000/svg'
+  viewBox='0 0 1000 1000'
+  height='1.8rem'
+  width='1.8rem'
+>
+  <path
+    d='m 162.74,976.43485 -10.47133,-9.79617 V 766.1038 565.56892 h -45.83039 c -50.763748,0 -66.86203,-5.17542 -80.570758,-25.90272 C 13.167748,520.46444 10.955002,498.30818 19.718259,478.09335 30.219727,453.86882 469.64661,19.352705 487.72193,15.319776 c 26.45493,-5.9025653 35.08525,0.500299 137.16415,101.762594 54.73533,54.29743 100.44482,98.7226 101.5767,98.7226 1.13189,0 2.05795,-13.67075 2.05795,-30.37945 0,-27.18977 1.09936,-31.408 10.4713,-40.17559 9.19405,-8.60121 15.85948,-9.7778 54.64454,-9.64581 66.26282,0.2255 66.00422,-0.25812 66.10665,123.61063 l 0.075,91.29661 59.36176,58.38021 c 45.073,44.32769 60.43581,62.25057 63.82369,74.45937 5.39968,19.45846 2.1815,39.62415 -9.02804,56.57281 -13.53183,20.45968 -29.78886,25.64517 -80.40047,25.64517 H 847.74475 V 766.1038 966.63868 l -10.47131,9.79617 c -9.9428,9.30163 -15.35862,9.79606 -107.30211,9.79606 h -96.8303 v -145.7793 c 0,-142.54209 -0.20069,-146.23082 -9.04087,-166.11263 -15.83064,-35.6037 -23.26302,-37.87197 -124.09321,-37.87197 -100.83021,0 -108.26257,2.26827 -124.09319,37.87197 -8.84013,19.88181 -9.04089,23.57054 -9.04089,166.11263 v 145.7793 H 270.0421 c -91.94345,0 -97.35929,-0.49443 -107.3021,-9.79606 z'
+  />
+</svg>
+
+const logo_tuto = <svg
+  xmlns='http://www.w3.org/2000/svg'
+  viewBox='0 0 1000 1000'
+  height='1.8rem'
+  width='1.8rem'
+>
+  <path
+    d='m 157.33319,886.51985 v -16.01023 l 16.97603,-16.89738 16.97603,-16.89737 H 313.68261 436.07997 V 802.89555 769.07623 L 251.70059,768.53613 67.321219,767.99604 56.674641,763.61283 C 34.844761,754.62541 18.748122,738.52877 9.7607064,716.69889 L 5.3774908,706.05232 4.8534663,440.05798 C 4.5089043,265.1623 5.0063898,170.35909 6.305737,163.24694 11.007769,137.51176 27.829518,116.02052 52.370849,104.39479 L 65.385477,98.229492 462.21248,97.6364 c 298.75308,-0.446517 399.45825,-0.03058 407.47358,1.683224 31.55142,6.745946 56.78277,33.138756 61.97135,64.824086 1.57151,9.59677 2.91788,175.10714 1.42418,175.07528 -0.26616,-0.006 -7.64273,-6.75659 -16.39238,-15.002 L 900.78076,309.22531 900.23541,236.635 c -0.53123,-70.71009 -0.65643,-72.79798 -4.83401,-80.6092 -5.36123,-10.02443 -18.44799,-21.3963 -27.52458,-23.91774 -4.45441,-1.23742 -146.57944,-1.90598 -400.82499,-1.88552 -377.912017,0.0304 -394.241158,0.17615 -401.741285,3.58294 -9.848569,4.47361 -22.73902,18.95834 -25.716848,28.89746 -3.263312,10.89194 -3.263312,431.2049 0,442.09686 2.977828,9.9391 15.868279,24.42383 25.716848,28.89746 7.447901,3.38314 19.283682,3.55323 250.089265,3.59372 l 242.27136,0.0426 8.26774,10.16264 c 39.81042,48.93466 86.73175,77.17761 148.88783,89.61872 12.97735,2.59753 23.22843,3.10065 48.51754,2.38121 l 32.06372,-0.91214 7.61898,13.72656 c 4.19044,7.54958 7.90932,14.38509 8.2642,15.18999 0.3549,0.80488 -69.11402,1.46344 -154.37538,1.46344 l -155.02062,-8e-5 v 33.87548 33.87548 h 122.39736 122.39734 l 16.97604,16.89737 16.97603,16.89738 v 16.01023 16.01022 H 468.98757 157.33319 Z m 768.76727,-10.5051 c -8.0362,-2.84054 -25.47372,-17.29199 -25.41455,-21.06245 0.0263,-1.67308 81.2109,-49.52544 86.0779,-50.73658 3.04952,-0.75887 6.85709,8.13021 8.14672,19.0192 4.32998,36.55983 -33.21802,65.36051 -68.81007,52.77983 z m -54.2842,-70.55702 c -9.94227,-17.19142 -25.2893,-43.68312 -34.10451,-58.87048 L 821.6841,718.97387 866.11556,693.4222 c 24.43733,-14.05342 44.70148,-25.23606 45.03147,-24.85033 4.45712,5.21009 66.89808,116.31638 66.09724,117.61219 -1.03829,1.67997 -84.66224,50.53081 -86.49978,50.53081 -0.46826,0 -8.98595,-14.0657 -18.92823,-31.25714 z M 716.58567,704.12296 c -41.47063,-7.82194 -80.1009,-28.93612 -110.08701,-60.17035 -40.72128,-42.41624 -60.25344,-94.37985 -57.42247,-152.7676 5.35255,-110.39429 94.89916,-196.47776 204.3821,-196.47776 76.22482,0 144.20386,38.9682 181.18546,103.86246 14.94672,26.22808 22.46947,50.1885 26.28077,83.7059 3.85981,33.94388 -3.22285,73.11675 -19.50015,107.8516 -25.3021,53.99326 -74.55712,94.65924 -134.64991,111.16984 -20.09526,5.5212 -67.94915,7.02063 -90.18879,2.82591 z m 77.36787,-34.92608 C 893.64301,646.51334 951.20766,541.83855 917.88501,443.84162 892.4106,368.92511 813.74876,319.69876 735.15203,329.4878 c -58.48961,7.28476 -108.53449,42.896 -135.23102,96.2285 -11.00488,21.9848 -15.0218,38.75281 -16.1851,67.56202 -1.2159,30.11203 2.01944,49.79719 12.00595,73.04935 9.77629,22.76271 17.83147,35.07943 34.58502,52.88192 27.34125,29.05306 60.6076,46.55456 100.95366,53.11193 13.91373,2.26137 46.04218,0.65956 62.673,-3.12464 z M 141.84726,493.12075 v -16.4538 h 159.69868 159.69867 v 16.4538 16.45381 H 301.54594 141.84726 Z m 0,-77.42965 v -16.45381 h 159.69868 159.69867 v 16.45381 16.4538 H 301.54594 141.84726 Z m 0,-77.42966 v -16.45381 h 159.69868 159.69867 v 16.45381 16.4538 H 301.54594 141.84726 Z m 0,-77.42967 v -16.4538 h 214.86731 214.8673 v 16.4538 16.4538 H 356.71457 141.84726 Z'
+  />
+</svg>
+
+const logo_doc = <svg
+  xmlns='http://www.w3.org/2000/svg'
+  viewBox='0 0 1000 1000'
+  height='1.8rem'
+  width='1.8rem'
+>
+  <path
+    d='m 3.014475,553.90339 v -295.3514 h 22.539401 22.539401 l 0.889917,-9.01103 c 0.938053,-9.49844 1.697873,-9.96018 27.159151,-16.50472 l 12.069649,-3.10235 v -13.88646 -13.88645 l 15.390076,-3.44414 c 20.94496,-4.68729 21.99646,-5.65706 22.97408,-21.18857 0.48926,-7.77285 2.52048,-14.51777 4.74737,-15.76398 2.14073,-1.19802 14.64756,-4.35751 27.79294,-7.0211 28.51362,-5.77761 76.82539,-4.54191 112.27019,2.87158 56.44782,11.80642 136.27023,45.20052 199.5978,83.5028 l 29.20273,17.66261 25.13289,-15.54656 c 114.20296,-70.64306 235.55834,-104.70156 315.41298,-88.52093 13.22816,2.68037 25.81246,5.85906 27.96512,7.06375 2.20113,1.23182 4.38724,8.19745 4.99553,15.91734 1.23968,15.73323 1.93222,16.37448 22.70423,21.02306 l 15.39008,3.44414 v 13.88645 13.88646 l 12.06965,3.10235 c 25.46127,6.54454 26.22109,7.00628 27.15916,16.50472 l 0.88991,9.01103 h 22.5394 22.5394 v 295.3514 295.3514 H 500 3.014475 Z M 387.82326,823.52662 C 278.65582,801.38742 131.21779,794.63196 57.682883,808.39997 l -9.229731,1.72809 V 544.27973 278.43141 h -9.939711 -9.93971 v 275.47198 275.47198 l 192.404389,-0.33267 192.4044,-0.33264 z M 971.42627,553.90339 V 278.43141 h -9.93971 -9.93971 v 265.88726 265.88726 l -9.22973,-1.85526 c -67.65746,-13.59969 -224.76983,-6.39638 -330.14039,15.1363 l -25.55926,5.22309 192.4044,0.33264 192.4044,0.33267 z m -482.78594,-6.8392 V 270.43281 l -20.5894,-13.18241 c -29.36086,-18.79838 -87.44168,-47.83 -125.31723,-62.6396 -45.56636,-17.81676 -84.59818,-26.90194 -124.1853,-28.90573 -32.42947,-1.6415 -68.84629,2.35551 -72.29452,7.93484 -0.83923,1.35791 -2.67248,78.84644 -4.07389,172.19677 -1.40142,93.3503 -3.32242,214.59222 -4.26891,269.42645 l -1.7209,99.69862 37.7791,1.59106 c 78.41327,3.3024 172.09513,32.48397 270.65233,84.30726 23.42932,12.31959 42.91825,22.4974 43.30874,22.61736 0.39049,0.11984 0.70998,-124.26601 0.70998,-276.41324 z M 319.98264,660.76934 c -56.29196,-14.00963 -59.73065,-15.25428 -67.34608,-24.37638 -14.52914,-17.40355 -13.63754,-42.87511 1.85614,-53.02696 6.39785,-4.19203 9.64796,-4.46767 22.13613,-1.87738 8.05048,1.66981 14.81585,2.85556 15.03412,2.63496 0.21839,-0.22067 0.85726,-36.7117 1.41996,-81.09134 l 1.02308,-80.69029 -14.19958,-4.73247 c -16.5737,-5.52369 -26.97922,-18.29034 -26.97922,-33.10114 0,-9.42676 7.97719,-20.87941 14.54325,-20.87941 1.75098,0 21.23991,5.26095 43.30874,11.69098 39.33174,11.4598 47.74133,15.57995 53.40674,26.16586 1.72593,3.22495 2.68344,43.48691 2.47383,104.02313 l -0.34196,98.76182 7.98821,1.59762 c 18.11114,3.62223 31.97673,22.39755 31.97673,43.29951 0,11.54355 -12.68731,27.03576 -21.79092,26.60846 -2.85355,-0.13404 -31.8827,-6.88708 -64.50917,-15.00697 z M 310.70165,356.5 c -30.63984,-18.36594 -42.18408,-64.73432 -21.13705,-84.89867 16.41341,-15.72505 40.97395,-11.70563 61.90579,10.13112 12.2808,12.81172 17.89342,27.42565 17.89342,46.59029 0,14.40355 -0.96058,16.95533 -9.65572,25.65047 -8.33905,8.33905 -11.5339,9.65206 -23.42932,9.62886 -9.5915,-0.0199 -17.35751,-2.17512 -25.57712,-7.10207 z m 332.71418,403.70529 c 71.92511,-28.47389 125.38833,-41.24275 182.8034,-43.65966 l 37.96763,-1.59828 -1.74333,-82.65193 c -0.95881,-45.45853 -2.40501,-138.24329 -3.21379,-206.18831 -1.63732,-137.55494 -4.27956,-250.38977 -5.92762,-253.13441 -0.59504,-0.99093 -9.58909,-3.4069 -19.98679,-5.3688 -27.10125,-5.11364 -77.70111,-1.99326 -114.20793,7.04296 -51.89509,12.84515 -125.75469,45.1696 -183.60844,80.35575 l -22.71934,13.8177 -0.72394,277.29177 -0.72393,277.29179 46.16261,-23.72935 c 25.38946,-13.05115 64.05411,-30.81231 85.92147,-39.46923 z M 611.96414,660.9378 c -6.35579,-5.46701 -7.5847,-8.77466 -7.36306,-19.81762 0.45737,-22.78506 12.52699,-38.35385 34.9394,-45.06875 l 10.97514,-3.28826 v -23.23308 c 0,-12.77821 -0.83533,-48.17471 -1.85626,-78.65892 l -1.85628,-55.42581 -12.82696,3.86035 c -11.2707,3.39197 -13.67023,3.30783 -19.7771,-0.69356 -6.23968,-4.08837 -6.80814,-6.03193 -5.5609,-19.01205 1.92535,-20.03775 8.16215,-24.47365 57.21629,-40.69483 55.16466,-18.24181 51.60707,-21.78531 53.95173,53.73845 3.83993,123.68848 4.74391,135.99305 9.84571,134.0182 13.95561,-5.40209 19.95539,-4.80244 27.50704,2.74921 6.80778,6.80779 7.48784,9.24856 6.36141,22.83183 -0.89296,10.76783 -3.48145,18.11995 -8.8642,25.17708 -7.00988,9.19046 -12.33766,11.53237 -68.30413,30.02401 -33.38567,11.0308 -62.06415,20.05603 -63.72996,20.05603 -1.66581,0 -6.46186,-2.95303 -10.65787,-6.56228 z m 35.71157,-302.28312 c -6.1835,-3.08901 -11.99874,-9.18364 -15.38832,-16.12767 -4.75953,-9.75057 -5.04861,-13.06921 -2.2858,-26.241 8.0103,-38.18939 44.93426,-64.44045 71.39408,-50.75753 33.96683,17.56491 13.52505,83.19123 -29.58067,94.96581 -14.21498,3.8829 -12.40845,4.02058 -24.13929,-1.83961 z M 389.24322,808.24783 c 0,-2.05292 -45.28981,-15.22991 -82.79086,-24.08786 -74.53076,-17.60454 -145.3032,-25.22173 -189.58268,-20.40464 -15.35668,1.67064 -30.08784,3.86891 -32.735921,4.88508 -4.498883,1.72639 -4.690095,-6.32708 -2.914891,-122.77425 4.938673,-323.95877 5.865764,-397.38914 5.039064,-399.11715 -0.490283,-1.02478 -5.363042,-0.49088 -10.828349,1.18646 l -9.936927,3.04973 v 270.76044 270.76042 l 16.329524,-2.15473 c 8.981238,-1.18513 47.63961,-2.08817 85.90749,-2.00675 71.03403,0.15109 124.09701,4.49571 187.43454,15.34649 16.40053,2.8097 30.77761,5.26521 31.94907,5.4567 1.17147,0.19141 2.12994,-0.21356 2.12994,-0.89994 z m 269.79215,-6.95246 c 21.08638,-3.10539 53.67443,-7.29429 72.41789,-9.30868 36.97958,-3.97426 156.62993,-5.07433 185.3046,-1.70372 l 17.74948,2.0864 V 521.32948 250.28962 l -10.07213,-1.88956 c -5.53966,-1.03924 -10.39112,-1.41664 -10.78098,-0.83866 -0.79731,1.18197 2.15746,234.07964 5.17972,408.27196 1.85663,107.01002 1.66806,114.58598 -2.80941,112.8678 -2.63982,-1.013 -16.82742,-3.18298 -31.52803,-4.82218 -44.98477,-5.01612 -122.82153,3.50517 -197.06197,21.57357 -35.61043,8.66678 -76.67777,20.97805 -76.67777,22.98666 0,0.79172 2.23644,0.77862 4.96986,-0.029 2.73342,-0.8077 22.22235,-4.00934 43.30874,-7.11473 z M 387.68127,789.80961 C 382.61014,784.83448 312.33065,758.1791 279.05321,748.60948 231.88474,735.04522 190.80988,729.17352 151.7621,730.41305 l -32.31102,1.0257 -0.0557,-25.57953 c -0.0307,-14.06873 1.47079,-131.32048 3.33645,-260.55943 1.86568,-129.23896 2.73694,-235.63513 1.93614,-236.43593 -0.80077,-0.8008 -5.32047,-0.10877 -10.04371,1.5377 l -8.58774,2.9937 -1.79682,90.0264 c -0.98826,49.51453 -2.45544,146.89575 -3.26042,216.40272 -0.805,69.50698 -2.206526,149.63905 -3.114532,178.07128 l -1.650901,51.69496 48.299893,0.11388 c 68.83167,0.16244 143.45592,11.8967 216.33028,34.01673 32.41754,9.83989 30.13303,9.32163 26.83722,6.08824 z m 316.79277,-22.70667 c 58.58866,-12.84239 97.08914,-17.24526 150.79981,-17.24526 h 48.36751 l -1.57081,-36.20894 c -0.86393,-19.91492 -2.23002,-102.66301 -3.03573,-183.88465 -0.80572,-81.22163 -2.28426,-185.6344 -3.28565,-232.02837 l -1.82072,-84.35264 -8.57025,-2.98759 c -4.71364,-1.64321 -9.2224,-2.33544 -10.01954,-1.53833 -0.79711,0.79714 0.0733,107.83226 1.93393,237.85588 1.86077,130.02363 3.35917,247.27839 3.32977,260.56613 l -0.0534,24.15958 -32.31102,-1.0257 c -39.04778,-1.23953 -80.12264,4.63217 -127.29111,18.19643 -32.60322,9.37574 -103.51518,36.18779 -108.4231,40.99518 -1.37113,1.34305 10.13053,-1.27959 25.55926,-5.82805 15.42871,-4.54847 45.30471,-12.05162 66.39111,-16.67367 z'
+  />
+</svg>
+
+const logo_contact = <svg
+  xmlns='http://www.w3.org/2000/svg'
+  viewBox='0 0 1000 1000'
+  height='1.8rem'
+  width='1.8rem'
+>
+  <path
+    d='M 73.899976,875.90139 C 40.937168,869.42787 12.296795,840.1985 5.9081337,806.51127 c -2.7238299,-14.36281 -2.7238299,-598.39643 0,-612.75924 6.5424433,-34.49806 35.0100633,-62.96568 69.5081303,-69.50811 14.424371,-2.73553 834.743106,-2.73553 849.167476,0 34.49807,6.54243 62.96569,35.01005 69.50811,69.50811 2.72385,14.36281 2.72385,598.39643 0,612.75924 -6.54242,34.49807 -35.01004,62.96569 -69.50811,69.50811 -12.97147,2.46 -838.139611,2.34552 -850.683764,-0.11801 z M 757.27835,680.87137 618.28561,541.87862 568.34724,591.53493 c -41.79051,41.55444 -51.28209,50.05497 -58.17393,52.0997 -16.55644,4.91214 -19.12525,3.10924 -75.61314,-53.06836 L 383.65363,539.93937 243.69127,679.90173 103.72888,819.86411 H 499.99999 896.2711 Z M 204.56487,362.25953 C 129.15162,287.28205 66.237927,225.23952 64.756655,224.38723 c -2.2938,-1.3198 -2.693233,39.63262 -2.693233,276.13089 V 778.19865 L 201.87164,638.39044 341.67987,498.58221 Z M 937.93658,499.6489 V 222.06467 L 798.9048,361.09648 659.873,500.12826 798.41526,638.68068 c 76.19825,76.20385 138.76257,138.55244 139.0318,138.55244 0.26924,0 0.48952,-124.91291 0.48952,-277.58422 z M 699.59057,377.0831 896.26733,180.39919 H 500.48086 c -217.68253,0 -395.78644,0.30148 -395.78644,0.66997 0,1.39663 395.3274,392.69785 396.73839,392.69785 0.81457,0 89.98555,-88.50776 198.15776,-196.68391 z'
+  />
+</svg>
+
+const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
+  <path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" />
+</svg>
+const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
+  <path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" />
+</svg>
+const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
+  <path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z" />
+</svg>
+
+const logo_hv = <svg xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 26 26"
+>
+  <g>
+    <path
+      d="m 17.84271,23.063448 c -1.269418,-1.282992 -2.346574,-2.454122 -2.393679,-2.602512 -0.0594,-0.187118 -0.01495,-0.364549 0.145033,-0.578998 0.227793,-0.305339 0.251457,-0.30961 1.893906,-0.341824 l 1.663232,-0.03262 v -5.044847 c 0,-3.278554 -0.04379,-5.16073 -0.125076,-5.375831 C 18.85592,8.636398 18.348461,8.114093 17.890847,7.918325 17.58911,7.78924 16.487878,7.756442 12.455374,7.756442 H 7.3983032 l -0.03263,1.662971 c -0.0324,1.65136 -0.03483,1.664613 -0.348521,1.898566 -0.272363,0.203132 -0.362903,0.216128 -0.65705,0.09431 -0.187636,-0.07771 -1.355183,-1.160016 -2.594548,-2.405127 -1.678774,-1.686558 -2.25339,-2.336228 -2.25339,-2.547722 0,-0.212412 0.600322,-0.884111 2.384458,-2.667967 2.546767,-2.546366 2.737072,-2.671811 3.260033,-2.148932 0.212788,0.212755 0.235188,0.391917 0.235188,1.881201 v 1.646051 h 5.0906128 c 5.443018,0 5.946321,0.04455 6.897173,0.610539 0.590386,0.351422 1.254964,1.004393 1.65343,1.62455 0.666046,1.036613 0.705198,1.426315 0.705198,7.019257 v 5.089812 h 1.646309 c 1.489519,0 1.668709,0.0224 1.881497,0.235151 0.519204,0.519121 0.394333,0.708915 -2.142301,3.256165 -1.834562,1.84224 -2.445485,2.387833 -2.675253,2.389168 -0.232072,0.0013 -0.80697,-0.51292 -2.605802,-2.330984 z"
+    />
+  </g>
+</svg>
+
+const logo_vh = <svg xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 26 26"
+  style={{ transform: 'rotate(180deg)' }}
+>
+  <g>
+    <path
+      d="m 3.1500765,17.283934 c 1.282992,-1.269418 2.454122,-2.346574 2.602512,-2.393679 0.187118,-0.0594 0.364549,-0.01495 0.578998,0.145033 0.305339,0.227793 0.30961,0.251457 0.341824,1.893906 l 0.03262,1.663232 h 5.0448465 c 3.278554,0 5.16073,-0.04379 5.375831,-0.125076 0.450418,-0.170206 0.972723,-0.677665 1.168491,-1.135279 0.129085,-0.301737 0.161883,-1.402969 0.161883,-5.435473 V 6.8395274 l -1.662971,-0.03263 c -1.65136,-0.0324 -1.664613,-0.03483 -1.898566,-0.348521 -0.203132,-0.272363 -0.216128,-0.362903 -0.09431,-0.65705 0.07771,-0.187636 1.160016,-1.355183 2.405127,-2.594548 1.686558,-1.678774 2.336228,-2.25339004 2.547722,-2.25339004 0.212412,0 0.884111,0.60032204 2.667967,2.38445804 2.546366,2.546767 2.671811,2.737072 2.148932,3.260033 -0.212755,0.212788 -0.391917,0.235188 -1.881201,0.235188 H 21.043731 V 11.92368 c 0,5.443018 -0.04455,5.946321 -0.610539,6.897173 -0.351422,0.590386 -1.004393,1.254964 -1.62455,1.65343 -1.036613,0.666046 -1.426315,0.705198 -7.019257,0.705198 H 6.6995735 v 1.646309 c 0,1.489519 -0.0224,1.668709 -0.235151,1.881497 -0.519121,0.519204 -0.708915,0.394333 -3.256165,-2.142301 -1.84224,-1.834562 -2.387833,-2.445485 -2.389168,-2.675253 -0.0013,-0.232072 0.51292,-0.80697 2.330984,-2.605802 z"
+    />
+  </g>
+</svg>
+
+const logo_vv = <svg xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 27 70">
+  <g>
+    <path
+      d="m 1.0769167,58.015255 c 0.217654,0.354078 2.981133,3.275215 6.141066,6.491418 5.2863293,5.380463 5.8029433,5.84764 6.4664543,5.84764 0.665502,0 1.194478,-0.484452 6.858149,-6.280882 6.083147,-6.225736 6.13703,-6.28875 6.13703,-7.176876 0,-0.637443 -0.145906,-1.069736 -0.505635,-1.498089 L 25.668348,54.796371 21.3514,54.730451 17.034455,54.664531 V 37.542387 c 0,-9.417179 -0.06092,-18.000541 -0.135383,-19.074135 l -0.135382,-1.951988 4.45232,-0.06594 4.452319,-0.06597 0.505644,-0.602096 c 0.358397,-0.426766 0.505643,-0.861029 0.505643,-1.491273 0,-0.878947 -0.07053,-0.961469 -6.133897,-7.1768736 -5.688745,-5.831388 -6.186808,-6.28770195 -6.86297,-6.28770195 -0.675922,0 -1.176483,0.45789495 -6.8661033,6.28087995 -6.08314705,6.2257346 -6.13703005,6.2887486 -6.13703005,7.1768766 0,0.637443 0.145908,1.069735 0.50563505,1.498089 l 0.505633,0.602095 4.316948,0.06592 4.3169453,0.06592 v 17.122137 c 0,9.417183 0.06092,18.000543 0.135383,19.074137 l 0.135382,1.951988 -4.4523203,0.06596 -4.452317,0.06596 -0.505646,0.602096 c -0.61444705,0.731653 -0.65563605,1.726456 -0.108342,2.616786 z"
+    />
+  </g>
+</svg>
+
+const logo_hh = <svg xmlns="http://www.w3.org/2000/svg"
+  width="16"
+  height="16"
+  viewBox="0 0 70 27"
+>
+  <g>
+    <path
+      d="m 57.188847,25.602699 c 0.354078,-0.217654 3.275215,-2.981133 6.491418,-6.141066 5.380463,-5.286329 5.84764,-5.802943 5.84764,-6.466454 0,-0.665502 -0.484452,-1.194478 -6.280882,-6.858149 C 57.021287,0.053883 56.958273,0 56.070147,0 55.432704,0 55.000411,0.145906 54.572058,0.505635 l -0.602095,0.505633 -0.06592,4.316948 -0.06592,4.316945 H 36.715979 c -9.41718,0 -18.000542,0.06092 -19.074136,0.135383 L 15.689855,9.915926 15.623915,5.463606 15.557945,1.011287 14.955849,0.505643 C 14.529083,0.147246 14.09482,0 13.464576,0 12.585629,0 12.503107,0.07053 6.287703,6.133897 0.45631402,11.822642 2.289157e-8,12.320705 2.289157e-8,12.996867 2.289157e-8,13.672789 0.45789502,14.17335 6.280881,19.86297 12.506615,25.946117 12.569629,26 13.457757,26 c 0.637443,0 1.069735,-0.145908 1.498089,-0.505635 l 0.602095,-0.505633 0.06592,-4.316948 0.06592,-4.316945 h 17.122138 c 9.417183,0 18.000543,-0.06092 19.074137,-0.135383 l 1.951988,-0.135382 0.06596,4.45232 0.06596,4.452317 0.602096,0.505646 c 0.731653,0.614447 1.726456,0.655636 2.616786,0.108342 z"
+    />
+  </g>
+</svg>
+
+// Logo flow ===================================
+
+const logo_flow = <svg
+  width={24}
+  height={24}
+  viewBox="0 0 6.3976391 5.9243476"
+  version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g transform="translate(-206.56258,-307.7782)">
+    <g transform="translate(-363.46259,-185.77275)">
+      <g transform="translate(-129.04874,-98.029683)">
+        <g transform="translate(-2.2918162,28.479156)">
+          <path
+            style={{ fill: 'none', strokeWidth: 1.365, strokeMiterlimit: 4, }}
+            d="m 701.39112,568.3244 c 1.81779,0.0677 2.42357,3e-5 3.16365,-2.12758 0.48699,-1.58472 1.13563,-2.44566 3.19742,-2.41194"
+          />
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
+
+const logo_graph = <svg
+  width={34}
+  height={24}
+  viewBox="0 0 9.6333912 7.0183054"
+  version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g transform="translate(-204.93248,-281.53913)">
+    <g transform="translate(-363.46259,-185.77275)">
+      <g transform="translate(-129.04874,-98.029683)">
+        <g transform="translate(-2.2552562,-8.6736814)">
+          <rect
+            style={{ strokeWidth: 0.264583 }}
+            width="9.3688116"
+            height="6.7537355"
+            x="699.83136"
+            y="574.14752"
+            rx="1.2230835"
+            ry="1.1714071"
+          />
+          <g transform="translate(-0.2725993,0.02867509)">
+            <g transform="translate(-0.00774892,0.04931533)">
+              <path
+                style={{ strokeWidth: 0.661458 }}
+                d="m 705.32968,577.69382 c 0.80084,0.004 1.06083,-2e-5 1.38478,0.9278 0.21316,0.69107 0.49708,1.06651 1.39956,1.0518"
+              />
+              <path
+                style={{ strokeWidth: 0.396875 }}
+                d="m 707.6205,576.12234 c -0.88183,0.007 -1.01211,-0.0731 -1.25954,0.46023 -0.21723,0.53034 -0.2587,0.58086 -0.99086,0.58423"
+              />
+            </g>
+            <rect
+              style={{ fill: '#ffffff', strokeWidth: 0.264582 }}
+              width="0.7937513"
+              height="0.7937513"
+              x="-705.25323"
+              y="577.14899"
+              transform="scale(-1,1)"
+            />
+          </g>
+          <g transform="translate(-0.00182644,-0.00913219)">
+            <path
+              style={{ strokeWidth: 0.79375 }}
+              d="m 701.47954,575.35168 c 0.83284,-0.0309 1.11039,-2e-5 1.44947,0.97116 0.22312,0.72337 0.52031,1.09444 1.46495,1.10096"
+            />
+            <path
+              style={{ strokeWidth: 0.264583 }}
+              d="m 704.3418,577.95185 c -0.61149,0.002 -0.82666,-2e-5 -1.0791,0.72252 -0.1661,0.53816 -0.38735,0.83053 -1.09061,0.81907"
+            />
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
+
+const logo_node = <svg
+  width={24}
+  height={24}
+  viewBox="0 0 5.9493138 5.7927019"
+  version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g transform="translate(-206.77426,-318.9784)">
+    <g transform="translate(-363.46259,-185.77275)">
+      <g transform="translate(-129.04874,-98.029683)">
+        <g transform="translate(-3.7168651,76.670708)" style={{ display: 'inline' }}>
+          <g transform="matrix(-1,0,0,1,1411.4251,-0.52916667)" style={{}}>
+            <ellipse
+              style={{ strokeWidth: 0.264583 }}
+              cx="704.47333"
+              cy="528.63928"
+              rx="1.8677084"
+              ry="1.8677086"
+            />
+            <rect
+              style={{ fill: '#ffffff', strokeWidth: 0.264582 }}
+              width="3.2354169"
+              height="3.2354169"
+              x="705.05493"
+              y="529.06427"
+            />
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
+
+const logo_tableau = <svg
+  width={32}
+  height={20}
+  viewBox="0 0 8.4398433 5.3956816"
+  version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <g transform="translate(-205.51567,-270.76938)">
+    <g transform="translate(-363.46259,-185.77275)">
+      <g transform="translate(-129.04874,-98.029683)">
+        <g transform="translate(-3.7168651,16.698635)">
+          <g
+            transform="matrix(0.62433794,0,0,0.80774046,399.43802,390.31488)"
+            style={{ strokeWidth: 0.372578, }}
+          >
+            <rect
+              width="13.145483"
+              height="6.3073921"
+              x="484.38855"
+              y="182.86662"
+              ry="0"
+              style={{ strokeWidth: 0.372578, strokeLinejoin: 'round' }}
+            />
+            <path d="m 488.82587,182.91184 v 6.37512" style={{ strokeWidth: 0.372578, strokeLinejoin: 'round' }} />
+            <path d="m 484.47899,184.49997 h 13.02313" style={{ strokeWidth: 0.372578, strokeLinejoin: 'round' }} />
+            <path d="m 484.35308,187.60234 h 13.17819 m -13.17819,-1.56639 h 13.17819" style={{ strokeWidth: 0.372578, strokeLinejoin: 'round' }} />
+            <path d="m 492.99799,182.93433 v 6.33026" style={{ strokeWidth: 0.372578, strokeLinejoin: 'round' }} />
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
+
+
+
+// Class ===========================================================================
+
+export class Class_IconLibrary {
+
+  // Define icon ===================================
+
+  protected _icon_new_da = <FontAwesomeIcon icon={faPlus} />
+
+  protected _icon_open_sankey = <FontAwesomeIcon icon={faFolderOpen} />
+  protected _icon_open_sankey_json = <FontAwesomeIcon icon={faFile} />
+  protected _icon_open_sankey_excel = <FontAwesomeIcon icon={faTable} />
+  protected _icon_open_sankey_sankeymatic = <FontAwesomeIcon icon={faChartSimple} />
+
+  protected _icon_save_sankey = <FontAwesomeIcon icon={faDownload} />
+  protected _icon_save_sankey_json = <FontAwesomeIcon icon={faFile} />
+  protected _icon_save_sankey_excel = <FontAwesomeIcon icon={faTable} />
+
+  protected _icon_export_sankey = <FontAwesomeIcon icon={faFileExport} />
+  protected _icon_export_sankey_png = <FontAwesomeIcon icon={faImage} />
+  protected _icon_export_sankey_pdf = <FontAwesomeIcon icon={faFile} />
+
+  protected _icon_setting = <FontAwesomeIcon icon={faGears} />
+
+  protected _icon_mep = <FontAwesomeIcon icon={faFileInvoice} />
+
+  protected _icon_edit_style = <FontAwesomeIcon icon={faPenToSquare} />
+  protected _icon_edit_style_node = <FontAwesomeIcon icon={faShapes} />
+  protected _icon_edit_style_flow = <FontAwesomeIcon icon={faShareNodes} />
+
+  protected _icon_welcome = logo_home
+  protected _icon_tuto = logo_doc
+  protected _icon_doc = logo_tuto
+  protected _icon_contact = logo_contact
+
+  protected _icon_save_in_cache = <FontAwesomeIcon icon={faCloudArrowUp} />
+
+  protected _icon_DA_edit = <FontAwesomeIcon icon={faPenNib} />
+  protected _icon_DA_selection = <FontAwesomeIcon icon={faArrowPointer} />
+
+  protected _icon_undo = <FontAwesomeIcon icon={faRotateLeft} />
+  protected _icon_redo = <FontAwesomeIcon icon={faRotateRight} />
+
+  protected _icon_enter_fullscreen = <FontAwesomeIcon icon={faCompress} />
+  protected _icon_exit_fullscreen = <FontAwesomeIcon icon={faExpand} />
+
+  protected _icon_area_fit_vert = <FontAwesomeIcon icon={faArrowsUpDown} />
+  protected _icon_area_fit_horiz = <FontAwesomeIcon icon={faArrowsLeftRight} />
+
+  protected _icon_config_spreadsheet = <FontAwesomeIcon icon={faTable} />
+  protected _icon_config_menu = <FontAwesomeIcon icon={faSliders} />
+
+  protected _icon_text_align_left = <FaAlignLeft />
+  protected _icon_text_align_center = <FaAlignCenter />
+  protected _icon_text_align_right = <FaAlignRight />
+
+  protected _icon_text_vert_pos_top = svg_label_top
+  protected _icon_text_vert_pos_center = svg_label_center
+  protected _icon_text_vert_pos_bottom = svg_label_bottom
+
+  protected _icon_text_bold = <FaBold />
+  protected _icon_text_italic = <FaItalic />
+
+  protected _icon_activated = <FaCheck />
+  protected _icon_unactivated = <FontAwesomeIcon icon={faXmark} />
+
+  protected _icon_popup_menu = <FontAwesomeIcon icon={faUpRightFromSquare} />
+
+  protected _icon_locked = <FaLock />
+  protected _icon_unlocked = <FaLockOpen />
+
+  protected _icon_add_element = <FaPlus />
+  protected _icon_remove_element = <FaMinus />
+
+  protected _icon_repeat = <FontAwesomeIcon icon={faRepeat} />
+
+  protected _icon_open_config = <FaAngleDoubleLeft />
+  protected _icon_close_config = <FaAngleDoubleRight />
+  protected _icon_open_close_config = <FontAwesomeIcon icon={faScrewdriverWrench} />
+
+  protected _icon_move_element_down = <FaArrowAltCircleDown />
+  protected _icon_move_element_up = <FaArrowAltCircleUp />
+
+  protected _icon_direction_up = <FaArrowUp />
+  protected _icon_direction_down = <FaArrowDown />
+  protected _icon_direction_left = <FaArrowLeft />
+  protected _icon_direction_rift = <FaArrowRight />
+
+  protected _icon_open_selector = <FaChevronDown />
+
+  protected _icon_orientation_hh = logo_hh
+  protected _icon_orientation_vv = logo_vv
+  protected _icon_orientation_hv = logo_hv
+  protected _icon_orientation_vh = logo_vh
+
+  protected _icon_order_up = <FaAngleUp />
+  protected _icon_order_down = <FaAngleDown />
+  protected _icon_order_top = <FaAngleDoubleUp />
+  protected _icon_order_bottom = <FaAngleDoubleDown />
+
+  protected _icon_element_visible = <FaEye />
+  protected _icon_element_invisible = <FaEyeSlash />
+
+  protected _icon_collapse_up = <FaCaretUp />
+  protected _icon_collapse_down = <FaCaretDown />
+
+
+  protected _icon_flow = logo_flow
+  protected _icon_graph = logo_graph
+  protected _icon_node = logo_node
+  protected _icon_tableau = logo_tableau
+
+
+  // Constructor ===================================
+  constructor() {
+  }
+
+  // Getters ===================================
+  public get icon_new_da() { return this._icon_new_da }
+  public get icon_open_sankey() { return this._icon_open_sankey }
+  public get icon_open_sankey_json() { return this._icon_open_sankey_json }
+  public get icon_open_sankey_excel() { return this._icon_open_sankey_excel }
+  public get icon_open_sankey_sankeymatic() { return this._icon_open_sankey_sankeymatic }
+  public get icon_save_sankey() { return this._icon_save_sankey }
+  public get icon_save_sankey_json() { return this._icon_save_sankey_json }
+  public get icon_save_sankey_excel() { return this._icon_save_sankey_excel }
+  public get icon_export_sankey() { return this._icon_export_sankey }
+  public get icon_export_sankey_png() { return this._icon_export_sankey_png }
+  public get icon_export_sankey_pdf() { return this._icon_export_sankey_pdf }
+  public get icon_setting() { return this._icon_setting }
+  public get icon_mep() { return this._icon_mep }
+  public get icon_edit_style() { return this._icon_edit_style }
+  public get icon_edit_style_node() { return this._icon_edit_style_node }
+  public get icon_edit_style_flow() { return this._icon_edit_style_flow }
+  public get icon_welcome() { return this._icon_welcome }
+  public get icon_tuto() { return this._icon_tuto }
+  public get icon_doc() { return this._icon_doc }
+  public get icon_contact() { return this._icon_contact }
+  public get icon_save_in_cache() { return this._icon_save_in_cache }
+  public get icon_DA_edit() { return this._icon_DA_edit }
+  public get icon_DA_selection() { return this._icon_DA_selection }
+  public get icon_undo() { return this._icon_undo }
+  public get icon_redo() { return this._icon_redo }
+  public get icon_enter_fullscreen() { return this._icon_enter_fullscreen }
+  public get icon_exit_fullscreen() { return this._icon_exit_fullscreen }
+  public get icon_area_fit_vert() { return this._icon_area_fit_vert }
+  public get icon_area_fit_horiz() { return this._icon_area_fit_horiz }
+  public get icon_config_spreadsheet() { return this._icon_config_spreadsheet }
+  public get icon_config_menu() { return this._icon_config_menu }
+  public get icon_text_align_left() { return this._icon_text_align_left }
+  public get icon_text_align_center() { return this._icon_text_align_center }
+  public get icon_text_align_right() { return this._icon_text_align_right }
+  public get icon_text_vert_pos_top() { return this._icon_text_vert_pos_top }
+  public get icon_text_vert_pos_center() { return this._icon_text_vert_pos_center }
+  public get icon_text_vert_pos_bottom() { return this._icon_text_vert_pos_bottom }
+  public get icon_text_bold() { return this._icon_text_bold }
+  public get icon_text_italic() { return this._icon_text_italic }
+  public get icon_activated() { return this._icon_activated }
+  public get icon_unactivated() { return this._icon_unactivated }
+  public get icon_popup_menu() { return this._icon_popup_menu }
+  public get icon_locked() { return this._icon_locked }
+  public get icon_unlocked() { return this._icon_unlocked }
+  public get icon_add_element() { return this._icon_add_element }
+  public get icon_remove_element() { return this._icon_remove_element }
+  public get icon_repeat() { return this._icon_repeat }
+  public get icon_open_config() { return this._icon_open_config }
+  public get icon_close_config() { return this._icon_close_config }
+  public get icon_move_element_down() { return this._icon_move_element_down }
+  public get icon_move_element_up() { return this._icon_move_element_up }
+  public get icon_direction_up() { return this._icon_direction_up }
+  public get icon_direction_down() { return this._icon_direction_down }
+  public get icon_direction_left() { return this._icon_direction_left }
+  public get icon_direction_rift() { return this._icon_direction_rift }
+  public get icon_open_selector() { return this._icon_open_selector }
+  public get icon_orientation_hh() { return this._icon_orientation_hh }
+  public get icon_orientation_vv() { return this._icon_orientation_vv }
+  public get icon_orientation_hv() { return this._icon_orientation_hv }
+  public get icon_orientation_vh() { return this._icon_orientation_vh }
+  public get icon_order_up() { return this._icon_order_up }
+  public get icon_order_down() { return this._icon_order_down }
+  public get icon_order_top() { return this._icon_order_top }
+  public get icon_order_bottom() { return this._icon_order_bottom }
+  public get icon_element_visible() { return this._icon_element_visible }
+  public get icon_element_invisible() { return this._icon_element_invisible }
+  public get icon_collapse_up() { return this._icon_collapse_up }
+  public get icon_collapse_down() { return this._icon_collapse_down }
+  public get icon_open_close_config() { return this._icon_open_close_config }
+
+
+  public get icon_flow() { return this._icon_flow }
+  public get icon_graph() { return this._icon_graph }
+  public get icon_node() { return this._icon_node }
+  public get icon_tableau() { return this._icon_tableau }
+
+}

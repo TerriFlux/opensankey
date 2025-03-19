@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,6 @@
 // ==================================================================================================
 
 // External imports
-import * as d3 from 'd3'
 import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 
 // Local imports
@@ -33,6 +32,9 @@ import { Type_MacroTagGroup } from '../types/Utils'
 
 // SPECIFIC TYPES **********************************************************************/
 
+
+export type keyTypeConfig = 'data' | 'context' | 'style'
+export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node'
 export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Nodes
   ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -60,12 +62,14 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
   // Modal - Style & Layout
   ref_setter_show_modal_styles_nodes: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_styles_nodes_context: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_styles_links: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_styles_links_context: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_spreadsheet : MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_spreadsheet: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 }
 
 // CLASS MENU CONFIG *******************************************************************/
@@ -83,12 +87,64 @@ export class Class_MenuConfig {
     ========================================*/
 
   /**
-   *   List of accordions to show
+   * Order of buttons in top menu
+   *
    * @protected
-   * @type {string[]}
    * @memberof Class_MenuConfig
    */
-  protected _accordions_to_show: string[] = []
+  protected _menu_top_order = [
+    [
+      'resetDA',
+      'open_sankey',
+      'save_sankey',
+      'export_sankey'
+    ],
+    [
+      'edit_style',
+      'mep',
+    ],
+    [
+      // 'welcome',
+      'tour',
+      'tutoriel',
+      'documentation',
+    ],
+    [
+      'contact',
+      'setting',
+    ]
+  ]
+
+
+  /**
+   * Variable that determine what kind of element we are configuring in the config menu
+   *
+   * @protected
+   * @memberof Class_MenuConfig
+   */
+  protected _type_menu_configuration_selected: keyTypeConfig = 'data'
+
+  /**
+   * Dict containing theme of menu according to _type_menu_configuration_selected & elements configurable
+   *
+   * @protected
+   * @type {{ [x: string]: { theme: string; elements_configurable: string[] } }}
+   * @memberof Class_MenuConfig
+   */
+  protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
+    'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'DA', 'flow', 'node'] },
+    'context': { 'theme': '#786960', elements_configurable: ['DA', 'flow', 'node', 'tag_flow', 'tag_node'] },
+    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'flow', 'node'] },
+  }
+
+  protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
+    'data': [],
+    'context': [],
+    'style': [],
+  }
+
+  public get elements_configurable_selected() { return this._elements_configurable_selected }
+
 
   /* ========================================
     Timeout dict
@@ -106,7 +162,7 @@ export class Class_MenuConfig {
   private _ref_to_spreadsheet: MutableRefObject<(() => void)>
 
   // Ref to state if configuration is opened
-  private _ref_menu_opened: MutableRefObject<[boolean,() => void]>
+  private _ref_menu_opened: MutableRefObject<[boolean, (b: boolean) => void]>
 
   /* ========================================
    Ref to button on the top menu in the app
@@ -118,24 +174,12 @@ export class Class_MenuConfig {
    Ref to button on the configuration menu in the app
    ========================================*/
 
-  // Button that open the configuration menu
-  private _ref_to_btn_toogle_menu: RefObject<HTMLButtonElement>
-
-  // Button that open the menu elements
-  private _ref_to_btn_accordion_config_elements: RefObject<HTMLButtonElement>
-
-  // Button that open the sub menu node of elements
-  private _ref_to_btn_accordion_config_node: RefObject<HTMLButtonElement>
-
-  // Button that open the sub menu links of elements
-  private _ref_to_btn_accordion_config_link: RefObject<HTMLButtonElement>
-
   /* ========================================
     Updater of component in the configuration menu
     ========================================*/
 
   // Update component OpenSankeyConfigurationsMenus
-  private _ref_to_menu_config_updater: MutableRefObject<() => void>
+  protected _ref_to_menu_config_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyMenuConfigurationLayout
   private _ref_to_menu_config_layout_updater: MutableRefObject<() => void>
@@ -209,6 +253,10 @@ export class Class_MenuConfig {
   // Update component OpenSankeyConfigurationsMenus
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
 
+  // Update component ToolBarBottom
+  protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
+
+
   /* ========================================
     Updater of filtering components
   =========================================== */
@@ -222,9 +270,8 @@ export class Class_MenuConfig {
   // TODO description
   private _ref_to_fluxtag_filter_updater: MutableRefObject<() => void>
 
-  // Update AddAllDropDownFlux
+  // Update FlowTagGroupFilter
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
-  private _ref_to_datatag_filter_navbar_updater: MutableRefObject<() => void>
 
   /* ========================================
     Dict of ref of setter of dialogs menu
@@ -261,13 +308,6 @@ export class Class_MenuConfig {
    */
   constructor() {
 
-    // Init button ref ------------------------------------------------------------------
-
-    this._ref_to_btn_toogle_menu = useRef<HTMLButtonElement>(null)
-    this._ref_to_btn_accordion_config_elements = useRef<HTMLButtonElement>(null)
-    this._ref_to_btn_accordion_config_node = useRef<HTMLButtonElement>(null)
-    this._ref_to_btn_accordion_config_link = useRef<HTMLButtonElement>(null)
-
     // Init menu component updater ------------------------------------------------------
 
     this._ref_to_splashscreen_updater = useRef(() => null)
@@ -275,7 +315,7 @@ export class Class_MenuConfig {
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_spreadsheet = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
-    this._ref_menu_opened = useRef([false,() => null])
+    this._ref_menu_opened = useRef([false, () => null])
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
@@ -322,7 +362,6 @@ export class Class_MenuConfig {
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
-    this._ref_to_datatag_filter_navbar_updater = useRef(() => null)
 
     // Init save diagram JSON components updater ------------------------------------------------
 
@@ -335,6 +374,9 @@ export class Class_MenuConfig {
     // Init ModalPreference components updater ------------------------------------------------
 
     this._ref_to_modal_pref_updater = useRef(() => null)
+
+    // Init ToolBarBottom components updater ------------------------------------------------
+    this._ref_to_toolbar_bottom_updater = useRef(() => null)
 
     // Init dict of setter show dialog -------------------------------------------------
 
@@ -365,7 +407,9 @@ export class Class_MenuConfig {
       ref_setter_png_saver_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
       // Modal - Style & Layout
       ref_setter_show_modal_styles_nodes: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles_nodes_context: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_styles_links: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles_links_context: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_apply_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Other modals
       ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -375,55 +419,6 @@ export class Class_MenuConfig {
   }
 
   // PUBLIC METHODS =====================================================================
-
-  /**
-   * Add accordion to menu config
-   * @param {string} _
-   * @memberof Class_MenuConfig
-   */
-  public addToAccordionsToShow(_: string) {
-    if (!this.isGivenAccordionShowed(_)) {
-      this._accordions_to_show.push(_)
-      this.updateAllMenuComponents()
-    }
-  }
-
-  /**
-   * Remove accordion to menu config
-   * @param {string} _
-   * @memberof Class_MenuConfig
-   */
-  public removeFromAccordionsToShow(_: string) {
-    if (this.isGivenAccordionShowed(_)) {
-      this._accordions_to_show = this._accordions_to_show
-        .filter(to_show => to_show !== _)
-      this.updateAllMenuComponents()
-    }
-  }
-
-  /**
-   * In menu config :
-   * If accordion exists - remove it
-   * It it does not exist - add it
-   * @param {string} _
-   * @memberof Class_MenuConfig
-   */
-  public toggleGivenAccordion(_: string) {
-    if (this.isGivenAccordionShowed(_))
-      this.removeFromAccordionsToShow(_)
-    else
-      this.addToAccordionsToShow(_)
-  }
-
-  /**
-   * Check if given accordion is displayed in menu config
-   * @param {string} _
-   * @return {*}
-   * @memberof Class_MenuConfig
-   */
-  public isGivenAccordionShowed(_: string) {
-    return this._accordions_to_show.includes(_)
-  }
 
   public closeAllMenus() {
     // Close config menu
@@ -440,7 +435,9 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     // -- Style & Layout
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes_context.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_links.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_links_context.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_apply_layout.current(false)
     // -- Other modals
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
@@ -453,14 +450,11 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public openConfigMenu() {
-    // Check if we linked the ref to the button to toggle the menu
-    // and if _ref_to_btn_accordion_config_elements is null it mean the menu is closed(because the accordion is not rendered if the menu is closed)
     if (
-      this._ref_to_btn_toogle_menu &&
-      this._ref_to_btn_toogle_menu.current &&
-      this._ref_to_btn_accordion_config_elements.current === null
+      this._ref_menu_opened.current &&
+      this._ref_menu_opened.current[0]===false
     ) {
-      this._ref_to_btn_toogle_menu.current.click()
+      this._ref_menu_opened.current[1](true)
     }
   }
 
@@ -469,81 +463,56 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public closeConfigMenu() {
-    // Check if we linked the ref to the button to toggle the menu
-    // and if _ref_to_btn_accordion_config_elements is null it mean the menu is closed(because the accordion is not rendered if the menu is closed)
     if (
-      this._ref_to_btn_toogle_menu &&
-      this._ref_to_btn_toogle_menu.current &&
-      this._ref_to_btn_accordion_config_elements.current !== null
+      this._ref_menu_opened.current &&
+      this._ref_menu_opened.current[0]===true
     ) {
-      this._ref_to_btn_toogle_menu.current.click()
+      this._ref_menu_opened.current[1](false)
     }
   }
 
-  /**
-   * Check if we linked the ref to the button to open elements accordion
-   * and check if the accordion elements is open then click to the button
-   * that _ref_to_btn_accordion_config_elements ref to
-   *
-   * @memberof Class_MenuConfig
-   */
-  public openConfigMenuElements() {
-    // Config menu must be opened first
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      // Open Element accordion
-      if (
-        this._ref_to_btn_accordion_config_elements.current &&
-        (d3.select(this._ref_to_btn_accordion_config_elements.current).attr('aria-expanded') === 'false')
-      ) {
-        this._ref_to_btn_accordion_config_elements.current.click()
-      }
-    }, 500)
-  }
+
 
   /**
-   * Check if we linked the ref to the button to toggle the menu
-   * and check if the accordion nodes is open then click to the button
-   * _ref_to_btn_accordion_config_node ref to
-   *
+   * Open config menu if closed and show sub-menu node in type config data
    * @memberof Class_MenuConfig
    */
   public openConfigMenuElementsNodes() {
-    // Element config men umust be opened first
-    this.openConfigMenuElements()
+    // Element config menu must be opened first
+    this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      // Open Node element menu
-      if (
-        this._ref_to_btn_accordion_config_node.current &&
-        (d3.select(this._ref_to_btn_accordion_config_node.current).attr('aria-expanded') === 'false')
-      ) {
-        this._ref_to_btn_accordion_config_node.current.click()
-      }
-    }, 500)
+      this._type_menu_configuration_selected='data'
+      this._elements_configurable_selected.data=['node']
+      this._ref_to_menu_config_updater.current()
+    }, 200)
   }
 
   /**
-   * Check if we linked the ref to the button to toggle the menu
-   * and check if the accordion nodes is open then click to the button
-   * _ref_to_btn_accordion_config_link ref to
-   *
+   * Open config menu if closed and show sub-menu flow in type config data
    * @memberof Class_MenuConfig
    */
   public openConfigMenuElementsLinks() {
-    // Element config men umust be opened first
-    this.openConfigMenuElements()
+    // Element config menu must be opened first
+    this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      if (
-        this._ref_to_btn_accordion_config_link.current &&
-        d3.select(this._ref_to_btn_accordion_config_link.current).attr('aria-expanded') === 'false'
-      ) {
-        this._ref_to_btn_accordion_config_link.current.click()
-      }
-    }, 500)
+      this._type_menu_configuration_selected='data'
+      this._elements_configurable_selected.data=['flow']
+      this._ref_to_menu_config_updater.current()
+    }, 200)
   }
+
+  public toggleElementInConfigEdition(kt: keyTypeConfig, ke: keyTypeElements) {
+    if (this._elements_configurable_selected[kt].includes(ke)) {
+      const idx = this._elements_configurable_selected[kt].indexOf(ke)
+      this._elements_configurable_selected[kt].splice(idx, 1)
+    } else {
+      this._elements_configurable_selected[kt].push(ke)
+    }
+  }
+
+
 
   // Menu config updaters methods -------------------------------------------------------
 
@@ -739,6 +708,7 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToFluxTags()
     this.updateAllComponentsRelatedToLevelTags()
     this.updateComponentPref()
+    this._ref_to_toolbar_bottom_updater.current()
   }
 
   public updateComponentPref() {
@@ -829,6 +799,8 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksData()
     this.updateAllComponentsRelatedToToolbar()
     this.updateAllComponentsRelatedToLevelTags()
+    this.updateAllComponentsRelatedToDataTags()
+    
   }
 
   public updateAllComponentsRelatedToLevelTags() {
@@ -850,7 +822,6 @@ export class Class_MenuConfig {
 
   public updateAllComponentsRelatedToDataTags() {
     this._ref_to_datatag_filter_updater.current()
-    this._ref_to_datatag_filter_navbar_updater.current()
     this.updateComponentRelatedToLinksData()
     this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['data_taggs'].current()
@@ -891,14 +862,7 @@ export class Class_MenuConfig {
   public updateComponentSaveDiagramJSON() {
     this._ref_to_save_diagram_updater.current()
   }
-  /**
-   * Function to position horizontally the toolbar, it's position depend if the configuration menu is opened
-   * @memberof Class_MenuConfig
-   */
-  public positionToolBar(menu_config_width: number) {
-    d3.select('.sideToolBar').transition().duration(300).style('right', ((this._ref_menu_opened.current[0] ? menu_config_width : 0)) + 'px')
-  }
-
+  
   /**
    * Function to update ApplyLayoutDialog component,
    * can be overrided in submodule if we add subcomponent to ApplyLayoutDialog
@@ -968,7 +932,7 @@ export class Class_MenuConfig {
     return this._ref_to_spreadsheet
   }
 
-  public get ref_menu_opened(): MutableRefObject<[boolean,() => void]> {
+  public get ref_menu_opened(): MutableRefObject<[boolean, (b: boolean) => void]> {
     return this._ref_menu_opened
   }
 
@@ -1002,32 +966,6 @@ export class Class_MenuConfig {
     return this._refs_to_btn_toogle_top_menus
   }
 
-  // Accordion menu openers -------------------------------------------------------------
-
-  public get accordions_to_show() {
-    return this._accordions_to_show
-  }
-
-  public set accordions_to_show(_: string[]) {
-    this._accordions_to_show = _
-    this.updateAllMenuComponents()
-  }
-
-  public get ref_to_btn_toogle_menu(): RefObject<HTMLButtonElement> {
-    return this._ref_to_btn_toogle_menu
-  }
-
-  public get ref_to_btn_accordion_config_elements(): RefObject<HTMLButtonElement> {
-    return this._ref_to_btn_accordion_config_elements
-  }
-
-  public get ref_to_btn_accordion_config_node(): RefObject<HTMLButtonElement> {
-    return this._ref_to_btn_accordion_config_node
-  }
-
-  public get ref_to_btn_accordion_config_link(): RefObject<HTMLButtonElement> {
-    return this._ref_to_btn_accordion_config_link
-  }
 
   public get ref_to_menu_config_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_updater
@@ -1100,7 +1038,7 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_links_data_updater
   }
 
-  public get ref_to_menu_contextual_config_links_data_updater():MutableRefObject<()=>void>{
+  public get ref_to_menu_contextual_config_links_data_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_contextual_config_links_data_updater
   }
 
@@ -1169,10 +1107,6 @@ export class Class_MenuConfig {
     return this._ref_to_datatag_filter_updater
   }
 
-  public get ref_to_datatag_filter_navbar_updater(): MutableRefObject<() => void> {
-    return this._ref_to_datatag_filter_navbar_updater
-  }
-
   // Nodes / links selectors ------------------------------------------------------------
 
   public get is_selector_only_for_visible_nodes() {
@@ -1208,5 +1142,24 @@ export class Class_MenuConfig {
   public get ref_to_modal_pref_updater() {
     return this._ref_to_modal_pref_updater
   }
+
+  public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
+    return this._ref_to_toolbar_bottom_updater
+  }
+
+  /**
+   * Order of buttons in top menu
+   *
+   * @memberof Class_MenuConfig
+   */
+  public get menu_top_order(): string[][] {
+    return this._menu_top_order
+  }
+
+  public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
+  public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }
+
+
+  public get style_config(): { [x: string]: { theme: string; elements_configurable: string[] } } { return this._style_config }
 }
 

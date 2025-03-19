@@ -31,17 +31,41 @@ import {
   Input,
 } from '@chakra-ui/react'
 
-import { FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
+import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
+
+
+// Utils functions -------------------------------------------------------------------
+
+const right_addon_pixel = (val: number) => {
+  if (val === 1) {
+    return 'pixel'
+  }
+  return 'pixels'
+}
 
 // MENU COMPONENT ***********************************************************************
 
 export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSankeyMenuConfigurationLayout> = ({
   new_data,
   extra_background_element,
-  contextual
 }) => {
+
+  // Components updaters ---------------------------------------------------------------
+
+  return <Box>
+    <DrawingAreaStyle new_data={new_data} extra_background_element={extra_background_element} />
+    <LayoutConfigDAScaleAndLimit new_data={new_data} />
+    <LegendStyleConfig new_data={new_data} />
+    <LegendContextConfig new_data={new_data} />
+
+  </Box>
+}
+
+
+export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ new_data, extra_background_element }) => {
 
   // Data -------------------------------------------------------------------------------
 
@@ -51,29 +75,13 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
 
   const [, setCount] = useState(0)
 
-  // Assing component updater to corresponding ref updater
-  if (contextual) {
-    new_data.menu_configuration.ref_to_menu_contextual_config_layout_updater.current = () => setCount(a => a + 1)
-  } else {
-    new_data.menu_configuration.ref_to_menu_config_layout_updater.current = () => setCount(a => a + 1)
-  }
-
-
   // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 9
+  const number_of_input = 1
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
   // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(String(new_data.drawing_area.scale))
-  ref_set_number_inputs[1].current(String(new_data.drawing_area.minimum_flux ?? ''))
-  ref_set_number_inputs[2].current(String(new_data.drawing_area.maximum_flux ?? ''))
-  ref_set_number_inputs[3].current(String(new_data.drawing_area.legend.legend_police))
-  ref_set_number_inputs[4].current(String(new_data.drawing_area.legend.legend_bg_opacity))
-  ref_set_number_inputs[5].current(String(new_data.drawing_area.legend.position_x))
-  ref_set_number_inputs[6].current(String(new_data.drawing_area.legend.position_y))
-  ref_set_number_inputs[7].current(String(new_data.drawing_area.legend.width))
-  ref_set_number_inputs[8].current(String(new_data.drawing_area.grid_size))
+  ref_set_number_inputs[0].current(String(new_data.drawing_area.grid_size))
 
   /**
    * Function used to reset menu UI
@@ -81,18 +89,11 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
   const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    setCount(a => a + 1)
     // And update this menu also
     new_data.menu_configuration.updateComponentRelatedToLayoutApparence()
   }
 
-  // Utils functions -------------------------------------------------------------------
-
-  const right_addon_pixel = (val: number) => {
-    if (val === 1) {
-      return 'pixel'
-    }
-    return 'pixels'
-  }
 
   // Event functions -------------------------------------------------------------------
 
@@ -126,6 +127,102 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
       new_data.setValueAndSaveHistory(new_data.drawing_area, 'grid_size', evt, f)
     }
   }
+
+
+  return <WrapperBoxSubSectionMenu title={t('Menu.background')} new_data={new_data} >
+    <>
+      {/* Couleur du fond de la page */}
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Menu.BgC')}
+        </Box>
+        <OSTooltip label={t('MEP.tooltips.BgC')}>
+          <Input
+            variant='menuconfigpanel_option_input_color'
+            type='color'
+            value={new_data.drawing_area.color}
+            onChange={eventBgColor}
+          />
+        </OSTooltip>
+      </Box>
+
+      {extra_background_element}
+
+      {/* Quadrillage */}
+      {/* Afficher le quadrillage */}
+      <Box layerStyle='menuconfigpanel_row_2cols'>
+
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={new_data.drawing_area.grid_visible}
+          icon={<CustomFaEyeCheckIcon />}
+          onChange={eventGridVisible}
+        >
+          <OSTooltip label={t('MEP.tooltips.GV')}>
+            {t('MEP.TCG')}
+          </OSTooltip>
+        </Checkbox>
+        {/* Taille de la grille */}
+
+        <OSTooltip label={t('MEP.tooltips.TCG')}>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[0]}
+            default_value={new_data.drawing_area.grid_size}
+            function_on_blur={eventGridSize}
+            minimum_value={10}
+            stepper={true}
+            unit_text={right_addon_pixel(new_data.drawing_area.grid_size)}
+          />
+        </OSTooltip>
+      </Box>
+    </>
+  </WrapperBoxSubSectionMenu>
+}
+
+
+
+/**
+ * Component to config scale of DA and limit to flow thickness
+ *
+ * @param {*} { new_data }
+ * @return {*} 
+ */
+export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+  const { t } = new_data
+  const [, setCount] = useState(0)
+
+  /**
+   * Function used to reset menu UI
+   */
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Whatever is done, set saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    setCount(a => a + 1)
+  }
+
+  // Link to ConfigMenuNumberInput state variable
+  const number_of_input = 3
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
+  for (let i = 0; i < number_of_input; i++)
+    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
+  // Be sure that values are updated in inputs when refreshing this component
+  ref_set_number_inputs[0].current(String(new_data.drawing_area.scale))
+  ref_set_number_inputs[1].current(String(new_data.drawing_area.minimum_flux ?? ''))
+  ref_set_number_inputs[2].current(String(new_data.drawing_area.maximum_flux ?? ''))
+
+
+
+
+  // Event functions -------------------------------------------------------------------
+
+  // ===================================================================================
+  // Create functions that will be used when modifying a attribute of the DA or the Legend,
+  // these functions will save the last value of said attribute in data history so we can revert if we want it
+  // ===================================================================================
 
   const eventMinLinkThickness = (evt: number | null | undefined) => {
     if (evt == null)
@@ -169,6 +266,142 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
       new_data.setValueAndSaveHistory(new_data.drawing_area, 'scale', evt, f)
     }
   }
+
+
+
+  return <WrapperBoxSubSectionMenu new_data={new_data} title={t('MEP.links_size')}>
+    <>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.Echelle')}
+        </Box>
+        <Box>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[0]}
+            default_value={new_data.drawing_area.scale}
+            function_on_blur={eventScale}
+            minimum_value={1}
+            stepper={true}
+            unit_text={'unit. / 100 pixels'}
+          />
+        </Box>
+      </Box>
+      {/* Taille minimale du flux */}
+      <Box
+        layerStyle='menuconfigpanel_2row_3cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='1'
+          gridColumnEnd='2'
+          gridRowStart='2'
+          gridRowEnd='3'
+        >
+          {t('MEP.link_size_limit')}
+        </Box>
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='2'
+          gridColumnEnd='3'
+          gridRowStart='1'
+          gridRowEnd='2'
+          alignItems='flex-end'
+        >
+          {t('MEP.MinFlux')}
+        </Box>
+        <Box
+          layerStyle='menuconfigpanel_option_name'
+          gridColumnStart='3'
+          gridColumnEnd='4'
+          gridRowStart='1'
+          gridRowEnd='2'
+          alignItems='flex-end'
+        >
+          {t('MEP.MaxFlux')}
+        </Box>
+        <Box
+          gridColumnStart='2'
+          gridColumnEnd='3'
+          gridRowStart='2'
+          gridRowEnd='3'
+        >
+          <OSTooltip label={t('MEP.tooltips.MinFlux')}>
+            <ConfigMenuNumberInput
+              ref_to_set_value={ref_set_number_inputs[1]}
+              default_value={new_data.drawing_area.minimum_flux}
+              function_on_blur={eventMinLinkThickness}
+              maximum_value={new_data.drawing_area.maximum_flux}
+              stepper={true}
+            />
+          </OSTooltip>
+        </Box>
+        <Box
+          gridColumnStart='3'
+          gridColumnEnd='4'
+          gridRowStart='2'
+          gridRowEnd='3'
+        >
+          <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
+            <ConfigMenuNumberInput
+              ref_to_set_value={ref_set_number_inputs[2]}
+              default_value={new_data.drawing_area.maximum_flux}
+              function_on_blur={eventMaxLinkThickness}
+              minimum_value={new_data.drawing_area.minimum_flux}
+              stepper={true}
+              unit_text={right_addon_pixel(new_data.drawing_area.maximum_flux!)}
+            />
+          </OSTooltip>
+        </Box>
+      </Box>
+    </>
+  </WrapperBoxSubSectionMenu>
+}
+
+
+/**
+ *Component to configure legend attribute
+ *
+ * @param {*} { new_data }
+ * @return {*} 
+ */
+export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+
+  const { t } = new_data
+  const [, setCount] = useState(0)
+
+
+  // Link to ConfigMenuNumberInput state variable
+  const number_of_input = 5
+  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
+  for (let i = 0; i < number_of_input; i++)
+    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
+  // Be sure that values are updated in inputs when refreshing this component
+  ref_set_number_inputs[0].current(String(new_data.drawing_area.legend.legend_police))
+  ref_set_number_inputs[1].current(String(new_data.drawing_area.legend.legend_bg_opacity))
+  ref_set_number_inputs[2].current(String(new_data.drawing_area.legend.position_x))
+  ref_set_number_inputs[3].current(String(new_data.drawing_area.legend.position_y))
+  ref_set_number_inputs[4].current(String(new_data.drawing_area.legend.width))
+
+
+  /**
+   * Function used to reset menu UI
+   */
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Whatever is done, set saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    setCount(a => a + 1)
+  }
+
+  // Event functions -------------------------------------------------------------------
+
+  // ===================================================================================
+  // Create functions that will be used when modifying a attribute of the DA or the Legend,
+  // these functions will save the last value of said attribute in data history so we can revert if we want it
+  // ===================================================================================
 
   const eventLegendMasked = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
@@ -218,6 +451,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
     if (evt) {
       const f = (_: number) => {
         new_data.drawing_area.legend.position_x = _
+        new_data.drawing_area.legend.applyPosition()
         refreshThisAndUpdateRelatedComponents()
       }
       new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'position_x', evt, f)
@@ -228,6 +462,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
     if (evt) {
       const f = (_: number) => {
         new_data.drawing_area.legend.position_y = _
+        new_data.drawing_area.legend.applyPosition()
         refreshThisAndUpdateRelatedComponents()
       }
       new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'position_y', evt, f)
@@ -244,200 +479,10 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
     }
   }
 
-  const eventLegendScale = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      new_data.drawing_area.legend.display_legend_scale = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'display_legend_scale', evt.target.checked, f)
-  }
-
-  const eventLegendDataTag = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      new_data.drawing_area.legend.legend_show_dataTags = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_show_dataTags', evt.target.checked, f)
-  }
-
-  const eventLegendLinkInfo = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      new_data.drawing_area.legend.info_link_value_void = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'info_link_value_void', evt.target.checked, f)
-  }
-
-  // Components updaters ---------------------------------------------------------------
-
-  return <>
+  return <Box layerStyle='menu_sub_section'>  
     <Box
       as='span'
-      layerStyle='menuconfigpanel_part_title_1'>
-      {t('Menu.background')}
-    </Box>
-
-    {/* Couleur du fond de la page */}
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-    >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Menu.BgC')}
-      </Box>
-      <OSTooltip label={t('MEP.tooltips.BgC')}>
-        <Input
-          variant='menuconfigpanel_option_input_color'
-          type='color'
-          value={new_data.drawing_area.color}
-          onChange={eventBgColor}
-        />
-      </OSTooltip>
-    </Box>
-
-    {extra_background_element}
-
-    {/* Quadrillage */}
-    {/* Afficher le quadrillage */}
-    <Box as='span'>
-
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.drawing_area.grid_visible}
-        icon={<CustomFaEyeCheckIcon />}
-        onChange={eventGridVisible}
-      >
-        <OSTooltip label={t('MEP.tooltips.GV')}>
-          {t('MEP.TCG')}
-        </OSTooltip>
-      </Checkbox>
-
-    </Box>
-
-    {/* Taille de la grille */}
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-      style={{ display: (new_data.drawing_area.grid_visible ? '' : 'none') }}
-    >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('MEP.TCG_shift')}
-      </Box>
-      <Box>
-        <OSTooltip label={t('MEP.tooltips.TCG')}>
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[8]}
-            default_value={new_data.drawing_area.grid_size}
-            function_on_blur={eventGridSize}
-            minimum_value={10}
-            stepper={true}
-            unit_text={right_addon_pixel(new_data.drawing_area.grid_size)}
-          />
-        </OSTooltip>
-      </Box>
-    </Box>
-
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'>
-      {t('MEP.links_size')}
-    </Box>
-
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_row_2cols'
-    >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('MEP.Echelle')}
-      </Box>
-      <Box>
-        <ConfigMenuNumberInput
-          ref_to_set_value={ref_set_number_inputs[0]}
-          default_value={new_data.drawing_area.scale}
-          function_on_blur={eventScale}
-          minimum_value={1}
-          stepper={true}
-          unit_text={'unit. / 100 pixels'}
-        />
-      </Box>
-    </Box>
-
-    {/* Taille minimale du flux */}
-    <Box
-      layerStyle='menuconfigpanel_2row_3cols'
-    >
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='1'
-        gridColumnEnd='2'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        {t('MEP.link_size_limit')}
-      </Box>
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='2'
-        gridColumnEnd='3'
-        gridRowStart='1'
-        gridRowEnd='2'
-        alignItems='flex-end'
-      >
-        {t('MEP.MinFlux')}
-      </Box>
-      <Box
-        layerStyle='menuconfigpanel_option_name'
-        gridColumnStart='3'
-        gridColumnEnd='4'
-        gridRowStart='1'
-        gridRowEnd='2'
-        alignItems='flex-end'
-      >
-        {t('MEP.MaxFlux')}
-      </Box>
-      <Box
-        gridColumnStart='2'
-        gridColumnEnd='3'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        <OSTooltip label={t('MEP.tooltips.MinFlux')}>
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[1]}
-            default_value={new_data.drawing_area.minimum_flux}
-            function_on_blur={eventMinLinkThickness}
-            maximum_value={new_data.drawing_area.maximum_flux}
-            stepper={true}
-            unit_text={right_addon_pixel(new_data.drawing_area.minimum_flux!)}
-          />
-        </OSTooltip>
-      </Box>
-      <Box
-        gridColumnStart='3'
-        gridColumnEnd='4'
-        gridRowStart='2'
-        gridRowEnd='3'
-      >
-        <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[2]}
-            default_value={new_data.drawing_area.maximum_flux}
-            function_on_blur={eventMaxLinkThickness}
-            minimum_value={new_data.drawing_area.minimum_flux}
-            stepper={true}
-            unit_text={right_addon_pixel(new_data.drawing_area.maximum_flux!)}
-          />
-        </OSTooltip>
-      </Box>
-    </Box>
-
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'
+      layerStyle='menu_sub_section_title'
     >
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
@@ -453,43 +498,8 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
       layerStyle='menuconfigpanel_grid'
       style={{ display: (new_data.drawing_area.legend.masked ? 'none' : '') }}
     >
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_part_title_2'>
-        {t('MEP.leg_layout')}
-      </Box>
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_part_title_3'>
-        {t('MEP.leg_layout_text')}
-      </Box>
-
-      {/* Font size de la legende*/}
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_suboption_name'>
-          {t('Menu.fontSize')}
-        </Box>
-        <OSTooltip label={t('Menu.tooltips.fontSize')}>
-          <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[3]}
-            default_value={new_data.drawing_area.legend.legend_police}
-            function_on_blur={eventLegendFontSize}
-            minimum_value={1}
-            stepper={true}
-          />
-        </OSTooltip>
-      </Box>
 
       {/* Couleur de fond de la légende */}
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_part_title_3'>
-        {t('MEP.leg_layout_background')}
-      </Box>
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
@@ -519,7 +529,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
           <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[4]}
+            ref_to_set_value={ref_set_number_inputs[1]}
             default_value={new_data.drawing_area.legend.legend_bg_opacity}
             function_on_blur={eventLegendBgOpacity}
             minimum_value={0}
@@ -530,8 +540,9 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
         </OSTooltip>
       </Box>
 
+
       {/* Affichage du bord de la légende */}
-      <Box as='span'>
+      <Box layerStyle='menuconfigpanel_grid'>
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
           isChecked={new_data.drawing_area.legend.legend_bg_border}
@@ -543,10 +554,24 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
         </Checkbox>
       </Box>
 
+      {/* Font size de la legende*/}
       <Box
         as='span'
-        layerStyle='menuconfigpanel_part_title_2'>
-        {t('MEP.leg_pos')}
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box
+          layerStyle='menuconfigpanel_suboption_name'>
+          {t('Menu.fontSize')}
+        </Box>
+        <OSTooltip label={t('Menu.tooltips.fontSize')}>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[0]}
+            default_value={new_data.drawing_area.legend.legend_police}
+            function_on_blur={eventLegendFontSize}
+            minimum_value={1}
+            stepper={true}
+          />
+        </OSTooltip>
       </Box>
 
       <Box
@@ -559,7 +584,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegX')}>
           <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[5]}
+            ref_to_set_value={ref_set_number_inputs[2]}
             default_value={new_data.drawing_area.legend.position_x}
             function_on_blur={eventLegendPosX}
             step={1}
@@ -580,7 +605,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegY')}>
           <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[6]}
+            ref_to_set_value={ref_set_number_inputs[3]}
             default_value={new_data.drawing_area.legend.position_y}
             function_on_blur={eventLegendPosY}
             step={1}
@@ -601,7 +626,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegWidth')}>
           <ConfigMenuNumberInput
-            ref_to_set_value={ref_set_number_inputs[7]}
+            ref_to_set_value={ref_set_number_inputs[4]}
             default_value={new_data.drawing_area.legend.width}
             function_on_blur={eventLegendWidth}
             minimum_value={0}
@@ -612,43 +637,111 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
         </OSTooltip>
       </Box>
 
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_part_title_2'>
-        {t('MEP.leg_info')}
-      </Box>
+    </Box>
+  </Box>
+}
 
-      {/* Afficher l'échelle sur le graphe*/}
-      <Box as='span'>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={new_data.drawing_area.legend.display_legend_scale}
-          checked={new_data.drawing_area.legend.display_legend_scale}
-          onChange={eventLegendScale}
-        >
-          {t('Menu.display_scale')}
-        </Checkbox>
-      </Box>
 
-      {/* Afficher les dataTags dans la légende*/}
+export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+
+  const { t } = new_data
+  const [, setCount] = useState(0)
+
+
+  /**
+   * Function used to reset menu UI
+   */
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Whatever is done, set saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    setCount(a => a + 1)
+  }
+
+  // Event functions -------------------------------------------------------------------
+
+  // ===================================================================================
+  // Create functions that will be used when modifying a attribute of the DA or the Legend,
+  // these functions will save the last value of said attribute in data history so we can revert if we want it
+  // ===================================================================================
+
+
+  const eventLegendScale = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.legend.display_legend_scale = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'display_legend_scale', evt.target.checked, f)
+  }
+
+  const eventLegendDataTag = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.legend.legend_show_dataTags = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_show_dataTags', evt.target.checked, f)
+  }
+
+  const eventLegendLinkInfo = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.legend.info_link_value_void = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'info_link_value_void', evt.target.checked, f)
+  }
+
+  const eventLegendMasked = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.legend.masked = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'masked', !evt.target.checked, f)
+  }
+
+
+  return <>
+    <Box
+      as='span'
+      layerStyle='menu_sub_section_title'
+    >
       <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.drawing_area.legend.legend_show_dataTags}
-        checked={new_data.drawing_area.legend.legend_show_dataTags}
-        onChange={eventLegendDataTag}
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={<CustomFaEyeCheckIcon />}
+        isChecked={!new_data.drawing_area.legend.masked}
+        onChange={eventLegendMasked}
       >
-        {t('MEP.leg_show_dataTags')}
-      </Checkbox>
-
-      {/* Afficher l'info concernant les flux null*/}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.drawing_area.legend.info_link_value_void}
-        checked={new_data.drawing_area.legend.info_link_value_void}
-        onChange={eventLegendLinkInfo}
-      >
-        {t('MEP.leg_show_info_link_void')}
+        {t('Menu.Leg')}
       </Checkbox>
     </Box>
+
+    {/* Afficher l'échelle sur le graphe*/}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={new_data.drawing_area.legend.display_legend_scale}
+      checked={new_data.drawing_area.legend.display_legend_scale}
+      onChange={eventLegendScale}
+    >
+      {t('Menu.display_scale')}
+    </Checkbox>
+
+    {/* Afficher les dataTags dans la légende*/}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={new_data.drawing_area.legend.legend_show_dataTags}
+      checked={new_data.drawing_area.legend.legend_show_dataTags}
+      onChange={eventLegendDataTag}
+    >
+      {t('MEP.leg_show_dataTags')}
+    </Checkbox>
+
+    {/* Afficher l'info concernant les flux null*/}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={new_data.drawing_area.legend.info_link_value_void}
+      checked={new_data.drawing_area.legend.info_link_value_void}
+      onChange={eventLegendLinkInfo}
+    >
+      {t('MEP.leg_show_info_link_void')}
+    </Checkbox>
   </>
 }

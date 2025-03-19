@@ -77,7 +77,7 @@ import {
   Type_JSON,
 } from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
-import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_is_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible } from './NodeAttributes'
+import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_is_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible, default_node_name_label_background_color, default_node_value_label_background_color } from './NodeAttributes'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -935,7 +935,7 @@ export abstract class ClassTemplate_NodeElement
     if (this.shape_visible !== _.shape_visible) {
       return false
     }
-    if (this.name_label_visible !== _.name_label_visible) {
+    if (this.name_label_is_visible !== _.name_label_is_visible) {
       return false
     }
     if (this.shape_min_width !== _.shape_min_width) {
@@ -1713,7 +1713,7 @@ export abstract class ClassTemplate_NodeElement
     this.d3_selection_g_name_label?.remove()
     // Add name label
     // ============== Draw Name Label ===================
-    if (this.name_label_visible) {
+    if (this.name_label_is_visible) {
       const label_to_display = this.name_label
       // Box position is set by label position. For text / shape ref point is not the same
       // - Text : ref point is below of text + right/middle/left depending on anchor
@@ -1767,7 +1767,7 @@ export abstract class ClassTemplate_NodeElement
 
       // ============== Draw Name Label Background ===================
       this.d3_selection_g_name_label?.select('.name_label_background').remove()
-      if (this.name_label_visible && this.name_label_background && this.d3_selection_g_name_label) {
+      if (this.name_label_is_visible && this.name_label_background && this.d3_selection_g_name_label) {
 
         // Get bounding box
         const name_label_bounding_box = (this.d3_selection_g_name_label.select('.name_label_text').node() as SVGGElement)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 }
@@ -1782,7 +1782,7 @@ export abstract class ClassTemplate_NodeElement
           .attr('y', name_label_bounding_box.y + 'px')
           .attr('width', (name_label_bounding_box.width + 10) + 'px')
           .attr('height', name_label_bounding_box.height + 'px')
-          .attr('fill', 'white')
+          .attr('fill', this.name_label_background_color)
           .attr('fill-opacity', 0.55)
           .attr('rx', 4)
           .style('stroke', 'none')
@@ -1908,7 +1908,7 @@ export abstract class ClassTemplate_NodeElement
           .attr('y', value_label_bounding_box.y + 'px')
           .attr('width', (value_label_bounding_box.width + 10) + 'px')
           .attr('height', value_label_bounding_box.height + 'px')
-          .attr('fill', 'white')
+          .attr('fill', this.value_label_background_color)
           .attr('fill-opacity', 0.55)
           .attr('rx', 4)
           .style('stroke', 'none')
@@ -2260,7 +2260,7 @@ export abstract class ClassTemplate_NodeElement
     }
 
     //Shallow copy of dict old pos so undo func doesn't call object attr but this dict (which don't mutate at each dragEnd) 
-    const dict_old_pos: { [x: string]: [number, number] } = {...this._drag_start_pos}
+    const dict_old_pos: { [x: string]: [number, number] } = { ...this._drag_start_pos }
 
     // If we moved 'this' node then we save  nodes dragged previous pos in undo & current pos in redo
     // it is done here because we don't know in eventMouseDragStart & eventMouseDragEnd if we aren't simply selecting the node
@@ -3672,11 +3672,11 @@ export abstract class ClassTemplate_NodeElement
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
-  public get name_label_visible() {
-    if (this._display.attributes.name_label_visible !== undefined) {
-      return this._display.attributes.name_label_visible
-    } else if (this._display.style.name_label_visible !== undefined) {
-      return this._display.style.name_label_visible
+  public get name_label_is_visible() {
+    if (this._display.attributes.name_label_is_visible !== undefined) {
+      return this._display.attributes.name_label_is_visible
+    } else if (this._display.style.name_label_is_visible !== undefined) {
+      return this._display.style.name_label_is_visible
     }
     return default_node_name_label_is_visible
   }
@@ -3685,8 +3685,8 @@ export abstract class ClassTemplate_NodeElement
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
-  public set name_label_visible(_: boolean) {
-    this._display.attributes.name_label_visible = _
+  public set name_label_is_visible(_: boolean) {
+    this._display.attributes.name_label_is_visible = _
     this.drawNameLabel()
   }
 
@@ -3957,6 +3957,28 @@ export abstract class ClassTemplate_NodeElement
     this.drawNameLabel()
   }
 
+  /**
+  * TODO Description
+  * @memberof ClassTemplate_NodeElement
+  */
+  public get name_label_background_color() {
+    if (this._display.attributes.name_label_background_color !== undefined) {
+      return this._display.attributes.name_label_background_color
+    } else if (this._display.style.name_label_background_color !== undefined) {
+      return this._display.style.name_label_background_color
+    }
+    return default_node_name_label_background_color
+  }
+
+  /**
+ * TODO Description
+ * @memberof ClassTemplate_NodeElement
+ */
+  public set name_label_background_color(_: string) {
+    this._display.attributes.name_label_background_color = _
+    this.drawNameLabel()
+  }
+
   // Value label related --------------------------------------------------------------------
 
 
@@ -4111,6 +4133,28 @@ export abstract class ClassTemplate_NodeElement
    */
   public set value_label_background(_: boolean) {
     this._display.attributes.value_label_background = _
+    this.drawValueLabel()
+  }
+
+  /**
+  * TODO Description
+  * @memberof ClassTemplate_NodeElement
+  */
+  public get value_label_background_color() {
+    if (this._display.attributes.value_label_background_color !== undefined) {
+      return this._display.attributes.value_label_background_color
+    } else if (this._display.style.value_label_background_color !== undefined) {
+      return this._display.style.value_label_background_color
+    }
+    return default_node_value_label_background_color
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_NodeElement
+   */
+  public set value_label_background_color(_: string) {
+    this._display.attributes.value_label_background_color = _
     this.drawValueLabel()
   }
 
