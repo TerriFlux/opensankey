@@ -178,8 +178,8 @@ export abstract class ClassTemplate_DrawingAreaOSP
    * @param {boolean} deleteSelectedLinks
    * @memberof ClassTemplate_DrawingAreaOSP
    */
-  public deleteSelection(deleteSelectedNodes:boolean,deleteSelectedLinks:boolean) {
-    super.deleteSelection(deleteSelectedNodes,deleteSelectedLinks)
+  public deleteSelection(deleteSelectedNodes: boolean, deleteSelectedLinks: boolean) {
+    super.deleteSelection(deleteSelectedNodes, deleteSelectedLinks)
     this.deleteSelectedContainers()
   }
 
@@ -469,6 +469,23 @@ export abstract class ClassTemplate_DrawingAreaOSP
       })
   }
 
+  // /**
+  //  * Return height of the top nav bar + view banner if open
+  //  *
+  //  * @return {*}
+  //  * @memberof ClassTemplate_DrawingArea
+  //  */
+  // public override getNavBarHeight() {
+  //   let additional_height = 0
+  //   if (this.application_data.menu_configuration.ref_to_banner_views_opened.current)
+  //     additional_height = ((document.getElementsByClassName('BannerView')[0]?.getBoundingClientRect().height) ?? 0)
+
+  //   return super.getNavBarHeight() + additional_height
+  // }
+
+  // public originalGetNavBarHeight() {
+  //   return super.getNavBarHeight()
+  // }
   // GETTERS / SETTERS ==================================================================
   public get id() { return this._sankey.id }
   public get name() { return this._sankey.name }

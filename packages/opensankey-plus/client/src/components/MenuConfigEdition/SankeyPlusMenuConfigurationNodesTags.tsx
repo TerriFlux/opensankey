@@ -4,7 +4,6 @@ import {
   Box,
   Checkbox,
   Select,
-  TabPanel,
 } from '@chakra-ui/react'
 
 // Local types
@@ -14,6 +13,8 @@ import type {
   FCType_SankeyMenuConfigurationNodesTags
 } from './types/SankeyMenuConfigurationNodesTagsTypes'
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
+import { SankeyNodeSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
+import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 
 // Component definition =================================================================
 
@@ -26,7 +27,6 @@ import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
  */
 export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMenuConfigurationNodesTags> = ({
   new_data,
-  menu_for_modal
 }) => {
 
   // Data ------------------------------------------------------------------------------
@@ -62,6 +62,8 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
     // If not, reset entry index
     else
       setNodeTaggEntryIndex(0)
+    setCount(a => a + 1)
+
   }
   new_data.menu_configuration.ref_to_menu_config_nodes_tags_updater.current = updateThis
 
@@ -89,75 +91,69 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
 
   // JSX content ------------------------------------------------------------------------
 
-  const content = <> {
-    (
-      selected_nodes.length > 0
-    ) ?
-      <Box
+  if (!has_node_taggs)
+    return <></>
+
+  const content = <>
+    <Box
+      as='span'
+      layerStyle='menu_sub_section_title'>
+      {t('Menu.node_associated_tag')}
+    </Box>
+    <SankeyNodeSelectionSimple new_data={new_data} />
+    <Box layerStyle='menuconfigpanel_grid' >
+      {/* Groupe d'étiquettes  */}
+      <Select
+        isDisabled={!new_data.has_sankey_plus}
+        variant='menuconfigpanel_option_select'
+        value={node_tagg_entry_index}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
+          setNodeTaggEntryIndex(Number(evt.target.value))
+        }
+      >
+        {
+          list_node_taggs
+            .map((node_tagg, node_tagg_index) =>
+              <option
+                key={node_tagg.id}
+                value={node_tagg_index}
+              >
+                {node_tagg.name}
+              </option>
+            )
+        }
+      </Select>
+      {has_node_taggs ? <Box
         layerStyle='menuconfigpanel_grid'
       >
-        <Box
-          as='span'
-          layerStyle='menuconfigpanel_part_title_1'
-        >
-          {t('Menu.EN')}
-        </Box>
-
-        {/* Groupe d'étiquettes  */}
-        <Select
-          isDisabled={!new_data.has_sankey_plus}
-          variant='menuconfigpanel_option_select'
-          value={node_tagg_entry_index}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
-            setNodeTaggEntryIndex(Number(evt.target.value))
-          }
-        >
-          {
-            list_node_taggs
-              .map((node_tagg, node_tagg_index) =>
-                <option
-                  key={node_tagg.id}
-                  value={node_tagg_index}
-                >
-                  {node_tagg.name}
-                </option>
-              )
-          }
-        </Select>
-        {has_node_taggs?<Box
-          layerStyle='menuconfigpanel_grid'
-        >
-          {
-            node_tagg_entry.tags_list
-              .map(node_tag => {
-                const [allTrue, allFalse] = haveAllSelectedNodesGivenTag(node_tag)
-                return <Checkbox
-                  isDisabled={!new_data.has_sankey_plus}
-                  variant='menuconfigpanel_tag_checkbox'
-                  isIndeterminate={
-                    (selected_nodes.length > 1) &&
-                    (!allTrue) &&
-                    (!allFalse)
-                  }
-                  isChecked={allTrue}
-                  onChange={(evt) => {
-                    const visible = evt.target.checked
-                    new_data.drawing_area.updateSelectedNodesTagAssignation(visible,node_tag)
-                  }}
-                >
-                  {node_tag.name}
-                </Checkbox>
-              })
-          }
-        </Box>:<></>}
-      </Box>
-      :
-      <></>
-  } </>
-
-  return<OSTooltip label={new_data.has_sankey_plus?'':t('Menu.sankeyOSPDisabled')}>{ menu_for_modal ?
-    content :
-    <TabPanel>
+        {
+          node_tagg_entry.tags_list
+            .map(node_tag => {
+              const [allTrue, allFalse] = haveAllSelectedNodesGivenTag(node_tag)
+              return <Checkbox
+                isDisabled={!new_data.has_sankey_plus}
+                variant='menuconfigpanel_tag_checkbox'
+                isIndeterminate={
+                  (selected_nodes.length > 1) &&
+                  (!allTrue) &&
+                  (!allFalse)
+                }
+                isChecked={allTrue}
+                onChange={(evt) => {
+                  const visible = evt.target.checked
+                  new_data.drawing_area.updateSelectedNodesTagAssignation(visible, node_tag)
+                }}
+              >
+                {node_tag.name}
+              </Checkbox>
+            })
+        }
+      </Box> : <></>}
+    </Box>
+  </>
+  return <WrapperBoxSubSectionMenu new_data={new_data} title={t('Menu.node_associated_tag')}>
+    <OSTooltip label={new_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>
       {content}
-    </TabPanel>}</OSTooltip>
+    </OSTooltip>
+  </WrapperBoxSubSectionMenu>
 }

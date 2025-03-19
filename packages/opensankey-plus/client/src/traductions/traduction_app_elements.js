@@ -44,6 +44,13 @@ export const resources_app_elements = {
         view_actual_file: 'Views',
         other_file: 'Other file',
         trade_close: 'Close to node',
+        flow_associated_tag:'Flow associated to tag',
+        node_associated_tag:'Nodes associated to tag',
+        Config:{
+          presentation:'Presentation',
+          element_object:'Object',
+          element_view:'View',
+        },
         Transformation: {
           'amp_short': 'Trans.',
           'amp': 'Modifier la mise en page',
@@ -91,6 +98,9 @@ export const resources_app_elements = {
           tool_afm: 'Use annex tools to reconciliation',
         }
       },
+      Banner:{
+        title_data_type:'Data displayed',
+      },
       Noeud: {
         'plns': 'Parameter for selected nodes',
         'img_visibility': 'Image visibility',
@@ -99,10 +109,10 @@ export const resources_app_elements = {
         'open_HL': 'Open',
         'illustration': 'Illustration',
         'illustration_type': 'Illustration Type',
+        'fo_txt':'Text',
         animate:'Launch animation',
         tabs: {
           'icon': 'Icon',
-          'fo': 'Illustration',
           'hl': 'Hyperlink'
         },
         apparence: {
@@ -451,6 +461,13 @@ export const resources_app_elements = {
         view_actual_file: 'Vues',
         other_file: 'Autre fichier',
         trade_close: 'Près du noeud',
+        flow_associated_tag:'Flux associés',
+        node_associated_tag:'Noeuds associés',
+        Config:{
+          presentation:'Présentation',
+          element_object:'Objet',
+          element_view:'Vues',
+        },
         Transformation: {
           'disabled_view': 'Impossible d\'importer des vues dans une vue. Pour le faire, positionnez-vous sur le diagramme de Sankey maître.',
           'list_icon':'Catalogue d\'icône',
@@ -473,6 +490,9 @@ export const resources_app_elements = {
           tool_afm: 'Utiliser des outils annexes à la réconciliation',
         }
       },
+      Banner:{
+        title_data_type:'Données affichées',
+      },
       Noeud: {
         'plns': 'Paramètres pour les noeuds sélectionnés',
         'img_visibility': 'Visibilité de l\'image',
@@ -481,11 +501,12 @@ export const resources_app_elements = {
         'open_HL': 'Ouvrir',
         'illustration': 'Illustration',
         'illustration_type': 'Type d\'illustration',
+        'fo_txt':'Texte',
         animate:'Lancer animation',
         tabs: {
           'icon': 'Icône',
-          'fo': 'Illustration',
-          'hl': 'Hyperlien'
+          'illustration': 'Illustration',
+          'hl': 'Hyperlien',
         },
         apparence: {
           'HideAlone': 'Masquer si intermédiaire',

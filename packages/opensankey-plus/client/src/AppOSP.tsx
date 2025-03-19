@@ -15,7 +15,6 @@ import { ChakraProvider } from '@chakra-ui/react'
 
 import {
   initializeApplicationDataOSP,
-  initializeReinitializationOSP,
   initializeAdditionalMenusOSP,
   initializeDiagrammSelectorOSP,
   moduleDialogsOSP,
@@ -26,18 +25,13 @@ import { ThemeOSP } from './chakra/ThemeOSP'
 // OpenSankey imports ===============================================================================
 
 import OpenSankeyApp from './deps/OpenSankey/App'
-import {
-  initializeMenuConfiguration
-} from './deps/OpenSankey/Modules'
 import { ClickSaveDiagram } from './deps/OpenSankey/components/dialogs/SankeyPersistence'
 
 // OpenSankeyApp for OpenSankey+ ========================================================================
 
 export const OpenSankeyPlusApp = <ChakraProvider theme={ThemeOSP}>
   <OpenSankeyApp
-    initializeReinitialization={initializeReinitializationOSP}
     initializeApplicationData={initializeApplicationDataOSP}
-    initializeMenuConfiguration={initializeMenuConfiguration}
     initializeAdditionalMenus={initializeAdditionalMenusOSP}
     initializeDiagrammSelector={initializeDiagrammSelectorOSP}
     moduleDialogs={moduleDialogsOSP}

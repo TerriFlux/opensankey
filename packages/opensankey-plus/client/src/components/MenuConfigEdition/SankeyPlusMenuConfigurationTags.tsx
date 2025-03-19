@@ -1,19 +1,10 @@
 // External imports
 import * as d3 from 'd3'
 import React, { useState, FunctionComponent } from 'react'
-import {
-  FaEye,
-  FaEyeSlash,
-  FaMinus,
-  FaPalette,
-  FaPlus,
-  FaRandom,
-} from 'react-icons/fa'
 import colormap from 'colormap'
 import {
   Box,
   Button,
-  Checkbox,
   Input,
   InputGroup,
   Select,
@@ -52,8 +43,8 @@ import {
   GetRandomInt,
   OSTooltip
 } from '../../deps/OpenSankey/types/Utils'
-import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Link'
+import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -87,8 +78,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data
-
+  const { t, icon_library } = new_data
+  const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible, icon_random, icon_palette_color } = icon_library
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
   const tags_group_dict = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
@@ -617,206 +608,203 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
   // Tags tables ------------------------------------------------------------------------
   let variant_table_edit_tag = 'table_edit_tag_node'
-  if (elementTagNameProp == 'flux_taggs') variant_table_edit_tag = 'table_edit_tag_link'
+  if (elementTagNameProp == 'flux_taggs' || elementTagNameProp == 'node_taggs') variant_table_edit_tag = 'table_edit_tag_link'
   if (elementTagNameProp == 'data_taggs') variant_table_edit_tag = 'table_edit_tag_data'
 
-  const tagSetting = (<>
-    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-    {t('Tags.GE')}:
-    <Box display='grid' gridTemplateColumns='2fr 1fr 1fr 1fr'>
-
-      {/* Tag group selector ---------------------------------------------------------- */}
-      <Select
-        variant='menuconfigpanel_option_select'
-        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          setTagsGroupEntryId(evt.target.value)
-        }}
-        value={tags_group_entry_id}
-      >
-        {
-          tags_group_list.map(
-            (tags_group) =>
-              <option
-                key={tags_group.id}
-                value={tags_group.id}
-              >
-                {tags_group.name}
-              </option>
-          )}
-      </Select>
-
-      {/* Boutons des palettes de couleur  -------------------------------------------- */}
-
-      {/* Palette de couleur aléatoire  */}
-      <OSTooltip label={t('Tags.tooltips.pal')}>
-        <Button
-          variant='toolbar_button_3'
-          height='100%'
-          onClick={handleRandColor}>
-          <FaPalette />
-        </Button>
-      </OSTooltip>
-
-      {/* Melanger les couleur  */}
-      <OSTooltip label={t('Tags.tooltips.pal_shuffle')}>
-        <Button
-          variant='toolbar_button_4'
-          height='100%'
-          onClick={handleShuffleColor}>
-          <FaRandom />
-        </Button>
-      </OSTooltip>
-
-      {/* Palettes des couleurs standard */}
-      <OSTooltip label={t('Tags.tooltips.pal_std')}>
+  const tagSetting = (<WrapperBoxSubSectionMenu new_data={new_data} title={t('Tags.EEG')}>
+    <>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <span>{t('Tags.GE')}:</span>
         <Select
           variant='menuconfigpanel_option_select'
-          onChange={
-            (evt: React.ChangeEvent<HTMLSelectElement>) => {
-              handleUsePalette(evt.target.value)
-            }}
-          value={color_map}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            setTagsGroupEntryId(evt.target.value)
+          }}
+          value={tags_group_entry_id}
         >
           {
-            color_maps.map(
-              (cur_colormap, i) =>
+            tags_group_list.map(
+              (tags_group) =>
                 <option
-                  key={i}
-                  value={cur_colormap}
+                  key={tags_group.id}
+                  value={tags_group.id}
                 >
-                  {cur_colormap}
+                  {tags_group.name}
                 </option>
-            )
-          }
+            )}
         </Select>
-      </OSTooltip>
-    </Box>
+      </Box>
 
-    {/* Tableaux d'étiquettes  -------------------------------------------------------- */}
+      <Box display='grid' gridTemplateColumns='1fr 1fr 1fr'>
+        {/* Boutons des palettes de couleur  -------------------------------------------- */}
 
-    {/* Entete du Tableau des étiquettes  */}
+        {/* Palette de couleur aléatoire  */}
+        <OSTooltip label={t('Tags.tooltips.pal')}>
+          <Button
+            variant='toolbar_button_3'
+            onClick={handleRandColor}>
+            {icon_palette_color}
+          </Button>
+        </OSTooltip>
 
-    <TableContainer>
-      <Table variant={variant_table_edit_tag} >
-        <Thead>
-          <Tr >
-            <Th>
-              {/* Bouton ajout d'une étiquette  */}
-              <OSTooltip label={t('Tags.tooltips.add')}>
-                <Button
-                  variant='menuconfigpanel_add_button'
-                  value='+'
-                  onClick={handleAddTagButton}>
-                  <FaPlus />
-                </Button>
-              </OSTooltip>
-            </Th>
-            {/* Nom de l'étqiuette  */}
-            <Th>
-              {t('Tags.Nom')}
-            </Th>
-            {/* Etiquette visible  */}
-            {elementTagNameProp !== 'data_taggs' ?
-              <Th>
-                {t('Tags.Visible')}
-              </Th> : <></>
-            }
-            <Th>
-              {t('Tags.Couleur')}
-            </Th>
-          </Tr>
-        </Thead>
+        {/* Melanger les couleur  */}
+        <OSTooltip label={t('Tags.tooltips.pal_shuffle')}>
+          <Button
+            variant='toolbar_button_4'
+            onClick={handleShuffleColor}>
+            {icon_random}
+          </Button>
+        </OSTooltip>
 
-        {/* Tableau des étqiuettes du groupe  */}
-        <Tbody>
-          {
-            tags_entry.length > 0 ?
-              tags_entry.map(tag => {
-                return (
-                  <Tr
-                    key={tag.id}
+        {/* Palettes des couleurs standard */}
+        <OSTooltip label={t('Tags.tooltips.pal_std')}>
+          <Select
+            variant='menuconfigpanel_option_select'
+            onChange={
+              (evt: React.ChangeEvent<HTMLSelectElement>) => {
+                handleUsePalette(evt.target.value)
+              }}
+            value={color_map}
+          >
+            {
+              color_maps.map(
+                (cur_colormap, i) =>
+                  <option
+                    key={i}
+                    value={cur_colormap}
                   >
-                    {/* Supprimer une etiquette  */}
-                    <Td >
-                      <OSTooltip label={t('Tags.tooltips.rm')}>
-                        <Button
-                          variant='menuconfigpanel_del_button_in_table'
-                          value='-' onClick={() => { handleDelTag(tag) }}>
-                          <FaMinus />
-                        </Button>
-                      </OSTooltip>
-                    </Td>
-                    {/* Renommer l'étiquette  */}
-                    {/* Met une largeur de cellue plus petite quand c'est les étiquettes de noeud car le tableau contient une colonne de plsu (forme) */}
-                    <Td >
-                      <OSTooltip label={t('Tags.tooltips.nom')}>
-                        <InputGroup variant='menuconfigpanel_option_input_table' >
-                          {/* TODO change with ConfigMenuTextInput */}
-                          <Input
-                            variant='menuconfigpanel_option_input_table'
-                            id={tag.id}
-                            type="text"
-                            value={tag.name}
-                            onChange={
-                              (evt: React.ChangeEvent) => {
-                                // Change tag name
-                                tag.name = (evt.target as HTMLInputElement).value
-                                // Update all related menus
-                                updateThisAndRelatedComponents()
-                              }
-                            } />
+                    {cur_colormap}
+                  </option>
+              )
+            }
+          </Select>
+        </OSTooltip>
+      </Box>
 
+      {/* Tableaux d'étiquettes  -------------------------------------------------------- */}
+      {/* Entete du Tableau des étiquettes  */}
+      <TableContainer>
+        <Table variant={variant_table_edit_tag} >
+          <Thead>
+            <Tr >
+              <Th>
+                {/* Bouton ajout d'une étiquette  */}
+                <OSTooltip label={t('Tags.tooltips.add')}>
+                  <Button
+                    variant='menuconfigpanel_add_button'
+                    value='+'
+                    onClick={handleAddTagButton}>
+                    {icon_add_element}
+                  </Button>
+                </OSTooltip>
+              </Th>
+              {/* Nom de l'étqiuette  */}
+              <Th>
+                {t('Tags.Nom')}
+              </Th>
+              {/* Etiquette visible  */}
+              {elementTagNameProp !== 'data_taggs' ?
+                <Th>
+                  {t('Tags.Visible')}
+                </Th> : <></>
+              }
+              <Th>
+                {t('Tags.Couleur')}
+              </Th>
+            </Tr>
+          </Thead>
 
-                        </InputGroup>
-                      </OSTooltip>
-                    </Td>
-                    {/* Rendre ou non visible  */}
-                    {
-                      elementTagNameProp !== 'data_taggs' ?
-                        <Td >
-                          <OSTooltip label={t('Tags.tooltips.visible')}>
-                            <Button
-                              variant='menuconfigpanel_option_button_in_table'
-                              name={'element_visible' + tag.id}
+          {/* Tableau des étqiuettes du groupe  */}
+          <Tbody>
+            {
+              tags_entry.length > 0 ?
+                tags_entry.map(tag => {
+                  return (
+                    <Tr
+                      key={tag.id}
+                    >
+                      {/* Supprimer une etiquette  */}
+                      <Td >
+                        <OSTooltip label={t('Tags.tooltips.rm')}>
+                          <Button
+                            variant='menuconfigpanel_del_button_in_table'
+                            value='-' onClick={() => { handleDelTag(tag) }}>
+                            {icon_remove_element}
+                          </Button>
+                        </OSTooltip>
+                      </Td>
+                      {/* Renommer l'étiquette  */}
+                      {/* Met une largeur de cellue plus petite quand c'est les étiquettes de noeud car le tableau contient une colonne de plsu (forme) */}
+                      <Td >
+                        <OSTooltip label={t('Tags.tooltips.nom')}>
+                          <InputGroup variant='menuconfigpanel_option_input_table' >
+                            {/* TODO change with ConfigMenuTextInput */}
+                            <Input
+                              variant='menuconfigpanel_option_input_table'
                               id={tag.id}
-                              onClick={
-                                () => {
-                                  toggleTagSelected(tag)
-                                }}
-                            >
-                              {tag.is_selected ? <FaEye /> : <FaEyeSlash />}
-                            </Button>
-                          </OSTooltip>
-                        </Td> :
-                        <></>
-                    }
-                    {/* Choix de la couleur*/}
-                    <Td >
-                      <OSTooltip label={t('Tags.tooltips.couleur')}>
-                        <Input padding='0.25rem' width='revert' height='revert'
-                          type='color'
-                          value={tag.color}
-                          onChange={
-                            evt => {
-                              handleTagColor(tag, evt.target.value)
-                            }} />
-                      </OSTooltip>
-                    </Td>
+                              type="text"
+                              value={tag.name}
+                              onChange={
+                                (evt: React.ChangeEvent) => {
+                                  // Change tag name
+                                  tag.name = (evt.target as HTMLInputElement).value
+                                  // Update all related menus
+                                  updateThisAndRelatedComponents()
+                                }
+                              } />
 
-                  </Tr>
-                )
-              }) :
-              <></>
-          }
-        </Tbody>
-      </Table>
-    </TableContainer>
-  </>
+
+                          </InputGroup>
+                        </OSTooltip>
+                      </Td>
+                      {/* Rendre ou non visible  */}
+                      {
+                        elementTagNameProp !== 'data_taggs' ?
+                          <Td >
+                            <OSTooltip label={t('Tags.tooltips.visible')}>
+                              <Button
+                                variant='menuconfigpanel_option_button_in_table'
+                                name={'element_visible' + tag.id}
+                                id={tag.id}
+                                onClick={
+                                  () => {
+                                    toggleTagSelected(tag)
+                                  }}
+                              >
+                                {tag.is_selected ? icon_element_visible : icon_element_invisible}
+                              </Button>
+                            </OSTooltip>
+                          </Td> :
+                          <></>
+                      }
+                      {/* Choix de la couleur*/}
+                      <Td >
+                        <OSTooltip label={t('Tags.tooltips.couleur')}>
+                          <Input padding='0' width='revert' height='1.25rem' border='0'
+                            type='color'
+                            value={tag.color}
+                            onChange={
+                              evt => {
+                                handleTagColor(tag, evt.target.value)
+                              }} />
+                        </OSTooltip>
+                      </Td>
+
+                    </Tr>
+                  )
+                }) :
+                <></>
+            }
+          </Tbody>
+        </Table>
+      </TableContainer>
+    </>
+  </WrapperBoxSubSectionMenu>
   )
 
   // Tag group menu ---------------------------------------------------------------------
-  return (
-    <Box layerStyle='menuconfigpanel_grid'>
+  return (<>
+    <WrapperBoxSubSectionMenu new_data={new_data} title={t('Tags.EGE')}>
       {/* Groupe d'étiquette  */}
       <TableContainer>
         <Table variant={elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'}>
@@ -829,7 +817,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                   <Button
                     variant='menuconfigpanel_add_button'
                     onClick={handleAddTagGrpButton}>
-                    <FaPlus />
+                    {icon_add_element}
                   </Button>
                 </OSTooltip>
               </Th>
@@ -853,7 +841,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                         <Switch
                           justifySelf='end'
                           alignSelf='center'
-                          height='1rem'
+                          height='1.5rem'
                           isChecked={tag_group_as_data_grp.is_sequence}
                           onChange={evt => {
                             tag_group_as_data_grp.is_sequence = evt.target.checked
@@ -877,7 +865,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                           variant='menuconfigpanel_del_button_in_table'
                           onClick={() => handleDelGroupTag(tag_group)}
                         >
-                          <FaMinus />
+                          {icon_remove_element}
                         </Button>
                       </OSTooltip>
                     </Td>
@@ -948,59 +936,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
           </Tbody>
         </Table>
       </TableContainer>
-      {tags_group_list.length > 0 ? tagSetting : <></>}
-    </Box>
+    </WrapperBoxSubSectionMenu>
+    {tags_group_list.length > 0 ? tagSetting : <></>}
+
+  </>
   )
 }
 
 export default null
 
 export { SankeySettingsEditionElementTags }
-type FCType_MenuPreferenceEditionTag = {
-  new_data: Type_GenericApplicationDataOSP
-}
-export const MenuPreferenceEditionTag: FunctionComponent<FCType_MenuPreferenceEditionTag> = ({ new_data }) => {
-  const [, setCount] = useState(0)
-  const { t } = new_data
-  new_data.menu_configuration.ref_to_checkbox_pref_edition_tags_updater.current = () => setCount(a => a + 1)
-
-  return <OSTooltip
-    label={!new_data.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''}
-  >
-    <Box>
-      <Checkbox
-        isDisabled={!new_data.has_sankey_plus}
-        key={5}
-        ref={new_data.checkbox_refs['EN']}
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.menu_configuration.isGivenAccordionShowed('EN')}
-        onChange={() => {
-          new_data.menu_configuration.toggleGivenAccordion('EN')
-        }}>
-        {t('Menu.EN')}
-      </Checkbox>
-      <Checkbox
-        isDisabled={!new_data.has_sankey_plus}
-        key={7}
-        ref={new_data.checkbox_refs['EF']}
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.menu_configuration.isGivenAccordionShowed('EF')}
-        onChange={() => {
-          new_data.menu_configuration.toggleGivenAccordion('EF')
-        }}>
-        {t('Menu.EF')}
-      </Checkbox>
-      <Checkbox
-        isDisabled={!new_data.has_sankey_plus}
-        key={8}
-        ref={new_data.checkbox_refs['ED']}
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.menu_configuration.isGivenAccordionShowed('ED')}
-        onChange={() => {
-          new_data.menu_configuration.toggleGivenAccordion('ED')
-        }}>
-        {t('Menu.ED')}
-      </Checkbox>
-    </Box>
-  </OSTooltip>
-}

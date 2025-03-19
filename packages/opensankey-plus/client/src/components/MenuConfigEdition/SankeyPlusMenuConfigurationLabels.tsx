@@ -1,67 +1,35 @@
 // Standard libs
 import React, { useState, ChangeEvent, FunctionComponent, useRef, MutableRefObject } from 'react'
-import { MultiSelect } from 'react-multi-select-component'
-import { FaAngleDown, FaAngleUp, FaMinus, FaPlus } from 'react-icons/fa'
 import ReactQuill from 'react-quill'
 // 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console
 // to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
 
 // Imported libs
 import {
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
   Box,
   Checkbox,
   Button,
   Input,
   ButtonGroup
 } from '@chakra-ui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 // OpenSankey ts-code
-import { Type_MenuSelectionEntry } from '../../deps/OpenSankey/components/topmenus/SankeyMenuTop'
 import { OSTooltip, Type_JSON } from '../../deps/OpenSankey/types/Utils'
 
 // Local libs
 import {
   FCType_MenuConfigurationFreeLabelsOSP,
-  FCType_MenuPreferenceLabelsOSP,
   FCType_ContextZDTOSP,
-  FCType_ZDTMenuAsAccordeonItemOSP
 } from './types/SankeyPlusMenuConfigurationLabelsTypes'
 import { Class_ContainerElement } from '../../types/FreeLabel'
 import { ClassTemplate_SankeyOSP } from '../../types/SankeyOSP'
 import { Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP } from '../../types/TypesOSP'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
+import { OSMultiSelect } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 
 type Type_GenericFreeLabelOSP = Class_ContainerElement<Type_GenericDrawingAreaOSP, ClassTemplate_SankeyOSP<Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>>
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-/**
- *  TODO Description
- * @param { * } new_data_plus
- */
-export const MenuPreferenceLabelsOSP: FunctionComponent<FCType_MenuPreferenceLabelsOSP> = ({
-  new_data_plus
-}) => {
-  const [, setCount] = useState(0)
-  new_data_plus.menu_configuration.ref_to_checkbox_pref_container_updater.current = () => setCount(a => a + 1)
-  return <Checkbox
-    ref={new_data_plus.checkbox_refs['LL']}
-    isDisabled={!new_data_plus.has_sankey_plus}
-    variant='menuconfigpanel_option_checkbox'
-    isChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('LL')}
-    onChange={() => {
-      new_data_plus.menu_configuration.toggleGivenAccordion('LL')
-      setCount(a => a + 1)
-    }}>
-    {new_data_plus.t('Menu.LL')}
-  </Checkbox>
-}
 
 /**
  * Description placeholder
@@ -74,7 +42,8 @@ export interface selected_type { 'label': string; 'value': string }
 export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfigurationFreeLabelsOSP> = ({
   new_data_plus,
 }) => {
-  const { t } = new_data_plus
+  const { t, icon_library } = new_data_plus
+  const { icon_add_element, icon_remove_element, icon_order_up, icon_order_down } = icon_library
   const selected_zdt = new_data_plus.drawing_area.selected_containers_list
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
@@ -82,18 +51,16 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   const [button_text_or_image, set_button_text_or_image] = useState<'text' | 'image'>(zdt_or_image)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
-  const INITIAL_OPTIONS_label = new_data_plus.drawing_area.sankey.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id } })
-  const selected_label = selected_zdt.map((d) => { return { 'label': d.title, 'value': d.id } })
+  const options_selector = new_data_plus.drawing_area.sankey.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id, selected: d.is_selected } })
 
 
   const [forceUpdate, setForceUpdate] = useState(false)
   // Link current component updater to menu config class
   new_data_plus.menu_configuration.ref_to_menu_config_containers_updater.current = () => setForceUpdate(!forceUpdate)
 
-
   const redrawAndRefresh = () => {
     selected_zdt.forEach(zdt => zdt.drawAsSelected())
-    ref_set_text_value_input.current(selected_zdt[0].title ?? '')
+    ref_set_text_value_input.current(selected_zdt[0]?.title ?? '')
     setForceUpdate(!forceUpdate)
   }
 
@@ -104,36 +71,25 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         layerStyle='submenuconfig_droplist'
       >
         {/* Position custom pour MultiSelect */}
-        <Box
-          height='2rem'
-          width='10rem'
-        >
-          <MultiSelect
-            disabled={!new_data_plus.has_sankey_plus}
-            valueRenderer={(selected: selected_type[]) => {
-              return selected.length ? selected.map(({ label }) => label + ', ') : 'Aucun label sélectionné'
-            }}
-            options={INITIAL_OPTIONS_label}
-            value={selected_label}
-            overrideStrings={{
-              'selectAll': 'Tout sélectionner',
-            }}
-            onChange={(entries: Type_MenuSelectionEntry[]) => {
-              // Update selection list
-              const entries_values = entries.map(d => d.value)
-              new_data_plus.drawing_area.sankey.containers_list.forEach(zdt => {
-                if (entries_values.includes(zdt.id)) {
-                  new_data_plus.drawing_area.addContainerToSelection(zdt)
-                }
-                else {
-                  new_data_plus.drawing_area.removeFreeLabelFromSelection(zdt)
-                }
-              })
-              redrawAndRefresh()
-            }}
-            labelledBy={t('Noeud.TS')}
-          />
-        </Box></Box>)
+
+        <OSMultiSelect
+          t={new_data_plus.t}
+          elements={options_selector}
+          onClick={(entries) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            new_data_plus.drawing_area.sankey.containers_list.forEach(zdt => {
+              if (entries_values.includes(zdt.id)) {
+                new_data_plus.drawing_area.addContainerToSelection(zdt)
+              }
+              else {
+                new_data_plus.drawing_area.removeFreeLabelFromSelection(zdt)
+              }
+            })
+            redrawAndRefresh()
+          }}
+        />
+      </Box>)
     return DD
   }
 
@@ -178,10 +134,26 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     return (display_size) ? opa : 0
   }
 
+  const allLabelBgVisible = () => {
+    let display_value = true
+    let visible = true
+    if (selected_zdt.length !== 0) {
+      visible = selected_zdt[0].color_visible
+    }
+    selected_zdt.map((d) => {
+      display_value = (d.color_visible === visible) ? display_value : false
+    })
+    return (display_value) ? visible : false
+  }
+
 
   const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
   const valAllLabelBorderTransparentIndeterminate = !selected_zdt.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
+
+  const valAllLabelBgVisible = selected_zdt[0]?.color_visible ?? false
+  // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
+  const valAllLabelBgVisibleIndeterminate = !selected_zdt.every(zdt => zdt.color_visible == valAllLabelBgVisible)
 
 
   const modules = {
@@ -462,8 +434,26 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     _updateImageSrc()
   }
 
+  const updateLabelBgVisible = (_: boolean) => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.color_visible]))
+    const _updateLabelBgVisible = () => {
+      selected_zdt.map(d => d.color_visible = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
 
+    const inv_updateLabelBgVisible = () => {
+      selected_zdt.map(d => d.color_visible = dict_old_val[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
 
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateLabelBgVisible)
+    new_data_plus.history.saveRedo(_updateLabelBgVisible)
+    // Execute original attr mutation
+    _updateLabelBgVisible()
+  }
 
   // Ref to number input setter --------------------------------------
   const number_of_input = 3
@@ -518,7 +508,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           isDisabled={!new_data_plus.has_sankey_plus}
           variant='menuconfigpanel_add_button'
           onClick={addFreeLAbel}>
-          <FaPlus />
+          {icon_add_element}
         </Button>
 
         {dropdownMultiLabel()}
@@ -526,7 +516,9 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         <Button
           variant='menuconfigpanel_del_button'
           isDisabled={disable_options}
-          onClick={deleteSelectedLabels}><FaMinus /></Button>
+          onClick={deleteSelectedLabels}>
+          {icon_remove_element}
+        </Button>
 
         {//Boutton pour monter le label sélctionné
         }
@@ -538,7 +530,9 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
               l.increaseDisplayOrder()
             })
             setForceUpdate(a => !a)
-          }}><FaAngleUp /></Button>
+          }}>
+          {icon_order_up}
+        </Button>
 
         <Button
           variant='menuconfigpanel_option_button'
@@ -548,7 +542,9 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
               l.decreaseDisplayOrder()
             })
             setForceUpdate(a => !a)
-          }}><FaAngleDown /></Button>
+          }}>
+          {icon_order_down}
+        </Button>
 
       </Box>
 
@@ -609,6 +605,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         readOnly={disable_options}
         style={{
           'height': '300px',
+          fontSize: '0.6rem',
           color: (disable_options) ? '#666666' : '',
           backgroundColor: (disable_options) ? '#cccccc' : '',
           overflowY: 'scroll'
@@ -656,30 +653,32 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 
       <Box
         as='span'
-        layerStyle='menuconfigpanel_row_2cols'
+        layerStyle='menuconfigpanel_row_3cols'
       >
-        <Box
-          as='span'
-          layerStyle='menuconfigpanel_row_2cols'
-        >
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t('LL.cfl')}
-          </Box>
-          <Input
-            variant='menuconfigpanel_option_input_color'
-            type='color'
-            id='form_color_zdt'
-            name='form_color_zdt'
-            isDisabled={disable_options}
-            value={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
-            onChange={evt => {
-              const val = evt.target.value
-              selected_zdt.map(d => d.color = val)
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          iconColor={valAllLabelBgVisibleIndeterminate ? '#78C2AD' : 'white'}
+          isDisabled={disable_options}
+          isIndeterminate={valAllLabelBgVisibleIndeterminate}
+          isChecked={allLabelBgVisible()}
+          onChange={(evt) => updateLabelBgVisible(evt.target.checked)}>
+          {t('LL.cfl')}
+        </Checkbox>
 
-              redrawAndRefresh()
-            }}
-          />
-        </Box>
+        <Input
+          variant='menuconfigpanel_option_input_color'
+          type='color'
+          id='form_color_zdt'
+          name='form_color_zdt'
+          isDisabled={disable_options}
+          value={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
+          onChange={evt => {
+            const val = evt.target.value
+            selected_zdt.map(d => d.color = val)
+
+            redrawAndRefresh()
+          }}
+        />
         <Box
           as='span'
           layerStyle='menuconfigpanel_row_2cols'
@@ -799,13 +798,14 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     </Button>
   </>
 
-  const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 
   const button_open_layout = <Button onClick={() => {
     new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
     closeContextMenu()
-
-  }} variant='contextmenu_button'>{t('Menu.LL')} {icon_open_modal}</Button>
+  }}
+  variant='contextmenu_button'
+  rightIcon={new_data_plus.icon_library.icon_popup_menu}
+  >{t('Menu.LL')} </Button>
 
   return zdt_to_contextualise ? <Box
     layerStyle='context_menu'
@@ -818,49 +818,4 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
       {button_open_layout}
     </ButtonGroup>
   </Box> : <></>
-}
-
-/**
- *Function that return content_menu_zdt with JSX to imbricate it in the config menu
-*
-* @param {*} {
-*   new_data_plus,
-*   content_menu_zdt
-* }
-* @return {*}
-*/
-export const ZDTMenuAsAccordeonItemOSP: FunctionComponent<FCType_ZDTMenuAsAccordeonItemOSP> = ({
-  new_data_plus,
-  content_menu_zdt
-}) => {
-  const { t } = new_data_plus
-  const [, setCount] = useState(0)
-  const refreshThis = () => setCount(a => a + 1)
-  new_data_plus.menu_configuration.ref_to_accordion_containers_updater.current = refreshThis
-
-  return <AccordionItem
-    style={{ 'display': (new_data_plus.menu_configuration.isGivenAccordionShowed('LL')) ? 'initial' : 'none' }}
-  >
-    <AccordionButton
-      ref={new_data_plus.menu_configuration.zdt_accordion_ref}
-      onClick={() => {
-        const scroll_x = window.scrollX
-        const scroll_y = window.scrollY
-        setTimeout(() => {
-          document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-        }, 50)
-      }}
-    >
-      <Box
-        as='span'
-        layerStyle='submenuconfig_entry'
-      >
-        {t('Menu.LL')}
-      </Box>
-      <AccordionIcon />
-    </AccordionButton>
-    <AccordionPanel>
-      {content_menu_zdt}
-    </AccordionPanel>
-  </AccordionItem>
 }

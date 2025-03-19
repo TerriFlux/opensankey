@@ -4,7 +4,6 @@ import {
   Box,
   Checkbox,
   Select,
-  TabPanel,
 } from '@chakra-ui/react'
 
 // Local types
@@ -14,12 +13,13 @@ import type {
   FCType_MenuConfigurationLinksTags
 } from './types/SankeyMenuConfigurationLinksTagsTypes'
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
+import { SankeyLinkSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
+import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 
 /*************************************************************************************************/
 
 export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurationLinksTags> = ({
   new_data,
-  menu_for_modal,
 }) => {
 
   // Data -------------------------------------------------------------------------------
@@ -59,6 +59,8 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
     // If not, reset entry
     else
       setFluxTaggEntryIndex(0)
+    setCount(a => a + 1)
+
   }
   new_data.menu_configuration.ref_to_menu_config_links_tags_updater.current = updateThis
 
@@ -84,6 +86,9 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
   }
 
   // JSX content ------------------------------------------------------------------------
+  if(!has_flux_taggs)
+    return<></>
+
 
   const content = <>
     {
@@ -93,13 +98,6 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
         <Box
           layerStyle='menuconfigpanel_grid'
         >
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_1'
-          >
-            {t('Menu.EF')}
-          </Box>
-
           {/* Groupe d'étiquettes  */}
           <Select
             isDisabled={!new_data.has_sankey_plus}
@@ -191,11 +189,13 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
     }</>
 
 
-  return <OSTooltip label={new_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>{menu_for_modal ?
-    content :
-    <TabPanel >
-      {content}
-    </TabPanel>
-  }
-  </OSTooltip>
+  return <WrapperBoxSubSectionMenu new_data={new_data} title={t('Menu.flow_associated_tag')}>
+    <OSTooltip label={new_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>
+      <>
+        <SankeyLinkSelectionSimple new_data={new_data} />
+        {content}
+      </>
+    </OSTooltip>
+
+  </WrapperBoxSubSectionMenu>
 }
