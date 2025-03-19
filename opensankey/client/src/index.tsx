@@ -41,10 +41,8 @@ import './traductions/traduction'
 import OpenSankeyApp from './App'
 import {
   initializeApplicationData,
-  initializeReinitialization,
   initializeAdditionalMenus,
   moduleDialogs,
-  initializeMenuConfiguration,
   initializeDiagrammSelector
 } from './Modules'
 import {
@@ -68,13 +66,9 @@ const root=createRoot(container)
 root.render(
   <ChakraProvider theme={opensankey_theme}>
     <OpenSankeyApp
-      initializeReinitialization={initializeReinitialization}
 
       //- Data
       initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
-
-      //- UI
-      initializeMenuConfiguration={initializeMenuConfiguration} // Function to create the configuration menu
 
       // Ref to some key ui element in the application
       initializeAdditionalMenus={initializeAdditionalMenus}

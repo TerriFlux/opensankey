@@ -28,12 +28,16 @@ import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../type
 
 export type FCType_SankeyModalStyleNode = {
   new_data: Type_GenericApplicationData,
-  node_attribute_tab: JSX.Element,
+  additionalMenus:Type_AdditionalMenus,
 }
 
 //Modal et fonctions pour l'edition et affectation des style de flux
 export type FCType_SankeyModalStyleLink = {
   new_data: Type_GenericApplicationData,
   additionalMenus:Type_AdditionalMenus
+}
+export type FCType_WrapperLinkStyleSelector={
+  new_data: Type_GenericApplicationData,
+  children:JSX.Element
 }
 

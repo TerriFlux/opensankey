@@ -32,3 +32,12 @@ export type FType_OpenSankeyMenuConfigurationLayout ={
   contextual:boolean
 }
 
+export type FCTpe_LayoutConfigDAScaleAndLimit={
+  new_data:Type_GenericApplicationData
+}
+
+export type FCType_DrawingAreaStyle={
+  new_data:Type_GenericApplicationData,
+  extra_background_element:JSX.Element,
+
+}

@@ -118,6 +118,7 @@ export type Type_PathLabelVPosition = 'dragged' | 'top' | 'middle' | 'bottom'
 
 export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   // Scale
@@ -459,6 +460,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
    * @memberof Class_LinkAttributes
    */
   public get id() { return 'undefined' }
+  public get name(): string { return 'none' }
 
   public get local_link_scale() { return this._local_link_scale }
 

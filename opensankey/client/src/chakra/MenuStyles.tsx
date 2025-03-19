@@ -35,37 +35,36 @@ export const menu_button_base_style = definePartsStyle({
     borderRadius: '6px',
     textStyle: 'h4',
     fontSize: '9px',
-    border:'0px',
-    span : {
+    border: '0px',
+    span: {
       display: 'grid',
       gridColumnGap: '0',
       gridRowGap: '0',
-      padding:'0',
-      margin:'0',
+      padding: '0',
+      margin: '0',
     },
   },
-  list:{
-    minWidth:'inherit'
+  list: {
+    minWidth: 'inherit'
   },
   item: {
     display: 'grid',
     textStyle: 'h4',
     fontSize: '12px',
-  }})
+  }
+})
 
 // Style used in subnav item droplist to limit minimum-width of item in the list
 // (sometime the text of the item is short and the 'button' of the item is much larger)
 export const menu_button_subnav_style = definePartsStyle({
   button: {
-    width: '4rem',
-    margin:'0.2rem, 0rem, 0.2rem, 0.75rem',
     color: 'gray.600',
     borderColor: 'transparent',
     bg: 'transparent',
     bgColor: 'transparent',
-    span : {
-      gridTemplateColumns: '2fr 1fr',
-      gridTemplateRows: '2fr 1fr',
+    'svg': {
+      'height': '2rem',
+      'width': '3rem'
     },
     _hover: {
       color: 'gray.600',
@@ -85,7 +84,7 @@ export const menu_button_subnav_account_style = definePartsStyle({
     borderColor: 'primaire.2',
     bg: 'primaire.2',
     bgColor: 'primaire.2',
-    span : {
+    span: {
       gridTemplateColumns: '2fr 1fr',
       gridTemplateRows: '1fr',
     },
@@ -104,14 +103,14 @@ export const menu_button_subnav_account_style = definePartsStyle({
 export const menu_subnav_item_demo = definePartsStyle({
   button: {
     width: '8rem',
-    margin:'0.2rem, 0rem, 0.2rem, 0.75rem',
+    margin: '0.2rem, 0rem, 0.2rem, 0.75rem',
     textStyle: 'h4',
     fontSize: '12px',
     color: 'gray.600',
     borderColor: 'transparent',
     bg: 'transparent',
     bgColor: 'transparent',
-    span : {
+    span: {
       gridTemplateColumns: '7fr 1fr',
       gridTemplateRows: '1fr',
     },
@@ -125,5 +124,26 @@ export const menu_subnav_item_demo = definePartsStyle({
   list: {
     display: 'grid',
     gridAutoFlow: 'row',
+  }
+})
+
+
+export const menu_select_elements = definePartsStyle({
+  item: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 9fr',
+    span: {
+      margin: 0,
+      padding: 0
+    },
+    _hover: {
+      bg: 'lightgrey'
+    }
+  },
+  list: {
+    maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+    overflowY: 'auto',
+    border: 'solid 1px',
+    borderColor: 'primaire.5'
   }
 })

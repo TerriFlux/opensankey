@@ -66,6 +66,8 @@ import {
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
 import { Class_Tag } from './Tag'
+import { Class_NodeAttribute } from '../Elements/NodeAttributes'
+import { Class_LinkAttribute } from '../Elements/LinkAttributes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -2182,6 +2184,41 @@ export abstract class ClassTemplate_DrawingArea
     })
   }
 
+  /**
+   * Remove a single attribute from local Class_NodeAttribute
+   *
+   * @param {keyof Class_NodeAttribute} k
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public deleteLocalAttrSelectedNode(k: keyof Class_NodeAttribute) {
+    const list_node = this.selected_nodes_list
+
+    list_node.forEach(n => {
+      if (k in n.display.attributes) {
+        delete n.display.attributes[k]
+        n.draw()
+      }
+    })
+    this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+  }
+
+  /**
+   * Remove a single attribute from local Class_LinkAttribute
+   *
+   * @param {keyof Class_LinkAttribute} k
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public deleteLocalAttrSelectedLinks(k: keyof Class_LinkAttribute) {
+    const list_links = this.selected_links_list
+
+    list_links.forEach(link => {
+      if (k in link.display.attributes) {
+        delete link.display.attributes[k]
+        link.drawWithNodes()
+      }
+    })
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+  }
 
   // PRIVATE METHODS ==================================================================
 
@@ -2860,7 +2897,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
-    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 6 * 16 // 16 because we set size in rem in css 1 rem = 16px
+    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 66
   }
 
   /**
@@ -2965,4 +3002,5 @@ export abstract class ClassTemplate_DrawingArea
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
 
+  public get fit_margin(): number { return this._fit_margin }
 }

@@ -35,6 +35,8 @@ import { Class_NodeStyle } from '../Elements/NodeAttributes'
 import { Class_MenuConfig } from '../types/MenuConfig'
 import { default_main_sankey_id, default_style_id, default_style_name, Type_ElementPosition } from '../types/Utils'
 import { ClassTemplate_ZoneSelection } from'../Elements/SelectionZone'
+import { Class_IconLibrary } from './IconLibrairie'
+import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 
 // STANDARD TYPES FOR OPENSANKEY AND MORE *********************************************************
 
@@ -47,10 +49,21 @@ export type Type_GenericLinkElement = ClassTemplate_LinkElement<Type_GenericDraw
 export type Type_AdditionalMenus = {
   // Top Menu
   external_edition_item: JSX.Element[],
-  external_file_item: JSX.Element[],
   external_file_export_item: JSX.Element[],
   externale_save_item: JSX.Element[],
   externale_navbar_item: { [_: string]: JSX.Element }
+  external_top_buttons_item: {[x:string]:JSX.Element},
+
+  // Config menu
+  additional_menu_type:{[x:string]:string}
+  additional_menu_button_element_configurable:typeButtonElementConfigurable
+  additional_menu_config_content:{
+    data:{[x:string]:JSX.Element},
+    context:{[x:string]:JSX.Element},
+    style:{[x:string]:JSX.Element},
+  }
+  additional_new_menu_config_content:{[x:string]:{[x:string]:JSX.Element}}
+additional_node_config_style:JSX.Element[]
 
   footer:JSX.Element[]
 
@@ -61,10 +74,6 @@ export type Type_AdditionalMenus = {
   // Nodes
   advanced_appearence_content: JSX.Element[],
   advanced_label_content: JSX.Element[],
-  advanced_label_value_content: JSX.Element[],
-  additional_menu_configuration_nodes: { [_: string]: JSX.Element },
-  additional_node_label_layout_content: ((_:boolean)=>JSX.Element)[],
-  additional_node_apparence_content: ((_:boolean)=>JSX.Element)[],
 
   context_node_order: string[],
   additional_context_node_element: { [_: string]: JSX.Element },
@@ -81,25 +90,16 @@ export type Type_AdditionalMenus = {
   // Preferences
   additional_preferences: JSX.Element[],
 
-  // Configuration Menu
-  additional_configuration_menus_edition_elements: JSX.Element[]
-  additional_configuration_menus_primary_accordion_elements: JSX.Element[]
-
   // Other menus
-  additional_edition_item: JSX.Element[],
   additional_file_save_json_option: JSX.Element[],
-  additional_file_item: JSX.Element[],
   additional_file_export_item: JSX.Element[],
 
-  sankey_menus: { [_: string]: JSX.Element },
 
   additional_nav_item: JSX.Element[],
 
-  example_menu: object,
   formations_menu: object,
 
   toolbar_order: string[],
-  toolbar_elements: { [k: string]: JSX.Element; }
 
   template_module_key: string[]
 }
@@ -114,6 +114,7 @@ export class Class_ApplicationData
     Class_DrawingArea, Class_Sankey, Class_NodeElement, Class_LinkElement
   > {
 
+
   // PUBLIC METHODS ====================================================================
 
   public createNewMenuConfiguration(): Class_MenuConfig {
@@ -126,6 +127,10 @@ export class Class_ApplicationData
       id
     )
     return drawing_area
+  }
+
+  public createNewIconLibrary(): Class_IconLibrary {
+    return new Class_IconLibrary()
   }
 }
 
@@ -203,7 +208,9 @@ export class Class_Sankey
 export class Class_NodeElement
   extends ClassTemplate_NodeElement<
     Class_DrawingArea, Class_Sankey, Class_LinkElement
-  > { }
+  > {
+    
+}
 
 // LINK ===========================================================================================
 
