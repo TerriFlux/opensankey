@@ -2,9 +2,7 @@
 import React, { Dispatch, FunctionComponent, SetStateAction, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import {
-  FaUser
-} from 'react-icons/fa'
+
 
 import {
   Accordion,
@@ -27,8 +25,6 @@ import {
   ModalHeader,
   ModalOverlay,
 } from '@chakra-ui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 // OpenSankey imports
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
@@ -150,7 +146,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
 
   if (new_data_app.has_sankey_plus) {
-    additionalMenus.external_file_item.push(<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
+    additionalMenus.external_top_buttons_item['sankeytheque']=(<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
   }
 }
 
@@ -170,37 +166,37 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
 
   // Either create a menu to select where we navigate to (login or register account)
   // or add a button to navigate to
-  const user_navigation_bar_free = <Box
-    layerStyle='menutop_layout_style'
-    height='5rem'
-    gridTemplateColumns='11rem 11rem'
+  const user_navigation_bar_free = <ButtonGroup
+    // layerStyle='menutop_layout_style'
+    // height='5rem'
+    // gridTemplateColumns='11rem 11rem'
+    isAttached
   >
     <OSTooltip
       label={t('UserNav.tooltip.to_buy')}
       isAlwaysOpen={new_data_app.menu_configuration.show_splashscreen}>
       <Button
         variant='btn_lone_navigation_primary'
+        size='sizeBtnTextLogin'
         onClick={() => navigate('/register')}
       >
         {t('UserNav.to_buy')}
       </Button></OSTooltip>
     <Button
       variant='btn_lone_navigation_secondary'
+      size='sizeBtnTextLogin'
       onClick={() => navigate('/login')}
     >
       {t('UserNav.to_con')}
     </Button>
-  </Box>
+  </ButtonGroup>
 
-  const user_navigation_bar_connected = <Box
-    alignSelf='center'
-    justifySelf='center'
-    display='grid'
-    gridTemplateColumns='1fr 1fr'
-    gridColumnGap='0.25rem'
+  const user_navigation_bar_connected = <ButtonGroup
+    isAttached
   >
     <Button
       variant={'menutop_button_goto_dashboard'}
+      size='sizeBtnTextLogin'
       onClick={() => {
         navigate('/account')
         // Save current json before moving to login page
@@ -209,12 +205,12 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
           ev.onkeydown(tmp)
         }
       }}>
-      <FaUser />
+      {new_data_app.icon_library.icon_user}
     </Button>
     <LoginOutButton
       new_data_app={new_data_app}
     />
-  </Box>
+  </ButtonGroup>
 
 
   return (!new_data_app.has_account ? user_navigation_bar_free : user_navigation_bar_connected)
@@ -285,7 +281,7 @@ const ButtonOpenModalSankeyTheque: FunctionComponent<{ new_data: Class_Applicati
 /**
  * Modal containing sankeytheque
  *
- * @param {*} { new_data, additionalMenu, Reinitialization }
+ * @param {*} { new_data, additionalMenu }
  * @return {*}
  */
 export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({ new_data }) => {
@@ -362,6 +358,7 @@ export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({
  * @return {*}
  */
 const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccordionGenerator> = ({ new_data, theque_tree, path, setPathToCard }) => {
+  const {icon_popup_menu}=new_data.icon_library
   const entries_tree = Object.entries(theque_tree)
   const sub_acc_item = entries_tree.filter(ent => ent[0] !== 'Files').map(ent => {
     let btn_open = <></>
@@ -371,7 +368,7 @@ const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccor
         return <AccordionItem>
           <Button
             variant='button_open_card_sankeytheque'
-            rightIcon={<FontAwesomeIcon icon={faUpRightFromSquare} />}
+            rightIcon={icon_popup_menu}
             onClick={() => setPathToCard([...path, ent[0],'Etude'])}
           >
             {ent[0]}
@@ -384,7 +381,7 @@ const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccor
       return <AccordionItem>
         <Button
           variant='button_open_card_sankeytheque'
-          rightIcon={<FontAwesomeIcon icon={faUpRightFromSquare} />}
+          rightIcon={icon_popup_menu}
           onClick={() => setPathToCard([...path, ent[0]])}
         >
           {ent[0]}
@@ -394,7 +391,7 @@ const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccor
     if ('Files' in ent[1]) {
       btn_open = <Button
         variant='button_open_card_sankeytheque'
-        rightIcon={<FontAwesomeIcon icon={faUpRightFromSquare} />}
+        rightIcon={icon_popup_menu}
         onClick={() => setPathToCard([...path, ent[0]])}
       >
         {ent[0]}

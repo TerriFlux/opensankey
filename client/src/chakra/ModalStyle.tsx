@@ -44,7 +44,7 @@ export const modal_sankeytheque = definePartsStyle({
   header: {
     minWidth: 'inherit',
     maxWidth: 'inherit',
-    width: 'max-content'
+    width: '100%'
   },
   body: {
     display: 'grid',

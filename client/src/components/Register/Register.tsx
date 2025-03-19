@@ -3,7 +3,6 @@ import React, { FunctionComponent, useState, useRef } from 'react'
 
 import ReCAPTCHA from 'react-google-recaptcha'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { FaCheck } from 'react-icons/fa'
 import { LuBadgeAlert } from 'react-icons/lu'
 
 import {
@@ -51,7 +50,8 @@ const Register: FunctionComponent<{
 }) => {
 
   // App data
-  const { t, logo } = new_data_app
+  const { t, logo,icon_library} = new_data_app
+  const { icon_activated} = icon_library
 
   // Step to register
   const [on_wait, setOnWait] = useState(false)
@@ -301,7 +301,7 @@ const Register: FunctionComponent<{
     // {/* Acceptance of terms of uses */}
     <Button
       onClick={onOpen}
-      leftIcon={(ok_terms_of_uses === true) ? <FaCheck /> : <LuBadgeAlert />}>
+      leftIcon={(ok_terms_of_uses === true) ? icon_activated: <LuBadgeAlert />}>
       {t('Register.account.btn_terms')}
     </Button>,
 
