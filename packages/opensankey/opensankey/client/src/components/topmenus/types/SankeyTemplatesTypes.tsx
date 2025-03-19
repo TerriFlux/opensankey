@@ -31,7 +31,6 @@ import { Type_GenericApplicationData, Type_AdditionalMenus } from '../../../type
 export type FCtype_ModalTemplate = {
   new_data: Type_GenericApplicationData
   additionalMenu: Type_AdditionalMenus
-  Reinitialization: () => void
 }
 
 export type FCType_ModalTuto = {
@@ -39,6 +38,5 @@ export type FCType_ModalTuto = {
   processFunctions: FType_ProcessFunctions
   show_tuto: boolean
   set_show_tuto: (b: boolean) => void
-  Reinitialization: () => void
 }
 

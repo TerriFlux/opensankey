@@ -51,7 +51,6 @@ type ExempleItemTypes = {
   exemple_menu: JSX.Element | ExempleMenuTypes,
   current_path: string,
   launch: (s: string) => void,
-  Reinitialization: () => void,
   initial_list: boolean
 }
 
@@ -67,7 +66,6 @@ const ExempleItem = (
     exemple_menu,
     current_path,
     launch,
-    Reinitialization
   }: ExempleItemTypes
 ) => {
   let content = <></>
@@ -91,7 +89,6 @@ const ExempleItem = (
           exemple_menu={(exemple_menu as subtypeObjectList)[key]}
           current_path={the_current_path}
           launch={launch}
-          Reinitialization={Reinitialization}
           initial_list={false}
         />
       }
@@ -130,7 +127,6 @@ const ExempleItem = (
               exemple_menu={(exemple_menu as subtypeObjectList)[key]}
               current_path={the_current_path}
               launch={launch}
-              Reinitialization={Reinitialization}
               initial_list={false}
             />
           </MenuList>

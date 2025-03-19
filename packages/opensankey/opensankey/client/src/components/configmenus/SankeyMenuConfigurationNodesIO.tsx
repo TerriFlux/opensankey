@@ -25,14 +25,12 @@
 // ==================================================================================================
 
 import React, { FunctionComponent, useState } from 'react'
-import { FaArrowAltCircleUp, FaArrowAltCircleDown } from 'react-icons/fa'
 
 import {
   Box,
   Button,
   Checkbox,
   Select,
-  TabPanel,
   Table,
   Tbody,
   Th,
@@ -50,6 +48,8 @@ import type { FCType_SankeyMenuConfigurationNodesIO } from './types/SankeyMenuCo
 /*************************************************************************************************/
 
 import { OSTooltip } from '../../types/Utils'
+import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
+import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 
 /*************************************************************************************************/
 
@@ -63,13 +63,13 @@ import { OSTooltip } from '../../types/Utils'
   * @return {*}
   */
 export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenuConfigurationNodesIO> = ({
-  new_data,
-  menu_for_modal
+  new_data
 }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t, icon_library } = new_data
+  const { icon_move_element_down, icon_move_element_up } = icon_library
 
   // Nodes to modify --------------------------------------------------------------------
 
@@ -89,7 +89,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   let has_at_least_one_input_link = false
   let has_at_least_one_output_link = false
   selected_nodes.forEach(node => {
-    has_at_least_one_input_link = (has_at_least_one_input_link || node.hasOutputLinks())
+    has_at_least_one_input_link = (has_at_least_one_input_link || node.hasInputLinks())
     has_at_least_one_output_link = (has_at_least_one_output_link || node.hasOutputLinks())
   })
 
@@ -103,7 +103,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   const input_direction = 'i'
   const [direction_selected, setSelectedDirection] = useState<string | undefined>(undefined)
 
-  if (direction_selected==undefined) {
+  if (direction_selected == undefined) {
     if (has_input_links)
       setSelectedDirection(input_direction)
     else if (has_output_links)
@@ -120,13 +120,13 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
 
   const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
 
-  if (direction_selected && side_selected==undefined) {
+  if (direction_selected && side_selected == undefined) {
     if (direction_selected === input_direction)
       setSelectedSide(unique_node_selected?.input_links_list[0]?.target_side ?? undefined)
     else
       setSelectedSide(unique_node_selected?.output_links_list[0]?.source_side ?? undefined)
   }
-  else if (direction_selected==undefined && side_selected) {
+  else if (direction_selected == undefined && side_selected) {
     setSelectedSide(undefined)  // reset selected side
   }
 
@@ -146,9 +146,9 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
           links_to_reorganize[side] = unique_node_selected.getInputLinksForGivenSide(side)
         }
       })
-      
-    const sideWithLinks=Object.keys(links_to_reorganize).filter((k)=>links_to_reorganize[k as Type_Side].length>0) as Type_Side[]
-    if(!sideWithLinks.includes(side_selected)){
+
+    const sideWithLinks = Object.keys(links_to_reorganize).filter((k) => links_to_reorganize[k as Type_Side].length > 0) as Type_Side[]
+    if (!sideWithLinks.includes(side_selected)) {
       setSelectedSide(sideWithLinks[0])
     }
   }
@@ -198,7 +198,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
     // Execute original function
     _reorgIONodeSelected()
   }
-  
+
   /**
    * Move link order before node target
    *
@@ -264,13 +264,6 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   const content_reorg = <Box
     layerStyle='menuconfigpanel_grid'
   >
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'
-    >
-      {t('Noeud.Reorg_title')}
-    </Box>
-
     <OSTooltip label={t('Noeud.tooltips.Reorg')}>
       <Button
         variant='menuconfigpanel_option_button'
@@ -289,7 +282,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
     side_selected
   ) ?
     <Box
-      layerStyle='menuconfigpanel_grid'
+      layerStyle='menu_sub_section'
     >
       {/* Choisir un lien entrant / sortant */}
       <Box
@@ -425,7 +418,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                                 }
                               }}
                             >
-                              <FaArrowAltCircleUp />
+                              {icon_move_element_up}
                             </Button>
                             <Button
                               variant='menuconfigpanel_option_button'
@@ -437,7 +430,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                                 }
                               }}
                             >
-                              <FaArrowAltCircleDown />
+                              {icon_move_element_down}
                             </Button>
                           </Box>
                         </td>
@@ -457,7 +450,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   >
     <Box
       as='span'
-      layerStyle='menuconfigpanel_part_title_1'
+      layerStyle='menu_sub_section_title'
     >
       {t('Noeud.Slct')}
     </Box>
@@ -503,19 +496,16 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
     </Box>
   </Box>
 
-  const content = <Box
-    layerStyle='menuconfigpanel_grid'
-  >
-    {content_reorg}
-    {content_for_one_node}
-    {content_always_present}
-  </Box>
-
-  return menu_for_modal ?
-    content :
-    <TabPanel>
-      {content}
-    </TabPanel>
+  const content = <><SankeyNodeSelectionSimple new_data={new_data} />
+    <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Reorg_title')} >
+      <Box layerStyle='menuconfigpanel_grid'>
+        {content_reorg}
+        {content_for_one_node}
+        {content_always_present}
+      </Box>
+    </WrapperBoxSubSectionMenu>
+  </>
+  return content
 
 }
 

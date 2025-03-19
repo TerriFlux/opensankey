@@ -44,7 +44,7 @@ import FileSaver from 'file-saver'
 import { Type_GenericApplicationData } from '../../types/Types'
 import { FType_ModalResolutionPNG } from './types/SankeyExportsTypes'
 import * as d3 from 'd3'
-import { MenuDraggable } from './SankeyMenuTop'
+import { MenuDraggable } from './SankeyMenus'
 
 
 // COMPONENTS ===========================================================================

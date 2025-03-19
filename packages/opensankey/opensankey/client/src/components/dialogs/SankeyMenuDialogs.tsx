@@ -27,15 +27,6 @@
 import React, { ChangeEvent, FunctionComponent, useState, } from 'react'
 
 import {
-  FaCheck
-} from 'react-icons/fa'
-import {
-  faXmark
-} from '@fortawesome/free-solid-svg-icons'
-import {
-  FontAwesomeIcon
-} from '@fortawesome/react-fontawesome'
-import {
   Box,
   Checkbox,
   Button,
@@ -69,7 +60,7 @@ import {
 } from '../../types/FunctionTypes'
 import { isPositionOverloaded } from '../../Elements/Node'
 
-import { MenuDraggable } from '../topmenus/SankeyMenuTop'
+import { MenuDraggable } from '../topmenus/SankeyMenus'
 
 
 /**
@@ -90,7 +81,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   const [mode_trans, set_mode_trans] = useState('simple')
   const [parametric, set_parametric] = useState(node_styles_dict[default_style_id].position.type == 'parametric')
   let trade_close = true
-  if ( 'NodeImportStyle' in node_styles_dict) {
+  if ('NodeImportStyle' in node_styles_dict) {
     trade_close = node_styles_dict['NodeImportStyle'].position.type == 'relative'
   }
   //const [trade_close, set_trade_close] = useState(true)
@@ -119,7 +110,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeImportStyle'].position.type = 'relative'
       node_styles_dict['NodeImportStyle'].shape_visible = false
       node_styles_dict['NodeImportStyle'].shape_min_height = 40
-      node_styles_dict['NodeImportStyle'].name_label_visible = false
+      node_styles_dict['NodeImportStyle'].name_label_is_visible = false
       node_styles_dict['NodeImportStyle'].value_label_is_visible = false
       // node_styles_dict['NodeImportStyle'].value_label_horiz = 'middle'
       // node_styles_dict['NodeImportStyle'].value_label_vert = 'top'
@@ -127,7 +118,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeExportStyle'].position.type = 'relative'
       node_styles_dict['NodeExportStyle'].shape_visible = false
       node_styles_dict['NodeExportStyle'].shape_min_height = 40
-      node_styles_dict['NodeExportStyle'].name_label_visible = false
+      node_styles_dict['NodeExportStyle'].name_label_is_visible = false
       node_styles_dict['NodeExportStyle'].value_label_is_visible = false
       // node_styles_dict['NodeExportStyle'].value_label_horiz = 'middle'
       // node_styles_dict['NodeExportStyle'].value_label_vert = 'bottom'
@@ -138,7 +129,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeImportStyle'].position.type = 'parametric'
       node_styles_dict['NodeImportStyle'].shape_visible = false
       node_styles_dict['NodeImportStyle'].shape_min_height = 1
-      node_styles_dict['NodeImportStyle'].name_label_visible = true
+      node_styles_dict['NodeImportStyle'].name_label_is_visible = true
       node_styles_dict['NodeImportStyle'].name_label_horiz = 'left'
       node_styles_dict['NodeImportStyle'].name_label_horiz_shift = -200
       node_styles_dict['NodeImportStyle'].value_label_is_visible = true
@@ -149,7 +140,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       node_styles_dict['NodeExportStyle'].position.type = 'parametric'
       node_styles_dict['NodeExportStyle'].shape_visible = false
       node_styles_dict['NodeExportStyle'].shape_min_height = 1
-      node_styles_dict['NodeExportStyle'].name_label_visible = true
+      node_styles_dict['NodeExportStyle'].name_label_is_visible = true
       node_styles_dict['NodeExportStyle'].name_label_horiz = 'right'
       node_styles_dict['NodeExportStyle'].name_label_horiz_shift = 200
       node_styles_dict['NodeExportStyle'].value_label_is_visible = true
@@ -189,7 +180,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
             </Box>
             <Box layerStyle='options_3cols' >
               <Button variant={mode_trans == 'simple' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('simple'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Basiques</Button>
-              <Button variant={mode_trans == 'expert' ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} onClick={() => { set_mode_trans('expert'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Tous</Button>
+              <Button variant={mode_trans == 'expert' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('expert'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Tous</Button>
             </Box>
           </Box>
 
@@ -345,7 +336,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                       }
                     }
                     }
-                  >{data_var_to_update.current.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}</Button>
+                  >{data_var_to_update.current.includes('Values') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
                 </Box>
               </Box></OSTooltip> : <></>}
 
@@ -449,7 +440,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                       }
                     }
                     }
-                  >{data_var_to_update.current.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}</Button>
+                  >{data_var_to_update.current.includes('tagLevel') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
                 </Box>
               </Box></OSTooltip> : <></>}
 
@@ -469,7 +460,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                     }
                   }
                   }
-                >{data_var_to_update.current.includes('attrDrawingArea') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}</Button>
+                >{data_var_to_update.current.includes('attrDrawingArea') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
               </Box>
             </Box></OSTooltip>
           {mode_trans == 'expert' ? apply_transformation_additional_elements.map((c: JSX.Element, i: number) => {
@@ -548,7 +539,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                   Object.values(node_styles_dict)
                     .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
                     .forEach(style => style.position.type = 'parametric')
-                  applicationData.drawing_area.sankey.nodes_list.forEach(n=>n.position_v=-1)
+                  applicationData.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
                   applicationData.drawing_area.computeParametrization()
                 } else {
                   Object.values(node_styles_dict)
@@ -764,7 +755,6 @@ export const ExcelModal: FunctionComponent<FCType_ExcelModal> = (
     new_data,
     uploadExcelImpl,
     launch,
-    Reinitialization
   }
 ) => {
   const { t, url_prefix } = new_data
@@ -789,7 +779,8 @@ export const ExcelModal: FunctionComponent<FCType_ExcelModal> = (
         variant="menuconfigpanel_option_button_secondary"
         onClick={
           () => {
-            Reinitialization()
+            // Reset navigator data without redrawing sankey (uploadExcelImpl will do it after downloading data from server)
+            new_data.reinitialization(false)
             launch((input_file_name as unknown as { [name: string]: string }).name)
             uploadExcelImpl(
               new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_loader.current, input_file_name as Blob, url_prefix

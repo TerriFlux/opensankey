@@ -46,3 +46,4 @@ export const heading_template_sankey = defineStyle({
   fontSize:'1.3rem',
   textStyle:'h2',
 })
+
