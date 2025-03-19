@@ -5,13 +5,12 @@ import ReactQuill from 'react-quill' // 'react-quill' seem to not be updated any
 import {
   Box,
   Textarea,
-  TabPanel,
   Checkbox,
   Button
 } from '@chakra-ui/react'
 
 // OpenSankey imports
-import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
+import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/types/Utils'
 
 // Local imports
 import type { FCType_NodeForeignObjectOSP } from './types/SankeyPlusForeignObjectTypes'
@@ -19,14 +18,14 @@ import type { Type_GenericNodeElementOSP } from '../../types/TypesOSP'
 
 export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP> = ({
   new_data_plus,
-  is_activated,
 }) => {
   const { drawing_area, t } = new_data_plus
+  const is_activated = new_data_plus.has_sankey_plus
 
   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
   const [, setCount] = useState(0)
   const selected_nodes = drawing_area.selected_nodes_list
-  new_data_plus.menu_configuration.r_editor_content_fo_node_updater.current=()=>setCount(a=>a+1)
+  new_data_plus.menu_configuration.r_editor_content_fo_node_updater.current = () => setCount(a => a + 1)
   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
   new_data_plus.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
@@ -81,17 +80,17 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
   // Functions we can undo ========================================
 
-  const updateFOVisibility = (_:boolean) => {
+  const updateFOVisibility = (_: boolean) => {
     const dict_old_value: { [x: string]: boolean } = {}
     selected_nodes.forEach(n => {
       dict_old_value[n.id] = n.has_FO
     })
     const _updateFOVisibility = () => {
       selected_nodes.forEach(n => {
-        n.has_FO=_
+        n.has_FO = _
         n.draw()
       })
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     }
 
     const inv_updateFOVisibility = () => {
@@ -99,7 +98,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         n.has_FO = dict_old_value[n.id]
         n.draw()
       })
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     }
     // Save undo/redo in data history
     new_data_plus.history.saveUndo(inv_updateFOVisibility)
@@ -108,17 +107,17 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     _updateFOVisibility()
   }
 
-  const updateFORaw = (_:boolean) => {
+  const updateFORaw = (_: boolean) => {
     const dict_old_value: { [x: string]: boolean } = {}
     selected_nodes.forEach(n => {
       dict_old_value[n.id] = n.is_FO_raw
     })
     const _updateFORaw = () => {
       selected_nodes.forEach(n => {
-        n.is_FO_raw=_
+        n.is_FO_raw = _
         n.draw()
       })
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     }
 
     const inv_updateFORaw = () => {
@@ -126,7 +125,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         n.is_FO_raw = dict_old_value[n.id]
         n.draw()
       })
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     }
     // Save undo/redo in data history
     new_data_plus.history.saveUndo(inv_updateFORaw)
@@ -135,18 +134,18 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     _updateFORaw()
   }
 
-  
-  const applyEditor=()=>{
-    const dict_old_value:{[x:string]:string}={}
-    selected_nodes.map(node => dict_old_value[node.id] =node.FO_content)
 
-    const _applyEditor=()=>{
+  const applyEditor = () => {
+    const dict_old_value: { [x: string]: string } = {}
+    selected_nodes.map(node => dict_old_value[node.id] = node.FO_content)
+
+    const _applyEditor = () => {
       selected_nodes.map(node => node.FO_content = s_tmp_editor_content_fo_node)
       sEditorContentFoNode(s_tmp_editor_content_fo_node)
       // Toogle saving indicator
       new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     }
-    const inv_applyEditor=()=>{
+    const inv_applyEditor = () => {
       selected_nodes.map(node => node.FO_content = dict_old_value[node.id])
       sEditorContentFoNode(selected_nodes[0].FO_content)
     }
@@ -161,10 +160,10 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want
-  const editor_fo = <Box style={{ 'height': '300px' }}>
+  const editor_fo = <Box>
     <ReactQuill
       className='quill_editor'
-      value={selected_nodes.length>0?selected_nodes[0].FO_content:''}
+      value={selected_nodes.length > 0 ? selected_nodes[0].FO_content : ''}
       onChange={(evt, _, s) => {
         if (s === 'user') {
           s_tmp_editor_content_fo_node = evt
@@ -207,13 +206,11 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     }}
   />
 
-  return <TabPanel>
-    <Box
-      layerStyle='menuconfigpanel_grid'
-    >
-
+  return <Box layerStyle='menu_sub_section' >
+    <Box as='span' layerStyle='menu_sub_section_title' >
       <Checkbox
-        variant='menuconfigpanel_option_checkbox'
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={<CustomFaEyeCheckIcon />}
         isDisabled={!is_activated}
         isIndeterminate={is_indeterminated}
         isChecked={has_FO}
@@ -222,7 +219,10 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         }}
       >
         {is_activated ? <>{t('Noeud.foreign_object.Visibilité')}</> : <OSTooltip label={t('Menu.sankeyOSPDisabled')}>{t('Noeud.foreign_object.Visibilité')}</OSTooltip>}
+
       </Checkbox>
+    </Box>
+    {has_FO ? <>
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
         isDisabled={!is_activated}
@@ -302,6 +302,6 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
           {t('Noeud.FO.submit')}
         </Button>
       </Box>
-    </Box>
-  </TabPanel>
+    </> : <></>}
+  </Box>
 }

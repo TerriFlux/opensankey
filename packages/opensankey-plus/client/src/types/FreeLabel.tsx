@@ -36,6 +36,7 @@ export const default_container_content = 'Text Label ...'
 export const default_container_label_width = 100
 export const default_container_label_height = 25
 export const default_container_color = 'white'
+export const default_container_color_visible = true
 export const default_container_color_border = 'black'
 export const default_container_opacity = 100
 export const default_container_transparent_border = false
@@ -113,6 +114,7 @@ export class Class_ContainerElement
   private _content: string
   private _opacity: number
   private _color: string
+  private _color_visible: boolean
   private _color_border: string
   private _transparent_border: boolean
   private _is_image: boolean
@@ -154,6 +156,7 @@ export class Class_ContainerElement
     this._label_width = default_container_label_width
     this._label_height = default_container_label_height
     this._color = default_container_color
+    this._color_visible = default_container_color_visible
     this._color_border = default_container_color_border
     this._opacity = default_container_opacity
     this._transparent_border = default_container_transparent_border
@@ -230,6 +233,7 @@ export class Class_ContainerElement
     this._content = container_to_copy._content
     this._opacity = container_to_copy._opacity
     this._color = container_to_copy._color
+    this._color_visible = container_to_copy._color_visible
     this._color_border = container_to_copy._color_border
     this._transparent_border = container_to_copy._transparent_border
     this._is_image = container_to_copy._is_image
@@ -255,6 +259,7 @@ export class Class_ContainerElement
     json_object['content'] = this._content
     json_object['opacity'] = this._opacity
     json_object['color'] = this._color
+    json_object['color_visible'] = this._color_visible
     json_object['color_border'] = this._color_border
     json_object['transparent_border'] = this._transparent_border
     json_object['is_image'] = this._is_image
@@ -280,6 +285,7 @@ export class Class_ContainerElement
     this._content = getStringFromJSON(json_object, 'content', this.content)
     this._opacity = getNumberFromJSON(json_object, 'opacity', this.opacity)
     this._color = getStringFromJSON(json_object, 'color', this.color)
+    this._color_visible = getBooleanFromJSON(json_object, 'color_visible', this._color_visible)
     this._color_border = getStringFromJSON(json_object, 'color_border', this.color_border)
     this._transparent_border = getBooleanFromJSON(json_object, 'transparent_border', this.transparent_border)
     this._is_image = getBooleanFromJSON(json_object, 'is_image', this.is_image)
@@ -325,7 +331,7 @@ export class Class_ContainerElement
     // Apply common properties
     this.d3_selection_g_shape?.selectAll('.zdt_shape')
       .attr('id', this.id)
-      .attr('fill-opacity', this._opacity / 100)
+      .attr('fill-opacity',this._color_visible? this._opacity / 100:0)
       .attr('fill', this._color)
       .attr('stroke', this._color_border)
       .attr('stroke-opacity', (this._transparent_border) ? 0 : 1)
@@ -838,6 +844,9 @@ export class Class_ContainerElement
   public get color(): string { return this._color }
   public set color(value: string) { this._color = value }
 
+  public get color_visible(): boolean { return this._color_visible }
+  public set color_visible(value: boolean) { this._color_visible = value }
+  
   public get color_border(): string { return this._color_border }
   public set color_border(value: string) { this._color_border = value }
 

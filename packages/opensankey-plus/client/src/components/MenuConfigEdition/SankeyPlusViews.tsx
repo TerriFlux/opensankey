@@ -2,14 +2,7 @@
 import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
 
 // Imported libs
-import { FaArrowDown, FaArrowUp, FaCheck, FaMinus } from 'react-icons/fa'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock, faListCheck, faHome, faCaretSquareLeft, faCaretSquareRight, faPlus, faCopy, faMinus, faXmark } from '@fortawesome/free-solid-svg-icons'
 import {
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
   Box,
   Checkbox,
   Select,
@@ -29,8 +22,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  ButtonGroup
-} from '@chakra-ui/react'
+  ButtonGroup,
+  useDisclosure,
+  Fade} from '@chakra-ui/react'
 
 // OpenSankey Libs
 import {
@@ -45,7 +39,6 @@ import {
 // Local libs
 import {
   FCType_BannerViewsOSP,
-  FCType_MenuPreferenceViewOSP,
   FCType_SelecteurView,
   FCType_ViewAccordion,
   FCType_MenuEnregistrerViewOSP,
@@ -53,23 +46,23 @@ import {
   FCType_ModalTransparentViewAttrOSP
 } from './types/SankeyPlusViewsTypes'
 
-import {
-  OSPData
-} from '../../types/LegacyTypes'
+import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 
-// TODO Est-ce toujours utile ?
-declare const window: Window &
-  typeof globalThis & {
-    SankeyToolsStatic: boolean
-    sankey: {
-      diagram: string,
-      sous_filieres: { [key: string]: string }
-      help: { [key: string]: string }
-      excel: string
-      structure: boolean,
-      advanced: boolean
-    } & { [key: string]: OSPData }
-  }
+
+export const logo_view = <svg
+  xmlns='http://www.w3.org/2000/svg'
+  viewBox='0 0 24 24'
+  height='1.8rem'
+  width='1.8rem'
+>
+  <path
+    d='m17,15c-3.704,0-5.798,2.252-6.716,3.595-.376.55-.376,1.261,0,1.811.918,1.343,3.012,3.595,6.716,3.595s5.798-2.252,6.716-3.595c.376-.55.376-1.261,0-1.811-.918-1.343-3.012-3.595-6.716-3.595Zm5.891,4.841c-.807,1.18-2.646,3.159-5.891,3.159s-5.084-1.979-5.891-3.159c-.146-.214-.146-.468,0-.682.808-1.18,2.646-3.159,5.891-3.159s5.084,1.979,5.891,3.159c.146.214.146.468,0,.682Zm-5.891-2.341c-1.103,0-2,.897-2,2s.897,2,2,2,2-.897,2-2-.897-2-2-2Zm0,3c-.551,0-1-.448-1-1s.449-1,1-1,1,.448,1,1-.449,1-1,1ZM6,5.5c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Zm0,11c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Zm0-5.5c0,.552-.448,1-1,1s-1-.448-1-1,.448-1,1-1,1,.448,1,1Zm3-5.5c0-.276.224-.5.5-.5h10c.276,0,.5.224.5.5s-.224.5-.5.5h-10c-.276,0-.5-.224-.5-.5Zm10.5,6h-10c-.276,0-.5-.224-.5-.5s.224-.5.5-.5h10c.276,0,.5.224.5.5s-.224.5-.5.5Zm4.5-7v10c0,.276-.224.5-.5.5s-.5-.224-.5-.5V4.5c0-1.93-1.57-3.5-3.5-3.5H4.5c-1.93,0-3.5,1.57-3.5,3.5v13c0,1.93,1.57,3.5,3.5,3.5h3.5c.276,0,.5.224.5.5s-.224.5-.5.5h-3.5c-2.481,0-4.5-2.019-4.5-4.5V4.5C0,2.019,2.019,0,4.5,0h15c2.481,0,4.5,2.019,4.5,4.5Z'
+  />
+</svg>
+
+
+
+// ================================================================
 
 /**
  * Fucntion that return a toolbar to navigate,create or modify view, it contain :
@@ -93,16 +86,18 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data_plus
-
+  const { t, icon_library } = new_data_plus
+  const { icon_add_element, icon_remove_element, icon_welcome, icon_next, icon_previous, icon_attr_view, icon_copy, icon_locked, icon_collapse_down, icon_collapse_up } = icon_library
   // Component updater ------------------------------------------------------------------
 
   // Local updater ----------------------------------------------------------------------
 
   const [, setCount] = useState(0)
+  const { isOpen, onToggle } = useDisclosure()
   const refreshThis = () => {
     setCount(a => a + 1)
   }
+  new_data_plus.menu_configuration.ref_to_banner_views_opened.current = isOpen
   new_data_plus.menu_configuration.ref_to_banner_views_updater.current = refreshThis
 
   // Ref to trigger other components ----------------------------------------------------
@@ -119,6 +114,10 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   // Button to create a view ------------------------------------------------------------
 
+  const logo_locked = <Box className='iconLocked'>
+    {icon_locked}
+  </Box>
+
   const activate_button_to_create_view = has_sankey_plus
   const button_to_create_view = <OSTooltip
     placement='bottom'
@@ -127,54 +126,39 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
         (t('Menu.sankeyOSPDisabled')) :
         t('view.tooltips.buttonCreateView')}
   >
-    <Box>
-      <Button
-        variant='menutop_button'
-        isDisabled={!activate_button_to_create_view}
-        onClick={() => {
-          const evt = document
-          const evt_ctrl_x = new KeyboardEvent('keydown', { key: 'x', ctrlKey: true })
-          if (evt.onkeydown) {
-            evt.onkeydown(evt_ctrl_x)
-          }
-        }}
+    <Button
+      variant='button_banner_view'
+      size='sizeMenuTopButton'
+      isDisabled={!activate_button_to_create_view}
+      onClick={() => {
+        const evt = document
+        const evt_ctrl_x = new KeyboardEvent('keydown', { key: 'x', ctrlKey: true })
+        if (evt.onkeydown) {
+          evt.onkeydown(evt_ctrl_x)
+        }
+      }}
+    >
+      <Box
+        layerStyle='banner_view_buttons'
       >
         <Box
-          layerStyle='menutop_button_style'
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
         >
-          <Box
-            gridRow="1"
-            padding="0.1rem 0 0.1rem 0"
-          >
-            <FontAwesomeIcon
-              style={{
-                'height': '2rem',
-                'width': '3rem',
-              }}
-              icon={faPlus}
-            />
-            {
-              !has_sankey_plus ?
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{
-                    'fontSize': '1em',
-                    'position': 'absolute',
-                    'right': '0.1em',
-                    'bottom': '0em',
-                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                  }} />
-                : <></>
-            }
-          </Box>
-          <Box
-            gridRow="2"
-          >
-            {t('Menu.addView')}
-          </Box>
+          {icon_add_element}
+          {
+            !has_sankey_plus ?
+              logo_locked
+              : <></>
+          }
         </Box>
-      </Button>
-    </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('Menu.addView')}
+        </Box>
+      </Box>
+    </Button>
   </OSTooltip>
 
   // Button to delete actual view -------------------------------------------------------
@@ -188,53 +172,38 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
         t('view.tooltips.button_delete_actual_view')
     }
   >
-    <Box>
-      <Button
-        variant='menutop_button'
-        isDisabled={!activate_button_to_delete_actual_view}
-        onClick={
-          // Delete the view
-          () => {
-            new_data_plus.deleteCurrentView()
-          }
+    <Button
+      variant='button_banner_view'
+      size='sizeMenuTopButton'
+      isDisabled={!activate_button_to_delete_actual_view}
+      onClick={
+        // Delete the view
+        () => {
+          new_data_plus.deleteCurrentView()
         }
+      }
+    >
+      <Box
+        layerStyle='banner_view_buttons'
       >
         <Box
-          layerStyle='menutop_button_style'
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
         >
-          <Box
-            gridRow="1"
-            padding="0.1rem 0 0.1rem 0"
-          >
-            <FontAwesomeIcon
-              style={{
-                'height': '2rem',
-                'width': '3rem'
-              }}
-              icon={faMinus}
-            />
-            {
-              (!has_sankey_plus) ?
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{
-                    'fontSize': '1em',
-                    'position': 'absolute',
-                    'right': '0.1em',
-                    'bottom': '0em',
-                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                  }} /> :
-                <></>
-            }
-          </Box>
-          <Box
-            gridRow="2"
-          >
-            {t('view.delete')}
-          </Box>
+          {icon_remove_element}
+          {
+            (!has_sankey_plus) ?
+              logo_locked :
+              <></>
+          }
         </Box>
-      </Button>
-    </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('view.delete')}
+        </Box>
+      </Box>
+    </Button>
   </OSTooltip>
 
   // Button to fallback to master -------------------------------------------------------
@@ -244,42 +213,34 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
     placement='bottom'
     label={t('view.tooltips.home')}
   >
-    <Box>
-      <Button
-        variant='menutop_button'
-        isDisabled={!activate_button_to_return_to_master}
-        onClick={() => {
-          const evt = document
-          const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7' })
-          if (evt.onkeydown) {
-            evt.onkeydown(evt_key_f7)
-          }
-        }}
+    <Button
+      variant='button_banner_view'
+      size='sizeMenuTopButton'
+      isDisabled={!activate_button_to_return_to_master}
+      onClick={() => {
+        const evt = document
+        const evt_key_f7 = new KeyboardEvent('keydown', { key: 'F7' })
+        if (evt.onkeydown) {
+          evt.onkeydown(evt_key_f7)
+        }
+      }}
+    >
+      <Box
+        layerStyle='banner_view_buttons'
       >
         <Box
-          layerStyle='menutop_button_style'
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
         >
-          <Box
-            gridRow="1"
-            padding="0.1rem 0 0.1rem 0"
-          >
-            <FontAwesomeIcon
-              style={{
-                'height': '2rem',
-                'width': '3rem',
-                // 'opacity': (!has_sankey_plus && !has_views) ? '0.6' : '1'
-              }}
-              icon={faHome}
-            />
-          </Box>
-          <Box
-            gridRow="2"
-          >
-            {t('Menu.home')}
-          </Box>
+          {icon_welcome}
         </Box>
-      </Button>
-    </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('Menu.home')}
+        </Box>
+      </Box>
+    </Button>
   </OSTooltip>
 
   // Button to go to next view ----------------------------------------------------------
@@ -291,7 +252,8 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
   >
     <Box>
       <Button
-        variant='menutop_button'
+        variant='button_banner_view'
+        size='sizeMenuTopButton'
         isDisabled={!activate_button_to_prev_view}
         onClick={() => {
           const ev = document
@@ -302,20 +264,13 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
         }}
       >
         <Box
-          layerStyle='menutop_button_style'
+          layerStyle='banner_view_buttons'
         >
           <Box
             gridRow="1"
             padding="0.1rem 0 0.1rem 0"
           >
-            <FontAwesomeIcon
-              style={{
-                'height': '2rem',
-                'width': '3rem',
-                // 'opacity': (prev_button_disabled || !has_views) ? '0.6' : '1'
-              }}
-              icon={faCaretSquareLeft}
-            />
+            {icon_previous}
           </Box>
           <Box
             gridRow="2"
@@ -334,41 +289,34 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
     placement='bottom'
     label={t('view.tooltips.NextViewButton')}
   >
-    <Box>
-      <Button
-        variant='menutop_button'
-        isDisabled={!activate_button_to_next_view}
-        onClick={() => {
-          const ev = document
-          const tmp = new KeyboardEvent('keydown', { key: 'F9' })
-          if (ev.onkeydown) {
-            ev.onkeydown(tmp as KeyboardEvent)
-          }
-        }}
+    <Button
+      variant='button_banner_view'
+      size='sizeMenuTopButton'
+      isDisabled={!activate_button_to_next_view}
+      onClick={() => {
+        const ev = document
+        const tmp = new KeyboardEvent('keydown', { key: 'F9' })
+        if (ev.onkeydown) {
+          ev.onkeydown(tmp as KeyboardEvent)
+        }
+      }}
+    >
+      <Box
+        layerStyle='banner_view_buttons'
       >
         <Box
-          layerStyle='menutop_button_style'
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
         >
-          <Box
-            gridRow="1"
-            padding="0.1rem 0 0.1rem 0"
-          >
-            <FontAwesomeIcon
-              style={{
-                'height': '2rem',
-                'width': '3rem',
-              }}
-              icon={faCaretSquareRight}
-            />
-          </Box>
-          <Box
-            gridRow="2"
-          >
-            {t('Menu.nextView')}
-          </Box>
+          {icon_next}
         </Box>
-      </Button>
-    </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('Menu.nextView')}
+        </Box>
+      </Box>
+    </Button>
   </OSTooltip>
 
   // Button to display attributes transfert modal ---------------------------------------
@@ -381,53 +329,37 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
         (t('Menu.sankeyOSPDisabled')) :
         t('view.tooltips.buttonCloneMasterAttrView')
     }>
-    <Box>
-      <Button
-        variant='menutop_button'
-        isDisabled={!activate_button_to_show_view_attr_transfert_modal}
-        onClick={
-          () => {
-            new_data_plus.menu_configuration.ref_to_modal_view_attributes_switcher.current(true)
-          }
+    <Button
+      variant='button_banner_view'
+      size='sizeMenuTopButton'
+      isDisabled={!activate_button_to_show_view_attr_transfert_modal}
+      onClick={
+        () => {
+          new_data_plus.menu_configuration.ref_to_modal_view_attributes_switcher.current(true)
         }
+      }
+    >
+      <Box
+        layerStyle='banner_view_buttons'
       >
         <Box
-          layerStyle='menutop_button_style'
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
         >
-          <Box
-            gridRow="1"
-            padding="0.1rem 0 0.1rem 0"
-          >
-            <FontAwesomeIcon
-              style={{
-                'height': '2rem',
-                'width': '3rem',
-                // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
-              }}
-              icon={faListCheck}
-            />
-            {
-              (!has_sankey_plus) ?
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{
-                    'fontSize': '1em',
-                    'position': 'absolute',
-                    'right': '0.1em',
-                    'bottom': '0em',
-                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                  }} />
-                : <></>
-            }
-          </Box>
-          <Box
-            gridRow="2"
-          >
-            {t('view.keep_master_var')}
-          </Box>
+          {icon_attr_view}
+          {
+            (!has_sankey_plus) ?
+              logo_locked
+              : <></>
+          }
         </Box>
-      </Button>
-    </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('view.keep_master_var')}
+        </Box>
+      </Box>
+    </Button>
   </OSTooltip>
 
   // Button to load views as a catalog of view (ie  JSON containing only views) ---------
@@ -441,55 +373,38 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
         t('view.tooltips.catalog_data')
     }
   >
-    <Box>
-      <Button
-        variant='menutop_button'
-        isDisabled={!activate_create_data_catalog}
-        onClick={
-          () => {
-            if (ref_to_input_loader_json_catalog.current) {
-              ref_to_input_loader_json_catalog.current.name = ''
-              ref_to_input_loader_json_catalog.current.click()
-            }
-          }}
+    <Button
+      variant='button_banner_view'
+      size='sizeMenuTopButton' isDisabled={!activate_create_data_catalog}
+      onClick={
+        () => {
+          if (ref_to_input_loader_json_catalog.current) {
+            ref_to_input_loader_json_catalog.current.name = ''
+            ref_to_input_loader_json_catalog.current.click()
+          }
+        }}
+    >
+      <Box
+        layerStyle='banner_view_buttons'
       >
         <Box
-          layerStyle='menutop_button_style'
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
         >
-          <Box
-            gridRow="1"
-            padding="0.1rem 0 0.1rem 0"
-          >
-            <FontAwesomeIcon
-              style={{
-                'height': '2rem',
-                'width': '3rem',
-                // 'opacity': (!has_sankey_plus) ? '0.6' : '1'
-              }}
-              icon={faCopy}
-            />
-            {
-              (!has_sankey_plus) ?
-                <FontAwesomeIcon
-                  icon={faLock}
-                  style={{
-                    'fontSize': '1em',
-                    'position': 'absolute',
-                    'right': '0.1em',
-                    'bottom': '0em',
-                    'color': 'rgba(var(--bs-info-rgb), var(--bs-bg-opacity))'
-                  }} />
-                : <></>
-            }
-          </Box>
-          <Box
-            gridRow="2"
-          >
-            {t('view.catalog')}
-          </Box>
+          {icon_copy}
+          {
+            (!has_sankey_plus) ?
+              logo_locked
+              : <></>
+          }
         </Box>
-      </Button>
-    </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('view.catalog')}
+        </Box>
+      </Box>
+    </Button>
   </OSTooltip>
 
   // Input to read JSON as a catalog of view (ie  JSON containing only views) ---------
@@ -515,7 +430,6 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
               () => {
                 new_data_plus.drawing_area.bypass_redraws = true
                 new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON)
-                new_data_plus.updateDisplayedConfigMenu()
               })
           }
         })()
@@ -528,7 +442,21 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
     }}
   />
 
-  return <>
+  // ButtonsGrooup doesn't have variant so we set style here
+  const buttonGroupView = <ButtonGroup
+    className='BannerView'
+    style={{
+      position: 'fixed',
+      top: new_data_plus.drawing_area.getNavBarHeight() + new_data_plus.drawing_area.fit_margin,
+      zIndex: '1',
+      background: 'white',
+      border: '1px solid',
+      borderRadius: '4px',
+      width: 'fit-content',
+      left: '50%',
+      transform: 'translate(-50%)'
+    }}
+  >
     {/* Load + Save  */}
     {new_data_plus.is_static ? <></> : input_loader_json_catalog}
     {new_data_plus.is_static ? <></> : create_data_catalog}
@@ -557,6 +485,44 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
           {button_to_show_view_attr_transfert_modal}
         </>
     }
+    <Button
+      variant='button_collapse_banner_view'
+      size='sizeMenuTopButton'
+      onClick={onToggle}>
+      {isOpen ? icon_collapse_up : icon_collapse_down}
+    </Button>
+  </ButtonGroup>
+
+  const buttonShowBanner = <OSTooltip placement='bottom' label={(!has_sankey_plus) ? (t('Menu.sankeyOSPDisabled')) : ''}>
+    <Button
+      isDisabled={!new_data_plus.has_sankey_plus && !new_data_plus.has_views}
+      variant={isOpen ? 'menutop_button_view_activated' : 'menutop_button'}
+      size='sizeMenuTopButton'
+      onClick={onToggle}
+    >
+      <Box
+        layerStyle='menutop_button_style'
+      >
+        <Box
+          gridRow='1'
+          padding='0.1rem 0 0.1rem 0'
+        >
+          {logo_view}
+        </Box>
+        <Box
+          gridRow='2'
+        >
+          {t(('Menu.view'))}
+        </Box>
+      </Box>
+    </Button>
+  </OSTooltip>
+
+  return <>
+    {buttonShowBanner}
+    <Fade in={isOpen}>
+      {buttonGroupView}
+    </Fade>
   </>
 }
 
@@ -591,7 +557,7 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
   // JSX elements -----------------------------------------------------------------------
 
   const selecteur = <Select
-    variant='menuconfigpanel_option_select'
+    variant='view_select'
     onDoubleClick={() => {
       if (
         has_sankey_plus &&
@@ -638,30 +604,30 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
     }}
     disabled={!has_views}
   />
-
   return ((s_select_or_edit === 'edit') || (!has_views)) ? text_input : selecteur
 }
 
 /**
- * Sub accordion for view config in menu configuration
+ * Content for view config in menu configuration
  * @param {*} {
  *   new_data_plus,
  * }
  * @return {*}
  */
-export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
+export const ViewsConfig: FunctionComponent<FCType_ViewAccordion> = (
   { new_data_plus }
 ) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data_plus
+  const { t, icon_library } = new_data_plus
+  const { icon_remove_element, icon_move_element_up, icon_move_element_down } = icon_library
 
   // Components updaters ----------------------------------------------------------------
 
   const [, setCount] = useState(0)
   const refreshThis = () => setCount(a => a + 1)
-  new_data_plus.menu_configuration.ref_to_accordion_views_updater.current = refreshThis
+  new_data_plus.menu_configuration.ref_to_views_config_updater.current = refreshThis
 
   // Local variables --------------------------------------------------------------------
 
@@ -673,102 +639,82 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
 
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
-  return <AccordionItem
-    style={{ 'display': (new_data_plus.menu_configuration.accordions_to_show.includes('Vis')) ? 'initial' : 'none' }}
-  >
-    <AccordionButton onClick={() => {
-      const scroll_x = window.scrollX
-      const scroll_y = window.scrollY
-      setTimeout(() => {
-        document.getElementsByTagName('html')[0]?.scrollTo(scroll_x, scroll_y)
-      }, 50)
-    }}
-    >
-      <Box as='span' layerStyle='menuconfig_entry'>
-        {t('view.storytelling')}
-      </Box>
-      <AccordionIcon />
-    </AccordionButton>
-    <AccordionPanel>
-      <Box layerStyle='menuconfigpanel_grid'>
+  return <WrapperBoxSubSectionMenu new_data={new_data_plus} title={t('view.storytelling')}>
+    <Box layerStyle='menuconfigpanel_grid'>
 
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('view.select')}
-          </Box>
-          <InputGroup
-            variant='menuconfigpanel_option_input'>
-            <SelecteurView new_data_plus={new_data_plus} />
-          </InputGroup>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('view.select')}
         </Box>
-        <Table size='sm'>
-          <Thead>
-            <Tr>
-              <Th>{t('view.name')}</Th>
-              <Th>Position</Th>
-              <Th>{t('view.delete')}</Th>
-              {/* <Th>{t('view.copy')}</Th>
-                <Th>{t('view.import')}</Th>
-                <Th>{t('view.export')}</Th> */}
-            </Tr>
-          </Thead>
-          <Tbody>
-            {list_view.map((d, idx) => {
-              return (
-                <React.Fragment key={idx}>
-                  <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
-                    <Td>
-                      <Input
-                        variant='menuconfigpanel_option_input'
-                        value={d.name}
-                        isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onChange={evt => {
-                          d.name = evt.target.value
-                          refreshThis()
-                        }}
-                        onBlur={()=>{
-                          new_data_plus.menu_configuration.updateComponentRelatedToViews()
-                        }}
-                      />
-                    </Td>
-                    <Td>
-                      {/* Change the position of the view in the liste of view from master data */}
-                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={() => { new_data_plus.moveViewUpInOrder(d.id); new_data_plus.menu_configuration.updateComponentRelatedToViews() }}
-                      >
-                        <FaArrowUp />
-                      </Button>
-                      <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={() => { new_data_plus.moveViewDownInOrder(d.id); new_data_plus.menu_configuration.updateComponentRelatedToViews() }}
-                      >
-                        <FaArrowDown />
-                      </Button>
-                    </Td>
-                    <Td>
-                      <Button
-                        variant='menuconfigpanel_del_button_in_table'
-                        isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                        onClick={
-                          // Delete the view
-                          () => {
-                            new_data_plus.deleteView(d.id)
-                            new_data_plus.menu_configuration.updateComponentRelatedToViews()
-                          }
-                        }
-                      >
-                        <FaMinus />
-                      </Button>
-                    </Td>
-                  </Tr>
-                </React.Fragment>
-              )
-            })}
-          </Tbody>
-        </Table>
+        <InputGroup
+          variant='menuconfigpanel_option_input'>
+          <SelecteurView new_data_plus={new_data_plus} />
+        </InputGroup>
       </Box>
+      <Table variant='table_view' size='sm'>
+        <Thead>
+          <Tr>
+            <Th>{t('view.name')}</Th>
+            <Th>Position</Th>
+            <Th>{t('view.delete')}</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {list_view.map((d, idx) => {
+            return (
+              <React.Fragment key={idx}>
+                <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
+                  <Td>
+                    <Input
+                      variant='menuconfigpanel_option_input'
+                      value={d.name}
+                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                      onChange={evt => {
+                        d.name = evt.target.value
+                        refreshThis()
+                      }}
+                      onBlur={() => {
+                        new_data_plus.menu_configuration.updateComponentRelatedToViews()
+                      }}
+                    />
+                  </Td>
+                  <Td>
+                    {/* Change the position of the view in the liste of view from master data */}
+                    <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                      onClick={() => { new_data_plus.moveViewUpInOrder(d.id); new_data_plus.menu_configuration.updateComponentRelatedToViews() }}
+                    >
+                      {icon_move_element_up}
+                    </Button>
+                    <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                      onClick={() => { new_data_plus.moveViewDownInOrder(d.id); new_data_plus.menu_configuration.updateComponentRelatedToViews() }}
+                    >
+                      {icon_move_element_down}
+                    </Button>
+                  </Td>
+                  <Td>
+                    <Button
+                      variant='menuconfigpanel_del_button_in_table'
+                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                      onClick={
+                        // Delete the view
+                        () => {
+                          new_data_plus.deleteView(d.id)
+                          new_data_plus.menu_configuration.updateComponentRelatedToViews()
+                        }
+                      }
+                    >
+                      {icon_remove_element}
+                    </Button>
+                  </Td>
+                </Tr>
+              </React.Fragment>
+            )
+          })}
+        </Tbody>
+      </Table>
+    </Box>
 
-    </AccordionPanel>
-  </AccordionItem>
+  </WrapperBoxSubSectionMenu>
 }
 
 // TODO Voir si toujours utile
@@ -829,24 +775,24 @@ export const ViewsAccordion: FunctionComponent<FCType_ViewAccordion> = (
 //   }
 // }
 
-export const MenuPreferenceViewOSP: FunctionComponent<FCType_MenuPreferenceViewOSP> = (
-  { new_data_plus }
-) => {
-  const [, setCount] = useState(0)
-  new_data_plus.menu_configuration.ref_to_checkbox_pref_view_updater.current = () => setCount(a => a + 1)
-  const { t } = new_data_plus
-  return <Checkbox
-    variant='menuconfigpanel_option_checkbox'
-    isDisabled={!new_data_plus.has_sankey_plus}
-    ref={new_data_plus.checkbox_refs['Vis']}
-    isChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('Vis')}
-    onChange={() => {
-      new_data_plus.menu_configuration.toggleGivenAccordion('Vis')
-      setCount(a => a + 1)
-    }}>
-    {t('view.storytelling')}
-  </Checkbox>
-}
+// export const MenuPreferenceViewOSP: FunctionComponent<FCType_MenuPreferenceViewOSP> = (
+//   { new_data_plus }
+// ) => {
+//   const [, setCount] = useState(0)
+//   new_data_plus.menu_configuration.ref_to_checkbox_pref_view_updater.current = () => setCount(a => a + 1)
+//   const { t } = new_data_plus
+//   return <Checkbox
+//     variant='menuconfigpanel_option_checkbox'
+//     isDisabled={!new_data_plus.has_sankey_plus}
+//     ref={new_data_plus.checkbox_refs['Vis']}
+//     isChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('Vis')}
+//     onChange={() => {
+//       new_data_plus.menu_configuration.toggleGivenAccordion('Vis')
+//       setCount(a => a + 1)
+//     }}>
+//     {t('view.storytelling')}
+//   </Checkbox>
+// }
 
 /**
  * Modal to ask user if he want to save unsaved view change before switching view
@@ -911,8 +857,11 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
   { new_data_plus }
 ): JSX.Element => {
 
-  const { t } = new_data_plus
-
+  const { t, icon_library } = new_data_plus
+  const {
+    icon_activated,
+    icon_unactivated
+  } = icon_library
   const [state, setState] = useState(false)
   const [, setUpdater] = useState(0)
   const show_modal = state
@@ -1065,7 +1014,7 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
                     updateComponent()
                   }}
                 >
-                  {new_data_plus.drawing_area.heredited_attr.includes('Values') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+                  {new_data_plus.drawing_area.heredited_attr.includes('Values') ? icon_activated : icon_unactivated}
                 </Button>
               </Box>
 
@@ -1164,7 +1113,7 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
                     updateComponent()
                   }}
                 >
-                  {new_data_plus.drawing_area.heredited_attr.includes('tagLevel') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+                  {new_data_plus.drawing_area.heredited_attr.includes('tagLevel') ? icon_activated : icon_unactivated}
                 </Button>
               </Box>
             </Box>
@@ -1184,7 +1133,7 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
                     updateComponent()
                   }}
                 >
-                  {new_data_plus.drawing_area.heredited_attr.includes('attrGeneral') ? <FaCheck /> : <FontAwesomeIcon icon={faXmark} />}
+                  {new_data_plus.drawing_area.heredited_attr.includes('attrGeneral') ? icon_activated : icon_unactivated}
                 </Button>
               </Box>
             </Box>

@@ -2,22 +2,13 @@
 import React, { ChangeEvent, useState, useRef, FunctionComponent } from 'react'
 
 import {
-  FaEyeSlash,
-  FaFileImport,
-  FaLock,
-  FaLockOpen
-} from 'react-icons/fa'
-import {
   Box,
   Button,
   Checkbox,
-  TabPanel,
   Input,
-  InputGroup
+  InputGroup,
+  InputRightElement
 } from '@chakra-ui/react'
-import { faIcons, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDeleteLeft } from '@fortawesome/free-solid-svg-icons'
 
 // Local imports
 import {
@@ -28,18 +19,10 @@ import {
 
 // OpenSankey ts-code
 import {
-  isAttributeOverloaded
-} from '../../deps/OpenSankey/Elements/Node'
-import {
-  default_shape_visible
-} from '../../deps/OpenSankey/Elements/NodeAttributes'
-import {
-  OSTooltip,
-  TooltipValueSurcharge
-} from '../../deps/OpenSankey/types/Utils'
-import {
-  icon_open_modal
-} from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextNode'
+  CustomFaEyeCheckIcon,
+  OSTooltip} from '../../deps/OpenSankey/types/Utils'
+import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+
 
 
 
@@ -50,11 +33,12 @@ declare const window: Window &
 
 export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   new_data_plus,
-  menu_for_modal,
 }) => {
-  const { t } = new_data_plus
+  const { t, icon_library } = new_data_plus
+  const { icon_locked, icon_unlocked, icon_import_file_image } = icon_library
   const is_activated = new_data_plus.has_sankey_plus
-  const [show_menu_node_icon, set_show_menu_node_icon] = useState(false)
+
+  const [, set_show_menu_node_icon] = useState(false)
   const [, setForceUpdate] = useState(false)
   const selected_nodes = new_data_plus.drawing_area.selected_nodes_list
   new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
@@ -63,12 +47,12 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   // Update this component & component node appareance because we modify shape visibility
   const redrawAndRefresh = () => {
     new_data_plus.menu_configuration.updateComponentRelatedToNodesApparence()
+    setForceUpdate(b => !b)
     selected_nodes.forEach(zdt => zdt.draw())
   }
 
   const _load_image = useRef<HTMLInputElement>(null)
 
-  const isAllNodeVisible = (selected_nodes[0]?.shape_visible ?? default_shape_visible)
 
   let all_are_icons = (
     selected_nodes.length > 0)
@@ -80,6 +64,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
       all_are_images = (all_are_images && d.is_image)
       all_are_none = (all_are_none && (!d.iconVisible && !d.is_image))
     })
+
 
   let button_icon_or_image = 'both'
   if (all_are_icons) {
@@ -93,37 +78,6 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   }
 
   // Functions we can undo ==========================================
-
-  /**
-   *Update visibility of selected nodes & save it's undo
-   *
-   * @param {boolean} _
-   */
-  const updateNodeShapeVisibility = (_: boolean) => {
-    const dict_old_value: { [x: string]: boolean } = {}
-    selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.shape_visible
-    })
-    const _updateNodeShapeVisibility = () => {
-      selected_nodes.forEach(n => {
-        n.shape_visible = _
-
-      })
-      redrawAndRefresh()
-    }
-
-    const inv_updateNodeShapeVisibility = () => {
-      selected_nodes.forEach(n => {
-        n.shape_visible = dict_old_value[n.id]
-      })
-      redrawAndRefresh()
-    }
-    // Save undo/redo in data history
-    new_data_plus.history.saveUndo(inv_updateNodeShapeVisibility)
-    new_data_plus.history.saveRedo(_updateNodeShapeVisibility)
-    // Execute original attr mutation
-    _updateNodeShapeVisibility()
-  }
 
   /**
    *Update icon visibility of selected nodes & save it's undo
@@ -372,7 +326,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                   new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current!(true)
                 }}
               >
-                <FontAwesomeIcon icon={faIcons} />
+                {new_data_plus.icon_library.icon_open_modal_icon}
               </Button>
             </Box>
           </OSTooltip>
@@ -404,7 +358,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
               <Button
                 //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
                 variant={
-                  (selected_nodes.length === 1) ?
+                  (selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ?
                     'menuconfigpanel_option_button_activated' :
                     'menuconfigpanel_option_button'}
                 onClick={() => {
@@ -413,7 +367,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                   updateNodeIconColorSustainable(value)
                 }}
               >
-                {(selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ? <FaLock /> : <FaLockOpen />}
+                {(selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ? icon_locked : icon_unlocked}
               </Button>
             </Box>
           </OSTooltip>
@@ -454,13 +408,13 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                   }
                 }}
               >
-                <FaFileImport />
+                {icon_import_file_image}
               </Button>
               <Button
                 variant='menuconfigpanel_option_button_right'
                 onClick={resetNodeImageSrc}
               >
-                <FontAwesomeIcon icon={faDeleteLeft} />
+                {new_data_plus.icon_library.icon_delete}
               </Button>
             </Box>
             <Input
@@ -489,110 +443,89 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   </Box>
 
   // Content of the tab that change depending on the illustration we want to make
-  const content_tab = <Box
-    layerStyle='menuconfigpanel_grid'
-  >
-    {/* Visibilite du noeud */}
-
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      // isIndeterminate={isAllNodeVisible[1]}
-      isChecked={isAllNodeVisible}
-      onChange={(evt) => updateNodeShapeVisibility(evt.target.checked)}
-    >
-      <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')} >
-        {t('Noeud.apparence.Visibilité')}
-      </OSTooltip>
-      {
-        isAttributeOverloaded(selected_nodes, 'shape_visible') ?
-          TooltipValueSurcharge('node_var', t) :
-          <></>
-      }
-    </Checkbox>
-
-    <OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
-
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
+  const content_component = <Box layerStyle='menu_sub_section' >
+    <Box as='span' layerStyle='menu_sub_section_title' >
+      <Checkbox
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={<CustomFaEyeCheckIcon />}
+        isChecked={button_icon_or_image !== 'none'}
+        onChange={(evt) => {
+          if (evt.target.checked)
+            updateNodeIconVisibility()
+          else
+            setIllustrationVisibilityToNone()
+        }}
       >
+        <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')}>
+          {t('Noeud.illustration')}
+        </OSTooltip>
+      </Checkbox>
+    </Box>
+    {button_icon_or_image !== 'none' ? <>
+      <OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
         <Box
           as='span'
-          layerStyle='menuconfigpanel_option_name'
+          layerStyle='menuconfigpanel_row_2cols'
         >
-          {t('Noeud.illustration_type')}
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_option_name'
+          >
+            {t('Noeud.illustration_type')}
+          </Box>
+          <Box
+            as='span'
+            layerStyle='options_2cols'
+          >
+            <Button
+              variant={
+                button_icon_or_image !== 'icon' ?
+                  'menuconfigpanel_option_button_center' :
+                  'menuconfigpanel_option_button_activated_center'
+              }
+              isDisabled={!is_activated}
+              onClick={updateNodeIconVisibility}
+            >
+              {t('Noeud.icon.icon')}
+            </Button>
+            <Button
+              variant={
+                button_icon_or_image !== 'image' ?
+                  'menuconfigpanel_option_button_right' :
+                  'menuconfigpanel_option_button_activated_right'
+              }
+              isDisabled={!is_activated}
+              onClick={updateNodeImageVisibility}
+            >
+              Image
+            </Button>
+          </Box>
         </Box>
-        <Box
-          as='span'
-          layerStyle='options_3cols'
-        >
-          <Button
-            variant={
-              button_icon_or_image !== 'none' ?
-                'menuconfigpanel_option_button_left' :
-                'menuconfigpanel_option_button_activated_left'
-            }
-            isDisabled={!is_activated}
-            onClick={setIllustrationVisibilityToNone}
-          >
-            <FaEyeSlash />
-          </Button>
-          <Button
-            variant={
-              button_icon_or_image !== 'icon' ?
-                'menuconfigpanel_option_button_center' :
-                'menuconfigpanel_option_button_activated_center'
-            }
-            isDisabled={!is_activated}
-            onClick={updateNodeIconVisibility}
-          >
-            {t('Noeud.icon.icon')}
-          </Button>
-          <Button
-            variant={
-              button_icon_or_image !== 'image' ?
-                'menuconfigpanel_option_button_right' :
-                'menuconfigpanel_option_button_activated_right'
-            }
-            isDisabled={!is_activated}
-            onClick={updateNodeImageVisibility}
-          >
-            Image
-          </Button>
-        </Box>
-      </Box>
-    </OSTooltip>
+      </OSTooltip>
 
-    {
-      button_icon_or_image === 'icon' ?
-        content_icon :
-        button_icon_or_image === 'image' ?
-          content_image :
-          <></>
-    }
-
+      {
+        button_icon_or_image === 'icon' ?
+          content_icon :
+          button_icon_or_image === 'image' ?
+            content_image :
+            <></>
+      }
+    </> : <></>}
   </Box>
-
-  if (menu_for_modal && !show_menu_node_icon) {
-    return [<></>]
-  }
-  if (menu_for_modal && show_menu_node_icon) {
-    return [content_tab]
-  }
-
-  return <TabPanel>
-    {content_tab}
-  </TabPanel>
+  return content_component
 }
 
 export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
   new_data_plus,
-  is_activated,
 }) => {
-  const { drawing_area, t } = new_data_plus
+  const { drawing_area, t, menu_configuration } = new_data_plus
   const selected_nodes = drawing_area.selected_nodes_list
+  const is_activated = new_data_plus.has_sankey_plus
 
   const [, setCount] = useState(0)
+  menu_configuration.ref_to_node_hyperlink_updater.current = () => setCount(a => a + 1)
+  if (selected_nodes.length == 0)
+    return <></>
 
   const hasHyperLink = () => {
     let visible = ''
@@ -635,15 +568,8 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
       <OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
 
         <Box
-          as='span'
-          layerStyle='menuconfigpanel_row_2cols'
+          layerStyle='menuconfigpanel_grid'
         >
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_option_name'
-          >
-            {t('Noeud.HL')}
-          </Box>
           <InputGroup
             variant='menuconfigpanel_option_input'
           >
@@ -654,38 +580,26 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
                 updateHyperlinkValue(evt.target.value)
               }}
             />
+            <InputRightElement >
+              <Button
+                variant='menuconfigpanel_option_button'
+                onClick={() => {
+                  window.open(node_hyperlink)
+                }}
+              >
+                {new_data_plus.icon_library.icon_popup_menu}
+              </Button>
+            </InputRightElement>
           </InputGroup>
-        </Box>
-      </OSTooltip>
-
-      {/* Open Hyperlink */}
-      <OSTooltip label={!is_activated ? t('Menu.sankeyOSPDisabled') : ''} >
-        <Box
-          as='span'
-          layerStyle='menuconfigpanel_row_2cols'
-        >
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_option_name'
-          >
-            {t('Noeud.open_HL')}
-          </Box>
-          <Button
-            variant='menuconfigpanel_option_button'
-            onClick={() => {
-              window.open(node_hyperlink)
-            }}
-          >
-            <FontAwesomeIcon icon={faUpRightFromSquare} />
-          </Button>
         </Box>
       </OSTooltip>
     </Box> :
     <></>
 
-  return <TabPanel>
+  return <WrapperBoxSubSectionMenu new_data={new_data_plus} title={t('Noeud.HL')}>
     {content_image_tab}
-  </TabPanel>
+  </WrapperBoxSubSectionMenu>
+
 }
 
 export const ButtonNodeContextShowTagMenu: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
@@ -704,9 +618,9 @@ export const ButtonNodeContextShowTagMenu: FunctionComponent<FCType_ButtonNodeCo
       closeContextMenu()
     }}
     variant='contextmenu_button'
+    rightIcon={new_data.icon_library.icon_popup_menu}
   >
     {t('Menu.Etiquettes')}
-    {icon_open_modal}
   </Button>
 
 }
@@ -728,9 +642,9 @@ export const ButtonNodeContextShowTooltipMenu: FunctionComponent<FCType_ButtonNo
       closeContextMenu()
     }}
     variant='contextmenu_button'
+    rightIcon={new_data.icon_library.icon_popup_menu}
   >
     {t('Noeud.IS')}
-    {icon_open_modal}
   </Button>
 }
 

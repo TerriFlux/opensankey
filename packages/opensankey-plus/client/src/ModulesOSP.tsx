@@ -1,9 +1,27 @@
 // ==================================================================================================
-// Authors :
-//  - Vincent CLAVEL
-//  - Julien ALAPETITE
-//  - Vincent LE DOZE
-// All rights reserved for TerriFlux
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
 // External imports
@@ -12,7 +30,8 @@ import React from 'react'
 // OpenSankey imports
 import {
   MenuDraggable
-} from './deps/OpenSankey/components/topmenus/SankeyMenuTop'
+} from './deps/OpenSankey/components/topmenus/SankeyMenus'
+import { WrapperContentConfig } from './deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import {
   OpenSankeyDiagramSelector
 } from './deps/OpenSankey/components/dialogs/SankeyMenuDialogs'
@@ -20,7 +39,6 @@ import {
   FType_InitializeDiagrammSelector
 } from './deps/OpenSankey/components/dialogs/types/SankeyMenuDialogsTypes'
 import {
-  FType_InitializeReinitialization,
   FType_ModuleDialogs
 } from './deps/OpenSankey/types/FunctionTypes'
 import {
@@ -28,7 +46,6 @@ import {
 } from './deps/OpenSankey/types/MenuConfig'
 import {
   initializeAdditionalMenus,
-  initializeReinitialization,
   moduleDialogs
 } from './deps/OpenSankey/Modules'
 
@@ -43,10 +60,8 @@ import {
 } from './types/TypesOSP'
 
 import {
-  ZDTMenuAsAccordeonItemOSP,
   MenuConfigurationFreeLabelsOSP,
   ContextZDTOSP,
-  MenuPreferenceLabelsOSP
 } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLabels'
 import {
   ButtonNodeContextShowTagMenu,
@@ -61,8 +76,7 @@ import {
   MenuEnregistrerViewOSP,
   ModalViewNotSavedOSP,
   BannerViewsOSP,
-  MenuPreferenceViewOSP,
-  ViewsAccordion,
+  ViewsConfig,
 } from './components/MenuConfigEdition/SankeyPlusViews'
 import {
   SankeyMenuConfigurationNodesTooltip
@@ -91,7 +105,7 @@ import {
   MenuConfigurationLinksTooltip
 } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLinksTooltip'
 import {
-  MenuPreferenceEditionTag
+  SankeySettingsEditionElementTags
 } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationTags'
 
 import {
@@ -100,13 +114,8 @@ import {
 import {
   DrawerSequenceDataTagg,
   ImportImageAsSvgBg,
-  MenuConfEditionTag,
-  ToolBarDataTagFilter,
-  ToolBarLevelFilter,
-  ToolBarLinkTagFilter,
-  ToolBarLinkVisualFilter,
-  ToolBarNodeTagFilter,
 } from './components/UtilsOSP'
+import { ToolbarFilter } from './components/FilterComponent/TagsFilterComponent'
 
 declare const window: Window &
   typeof globalThis & {
@@ -123,16 +132,6 @@ export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = 
     new_data_plus.fromJSON(initial_data)
   }
   return new_data_plus
-}
-
-export const initializeReinitializationOSP: FType_InitializeReinitialization = (
-  new_data
-) => {
-  return () => {
-    initializeReinitialization(new_data)()
-    localStorage.removeItem('icon_imported')
-    sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
-  }
 }
 
 export const initializeDiagrammSelectorOSP: FType_InitializeDiagrammSelector = (
@@ -166,25 +165,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // Data -------------------------------------------------------------------------------
   const new_data_plus = new_data as Type_GenericApplicationDataOSP
+  const { t, has_sankey_plus, icon_library } = new_data_plus
 
-  // JSX Elements for views navbar ------------------------------------------------------
-  if (new_data_plus.has_sankey_plus) {
-    // Edition DataTag
-    additionalMenus.additional_configuration_menus_primary_accordion_elements.push(<MenuConfEditionTag
-      new_data_plus={new_data_plus}
-    />)
-
-    // AddMenu accordion views
-    additionalMenus.additional_configuration_menus_primary_accordion_elements.push(
-      <ViewsAccordion
-        new_data_plus={new_data_plus}
-      />
-    )
-  }
-  if (new_data_plus.has_sankey_plus || new_data_plus.has_views)
-    additionalMenus.externale_navbar_item['view'] = <BannerViewsOSP
-      new_data_plus={new_data_plus}
-    />
+  // Add Buttons to open banner of views
+  additionalMenus.external_top_buttons_item['views'] = <BannerViewsOSP new_data_plus={new_data_plus} />
 
   // TODO OTHER JSX ELEMENTS -----------------------------------------------------------
 
@@ -196,29 +180,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.extra_background_element = <ImportImageAsSvgBg
     new_data_plus={new_data_plus}
   />
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.tags'] = <SankeyMenuConfigurationNodesTags
-    new_data={new_data_plus}
-    menu_for_modal={false}
-  />
-
-  // Menu conf nodes
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.infos'] = <SankeyMenuConfigurationNodesTooltip
-    new_data={new_data_plus}
-    menu_for_modal={false}
-  />
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.icon'] = <NodeIconOSP
-    new_data_plus={new_data_plus}
-    menu_for_modal={false}
-  />
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.fo'] = <NodeForeignObjectOSP
-    new_data_plus={new_data_plus}
-    is_activated={new_data_plus.has_sankey_plus}
-  />
-  additionalMenus.additional_menu_configuration_nodes['Noeud.tabs.hl'] = <NodeHyperLinkOSP
-    new_data_plus={new_data_plus}
-    is_activated={new_data_plus.has_sankey_plus}
-  />
-
 
   //Context node
   additionalMenus.context_node_order.push('drag_tag', 'drag_tooltip')
@@ -230,15 +191,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   const idx_sep_3 = additionalMenus.context_node_order.indexOf('sep_3')
   additionalMenus.context_node_order.splice(idx_sep_3, 0, 'animate')
 
-  //Links
-  additionalMenus.additional_menu_configuration_links['Noeud.tags_node.tags'] = <MenuConfigurationLinksTags
-    new_data={new_data_plus}
-    menu_for_modal={false}
-  />
-  additionalMenus.additional_menu_configuration_links['Flux.IS'] = <MenuConfigurationLinksTooltip
-    new_data={new_data_plus}
-    menu_for_modal={false}
-  />
 
   // Add dashed config
   additionalMenus.additional_link_appearence_items.push(
@@ -252,7 +204,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus={new_data_plus}
     menu_for_style={menu_for_style}
   />)
-  additionalMenus.additional_link_appearence_value.push((menu_for_style:boolean)=><MenuConfLinkScientificPrecision
+  additionalMenus.additional_link_appearence_value.push((menu_for_style: boolean) => <MenuConfLinkScientificPrecision
     new_data_plus={new_data_plus}
     menu_for_style={menu_for_style}
   />)
@@ -268,33 +220,21 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
 
   //Preferences
-  additionalMenus.additional_preferences.push(
-    <MenuPreferenceEditionTag
-      new_data={new_data_plus}
-    />
-  )
-  additionalMenus.additional_preferences.push(
-    <MenuPreferenceLabelsOSP
-      new_data_plus={new_data_plus}
-    />
-  )
-  additionalMenus.additional_preferences.push(
-    <MenuPreferenceViewOSP
-      new_data_plus={new_data_plus}
-    />
-  )
-
-  //- Builds Configuration Menus FreeLabel
-  additionalMenus.additional_configuration_menus_edition_elements.push(
-    <ZDTMenuAsAccordeonItemOSP
-      new_data_plus={new_data_plus}
-      content_menu_zdt={
-        <MenuConfigurationFreeLabelsOSP
-          new_data_plus={new_data_plus}
-        />
-      }
-    />
-  )
+  // additionalMenus.additional_preferences.push(
+  //   <MenuPreferenceEditionTag
+  //     new_data={new_data_plus}
+  //   />
+  // )
+  // additionalMenus.additional_preferences.push(
+  //   <MenuPreferenceLabelsOSP
+  //     new_data_plus={new_data_plus}
+  //   />
+  // )
+  // additionalMenus.additional_preferences.push(
+  //   <MenuPreferenceViewOSP
+  //     new_data_plus={new_data_plus}
+  //   />
+  // )
 
   // Addition chackbox for dialog save JSON dagram
   additionalMenus.additional_file_save_json_option.push(
@@ -302,13 +242,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       new_data_plus={new_data_plus}
     />
   )
-
-  // Add new button for the toolbar
-  additionalMenus.toolbar_elements['link_visual_filter'] = <ToolBarLinkVisualFilter new_data_plus={new_data_plus} />
-  additionalMenus.toolbar_elements['node_tag_filter'] = <ToolBarNodeTagFilter new_data_plus={new_data_plus} />
-  additionalMenus.toolbar_elements['link_tag_filter'] = <ToolBarLinkTagFilter new_data_plus={new_data_plus} />
-  additionalMenus.toolbar_elements['data_tag_filter'] = <ToolBarDataTagFilter new_data_plus={new_data_plus} />
-  additionalMenus.toolbar_elements['aggregation'] = <ToolBarLevelFilter new_data_plus={new_data_plus} />
 
   // Place new button in desired order in the toolbar
   additionalMenus.toolbar_order.splice(1, 0, 'aggregation', 'link_visual_filter', 'node_tag_filter', 'link_tag_filter', 'data_tag_filter')
@@ -326,8 +259,81 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   //Add data sequence in footer
   additionalMenus.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus} />)
 
+
+
+
+  additionalMenus.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
+  additionalMenus.additional_node_config_style.push(<NodeForeignObjectOSP new_data_plus={new_data_plus} />)
+
   additionalMenus.template_module_key.push('intermediary')
   additionalMenus.template_module_key.push('advanced')
+
+
+  additionalMenus.additional_menu_type['presentation'] = 'presentation'
+  additionalMenus.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: !has_sankey_plus }
+  additionalMenus.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
+  additionalMenus.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus },
+  additionalMenus.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus },
+  additionalMenus.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus },
+
+  // Add menu for new menu type 'Présentation'
+  additionalMenus.additional_new_menu_config_content['presentation'] = {
+    'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
+      <MenuConfigurationFreeLabelsOSP new_data_plus={new_data_plus} />
+    </WrapperContentConfig>,
+
+    'node': <WrapperContentConfig title={t('Flux.IS')}><>
+      <SankeyMenuConfigurationNodesTooltip new_data={new_data_plus} />
+      <NodeHyperLinkOSP new_data_plus={new_data_plus} />
+    </>
+    </WrapperContentConfig>,
+
+    'flow': <WrapperContentConfig title={t('Noeud.IS')}>
+      <MenuConfigurationLinksTooltip new_data={new_data_plus} />
+    </WrapperContentConfig>,
+
+    'view': <WrapperContentConfig title={t('view.storytelling')}>
+      <ViewsConfig new_data_plus={new_data_plus}
+      />
+    </WrapperContentConfig>,
+  }
+
+  // Add menu for menu type 'data'
+  additionalMenus.additional_menu_config_content['data'] = {
+    'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
+      <SankeySettingsEditionElementTags
+        new_data={new_data_plus}
+        elementTagNameProp='data_taggs'
+      />
+    </WrapperContentConfig>
+  }
+
+  // Add menu for menu type 'context'
+  additionalMenus.additional_menu_config_content['context'] = {
+    'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
+      <>
+        <SankeySettingsEditionElementTags
+          new_data={new_data_plus}
+          elementTagNameProp='node_taggs'
+        />
+        <SankeyMenuConfigurationNodesTags
+          new_data={new_data_plus}
+          menu_for_modal={false}
+        /></>
+    </WrapperContentConfig>,
+    'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
+      <><SankeySettingsEditionElementTags
+        new_data={new_data_plus}
+        elementTagNameProp='flux_taggs'
+      />
+      <MenuConfigurationLinksTags
+        new_data={new_data_plus}
+      />
+      </>
+    </WrapperContentConfig>
+  }
+
+
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
@@ -349,7 +355,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
 
   // Cast type
   const new_data_plus = new_data as Type_GenericApplicationDataOSP
-
+  const { t } = new_data_plus
   // Add new_menus
   const content_draggable_menu_zdt = <MenuConfigurationFreeLabelsOSP
     new_data_plus={new_data_plus}
@@ -359,7 +365,8 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       dict_hook_ref_setter_show_dialog_components={new_data_plus.menu_configuration.dict_setter_show_dialog_plus as unknown as IType_DictHookRefSetterShowDialogComponents}
       dialog_name={'ref_setter_show_menu_zdt' as keyof IType_DictHookRefSetterShowDialogComponents}
       content={content_draggable_menu_zdt}
-      title={new_data_plus.t('Menu.LL')}
+      title={t('Menu.LL')}
+      maxW='20%'
     />,
     <ContextZDTOSP
       new_data_plus={new_data_plus}
@@ -380,34 +387,38 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
         new_data={new_data_plus}
         menu_for_modal={true}
       />}
-      title={new_data_plus.t('Menu.Noeuds') + ' ' + new_data_plus.t('Menu.Etiquettes')}
+      title={t('Menu.Noeuds') + ' ' + t('Menu.Etiquettes')}
+      maxW='20%'
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_link_tags'}
       content={<MenuConfigurationLinksTags
         new_data={new_data_plus}
-        menu_for_modal={true}
       />}
-      title={new_data_plus.t('Menu.flux') + ' ' + new_data_plus.t('Menu.Etiquettes')}
+      title={t('Menu.flux') + ' ' + t('Menu.Etiquettes')}
+      maxW='20%'
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_node_tooltip'}
       content={<SankeyMenuConfigurationNodesTooltip
         new_data={new_data_plus}
-        menu_for_modal={true}
       />}
-      title={new_data_plus.t('Menu.Noeuds') + ' ' + new_data_plus.t('Noeud.IS')}
+      title={t('Menu.Noeuds') + ' ' + t('Noeud.IS')}
+      maxW='20%'
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_link_tooltip'}
       content={<MenuConfigurationLinksTooltip
         new_data={new_data_plus}
-        menu_for_modal={true}
       />}
-      title={new_data_plus.t('Menu.flux') + ' ' + new_data_plus.t('Flux.IB')}
+      title={t('Menu.flux') + ' ' + t('Flux.IB')}
+      maxW='20%'
+    />,
+    <ToolbarFilter
+      new_data={new_data_plus}
     />,
   ]
 

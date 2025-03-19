@@ -34,10 +34,7 @@ import {
   default_shape_is_dashed
 } from '../../deps/OpenSankey/Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../deps/OpenSankey/Elements/LinkAttributes'
-import {
-  icon_open_modal
 
-} from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextNode'
 import {
   checked,
   sep
@@ -277,7 +274,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
 
   return <>
     {/* Choose number of significant number */}
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols_little_input' >
       {/* Choix d'affichage du nombre de chiffre significatifs  */}
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
@@ -361,9 +358,9 @@ export const ButtonLinkContextShowTooltipMenu: FunctionComponent<FCType_MenuCont
       new_data.drawing_area.link_contextualised = undefined
     }}
     variant='contextmenu_button'
+    rightIcon={new_data.icon_library.icon_popup_menu}
   >
     {t('Flux.IS')}
-    {icon_open_modal}
   </Button>
 }
 
@@ -377,9 +374,9 @@ export const ButtonLinkContextShowTagMenu: FunctionComponent<FCType_MenuContextL
       new_data.drawing_area.link_contextualised = undefined
     }}
     variant='contextmenu_button'
+    rightIcon={new_data.icon_library.icon_popup_menu}
   >
     {t('Menu.Etiquettes')}
-    {icon_open_modal}
   </Button>
 }
 

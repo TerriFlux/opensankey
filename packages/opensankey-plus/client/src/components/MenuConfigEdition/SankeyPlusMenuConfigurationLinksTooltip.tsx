@@ -3,7 +3,6 @@ import React, { FunctionComponent, MutableRefObject, useRef, useState } from 're
 import {
   Box,
   Button,
-  TabPanel,
   Textarea
 } from '@chakra-ui/react'
 
@@ -13,6 +12,8 @@ import type { Type_GenericLinkElement } from '../../deps/OpenSankey/types/Types'
 
 // Local functions
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
+import { SankeyLinkSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
+import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 
 // MENU COMPONENT ***********************************************************************
 
@@ -27,7 +28,6 @@ import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
  */
 export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigurationLinksTooltip> = ({
   new_data,
-  menu_for_modal
 }) => {
 
   // Data -------------------------------------------------------------------------------
@@ -51,6 +51,7 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
 
   // State & refs for text input
   const [editor_content_tooltip, setEditorContentTooltip] = useState('')
+  const [, setCount] = useState(0)
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
   let tmp_editor_content_tooltip = editor_content_tooltip
 
@@ -62,17 +63,17 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
     }
   }
 
-  const applyEditor=()=>{
-    const dict_old_value:{[x:string]:string}={}
-    selected_links.map(link => dict_old_value[link.id] =link.tooltip_text)
+  const applyEditor = () => {
+    const dict_old_value: { [x: string]: string } = {}
+    selected_links.map(link => dict_old_value[link.id] = link.tooltip_text)
 
-    const _applyEditor=()=>{
+    const _applyEditor = () => {
       selected_links.map(link => link.tooltip_text = tmp_editor_content_tooltip)
       setEditorContentTooltip(tmp_editor_content_tooltip)
       // Toogle saving indicator
       new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     }
-    const inv_applyEditor=()=>{
+    const inv_applyEditor = () => {
       selected_links.map(link => link.tooltip_text = dict_old_value[link.id])
       setEditorContentTooltip(selected_links[0].tooltip_text)
     }
@@ -122,17 +123,11 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
   }
 
   // Link with new_data components updater
-  new_data.menu_configuration.ref_to_menu_config_links_tooltips_updater.current = resetTextEditor
+  new_data.menu_configuration.ref_to_menu_config_links_tooltips_updater.current = () => { setCount(a => a + 1); resetTextEditor() }
 
   // JSX Components ---------------------------------------------------------------------
 
-  const content = <>
-    <Box
-      as='span'
-      layerStyle='menuconfigpanel_part_title_1'
-    >
-      {t('Noeud.IB')}
-    </Box>
+  const content = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.IB')}><>
     <OSTooltip label={new_data.has_sankey_plus ? t('Flux.tooltips.IB') : t('Menu.sankeyOSPDisabled')}>
       <Textarea
         isDisabled={!new_data.has_sankey_plus}
@@ -173,11 +168,8 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
       </Button>
     </Box>
   </>
-
-  return menu_for_modal ?
-    content
-    :
-    <TabPanel >
-      {content}
-    </TabPanel>
+  </WrapperBoxSubSectionMenu>
+  return <><SankeyLinkSelectionSimple new_data={new_data} />
+    {selected_links.length > 0 ? content : <></>}
+  </>
 }

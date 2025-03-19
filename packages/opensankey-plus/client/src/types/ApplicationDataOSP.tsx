@@ -23,6 +23,7 @@ import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { ClassTemplate_NodeElementOSP } from './NodeOSP'
 import { ClassTemplate_SankeyOSP } from './SankeyOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
+import { Class_IconLibraryOSP } from './IconLibrairieOSP'
 
 export interface Type_SaveDiagramOptionsOSP extends Type_SaveDiagramOptions {
   only_current_view?: boolean
@@ -58,9 +59,6 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
   // Static path
   public override static_path: string = 'static/sankeyanimation'
-
-  // Override all item selectable in SankeyMenuPreference
-  protected _preference_menu_all_item: string[] = [...this.preference_menu_all_item, 'EN', 'EF', 'ED', 'LL', 'Vis']
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -138,6 +136,16 @@ export abstract class ClassTemplate_ApplicationDataOSP
       this._original_current_view.delete()
       this._original_current_view = undefined
     }
+  }
+
+  /**
+   * Reset data & delete application data in navigator cache   *
+   * @memberof ClassTemplate_ApplicationDataOSP
+   */
+  public override reinitialization(redraw:boolean=true): void {
+    super.reinitialization(redraw)
+    localStorage.removeItem('icon_imported')
+    sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
   }
 
   // SAVING METHODS =====================================================================
@@ -221,27 +229,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
     ) {
       this._drawing_area = this._views[active_view_id]
     }
+  }
 
-    // Update displayed element in menu config
-    this.updateDisplayedConfigMenu()
-  }
-  /**
-   * Function that check elements in saneky and display sub config menu in menu configuration
-   *
-   * @memberof ClassTemplate_ApplicationDataOSP
-   */
-  public updateDisplayedConfigMenu() {
-    if (this._drawing_area.sankey.node_taggs_list.length > 0)
-      this.menu_configuration.addToAccordionsToShow('EN')
-    if (this._drawing_area.sankey.flux_taggs_list.length > 0)
-      this.menu_configuration.addToAccordionsToShow('EF')
-    if (this._drawing_area.sankey.data_taggs_list.length > 0)
-      this.menu_configuration.addToAccordionsToShow('ED')
-    if (this._drawing_area.sankey.containers_list.length > 0)
-      this.menu_configuration.addToAccordionsToShow('LL')
-    if (this._views_order.length > 1)
-      this.menu_configuration.addToAccordionsToShow('Vis')
-  }
 
   /**
    * Function to add views from a JSON file to current application data
@@ -372,9 +361,6 @@ export abstract class ClassTemplate_ApplicationDataOSP
       evt.preventDefault()
       // Create a new view from current displayed sankey
       this.createNewView()
-
-      if (!this.menu_configuration.isGivenAccordionShowed('Vis'))
-        this.menu_configuration.toggleGivenAccordion('Vis')
     }
 
     // Changing view to is_master ---------------------------------------------------------------
@@ -398,7 +384,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
   }
 
   protected override _pre_process_export_svg(): d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | undefined {
-    const svg_clone=super._pre_process_export_svg()
+    const svg_clone = super._pre_process_export_svg()
 
     svg_clone?.selectAll('.node_fo').raise() // place correctly image html in in node <g> to avoid problem at export
 
@@ -518,8 +504,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
         this._drawing_area.draw()
 
         this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
-        
-        this._history=new Class_ApplicationHistory(this._menu_configuration)
+
+        this._history = new Class_ApplicationHistory(this._menu_configuration)
 
         // Update components related to viewss
         this._menu_configuration.updateAllMenuComponents()
@@ -672,6 +658,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
   // Override getter & setter so we can get new type
   public get menu_configuration(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
   public set menu_configuration(_: Class_MenuConfigOSP) { this._menu_configuration = _ }
+
+  public get icon_library():Class_IconLibraryOSP { return this._icon_library as Class_IconLibraryOSP }
 
   // Views
   public get views(): Type_GenericDrawingArea[] {

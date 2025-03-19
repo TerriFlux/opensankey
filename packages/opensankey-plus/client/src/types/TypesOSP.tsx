@@ -16,6 +16,7 @@ import { Class_NodeAttributeOSP, ClassTemplate_NodeElementOSP, Class_NodeStyleOS
 import { Class_LinkAttributeOSP, ClassTemplate_LinkElementOSP, Class_LinkStyleOSP } from './LinkOSP'
 import { Class_ContainerElement } from './FreeLabel'
 import { ClassTemplate_ZoneSelectionOSP } from './SelectionZoneOSP'
+import { Class_IconLibraryOSP } from './IconLibrairieOSP'
 
 // STANDARD TYPES FOR OPENSANKEY+ AND MORE **********************************************
 
@@ -38,6 +39,7 @@ export class Class_ApplicationDataOSP
     Class_LinkElementOSP
   > {
 
+
   public createNewMenuConfiguration(): Class_MenuConfigOSP {
     return new Class_MenuConfigOSP()
   }
@@ -48,6 +50,9 @@ export class Class_ApplicationDataOSP
       id
     )
     return drawing_area
+  }
+  public createNewIconLibrary(): Class_IconLibraryOSP {
+    return new Class_IconLibraryOSP()
   }
 }
 

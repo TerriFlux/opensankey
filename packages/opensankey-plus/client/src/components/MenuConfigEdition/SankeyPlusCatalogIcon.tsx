@@ -1,7 +1,6 @@
 
 import * as d3 from 'd3'
 import React, { FunctionComponent, useState, useRef, ChangeEvent } from 'react'
-import { FaPlus } from 'react-icons/fa'
 import {
   Box,
   Card,
@@ -211,7 +210,6 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
 
       <Heading>{t('Import')}</Heading>
       <Divider />
-      <FaPlus style={{ width: '5em', height: '5em' }} />
     </CardBody>
   </Card>
 

@@ -15,3 +15,20 @@ export const drawer_sequence=defineStyle({
     padding:'0'
   }
 })
+export const drawer_menu_filter=defineStyle({
+  dialog:{
+    maxWidth:'inherit',
+    background:'primaire.5',
+    borderRadius:'4px'
+
+  },
+  dialogContainer:{
+    width:'inherit',
+    background:'none',
+    zIndex:1
+  },
+  body:{
+    overflow:'unset',
+    padding:'0',
+  }
+})
