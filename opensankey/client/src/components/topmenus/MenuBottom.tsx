@@ -72,18 +72,22 @@ const ComponentMouseMode: FunctionComponent<FCType_ToolbarSubComponent> = ({ new
         id='button_selection_edition'
         size='sizeToolbarButton'
         onClick={() => {
-          new_data.drawing_area.setToModeEdition(true)
-          updateParentComponent()
+          if (!new_data.drawing_area.isInEditionMode()) {
+            new_data.drawing_area.switchMode()
+            updateParentComponent()
+          }
         }}>
         {new_data.icon_library.icon_DA_edit}
       </Button>
       <Button
-        variant={!new_data.drawing_area.isInEditionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        variant={new_data.drawing_area.isInSelectionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
         id='button_selection_edition'
         size='sizeToolbarButton'
         onClick={() => {
-          new_data.drawing_area.setToModeEdition(false)
-          updateParentComponent()
+          if (!new_data.drawing_area.isInSelectionMode()) {
+            new_data.drawing_area.switchMode()
+            updateParentComponent()
+          }
         }}>
         {new_data.icon_library.icon_DA_selection}
       </Button>
