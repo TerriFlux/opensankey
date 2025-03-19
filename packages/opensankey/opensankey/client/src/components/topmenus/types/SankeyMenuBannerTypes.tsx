@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,34 +24,32 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { drawerAnatomy } from '@chakra-ui/anatomy'
-import { createMultiStyleConfigHelpers } from '@chakra-ui/react'
+import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
 
-const { definePartsStyle } =
-  createMultiStyleConfigHelpers(drawerAnatomy.keys)
+export type FType_SetDiagram = (
+  the_diagram: string,
+  new_data: Type_GenericApplicationData
+) => void
 
-// Define the base component styles
-export const drawer_base_style = definePartsStyle({})
+export type FCType_ToolBarBottom = {
+  new_data: Type_GenericApplicationData,
+}
 
-// Style for the drawer containing the configuration menu
-export const drawer_menu_config = definePartsStyle({
-  dialog: {
-    maxWidth: 'inherit',
-    borderRadius: '4px',
-    background: 'none',
-    boxShadow: 'unset',
-    height:'fit-content',
-    overflowY:'unset',
-  },
-  dialogContainer: {
-    width: 'inherit',
-    background: 'none',
-    zIndex: 1
-  },
-  body: {
-    padding: '0',
-    overflow:'unset'
-  },
+/**
+ * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
+ */
+export type FCType_ToolbarBuilder = {
+  new_data: Type_GenericApplicationData,
+  additionalMenu: Type_AdditionalMenus,
+}
 
-})
+export type FCType_ToolbarSubComponent = {
+  new_data: Type_GenericApplicationData,
+  updateParentComponent:()=>void
+}
+
+export type FType_StretchButtons = (
+  new_data: Type_GenericApplicationData
+) => JSX.Element
+
 

@@ -198,7 +198,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   // JSX -------------------------------------------------------------------------------
 
   const content = <Box
-    layerStyle='menuconfigpanel_grid'
+    layerStyle='menu_sub_section'
   >
     {
       // Définition des valeurs selon les paramètre dataTags

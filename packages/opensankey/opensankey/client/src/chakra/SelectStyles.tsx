@@ -31,11 +31,11 @@ const { definePartsStyle } = createMultiStyleConfigHelpers(selectAnatomy.keys)
 
 export const select_base_style = definePartsStyle({
   field: {
-    height: '2rem',
+    height: '1.5rem',
     border: 'solid 1px',
     borderRadius: '6px',
     borderColor: 'gray.50',
-    textStyle: 'h4',
+    fontSize: 'unset',
     bg: 'white',
     bgColor: 'white',
     _disabled: {
@@ -51,14 +51,14 @@ export const select_base_style = definePartsStyle({
 
 export const select_custom_style = definePartsStyle({
   field: {
+    height: '1.5rem',
     borderRadius: '0px 6px 6px 0px',
-    fontSize: '12px'
   }
 })
 
 export const menuconfigpanel_option_select = definePartsStyle({
   field: {
-    height: '2rem',
+    height: '1.5rem',
     border: 'solid 1px',
     borderRadius: '6px',
     borderColor: 'gray.50',
@@ -69,10 +69,15 @@ export const menuconfigpanel_option_select = definePartsStyle({
 export const menuconfigpanel_option_select_table = definePartsStyle({
   field: {
     paddingLeft:'0.25rem',
+    paddingRight:'0.8rem',
     height: 'revert',
     border: 'solid 1px',
     borderRadius: '6px',
     borderColor: 'gray.50',
+  },
+  icon:{
+    width:'0.75rem',
+    height:'0.75rem',
   }
 })
 
