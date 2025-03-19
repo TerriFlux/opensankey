@@ -26,8 +26,6 @@
 
 import React, { FunctionComponent, useState } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
 
 import {
   Box,
@@ -38,7 +36,6 @@ import {
   MenuItem,
   MenuList
 } from '@chakra-ui/react'
-import { ChevronRightIcon } from '@chakra-ui/icons'
 
 /*************************************************************************************************/
 
@@ -48,7 +45,6 @@ import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttribu
 
 /*************************************************************************************************/
 
-const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 export const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 export const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
 
@@ -202,9 +198,9 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
         new_data.drawing_area.link_contextualised = undefined
       }}
       variant='contextmenu_button'
+      rightIcon={new_data.icon_library.icon_popup_menu}
     >
       {t('Flux.apparence.apparence')}
-      {icon_open_modal}
     </Button> :
     <></>
 
@@ -214,7 +210,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       <MenuButton
         variant='contextmenu_button'
         as={Button}
-        rightIcon={<ChevronRightIcon />}
+        rightIcon={new_data.icon_library.icon_open_selector}
         className="dropdown-basic"
       >
         {t('Noeud.SelectStyle')}
@@ -243,7 +239,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       <MenuButton
         variant='contextmenu_button'
         as={Button}
-        rightIcon={<ChevronRightIcon />}
+        rightIcon={new_data.icon_library.icon_open_selector}
         className="dropdown-basic"
       >
         {t('Noeud.editStyle')}
@@ -267,7 +263,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       <MenuButton
         variant='contextmenu_button'
         as={Button}
-        rightIcon={<ChevronRightIcon />}
+        rightIcon={new_data.icon_library.icon_open_selector}
         className="dropdown-basic"
       >
         {t('Flux.layout')}
@@ -307,9 +303,9 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
         new_data.drawing_area.link_contextualised = undefined
       }}
       variant='contextmenu_button'
+      rightIcon={new_data.icon_library.icon_popup_menu}
     >
       {t('Flux.data.données')}
-      {icon_open_modal}
     </Button> :
     <></>
 
@@ -332,7 +328,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       <MenuButton
         variant='contextmenu_button'
         as={Button}
-        rightIcon={<ChevronRightIcon />}
+        rightIcon={new_data.icon_library.icon_open_selector}
         className="dropdown-basic"
       >
         {t('Flux.data.edit_value')}

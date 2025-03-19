@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
+import React, { Dispatch, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import i18next, { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -50,6 +50,7 @@ import { DataSuiteType } from './LegacyType'
 import { Type_SaveDiagramOptions } from '../components/dialogs/types/SankeyPersistenceTypes'
 import { JSONtoExcel, retrieveExcelResults } from '../components/dialogs/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
+import { Class_IconLibrary } from './IconLibrairie'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -138,6 +139,17 @@ export abstract class ClassTemplate_ApplicationData
   protected _menu_configuration: Class_MenuConfig
 
   /**
+ * Librairie containing icon for the app
+ *
+ * @protected
+ * @type {Class_MenuConfig}
+ * @memberof ClassTemplate_ApplicationData
+ */
+  protected _icon_library: Class_IconLibrary
+
+
+
+  /**
    * Application logo
    * @private
    * @type {string}
@@ -180,14 +192,6 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _is_reconcilied: boolean = false
 
-
-  /**
-   * All item selectable in SankeyMenuPreference
-   * @protected
-   * @type {string[]}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  protected _preference_menu_all_item: string[] = []
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -271,13 +275,6 @@ export abstract class ClassTemplate_ApplicationData
    */
   private _language?: string | undefined
 
-  /**
-   * Ref to checkbox of displayed menu in SankeyMenuPreference
-   * @private
-   * @type {{ [_: string]: RefObject<HTMLInputElement> }}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  private _checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
 
   // TODO ???
   private _processFunction: FType_ProcessFunctions
@@ -341,7 +338,8 @@ export abstract class ClassTemplate_ApplicationData
     // For published mode only
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
-
+    // Librairie of icon
+    this._icon_library = this.createNewIconLibrary()
     // Get OpenSankey logo
     this._logo_opensankey = 'logos/logo_opensankey.png'
     // Get TerriFlux logo
@@ -375,6 +373,7 @@ export abstract class ClassTemplate_ApplicationData
 
   public abstract createNewDrawingArea(id?: string): Type_GenericDrawingArea
   public abstract createNewMenuConfiguration(): Class_MenuConfig
+  public abstract createNewIconLibrary(): Class_IconLibrary
 
   // CLEANING METHODS ===================================================================
   /**
@@ -419,9 +418,31 @@ export abstract class ClassTemplate_ApplicationData
     this._is_reconcilied = false
 
     // Reset Class_DataHistory
-    this._history=new Class_ApplicationHistory(this._menu_configuration)
+    this._history = new Class_ApplicationHistory(this._menu_configuration)
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
+  }
+
+  /**
+   * Reset data & delete application data in navigator cache
+   *
+   * @memberof ClassTemplate_ApplicationData
+   */
+  public reinitialization(redraw: boolean = true) {
+    localStorage.removeItem('diff')
+    localStorage.removeItem('data')
+    localStorage.removeItem('last_save')
+    localStorage.removeItem('initial_data')
+    localStorage.removeItem('icon_imported')
+
+    // Reset Class_ApplicationData instance
+    if (redraw) {
+      this.reset()
+      this.draw()
+    }
+
+    sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
+    sessionStorage.setItem('dismiss_warning_sankey_mfa', '0')
   }
 
   // SAVING METHODS =====================================================================
@@ -776,14 +797,14 @@ export abstract class ClassTemplate_ApplicationData
         selector: '.sideToolBar',
         content: this.t('guide.toolbar'),
         actionAfter: () => {
-          this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+          this.menu_configuration.ref_menu_opened.current[1](true)
           setTimeout(() => { }, 500)
         }
       },
       {
         selector: '.drawer_menu_config ',
         content: this.t('guide.menu_config'),
-        actionAfter: () => this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+        actionAfter: () => this.menu_configuration.ref_menu_opened.current[1](true)
       },
       {
         selector: '.menutop_button_save_in_cache',
@@ -824,10 +845,10 @@ export abstract class ClassTemplate_ApplicationData
     model: TModel,
     key: TKey,
     value: TModel[TKey],
-    func:(_:TModel[TKey])=>void
+    func: (_: TModel[TKey]) => void
   ) {
     const old_val = model[key]
-    this._history.saveUndo(() => { func(old_val)})
+    this._history.saveUndo(() => { func(old_val) })
     this._history.saveRedo(() => { func(value) })
     func(value)
   }
@@ -912,7 +933,7 @@ export abstract class ClassTemplate_ApplicationData
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {
-      app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+      app_ref.menu_configuration.ref_menu_opened.current[1](!app_ref.menu_configuration.ref_menu_opened.current[0])
     }
     // Event to restore application display as neutral --------------------------------
     else if (evtKeyEsc) {
@@ -930,7 +951,7 @@ export abstract class ClassTemplate_ApplicationData
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
       // Delete selected elements
-      app_ref.drawing_area.deleteSelection(true,true)
+      app_ref.drawing_area.deleteSelection(true, true)
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -987,12 +1008,12 @@ export abstract class ClassTemplate_ApplicationData
       }
     }
     // Undo
-    else if (evtCtrlZ){
+    else if (evtCtrlZ) {
       evt.preventDefault()
       this._history.applyUndo()
     }
     // Redo
-    else if (evtCtrlY || evtCtrlShiftZ){
+    else if (evtCtrlY || evtCtrlShiftZ) {
       evt.preventDefault()
       this._history.applyRedo()
     }
@@ -1111,6 +1132,7 @@ export abstract class ClassTemplate_ApplicationData
   public get is_static(): boolean { return this._drawing_area.static }
 
   public get history(): Class_ApplicationHistory { return this._history }
+  public get icon_library(): Class_IconLibrary { return this._icon_library }
 
   public get steps(): StepType[] { return this._steps }
 
@@ -1141,8 +1163,6 @@ export abstract class ClassTemplate_ApplicationData
   public get processFunction(): FType_ProcessFunctions { return this._processFunction }
 
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
-  public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
-  public get preference_menu_all_item() { return this._preference_menu_all_item }
 
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }

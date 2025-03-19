@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,7 +28,6 @@ import { extendTheme } from '@chakra-ui/react'
 
 import {
   accordion_base_style,
-  accordion_sublevel_style
 } from './AccordionStyles'
 import {
   badge_base_style,
@@ -58,7 +57,7 @@ import {
   menutop_button_with_dropdown,
   menutop_button,
   submenu_nav_btn_dropdown_item_demo,
-  toolbar_button_1,
+  toolbar_button_mouse_mode,
   toolbar_button_2,
   toolbar_button_3,
   toolbar_button_5,
@@ -68,6 +67,19 @@ import {
   btn_documentation,
   button_is_spreadsheet,
   button_is_spreadsheet_selected,
+  toolbar_button_mouse_mode_activated,
+  toolbar_button_undo_redo,
+  toolbar_button_undo_redo_activated,
+  sizeToolbarButton,
+  sizeMenuTopButton,
+  sizeMenuTopButtonSaveCache,
+  button_config_element,
+  button_config_element_activated,
+  button_type_config_activated,
+  button_type_config,
+  menu_sub_section_collapse_button,
+  sizeCollapseButton,
+  text_menu_select,
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -96,7 +108,7 @@ import {
 } from './CloseButtonStyle'
 import {
   drawer_base_style,
-  drawer_menu_config
+  drawer_menu_config,
 } from './DrawerStyles'
 import {
   input_base_style,
@@ -109,6 +121,7 @@ import {
   menu_button_base_style,
   menu_button_subnav_account_style,
   menu_button_subnav_style,
+  menu_select_elements,
   menu_subnav_item_demo
 } from './MenuStyles'
 import {
@@ -146,7 +159,7 @@ import {
   heading_base_style,
   heading_template_dashboard,
   heading_template_sankey,
-  heading_welcome_style
+  heading_welcome_style,
 } from './HeadingStyles'
 import {
   breadcrumb_base_style,
@@ -176,7 +189,6 @@ export const opensankey_theme = extendTheme({
   components: {
     Accordion: {
       baseStyle: accordion_base_style,
-      variants: { accordion_sublevel_style }
     },
     Badge: {
       baseStyle: badge_base_style,
@@ -207,7 +219,10 @@ export const opensankey_theme = extendTheme({
         menutop_button_with_dropdown,
         menutop_button,
         submenu_nav_btn_dropdown_item_demo,
-        toolbar_button_1,
+        toolbar_button_mouse_mode,
+        toolbar_button_mouse_mode_activated,
+        toolbar_button_undo_redo,
+        toolbar_button_undo_redo_activated,
         toolbar_button_2,
         toolbar_button_3,
         toolbar_button_5,
@@ -217,6 +232,18 @@ export const opensankey_theme = extendTheme({
         btn_documentation,
         button_is_spreadsheet,
         button_is_spreadsheet_selected,
+        button_config_element,
+        button_config_element_activated,
+        button_type_config,
+        button_type_config_activated,
+        menu_sub_section_collapse_button,
+        text_menu_select,
+      },
+      sizes: {
+        sizeToolbarButton,
+        sizeMenuTopButton,
+        sizeMenuTopButtonSaveCache,
+        sizeCollapseButton,
       }
     },
     ButtonGroup: {
@@ -281,6 +308,7 @@ export const opensankey_theme = extendTheme({
         menu_button_subnav_style,
         menu_button_subnav_account_style,
         menu_subnav_item_demo,
+        menu_select_elements
       }
     },
     NumberInput: {
@@ -335,7 +363,7 @@ export const opensankey_theme = extendTheme({
     Drawer: {
       baseStyle: drawer_base_style,
       variants: {
-        drawer_menu_config
+        drawer_menu_config,
       }
     },
     Heading: {
@@ -351,6 +379,9 @@ export const opensankey_theme = extendTheme({
     }
   },
   layerStyles: {
+    base: {
+      margin: 0
+    },
     context_menu: {
       display: 'grid',
       rowGap: '0.1rem',
@@ -368,12 +399,6 @@ export const opensankey_theme = extendTheme({
       textAlign: 'left',
       flex: '1'
     },
-    submenuconfig_droplist: {
-      textStyle: 'h2',
-      textAlign: 'left',
-      flex: '1',
-      height: '2rem'
-    },
     submenuconfig_tab: {
       textStyle: 'h3',
       textAlign: 'center',
@@ -387,17 +412,17 @@ export const opensankey_theme = extendTheme({
       display: 'grid',
       gridColumnGap: '0.25rem',
       gridTemplateColumns: '1fr 1fr',
-      height: '2rem',
       paddingEnd: '0em',
       paddingStart: '1em',
       textAlign: 'center',
       textStyle: 'h3',
     },
-    menuconfigpanel_part_title_1: {
-      textStyle: 'h2',
+    menu_sub_section_title: {
       textAlign: 'center',
       display: 'block',
-      height: '2rem'
+      margin: 'auto',
+      width: '100%',
+
     },
     menuconfigpanel_part_title_2: {
       textStyle: 'h3',
@@ -437,37 +462,44 @@ export const opensankey_theme = extendTheme({
     },
     menuconfigpanel_row_droplist: {
       display: 'grid',
-      gridTemplateColumns: '1fr 5fr 1fr 1fr',
+      gridTemplateColumns: '1fr 7fr 1fr 1fr',
       gridColumnGap: '0.25rem',
-      height: '2rem'
+
+
+    },
+    menuconfigpanel_row_droplist_simple: {
+      display: 'grid',
+      gridColumnGap: '0.25rem',
+      gridTemplateColumns: '8fr 1fr',
     },
     menuconfigpanel_zdt_row_droplist: {
       display: 'grid',
       gridTemplateColumns: '1fr 6fr 1fr 1fr 1fr',
       gridColumnGap: '0.25rem',
-      height: '2rem'
     },
     menuconfigpanel_row_stylechoice: {
       display: 'grid',
-      gridTemplateColumns: '1fr 6fr 1fr',
+      gridTemplateColumns: '1fr 1fr 6fr',
       gridColumnGap: '0.25rem',
-      height: '2rem'
     },
     menuconfigpanel_row_2cols: {
       display: 'grid',
       gridTemplateColumns: '2fr 3fr',
       gridColumnGap: '0.25rem',
-      height: '2rem'
+    },
+    menuconfigpanel_row_2cols_little_input: {
+      display: 'grid',
+      gridTemplateColumns: '3fr 2fr',
+      gridColumnGap: '0.25rem',
     },
     menuconfigpanel_row_3cols: {
       display: 'grid',
       gridTemplateColumns: '2fr 1.5fr 1.5fr',
       gridColumnGap: '0.25rem',
-      height: '2rem'
     },
     menuconfigpanel_2row_3cols: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1.5fr 1.5fr',
+      gridTemplateColumns: '2fr 1.25fr 1.75fr',
       gridTemplateRows: '1fr 2fr',
       gridColumnGap: '0',
       gridRowGap: '0',
@@ -476,7 +508,7 @@ export const opensankey_theme = extendTheme({
     menutop_layout_style: {
       display: 'grid',
       gridColumnGap: '0.25rem',
-      height: 'max-content',
+      height: 'unset',
       width: 'auto',
       padding: '0',
       margin: '0px 3px 0px 3px',
@@ -525,25 +557,21 @@ export const opensankey_theme = extendTheme({
       display: 'grid',
       gridTemplateColumns: '2fr 1fr',
       gridColumnGap: '0.12rem',
-      height: '2rem'
     },
     options_2cols: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gridColumnGap: '0.12rem',
-      height: '2rem'
     },
     options_3cols: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
       gridColumnGap: '0.12rem',
-      height: '2rem'
     },
     options_4cols: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr 1fr',
       gridColumnGap: '0.12rem',
-      height: '2rem'
     },
     options_cards: {
       display: 'grid',
@@ -557,11 +585,6 @@ export const opensankey_theme = extendTheme({
       gridTemplateColumns: '1fr 3fr',
       gridColumnGap: '0.25rem',
     },
-    welcome_license_row_inverse: {
-      display: 'grid',
-      gridTemplateColumns: '3fr 1fr',
-      gridColumnGap: '0.25rem',
-    },
     welcome_license_desc: {
       whiteSpace: 'pre-line'
     },
@@ -569,48 +592,46 @@ export const opensankey_theme = extendTheme({
       display: 'grid',
       gridTemplateColumns: '1fr 6fr 1fr',
       gridColumnGap: '0.25rem',
-      height: '2rem'
     },
     popover_sidebar_row_tag_filter: {
       display: 'grid',
       gridTemplateColumns: '4fr 1fr',
       gridColumnGap: '0.25rem',
-      height: '2rem'
     },
-    popover_sidebar_layout_filter: {
-      display: 'grid',
-      gridTemplateColumns: 'auto 15rem 5rem',
-      gridColumnGap: '1.25rem',
-      height: '2rem',
-      alignItems: 'center'
-    },
-    menucontext_layout: {
+    menu_draggable_layout: {
       padding: '0.25rem',
       display: 'grid',
       gridRowGap: '0.5rem',
       gridColGap: '0.5rem',
       alignItems: 'center',
       width: 'fit-content',
-      maxWidth: '40vw',
       color: 'gray.600',
       bg: 'white',
       bgColor: 'white',
       border: 'solid 1px',
       borderColor: 'primaire.2',
       borderRadius: '6px',
+      fontSize:'0.6rem'
     },
-    menucontext_title_layout: {
+    menu_draggable_title_layout: {
       display: 'grid',
       gridTemplateColumns: '9fr 1fr',
       gridColumnGap: '0.25rem',
       margin: '0.25rem',
-      borderBottom: ' 1px solid',
-      borderBottomColor: 'primaire.2',
-      height: '2rem',
       alignItems: 'center',
-      alignContent: 'center'
+      alignContent: 'center',
+
+      padding: '1rem',
+
+      height: 'fit-content',
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      color: 'white',
+      background: 'primaire.2',
+      borderRadius: '6px',
+      paddingRight: '1rem'
     },
-    menucontext_entries_layout: {
+    menu_draggable_content_layout: {
       display: 'grid',
       gridRowGap: '0.25rem',
       fontStyle: 'h4',
@@ -620,7 +641,129 @@ export const opensankey_theme = extendTheme({
     image_layout: {
       height: '100%',
       margin: '1rem'
-    }
+    },
+    toolbar_bottom: {
+      display: 'grid',
+      gridTemplateColumns: '2fr 2fr 3fr 1fr',
+      gridColumnGap: '1rem',
+      position: 'fixed',
+      zIndex: 1,
+      width: 'fit-content',
+      left: '50%',
+      transform: 'translate(-50%)'
+    },
+    config_menu_layout: {
+      display: 'grid',
+      gridGap: '0.2rem',
+      gridTemplateColumns: '8fr 1fr',
+      gridTemplateAreas: `'header  header  header' 
+      'content content sidebar' 
+      'content content sidebar'`,
+      color: '#444',
+      borderRadius: '5px',
+      padding: '0.2rem',
+      fontSize: '0.6rem',
+    },
+    config_box: {
+      gridArea: 'content',
+      display: 'grid',
+      gridRowGap: '0.2rem',
+      color: 'primaire.5',
+      overflowY: 'auto',
+    },
+    element_box: {
+      gridArea: 'sidebar'
+
+    },
+    type_config_box: {
+      gridArea: 'header',
+    },
+    box_content_config: {
+      background: 'white',
+      borderRadius: '4px',
+      padding: '0.2rem',
+      display: 'grid',
+      gridRowGap: '0.2rem',
+      gridAutoRows: 'max-content',
+
+      '.title_box': {
+        padding: '0.4rem',
+        width: '100%',
+        background: 'primaire.2',
+        borderRadius: '4px',
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: '0.8rem',
+      }
+    },
+    menu_sub_section: {
+      display: 'grid',
+      border: '1px solid black',
+      borderRadius: '4px',
+      gridRowGap: '0.2rem',
+      padding: '0.2rem'
+    },
+    menu_sub_section_head: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 9fr'
+    },
+    selector_elements: {
+      // Styling box containing multi select
+      width: '9rem',
+      height: '1.5rem',
+
+      // Styling of react component multi select
+      '.rmsc .dropdown-container': {
+        height: '1.5rem !important',
+      },
+
+      '.dropdown-content ul': {
+        minHeight: 'unset',
+        maxHeight: '8rem',
+      },
+
+      '.rmsc': {
+        '--rmsc-radius': '6px !important',
+        '--rmsc-h': '1.5rem !important',
+        '-webkit-user-select': 'none',  /* Chrome all / Safari all */
+        '-moz-user-select': 'none',    /* Firefox all */
+        '-ms-user-select': 'none',     /* IE 10+ */
+        'user-select': 'none',
+      }
+    },
+    selector_elements_simple: {
+      // Styling box containing multi select
+      width: '14vw',
+      height: '1.5rem',
+
+      // Styling of react component multi select
+      '.rmsc .dropdown-container': {
+        height: '1.5rem !important',
+      },
+      '.dropdown-content ul': {
+        minHeight: 'unset',
+        maxHeight: '8rem',
+      },
+
+      '.rmsc': {
+        '--rmsc-radius': '6px !important',
+        '--rmsc-h': '1.5rem !important',
+        '-webkit-user-select': 'none',  /* Chrome all / Safari all */
+        '-moz-user-select': 'none',    /* Firefox all */
+        '-ms-user-select': 'none',     /* IE 10+ */
+        'user-select': 'none',
+      }
+    },
+    empty_config_text: {
+      color: 'white',
+      fontSize: '0.7rem',
+    },
+    text_menu_select:{
+      overflow:'hidden',
+      textOverflow:'ellipsis',
+      whiteSpace:'nowrap',
+    },
+
   },
   textStyles: {
     xl: {
@@ -640,23 +783,27 @@ export const opensankey_theme = extendTheme({
     },
     h1: {
       fontFamily: 'Open Sans,sans-serif',
-      fontSize: '16px',
+      // fontSize: '16px',
       fontWeight: 'bold',
     },
     h2: {
       fontFamily: 'Open Sans,sans-serif',
-      fontSize: '14px',
+      // fontSize: '14px',
       fontWeight: 'bold',
     },
     h3: {
       fontFamily: 'Open Sans,sans-serif',
-      fontSize: '12px',
+      // fontSize: '12px',
       fontWeight: 'bold',
     },
     h4: {
       fontFamily: 'Open Sans,sans-serif',
-      fontSize: '12px',
+      // fontSize: '12px',
       fontWeight: 'normal',
+    },
+    title_sub_section: {
+      fontSize: '0.7rem',
+      fontWeight: 'bold',
     }
   },
   colors: {

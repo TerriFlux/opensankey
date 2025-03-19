@@ -25,27 +25,15 @@
 // ==================================================================================================
 
 import React, { FunctionComponent, useRef, useState } from 'react'
-import { FaPlus, FaMinus, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { MultiSelect } from 'react-multi-select-component'
 
 import {
   Box,
-  Button,
-  InputGroup,
-  Input,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab
+  Button
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
 
 import type {
-  Type_MenuSelectionEntry
-} from '../topmenus/SankeyMenuTop'
-import type {
-  Type_AdditionalMenus,
   Type_GenericApplicationData,
   Type_GenericNodeElement
 } from '../../types/Types'
@@ -55,34 +43,29 @@ import type {
 import {
   OSTooltip
 } from '../../types/Utils'
-import { SankeyMenuConfigurationNodesIO } from './SankeyMenuConfigurationNodesIO'
-import { SankeyWrapperConfigInModalOrMenu } from './SankeyMenuConfigurationNodesAttributes'
 import { ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
 
 
 /*************************************************************************************************/
 
 type FCType_SankeyNodeEdition = {
   new_data: Type_GenericApplicationData,
-  menu_configuration_nodes_attributes: JSX.Element,
-  additionalMenus: Type_AdditionalMenus
 }
 
 /*************************************************************************************************/
 
-const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
+export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = (
   {
     new_data,
-    menu_configuration_nodes_attributes,
-    additionalMenus
   }
 ) => {
 
   // Datas ------------------------------------------------------------------------------
 
   // Traduction
-  const { t } = new_data
-
+  const { t, icon_library } = new_data
+  const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible } = icon_library
   // Nodes to select --------------------------------------------------------------------
 
   let nodes: Type_GenericNodeElement[]
@@ -97,8 +80,7 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
     nodes = new_data.drawing_area.sankey.visible_nodes_list_sorted
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
-  const entries_for_nodes: Type_MenuSelectionEntry[] = nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
-  const entries_for_selected_nodes: Type_MenuSelectionEntry[] = selected_nodes.map((d) => { return { 'label': d.name, 'value': d.id } })
+  const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id,selected:selected_nodes.includes(d) } })
 
   // Menu updaters ----------------------------------------------------------------------
 
@@ -133,62 +115,6 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
   }
 
   // JSX Components ---------------------------------------------------------------------
-
-  const ui: { [s: string]: JSX.Element } = {
-    'Noeud.tabs.apparence': <SankeyWrapperConfigInModalOrMenu
-      menu_to_wrap={menu_configuration_nodes_attributes}
-      for_modal={false}
-      idTab={'node_attr'}
-    />,
-    ...additionalMenus.additional_menu_configuration_nodes
-  }
-
-
-
-  ui['Noeud.tabs.io'] = <SankeyMenuConfigurationNodesIO
-    new_data={new_data}
-    menu_for_modal={false}
-  />
-
-  // Object.assign(ui,additionalMenus.additional_menu_configuration_nodes)
-  // ui={...ui,...additionalMenus.additional_menu_configuration_nodes}
-  // Renvoie le menu déroulant pour la sélection des noeuds
-  const dropdownMultiNode = () => {
-    const DD = (
-      <Box
-        layerStyle='submenuconfig_droplist'
-      >
-        {/* Position custom pour MultiSelect */}
-        <Box
-          height='2rem'
-          width='14.75rem'
-        >
-          <MultiSelect
-            options={entries_for_nodes}
-            value={entries_for_selected_nodes}
-            labelledBy={t('Noeud.TS')}
-            onChange={(entries: Type_MenuSelectionEntry[]) => {
-              // Update selection list
-              const entries_values = entries.map(d => d.value)
-              nodes.forEach(n => {
-                if (entries_values.includes(n.id)) {
-                  new_data.drawing_area.addNodeToSelection(n)
-                }
-                else {
-                  new_data.drawing_area.removeNodeFromSelection(n)
-                }
-              })
-              // Update all menus
-              refreshThisAndUpdateRelatedComponents()
-            }}
-            valueRenderer={(entries_for_selected_nodes: Type_MenuSelectionEntry[]) => {
-              return entries_for_selected_nodes.length ? entries_for_selected_nodes.map(({ label }) => label + ', ') : t('Noeud.NS')
-            }}
-          />
-        </Box>
-      </Box>)
-    return DD
-  }
 
   // Commented for now awaiting the redesign of nodes tree structur
   // const overlayNodeSlector= <Overlay
@@ -355,26 +281,42 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
     _updateNameNode()
   }
 
-
-
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_droplist'
+        className='row_select'
       >
         {/* Boutton pour ajouter un noeud */}
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
             onClick={addNode}>
-            <FaPlus />
+            {icon_add_element}
           </Button>
         </OSTooltip>
 
         {/* Liste déroulante pour selectionner un noeud */}
         <OSTooltip label={t('Menu.tooltips.noeud.slct')}>
-          {dropdownMultiNode()}
+          <OSMultiSelect
+            t={new_data.t}
+            elements={entries_for_nodes}
+            onClick={(entries: typeElementSelectable) => {
+              // Update selection list
+              const entries_values = entries.map(d => d.value)
+              nodes.forEach(n => {
+                if (entries_values.includes(n.id)) {
+                  new_data.drawing_area.addNodeToSelection(n)
+                }
+                else {
+                  new_data.drawing_area.removeNodeFromSelection(n)
+                }
+              })
+              // Update all menus
+              refreshThisAndUpdateRelatedComponents()
+            }}
+          />        
         </OSTooltip>
 
         {/* Boutton pour supprimer le noeud selectionné */}
@@ -389,7 +331,7 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
                 // Update all menus
                 refreshThisAndUpdateRelatedComponents()
               }}>
-            <FaMinus />
+            {icon_remove_element}
           </Button>
         </OSTooltip>
 
@@ -402,7 +344,7 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
                 // Update indicator (only visible nodes / all nodes)
                 new_data.menu_configuration.toggle_selector_on_visible_nodes()
               }}>
-            {new_data.menu_configuration.is_selector_only_for_visible_nodes ? <FaEye /> : <FaEyeSlash />}
+            {new_data.menu_configuration.is_selector_only_for_visible_nodes ? icon_element_visible : icon_element_invisible}
           </Button>
         </OSTooltip>
       </Box>
@@ -429,40 +371,121 @@ const SankeyNodeEdition: FunctionComponent<FCType_SankeyNodeEdition> = (
           </OSTooltip>
         </Box>
       </Box>
-
-      {/* Declenché si des neouds sont selectionnées */}
-      {
-        (selected_nodes.length !== 0) ?
-          <Tabs>
-            <TabList>
-              {
-                Object
-                  .keys(ui)
-                  .map((key, i) => {
-                    return <Tab key={'submenuconfig_tab_' + i}>
-                      <Box layerStyle='submenuconfig_tab' >
-                        {t(key)}
-                      </Box>
-                    </Tab>
-                  }
-                  )
-              }
-            </TabList>
-            <TabPanels>
-              {
-                Object
-                  .values(ui)
-                  .map((c, i) => <React.Fragment key={'panel' + i}>{c}</React.Fragment>)
-              }
-            </TabPanels>
-          </Tabs> :
-          <></>
-      }
     </Box>
   )
 }
 
-export default SankeyNodeEdition
+export const SankeyNodeSelectionSimple: FunctionComponent<FCType_SankeyNodeEdition> = (
+  {
+    new_data,
+  }
+) => {
+
+  // Datas ------------------------------------------------------------------------------
+
+  // Traduction
+  const { t, icon_library } = new_data
+  const { icon_element_visible, icon_element_invisible } = icon_library
+
+  // Nodes to select --------------------------------------------------------------------
+
+  let nodes: Type_GenericNodeElement[]
+  let selected_nodes: Type_GenericNodeElement[]
+  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
+    // All availables nodes
+    nodes = new_data.drawing_area.sankey.nodes_list_sorted
+    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+  }
+  else {
+    // Only visible nodes
+    nodes = new_data.drawing_area.sankey.visible_nodes_list_sorted
+    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+  }
+  const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id,selected:selected_nodes.includes(d) } })
+
+  // Menu updaters ----------------------------------------------------------------------
+
+  // Boolean used to force this component to reload
+  const [, setCount] = useState(0)
+  // Link this menu's update function to ref
+  new_data.menu_configuration.ref_to_menu_config_nodes_selection_updater.current = () => {
+    const value_to_show = (new_data.drawing_area.selected_nodes_list.length != 1) ? '' : new_data.drawing_area.selected_nodes_list[0].name
+    // Update text input of node name
+    ref_set_text_value_input.current(String(value_to_show))
+    setCount(a => a + 1)
+  }
+
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+
+  // Function used to reset menu UI -----------------------------------------------------
+
+  const refreshThisAndToggleSaving = () => {
+    // Toogle saving indicator
+    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    ref_set_text_value_input.current(String((selected_nodes.length != 1) ? '' : selected_nodes[0].name))
+
+    // Refresh this menu
+    setCount(a => a + 1)
+  }
+
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Update values displayed in menus for node's configuration
+    new_data.menu_configuration.updateAllComponentsRelatedToNodesConfig()
+    // Update and update saving indicator
+    refreshThisAndToggleSaving()
+  }
+
+  // JSX Components ---------------------------------------------------------------------
+  const new_select = <OSMultiSelect
+    t={new_data.t}
+    elements={entries_for_nodes}
+    onClick={(entries: typeElementSelectable) => {
+      // Update selection list
+      const entries_values = entries.map(d => d.value)
+      nodes.forEach(n => {
+        if (entries_values.includes(n.id)) {
+          new_data.drawing_area.addNodeToSelection(n)
+        }
+        else {
+          new_data.drawing_area.removeNodeFromSelection(n)
+        }
+      })
+      // Update all menus
+      refreshThisAndUpdateRelatedComponents()
+    }}
+  />
+
+  return (
+    <Box layerStyle='menuconfigpanel_grid'>
+      <Box
+        as='span'
+        className='row_select'
+        layerStyle='menuconfigpanel_row_droplist_simple'
+      >
+
+        {/* Liste déroulante pour selectionner un noeud */}
+        <OSTooltip label={t('Menu.tooltips.noeud.slct')}>
+          {/* {dropdownMultiNode()} */}
+          {new_select}
+        </OSTooltip>
+
+        {/* Checkbox permettant d'afficher que les noeuds visibles dans le selecteur */}
+        <OSTooltip label={t('Menu.tooltips.noeud.dns')}>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={
+              () => {
+                // Update indicator (only visible nodes / all nodes)
+                new_data.menu_configuration.toggle_selector_on_visible_nodes()
+              }}>
+            {new_data.menu_configuration.is_selector_only_for_visible_nodes ? icon_element_visible : icon_element_invisible}
+          </Button>
+        </OSTooltip>
+      </Box>
+    </Box>
+  )
+}
+
 
 // export const tree_data_nodes : tree_data_nodesFType =(
 //   t:TFunction<'translation', undefined>,

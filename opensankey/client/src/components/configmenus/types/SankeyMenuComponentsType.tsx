@@ -59,11 +59,23 @@ export type labelAttributeType = {
 }
 
 export type labelValueAttribute = labelAttributeType & {
-    label_unit_visible: 'value_label_unit_visible',
     label_nb_digit: 'value_label_nb_digit',
+    label_custom_digit: 'value_label_custom_digit',
+
+}
+
+export type UnitAttributeType={
+    label_unit_visible: 'value_label_unit_visible',
     label_unit: 'value_label_unit',
     label_unit_factor: 'value_label_unit_factor',
-    label_custom_digit: 'value_label_custom_digit',
+}
+
+export type FCType_MenuUnit = {
+    new_data: Type_GenericApplicationData,
+    elements: Class_LinkStyle[] | Type_GenericLinkElement[] | Type_GenericNodeElement[] | Class_NodeStyle[],
+    selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
+    refreshParentComponent: () => void,
+    dict_decorator_name: UnitAttributeType
 }
 
 export type FCType_SankeyMenuLabelComponent = {
@@ -80,4 +92,9 @@ export type FCType_SankeyMenuValueLabelComponent = {
     selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
     refreshParentComponent: () => void,
     dict_decorator_name: labelValueAttribute
+}
+export type FCType_WrapperBoxSubSectionMenu={
+    new_data:Type_GenericApplicationData,
+    title:string,
+    children:JSX.Element
 }

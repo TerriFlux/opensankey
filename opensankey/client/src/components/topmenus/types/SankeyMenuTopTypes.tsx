@@ -33,13 +33,15 @@ import {
 } from '../../../types/Types'
 import {
   FType_SetDiagram
-} from '../../configmenus/types/SankeyMenuBannerTypes'
+} from './SankeyMenuBannerTypes'
 
 export type FCType_MenuDraggable = {
   dict_hook_ref_setter_show_dialog_components: IType_DictHookRefSetterShowDialogComponents,
   dialog_name: keyof IType_DictHookRefSetterShowDialogComponents,
   content: JSX.Element | JSX.Element[],
   title: string,
+  maxW?: string,
+  customPos?: {x:number,y:number}
 }
 
 export type FCType_OpenSankeySaveButton = {
@@ -47,7 +49,6 @@ export type FCType_OpenSankeySaveButton = {
 }
 
 export type FType_OpenSankeyMenusDictBuilder = (
-  Reinitialization: () => void,
   new_data: Type_GenericApplicationData,
   additional_menus: Type_AdditionalMenus,
   setDiagram: FType_SetDiagram,

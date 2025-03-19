@@ -27,9 +27,6 @@
 import * as d3 from 'd3'
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-
 import {
   Box,
   Button,
@@ -47,7 +44,6 @@ import { FCType_ContextMenuZdd } from './types/SankeyMenuContextZDDTypes'
 import { GetRandomInt, list_palette_color } from '../../types/Utils'
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 
-const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
 
@@ -308,8 +304,11 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   const button_open_layout = <Button onClick={() => {
     new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_layout.current(true)
     new_data.drawing_area.is_drawing_area_contextualised = false
-  }} variant='contextmenu_button'>
-    {t('Menu.MEP')} {icon_open_modal}
+  }}
+  variant='contextmenu_button'
+  rightIcon={new_data.icon_library.icon_popup_menu}
+  >
+    {t('Menu.MEP')} 
   </Button>
 
   return new_data.drawing_area.is_drawing_area_contextualised ? <Box

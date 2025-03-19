@@ -26,9 +26,6 @@
 
 import React, { FunctionComponent, useRef, useState } from 'react'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons'
-
 import {
   Box,
   Button,
@@ -59,7 +56,6 @@ import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttribu
 
 /*************************************************************************************************/
 
-export const icon_open_modal = <FontAwesomeIcon style={{ float: 'right' }} icon={faUpRightFromSquare} />
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
 // MENU COMPONENT ***********************************************************************
@@ -107,7 +103,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   }
 
   const contextualised_node_shape_visible = contextualised_node !== undefined ? contextualised_node.shape_visible : false
-  const contextualised_node_label_visible = contextualised_node !== undefined ? contextualised_node.name_label_visible : false
+  const contextualised_node_label_visible = contextualised_node !== undefined ? contextualised_node.name_label_is_visible : false
   const contextualised_node_value_visible = contextualised_node !== undefined ? contextualised_node.value_label_is_visible : false
 
   const selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list
@@ -280,19 +276,19 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     const dict_old_value: { [x: string]: boolean } = {}
     // Clone Class_attribute of links so in the undo it's doens't affect a value if the original value came from style
     selected_nodes.forEach(node => {
-      dict_old_value[node.id] = node.name_label_visible
+      dict_old_value[node.id] = node.name_label_is_visible
     })
     const _updateNameVisibility = () => {
       selected_nodes
         .forEach(node => {
-          node.name_label_visible = !contextualised_node_label_visible
+          node.name_label_is_visible = !contextualised_node_label_visible
         })
       refreshThisAndToggleSaving()
     }
 
     const inv_updateNameVisibility = () => {
       selected_nodes.forEach(node => {
-        node.name_label_visible = dict_old_value[node.id]
+        node.name_label_is_visible = dict_old_value[node.id]
         node.draw()
       })
       refreshThisAndToggleSaving()
@@ -367,7 +363,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     // Execute original attr mutation
     _updateShapeVisibility()
   }
-  
+
   /**
  * Reorganise link's IO order of selected nodes based on pos of source/target & save it's undo
  *
@@ -401,9 +397,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       closeContextMenu()
     }}
     variant='contextmenu_button'
+    rightIcon={new_data.icon_library.icon_popup_menu}
   >
     {t('Noeud.apparence.apparence')}
-    {icon_open_modal}
   </Button>
 
   // Menu to change some pararmeter concerning the style of the node
@@ -459,9 +455,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       closeContextMenu()
     }}
     variant='contextmenu_button'
+    rightIcon={new_data.icon_library.icon_popup_menu}
   >
     {t('Noeud.PF.PF')}
-    {icon_open_modal}
   </Button>
 
   // ===============ALIGNEMENT HORIZONTAL DES NOEUDS====================================
