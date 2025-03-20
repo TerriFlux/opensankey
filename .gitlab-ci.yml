@@ -31,7 +31,7 @@ build:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     # Build SankeySuite node module
-    - bash build_client.sh -I -L -B -D
+    - bash build_client.sh -I -L -B -D -S
     # Check flask server
     - bash build_server.sh
   except:

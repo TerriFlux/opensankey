@@ -15,10 +15,14 @@ install=false
 linter=false
 build=false
 dist=false
+deps=false
+gdeps=false
+
+args=$@
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --install-deps | -I )
+    --install_deps | -I )
       install=true
       shift # past argument
       ;;
@@ -30,28 +34,38 @@ while [[ $# -gt 0 ]]; do
       build=true
       shift # past argument
       ;;
-    --no-dist | -D)
+    --dist | -D)
       dist=true
+      shift # past argument
+      ;;
+    --sub_deps | -S)
+      deps=true
+      shift # past argument
+      ;;
+    --global_deps | -G)
+      gdeps=true
       shift # past argument
       ;;
     --help | -H)
       echo 'Options: '
-      echo '--install-deps | -I : Install node modules dependencies'
+      echo '--install_deps | -I : Install node modules dependencies'
       echo '--linter | -L : Run linter'
       echo '--build | -B : Run build'
       echo '--dist | -D : Compile dist'
-      echo '--skip_gdeps : Skip install of global deps'
+      echo '--sub_deps | -S : Run sub-scripts of deps'
+      echo '--global_deps | -G : Run install of global deps'
       exit 1
       ;;
     *)
       echo 'Unknown option $1'
       echo ''
       echo 'Options: '
-      echo '--install-deps | -I : Install node modules dependencies'
+      echo '--install_deps | -I : Install node modules dependencies'
       echo '--linter | -L : Run linter'
       echo '--build | -B : Run build'
       echo '--dist | -D : Compile dist'
-      echo '--skip_gdeps : Skip install of global deps'
+      echo '--sub_deps | -S : Run sub-scripts of deps'
+      echo '--global_deps | -G : Run install of global deps'
       exit 1
       ;;
   esac
@@ -61,16 +75,26 @@ done
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Install global dependencies
-printf "Global dependencies -------------------------------------------------\n"
-if ! command -v pnpm &> /dev/null
-then
-  global=`npm root -g`
-  printf ">>> Installation dans "${global}"\n"
-  npm install -g pnpm
+if [ "$gdeps" = true ] ; then
+  printf "Global dependencies -------------------------------------------------\n"
+  if ! command -v pnpm &> /dev/null
+  then
+    global=`npm root -g`
+    printf ">>> Installation dans "${global}"\n"
+    npm install -g pnpm
+  fi
+  printf "OK ------------------------------------------------------------------\n"
 fi
-printf "OK ------------------------------------------------------------------\n"
 
-# Clean subdeps first
+# Check sub deps
+if [ "$deps" = true ] ; then
+  printf "\nOpenSankey+ ========================================================\n"
+  cd $SCRIPT_DIR/submodules/OpenSankey+
+  bash build_client.sh $args || exit_if_error $?
+  printf "\nOK OpenSankey+ =======================================================\n"
+fi
+
+# Clean sub deps
 printf "\nClean deps ----------------------------------------------------------\n"
 bash $SCRIPT_DIR/submodules/OpenSankey+/build_client.sh &> /dev/null || exit_if_error $?
 for dir in node_modules dist build; do
