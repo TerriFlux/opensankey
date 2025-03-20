@@ -2896,7 +2896,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
-    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 66
+    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5*parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
   /**
@@ -2906,17 +2906,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getBottomBarHeight() {
-    return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * 16 // 16 because we set size in rem in css 1 rem = 16px
-  }
-
-  /**
-   * Return height of the top nav bar
-   *
-   * @return {*}
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public getSideBarWidth() {
-    return (document.getElementsByClassName('openMenu')[0]?.getBoundingClientRect().width) ?? 50
+    return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
   // Color

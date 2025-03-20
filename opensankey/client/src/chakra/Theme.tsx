@@ -508,7 +508,7 @@ export const opensankey_theme = extendTheme({
     menutop_layout_style: {
       display: 'grid',
       gridColumnGap: '0.25rem',
-      height: 'unset',
+      height: '5rem',
       width: 'auto',
       padding: '0',
       margin: '0px 3px 0px 3px',
@@ -656,8 +656,8 @@ export const opensankey_theme = extendTheme({
       display: 'grid',
       gridGap: '0.2rem',
       gridTemplateColumns: '8fr 1fr',
-      gridTemplateAreas: `'header  header  header' 
-      'content content sidebar' 
+      gridTemplateAreas: `'header  header  header'
+      'content content sidebar'
       'content content sidebar'`,
       color: '#444',
       borderRadius: '5px',
