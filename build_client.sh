@@ -14,11 +14,12 @@ install=false
 linter=false
 build=false
 dist=false
-skip_gdeps=false
+deps=false
+gdeps=false
 
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --install-deps | -I )
+    --install_deps | -I )
       install=true
       shift # past argument
       ;;
@@ -34,35 +35,39 @@ while [[ $# -gt 0 ]]; do
       dist=true
       shift # past argument
       ;;
-    --skip_gdeps)
-      skip_gdeps=true
+    --sub_deps | -S)
+      deps=true
+      shift # past argument
+      ;;
+    --global_deps | -G)
+      gdeps=true
       shift # past argument
       ;;
     --help | -H)
       echo 'Options: '
-      echo '--install-deps | -I : Install node modules dependencies'
+      echo '--install_deps | -I : Install node modules dependencies'
       echo '--linter | -L : Run linter'
       echo '--build | -B : Run build'
       echo '--dist | -D : Compile dist'
-      echo '--skip_gdeps : Skip install of global deps'
+      echo '--global_deps | -G : Run install of global deps'
       exit 1
       ;;
     *)
       echo 'Unknown option $1'
       echo ''
       echo 'Options: '
-      echo '--install-deps | -I : Install node modules dependencies'
+      echo '--install_deps | -I : Install node modules dependencies'
       echo '--linter | -L : Run linter'
       echo '--build | -B : Run build'
-      echo '--no-dist | -D : Compile dist'
-      echo '--skip_gdeps : Skip install of global deps'
+      echo '--dist | -D : Compile dist'
+      echo '--global_deps | -G : Run install of global deps'
       exit 1
       ;;
   esac
 done
 
 # Install global dependencies
-if [ "$skip_gdeps" = false ] ; then
+if [ "$gdeps" = true ] ; then
   printf "\nGlobal dependencies ------------------------------------------------\n"
   global=`npm root -g`
   printf ">>> Installation dans "${global}"\n"
