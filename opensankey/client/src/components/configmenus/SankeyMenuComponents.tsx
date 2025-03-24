@@ -841,7 +841,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
   onClick
 }) => {
   const selected_elements=elements.filter(el=>el.selected)
-  const textBtn = selected_elements.length > 0 ? elements.map(el => el.label).join(',') : 'Aucune sélection'
+  const textBtn = selected_elements.length > 0 ? selected_elements.map(el => el.label).join(',') : 'Aucune sélection'
   const selecAll = elements.length > 0 ? <>
     <MenuItem
       icon={(selected_elements.length == elements.length) ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
