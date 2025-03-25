@@ -28,13 +28,12 @@ import React, { FunctionComponent, MutableRefObject, useRef, useState } from 're
 import {
   Box,
   Checkbox,
-  Input,
 } from '@chakra-ui/react'
-
 import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
+import { OSColorPicker } from './OSColorPicker';
 
 
 // Utils functions -------------------------------------------------------------------
@@ -102,12 +101,12 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
   // these functions will save the last value of said attribute in data history so we can revert if we want it
   // ===================================================================================
 
-  const eventBgColor = (evt: React.ChangeEvent<HTMLInputElement>) => {
+  const eventBgColor = (evt: string) => {
     const f = (_: string) => {
       new_data.drawing_area.color = _
       refreshThisAndUpdateRelatedComponents()
     }
-    new_data.setValueAndSaveHistory(new_data.drawing_area, 'color', evt.target.value, f)
+    new_data.setValueAndSaveHistory(new_data.drawing_area, 'color', evt, f)
   }
 
   const eventGridVisible = (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,12 +139,12 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
           {t('Menu.BgC')}
         </Box>
         <OSTooltip label={t('MEP.tooltips.BgC')}>
-          <Input
-            variant='menuconfigpanel_option_input_color'
-            type='color'
-            value={new_data.drawing_area.color}
-            onChange={eventBgColor}
-          />
+          <Box>
+            <OSColorPicker
+              initialColor={new_data.drawing_area.color}
+              functionOnBlur={eventBgColor}
+            />
+          </Box>
         </OSTooltip>
       </Box>
 
@@ -421,12 +420,12 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
     }
   }
 
-  const eventGLegendBgColor = (evt: React.ChangeEvent<HTMLInputElement>) => {
+  const eventGLegendBgColor = (evt: string) => {
     const f = (_: string) => {
       new_data.drawing_area.legend.legend_bg_color = _
       refreshThisAndUpdateRelatedComponents()
     }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_bg_color', evt.target.value, f)
+    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_bg_color', evt, f)
   }
 
   const eventLegendBgOpacity = (evt: number | null | undefined) => {
@@ -479,7 +478,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
     }
   }
 
-  return <Box layerStyle='menu_sub_section'>  
+  return <Box layerStyle='menu_sub_section'>
     <Box
       as='span'
       layerStyle='menu_sub_section_title'
@@ -509,12 +508,12 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
           {t('Menu.LegBgColor')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgColor')}>
-          <Input
-            variant='menuconfigpanel_option_input_color'
-            type='color'
-            value={new_data.drawing_area.legend.legend_bg_color}
-            onChange={eventGLegendBgColor}
-          />
+          <Box>
+            <OSColorPicker
+              initialColor={new_data.drawing_area.legend.legend_bg_color}
+              functionOnBlur={eventGLegendBgColor}
+            />
+          </Box>
         </OSTooltip>
       </Box>
 
