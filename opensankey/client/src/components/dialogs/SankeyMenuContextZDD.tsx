@@ -34,7 +34,6 @@ import {
   Menu,
   MenuButton,
   MenuList,
-  Input,
   NumberInput,
   NumberInputField
 } from '@chakra-ui/react'
@@ -43,6 +42,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 import { FCType_ContextMenuZdd } from './types/SankeyMenuContextZDDTypes'
 import { GetRandomInt, list_palette_color } from '../../types/Utils'
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
+import { OSColorPicker } from '../configmenus/OSColorPicker'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
@@ -187,13 +187,15 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   // Buttons components ==============================================================
 
   const button_bg_color = <Button variant='contextmenu_button'>
-    <Input hidden type='color' id='color_bg_zdd' name='color_bg_zdd'
-      onChange={(evt) => {
-        new_data.drawing_area.color = evt.target.value
-      }}
-    >
-    </Input>
-    <label htmlFor='color_bg_zdd' style={{ width: '100%', margin: 0 }}>{t('Menu.BgC')}</label>
+    <Box style={{display:'grid',gridTemplateColumns:'1fr 3fr'}}>
+      <label htmlFor='color_bg_zdd' style={{ margin: 0 }}>{t('Menu.BgC')}</label>
+      <OSColorPicker
+        initialColor={new_data.drawing_area.color}
+        functionOnBlur={(new_color) => {
+          new_data.drawing_area.color = new_color
+        }}
+      />
+    </Box>
   </Button>
 
   const button_bg_grid = <Button variant='contextmenu_button' onClick={bgGrid}>{t('MEP.TCG')}{checked(new_data.drawing_area.grid_visible)}</Button>
@@ -305,10 +307,10 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_layout.current(true)
     new_data.drawing_area.is_drawing_area_contextualised = false
   }}
-  variant='contextmenu_button'
-  rightIcon={new_data.icon_library.icon_popup_menu}
+    variant='contextmenu_button'
+    rightIcon={new_data.icon_library.icon_popup_menu}
   >
-    {t('Menu.MEP')} 
+    {t('Menu.MEP')}
   </Button>
 
   return new_data.drawing_area.is_drawing_area_contextualised ? <Box

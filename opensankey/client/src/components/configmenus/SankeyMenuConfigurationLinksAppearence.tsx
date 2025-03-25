@@ -30,7 +30,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Input,
   InputGroup,
   Menu,
   MenuButton,
@@ -79,6 +78,7 @@ import {
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit } from './SankeyMenuComponents'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
+import { OSColorPicker } from './OSColorPicker'
 
 /*************************************************************************************************/
 // Declare custom logo used for some button
@@ -277,12 +277,14 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
               <>{TooltipValueSurcharge('link_var_', t)}</> :
               <></>
           }
+        </Box><Box>
+        <OSColorPicker
+          initialColor={shape_color}
+          functionOnBlur={(new_color) => {
+            updateElements('shape_color', new_color)
+          }}
+        />
         </Box>
-        <Input
-          variant='menuconfigpanel_option_input_color'
-          type='color'
-          value={shape_color}
-          onChange={evt => { updateElements('shape_color', evt.target.value) }} />
       </Box>
 
       {/* Opacité */}
@@ -326,7 +328,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         {t('Flux.apparence.fleche')}
       </OSTooltip>
     </Checkbox>
-    
+
     {shape_is_arrow ?
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
