@@ -29,7 +29,6 @@ import {
   Button,
   Checkbox,
   Collapse,
-  Input,
   Menu,
   MenuButton,
   MenuDivider,
@@ -69,6 +68,7 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
+import { OSColorPicker } from './OSColorPicker'
 
 
 /**
@@ -498,17 +498,14 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
               <></>
           }
         </Box>
-        <Input
-          variant='menuconfigpanel_option_input_color'
-          type='color'
-          value={get_label_color}
-          onChange={evt => {
-            updateElements(new_data, elements, dict_decorator_name, 'label_color', evt.target.value, refreshParentComponent)
+        <OSColorPicker
+          initialColor={get_label_color}
+          functionOnBlur={(new_color) => {
+            updateElements(new_data, elements, dict_decorator_name, 'label_color', new_color, refreshParentComponent)
+
           }}
         />
       </Box>
-
-
     </Box>
 
   </Box>
@@ -846,7 +843,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
     <MenuItem
       icon={(selected_elements.length == elements.length) ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
       onClick={() => {
-        
+
         const new_sel = selected_elements.length == elements.length ? [] : elements //select or deselect all
         onClick(new_sel)
       }}>{t('Noeud.TS')}</MenuItem>
@@ -879,3 +876,5 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
     </MenuList>
   </Menu>
 }
+
+
