@@ -196,7 +196,7 @@ export const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_dat
                 height='100%'
               >
                 <Button
-                  variant='menuconfigpanel_del_button'
+                  variant='template_button_reset'
                   onClick={() => {
                     new_data.reinitialization()
                     set_show_template(false)
