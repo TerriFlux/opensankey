@@ -43,7 +43,6 @@ import {
 // Local imports
 import type {
   FCType_MenuConfLinkApparenceDashedOSP,
-  FCType_MenuConfLinkApparenceGradientOSP,
   FCType_MenuConfLinkScientificPrecision,
   FCType_MenuContextLink
 } from './types/SankeyPlusGradientTypes'
@@ -56,83 +55,7 @@ import type {
 import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
 
-export const MenuConfLinkApparenceGradientOSP: FunctionComponent<FCType_MenuConfLinkApparenceGradientOSP> = ({
-  new_data_plus,
-  menu_for_style,
-}) => {
 
-  // Get data
-  const { ref_selected_style_link } = new_data_plus.menu_configuration
-
-  const { t } = new_data_plus
-  const [forceUpdate, setForceUpdate] = useState(false)
-
-  // Selected links
-  let selected_links
-  if (!new_data_plus.menu_configuration.is_selector_only_for_visible_links) {
-    // All availables links
-    selected_links = new_data_plus.drawing_area.selected_links_list_sorted
-  }
-  else {
-    // Only visible links
-    selected_links = new_data_plus.drawing_area.visible_and_selected_links_list_sorted
-  }
-
-  // Elements on which menu modification applies
-  let elements: Class_LinkStyleOSP[] | Type_GenericLinkElementOSP[]
-  if (menu_for_style) {
-    elements = [new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
-  }
-  else {
-    elements = selected_links
-  }
-  const check_indeterminate = (curr: Type_GenericLinkElementOSP) => {
-    return (selected_links[0].shape_is_gradient == curr.shape_is_gradient)
-  }
-  const is_indeterminate = !selected_links.every(check_indeterminate)
-
-  // Function that can be undone ===================================
-  const updateGradientLinks = (_: boolean) => {
-    const dict_old_val = Object.fromEntries(elements.map(el => [el.id, el.shape_is_gradient]))
-    const list_node_to_redraw_arrow = menu_for_style ? [] : selected_links.map(l => l.target)
-
-    const _updateGradientLinks = () => {
-      elements.forEach(element => element.shape_is_gradient = _);
-      [...new Set(list_node_to_redraw_arrow)].forEach(n => n.drawLinksArrow())//Remove duplicate node in array then redraw link arrow of nodes
-      setForceUpdate(!forceUpdate)
-    }
-    const inv_updateGradientLinks = () => {
-      elements.forEach(element => element.shape_is_gradient = dict_old_val[element.id]);
-      [...new Set(list_node_to_redraw_arrow)].forEach(n => n.drawLinksArrow())//Remove duplicate node in array then redraw link arrow of nodes
-      setForceUpdate(!forceUpdate)
-    }
-
-    // Save undo/redo in data history
-    new_data_plus.history.saveUndo(inv_updateGradientLinks)
-    new_data_plus.history.saveRedo(_updateGradientLinks)
-    // Execute original attr mutation
-    _updateGradientLinks()
-  }
-
-  return elements.length > 0 ? (
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isDisabled={!new_data_plus.has_sankey_plus}
-      isIndeterminate={is_indeterminate}
-      isChecked={elements[0].shape_is_gradient}
-      iconColor={is_indeterminate ? '#78C2AD' : 'white'}
-      onChange={(evt) => updateGradientLinks(evt.target.checked)}>
-      <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
-        {t('Flux.apparence.grad')}
-      </OSTooltip>
-      {(!menu_for_style) &&
-        isAttributeOverloaded(selected_links, 'value_label_on_path') ?
-        TooltipValueSurcharge('link_var_', t) :
-        <></>}
-    </Checkbox>
-  ) : <></>
-
-}
 
 export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLinkApparenceDashedOSP> = ({ new_data_plus,
   menu_for_style }) => {

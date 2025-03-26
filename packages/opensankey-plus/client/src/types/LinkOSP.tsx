@@ -131,7 +131,7 @@ export abstract class ClassTemplate_LinkElementOSP
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
     // Apply gradient if needed
-    if (this.shape_is_gradient) {
+    if (this.shape_color_rule=='gradient') {
 
       const defGradient = this.drawing_area.d3_selection_def_gradient
       const n_source = this.source
@@ -279,7 +279,7 @@ export abstract class ClassTemplate_LinkElementOSP
   }
 
   public getArrowColorToUse() {
-    if (this.shape_is_gradient) {
+    if (this.shape_color_rule=='gradient') {
       const link_arrow_side_right = this.target_side == 'right'
       const link_arrow_side_bottom = this.target_side == 'bottom'
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
@@ -311,21 +311,6 @@ export abstract class ClassTemplate_LinkElementOSP
   }
 
   //  GETTER & SETTER =============================================
-
-  public get shape_is_gradient() {
-    if (this._display.attributes.shape_is_gradient !== undefined) {
-      return this._display.attributes.shape_is_gradient
-    } else if (this._display.style.shape_is_gradient !== undefined) {
-      return this._display.style.shape_is_gradient
-    }
-    return default_shape_shape_is_gradient
-  }
-
-  public set shape_is_gradient(_: boolean) {
-    this._display.attributes.shape_is_gradient = _
-    // Need to redraw from nodes
-    this.drawElements()
-  }
 }
 
 // CLASS LINK ATTRIBUTES ****************************************************************
@@ -340,35 +325,40 @@ export class Class_LinkAttributeOSP extends Class_LinkAttribute {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  protected _shape_is_gradient?: boolean | undefined
 
   // PUBLIC METHODES ====================================================================
 
   public toJSON() {
     const json_object = super.toJSON()
-    if (this._shape_is_gradient !== undefined) json_object['gradient'] = this._shape_is_gradient
     return json_object
   }
 
   public fromJSON(json_local_object: Type_JSON) {
     super.fromJSON(json_local_object)
-    this._shape_is_gradient = getBooleanFromJSON(json_local_object, 'gradient', default_shape_shape_is_gradient) as boolean
   }
 
   public copyFrom(element: Class_LinkAttributeOSP) {
     super.copyFrom(element)
-    this._shape_is_gradient = element._shape_is_gradient
+  }
+
+  public override fromLegacyJSON(json_local_object: Type_JSON): void {
+    super.fromLegacyJSON(json_local_object)
+    if (json_local_object['version'] === undefined) {
+      const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', default_shape_shape_is_gradient) as boolean
+      if(was_gradient){
+        this._shape_color_rule='gradient'
+      }
+    }
+
   }
 
   // PROTECTED METHODS ==================================================================
 
   // GETTERS ============================================================================
 
-  public get shape_is_gradient(): boolean | undefined { return this._shape_is_gradient }
 
   // SETTERS ============================================================================
 
-  public set shape_is_gradient(value: boolean | undefined) { this._shape_is_gradient = value; this.update() }
 }
 
 // CLASS LINK STYLE *********************************************************************

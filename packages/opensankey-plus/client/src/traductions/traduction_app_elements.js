@@ -143,6 +143,9 @@ export const resources_app_elements = {
       },
       Flux: {
         'asf': 'Apply style to links having this style',
+        apparence:{
+          gradient:'Gradient source -> target'
+        },
         data: {
           'scientificNotation': 'Display the value in scientific notation',
           'fla': 'Display free links',
@@ -536,6 +539,9 @@ export const resources_app_elements = {
       },
       Flux: {
         'asf': 'Appliquer le Style aux flux',
+        apparence:{
+          gradient:'Dégradé source -> cible'
+        },
         data: {
           'scientificNotation': 'En notation scientifique',
           'fla': 'Flux nuls indéterminés visibles',

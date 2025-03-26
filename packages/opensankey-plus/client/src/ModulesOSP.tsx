@@ -92,7 +92,6 @@ import {
   ButtonLinkContextShowTagMenu,
   ButtonLinkContextShowTooltipMenu,
   MenuConfLinkApparenceDashedOSP,
-  MenuConfLinkApparenceGradientOSP,
   MenuConfLinkScientificPrecision
 } from './components/MenuConfigEdition/SankeyPlusLink'
 import {
@@ -170,6 +169,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Add Buttons to open banner of views
   additionalMenus.external_top_buttons_item['views'] = <BannerViewsOSP new_data_plus={new_data_plus} />
 
+  // Add an option for flow color rule
+  if(has_sankey_plus){
+    new_data_plus.menu_configuration.flow_color_origin_type.push('gradient')
+  }
+
   // TODO OTHER JSX ELEMENTS -----------------------------------------------------------
 
   // TODO : manque implementation des exort svg
@@ -199,11 +203,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       menu_for_style={menu_for_style}
     />)
 
-  // Add gradient config
-  additionalMenus.additional_link_appearence_items.push((menu_for_style: boolean) => <MenuConfLinkApparenceGradientOSP
-    new_data_plus={new_data_plus}
-    menu_for_style={menu_for_style}
-  />)
   additionalMenus.additional_link_appearence_value.push((menu_for_style: boolean) => <MenuConfLinkScientificPrecision
     new_data_plus={new_data_plus}
     menu_for_style={menu_for_style}
@@ -219,22 +218,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   const idx_sep_4 = additionalMenus.context_link_order.indexOf('sep_4')
   additionalMenus.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
 
-  //Preferences
-  // additionalMenus.additional_preferences.push(
-  //   <MenuPreferenceEditionTag
-  //     new_data={new_data_plus}
-  //   />
-  // )
-  // additionalMenus.additional_preferences.push(
-  //   <MenuPreferenceLabelsOSP
-  //     new_data_plus={new_data_plus}
-  //   />
-  // )
-  // additionalMenus.additional_preferences.push(
-  //   <MenuPreferenceViewOSP
-  //     new_data_plus={new_data_plus}
-  //   />
-  // )
 
   // Addition chackbox for dialog save JSON dagram
   additionalMenus.additional_file_save_json_option.push(

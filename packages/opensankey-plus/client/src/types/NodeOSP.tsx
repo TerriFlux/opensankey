@@ -514,7 +514,7 @@ export abstract class ClassTemplate_NodeElementOSP
           // Get color of target (can be used if link_animated was a gradient)
           const colorTarget = Target.shape_visible ? Target.getShapeColorToUse() : (Target.iconVisible ? Target.iconColor : 'grey')
 
-          const l_grad = link_animated.shape_is_gradient
+          const l_grad = link_animated.shape_color_rule=='gradient'
           const t = (l_grad) ? colorTarget : link_animated.getPathColorToUse()
           if (t) {
             arrow.attr('fill', t)
