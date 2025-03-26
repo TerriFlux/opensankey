@@ -80,6 +80,7 @@ import {
   menu_sub_section_collapse_button,
   sizeCollapseButton,
   text_menu_select,
+  template_button_reset,
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -238,6 +239,7 @@ export const opensankey_theme = extendTheme({
         button_type_config_activated,
         menu_sub_section_collapse_button,
         text_menu_select,
+        template_button_reset,
       },
       sizes: {
         sizeToolbarButton,
@@ -447,7 +449,11 @@ export const opensankey_theme = extendTheme({
       textStyle: 'h4',
       textAlign: 'left',
       display: 'flex',
-      alignItems: 'center'
+      alignItems: 'center',
+      'svg.tooltip_overload': {
+        marginLeft: 'auto',
+        marginRight: '0'
+      }
     },
     menuconfigpanel_suboption_name: {
       textStyle: 'h4',
@@ -611,7 +617,7 @@ export const opensankey_theme = extendTheme({
       border: 'solid 1px',
       borderColor: 'primaire.2',
       borderRadius: '6px',
-      fontSize:'0.6rem'
+      fontSize: '0.6rem'
     },
     menu_draggable_title_layout: {
       display: 'grid',
@@ -758,10 +764,10 @@ export const opensankey_theme = extendTheme({
       color: 'white',
       fontSize: '0.7rem',
     },
-    text_menu_select:{
-      overflow:'hidden',
-      textOverflow:'ellipsis',
-      whiteSpace:'nowrap',
+    text_menu_select: {
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
     },
 
   },
