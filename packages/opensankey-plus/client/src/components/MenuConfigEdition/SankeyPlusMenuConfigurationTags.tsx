@@ -45,6 +45,7 @@ import {
 } from '../../deps/OpenSankey/types/Utils'
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Link'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { OSColorPicker } from '../../deps/OpenSankey/components/configmenus/OSColorPicker'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -258,13 +259,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-        id: tag.id,
-        name: tag.name,
-        elementsRef: dict_ref_element,
-        grp: tag.group,
-        color: tag.color,
-        dict_link_value: {}
-      }
+      id: tag.id,
+      name: tag.name,
+      elementsRef: dict_ref_element,
+      grp: tag.group,
+      color: tag.color,
+      dict_link_value: {}
+    }
 
     if (tag instanceof Class_DataTag) {
       // Save value of each links in dict
@@ -339,13 +340,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-        id: tagg.id,
-        name: tagg.name,
-        activated: tagg.show_legend,
-        banner: tagg.banner,
-        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
-        dict_link_value: {}
-      }
+      id: tagg.id,
+      name: tagg.name,
+      activated: tagg.show_legend,
+      banner: tagg.banner,
+      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+      dict_link_value: {}
+    }
 
     if (tagg instanceof Class_DataTagGroup) {
       new_data.drawing_area.sankey.links_list.forEach(l => {
@@ -780,13 +781,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                       {/* Choix de la couleur*/}
                       <Td >
                         <OSTooltip label={t('Tags.tooltips.couleur')}>
-                          <Input padding='0' width='revert' height='1.25rem' border='0'
-                            type='color'
-                            value={tag.color}
-                            onChange={
-                              evt => {
-                                handleTagColor(tag, evt.target.value)
-                              }} />
+                          <Box>
+                            <OSColorPicker
+                              initialColor={tag.color}
+                              functionOnBlur={(new_color) => {
+                                handleTagColor(tag, new_color)
+                              }}
+                            /></Box>
                         </OSTooltip>
                       </Td>
 

@@ -26,6 +26,7 @@ import { ClassTemplate_SankeyOSP } from '../../types/SankeyOSP'
 import { Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP } from '../../types/TypesOSP'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 import { OSMultiSelect } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { OSColorPicker } from '../../deps/OpenSankey/components/configmenus/OSColorPicker'
 
 type Type_GenericFreeLabelOSP = Class_ContainerElement<Type_GenericDrawingAreaOSP, ClassTemplate_SankeyOSP<Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>>
 
@@ -664,18 +665,11 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           onChange={(evt) => updateLabelBgVisible(evt.target.checked)}>
           {t('LL.cfl')}
         </Checkbox>
-
-        <Input
-          variant='menuconfigpanel_option_input_color'
-          type='color'
-          id='form_color_zdt'
-          name='form_color_zdt'
+        <OSColorPicker
           isDisabled={disable_options}
-          value={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
-          onChange={evt => {
-            const val = evt.target.value
-            selected_zdt.map(d => d.color = val)
-
+          initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
+          functionOnBlur={(new_color) => {
+            selected_zdt.map(d => d.color = new_color)
             redrawAndRefresh()
           }}
         />
@@ -709,17 +703,11 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           as='span'
           layerStyle='menuconfigpanel_row_2cols'
         >
-          <Input
-            variant='menuconfigpanel_option_input_color'
-            type='color'
-            id='form_color_border_zdt'
-            name='form_color_border_zdt'
-            disabled={!new_data_plus.has_sankey_plus && !valAllLabelBorderTransparent}
-            value={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
-            onChange={evt => {
-              const val = evt.target.value
-              selected_zdt.map(d => d.color_border = val)
-
+          <OSColorPicker
+            isDisabled={!new_data_plus.has_sankey_plus && !valAllLabelBorderTransparent}
+            initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
+            functionOnBlur={(new_color) => {
+              selected_zdt.map(d => d.color_border = new_color)
               redrawAndRefresh()
             }}
           />
@@ -783,18 +771,17 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
 
 
   const btn_change_color = <>
-
     <Button variant='contextmenu_button'>
-      <Input hidden type='color' id='form_color_zdt' name='color_bg_zdd'
-        value={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
-        onChange={(evt) => {
-          const val = evt.target.value
-          selected_zdt.map(d => d.color = val)
-          redrawAndRefresh()
-        }}
-      >
-      </Input>
-      <label htmlFor='form_color_zdt' style={{ width: '100%', margin: 0 }}>{t('LL.cfl')}</label>
+      <Box style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
+        <label style={{ margin: 0 }}>{t('LL.cfl')}</label>
+        <OSColorPicker
+          initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
+          functionOnBlur={(new_color) => {
+            selected_zdt.map(d => d.color = new_color)
+            redrawAndRefresh()
+          }}
+        />
+      </Box>
     </Button>
   </>
 
@@ -803,8 +790,8 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
     closeContextMenu()
   }}
-  variant='contextmenu_button'
-  rightIcon={new_data_plus.icon_library.icon_popup_menu}
+    variant='contextmenu_button'
+    rightIcon={new_data_plus.icon_library.icon_popup_menu}
   >{t('Menu.LL')} </Button>
 
   return zdt_to_contextualise ? <Box

@@ -20,8 +20,10 @@ import {
 // OpenSankey ts-code
 import {
   CustomFaEyeCheckIcon,
-  OSTooltip} from '../../deps/OpenSankey/types/Utils'
+  OSTooltip
+} from '../../deps/OpenSankey/types/Utils'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { OSColorPicker } from '../../deps/OpenSankey/components/configmenus/OSColorPicker'
 
 
 
@@ -342,33 +344,33 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
               >
                 {t('Noeud.apparence.Couleur')}
               </Box>
-              <Input
-                variant='menuconfigpanel_option_input_color'
-                type='color'
-                value={
-                  (selected_nodes.length === 1) ?
-                    selected_nodes[0].iconColor :
-                    '#ffffff'
-                }
-                onChange={evt => {
-                  const color = evt.target.value
-                  updateNodeIconColor(color)
-                }}
-              />
-              <Button
-                //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-                variant={
-                  (selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ?
-                    'menuconfigpanel_option_button_activated' :
-                    'menuconfigpanel_option_button'}
-                onClick={() => {
-                  let value = false
-                  value = selected_nodes[0]?.iconColorSustainable ?? ''
-                  updateNodeIconColorSustainable(value)
-                }}
-              >
-                {(selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ? icon_locked : icon_unlocked}
-              </Button>
+              <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''}>
+                <Box>
+                  <OSColorPicker
+                    isDisabled={new_data_plus.has_sankey_plus}
+                    initialColor={(selected_nodes.length === 1) ?
+                      selected_nodes[0].iconColor :
+                      '#ffffff'}
+                    functionOnBlur={(new_color) => {
+                      updateNodeIconColor(new_color)
+                    }}
+                  />
+                </Box>
+                </OSTooltip>
+                <Button
+                  //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+                  variant={
+                    (selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ?
+                      'menuconfigpanel_option_button_activated' :
+                      'menuconfigpanel_option_button'}
+                  onClick={() => {
+                    let value = false
+                    value = selected_nodes[0]?.iconColorSustainable ?? ''
+                    updateNodeIconColorSustainable(value)
+                  }}
+                >
+                  {(selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ? icon_locked : icon_unlocked}
+                </Button>
             </Box>
           </OSTooltip>
         </Box> :
