@@ -633,7 +633,11 @@ export const resources_app_elements = {
         },
         apparence: {
           apparence: 'Appearance',
+          flow:'Fow',
+          source:'Source node',
+          target:'Target node',
           couleur: 'Color',
+          color_source:'Element defining flow color',
           grad: 'Gradient',
           hach: 'Dashed',
           of: 'Orientation',
@@ -652,6 +656,13 @@ export const resources_app_elements = {
           hide_link_lab: 'Hide value',
           data_off_scale: 'Scale',
           tooltips: {
+ 
+            color_source:{
+              def:'Choose what rule define flow color :',
+              flow:' Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
+              source:'Color is defined by node source color',
+              target:'Color is defined by node target color',
+            },
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
             hach: 'Applies a hatch effect on the selected link(s)',
@@ -1479,6 +1490,10 @@ export const resources_app_elements = {
           apparence: 'Apparence',
           couleur: 'Couleur',
           grad: 'Gradient',
+          flow:'Flux',
+          color_source:'Élement définissant la couleur du flux',
+          source:'Noeud source',
+          target:'Noeud cible',
           hach: 'Hachuré',
           of: 'Orientation',
           type: 'Type',
@@ -1497,6 +1512,12 @@ export const resources_app_elements = {
           data_off_scale: 'Échelle',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
+            color_source:{
+              def:'Choisir la règle qui définie la couleur du flux',
+              flow:'La couleur est définie avec les paramètres liées au flux (couleur, couleur des étiquettes de flux ou données)',
+              source:'La couleur est définie par la couelur du noeud source',
+              target:'La couleur est définie par la couelur du noeud cible',
+            },
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
             hach: 'Applique un effet de hachure sur le/les flux sélectionné(s)',
             of_vv: 'Permet d\'orienter le début du flux verticalement et la fin du flux verticalement',

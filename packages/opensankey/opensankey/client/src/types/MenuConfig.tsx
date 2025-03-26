@@ -115,6 +115,7 @@ export class Class_MenuConfig {
     ]
   ]
 
+  protected _flow_color_origin_type: string[] = ['flow', 'source', 'target']
 
   /**
    * Variable that determine what kind of element we are configuring in the config menu
@@ -1159,7 +1160,8 @@ export class Class_MenuConfig {
   public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
   public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }
 
-
   public get style_config(): { [x: string]: { theme: string; elements_configurable: string[] } } { return this._style_config }
+  public get flow_color_origin_type(): string[] {return this._flow_color_origin_type}
+
 }
 
