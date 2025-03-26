@@ -185,6 +185,7 @@ import {
 import {
   spinner_base_style
 } from './Spinner'
+import { editable_base_style, name_file_editable } from './EditableStyle'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -284,6 +285,12 @@ export const opensankey_theme = extendTheme({
     },
     CloseButton: {
       baseStyle: close_button_base_style
+    },
+    Editable:{
+      baseStyle:editable_base_style,
+      variants:{
+        name_file_editable,
+      }
     },
     Input: {
       baseStyle: input_base_style,
@@ -769,6 +776,16 @@ export const opensankey_theme = extendTheme({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
     },
+    topbar_file_name:{
+      margin:'auto',  
+    },
+    toolbar_save_and_file_name:{
+      position:'absolute',
+      right:0,
+      zIndex:2,
+      display:'grid',
+      gridTemplateColumns:'auto auto',
+    }
 
   },
   textStyles: {

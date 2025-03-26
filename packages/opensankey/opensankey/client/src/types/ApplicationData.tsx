@@ -40,12 +40,11 @@ import { useToast } from '@chakra-ui/react'
 import { Class_MenuConfig } from '../types/MenuConfig'
 import { ClassAbstract_ApplicationData } from '../types/Abstract'
 import { ClassTemplate_DrawingArea } from './DrawingArea'
-import { randomId, Type_JSON } from './Utils'
+import { getStringFromJSON, randomId, Type_JSON } from './Utils'
 import { ClassTemplate_NodeElement } from '../Elements/Node'
 import { ClassTemplate_LinkElement } from '../Elements/Link'
 import { ClassTemplate_Sankey } from './Sankey'
 import { FType_ProcessFunctions } from './FunctionTypes'
-import { DataSuiteType } from './LegacyType'
 
 import { Type_SaveDiagramOptions } from '../components/dialogs/types/SankeyPersistenceTypes'
 import { JSONtoExcel, retrieveExcelResults } from '../components/dialogs/SankeyPersistence'
@@ -74,6 +73,7 @@ export type Type_TextForToastPromise = {
 export const default_save_only_visible_elements = false
 export const default_save_with_values = true
 export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
+export const default_file_name = 'Diagramme de Sankey'
 
 const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
@@ -110,6 +110,8 @@ export abstract class ClassTemplate_ApplicationData
   public data_var_to_update: MutableRefObject<string[]> = React.useRef([])
 
   // PROTECTED ATTRIBUTES ==============================================================
+
+  protected _file_name = default_file_name
 
   /**
    * Drawing area
@@ -310,11 +312,6 @@ export abstract class ClassTemplate_ApplicationData
    */
   private _steps: StepType[] = []
 
-  // OPTIONNAL ATTRIBUTES ===============================================================
-
-  // File name
-  file_name?: string
-
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -407,7 +404,7 @@ export abstract class ClassTemplate_ApplicationData
   protected _reset() {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
-
+    this._file_name = default_file_name
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -522,21 +519,9 @@ export abstract class ClassTemplate_ApplicationData
     // Prepare JSON for saving
     const json_data_str = JSON.stringify(json_data, null, 2)
     const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
-    // Set name for file to download
-    const dataAsSuite = (json_data as DataSuiteType)
-    let name = 'Diagramme de Sankey'
-    if (
-      dataAsSuite.view &&
-      dataAsSuite.view.length > 0 &&
-      !dataAsSuite.is_catalog
-    ) {
-      name = 'Diagramme de Sankey avec vues'
-    }
-    else if (dataAsSuite.is_catalog === true) {
-      name = 'Catalogue de vues de diagrammes de Sankey'
-    }
+
     // Trigger file download
-    FileSaver.saveAs(blob, name + '.json')
+    FileSaver.saveAs(blob, this._file_name + '.json')
   }
 
   /**
@@ -550,13 +535,11 @@ export abstract class ClassTemplate_ApplicationData
    */
   public saveToExcel(
     url_prefix: string,
-    file_name = 'sankey'
   ) {
     this.sendWaitingToast(
       () => {
         this._saveToExcel(
-          url_prefix,
-          file_name
+          url_prefix
         )
       },
       {
@@ -581,12 +564,11 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _saveToExcel(
     url_prefix: string,
-    file_name = 'sankey'
   ) {
     JSONtoExcel(
       this._toJSON(),
       url_prefix,
-      file_name
+      this._file_name
     )
   }
 
@@ -603,6 +585,9 @@ export abstract class ClassTemplate_ApplicationData
     // Node label separator attribute
     json_object['node_label_separator'] = this._node_label_separator
     json_object['node_label_separator_part'] = this._node_label_separator_part
+    //File name
+    json_object['name_file'] = this._file_name
+
     // Dump with drawing area & its content in json struct
     return {
       ...json_object,
@@ -655,6 +640,8 @@ export abstract class ClassTemplate_ApplicationData
   ) {
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
+    this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
+
   }
 
   /**
@@ -686,6 +673,7 @@ export abstract class ClassTemplate_ApplicationData
       () => {
         // Processing
         this._updateFromJSON(json_object)
+        this._menu_configuration.updateAllMenuComponents()
       })
   }
 
@@ -700,6 +688,7 @@ export abstract class ClassTemplate_ApplicationData
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
       drawing_area_from_layout.fromJSON(json_layout)
+      this.file_name=getStringFromJSON(json_layout,'name_file',this.file_name)
       this.drawing_area.updateFrom(
         drawing_area_from_layout,
         ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux',/*'tagLevel',*/'icon_catalog']
@@ -1065,7 +1054,7 @@ export abstract class ClassTemplate_ApplicationData
             this._toast_processes.splice(0, 1) // pop process from processes list
             resolve(200) // end
           },
-          500) // Leave 500ms of delay in order to give enough time to load spinner component
+            500) // Leave 500ms of delay in order to give enough time to load spinner component
         }),
         {
           success: {
@@ -1169,8 +1158,9 @@ export abstract class ClassTemplate_ApplicationData
 
   public get i18n() { return this._i18n }
 
-  public get is_reconcilied(): boolean {
-    return this._is_reconcilied
-  }
+  public get is_reconcilied(): boolean { return this._is_reconcilied }
+
+  public get file_name(): string { return this._file_name }
+  public set file_name(value: string) { this._file_name = value }
 }
 
