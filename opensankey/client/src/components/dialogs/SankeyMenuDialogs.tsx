@@ -722,7 +722,6 @@ export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> 
         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
           <Box layerStyle='options_2cols' >
             <Button
-              variant='menuconfigpanel_option_button'
               onClick={
                 () => {
                   ClickSaveDiagram(new_data)
@@ -730,7 +729,6 @@ export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> 
               }>{t('Menu.SaveJSON')}
             </Button>
             <Button
-              variant='menuconfigpanel_del_button'
               onClick={
                 () => {
                   set_show_save_json_modal(false)
