@@ -35,6 +35,7 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Select,
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -60,6 +61,7 @@ import {
   default_link_value_label_on_path,
   default_link_value_label_pos_auto,
   default_link_name_label_is_visible,
+  default_shape_color_rule,
   Class_LinkAttribute
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
@@ -212,6 +214,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const shape_arrow_size = (element_ref?.shape_arrow_size ?? default_shape_arrow_size)
   const shape_is_arrow = (element_ref?.shape_is_arrow ?? default_shape_is_arrow)
   const shape_color = (element_ref?.shape_color ?? default_shape_color)
+  const shape_color_rule = (element_ref?.shape_color_rule ?? default_shape_color_rule)
   const shape_opacity = (element_ref?.shape_opacity ?? default_shape_opacity)
   const shape_is_structure = (element_ref?.shape_is_structure ?? default_shape_is_structure)
   const shape_local_scale = (element_ref?.local_link_scale ?? default_shape_local_scale)
@@ -283,6 +286,26 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
 
   const content_shape_color = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.apparence.couleur')}>
     <>
+      {/* Choix de la source de la couleur */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Flux.apparence.color_source')}
+          <TooltipElementOverloaded k={'shape_color_rule'} />
+        </Box>
+        <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
+          <Select
+            onChange={(evt) => {
+              updateElements('shape_color_rule', evt.target.value)
+            }}
+          >
+            {new_data.menu_configuration.flow_color_origin_type.map(el => {
+              return<option key={'value_' + el} value={el}><><OSTooltip label={t('Flux.apparence.tooltips.color_source.' + el)}>{t('Flux.apparence.' + el)}</OSTooltip></></option>
+
+            })}
+          </Select>
+        </OSTooltip>
+      </Box>
+
       {/* Choix de la couleur du flux */}
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
@@ -290,6 +313,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
           <TooltipElementOverloaded k={'shape_color'} />
         </Box><Box>
         <OSColorPicker
+          isDisabled={shape_color_rule !== 'auto'}
           initialColor={shape_color}
           functionOnBlur={(new_color) => {
             updateElements('shape_color', new_color)
@@ -606,6 +630,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       _shape_arrow_size: { overloaded: isAttributeOverloaded(selected_links, 'shape_arrow_size'), name: t('Flux.apparence.arrow_size') },
       _shape_is_arrow: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_arrow'), name: t('Flux.apparence.fleche') },
       _shape_color: { overloaded: isAttributeOverloaded(selected_links, 'shape_color'), name: t('Flux.apparence.couleur') },
+      _shape_color_rule: { overloaded: isAttributeOverloaded(selected_links, 'shape_color_rule'), name: t('Flux.apparence.color_source') },
       _shape_opacity: { overloaded: isAttributeOverloaded(selected_links, 'shape_opacity'), name: t('Flux.apparence.opacity') },
       _shape_is_structure: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_structure'), name: t('Flux.apparence.structure') },
       _local_link_scale: { overloaded: isAttributeOverloaded(selected_links, 'local_link_scale'), name: t('Flux.apparence.data_off_scale') },
