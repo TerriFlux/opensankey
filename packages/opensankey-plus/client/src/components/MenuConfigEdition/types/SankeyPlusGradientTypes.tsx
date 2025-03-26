@@ -1,10 +1,5 @@
 import { Type_GenericApplicationDataOSP } from '../../../types/TypesOSP'
 
-export type FCType_MenuConfLinkApparenceGradientOSP = {
-  new_data_plus: Type_GenericApplicationDataOSP,
-  menu_for_style: boolean,
-}
-
 export type FCType_MenuConfLinkApparenceDashedOSP={
   new_data_plus:Type_GenericApplicationDataOSP,
   menu_for_style:boolean
