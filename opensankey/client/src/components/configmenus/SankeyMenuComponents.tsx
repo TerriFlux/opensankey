@@ -254,6 +254,23 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
     get_label_uppercase = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_uppercase'])) ?? default_node_value_label_uppercase
   }
 
+
+  /**
+     * Local component that add a icon with a tooltip to show attribute value is managed by element attribute (and not style as by default)
+     *
+     * @param {*} {k}
+     * @return {*} 
+     */
+  const TooltipElementOverloaded: FunctionComponent<{ k: possibleDecoratorName }> = ({ k }) => {
+    if (menu_for_style)
+      return <></>
+
+    const isOverwritted = isElementAttributeOverloaded(selectedElements, k)
+    return isOverwritted ? (
+      <>{TooltipValueSurcharge('el_var_', t)}</>
+    ) : <></>
+  }
+
   // Link to ConfigMenuNumberInput state variable
   const number_of_input = 1
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
@@ -269,7 +286,6 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
     >
       {/* Police et taille du texte de label */}
       <Box layerStyle='options_2cols' >
-
         <Select
           variant='menuconfigpanel_option_select'
           value={get_label_font_family}
@@ -497,6 +513,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
               <>{TooltipValueSurcharge('link_var_', t)}</> :
               <></>
           }
+          <TooltipElementOverloaded k={dict_decorator_name['label_color']} />
         </Box>
         <OSColorPicker
           initialColor={get_label_color}
@@ -511,6 +528,19 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
   </Box>
 }
 
+
+/**
+ * Component with inputs to set value for label_value attribute of node & flow
+ *
+ * @param {*} {
+ *   new_data,
+ *   elements,
+ *   selectedElements,
+ *   refreshParentComponent,
+ *   dict_decorator_name
+ * }
+ * @return {*} 
+ */
 export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuValueLabelComponent> = ({
   new_data,
   elements,
@@ -651,7 +681,7 @@ export const WrapperBoxSubSectionMenu: FunctionComponent<FCType_WrapperBoxSubSec
  * @param {*} { new_data, title, children, hide = false }
  * @return {*} 
  */
-export const WrapperContentConfig: FunctionComponent<{ title: string; hide?: boolean; children: JSX.Element }> = ({  title, children, hide = false }) => {
+export const WrapperContentConfig: FunctionComponent<{ title: string; hide?: boolean; children: JSX.Element }> = ({ title, children, hide = false }) => {
   // If var hide is at true then return 'nothing'
   if (hide)
     return <></>
@@ -725,6 +755,22 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
     get_label_unit_factor = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_factor']) ?? default_node_value_label_unit_factor)
   }
 
+  /**
+   * Local component that add a icon with a tooltip to show attribute value is managed by element attribute (and not style as by default)
+   *
+   * @param {*} {k}
+   * @return {*} 
+   */
+  const TooltipElementOverloaded: FunctionComponent<{ k: possibleDecoratorName }> = ({ k }) => {
+    if (menu_for_style)
+      return <></>
+
+    const isOverwritted = isElementAttributeOverloaded(selectedElements, k)
+    return isOverwritted ? (
+      <>{TooltipValueSurcharge('el_var_', t)}</>
+    ) : <></>
+  }
+
   // Link to ConfigMenuNumberInput state variable
   const number_of_input = 2
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
@@ -747,12 +793,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
           <OSTooltip label={t('Flux.label.tooltips.l_u_v')}>
             {t('Flux.label.l_u_v') + ' '}
           </OSTooltip>
-          {
-            (!menu_for_style) &&
-              isElementAttributeOverloaded(selectedElements, 'value_label_unit_visible') ?
-              TooltipValueSurcharge('link_var_', t) :
-              <></>
-          }
+          <TooltipElementOverloaded k='value_label_unit_visible' />
         </Checkbox>
       </Box>
       {/* Modifie l'unité du label de flux */}
@@ -762,12 +803,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.label.l_u')}
-                {
-                  (!menu_for_style) &&
-                    isElementAttributeOverloaded(selectedElements, 'value_label_unit') ?
-                    <>{TooltipValueSurcharge('link_var_', t)}</> :
-                    <></>
-                }
+                <TooltipElementOverloaded k='value_label_unit' />
               </Box>
               <OSTooltip label={t('Flux.label.tooltips.l_u')}>
                 <ConfigMenuTextInput
@@ -784,14 +820,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.label.unit_factor')}
-                {
-                  (
-                    (!menu_for_style) &&
-                    isElementAttributeOverloaded(selectedElements, 'value_label_unit_factor')
-                  ) ?
-                    <>{TooltipValueSurcharge('link_var_', t)}</> :
-                    <></>
-                }
+                <TooltipElementOverloaded k='value_label_unit_factor' />
               </Box>
               <OSTooltip label={t('Flux.label.tooltips.unit_factor')}>
                 <ConfigMenuNumberInput
@@ -819,7 +848,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
 export type typeElementSelectable = {
   label: string,
   value: string,
-  selected:boolean
+  selected: boolean
 }[]
 
 
@@ -837,7 +866,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
   elements,
   onClick
 }) => {
-  const selected_elements=elements.filter(el=>el.selected)
+  const selected_elements = elements.filter(el => el.selected)
   const textBtn = selected_elements.length > 0 ? selected_elements.map(el => el.label).join(',') : 'Aucune sélection'
   const selecAll = elements.length > 0 ? <>
     <MenuItem
@@ -861,11 +890,11 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
       {elements.map((el, i) => {
         return <MenuItem
           key={'elements_' + i}
-          icon={el.selected? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
+          icon={el.selected ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
           onClick={() => {
             // Update list of selected element before letting parent decide what to do with it (via onClick)
-            el.selected=!el.selected
-            const new_selected_elements=elements.filter(el=>el.selected)
+            el.selected = !el.selected
+            const new_selected_elements = elements.filter(el => el.selected)
             // Execute parent function for newly selected elements
             onClick(new_selected_elements)
           }}>

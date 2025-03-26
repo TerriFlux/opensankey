@@ -199,6 +199,26 @@ export const menuconfigpanel_option_button_secondary = defineStyle({
   },
 })
 
+export const template_button_reset = defineStyle({
+  height: '2rem',
+  minWidth: 'unset',
+  width: 'unset',
+  textStyle: 'h4',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  borderColor: 'primaire.2',
+  _hover: {
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+    borderColor: 'secondaire.2',
+  },
+  _active: {
+    bg: 'tertiaire.2',
+    bgColor: 'tertiaire.2',
+    borderColor: 'tertiaire.2',
+  },
+})
+
 export const menuconfigpanel_option_button_secondary_activated = defineStyle({
   height: '2rem',
   minWidth: '4.5rem',

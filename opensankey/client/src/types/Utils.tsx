@@ -328,8 +328,8 @@ export const check_perf = (f: () => void, name: string) => {
 
 // Tooltipe added to input in menu when add a local value (for nodes & links local attributes)
 export const TooltipValueSurcharge = (k: string, t: TFunction) => {
-  return <OSTooltip label={t('Menu.overcharge_style_value')}>
-    <FontAwesomeIcon style={{ color: '#6cc3d5', height: '12', width: '12', float: 'right' }} icon={faCircleInfo} />
+  return <OSTooltip label={t('Menu.overcharge_style_value')} placement='left'>
+    <FontAwesomeIcon className='tooltip_overload' style={{ color: '#6cc3d5', height: '12', width: '12', float: 'right' }} icon={faCircleInfo} />
   </OSTooltip>
 }
 
