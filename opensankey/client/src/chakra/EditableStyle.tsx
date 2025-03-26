@@ -24,61 +24,50 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { SankeyData } from '../../../types/LegacyType'
-import { Type_GenericApplicationData } from '../../../types/Types'
-import { Type_JSON } from '../../../types/Utils'
+import { editableAnatomy } from '@chakra-ui/anatomy'
+import { createMultiStyleConfigHelpers } from '@chakra-ui/react'
 
-/**
- * Description placeholder
- *
- * @param {{url_prefix:string,finishReconciliation:(x:boolean)=>void,value:number[],result:string,setResult:(x:string)=>void}} {url_prefix,finishReconciliation,value,result,setResult}
- * @returns {void; value: {}; result: string; setResult: (x: string) => void; }) => any}
- */
-export type FCType_Counter = {
-  url_prefix: string,
-  finishReconciliation: (x: boolean) => void,
-  value: number[],
-  result: string,
-  set_result: (_: string) => void
-}
+const { definePartsStyle } =
+    createMultiStyleConfigHelpers(editableAnatomy.keys)
 
-export type FType_ProcessExample = (
-  applicationData: Type_GenericApplicationData,
-  postProcessLoadExcel: (server_data: SankeyData) => void,
-) => void
 
-export type FType_RetrieveExcelResults = (
-  new_data: Type_GenericApplicationData,
-  text: string,
-) => void
 
-export type Type_SaveDiagramOptions = {
-  mode_save?: boolean,
-  mode_visible_element?: boolean
-}
+// Define the base component styles
+export const editable_base_style = definePartsStyle({
+})
 
-export type FType_ClickSaveDiagram = (
-  new_data: Type_GenericApplicationData
-) => void
+export const name_file_editable = definePartsStyle({
 
-export type FType_DownloadExamples = (
-  file_name: string,
-  filetype: string
-) => void
-
-export type FType_UploadExcelImpl = (
-  set_show_excel_dialog: (b: boolean) => void,
-  input_file: Blob,
-  the_url_prefix: string
-) => void
-
-export type FType_UploadExemple = (
-  file_name: string,
-  applicationData: Type_GenericApplicationData
-) => void
-
-export type FType_JSONtoExcel = (
-  data_as_json: Type_JSON,
-  url_prefix: string,
-  file_name: string
-) => void
+    preview: {
+        display: 'block',
+        alignItems: 'center',
+        paddingLeft:'0.2rem',
+        paddingRight:'0.2rem',
+        height: '1.75rem',
+        fontSize: '0.6rem',
+        bg: 'primaire.3',
+        border: '1px solid',
+        borderColor: 'primaire.3',
+        color: 'white',
+        maxW: '15rem',
+        width: 'fit-content',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    input: {
+        height: '1.75rem',
+        fontSize: '0.6rem',
+        bg: 'primaire.3',
+        border: '1px solid',
+        borderColor: 'primaire.3',
+        color: 'white',
+        width: '6rem',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+    },
+    _active: {
+        secondaire: 'primaire.3',
+    }
+})
