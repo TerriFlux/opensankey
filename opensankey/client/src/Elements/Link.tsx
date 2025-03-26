@@ -894,9 +894,15 @@ export abstract class ClassTemplate_LinkElement
   }
 
   public getPathColorToUse() {
-    // TODO revoir : la couleur d'un flux devrait aussi être definie par la couleur de ses noeuds sources / target
+    const type_source=this.shape_color_rule
+    if(type_source=='source'){
+      return this.source.getShapeColorToUse()
+    }else if(type_source=='target'){
+      return this.target.getShapeColorToUse()
+    }
     // Default color
     let shape_color = this.shape_color
+    // Test if tagg of flow or data are activated, if so use color from tag associated to link
     const dataTagColorActivated = this.sankey.selected_data_tags_list.filter(tag => tag.group.show_legend)
     // Do we apply color of flux tags ?
     const flux_taggs_activated = this.flux_taggs_list
@@ -914,51 +920,7 @@ export abstract class ClassTemplate_LinkElement
       dataTagColorActivated
         .forEach(tag => shape_color = tag.color)
     }
-    else {
-      const src_taggs_activated = this._source.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => {
-          return this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length > 0
-        }).length > 0
-      const trgt_taggs_activated = this._target.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => {
-          return (this._target.grouped_taggs_dict[grp.id] ?? []).filter(tag => tag.is_selected).length > 0
-        }).length > 0
-
-
-      // Do we apply colors of node source/target tags ?
-      const tagg_activated = this.sankey.node_taggs_list
-        .filter(tagg => tagg.show_legend)
-
-      const trgt_node_type = this._target.grouped_taggs_dict['type de noeud']
-      const src_node_type = this._source.grouped_taggs_dict['type de noeud']
-
-      // The first common tag is used to défine the color. The code after would take the first tag
-      // of one of the two nodes source or target which is not the same as the first of the common tag
-      if (tagg_activated.length > 0 && this._source.grouped_taggs_dict[tagg_activated[0].id]) {
-        const group_id = tagg_activated[0].id
-        const common_tags = this._source.grouped_taggs_dict[group_id].filter(t => this._target.grouped_taggs_dict[group_id] && this._target.grouped_taggs_dict[group_id].includes(t))
-        if (common_tags.length > 0) {
-          shape_color = common_tags[0].color
-          return shape_color
-        }
-      }
-      // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt
-      if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {
-        shape_color = this._source.getShapeColorToUse()
-      }
-      else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
-        shape_color = this._target.getShapeColorToUse()
-      }
-      else {
-        if (trgt_taggs_activated) {
-          // If target has a tag from a group of which we display the palette
-          shape_color = this._target.getShapeColorToUse()
-        } else if (src_taggs_activated) {
-          // If source has a tag from a group of which we display the palette
-          shape_color = this._source.getShapeColorToUse()
-        }
-      }
-    }
+   
     return shape_color
   }
 
@@ -3806,6 +3768,26 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawElements() }
+
+  /**
+ * TODO Description
+ * @memberof ClassTemplate_LinkElement
+ */
+  public get shape_color_rule() {
+    if (this._display.attributes.shape_color_rule !== undefined) {
+      return this._display.attributes.shape_color_rule
+    } else if (this._display.style.shape_color_rule !== undefined) {
+      return this._display.style.shape_color_rule
+    }
+    return default_shape_color
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set shape_color_rule(_: string) { this._display.attributes.shape_color_rule = _; this.drawElements() }
+
 
   /**
    * TODO Description
