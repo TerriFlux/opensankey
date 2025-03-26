@@ -932,6 +932,21 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
     }
   }
 
+    /**
+   * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
+   *
+   * @param {*} {k}
+   * @return {*} 
+   */
+    const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
+      if (menu_for_style)
+        return <></>
+  
+      return isAttributeOverloaded(selected_nodes, k) ? (
+        <>{TooltipValueSurcharge('node_var_', t)}</>
+      ) : <></>
+    }
+
   /**
    *
    * function that go throught all Type_GenericNodeElement of an array & check if they're all equals
@@ -1015,11 +1030,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
           {t('Noeud.labels.vdb')}
         </OSTooltip>
-        {((!menu_for_style) &&
-          isAttributeOverloaded(selected_nodes, 'name_label_is_visible') ?
-          TooltipValueSurcharge('node_var', t) :
-          <></>
-        )}
+        <TooltipElementOverloaded k='name_label_is_visible'/>
       </Checkbox>
     </Box>
     {name_label_is_visible ? <><SankeyMenuLabelComponent
@@ -1051,12 +1062,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
             {t('Noeud.labels.l_bg')}
           </OSTooltip>
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_nodes, 'name_label_background') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>
-          }
+          <TooltipElementOverloaded k='name_label_background'/>
         </Checkbox>
         <OSColorPicker
           initialColor={name_label_background_color}
@@ -1070,12 +1076,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Menu.larg')}
-            {
-              (!menu_for_style) &&
-                isAttributeOverloaded(selected_nodes, 'name_label_box_width') ?
-                <>{TooltipValueSurcharge('node_var_', t)}</> :
-                <></>
-            }
+          <TooltipElementOverloaded k='name_label_background'/>
           </Box>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[0]}
@@ -1097,10 +1098,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Noeud.labels.anchor_dx')}
-            {(!menu_for_style) &&
-              isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>}
+            <TooltipElementOverloaded k='name_label_horiz_shift'/>
           </Box>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[1]}
@@ -1122,10 +1120,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Noeud.labels.anchor_dy')}
-            {(!menu_for_style) &&
-              isAttributeOverloaded(selected_nodes, 'name_label_vert_shift') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>}
+            <TooltipElementOverloaded k='name_label_vert_shift'/>
           </Box>
 
           <ConfigMenuNumberInput
@@ -1163,12 +1158,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <OSTooltip label={t('Flux.label.tooltips.label')}>
           {t('Flux.label.vdb') + ' '}
         </OSTooltip>
-        {
-          (!menu_for_style) &&
-            isAttributeOverloaded(selected_nodes, 'value_label_is_visible') ?
-            TooltipValueSurcharge('link_var_', t) :
-            <></>
-        }
+        <TooltipElementOverloaded k='value_label_is_visible'/>
       </Checkbox>
     </Box>
     {value_label_is_visible ? <>
@@ -1202,12 +1192,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
             {t('Noeud.labels.l_bg')}
           </OSTooltip>
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_nodes, 'value_label_background') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>
-          }
+          <TooltipElementOverloaded k='value_label_background'/>
         </Checkbox>
         <OSColorPicker
           initialColor={value_label_background_color}
@@ -1221,10 +1206,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Noeud.labels.anchor_dx')}
-            {(!menu_for_style) &&
-              isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>}
+            <TooltipElementOverloaded k='value_label_horiz_shift'/>
           </Box>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[3]}
@@ -1246,10 +1228,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Noeud.labels.anchor_dy')}
-            {(!menu_for_style) &&
-              isAttributeOverloaded(selected_nodes, 'value_label_vert_shift') ?
-              TooltipValueSurcharge('node_var', t) :
-              <></>}
+            <TooltipElementOverloaded k='value_label_vert_shift'/>
           </Box>
 
           <ConfigMenuNumberInput

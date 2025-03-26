@@ -84,9 +84,10 @@ export const checkbox_base_style = definePartsStyle({
 export const menuconfigpanel_option_checkbox = definePartsStyle({
   label:{
     fontSize: 'unset',
+    width:'100%',
     svg:{
       marginRight:'0.2rem',
-    }
+    },
   },
   control:{
     w:'0.75rem',
