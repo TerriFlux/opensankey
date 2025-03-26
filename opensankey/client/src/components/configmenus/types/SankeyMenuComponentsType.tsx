@@ -44,6 +44,13 @@ export type possibleDecoratorName = 'value_label_horiz'
     | 'name_label_font_size'
     | 'name_label_color'
     | 'name_label_font_family'
+    | 'value_label_uppercase'
+    | 'name_label_uppercase'
+    | 'value_label_italic'
+    | 'name_label_italic'
+    | 'value_label_bold'
+    | 'name_label_bold'
+
 
 
 
@@ -64,7 +71,7 @@ export type labelValueAttribute = labelAttributeType & {
 
 }
 
-export type UnitAttributeType={
+export type UnitAttributeType = {
     label_unit_visible: 'value_label_unit_visible',
     label_unit: 'value_label_unit',
     label_unit_factor: 'value_label_unit_factor',
@@ -93,8 +100,8 @@ export type FCType_SankeyMenuValueLabelComponent = {
     refreshParentComponent: () => void,
     dict_decorator_name: labelValueAttribute
 }
-export type FCType_WrapperBoxSubSectionMenu={
-    new_data:Type_GenericApplicationData,
-    title:string,
-    children:JSX.Element
+export type FCType_WrapperBoxSubSectionMenu = {
+    new_data: Type_GenericApplicationData,
+    title: string,
+    children: JSX.Element
 }

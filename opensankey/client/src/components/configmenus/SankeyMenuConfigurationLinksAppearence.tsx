@@ -59,7 +59,8 @@ import {
   default_link_value_label_is_visible,
   default_link_value_label_on_path,
   default_link_value_label_pos_auto,
-  default_link_name_label_is_visible
+  default_link_name_label_is_visible,
+  Class_LinkAttribute
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
 import {
@@ -263,6 +264,21 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
     new_data.menu_configuration.updateComponentRelatedToLinksApparence()
   }
 
+  /**
+   * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
+   *
+   * @param {*} {k}
+   * @return {*} 
+   */
+  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
+    if (menu_for_style)
+      return <></>
+
+    return isAttributeOverloaded(selected_links, k) ? (
+      <>{TooltipValueSurcharge('node_var_', t)}</>
+    ) : <></>
+  }
+
   // JSX menu components ---------------------------------------------------------------
 
   const content_shape_color = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.apparence.couleur')}>
@@ -271,12 +287,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.couleur')}
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'shape_color') ?
-              <>{TooltipValueSurcharge('link_var_', t)}</> :
-              <></>
-          }
+          <TooltipElementOverloaded k={'shape_color'} />
         </Box><Box>
         <OSColorPicker
           initialColor={shape_color}
@@ -291,12 +302,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.opacity')}
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'shape_opacity') ?
-              <>{TooltipValueSurcharge('link_var_', t)}</> :
-              <></>
-          }
+          <TooltipElementOverloaded k={'shape_opacity'} />
         </Box>
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
@@ -333,12 +339,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.arrow_size')}
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'shape_arrow_size') ?
-              <>{TooltipValueSurcharge('link_var_', t)}</> :
-              <></>
-          }
+          <TooltipElementOverloaded k={'shape_arrow_size'} />
         </Box>
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
@@ -451,6 +452,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         onChange={(evt) => { updateElements('shape_is_curved', evt.target.checked) }}>
         <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
           {t('Flux.apparence.courbe')}
+          <TooltipElementOverloaded k={'shape_is_curved'} />
         </OSTooltip>
       </Checkbox>
 
@@ -458,14 +460,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.starting_curve')}
-          {
-            (
-              (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'shape_starting_curve')
-            ) ?
-              <>{TooltipValueSurcharge('link_var_', t)}</> :
-              <></>
-          }
+          <TooltipElementOverloaded k={'shape_starting_curve'} />
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
           <ConfigMenuNumberInput
@@ -486,14 +481,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.ending_curve')}
-          {
-            (
-              (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'shape_ending_curve')
-            ) ?
-              <>{TooltipValueSurcharge('link_var_', t)}</> :
-              <></>
-          }
+          <TooltipElementOverloaded k={'shape_ending_curve'} />
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
           <ConfigMenuNumberInput
@@ -515,12 +503,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.starting_tangeant')}
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'shape_starting_tangeant') ?
-              <>{TooltipValueSurcharge('link_var_', t)}</> :
-              <></>
-          }
+          <TooltipElementOverloaded k={'shape_starting_tangeant'} />
         </Box>
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
@@ -543,12 +526,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.ending_tangeant')}
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'shape_ending_tangeant') ?
-              <>{TooltipValueSurcharge('link_var_', t)}</> :
-              <></>
-          }
+          <TooltipElementOverloaded k={'shape_ending_tangeant'} />
         </Box>
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
@@ -572,14 +550,10 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       <Box layerStyle='menuconfigpanel_grid' >
         <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
           <>
-            <Box
-              as='span'
-              layerStyle='menuconfigpanel_row_2cols'
-            >
-              <Box
-                layerStyle='menuconfigpanel_option_name'
-              >
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
                 {t('Flux.apparence.data_off_scale')}
+                <TooltipElementOverloaded k={'local_link_scale'} />
               </Box>
               <ConfigMenuNumberOrUndefinedInput
                 ref_to_set_value={ref_set_link_scale_inputs}
@@ -588,7 +562,6 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
                 minimum_value={0}
                 stepper={true}
                 step={1}
-
               />
             </Box>
           </>
@@ -603,6 +576,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         onChange={(evt) => { updateElements('shape_is_structure', evt.target.checked) }}>
         <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
           {t('Flux.apparence.structure')}
+          <TooltipElementOverloaded k={'shape_is_structure'} />
         </OSTooltip>
       </Checkbox>
     </>
@@ -829,7 +803,20 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
 
+  /**
+   * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
+   *
+   * @param {*} {k}
+   * @return {*} 
+   */
+  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
+    if (menu_for_style)
+      return <></>
 
+    return isAttributeOverloaded(selected_links, k) ? (
+      <>{TooltipValueSurcharge('link_var_', t)}</>
+    ) : <></>
+  }
 
   const content_value_specific_flow = value_label_is_visible ? <>
     {/* Orienter le texte du label le long du flux  */}
@@ -841,12 +828,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
       <OSTooltip label={t('Flux.label.tooltips.acf')}>
         {t('Flux.label.acf') + ' '}
       </OSTooltip>
-      {
-        (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'value_label_on_path') ?
-          TooltipValueSurcharge('link_var_', t) :
-          <></>
-      }
+      <TooltipElementOverloaded k='value_label_on_path' />
     </Checkbox>
 
     {/* Button to adjust label position in case the label is bigger than the link */}
@@ -859,6 +841,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
       <OSTooltip label={t('Flux.tooltips.ajust_label')}>
         {t('Flux.ajust_label')}
       </OSTooltip>
+      <TooltipElementOverloaded k='value_label_pos_auto' />
     </Checkbox>
   </> : <></>
 
@@ -878,12 +861,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
         <OSTooltip label={t('Flux.label.tooltips.label')}>
           {t('Flux.label.vdb') + ' '}
         </OSTooltip>
-        {
-          (!menu_for_style) &&
-            isAttributeOverloaded(selected_links, 'value_label_is_visible') ?
-            TooltipValueSurcharge('link_var_', t) :
-            <></>
-        }
+        <TooltipElementOverloaded k='value_label_is_visible' />
       </Checkbox>
     </Box>
     {value_label_is_visible ?
@@ -937,12 +915,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
       <OSTooltip label={t('Flux.label.tooltips.acf')}>
         {t('Flux.label.acf') + ' '}
       </OSTooltip>
-      {
-        (!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'name_label_on_path') ?
-          TooltipValueSurcharge('link_var_', t) :
-          <></>
-      }
+      <TooltipElementOverloaded k='name_label_on_path' />
     </Checkbox>
 
     {/* Button to adjust label position in case the label is bigger than the link */}
@@ -955,6 +928,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
       <OSTooltip label={t('Flux.tooltips.ajust_label')}>
         {t('Flux.ajust_label')}
       </OSTooltip>
+      <TooltipElementOverloaded k='name_label_pos_auto' />
     </Checkbox>
   </> : <></>
 
@@ -972,11 +946,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
         <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
           {t('Noeud.labels.vdb')}
         </OSTooltip>
-        {((!menu_for_style) &&
-          isAttributeOverloaded(selected_links, 'name_label_is_visible') ?
-          TooltipValueSurcharge('node_var', t) :
-          <></>
-        )}
+        <TooltipElementOverloaded k='name_label_is_visible' />
       </Checkbox>
     </Box>
 
