@@ -30,12 +30,12 @@ import { defineStyle } from '@chakra-ui/react'
 export const button_base_style = defineStyle({
   width: '100%',
   margin: '0',
+  fontSize:'0.6rem',
+  color:'white',
   minW: 'unset',
   border: 'solid 1px ',
   borderRadius: '6px',
   minWidth: 'unset',
-  color: 'white',
-  fontSize: 'unset',
   fill: 'white',
   path: 'white',
   borderColor: 'primaire.3',
@@ -60,7 +60,7 @@ export const button_base_style = defineStyle({
 
 export const menuconfigpanel_option_button = defineStyle({
   height: '1.5rem',
-  width: '1.rem',
+  width: '1.5rem',
   padding: '0.5rem',
   fontSize: 'unset',
   backgroundColor: 'white',
@@ -140,6 +140,25 @@ export const menuconfigpanel_add_button = defineStyle({
 })
 
 export const menuconfigpanel_del_button = defineStyle({
+  height: '1.5rem',
+  width: '1.5rem',
+  borderColor: 'primaire.1',
+  bg: 'primaire.1',
+  bgColor: 'primaire.1',
+  padding: '0.5rem',
+  _hover: {
+    borderColor: 'secondaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+  },
+  _active: {
+    borderColor: 'secondaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+  },
+})
+
+export const menuconfigpanel_close = defineStyle({
   height: '1.5rem',
   width: '1.5rem',
   borderColor: 'primaire.1',
@@ -521,8 +540,8 @@ export const menutop_button_save_in_cache = defineStyle({
   fill: 'white',
   // Size of icon in button
   'svg': {
-    height: '2.5rem',
-    width: '2rem'
+    height: '1.25rem',
+    width: '1.25rem'
   },
   _hover: {
     borderColor: 'secondaire.3',
@@ -779,7 +798,8 @@ export const sizeMenuTopButton = defineStyle({
 })
 
 export const sizeMenuTopButtonSaveCache = defineStyle({
-  ...sizeMenuTopButton,
-  width: '4rem',
+  height: '1.75rem',
+  width: '1.75rem',
+  minW: 'unset',
 })
 
