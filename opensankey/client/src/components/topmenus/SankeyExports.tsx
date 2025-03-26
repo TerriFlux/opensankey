@@ -189,7 +189,7 @@ const clickSavePNG = (
 
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/png' })
-    FileSaver.saveAs(newBlob, 'sankey_diagram.png')
+    FileSaver.saveAs(newBlob, new_data.file_name+'.png')
   }
 
   const cleanFile = () => {
@@ -230,7 +230,7 @@ export const clickSavePDF = (new_data: Type_GenericApplicationData) => {
 
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/pdf' })
-    FileSaver.saveAs(newBlob, 'sankey_diagram.pdf')
+    FileSaver.saveAs(newBlob, new_data.file_name+'.pdf')
   }
 
   const cleanFile = () => {

@@ -54,7 +54,8 @@ import {
 } from '@chakra-ui/react'
 import {
   faCheck,
-  faExclamation} from '@fortawesome/free-solid-svg-icons'
+  faExclamation
+} from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
 } from '@fortawesome/react-fontawesome'
@@ -148,22 +149,14 @@ export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton
         }
       }}
     >
-      <Box
-        display='grid'
-        gridTemplateColumns='3fr 1fr'
-        gridTemplateRows='1fr'
-      >
-        <Box
-          gridColumn='1'
-          alignSelf='center'
-          justifySelf='end'
-        >
+      <Box>
+        <Box>
           {new_data.icon_library.icon_save_in_cache}
         </Box>
         <Box
-          gridColumn='2'
-          alignSelf='end'
-          justifySelf='start'
+          position='absolute'
+          bottom='0.15rem'
+          right='0.1rem'
         >
           {indicator_saved_data}
         </Box>
@@ -194,6 +187,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
   const _load_sankeymatic = useRef<HTMLInputElement>(null)
 
   ref_setter_show_modal_tuto.current = set_show_tuto
+
 
 
   // Button reset DA & start either from empty sankey or template
@@ -592,6 +586,8 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
   // Button to launch tour of application
   const button_tour = <ButtonLaunchGuide new_data={new_data} />
 
+
+
   // Dict containing buttons of OpenSankey that will be displayed in order of menu_top_order
   const dict_components_menu_top: { [x: string]: React.JSX.Element; } = {
     // Files open / save / export buttons
@@ -636,7 +632,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
                 }
               </ButtonGroup>
               {
-                (i < (new_data.menu_configuration.menu_top_order.length - 1)) ?
+                (i < (new_data.menu_configuration.menu_top_order.length)) ?
                   <Divider
                     orientation='vertical'
                     margin='0'
@@ -848,11 +844,11 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
         alignSelf='center'
         justifySelf='end'
         display='grid'
-        gridTemplateColumns='1fr 1fr'
+        gridTemplateColumns='1fr'
         gridColumnGap='0.25rem'
         width='min-content'
       >
-        <OpenSankeySaveButton new_data={new_data} />
+
         {constent_additional_nav_item}
       </Box>
     </Box>

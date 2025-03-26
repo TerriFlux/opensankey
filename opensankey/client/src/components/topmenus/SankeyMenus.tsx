@@ -36,6 +36,9 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
+  Editable,
+  EditableInput,
+  EditablePreview,
   Text,
   Toast,
 } from '@chakra-ui/react'
@@ -68,7 +71,7 @@ import { ToolBarBottom } from './MenuBottom'
 import { FCType_Menu } from '../../types/FunctionTypes'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
-import { MenuTopNavBar } from './MenuTop'
+import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../types/Types'
 import { keyTypeConfig, keyTypeElements } from '../../types/MenuConfig'
 import { DrawingAreaStyle, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
@@ -124,6 +127,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   const { icon_open_close_config } = icon_library
   const [show_nav, set_show_nav] = useState(false)
   const [, setCount] = useState(0)
+
   menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   menu_configuration.ref_menu_opened.current = [show_nav, (val) => set_show_nav(val)]
   const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + menu_config_width + '% + ' + new_data.drawing_area.fit_margin + 'px)' : new_data.drawing_area.fit_margin / 2
@@ -132,6 +136,12 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     set_show_nav(!show_nav)
   }
 
+  // 1.75rem is the size of the btn save in cache + edit diagram name
+  const posTopMenuConfig = 'calc(' + (new_data.drawing_area.getNavBarHeight() + (new_data.drawing_area.fit_margin)) + 'px + 1.75rem)'
+
+  // JSX.Elements for the component ----------------------------------------------------------------
+
+  const modal_resolution_png = modalResolutionPNG(new_data)
 
   const content_support = <>
     <Text
@@ -148,6 +158,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     </Text>
   </>
 
+
   const modal_support = <MenuDraggable
     dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_support'}
@@ -156,7 +167,25 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   />
 
 
-  const modal_resolution_png = modalResolutionPNG(new_data)
+  const sankey_file_name = <Box style={{ top: new_data.drawing_area.getNavBarHeight() + new_data.drawing_area.fit_margin / 2, right: new_data.drawing_area.fit_margin / 2 }} className='toolbar_save_and_file_name' layerStyle='toolbar_save_and_file_name' >
+    <OpenSankeySaveButton new_data={new_data} />
+    <OSTooltip placement='left' label={t('Menu.tooltips.sankey_file_name') + new_data.file_name}>
+      <Box layerStyle='topbar_file_name' >
+        <Editable textAlign={'center'} justifyContent={'center'}
+          variant='name_file_editable'
+          defaultValue={new_data.file_name}
+          onSubmit={(evt) => {
+            if (evt) {
+              new_data.file_name = evt
+              setCount(a => a + 1)
+            }
+          }}>
+          <EditablePreview />
+          <EditableInput />
+        </Editable>
+      </Box>
+    </OSTooltip>
+  </Box>
 
   return (
     <>
@@ -217,7 +246,8 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       }
 
       {
-        (!new_data.is_static) ?
+        (!new_data.is_static) ? <>
+          {sankey_file_name}
           <Drawer
             blockScrollOnMount={false}
             isOpen={show_nav}
@@ -243,14 +273,14 @@ export const Menu: FunctionComponent<FCType_Menu> = (
               style={{
                 width: menu_config_width + '%',
                 right: new_data.drawing_area.fit_margin / 2,
-                marginTop: (new_data.drawing_area.fit_margin) + new_data.drawing_area.getNavBarHeight()
+                marginTop: posTopMenuConfig
               }}
             >
               <DrawerBody>
                 <ConfigMenu new_data={new_data} additional_menus={additionalMenus} />
               </DrawerBody>
             </DrawerContent>
-          </Drawer> :
+          </Drawer></> :
           <></>}
 
 
@@ -268,7 +298,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             value='menuConfigButton'
             style={{
               right: posBtnOpenConfig,
-              top: new_data.drawing_area.getNavBarHeight() + (new_data.drawing_area.fit_margin),
+              top: posTopMenuConfig,
             }}
           >
             {icon_open_close_config}
