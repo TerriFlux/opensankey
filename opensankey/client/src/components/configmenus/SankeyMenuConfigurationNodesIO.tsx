@@ -48,7 +48,7 @@ import type { FCType_SankeyMenuConfigurationNodesIO } from './types/SankeyMenuCo
 /*************************************************************************************************/
 
 import { OSTooltip } from '../../types/Utils'
-import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
+import { SankeyNodeSelection } from './SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 
 /*************************************************************************************************/
@@ -496,7 +496,8 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
     </Box>
   </Box>
 
-  const content = <><SankeyNodeSelectionSimple new_data={new_data} />
+  const content = <>
+    <SankeyNodeSelection new_data={new_data} />
     <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Reorg_title')} >
       <Box layerStyle='menuconfigpanel_grid'>
         {content_reorg}
