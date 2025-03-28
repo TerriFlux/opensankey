@@ -628,7 +628,7 @@ export const resources_app_elements = {
           données: 'Data',
           vpp: 'Value',
           edit_value: 'Edit value',
-          affichage: 'Display',
+          affichage: 'Label',
           tooltips: {
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
             scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
@@ -1485,7 +1485,7 @@ export const resources_app_elements = {
           edit_value: 'Éditer la valeur',
           données: 'Données',
           vpp: 'Valeur',
-          affichage: 'Affichage',
+          affichage: 'Label',
           tooltips: {
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
             scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',

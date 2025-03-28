@@ -88,6 +88,7 @@ const getFluxFromSankey = (new_data: Type_GenericApplicationData): IType_SpreadS
 export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationData }> = (
   { new_data }: { new_data: Type_GenericApplicationData }
 ) => {
+  const { menu_configuration } = new_data
 
   // Table header
   const headerRow: Row = {
@@ -117,12 +118,12 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   // Define the spreadsheet rows
   const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey(new_data))
   const rows = getRows(spreadSheetFlux)
-  const innerW=window.innerWidth
+  const innerW = window.innerWidth
   // Define the spreadsheet columns and their properties
   const [columns, setColumns] = useState<Column[]>([
-    { columnId: 'source', width: innerW*0.055, resizable: true },
-    { columnId: 'target', width: innerW*0.055, resizable: true },
-    { columnId: 'value', width: innerW*0.045, resizable: true }
+    { columnId: 'source', width: innerW * 0.055, resizable: true },
+    { columnId: 'target', width: innerW * 0.055, resizable: true },
+    { columnId: 'value', width: innerW * 0.045, resizable: true }
   ])
 
   // Map node and link names to their IDs for quick lookups
@@ -218,9 +219,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     new_data.draw()
   }
 
-  const updateTable = () => {
-    setSpreadSheetFlux([...spreadSheetFlux])//Update Table
-  }
 
 
   // Functions called in onCellChanges that can be undone ===============================================
@@ -261,8 +259,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           new_data.drawing_area.sankey.links_dict[ent_l[0]].data_value = ent_l[1]
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
-        updateTable()
-        synchronizeSpreadSheetWithSankey()
+        menu_configuration.updateComponentRelatedToLinksData()
       }
 
       // Create redo of original function ----------------------------
@@ -271,15 +268,14 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           new_data.drawing_area.sankey.links_dict[ent_l[0]].data_value = ent_l[1]
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
-        updateTable()
-        synchronizeSpreadSheetWithSankey()
+        menu_configuration.updateComponentRelatedToLinksData()
       }
 
       //Save undo/redo
       new_data.history.saveUndo(undoUpdateLinksValues)
       new_data.history.saveRedo(redoUpdateLinksValues)
 
-      updateTable()
+      menu_configuration.updateComponentRelatedToLinksData()
     }
 
   }
@@ -308,11 +304,10 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             createdElements.push(c_element)
           }
           redraw()
-          synchronizeSpreadSheetWithSankey()
-        } else{
-          updateTable()
+          menu_configuration.updateComponentRelatedToLinksData()
+        } else {
+          menu_configuration.updateComponentRelatedToLinksData()
         }
-        
       })
 
 
@@ -329,9 +324,9 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             })
           })
           redraw()
-          synchronizeSpreadSheetWithSankey()
-        }else{
-          updateTable()
+          menu_configuration.updateComponentRelatedToLinksData()
+        } else {
+          menu_configuration.updateComponentRelatedToLinksData()
         }
 
       }
@@ -350,11 +345,10 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             new_data.drawing_area.sankey.addNewLink(src, trgt)
           })
           redraw()
-          synchronizeSpreadSheetWithSankey()
-        }else{
-          updateTable()
+          menu_configuration.updateComponentRelatedToLinksData()
+        } else {
+          menu_configuration.updateComponentRelatedToLinksData()
         }
-        
       }
       //Save undo/redo
       new_data.history.saveUndo(undoNewFlux)
@@ -399,7 +393,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           // Remove lone nodes
           new_data.drawing_area.deleteNode(prevNode)
         }
-        synchronizeSpreadSheetWithSankey()
+        menu_configuration.updateComponentRelatedToLinksData()
       })
 
 
@@ -431,7 +425,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             dict_l[ent_l[0]].target = dict_n[ent_l[1].target]
           }
         })
-        synchronizeSpreadSheetWithSankey()
+        menu_configuration.updateComponentRelatedToLinksData()
       }
 
       // Create redo of original function ----------------------------
@@ -461,7 +455,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             }
           }
         })
-        synchronizeSpreadSheetWithSankey()
+        menu_configuration.updateComponentRelatedToLinksData()
       }
       //Save undo/redo
       new_data.history.saveUndo(undoModifyFlux)
@@ -502,7 +496,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           l.target.name = new_node_name
           dict_new_name[l.id] = { src: undefined, trgt: new_node_name }
         }
-        synchronizeSpreadSheetWithSankey()
+        menu_configuration.updateComponentRelatedToLinksData()
       })
 
       // Create undo of original function ----------------------------
@@ -515,7 +509,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             new_data.drawing_area.sankey.links_dict[ent_l[0]].target.name = ent_l[1].trgt
           }
         })
-        synchronizeSpreadSheetWithSankey()
+        menu_configuration.updateComponentRelatedToLinksData()
       }
 
       // Create redo of original function ----------------------------
@@ -528,7 +522,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
             new_data.drawing_area.sankey.links_dict[ent_l[0]].target.name = ent_l[1].trgt
           }
         })
-        synchronizeSpreadSheetWithSankey()
+        menu_configuration.updateComponentRelatedToLinksData()
       }
       //Save undo/redo
       new_data.history.saveUndo(undoChangeNodeName)
@@ -647,7 +641,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
               let redraw = false
               let synchronizeSpreadSheet = false
-              const elementCreated:([typeCreatedLink, typeCreatedNode[]] | undefined)[]=[]
+              const elementCreated: ([typeCreatedLink, typeCreatedNode[]] | undefined)[] = []
               spreadSheetFlux.forEach(flux => {
                 if (flux.value && isNaN(flux.value)) {
                   flux.value = (flux.value as unknown as string).replace(' ', '').replace('\r', '') as unknown as number
@@ -668,35 +662,35 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
               if (redraw) {
                 new_data.drawing_area.computeAutoSankey(true)
                 new_data.draw()
-                synchronizeSpreadSheetWithSankey()
+                menu_configuration.updateComponentRelatedToLinksData()
               }
               if (synchronizeSpreadSheet) {
-                synchronizeSpreadSheetWithSankey()
+                menu_configuration.updateComponentRelatedToLinksData()
               }
 
               const undoPaste = () => {
-                elementCreated.forEach(ec=>{
-                  if(ec==undefined){
+                elementCreated.forEach(ec => {
+                  if (ec == undefined) {
                     return
                   }
-                  ec[1].forEach(node=>{
+                  ec[1].forEach(node => {
                     // delete node from sankey.node_dict & not directly from elementCreated because
                     //  element in elementCreated can be element not refered in nodes_dict (especially after a redo, so we call an object with the same id)  
                     new_data.drawing_area.sankey.deleteNode(new_data.drawing_area.sankey.nodes_dict[node.id])
                   })
                 })
-                new_data.drawing_area.fromJSON(prevSankey,false)
-               
+                new_data.drawing_area.fromJSON(prevSankey, false)
+
                 // new_data.drawing_area.computeAutoSankey(true)
                 new_data.draw()
-                synchronizeSpreadSheetWithSankey()
+                menu_configuration.updateComponentRelatedToLinksData()
               }
 
               const redoPaste = () => {
-                new_data.drawing_area.fromJSON(nextSankey,false)
+                new_data.drawing_area.fromJSON(nextSankey, false)
                 new_data.drawing_area.computeAutoSankey(true)
                 new_data.draw()
-                synchronizeSpreadSheetWithSankey()
+                menu_configuration.updateComponentRelatedToLinksData()
               }
               //Save undo/redo
               new_data.history.saveUndo(undoPaste)
