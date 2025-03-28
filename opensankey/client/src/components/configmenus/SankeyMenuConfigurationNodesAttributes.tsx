@@ -334,277 +334,277 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         <TooltipElementOverloaded k='shape_visible' />
       </Checkbox>
     </Box>
+    {shape_visible ? <>
+      {/* In this position of the array, there is an input who can change the node visibility (hide if intermediary)(dev) */}
+      {additional_menus.advanced_appearence_content.splice(1, 1)}
 
-    {/* In this position of the array, there is an input who can change the node visibility (hide if intermediary)(dev) */}
-    {additional_menus.advanced_appearence_content.splice(1, 1)}
-
-    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-      {t('Menu.edition')}
-    </Box>
-
-    {/* Couleur du noeud */}
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Noeud.apparence.Couleur')}
-        <TooltipElementOverloaded k='shape_color' />
+      <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+        {t('Menu.edition')}
       </Box>
-      <Box layerStyle='option_with_activation'>
-        <OSTooltip label={t('Noeud.apparence.tooltips.Couleur')}>
-          <Box>
-            <OSColorPicker
-              initialColor={shape_color}
-              functionOnBlur={(new_color) => {
-                updateElements('shape_color', new_color)
-              }}
-            />
-          </Box>
-        </OSTooltip>
-        <OSTooltip label={t('Noeud.apparence.tooltips.CouleurPérenne')}>
-          <Button
-            //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-            variant={
-              shape_color_sustainable ?
-                'menuconfigpanel_option_button_activated' :
-                'menuconfigpanel_option_button'}
-            onClick={() => {
-              updateElements('shape_color_sustainable', !shape_color_sustainable)
-            }}
-          >
-            {shape_color_sustainable ? icon_locked : icon_unlocked}
-            <TooltipElementOverloaded k='shape_color_sustainable' />
-          </Button>
-        </OSTooltip>
-      </Box>
-    </Box>
 
-    {/* Forme du noeud */}
-    <OSTooltip label={t('Noeud.apparence.tooltips.Forme')}>
+      {/* Couleur du noeud */}
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.apparence.Forme')}
-          <TooltipElementOverloaded k='shape_type' />
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Noeud.apparence.Couleur')}
+          <TooltipElementOverloaded k='shape_color' />
         </Box>
-        <Box layerStyle='options_3cols' >
-          <Button
-            value="ellipse"
-            variant={
-              shape_type === 'ellipse' ?
-                'menuconfigpanel_option_button_activated' :
-                'menuconfigpanel_option_button'}
-            onClick={() => {
-              updateElements('shape_type', 'ellipse')
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill='#78C2AD'
-              stroke='currentColor'
-              viewBox='0 0 17 17'
-              width="1rem"
-              height="1rem"
-            >
-              <path d="M 16.440445,8.4666672 A 7.9737778,7.9737773 0 0 1 8.4666672,16.440444 7.9737778,7.9737773 0 0 1 0.4928894,8.4666672 7.9737778,7.9737773 0 0 1 8.4666672,0.49288988 7.9737778,7.9737773 0 0 1 16.440445,8.4666672 Z" />
-            </svg>
-          </Button>
-
-          <Button
-            variant={
-              shape_type === 'rect' ?
-                'menuconfigpanel_option_button_activated' :
-                'menuconfigpanel_option_button'}
-            onClick={() => {
-              updateElements('shape_type', 'rect')
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill='#78C2AD'
-              stroke='currentColor'
-              viewBox='0 0 17 17'
-              width="1rem"
-              height="1rem"
-            >
-              <path d="M 0.385555,0.385555 H 16.547779 V 16.547779 H 0.385555 Z" />
-            </svg>
-            {/* {t('Noeud.apparence.Rectangle')} */}
-          </Button>
-
-          <Button
-            variant={
-              shape_type === 'arrow' ?
-                'menuconfigpanel_option_button_activated' :
-                'menuconfigpanel_option_button'
-            }
-            onClick={() => {
-              updateElements('shape_type', 'arrow')
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill='#78C2AD'
-              stroke='currentColor'
-              viewBox='0 0 17 17'
-              width="1rem"
-              height="1rem"
-            >
-              <path d="M 0.11499051,0.11500028 H 10.015883 L 16.844087,8.5149428 10.015883,16.818334 H 0.11499051 L 6.601784,8.5149428 Z" />
-            </svg>
-            {/* {t('Noeud.apparence.arrow')} */}
-          </Button>
-        </Box>
-      </Box>
-    </OSTooltip>
-
-    {
-      /* Change the angle of the arrow shaped node */
-      shape_type === 'arrow' ?
-        <Box layerStyle='menuconfigpanel_grid'>
-          <OSTooltip label={t('Noeud.apparence.tooltips.arrow_angle')}>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name' >
-                {t('Noeud.apparence.arrow_angle')}
-                <TooltipElementOverloaded k='shape_arrow_angle_factor' />
-              </Box>
-              <Slider
-                min={0}
-                max={45}
-                step={5}
-                value={shape_arrow_angle_factor}
-                onChange={(value) => {
-                  updateElements('shape_arrow_angle_factor', value)
+        <Box layerStyle='option_with_activation'>
+          <OSTooltip label={t('Noeud.apparence.tooltips.Couleur')}>
+            <Box>
+              <OSColorPicker
+                initialColor={shape_color}
+                functionOnBlur={(new_color) => {
+                  updateElements('shape_color', new_color)
                 }}
-              >
-                <SliderMark
-                  value={shape_arrow_angle_factor as number}
-                >
-                  {shape_arrow_angle_factor}°
-                </SliderMark>
-                <SliderTrack>
-                  <SliderFilledTrack />
-                </SliderTrack>
-                <SliderThumb />
-              </Slider>
+              />
             </Box>
           </OSTooltip>
+          <OSTooltip label={t('Noeud.apparence.tooltips.CouleurPérenne')}>
+            <Button
+              //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+              variant={
+                shape_color_sustainable ?
+                  'menuconfigpanel_option_button_activated' :
+                  'menuconfigpanel_option_button'}
+              onClick={() => {
+                updateElements('shape_color_sustainable', !shape_color_sustainable)
+              }}
+            >
+              {shape_color_sustainable ? icon_locked : icon_unlocked}
+              <TooltipElementOverloaded k='shape_color_sustainable' />
+            </Button>
+          </OSTooltip>
+        </Box>
+      </Box>
 
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name' >
-              {t('Noeud.apparence.angle_orientation')}
-              <TooltipElementOverloaded k='shape_arrow_angle_direction' />
-            </Box>
-            <Box layerStyle='options_4cols' >
-              <Button
-                variant={
-                  shape_arrow_angle_direction === 'left' ?
-                    'menuconfigpanel_option_button_activated' :
-                    'menuconfigpanel_option_button'
-                }
-                minWidth={0}
-                onClick={() => {
-                  updateElements('shape_arrow_angle_direction', 'left')
-                }}
-              >
-                {icon_direction_left}
-              </Button>
-              <Button
-                variant={
-                  shape_arrow_angle_direction === 'right' ?
-                    'menuconfigpanel_option_button_activated' :
-                    'menuconfigpanel_option_button'
-                }
-                minWidth={0}
-                onClick={() => {
-                  updateElements('shape_arrow_angle_direction', 'right')
-                }}
-              >
-                {icon_direction_rift}
-              </Button>
-              <Button
-                variant={
-                  shape_arrow_angle_direction === 'top' ?
-                    'menuconfigpanel_option_button_activated' :
-                    'menuconfigpanel_option_button'
-                }
-                minWidth={0}
-                onClick={() => {
-                  updateElements('shape_arrow_angle_direction', 'top')
-
-                }}
-              >
-                {icon_direction_up}
-              </Button>
-              <Button
-                variant={
-                  shape_arrow_angle_direction === 'bottom' ?
-                    'menuconfigpanel_option_button_activated' :
-                    'menuconfigpanel_option_button'
-                }
-                minWidth={0}
-                onClick={() => {
-                  updateElements('shape_arrow_angle_direction', 'bottom')
-                }}
-              >
-                {icon_direction_down}
-              </Button>
-            </Box>
+      {/* Forme du noeud */}
+      <OSTooltip label={t('Noeud.apparence.tooltips.Forme')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.apparence.Forme')}
+            <TooltipElementOverloaded k='shape_type' />
           </Box>
-        </Box> :
-        <></>
-    }
+          <Box layerStyle='options_3cols' >
+            <Button
+              value="ellipse"
+              variant={
+                shape_type === 'ellipse' ?
+                  'menuconfigpanel_option_button_activated' :
+                  'menuconfigpanel_option_button'}
+              onClick={() => {
+                updateElements('shape_type', 'ellipse')
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill='#78C2AD'
+                stroke='currentColor'
+                viewBox='0 0 17 17'
+                width="1rem"
+                height="1rem"
+              >
+                <path d="M 16.440445,8.4666672 A 7.9737778,7.9737773 0 0 1 8.4666672,16.440444 7.9737778,7.9737773 0 0 1 0.4928894,8.4666672 7.9737778,7.9737773 0 0 1 8.4666672,0.49288988 7.9737778,7.9737773 0 0 1 16.440445,8.4666672 Z" />
+              </svg>
+            </Button>
 
-    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-      {t('Noeud.size')}
-    </Box>
+            <Button
+              variant={
+                shape_type === 'rect' ?
+                  'menuconfigpanel_option_button_activated' :
+                  'menuconfigpanel_option_button'}
+              onClick={() => {
+                updateElements('shape_type', 'rect')
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill='#78C2AD'
+                stroke='currentColor'
+                viewBox='0 0 17 17'
+                width="1rem"
+                height="1rem"
+              >
+                <path d="M 0.385555,0.385555 H 16.547779 V 16.547779 H 0.385555 Z" />
+              </svg>
+              {/* {t('Noeud.apparence.Rectangle')} */}
+            </Button>
 
-    {/* Largeur minimale du noeud */}
-    <OSTooltip label={t('Noeud.apparence.tooltips.TML')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.apparence.TML')}
-          <TooltipElementOverloaded k='shape_min_width' />
+            <Button
+              variant={
+                shape_type === 'arrow' ?
+                  'menuconfigpanel_option_button_activated' :
+                  'menuconfigpanel_option_button'
+              }
+              onClick={() => {
+                updateElements('shape_type', 'arrow')
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill='#78C2AD'
+                stroke='currentColor'
+                viewBox='0 0 17 17'
+                width="1rem"
+                height="1rem"
+              >
+                <path d="M 0.11499051,0.11500028 H 10.015883 L 16.844087,8.5149428 10.015883,16.818334 H 0.11499051 L 6.601784,8.5149428 Z" />
+              </svg>
+              {/* {t('Noeud.apparence.arrow')} */}
+            </Button>
+          </Box>
         </Box>
-        <ConfigMenuNumberInput
-          ref_to_set_value={ref_set_number_inputs[1]}
-          default_value={shape_min_width}
-          function_on_blur={(value) => {
-            updateElements('shape_min_width', (value ?? undefined))
-          }}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          step={1}
-          stepper={true}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip>
+      </OSTooltip>
 
-    {/* Hauteur minimale du noeud */}
-    <OSTooltip label={t('Noeud.apparence.tooltips.TMH')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.apparence.TMH')}
-          <TooltipElementOverloaded k='shape_min_height' />
+      {
+        /* Change the angle of the arrow shaped node */
+        shape_type === 'arrow' ?
+          <Box layerStyle='menuconfigpanel_grid'>
+            <OSTooltip label={t('Noeud.apparence.tooltips.arrow_angle')}>
+              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                <Box layerStyle='menuconfigpanel_option_name' >
+                  {t('Noeud.apparence.arrow_angle')}
+                  <TooltipElementOverloaded k='shape_arrow_angle_factor' />
+                </Box>
+                <Slider
+                  min={0}
+                  max={45}
+                  step={5}
+                  value={shape_arrow_angle_factor}
+                  onChange={(value) => {
+                    updateElements('shape_arrow_angle_factor', value)
+                  }}
+                >
+                  <SliderMark
+                    value={shape_arrow_angle_factor as number}
+                  >
+                    {shape_arrow_angle_factor}°
+                  </SliderMark>
+                  <SliderTrack>
+                    <SliderFilledTrack />
+                  </SliderTrack>
+                  <SliderThumb />
+                </Slider>
+              </Box>
+            </OSTooltip>
+
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name' >
+                {t('Noeud.apparence.angle_orientation')}
+                <TooltipElementOverloaded k='shape_arrow_angle_direction' />
+              </Box>
+              <Box layerStyle='options_4cols' >
+                <Button
+                  variant={
+                    shape_arrow_angle_direction === 'left' ?
+                      'menuconfigpanel_option_button_activated' :
+                      'menuconfigpanel_option_button'
+                  }
+                  minWidth={0}
+                  onClick={() => {
+                    updateElements('shape_arrow_angle_direction', 'left')
+                  }}
+                >
+                  {icon_direction_left}
+                </Button>
+                <Button
+                  variant={
+                    shape_arrow_angle_direction === 'right' ?
+                      'menuconfigpanel_option_button_activated' :
+                      'menuconfigpanel_option_button'
+                  }
+                  minWidth={0}
+                  onClick={() => {
+                    updateElements('shape_arrow_angle_direction', 'right')
+                  }}
+                >
+                  {icon_direction_rift}
+                </Button>
+                <Button
+                  variant={
+                    shape_arrow_angle_direction === 'top' ?
+                      'menuconfigpanel_option_button_activated' :
+                      'menuconfigpanel_option_button'
+                  }
+                  minWidth={0}
+                  onClick={() => {
+                    updateElements('shape_arrow_angle_direction', 'top')
+
+                  }}
+                >
+                  {icon_direction_up}
+                </Button>
+                <Button
+                  variant={
+                    shape_arrow_angle_direction === 'bottom' ?
+                      'menuconfigpanel_option_button_activated' :
+                      'menuconfigpanel_option_button'
+                  }
+                  minWidth={0}
+                  onClick={() => {
+                    updateElements('shape_arrow_angle_direction', 'bottom')
+                  }}
+                >
+                  {icon_direction_down}
+                </Button>
+              </Box>
+            </Box>
+          </Box> :
+          <></>
+      }
+
+      <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+        {t('Noeud.size')}
+      </Box>
+
+      {/* Largeur minimale du noeud */}
+      <OSTooltip label={t('Noeud.apparence.tooltips.TML')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.apparence.TML')}
+            <TooltipElementOverloaded k='shape_min_width' />
+          </Box>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[1]}
+            default_value={shape_min_width}
+            function_on_blur={(value) => {
+              updateElements('shape_min_width', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+          />
         </Box>
-        <ConfigMenuNumberInput
-          ref_to_set_value={ref_set_number_inputs[0]}
-          default_value={shape_min_height}
-          function_on_blur={(value) => {
-            updateElements('shape_min_height', (value ?? undefined))
-          }}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          step={1}
-          stepper={true}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip>
-    {!menu_for_style && position_type == 'parametric' ? <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-      {t('Noeud.position')}
-    </Box> : <></>}
+      </OSTooltip>
 
-    {/* Position du noeud */}
-    {/* {menu_for_style ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
+      {/* Hauteur minimale du noeud */}
+      <OSTooltip label={t('Noeud.apparence.tooltips.TMH')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.apparence.TMH')}
+            <TooltipElementOverloaded k='shape_min_height' />
+          </Box>
+          <ConfigMenuNumberInput
+            ref_to_set_value={ref_set_number_inputs[0]}
+            default_value={shape_min_height}
+            function_on_blur={(value) => {
+              updateElements('shape_min_height', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+          />
+        </Box>
+      </OSTooltip>
+      {!menu_for_style && position_type == 'parametric' ? <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+        {t('Noeud.position')}
+      </Box> : <></>}
+
+      {/* Position du noeud */}
+      {/* {menu_for_style ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.geometry')}
@@ -659,28 +659,28 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         </Box>
       </Box>
     </OSTooltip>:<></>} */}
-    {/* Ecarts horizontal des noeuds */}
-    {!menu_for_style && position_type == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.apparence.geometry_u')}
-        </Box>
+      {/* Ecarts horizontal des noeuds */}
+      {!menu_for_style && position_type == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.apparence.geometry_u')}
+          </Box>
 
-        <ConfigMenuNumberInput
-          default_value={position_u}
-          ref_to_set_value={ref_set_number_inputs[2]}
-          menu_for_style={menu_for_style}
-          function_on_blur={() => {
-            new_data.drawing_area.computeParametricV()
-            refreshThisAndUpdateRelatedComponents()
-          }}
-          stepper={true}
-          minimum_value={1}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip> : <></>}
-    {/* Ecarts horizontal des noeuds
+          <ConfigMenuNumberInput
+            default_value={position_u}
+            ref_to_set_value={ref_set_number_inputs[2]}
+            menu_for_style={menu_for_style}
+            function_on_blur={() => {
+              new_data.drawing_area.computeParametricV()
+              refreshThisAndUpdateRelatedComponents()
+            }}
+            stepper={true}
+            minimum_value={1}
+            unit_text='pixels'
+          />
+        </Box>
+      </OSTooltip> : <></>}
+      {/* Ecarts horizontal des noeuds
     {list_value['position'][0] == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dx')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
@@ -701,61 +701,61 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         />
       </Box>
     </OSTooltip> : <></>} */}
-    {/* Ecarts vertical des noeuds */}
-    {menu_for_style && position_type == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dy')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.apparence.geometry_dy')}
+      {/* Ecarts vertical des noeuds */}
+      {menu_for_style && position_type == 'parametric' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dy')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.apparence.geometry_dy')}
+          </Box>
+          <ConfigMenuNumberInput
+            default_value={position_dy}
+            ref_to_set_value={ref_set_number_inputs[3]}
+            menu_for_style={menu_for_style}
+            function_on_blur={val => {
+              elements.forEach(element => (element as Class_NodeStyle).position.dy = val as number)
+              refreshThisAndUpdateRelatedComponents()
+            }}
+            stepper={true}
+            unit_text='pixels'
+          />
         </Box>
-        <ConfigMenuNumberInput
-          default_value={position_dy}
-          ref_to_set_value={ref_set_number_inputs[3]}
-          menu_for_style={menu_for_style}
-          function_on_blur={val => {
-            elements.forEach(element => (element as Class_NodeStyle).position.dy = val as number)
-            refreshThisAndUpdateRelatedComponents()
-          }}
-          stepper={true}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip> : <></>}
-    {/* Ecarts vertical des noeuds */}
-    {menu_for_style && position_type == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dx')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.apparence.geometry_relative_dx')}
+      </OSTooltip> : <></>}
+      {/* Ecarts vertical des noeuds */}
+      {menu_for_style && position_type == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dx')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.apparence.geometry_relative_dx')}
+          </Box>
+          <ConfigMenuNumberInput
+            default_value={position_relative_dx}
+            ref_to_set_value={ref_set_number_inputs[4]}
+            menu_for_style={menu_for_style}
+            function_on_blur={() => {
+              refreshThisAndUpdateRelatedComponents()
+            }}
+            stepper={true}
+            unit_text='pixels'
+          />
         </Box>
-        <ConfigMenuNumberInput
-          default_value={position_relative_dx}
-          ref_to_set_value={ref_set_number_inputs[4]}
-          menu_for_style={menu_for_style}
-          function_on_blur={() => {
-            refreshThisAndUpdateRelatedComponents()
-          }}
-          stepper={true}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip> : <></>}
-    {menu_for_style && position_type == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dy')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.apparence.geometry_relative_dy')}
+      </OSTooltip> : <></>}
+      {menu_for_style && position_type == 'relative' ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_relative_dy')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.apparence.geometry_relative_dy')}
+          </Box>
+          <ConfigMenuNumberInput
+            default_value={position_relative_dy}
+            ref_to_set_value={ref_set_number_inputs[5]}
+            menu_for_style={menu_for_style}
+            function_on_blur={() => {
+              refreshThisAndUpdateRelatedComponents()
+            }}
+            stepper={true}
+            unit_text='pixels'
+          />
         </Box>
-        <ConfigMenuNumberInput
-          default_value={position_relative_dy}
-          ref_to_set_value={ref_set_number_inputs[5]}
-          menu_for_style={menu_for_style}
-          function_on_blur={() => {
-            refreshThisAndUpdateRelatedComponents()
-          }}
-          stepper={true}
-          unit_text='pixels'
-        />
-      </Box>
-    </OSTooltip> : <></>}
-    {/* Positionnement vertical automatique
+      </OSTooltip> : <></>}
+      {/* Positionnement vertical automatique
     <Box as='span' >
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
@@ -769,7 +769,8 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         </OSTooltip>
       </Checkbox>
     </Box> */}
-    {additional_menus.advanced_appearence_content}
+      {additional_menus.advanced_appearence_content}
+    </>: <></>}
   </Box>
 
 
@@ -932,20 +933,20 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
     }
   }
 
-    /**
-   * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
-   *
-   * @param {*} {k}
-   * @return {*} 
-   */
-    const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
-      if (menu_for_style)
-        return <></>
-  
-      return isAttributeOverloaded(selected_nodes, k) ? (
-        <>{TooltipValueSurcharge('node_var_', t)}</>
-      ) : <></>
-    }
+  /**
+ * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
+ *
+ * @param {*} {k}
+ * @return {*} 
+ */
+  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
+    if (menu_for_style)
+      return <></>
+
+    return isAttributeOverloaded(selected_nodes, k) ? (
+      <>{TooltipValueSurcharge('node_var_', t)}</>
+    ) : <></>
+  }
 
   /**
    *
@@ -1030,7 +1031,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
           {t('Noeud.labels.vdb')}
         </OSTooltip>
-        <TooltipElementOverloaded k='name_label_is_visible'/>
+        <TooltipElementOverloaded k='name_label_is_visible' />
       </Checkbox>
     </Box>
     {name_label_is_visible ? <><SankeyMenuLabelComponent
@@ -1062,7 +1063,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
             {t('Noeud.labels.l_bg')}
           </OSTooltip>
-          <TooltipElementOverloaded k='name_label_background'/>
+          <TooltipElementOverloaded k='name_label_background' />
         </Checkbox>
         <OSColorPicker
           initialColor={name_label_background_color}
@@ -1076,7 +1077,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Menu.larg')}
-          <TooltipElementOverloaded k='name_label_background'/>
+            <TooltipElementOverloaded k='name_label_background' />
           </Box>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[0]}
@@ -1098,7 +1099,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Noeud.labels.anchor_dx')}
-            <TooltipElementOverloaded k='name_label_horiz_shift'/>
+            <TooltipElementOverloaded k='name_label_horiz_shift' />
           </Box>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[1]}
@@ -1120,7 +1121,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Noeud.labels.anchor_dy')}
-            <TooltipElementOverloaded k='name_label_vert_shift'/>
+            <TooltipElementOverloaded k='name_label_vert_shift' />
           </Box>
 
           <ConfigMenuNumberInput
@@ -1158,7 +1159,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <OSTooltip label={t('Flux.label.tooltips.label')}>
           {t('Flux.label.vdb') + ' '}
         </OSTooltip>
-        <TooltipElementOverloaded k='value_label_is_visible'/>
+        <TooltipElementOverloaded k='value_label_is_visible' />
       </Checkbox>
     </Box>
     {value_label_is_visible ? <>
@@ -1192,7 +1193,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
             {t('Noeud.labels.l_bg')}
           </OSTooltip>
-          <TooltipElementOverloaded k='value_label_background'/>
+          <TooltipElementOverloaded k='value_label_background' />
         </Checkbox>
         <OSColorPicker
           initialColor={value_label_background_color}
@@ -1206,7 +1207,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Noeud.labels.anchor_dx')}
-            <TooltipElementOverloaded k='value_label_horiz_shift'/>
+            <TooltipElementOverloaded k='value_label_horiz_shift' />
           </Box>
           <ConfigMenuNumberInput
             ref_to_set_value={ref_set_number_inputs[3]}
@@ -1228,7 +1229,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
             {t('Noeud.labels.anchor_dy')}
-            <TooltipElementOverloaded k='value_label_vert_shift'/>
+            <TooltipElementOverloaded k='value_label_vert_shift' />
           </Box>
 
           <ConfigMenuNumberInput

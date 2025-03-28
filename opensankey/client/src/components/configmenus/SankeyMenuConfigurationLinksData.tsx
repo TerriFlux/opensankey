@@ -333,13 +333,11 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
-
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update data menu for link
     new_data.menu_configuration.updateComponentRelatedToLinksData()
-    new_data.menu_configuration.ref_to_spreadsheet.current()
     // And update this menu also
     setCount(a => a + 1)
     updateInputsValues()

@@ -60,7 +60,6 @@ export const button_base_style = defineStyle({
 
 export const menuconfigpanel_option_button = defineStyle({
   height: '1.5rem',
-  width: '1.5rem',
   padding: '0.5rem',
   fontSize: 'unset',
   backgroundColor: 'white',

@@ -245,9 +245,7 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
   const [, setForceUpdate] = useBoolean()
 
   new_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current = setForceUpdate.toggle
-
   // Shared refs for external components
-  ref_selected_style_link.current = selected_link_style_id
   // Dict of links styles
   const link_styles_dict = new_data.drawing_area.sankey.link_styles_dict
 
@@ -306,7 +304,6 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
   // Dict of links styles
   const link_styles_dict = new_data.drawing_area.sankey.link_styles_dict
 
-
   return <Box layerStyle='menuconfigpanel_grid'>
     <Box
       as='span'
@@ -325,9 +322,6 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
 
           // Need to save
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
-          // Update this component
-          ref_selected_style_link.current = new_style.id
-          new_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current()
         }}>
         {icon_add_element}
       </Button>
@@ -356,10 +350,6 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
                     ref_selected_style_link.current = id
                     new_data.menu_configuration.updateComponentRelatedToLinksApparence()
                     new_data.menu_configuration.updateComponentRelatedToLinksStyles()
-
-                    ref_selected_style_link.current = id
-                    new_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current()
-
                   }}
                 >
                   {link_styles_dict[id].name}
@@ -382,10 +372,6 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
           new_data.menu_configuration.updateComponentRelatedToLinksStyles()
 
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
-          // Update this component
-          ref_selected_style_link.current = default_style_id
-          new_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current()
-
         }}
       >
         {icon_remove_element}
