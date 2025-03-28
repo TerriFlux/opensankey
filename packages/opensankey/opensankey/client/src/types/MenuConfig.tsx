@@ -483,8 +483,9 @@ export class Class_MenuConfig {
     this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      this._type_menu_configuration_selected='data'
       this._elements_configurable_selected.data=['node']
+      this._elements_configurable_selected.context=['node']
+      this._elements_configurable_selected.style=['node']
       this._ref_to_menu_config_updater.current()
     }, 200)
   }
@@ -498,8 +499,9 @@ export class Class_MenuConfig {
     this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      this._type_menu_configuration_selected='data'
       this._elements_configurable_selected.data=['flow']
+      this._elements_configurable_selected.context=['flow']
+      this._elements_configurable_selected.style=['flow']
       this._ref_to_menu_config_updater.current()
     }, 200)
   }
@@ -632,6 +634,7 @@ export class Class_MenuConfig {
       'updateComponentRelatedToLinksData',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_links_data_updater.current()
+        _this._ref_to_spreadsheet.current()
         _this._ref_to_menu_contextual_config_links_data_updater.current()
       }
     )
