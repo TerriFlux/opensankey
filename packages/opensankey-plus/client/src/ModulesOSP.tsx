@@ -170,7 +170,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.external_top_buttons_item['views'] = <BannerViewsOSP new_data_plus={new_data_plus} />
 
   // Add an option for flow color rule
-  if(has_sankey_plus){
+  if (has_sankey_plus) {
     new_data_plus.menu_configuration.flow_color_origin_type.push('gradient')
   }
 
@@ -256,30 +256,30 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: !has_sankey_plus }
   additionalMenus.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
   additionalMenus.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus },
-  additionalMenus.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus },
-  additionalMenus.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus },
+    additionalMenus.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus },
+    additionalMenus.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus },
 
-  // Add menu for new menu type 'Présentation'
-  additionalMenus.additional_new_menu_config_content['presentation'] = {
-    'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-      <MenuConfigurationFreeLabelsOSP new_data_plus={new_data_plus} />
-    </WrapperContentConfig>,
+    // Add menu for new menu type 'Présentation'
+    additionalMenus.additional_new_menu_config_content['presentation'] = {
+      'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
+        <MenuConfigurationFreeLabelsOSP new_data_plus={new_data_plus} />
+      </WrapperContentConfig>,
 
-    'node': <WrapperContentConfig title={t('Flux.IS')}><>
-      <SankeyMenuConfigurationNodesTooltip new_data={new_data_plus} />
-      <NodeHyperLinkOSP new_data_plus={new_data_plus} />
-    </>
-    </WrapperContentConfig>,
+      'node': <WrapperContentConfig title={t('Flux.IS')}><>
+        <SankeyMenuConfigurationNodesTooltip new_data={new_data_plus} />
+        <NodeHyperLinkOSP new_data_plus={new_data_plus} />
+      </>
+      </WrapperContentConfig>,
 
-    'flow': <WrapperContentConfig title={t('Noeud.IS')}>
-      <MenuConfigurationLinksTooltip new_data={new_data_plus} />
-    </WrapperContentConfig>,
+      'flow': <WrapperContentConfig title={t('Noeud.IS')}>
+        <MenuConfigurationLinksTooltip new_data={new_data_plus} />
+      </WrapperContentConfig>,
 
-    'view': <WrapperContentConfig title={t('view.storytelling')}>
-      <ViewsConfig new_data_plus={new_data_plus}
-      />
-    </WrapperContentConfig>,
-  }
+      'view': <WrapperContentConfig title={t('view.storytelling')}>
+        <ViewsConfig new_data_plus={new_data_plus}
+        />
+      </WrapperContentConfig>,
+    }
 
   // Add menu for menu type 'data'
   additionalMenus.additional_menu_config_content['data'] = {
@@ -301,7 +301,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         />
         <SankeyMenuConfigurationNodesTags
           new_data={new_data_plus}
-          menu_for_modal={false}
         /></>
     </WrapperContentConfig>,
     'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
@@ -309,9 +308,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         new_data={new_data_plus}
         elementTagNameProp='flux_taggs'
       />
-      <MenuConfigurationLinksTags
-        new_data={new_data_plus}
-      />
+        <MenuConfigurationLinksTags
+          new_data={new_data_plus}
+        />
       </>
     </WrapperContentConfig>
   }
@@ -366,19 +365,30 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_node_tags'}
-      content={<SankeyMenuConfigurationNodesTags
-        new_data={new_data_plus}
-        menu_for_modal={true}
-      />}
+      content={<>
+        <SankeySettingsEditionElementTags
+          new_data={new_data_plus}
+          elementTagNameProp='node_taggs'
+        />
+        <SankeyMenuConfigurationNodesTags
+          new_data={new_data_plus}
+        />
+      </>}
       title={t('Menu.Noeuds') + ' ' + t('Menu.Etiquettes')}
       maxW='20%'
     />,
     <MenuDraggable
       dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_link_tags'}
-      content={<MenuConfigurationLinksTags
-        new_data={new_data_plus}
-      />}
+      content={<>
+        <SankeySettingsEditionElementTags
+          new_data={new_data_plus}
+          elementTagNameProp='flux_taggs'
+        />
+        <MenuConfigurationLinksTags
+          new_data={new_data_plus}
+        />
+      </>}
       title={t('Menu.flux') + ' ' + t('Menu.Etiquettes')}
       maxW='20%'
     />,
