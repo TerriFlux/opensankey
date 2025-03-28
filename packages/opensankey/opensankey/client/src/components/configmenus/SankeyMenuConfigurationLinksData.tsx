@@ -47,6 +47,7 @@ import {
 } from '../../types/Utils'
 import { default_link_value_label_unit } from '../../Elements/LinkAttributes'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 
 /*************************************************************************************************/
 
@@ -200,6 +201,9 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   const content = <Box
     layerStyle='menu_sub_section'
   >
+    <SankeyLinkSelection
+    new_data={new_data}
+    />
     {
       // Définition des valeurs selon les paramètre dataTags
       list_data_taggs.map(data_tagg => {
