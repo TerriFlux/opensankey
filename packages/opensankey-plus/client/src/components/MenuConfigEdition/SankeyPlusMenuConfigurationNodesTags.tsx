@@ -91,7 +91,8 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
 
   // JSX content ------------------------------------------------------------------------
 
-  if (!has_node_taggs)
+  // Return nothing if there is no tag or no nodes are selected
+  if (!has_node_taggs || selected_nodes.length==0)
     return <></>
 
   const content = <>
