@@ -38,7 +38,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { t, TFunction } from 'i18next'
-import React, { FunctionComponent, MutableRefObject, useRef } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { ClassTemplate_LinkElement } from '../../Elements/Link'
 import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, font_families } from '../../types/Utils'
@@ -708,7 +708,7 @@ export const MenuResetAttrLocal: FunctionComponent<{ new_data: Type_GenericAppli
   const { icon_undo } = icon_library
 
   // Delete all local attributes of selected elements
-  const resetAll = nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes : new_data.drawing_area.sankey.resetAttrSelectedLinks
+  const resetAll =()=> nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
   // Delete local attributes 'k' of selected elements
   const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as keyof Class_LinkAttribute)
 
@@ -866,6 +866,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
   elements,
   onClick
 }) => {
+  const [menuListItems,setMenuListItems]=useState<JSX.Element[]>([])
   const selected_elements = elements.filter(el => el.selected)
   const textBtn = selected_elements.length > 0 ? selected_elements.map(el => el.label).join(',') : 'Aucune sélection'
   const selecAll = elements.length > 0 ? <>
@@ -879,28 +880,34 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
     <MenuDivider />
   </> : <></>
 
-  return <Menu
+// Create a function that render list so we can choose when to go throught list (that can be long with big sankey)
+  const renderMenu=()=>elements.map((el, i) => {
+
+    return <MenuItem
+      key={'elements_' + i}
+      icon={el.selected ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
+      onClick={() => {
+        // Update list of selected element before letting parent decide what to do with it (via onClick)
+        el.selected = !el.selected
+        const new_selected_elements = elements.filter(el => el.selected)
+        // Execute parent function for newly selected elements
+        onClick(new_selected_elements)
+        setMenuListItems(renderMenu())
+      }}>
+      {el.label}
+    </MenuItem>
+  })
+
+  return <Menu isLazy
     placement='auto'
     variant={'menu_select_elements'}
     closeOnSelect={false}
+    onOpen={()=>setMenuListItems(renderMenu())}
   >
     <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant={'text_menu_select'}> {textBtn}</MenuButton>
     <MenuList>
       {selecAll}
-      {elements.map((el, i) => {
-        return <MenuItem
-          key={'elements_' + i}
-          icon={el.selected ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
-          onClick={() => {
-            // Update list of selected element before letting parent decide what to do with it (via onClick)
-            el.selected = !el.selected
-            const new_selected_elements = elements.filter(el => el.selected)
-            // Execute parent function for newly selected elements
-            onClick(new_selected_elements)
-          }}>
-          {el.label}
-        </MenuItem>
-      })}
+      {menuListItems}
 
     </MenuList>
   </Menu>
