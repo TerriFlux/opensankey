@@ -86,8 +86,9 @@ export const MenuConfigurationLinksTags: FunctionComponent<FCType_MenuConfigurat
   }
 
   // JSX content ------------------------------------------------------------------------
-  if(!has_flux_taggs)
-    return<></>
+  // Return nothing if there is no tag or no links are selected
+  if (!has_flux_taggs || selected_links.length==0)
+    return <></>
 
 
   const content = <>
