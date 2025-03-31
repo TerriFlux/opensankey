@@ -25,6 +25,7 @@
 // ==================================================================================================
 
 import React, { FunctionComponent, useState } from 'react'
+import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from "react-beautiful-dnd";
 
 import {
   Box,
@@ -259,6 +260,14 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
     _moveLinkAfter()
   }
 
+  // Function that return style of element draggable depending on it's state (isDragging)
+  const style_TableLineDragging= (isDragging:boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined) => ({
+    // change background colour if dragging
+    border:isDragging ? "1px solid #78A7C2" : "unset",
+    // styles we need to apply on draggables
+    ...draggableStyle
+  });
+
   // JSX Components ---------------------------------------------------------------------
 
   const content_reorg = <Box
@@ -394,51 +403,76 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                 <Th>{t('Tags.Position')}</Th>
               </Tr>
             </Thead>
-            <Tbody>
-              {
-                links_to_reorganize[side_selected]
-                  .map((link, link_idx) => {
-                    const color = link.getPathColorToUse()
-                    const bc = { 'backgroundColor': (color && tab_colored) ? color : 'inherit' }
-                    const first_link = (link_idx === 0)
-                    const last_link = link_idx === (links_to_reorganize[side_selected].length - 1)
-
-                    return (
-                      <Tr key={link.id}>
-                        <td style={bc}>{link.name}</td>
-                        <td style={{ 'width': '10%' }}>
-                          <Box layerStyle="options_2cols">
-                            <Button
-                              variant='menuconfigpanel_option_button'
-                              isDisabled={first_link}
-                              minWidth='0'
-                              onClick={() => {
-                                if (!first_link) {
-                                  moveLinkBefore(link, links_to_reorganize[side_selected][link_idx - 1])
-                                }
-                              }}
-                            >
-                              {icon_move_element_up}
-                            </Button>
-                            <Button
-                              variant='menuconfigpanel_option_button'
-                              isDisabled={last_link}
-                              minWidth='0'
-                              onClick={() => {
-                                if (!last_link) {
-                                  moveLinkAfter(link, links_to_reorganize[side_selected][link_idx + 1])
-                                }
-                              }}
-                            >
-                              {icon_move_element_down}
-                            </Button>
-                          </Box>
-                        </td>
-                      </Tr>
-                    )
-                  })
+            <DragDropContext onDragEnd={(evt) => {
+              // Reorganise links order at drop event
+              if (evt.destination && evt.destination.index !== undefined) {
+                if (evt.destination.index - evt.source.index < 0) {
+                  moveLinkBefore(links_to_reorganize[side_selected][evt.source.index], links_to_reorganize[side_selected][evt.destination.index])
+                } else if (evt.destination.index - evt.source.index > 0) {
+                  moveLinkAfter(links_to_reorganize[side_selected][evt.source.index], links_to_reorganize[side_selected][evt.destination.index])
+                }
               }
-            </Tbody>
+            }}>
+              <Droppable droppableId="droppable">
+                {(provided,) => (
+                  <Tbody
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}>
+                    {
+                      links_to_reorganize[side_selected]
+                        .map((link, link_idx) => {
+                          const color = link.getPathColorToUse()
+                          const bc = { 'backgroundColor': (color && tab_colored) ? color : 'inherit' }
+                          const first_link = (link_idx === 0)
+                          const last_link = link_idx === (links_to_reorganize[side_selected].length - 1)
+
+                          return (
+                            <Draggable key={link.id} index={link_idx} draggableId={'line_drag_' + link.id}>
+                              {(provided, snapshot) => (
+                                <Tr key={link.id} ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  style={style_TableLineDragging(snapshot.isDragging,provided.draggableProps.style)}
+                                >
+                                  <td style={bc}>{link.name}</td>
+                                  <td style={{ 'width': '10%' }}>
+                                    <Box layerStyle="options_2cols">
+                                      <Button
+                                        variant='menuconfigpanel_option_button'
+                                        isDisabled={first_link}
+                                        minWidth='0'
+                                        onClick={() => {
+                                          if (!first_link) {
+                                            moveLinkBefore(link, links_to_reorganize[side_selected][link_idx - 1])
+                                          }
+                                        }}
+                                      >
+                                        {icon_move_element_up}
+                                      </Button>
+                                      <Button
+                                        variant='menuconfigpanel_option_button'
+                                        isDisabled={last_link}
+                                        minWidth='0'
+                                        onClick={() => {
+                                          if (!last_link) {
+                                            moveLinkAfter(link, links_to_reorganize[side_selected][link_idx + 1])
+                                          }
+                                        }}
+                                      >
+                                        {icon_move_element_down}
+                                      </Button>
+                                    </Box>
+                                  </td>
+                                </Tr>)}
+                            </Draggable>
+                          )
+                        })
+                    }
+                    {provided.placeholder}
+                  </Tbody>
+                )}
+              </Droppable>
+            </DragDropContext>
           </Table>
         </>
       }
