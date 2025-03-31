@@ -11,10 +11,10 @@ import { LevelTagFilter } from './LevelTagFilter'
 
 // Types for FunctionComponent ==========================================
 
-type FCType_CollapseButton = {new_data:Type_GenericApplicationDataOSP, isOpen: boolean, onToggle: () => void }
+type FCType_CollapseButton = { new_data: Type_GenericApplicationDataOSP, isOpen: boolean, onToggle: () => void }
 
 type FCType_FilterTagGroup = {
-  new_data:Type_GenericApplicationDataOSP,
+  new_data: Type_GenericApplicationDataOSP,
   title: string,
   children: ReactNode,
 
@@ -43,7 +43,7 @@ export const title_filter_column = (new_data: Type_GenericApplicationDataOSP) =>
  */
 export const ToolbarFilter: FunctionComponent<FCType_ToolbarFilter> = ({ new_data }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const width_drawer = (drawerOpen ? width_fitler_drawer + new_data.drawing_area.fit_margin/2 : 0) + new_data.drawing_area.fit_margin/2
+  const width_drawer = (drawerOpen ? width_fitler_drawer + new_data.drawing_area.fit_margin / 2 : 0) + new_data.drawing_area.fit_margin / 2
   new_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
 
   return <>
@@ -82,7 +82,7 @@ export const ToolbarFilter: FunctionComponent<FCType_ToolbarFilter> = ({ new_dat
           height: 'fit-content',
           boxShadow: 'unset',
           maxWidth: 'unset',
-          left:new_data.drawing_area.fit_margin / 2,
+          left: new_data.drawing_area.fit_margin / 2,
           maxHeight: new_data.drawing_area.window_fitting_height,
           overflowY: 'auto',
           marginTop: (new_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
@@ -155,6 +155,7 @@ const FlowValueFilter: FunctionComponent<FCType_FlowValueFilter> = ({ new_data }
         </Slider>
 
         <ConfigMenuNumberInput
+          t={new_data.t}
           ref_to_set_value={ref_set_number_inputs[0]}
           default_value={new_data.drawing_area.filter_link_value}
           function_on_blur={(value) => {
@@ -197,6 +198,7 @@ const FlowValueFilter: FunctionComponent<FCType_FlowValueFilter> = ({ new_data }
           <SliderThumb />
         </Slider>
         <ConfigMenuNumberInput
+          t={new_data.t}
           ref_to_set_value={ref_set_number_inputs[1]}
           default_value={new_data.drawing_area.filter_label}
           function_on_blur={(value) => {
@@ -221,7 +223,7 @@ const FlowValueFilter: FunctionComponent<FCType_FlowValueFilter> = ({ new_data }
   </FilterWrapperBox>
 }
 
-export const CollapseButton: FunctionComponent<FCType_CollapseButton> = ({new_data, isOpen, onToggle }) => {
+export const CollapseButton: FunctionComponent<FCType_CollapseButton> = ({ new_data, isOpen, onToggle }) => {
   return <Button variant='collapse_filter'
     size='sizeBtnCollapseFilter'
     onClick={onToggle}>
@@ -311,7 +313,7 @@ export const FilterDataType: FunctionComponent<FCType_ToolbarFilter> = ({ new_da
       </Select>
     </Box></>
 
-  return <FilterWrapperBox 
+  return <FilterWrapperBox
     new_data={new_data}
     title={t('Banner.title_data_type')}>
     {content}

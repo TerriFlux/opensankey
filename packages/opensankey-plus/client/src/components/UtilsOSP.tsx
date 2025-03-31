@@ -246,6 +246,7 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
     </Box>
 
     <ConfigMenuNumberInput
+      t={new_data.t}
       default_value={new_data.menu_configuration.timeout_sequence}
       ref_to_set_value={ref_set_number_input}
       minimum_value={1}
