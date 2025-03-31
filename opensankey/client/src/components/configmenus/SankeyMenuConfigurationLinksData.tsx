@@ -204,7 +204,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     layerStyle='menu_sub_section'
   >
     <SankeyLinkSelection
-    new_data={new_data}
+      new_data={new_data}
     />
     {
       // Définition des valeurs selon les paramètre dataTags

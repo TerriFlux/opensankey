@@ -310,7 +310,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
         </Select>
 
         <ConfigMenuNumberInput
-      t={new_data.t}
+          t={new_data.t}
           ref_to_set_value={ref_set_number_inputs[0]}
           default_value={get_label_font_size}
           menu_for_style={menu_for_style}
@@ -620,7 +620,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
         /* Choose number of custom digit */
         <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
           <ConfigMenuNumberInput
-      t={new_data.t}
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={get_label_nb_digit}
             menu_for_style={menu_for_style}
@@ -831,7 +831,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
               </Box>
               <OSTooltip label={t('Flux.label.tooltips.unit_factor')}>
                 <ConfigMenuNumberInput
-      t={new_data.t}
+                  t={new_data.t}
                   ref_to_set_value={ref_set_number_inputs[1]}
                   default_value={get_label_unit_factor}
                   function_on_blur={(value) => {
@@ -889,7 +889,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
     <MenuDivider />
   </> : <></>
 
-// Create a function that render list so we can choose when to go throught list (that can be long with big sankey)
+  // Create a function that render list so we can choose when to go throught list (that can be long with big sankey)
   const renderMenu=()=>elements.map((el, i) => {
 
     return <MenuItem

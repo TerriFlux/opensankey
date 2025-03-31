@@ -38,36 +38,36 @@ export const editable_base_style = definePartsStyle({
 
 export const name_file_editable = definePartsStyle({
 
-    preview: {
-        display: 'block',
-        alignItems: 'center',
-        paddingLeft:'0.2rem',
-        paddingRight:'0.2rem',
-        height: '1.75rem',
-        fontSize: '0.6rem',
-        bg: 'primaire.3',
-        border: '1px solid',
-        borderColor: 'primaire.3',
-        color: 'white',
-        maxW: '15rem',
-        width: 'fit-content',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-    },
-    input: {
-        height: '1.75rem',
-        fontSize: '0.6rem',
-        bg: 'primaire.3',
-        border: '1px solid',
-        borderColor: 'primaire.3',
-        color: 'white',
-        width: '6rem',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-    },
-    _active: {
-        secondaire: 'primaire.3',
-    }
+  preview: {
+    display: 'block',
+    alignItems: 'center',
+    paddingLeft:'0.2rem',
+    paddingRight:'0.2rem',
+    height: '1.75rem',
+    fontSize: '0.6rem',
+    bg: 'primaire.3',
+    border: '1px solid',
+    borderColor: 'primaire.3',
+    color: 'white',
+    maxW: '15rem',
+    width: 'fit-content',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  input: {
+    height: '1.75rem',
+    fontSize: '0.6rem',
+    bg: 'primaire.3',
+    border: '1px solid',
+    borderColor: 'primaire.3',
+    color: 'white',
+    width: '6rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  _active: {
+    secondaire: 'primaire.3',
+  }
 })

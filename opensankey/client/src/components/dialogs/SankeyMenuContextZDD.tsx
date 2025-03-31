@@ -308,8 +308,8 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_layout.current(true)
     new_data.drawing_area.is_drawing_area_contextualised = false
   }}
-    variant='contextmenu_button'
-    rightIcon={new_data.icon_library.icon_popup_menu}
+  variant='contextmenu_button'
+  rightIcon={new_data.icon_library.icon_popup_menu}
   >
     {t('Menu.MEP')}
   </Button>
