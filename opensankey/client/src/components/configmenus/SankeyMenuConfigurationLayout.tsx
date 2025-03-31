@@ -168,6 +168,7 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
 
         <OSTooltip label={t('MEP.tooltips.TCG')}>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={new_data.drawing_area.grid_size}
             function_on_blur={eventGridSize}
@@ -279,6 +280,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
         </Box>
         <Box>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={new_data.drawing_area.scale}
             function_on_blur={eventScale}
@@ -329,6 +331,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
         >
           <OSTooltip label={t('MEP.tooltips.MinFlux')}>
             <ConfigMenuNumberInput
+              t={new_data.t}
               ref_to_set_value={ref_set_number_inputs[1]}
               default_value={new_data.drawing_area.minimum_flux}
               function_on_blur={eventMinLinkThickness}
@@ -345,6 +348,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
         >
           <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
             <ConfigMenuNumberInput
+              t={new_data.t}
               ref_to_set_value={ref_set_number_inputs[2]}
               default_value={new_data.drawing_area.maximum_flux}
               function_on_blur={eventMaxLinkThickness}
@@ -528,6 +532,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[1]}
             default_value={new_data.drawing_area.legend.legend_bg_opacity}
             function_on_blur={eventLegendBgOpacity}
@@ -564,6 +569,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
         </Box>
         <OSTooltip label={t('Menu.tooltips.fontSize')}>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={new_data.drawing_area.legend.legend_police}
             function_on_blur={eventLegendFontSize}
@@ -583,6 +589,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegX')}>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[2]}
             default_value={new_data.drawing_area.legend.position_x}
             function_on_blur={eventLegendPosX}
@@ -604,6 +611,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegY')}>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[3]}
             default_value={new_data.drawing_area.legend.position_y}
             function_on_blur={eventLegendPosY}
@@ -625,6 +633,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegWidth')}>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[4]}
             default_value={new_data.drawing_area.legend.width}
             function_on_blur={eventLegendWidth}

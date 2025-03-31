@@ -44,7 +44,10 @@ import {
   InputRightAddon,
   InputGroup,
   Input,
+  FormErrorMessage,
+  FormControl,
 } from '@chakra-ui/react'
+import { TFunction } from 'i18next'
 
 // Local libs
 
@@ -89,6 +92,7 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
   * @return {*}
   */
 export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
+  t,
   default_value,
   ref_to_set_value,
   function_on_blur,
@@ -99,12 +103,14 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   step = 1,
   unit_text = undefined,
   fixed_dec = 2,
-  disabled=false
+  disabled = false,
+  multiValue = false
+
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const getFixedVal = (_: string| number | null | undefined) => {
+  const getFixedVal = (_: string | number | null | undefined) => {
     const number_val = Number(_)
     // if val has decimal & we want a fixed number of decimal & the number is not an Integer then fix value decimal else return value(Integer or null)
     const new_fixed_value = (fixed_dec !== 0 && number_val !== null && number_val !== undefined && Math.trunc(number_val) != number_val) ? (number_val?.toFixed(fixed_dec)) : number_val
@@ -122,56 +128,59 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   // Add unit addon if specified
   const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
 
-  return <InputGroup>
-    <NumberInput
-      allowMouseWheel
-      isDisabled={disabled}
-      variant={variant}
-      min={minimum_value??undefined}
-      max={maximum_value}
-      step={step}
-      value={value ?? ''}
-      onChange={(value_as_string) => {
-        // Launch/reset timeout before the input auto blur (and update the value in data)
-        if (!menu_for_style) {
-          // reset timeout if exist
-          if (is_modifying.current) {
-            clearTimeout(is_modifying.current)
-          }
-          // launch timeout that automatically blur the input
-          is_modifying.current = setTimeout(() => {
-            ref_input.current?.blur()
-          }, 3000)
-        }
-        // Update displayed value_as_number
-        setValue((value_as_string !== '') ? value_as_string : null)
-      }}
-      onKeyDown={e => {
-        if (e.key === 'Enter') {
-          e.preventDefault()
-          ref_input.current?.blur()
-        }
-      }}
-    >
-      <NumberInputField
-        ref={ref_input}
-        onBlur={() => {
+  return <FormControl isInvalid={multiValue} >
+    <InputGroup>
+      <NumberInput
+        allowMouseWheel
+        isDisabled={disabled}
+        variant={variant}
+        min={minimum_value ?? undefined}
+        max={maximum_value}
+        step={step}
+        value={value ?? ''}
+        onChange={(value_as_string) => {
+          // Launch/reset timeout before the input auto blur (and update the value in data)
           if (!menu_for_style) {
-            clearTimeout(is_modifying.current)
+            // reset timeout if exist
+            if (is_modifying.current) {
+              clearTimeout(is_modifying.current)
+            }
+            // launch timeout that automatically blur the input
+            is_modifying.current = setTimeout(() => {
+              ref_input.current?.blur()
+            }, 3000)
           }
-          // Update selected elements value
-          // Use functionOnBlur with either value null or value casted as number
-          let new_value = value === null ? value : Number(value)
-          if (fixed_dec > 0 && new_value !== null) {
-            new_value = +new_value?.toFixed(2)
-          }
-          function_on_blur(new_value)
+          // Update displayed value_as_number
+          setValue((value_as_string !== '') ? value_as_string : null)
         }}
-      />
-      {stepperBtn}
-    </NumberInput>
-    {input_unit}
-  </InputGroup>
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            ref_input.current?.blur()
+          }
+        }}
+      >
+        <NumberInputField
+          ref={ref_input}
+          onBlur={() => {
+            if (!menu_for_style) {
+              clearTimeout(is_modifying.current)
+            }
+            // Update selected elements value
+            // Use functionOnBlur with either value null or value casted as number
+            let new_value = value === null ? value : Number(value)
+            if (fixed_dec > 0 && new_value !== null) {
+              new_value = +new_value?.toFixed(2)
+            }
+            function_on_blur(new_value)
+          }}
+        />
+        {stepperBtn}
+      </NumberInput>
+      {input_unit}
+    </InputGroup>
+    <FormErrorMessage marginTop={0} fontSize='0.5rem'>{t('Menu.multiValue')}</FormErrorMessage>
+  </FormControl>
 }
 
 export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMenuNumberOrUndefinedInput> = ({
@@ -246,17 +255,19 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
 }
 
 export type FCType_ConfigMenuNumberInput = {
+  t: TFunction,
   default_value: number | null | undefined,
   ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
   function_on_blur: (val: number | null | undefined) => void,
   menu_for_style?: boolean,
-  minimum_value?: number|null,
+  minimum_value?: number | null,
   maximum_value?: number,
   stepper?: boolean,
   step?: number,
   unit_text?: string,
   fixed_dec?: number,
-  disabled?:boolean
+  disabled?: boolean,
+  multiValue?: boolean
 }
 
 export type FCType_ConfigMenuNumberOrUndefinedInput = {
@@ -286,14 +297,15 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
   function_get_value,
   function_on_blur,
   menu_for_style = false,
-  disabled = false
+  disabled = false,
+  multiValue: multiValue = false
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const [value, setValue] = useState<string | null | undefined>(function_get_value())
   ref_to_set_value.current = setValue
 
-  return <InputGroup>
+  return <FormControl isInvalid={multiValue} > <InputGroup>
     <Input
       isDisabled={disabled}
       ref={ref_input}
@@ -329,6 +341,8 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
       }}
     />
   </InputGroup>
+    <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
+  </FormControl>
 }
 
 export type FCType_ConfigMenuTextInput = {
@@ -337,4 +351,5 @@ export type FCType_ConfigMenuTextInput = {
   function_on_blur: (_: string | null | undefined) => void,
   menu_for_style?: boolean,
   disabled?: boolean,
+  multiValue?: boolean,
 }

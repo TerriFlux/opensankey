@@ -282,6 +282,14 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
     ) : <></>
   }
 
+  const is_arrow_size_indeterminated = !elements.every(el => el.shape_arrow_size == element_ref.shape_arrow_size)
+  const is_starting_curve_indeterminated = !elements.every(el => el.shape_starting_curve == element_ref.shape_starting_curve)
+  const is_ending_curve_indeterminated = !elements.every(el => el.shape_ending_curve == element_ref.shape_ending_curve)
+  const is_starting_tangeant_indeterminated = !elements.every(el => el.shape_starting_tangeant == element_ref.shape_starting_tangeant)
+  const is_ending_tangeant_indeterminated = !elements.every(el => el.shape_ending_tangeant == element_ref.shape_ending_tangeant)
+  const is_opacity_indeterminated = !elements.every(el => el.shape_opacity == element_ref.shape_opacity)
+
+
   // JSX menu components ---------------------------------------------------------------
 
   const content_shape_color = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.apparence.couleur')}>
@@ -299,7 +307,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
             }}
           >
             {new_data.menu_configuration.flow_color_origin_type.map(el => {
-              return<option key={'value_' + el} value={el}><><OSTooltip label={t('Flux.apparence.tooltips.color_source.' + el)}>{t('Flux.apparence.' + el)}</OSTooltip></></option>
+              return <option key={'value_' + el} value={el}><><OSTooltip label={t('Flux.apparence.tooltips.color_source.' + el)}>{t('Flux.apparence.' + el)}</OSTooltip></></option>
 
             })}
           </Select>
@@ -312,13 +320,13 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
           {t('Flux.apparence.couleur')}
           <TooltipElementOverloaded k={'shape_color'} />
         </Box><Box>
-        <OSColorPicker
-          isDisabled={shape_color_rule !== 'auto'}
-          initialColor={shape_color}
-          functionOnBlur={(new_color) => {
-            updateElements('shape_color', new_color)
-          }}
-        />
+          <OSColorPicker
+            isDisabled={shape_color_rule !== 'auto'}
+            initialColor={shape_color}
+            functionOnBlur={(new_color) => {
+              updateElements('shape_color', new_color)
+            }}
+          />
         </Box>
       </Box>
 
@@ -331,6 +339,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
             <ConfigMenuNumberInput
+              t={new_data.t}
               ref_to_set_value={ref_set_number_inputs[5]}
               default_value={shape_opacity}
               menu_for_style={menu_for_style}
@@ -338,7 +347,10 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
               maximum_value={1}
               step={0.1}
               stepper={true}
-              function_on_blur={(value) => { updateElements('shape_opacity', value ?? undefined) }} />
+              function_on_blur={(value) => { updateElements('shape_opacity', value ?? undefined) }}
+              multiValue={is_opacity_indeterminated}
+            />
+
           </OSTooltip>
         </InputGroup>
       </Box>
@@ -368,12 +380,15 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
             <ConfigMenuNumberInput
+              t={new_data.t}
               ref_to_set_value={ref_set_number_inputs[0]}
               default_value={shape_arrow_size}
               menu_for_style={menu_for_style}
               minimum_value={1}
               stepper={true}
-              function_on_blur={(value) => { updateElements('shape_arrow_size', value ?? undefined) }} />
+              function_on_blur={(value) => { updateElements('shape_arrow_size', value ?? undefined) }}
+              multiValue={is_arrow_size_indeterminated}
+            />
           </OSTooltip>
         </InputGroup>
       </Box>
@@ -488,6 +503,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[1]}
             default_value={shape_starting_curve * 100}
             function_on_blur={(value) => { updateElements('shape_starting_curve', (value ? value / 100 : undefined)) }}
@@ -497,6 +513,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
             step={1}
             stepper={true}
             unit_text='%'
+            multiValue={is_starting_curve_indeterminated}
           />
         </OSTooltip>
       </Box>
@@ -509,6 +526,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[2]}
             default_value={shape_ending_curve * 100}
             menu_for_style={menu_for_style}
@@ -518,6 +536,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
             stepper={true}
             unit_text='%'
             function_on_blur={(value) => { updateElements('shape_ending_curve', (value ? value / 100 : undefined)) }}
+            multiValue={is_ending_curve_indeterminated}
           />
         </OSTooltip>
       </Box>
@@ -532,6 +551,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
             <ConfigMenuNumberInput
+              t={new_data.t}
               ref_to_set_value={ref_set_number_inputs[3]}
               default_value={shape_starting_tangeant * 100}
               menu_for_style={menu_for_style}
@@ -540,6 +560,8 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
               stepper={true}
               unit_text='%'
               function_on_blur={(value) => { updateElements('shape_starting_tangeant', (value ? value / 100 : undefined)) }}
+              multiValue={is_starting_tangeant_indeterminated}
+
             />
           </OSTooltip>
         </InputGroup>
@@ -555,6 +577,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
             <ConfigMenuNumberInput
+              t={new_data.t}
               ref_to_set_value={ref_set_number_inputs[4]}
               default_value={shape_ending_tangeant * 100}
               menu_for_style={menu_for_style}
@@ -563,7 +586,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
               stepper={true}
               unit_text='%'
               function_on_blur={(value) => { updateElements('shape_ending_tangeant', (value ? value / 100 : undefined)) }}
-
+              multiValue={is_ending_tangeant_indeterminated}
             />
           </OSTooltip>
         </InputGroup>

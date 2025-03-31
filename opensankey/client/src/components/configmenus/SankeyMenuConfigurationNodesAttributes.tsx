@@ -223,33 +223,33 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
     return (selected_nodes[0].isEqual(curr))
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
-
+  const element_ref = elements[0]
   // Get values or default values
-  const shape_visible = (elements[0]?.shape_visible ?? default_shape_visible)
-  const shape_min_width = (elements[0]?.shape_min_width ?? default_shape_min_width)
-  const shape_min_height = (elements[0]?.shape_min_height ?? default_shape_min_height)
-  const shape_color = (elements[0]?.shape_color ?? default_shape_color)
-  const shape_type = (elements[0]?.shape_type ?? default_shape_type)
-  const shape_arrow_angle_factor = (elements[0]?.shape_arrow_angle_factor ?? default_shape_arrow_angle_factor)
-  const shape_arrow_angle_direction = (elements[0]?.shape_arrow_angle_direction ?? default_shape_arrow_angle_direction)
-  const shape_color_sustainable = (elements[0]?.shape_color_sustainable ?? default_shape_color_sustainable)
+  const shape_visible = (element_ref?.shape_visible ?? default_shape_visible)
+  const shape_min_width = (element_ref?.shape_min_width ?? default_shape_min_width)
+  const shape_min_height = (element_ref?.shape_min_height ?? default_shape_min_height)
+  const shape_color = (element_ref?.shape_color ?? default_shape_color)
+  const shape_type = (element_ref?.shape_type ?? default_shape_type)
+  const shape_arrow_angle_factor = (element_ref?.shape_arrow_angle_factor ?? default_shape_arrow_angle_factor)
+  const shape_arrow_angle_direction = (element_ref?.shape_arrow_angle_direction ?? default_shape_arrow_angle_direction)
+  const shape_color_sustainable = (element_ref?.shape_color_sustainable ?? default_shape_color_sustainable)
 
 
   const position_type = menu_for_style ?
-    ((elements[0] as Class_NodeStyle)?.position.type ?? default_position_type) :
-    ((elements[0] as Type_GenericNodeElement)?.position_type ?? default_position_type)
+    ((element_ref as Class_NodeStyle)?.position.type ?? default_position_type) :
+    ((element_ref as Type_GenericNodeElement)?.position_type ?? default_position_type)
   const position_u = menu_for_style ?
-    ((elements[0] as Class_NodeStyle)?.position.dx ?? 0) :
-    ((elements[0] as Type_GenericNodeElement)?.display.position.u ?? 0)
+    ((element_ref as Class_NodeStyle)?.position.dx ?? 0) :
+    ((element_ref as Type_GenericNodeElement)?.display.position.u ?? 0)
   const position_dy = menu_for_style ?
-    ((elements[0] as Class_NodeStyle)?.position.dy ?? default_dy) :
-    ((elements[0] as Type_GenericNodeElement)?.display.position.dy ?? default_dy)
+    ((element_ref as Class_NodeStyle)?.position.dy ?? default_dy) :
+    ((element_ref as Type_GenericNodeElement)?.display.position.dy ?? default_dy)
   const position_relative_dx = menu_for_style ?
-    ((elements[0] as Class_NodeStyle)?.position.relative_dx ?? default_relative_dx) :
-    ((elements[0] as Type_GenericNodeElement)?.display.position.relative_dx ?? default_relative_dx)
+    ((element_ref as Class_NodeStyle)?.position.relative_dx ?? default_relative_dx) :
+    ((element_ref as Type_GenericNodeElement)?.display.position.relative_dx ?? default_relative_dx)
   const position_relative_dy = menu_for_style ?
-    ((elements[0] as Class_NodeStyle)?.position.relative_dy ?? default_relative_dy) :
-    ((elements[0] as Type_GenericNodeElement)?.display.position.relative_dy ?? default_relative_dy)
+    ((element_ref as Class_NodeStyle)?.position.relative_dy ?? default_relative_dy) :
+    ((element_ref as Type_GenericNodeElement)?.display.position.relative_dy ?? default_relative_dy)
 
 
   // Components updaters ----------------------------------------------------------------
@@ -294,6 +294,11 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   ref_set_number_inputs[3].current(String(position_dy))
   ref_set_number_inputs[4].current(String(position_relative_dx))
   ref_set_number_inputs[5].current(String(position_relative_dy))
+
+
+  const is_shape_min_height_indeterminated = !elements.every(el => el.shape_min_height == element_ref.shape_min_height)
+  const is_shape_min_width_indeterminated = !elements.every(el => el.shape_min_width == element_ref.shape_min_width)
+
 
 
   // JSX menu components ---------------------------------------------------------------
@@ -564,6 +569,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             <TooltipElementOverloaded k='shape_min_width' />
           </Box>
           <ConfigMenuNumberInput
+          t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[1]}
             default_value={shape_min_width}
             function_on_blur={(value) => {
@@ -574,6 +580,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             step={1}
             stepper={true}
             unit_text='pixels'
+          multiValue={is_shape_min_width_indeterminated}
           />
         </Box>
       </OSTooltip>
@@ -586,6 +593,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             <TooltipElementOverloaded k='shape_min_height' />
           </Box>
           <ConfigMenuNumberInput
+          t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={shape_min_height}
             function_on_blur={(value) => {
@@ -596,6 +604,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             step={1}
             stepper={true}
             unit_text='pixels'
+          multiValue={is_shape_min_height_indeterminated}
           />
         </Box>
       </OSTooltip>
@@ -667,6 +676,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
           </Box>
 
           <ConfigMenuNumberInput
+          t={new_data.t}
             default_value={position_u}
             ref_to_set_value={ref_set_number_inputs[2]}
             menu_for_style={menu_for_style}
@@ -687,6 +697,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
           {t('Noeud.apparence.geometry_dx')}
         </Box>
         <ConfigMenuNumberInput
+      t={new_data.t}
           data={applicationData.data}
           parameter_to_modify={parameter_to_modify}
           selected_parameter={selected_parameter}
@@ -708,6 +719,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             {t('Noeud.apparence.geometry_dy')}
           </Box>
           <ConfigMenuNumberInput
+          t={new_data.t}
             default_value={position_dy}
             ref_to_set_value={ref_set_number_inputs[3]}
             menu_for_style={menu_for_style}
@@ -727,6 +739,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             {t('Noeud.apparence.geometry_relative_dx')}
           </Box>
           <ConfigMenuNumberInput
+          t={new_data.t}
             default_value={position_relative_dx}
             ref_to_set_value={ref_set_number_inputs[4]}
             menu_for_style={menu_for_style}
@@ -744,6 +757,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             {t('Noeud.apparence.geometry_relative_dy')}
           </Box>
           <ConfigMenuNumberInput
+          t={new_data.t}
             default_value={position_relative_dy}
             ref_to_set_value={ref_set_number_inputs[5]}
             menu_for_style={menu_for_style}
@@ -960,18 +974,18 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
     return (selected_nodes[0].isEqual(curr))
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
-
-  const name_label_is_visible = (elements[0]?.name_label_is_visible ?? default_node_name_label_is_visible)
-  const value_label_is_visible = (elements[0]?.value_label_is_visible ?? default_node_value_label_is_visible)
-  const name_label_background = (elements[0]?.name_label_background ?? default_node_name_label_background)
-  const name_label_background_color = (elements[0]?.name_label_background_color ?? default_node_name_label_background_color)
-  const value_label_background = (elements[0]?.value_label_background ?? default_node_value_label_background)
-  const value_label_background_color = (elements[0]?.value_label_background_color ?? default_node_value_label_background_color)
-  const name_label_box_width = (elements[0]?.name_label_box_width ?? default_node_name_label_box_width)
-  const value_label_horiz_shift = (elements[0]?.value_label_horiz_shift ?? default_node_value_label_horiz_shift)
-  const value_label_vert_shift = (elements[0]?.value_label_vert_shift ?? default_node_value_label_vert_shift)
-  const name_label_horiz_shift = (elements[0]?.name_label_horiz_shift ?? default_node_name_label_horiz_shift)
-  const name_label_vert_shift = (elements[0]?.name_label_vert_shift ?? default_node_name_label_vert_shift)
+  const element_ref = elements[0]
+  const name_label_is_visible = (element_ref?.name_label_is_visible ?? default_node_name_label_is_visible)
+  const value_label_is_visible = (element_ref?.value_label_is_visible ?? default_node_value_label_is_visible)
+  const name_label_background = (element_ref?.name_label_background ?? default_node_name_label_background)
+  const name_label_background_color = (element_ref?.name_label_background_color ?? default_node_name_label_background_color)
+  const value_label_background = (element_ref?.value_label_background ?? default_node_value_label_background)
+  const value_label_background_color = (element_ref?.value_label_background_color ?? default_node_value_label_background_color)
+  const name_label_box_width = (element_ref?.name_label_box_width ?? default_node_name_label_box_width)
+  const value_label_horiz_shift = (element_ref?.value_label_horiz_shift ?? default_node_value_label_horiz_shift)
+  const value_label_vert_shift = (element_ref?.value_label_vert_shift ?? default_node_value_label_vert_shift)
+  const name_label_horiz_shift = (element_ref?.name_label_horiz_shift ?? default_node_name_label_horiz_shift)
+  const name_label_vert_shift = (element_ref?.name_label_vert_shift ?? default_node_name_label_vert_shift)
 
   // Components updaters ----------------------------------------------------------------
 
@@ -1013,6 +1027,12 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   ref_set_number_inputs[2].current(String(name_label_vert_shift))
   ref_set_number_inputs[3].current(String(value_label_horiz_shift))
   ref_set_number_inputs[4].current(String(value_label_vert_shift))
+
+  const is_name_label_box_width_indeterminated = !elements.every(el => el.name_label_box_width == element_ref.name_label_box_width)
+  const is_name_label_horiz_shift_indeterminated = !elements.every(el => el.name_label_horiz_shift == element_ref.name_label_horiz_shift)
+  const is_name_label_vert_shift_indeterminated = !elements.every(el => el.name_label_vert_shift == element_ref.name_label_vert_shift)
+  const is_value_label_horiz_shift_indeterminated = !elements.every(el => el.value_label_horiz_shift == element_ref.value_label_horiz_shift)
+  const is_value_label_vert_shift_indeterminated = !elements.every(el => el.value_label_vert_shift == element_ref.value_label_vert_shift)
 
 
   const content_label = <Box layerStyle='menu_sub_section' >
@@ -1080,6 +1100,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             <TooltipElementOverloaded k='name_label_background' />
           </Box>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={name_label_box_width}
             function_on_blur={(value) => {
@@ -1090,6 +1111,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             step={1}
             stepper={true}
             unit_text='pixels'
+            multiValue={is_name_label_box_width_indeterminated}
           />
         </Box>
       </OSTooltip>
@@ -1102,6 +1124,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             <TooltipElementOverloaded k='name_label_horiz_shift' />
           </Box>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[1]}
             default_value={name_label_horiz_shift}
             function_on_blur={(value) => {
@@ -1112,6 +1135,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             step={1}
             stepper={true}
             unit_text='pixels'
+            multiValue={is_name_label_horiz_shift_indeterminated}
           />
         </Box>
       </OSTooltip>
@@ -1125,6 +1149,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           </Box>
 
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[2]}
             default_value={name_label_vert_shift}
             function_on_blur={(value) => {
@@ -1135,6 +1160,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             step={1}
             stepper={true}
             unit_text='pixels'
+            multiValue={is_name_label_vert_shift_indeterminated}
           />
         </Box>
       </OSTooltip>
@@ -1210,6 +1236,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             <TooltipElementOverloaded k='value_label_horiz_shift' />
           </Box>
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[3]}
             default_value={value_label_horiz_shift}
             function_on_blur={(value) => {
@@ -1220,6 +1247,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             step={1}
             stepper={true}
             unit_text='pixels'
+            multiValue={is_value_label_horiz_shift_indeterminated}
           />
         </Box>
       </OSTooltip>
@@ -1233,6 +1261,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           </Box>
 
           <ConfigMenuNumberInput
+            t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[4]}
             default_value={value_label_vert_shift}
             function_on_blur={(value) => {
@@ -1243,6 +1272,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             step={1}
             stepper={true}
             unit_text='pixels'
+            multiValue={is_value_label_vert_shift_indeterminated}
           />
         </Box>
       </OSTooltip>
