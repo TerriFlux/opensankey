@@ -259,13 +259,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-      id: tag.id,
-      name: tag.name,
-      elementsRef: dict_ref_element,
-      grp: tag.group,
-      color: tag.color,
-      dict_link_value: {}
-    }
+        id: tag.id,
+        name: tag.name,
+        elementsRef: dict_ref_element,
+        grp: tag.group,
+        color: tag.color,
+        dict_link_value: {}
+      }
 
     if (tag instanceof Class_DataTag) {
       // Save value of each links in dict
@@ -340,13 +340,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-      id: tagg.id,
-      name: tagg.name,
-      activated: tagg.show_legend,
-      banner: tagg.banner,
-      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
-      dict_link_value: {}
-    }
+        id: tagg.id,
+        name: tagg.name,
+        activated: tagg.show_legend,
+        banner: tagg.banner,
+        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+        dict_link_value: {}
+      }
 
     if (tagg instanceof Class_DataTagGroup) {
       new_data.drawing_area.sankey.links_list.forEach(l => {

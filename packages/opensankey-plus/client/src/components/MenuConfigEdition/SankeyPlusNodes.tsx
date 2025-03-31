@@ -356,21 +356,21 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                     }}
                   />
                 </Box>
-                </OSTooltip>
-                <Button
-                  //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-                  variant={
-                    (selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ?
-                      'menuconfigpanel_option_button_activated' :
-                      'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    let value = false
-                    value = selected_nodes[0]?.iconColorSustainable ?? ''
-                    updateNodeIconColorSustainable(value)
-                  }}
-                >
-                  {(selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ? icon_locked : icon_unlocked}
-                </Button>
+              </OSTooltip>
+              <Button
+                //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
+                variant={
+                  (selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ?
+                    'menuconfigpanel_option_button_activated' :
+                    'menuconfigpanel_option_button'}
+                onClick={() => {
+                  let value = false
+                  value = selected_nodes[0]?.iconColorSustainable ?? ''
+                  updateNodeIconColorSustainable(value)
+                }}
+              >
+                {(selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ? icon_locked : icon_unlocked}
+              </Button>
             </Box>
           </OSTooltip>
         </Box> :
