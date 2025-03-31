@@ -625,6 +625,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
             {t('LL.hl')}
           </Box>
           <ConfigMenuNumberInput
+            t={new_data_plus.t}
             disabled={disable_options}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={allLabelHeight()}
@@ -642,6 +643,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
             {t('LL.ll')}
           </Box>
           <ConfigMenuNumberInput
+            t={new_data_plus.t}
             disabled={disable_options}
             ref_to_set_value={ref_set_number_inputs[1]}
             default_value={allLabelWidth()}
@@ -682,6 +684,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           </Box>
 
           <ConfigMenuNumberInput
+            t={new_data_plus.t}
             disabled={disable_options}
             ref_to_set_value={ref_set_number_inputs[2]}
             default_value={allLabelTransparent()}

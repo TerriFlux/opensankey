@@ -223,13 +223,14 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         }
       </Checkbox>
       {value_label_significant_digits ?
-      /* Choose number of custom digit */
+        /* Choose number of custom digit */
 
         /* <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.label.NbDigit')}
               </Box> */
         <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
           <ConfigMenuNumberInput
+            t={new_data_plus.t}
             ref_to_set_value={ref_set_number_inputs}
             default_value={value_label_nb_significant_digits}
             menu_for_style={/*menu_for_style*/false}
@@ -311,51 +312,51 @@ export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLin
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-      {sep}
-      <Menu placement='end'>
-        <MenuButton
-          variant='contextmenu_button'
-          as={Button}
-          rightIcon={<ChevronRightIcon />}
-          className="dropdown-basic"
-        >
-          {t('Menu.Transformation.tagFlux_assign')}
-        </MenuButton>
+    {sep}
+    <Menu placement='end'>
+      <MenuButton
+        variant='contextmenu_button'
+        as={Button}
+        rightIcon={<ChevronRightIcon />}
+        className="dropdown-basic"
+      >
+        {t('Menu.Transformation.tagFlux_assign')}
+      </MenuButton>
 
-        <MenuList>
-          {
-            new_data.drawing_area.sankey.flux_taggs_list
-              .filter(tagg => tagg.has_tags)
-              .map((tagg, i) => {
-                return <Menu key={i} placement='end'>
-                  <MenuButton
-                    variant='contextmenu_button'
-                    as={Button}
-                    rightIcon={<ChevronRightIcon />}
-                    className="dropdown-basic"
-                  >
-                    {tagg.name}
-                  </MenuButton>
-                  <MenuList>
-                    {
-                      tagg.tags_list
-                        .map(tag => {
-                          const has_tag = contextualised_link.hasGivenTag(tag)
-                          return <MenuItem
-                            onClick={() => {
-                              new_data.drawing_area.updateSelectedLinksTagAssignation(has_tag, tag)
-                            }}
-                          >
-                            {t.name}
-                            {checked(has_tag)}
-                          </MenuItem>
-                        })
-                    }
-                  </MenuList>
-                </Menu>
-              })
-          }
-        </MenuList>
-      </Menu></> :
+      <MenuList>
+        {
+          new_data.drawing_area.sankey.flux_taggs_list
+            .filter(tagg => tagg.has_tags)
+            .map((tagg, i) => {
+              return <Menu key={i} placement='end'>
+                <MenuButton
+                  variant='contextmenu_button'
+                  as={Button}
+                  rightIcon={<ChevronRightIcon />}
+                  className="dropdown-basic"
+                >
+                  {tagg.name}
+                </MenuButton>
+                <MenuList>
+                  {
+                    tagg.tags_list
+                      .map(tag => {
+                        const has_tag = contextualised_link.hasGivenTag(tag)
+                        return <MenuItem
+                          onClick={() => {
+                            new_data.drawing_area.updateSelectedLinksTagAssignation(has_tag, tag)
+                          }}
+                        >
+                          {t.name}
+                          {checked(has_tag)}
+                        </MenuItem>
+                      })
+                  }
+                </MenuList>
+              </Menu>
+            })
+        }
+      </MenuList>
+    </Menu></> :
     <></>
 }
