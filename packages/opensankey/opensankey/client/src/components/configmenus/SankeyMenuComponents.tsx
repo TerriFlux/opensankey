@@ -277,6 +277,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
   for (let i = 0; i < number_of_input; i++)
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
   ref_set_number_inputs[0].current(String(get_label_font_size))
+  const is_label_font_size_indetermined = !elements.every(el=>getValueWithDecoratorRetriever(el, dict_decorator_name['label_font_size'])==getValueWithDecoratorRetriever(elements[0], dict_decorator_name['label_font_size']))
 
   return <Box
     layerStyle='menuconfigpanel_grid'
@@ -309,6 +310,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
         </Select>
 
         <ConfigMenuNumberInput
+      t={new_data.t}
           ref_to_set_value={ref_set_number_inputs[0]}
           default_value={get_label_font_size}
           menu_for_style={menu_for_style}
@@ -318,6 +320,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
           function_on_blur={(value) => {
             updateElements(new_data, elements, dict_decorator_name, 'label_font_size', value ?? undefined, refreshParentComponent)
           }}
+          multiValue={is_label_font_size_indetermined}
         />
       </Box>
 
@@ -507,12 +510,6 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.couleur')}
-          {
-            (!menu_for_style) &&
-              isElementAttributeOverloaded(selectedElements, 'value_label_color') ?
-              <>{TooltipValueSurcharge('link_var_', t)}</> :
-              <></>
-          }
           <TooltipElementOverloaded k={dict_decorator_name['label_color']} />
         </Box>
         <OSColorPicker
@@ -582,6 +579,9 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
   ref_set_number_inputs[0].current(String(get_label_nb_digit))
 
+  const is_cstm_digit_indetermined = !elements.every(el=>getValueWithDecoratorRetriever(el, dict_decorator_name['label_nb_digit'])==get_label_nb_digit)
+
+
 
   return <Box
     layerStyle='menuconfigpanel_grid'
@@ -620,6 +620,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
         /* Choose number of custom digit */
         <OSTooltip label={t('Flux.label.tooltips.NbDigit')}>
           <ConfigMenuNumberInput
+      t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={get_label_nb_digit}
             menu_for_style={menu_for_style}
@@ -628,6 +629,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
             function_on_blur={(value) => {
               updateElements(new_data, elements, dict_decorator_name, 'label_nb_digit', value ?? undefined, refreshParentComponent)
             }}
+            multiValue={is_cstm_digit_indetermined}
           />
         </OSTooltip>
         : <></>
@@ -779,6 +781,10 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
   ref_set_number_inputs[0].current(String(get_label_unit))
   ref_set_number_inputs[1].current(String(get_label_unit_factor))
 
+  const is_unit_name_indetermined = !elements.every(el=>getValueWithDecoratorRetriever(el, dict_decorator_name['label_unit'])==get_label_unit)
+  const is_unit_factor_indetermined = !elements.every(el=>getValueWithDecoratorRetriever(el, dict_decorator_name['label_unit_factor'])==get_label_unit_factor)
+
+
   return <>
     <Box layerStyle='menu_sub_section'>
       <Box layerStyle='menu_sub_section_title'>
@@ -813,6 +819,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
                     updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit', value ? value : undefined, refreshParentComponent)
                   }}
                   menu_for_style={menu_for_style}
+                  multiValue={is_unit_name_indetermined}
                 />
               </OSTooltip>
             </Box>
@@ -824,6 +831,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
               </Box>
               <OSTooltip label={t('Flux.label.tooltips.unit_factor')}>
                 <ConfigMenuNumberInput
+      t={new_data.t}
                   ref_to_set_value={ref_set_number_inputs[1]}
                   default_value={get_label_unit_factor}
                   function_on_blur={(value) => {
@@ -834,6 +842,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
                   maximum_value={get_label_unit_factor}
                   step={1}
                   stepper={true}
+                  multiValue={is_unit_factor_indetermined}
                 />
               </OSTooltip>
             </Box>
