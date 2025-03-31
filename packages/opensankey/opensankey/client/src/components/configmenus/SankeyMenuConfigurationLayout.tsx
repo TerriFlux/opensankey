@@ -33,7 +33,7 @@ import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenS
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
-import { OSColorPicker } from './OSColorPicker';
+import { OSColorPicker } from './OSColorPicker'
 
 
 // Utils functions -------------------------------------------------------------------

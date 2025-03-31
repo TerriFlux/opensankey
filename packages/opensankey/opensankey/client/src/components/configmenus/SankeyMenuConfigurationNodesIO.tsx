@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { FunctionComponent, useState } from 'react'
-import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd'
 
 import {
   Box,
@@ -263,10 +263,10 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   // Function that return style of element draggable depending on it's state (isDragging)
   const style_TableLineDragging= (isDragging:boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined) => ({
     // change background colour if dragging
-    border:isDragging ? "1px solid #78A7C2" : "unset",
+    border:isDragging ? '1px solid #78A7C2' : 'unset',
     // styles we need to apply on draggables
     ...draggableStyle
-  });
+  })
 
   // JSX Components ---------------------------------------------------------------------
 

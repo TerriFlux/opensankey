@@ -341,7 +341,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
       }}
     />
   </InputGroup>
-    <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
+  <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
   </FormControl>
 }
 
