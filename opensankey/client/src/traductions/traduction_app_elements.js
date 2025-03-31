@@ -83,6 +83,8 @@ export const resources_app_elements = {
         ajustH: 'Adjust. H',
         ajustV: 'Adjust. V',
 
+        multiValue:'Multiple values among seleced elements',
+
         undo: 'Undo',
         redo: 'Redo',
         reset_all_attr: 'Reset all attributes overwrite',
@@ -897,6 +899,8 @@ export const resources_app_elements = {
         amp_short: 'Trans.',
         ajustH: 'Ajust. H',
         ajustV: 'Ajust. V',
+
+        multiValue:'Différentes valeurs dans la sélection',
 
         undo: 'Annuler',
         redo: 'Refaire',

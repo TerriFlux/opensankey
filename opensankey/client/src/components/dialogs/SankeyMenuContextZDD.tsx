@@ -187,7 +187,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   // Buttons components ==============================================================
 
   const button_bg_color = <Button variant='contextmenu_button'>
-    <Box style={{display:'grid',gridTemplateColumns:'1fr 3fr'}}>
+    <Box style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
       <label htmlFor='color_bg_zdd' style={{ margin: 0 }}>{t('Menu.BgC')}</label>
       <OSColorPicker
         initialColor={new_data.drawing_area.color}
@@ -209,6 +209,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         {t('MEP.Echelle')}
       </Box>
       <ConfigMenuNumberInput
+        t={new_data.t}
         ref_to_set_value={ref_set_number_inputs}
         default_value={new_data.drawing_area.scale}
         function_on_blur={changeScale}

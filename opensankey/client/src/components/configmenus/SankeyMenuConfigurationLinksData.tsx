@@ -195,6 +195,8 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     _updateTextLinks()
   }
 
+  const is_value_indeterminated = !selected_links.every(el => el.value?.data_value == selected_links[0].value?.data_value)
+  const is_label_indeterminated = !selected_links.every(el => el.value?.text_value == selected_links[0].value?.text_value)
 
   // JSX -------------------------------------------------------------------------------
 
@@ -263,6 +265,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
           {t('Flux.data.vpp')}
         </Box>
         <ConfigMenuNumberInput
+          t={new_data.t}
           ref_to_set_value={ref_set_data_value_input}
           default_value={value?.data_value as number | undefined}
           fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
@@ -270,6 +273,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
           minimum_value={0}
           stepper={true}
           step={1}
+          multiValue={is_value_indeterminated}
           unit_text={
             (
               selected_links[0]?.value_label_unit_visible &&
@@ -278,6 +282,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
               selected_links[0]?.value_label_unit :
               undefined
           }
+
         />
       </Box>
     </OSTooltip>
@@ -293,6 +298,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
           ref_to_set_value={ref_set_text_value_input}
           function_get_value={() => { return value?.text_value }}
           function_on_blur={updateTextLinks}
+          multiValue={is_label_indeterminated}
         />
       </Box>
     </OSTooltip>
@@ -381,6 +387,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   }
 
   return <ConfigMenuNumberInput
+    t={new_data.t}
     ref_to_set_value={ref_set_data_value_input}
     default_value={value?.data_value ?? null}
     function_on_blur={updateDataLinks}
