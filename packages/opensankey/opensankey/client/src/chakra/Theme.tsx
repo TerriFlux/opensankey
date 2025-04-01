@@ -784,6 +784,7 @@ export const opensankey_theme = extendTheme({
       right:0,
       zIndex:2,
       display:'grid',
+      gridColumnGap:'0.25rem',
       gridTemplateColumns:'auto auto',
     }
 
