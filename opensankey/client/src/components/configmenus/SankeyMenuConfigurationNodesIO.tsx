@@ -438,7 +438,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                                   <td style={{ 'width': '10%' }}>
                                     <Box layerStyle="options_2cols">
                                       <Button
-                                        variant='menuconfigpanel_option_button'
+                                        variant='menuconfigpanel_move_order_node_io'
                                         isDisabled={first_link}
                                         minWidth='0'
                                         onClick={() => {
@@ -450,7 +450,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                                         {icon_move_element_up}
                                       </Button>
                                       <Button
-                                        variant='menuconfigpanel_option_button'
+                                        variant='menuconfigpanel_move_order_node_io'
                                         isDisabled={last_link}
                                         minWidth='0'
                                         onClick={() => {
