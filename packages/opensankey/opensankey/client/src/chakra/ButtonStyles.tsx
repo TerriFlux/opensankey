@@ -71,6 +71,20 @@ export const menuconfigpanel_option_button = defineStyle({
   }
 })
 
+export const menuconfigpanel_move_order_node_io = defineStyle({
+  height: '1.5rem',
+  width:'3.5rem',
+  padding: '0.5rem',
+  fontSize: 'unset',
+  backgroundColor: 'white',
+  color: 'tertiaire.3',
+  fill: 'tertiaire.3',
+
+  _active: {
+    color: 'white  '
+  }
+})
+
 export const menuconfigpanel_option_button_right = defineStyle({
   ...menuconfigpanel_option_button,
   borderRadius: '0px 6px 6px 0px',
