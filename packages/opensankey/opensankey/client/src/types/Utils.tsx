@@ -75,7 +75,7 @@ export const default_black_color = 'black'
 export const default_background_color = '#f2f2f2'
 export const default_grid_color = '#d3d3d3'
 export const default_element_color = '#a9a9a9'
-export const default_element_color_source = 'auto'
+export const default_element_color_source = 'flow'
 
 export const default_font = 'Arial,sans-serif'
 export const font_families = [
@@ -339,7 +339,7 @@ export const OSTooltip: FunctionComponent<OSTooltpFuncType> = (
   {
     label,
     delay = 500,
-    placement = 'top',
+    placement = 'auto',
     isAlwaysOpen = false,
     children
   }

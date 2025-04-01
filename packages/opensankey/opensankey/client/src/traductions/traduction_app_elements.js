@@ -668,6 +668,7 @@ export const resources_app_elements = {
               flow:' Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
               source:'Color is defined by node source color',
               target:'Color is defined by node target color',
+              disabled:'Rule doesn\'t allow to choose flow color'
             },
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
@@ -1527,6 +1528,8 @@ export const resources_app_elements = {
               flow:'La couleur est définie avec les paramètres liées au flux (couleur, couleur des étiquettes de flux ou données)',
               source:'La couleur est définie par la couelur du noeud source',
               target:'La couleur est définie par la couelur du noeud cible',
+              disabled:'La règle ne permet pas modifier la couleur du flux'
+
             },
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
             hach: 'Applique un effet de hachure sur le/les flux sélectionné(s)',
