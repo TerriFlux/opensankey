@@ -239,6 +239,12 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         const fluxIndex = change.rowId as number
         const fieldName = change.columnId as 'value'
         const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+        // Error can't find link (possible when we enter value without source & target)
+        if (l == undefined) {
+          // Reset spreadsheet without taking into account entered value
+          synchronizeSpreadSheetWithSankey()
+          return
+        }
         dict_old_val[l.id] = l.data_value //save old link value in dict for undo
         if (l) {
           if (isNaN((change.newCell as NumberCell).value)) {
@@ -259,6 +265,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           new_data.drawing_area.sankey.links_dict[ent_l[0]].data_value = ent_l[1]
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
+        setSpreadSheetFlux([...spreadSheetFlux])//Update Table
         menu_configuration.updateComponentRelatedToLinksData()
       }
 
@@ -268,6 +275,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           new_data.drawing_area.sankey.links_dict[ent_l[0]].data_value = ent_l[1]
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
+        setSpreadSheetFlux([...spreadSheetFlux])//Update Table
         menu_configuration.updateComponentRelatedToLinksData()
       }
 
@@ -275,6 +283,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       new_data.history.saveUndo(undoUpdateLinksValues)
       new_data.history.saveRedo(redoUpdateLinksValues)
 
+      setSpreadSheetFlux([...spreadSheetFlux])//Update Table
       menu_configuration.updateComponentRelatedToLinksData()
     }
 
@@ -306,7 +315,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           redraw()
           menu_configuration.updateComponentRelatedToLinksData()
         } else {
-          menu_configuration.updateComponentRelatedToLinksData()
+          setSpreadSheetFlux([...spreadSheetFlux])//Update Table
         }
       })
 
@@ -326,7 +335,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           redraw()
           menu_configuration.updateComponentRelatedToLinksData()
         } else {
-          menu_configuration.updateComponentRelatedToLinksData()
+          setSpreadSheetFlux([...spreadSheetFlux])//Update Table
         }
 
       }
@@ -347,7 +356,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           redraw()
           menu_configuration.updateComponentRelatedToLinksData()
         } else {
-          menu_configuration.updateComponentRelatedToLinksData()
+          setSpreadSheetFlux([...spreadSheetFlux])//Update Table
         }
       }
       //Save undo/redo
