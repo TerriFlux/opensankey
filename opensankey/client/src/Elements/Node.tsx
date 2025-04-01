@@ -1988,29 +1988,29 @@ export abstract class ClassTemplate_NodeElement
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2788,6 +2788,24 @@ export abstract class ClassTemplate_NodeElement
         if (link.source === this && this._output_links_handle[link.id]) this._output_links_handle[link.id].draw()
         if (link.target === this && this._input_links_handle[link.id]) this._input_links_handle[link.id].draw()
       })
+  }
+
+
+  /**
+   * Redraw links to recolor them (function originally created just for the setter shape_color) since flow color can depend on node color
+   *
+   * @private
+   * @memberof ClassTemplate_NodeElement
+   */
+  private updateLinksColor() {
+    this._links_order
+      .forEach(link => {
+        // Filter out unvisible links
+        if (link.is_visible) {
+          link.drawPath()
+        }
+      }
+      )
   }
 
   /**
@@ -3576,6 +3594,8 @@ export abstract class ClassTemplate_NodeElement
   public set shape_color(_: string) {
     this._display.attributes.shape_color = _
     this.drawShape()
+    this.updateLinksColor()
+    this.drawLinksArrow()
   }
 
   /**
@@ -3664,6 +3684,7 @@ export abstract class ClassTemplate_NodeElement
   public set shape_color_sustainable(_: boolean) {
     this._display.attributes.shape_color_sustainable = _
     this.drawShape()
+    this.updateLinksColor()
   }
 
   // Name label related --------------------------------------------------------------------

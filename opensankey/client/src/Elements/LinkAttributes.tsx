@@ -227,7 +227,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     // Shape's Filling attributes
     if (this._shape_is_dashed !== undefined) json_object['dashed'] = this._shape_is_dashed
     if (this._shape_color !== undefined) json_object['color'] = this._shape_color
-    if (this._shape_color_rule !== undefined) json_object['color'] = this._shape_color_rule
+    if (this._shape_color_rule !== undefined) json_object['color_rule'] = this._shape_color_rule
     if (this._shape_opacity !== undefined) json_object['opacity'] = this._shape_opacity
 
     // Value label display - Default params for all labels
@@ -349,7 +349,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     // Shape's Filling attributes
     if (json_local_object['dashed'] !== undefined) this._shape_is_dashed = getBooleanFromJSON(json_local_object, 'dashed', default_shape_is_dashed)
     if (json_local_object['color'] !== undefined) this._shape_color = getStringFromJSON(json_local_object, 'color', default_shape_color)
-    if (json_local_object['color_source'] !== undefined) this._shape_color_rule = getStringFromJSON(json_local_object, 'color_source', default_shape_color)
+    if (json_local_object['color_rule'] !== undefined) this._shape_color_rule = getStringFromJSON(json_local_object, 'color_rule', default_shape_color)
     if (json_local_object['opacity'] !== undefined) this._shape_opacity = getNumberFromJSON(json_local_object, 'opacity', default_shape_opacity)
 
     // Value label display - Default params for all labels
