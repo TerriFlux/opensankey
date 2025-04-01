@@ -81,6 +81,7 @@ import {
   sizeCollapseButton,
   text_menu_select,
   template_button_reset,
+  menuconfigpanel_move_order_node_io,
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -241,6 +242,7 @@ export const opensankey_theme = extendTheme({
         menu_sub_section_collapse_button,
         text_menu_select,
         template_button_reset,
+        menuconfigpanel_move_order_node_io,
       },
       sizes: {
         sizeToolbarButton,
