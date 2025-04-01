@@ -1,23 +1,19 @@
 import { Box } from '@chakra-ui/react'
 import React, { CSSProperties, FunctionComponent, useState } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
+import { OSTooltip } from '../../types/Utils';
 
 // Necessary props to call Class
 type OSColorPickerProps = {
   initialColor: string;
   functionOnBlur: (x: string) => void;
-  isDisabled?: boolean
+  isDisabled?: boolean,
+  textDisabled?: string
 }
 
-// Internal class state attribute that can change
-type OSColorPickerState = {
-  displayColorPicker: boolean;
-  color: string;
-}
-
-export const OSColorPicker: FunctionComponent<OSColorPickerProps>=({initialColor,functionOnBlur,isDisabled}) =>{
-  const [displayColorPicker,setDisplayColorPicker]=useState(false)
-  const [color,setColor]=useState(initialColor)
+export const OSColorPicker: FunctionComponent<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled,textDisabled=''}) => {
+  const [displayColorPicker, setDisplayColorPicker] = useState(false)
+  const [color, setColor] = useState(initialColor)
 
 
   /**
@@ -55,7 +51,7 @@ export const OSColorPicker: FunctionComponent<OSColorPickerProps>=({initialColor
   }
 
 
-    
+
 
   // Style of button to open picker, popover containing picker & 'backgroung overlay' that close picker when clicked
   const styles: { [x: string]: CSSProperties; } = {
@@ -77,8 +73,8 @@ export const OSColorPicker: FunctionComponent<OSColorPickerProps>=({initialColor
     },
     popover: {
       position: 'absolute',
-      left:'-20%',
-      top:'20%',
+      left: '-20%',
+      top: '20%',
       zIndex: '2',
     },
     cover: {
@@ -91,9 +87,11 @@ export const OSColorPicker: FunctionComponent<OSColorPickerProps>=({initialColor
   }
 
   return (<Box>
+    <OSTooltip label={isDisabled?textDisabled:''}>
     <Box style={styles.swatch} onClick={handleClick}>
       <Box style={styles.color} />
     </Box>
+    </OSTooltip>
     {displayColorPicker ? <Box style={styles.popover}>
       <Box style={styles.cover} onClick={handleClose} />
       <SketchPicker color={color} onChange={handleChange} />

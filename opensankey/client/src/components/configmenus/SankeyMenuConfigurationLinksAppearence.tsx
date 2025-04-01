@@ -308,7 +308,6 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
           >
             {new_data.menu_configuration.flow_color_origin_type.map(el => {
               return <option key={'value_' + el} value={el}><><OSTooltip label={t('Flux.apparence.tooltips.color_source.' + el)}>{t('Flux.apparence.' + el)}</OSTooltip></></option>
-
             })}
           </Select>
         </OSTooltip>
@@ -321,11 +320,12 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
           <TooltipElementOverloaded k={'shape_color'} />
         </Box><Box>
           <OSColorPicker
-            isDisabled={shape_color_rule !== 'auto'}
+            isDisabled={shape_color_rule !== 'flow'}
             initialColor={shape_color}
             functionOnBlur={(new_color) => {
               updateElements('shape_color', new_color)
             }}
+            textDisabled={t('Flux.apparence.tooltips.color_source.disabled')}
           />
         </Box>
       </Box>
