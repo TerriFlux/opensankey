@@ -573,8 +573,8 @@ export const menutop_button_save_in_cache = defineStyle({
   fill: 'white',
   // Size of icon in button
   'svg': {
-    height: '1.25rem',
-    width: '1.25rem'
+    height: '1.5rem',
+    width: '1.5rem'
   },
   _hover: {
     borderColor: 'secondaire.3',
@@ -831,8 +831,8 @@ export const sizeMenuTopButton = defineStyle({
 })
 
 export const sizeMenuTopButtonSaveCache = defineStyle({
-  height: '1.75rem',
-  width: '1.75rem',
+  height: '2rem',
+  width: '2rem',
   minW: 'unset',
 })
 
