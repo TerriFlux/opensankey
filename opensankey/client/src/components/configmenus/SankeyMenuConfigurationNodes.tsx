@@ -80,7 +80,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
     nodes = new_data.drawing_area.sankey.visible_nodes_list_sorted
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
-  const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id,selected:selected_nodes.includes(d) } })
+  const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_nodes.includes(d) } })
 
   // Menu updaters ----------------------------------------------------------------------
 
@@ -316,7 +316,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
               // Update all menus
               refreshThisAndUpdateRelatedComponents()
             }}
-          />        
+          />
         </OSTooltip>
 
         {/* Boutton pour supprimer le noeud selectionné */}
@@ -367,6 +367,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
               ref_to_set_value={ref_set_text_value_input}
               function_get_value={() => (selected_nodes.length != 1) ? '' : selected_nodes[0].name}
               function_on_blur={updateNameNode}
+              disabled={new_data.drawing_area.selected_nodes_list.length !== 1}
             />
           </OSTooltip>
         </Box>
@@ -401,7 +402,7 @@ export const SankeyNodeSelectionSimple: FunctionComponent<FCType_SankeyNodeEditi
     nodes = new_data.drawing_area.sankey.visible_nodes_list_sorted
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
-  const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id,selected:selected_nodes.includes(d) } })
+  const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_nodes.includes(d) } })
 
   // Menu updaters ----------------------------------------------------------------------
 
