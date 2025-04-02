@@ -259,7 +259,7 @@ export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurati
             </InputLeftAddon>
             <Select
               variant='select_custom_style'
-              disabled={selected_links.length == 0}
+              isDisabled={selected_links.length !== 1}
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                 const new_source = new_data.drawing_area.sankey.getNode(event.target.value)
                 if (new_source !== null) {
@@ -288,7 +288,7 @@ export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurati
             </InputLeftAddon>
             <Select
               variant='select_custom_style'
-              disabled={selected_links.length == 0}
+              isDisabled={selected_links.length !== 1}
               onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
                 const new_target = new_data.drawing_area.sankey.getNode(event.target.value)
                 if (new_target !== null) {
