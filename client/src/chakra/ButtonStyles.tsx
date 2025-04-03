@@ -76,6 +76,7 @@ export const sizeBtnTextLogin=defineStyle({
   minWidth:'4rem',
   marginLeft:0,
   marginRight:0,
+  fontSize:'1rem',
 
 })
 
