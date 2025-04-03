@@ -80,7 +80,7 @@ import {
 } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit } from './SankeyMenuComponents'
-import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
+import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 import { OSColorPicker } from './OSColorPicker'
 
 /*************************************************************************************************/
@@ -701,7 +701,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
 
   }
 
-  const selection_link = menu_for_style ? <></> : <SankeyLinkSelection new_data={new_data} />
+  const selection_link = menu_for_style ? <></> : <SankeyLinkSelectionSimple new_data={new_data} />
 
   const content = <Box layerStyle='menuconfigpanel_grid'>
     {selection_link}
@@ -1097,7 +1097,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
     </Box>
   </WrapperBoxSubSectionMenu> : <></>
 
-  const selection_link = menu_for_style ? <></> : <SankeyLinkSelection new_data={new_data} />
+  const selection_link = menu_for_style ? <></> : <SankeyLinkSelectionSimple new_data={new_data} />
 
 
   let content_style = <></>
