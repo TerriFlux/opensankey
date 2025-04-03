@@ -1,7 +1,7 @@
 import { Box } from '@chakra-ui/react'
 import React, { CSSProperties, FunctionComponent, useState } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
-import { OSTooltip } from '../../types/Utils';
+import { OSTooltip } from '../../types/Utils'
 
 // Necessary props to call Class
 type OSColorPickerProps = {
@@ -88,9 +88,9 @@ export const OSColorPicker: FunctionComponent<OSColorPickerProps> = ({ initialCo
 
   return (<Box>
     <OSTooltip label={isDisabled?textDisabled:''}>
-    <Box style={styles.swatch} onClick={handleClick}>
-      <Box style={styles.color} />
-    </Box>
+      <Box style={styles.swatch} onClick={handleClick}>
+        <Box style={styles.color} />
+      </Box>
     </OSTooltip>
     {displayColorPicker ? <Box style={styles.popover}>
       <Box style={styles.cover} onClick={handleClose} />
