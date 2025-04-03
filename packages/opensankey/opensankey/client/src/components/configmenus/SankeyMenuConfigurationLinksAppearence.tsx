@@ -302,6 +302,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
           <Select
+            value={shape_color_rule}
             onChange={(evt) => {
               updateElements('shape_color_rule', evt.target.value)
             }}
@@ -667,7 +668,21 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         </OSTooltip>
         <Button
           variant='menuconfigpanel_option_button'
-          onClick={() => { ref_setter_show_modal_styles_links.current(true) }}
+          onClick={() => {
+            if (selected_links.length !== 0) {
+              const style = selected_links[0].style
+              let inchangee = true
+              selected_links.map(link => {
+                inchangee = (link.style.id === style.id) ? inchangee : false
+              })
+              if(inchangee){
+                ref_selected_style_link.current=style.id
+              }
+            }
+            new_data.menu_configuration.updateComponentRelatedToLinksStyles()
+            ref_setter_show_modal_styles_links.current(true)
+
+          }}
         >
           {icon_library.icon_edit_style}
         </Button>
@@ -1142,7 +1157,21 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
         </OSTooltip>
         <Button
           variant='menuconfigpanel_option_button'
-          onClick={() => { ref_setter_show_modal_styles_links_context.current(true) }}
+          onClick={() => { 
+            if (selected_links.length !== 0) {
+              const style = selected_links[0].style
+              let inchangee = true
+              selected_links.map(link => {
+                inchangee = (link.style.id === style.id) ? inchangee : false
+              })
+              if(inchangee){
+                ref_selected_style_link.current=style.id
+              }
+            }
+            new_data.menu_configuration.updateComponentRelatedToLinksStyles()
+
+            ref_setter_show_modal_styles_links_context.current(true) 
+          }}
         >
           {icon_library.icon_edit_style}
         </Button>
