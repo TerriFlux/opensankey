@@ -227,6 +227,7 @@ export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurati
       <OSTooltip label={t('Menu.tooltips.noeud.dns')}>
         <Button
           variant='menuconfigpanel_option_button'
+          size='sizeConfigButton'
           onClick={
             () => {
               // Update UI with only visible links / all links

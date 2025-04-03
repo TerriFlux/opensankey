@@ -772,7 +772,7 @@ export const menu_sub_section_collapse_button = defineStyle({
 
 export const text_menu_select = defineStyle({
   height: '1.5rem',
-  width: 'unset',
+  width: '100%',
   borderRadius: '6px',
   textStyle: 'h4',
   fontSize: '0.6rem',
@@ -787,7 +787,7 @@ export const text_menu_select = defineStyle({
   padding: '0.2rem',
   margin: '0',
   textAlign: 'left',
-  gridTemplateColumns: '10fr 1fr',
+  gridTemplateColumns: '9fr 1fr',
 
   '>span': {
     overflow: 'hidden',
@@ -809,6 +809,13 @@ export const text_menu_select = defineStyle({
 export const sizeToolbarButton = defineStyle({
   width: '2rem',
   height: '2rem',
+  minW: 'unset',
+  padding: '0.2rem',
+})
+
+export const sizeConfigButton = defineStyle({
+  width: '1.5rem',
+  height: '1.5rem',
   minW: 'unset',
   padding: '0.2rem',
 })
