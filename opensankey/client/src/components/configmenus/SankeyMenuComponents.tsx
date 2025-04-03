@@ -277,7 +277,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
   for (let i = 0; i < number_of_input; i++)
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
   ref_set_number_inputs[0].current(String(get_label_font_size))
-  const is_label_font_size_indetermined = !elements.every(el=>getValueWithDecoratorRetriever(el, dict_decorator_name['label_font_size'])==getValueWithDecoratorRetriever(elements[0], dict_decorator_name['label_font_size']))
+  const is_label_font_size_indetermined = !elements.every(el => getValueWithDecoratorRetriever(el, dict_decorator_name['label_font_size']) == getValueWithDecoratorRetriever(elements[0], dict_decorator_name['label_font_size']))
 
   return <Box
     layerStyle='menuconfigpanel_grid'
@@ -579,7 +579,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
   ref_set_number_inputs[0].current(String(get_label_nb_digit))
 
-  const is_cstm_digit_indetermined = !elements.every(el=>getValueWithDecoratorRetriever(el, dict_decorator_name['label_nb_digit'])==get_label_nb_digit)
+  const is_cstm_digit_indetermined = !elements.every(el => getValueWithDecoratorRetriever(el, dict_decorator_name['label_nb_digit']) == get_label_nb_digit)
 
 
 
@@ -710,7 +710,7 @@ export const MenuResetAttrLocal: FunctionComponent<{ new_data: Type_GenericAppli
   const { icon_undo } = icon_library
 
   // Delete all local attributes of selected elements
-  const resetAll =()=> nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
+  const resetAll = () => nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
   // Delete local attributes 'k' of selected elements
   const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as keyof Class_LinkAttribute)
 
@@ -781,8 +781,8 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
   ref_set_number_inputs[0].current(String(get_label_unit))
   ref_set_number_inputs[1].current(String(get_label_unit_factor))
 
-  const is_unit_name_indetermined = !elements.every(el=>getValueWithDecoratorRetriever(el, dict_decorator_name['label_unit'])==get_label_unit)
-  const is_unit_factor_indetermined = !elements.every(el=>getValueWithDecoratorRetriever(el, dict_decorator_name['label_unit_factor'])==get_label_unit_factor)
+  const is_unit_name_indetermined = !elements.every(el => getValueWithDecoratorRetriever(el, dict_decorator_name['label_unit']) == get_label_unit)
+  const is_unit_factor_indetermined = !elements.every(el => getValueWithDecoratorRetriever(el, dict_decorator_name['label_unit_factor']) == get_label_unit_factor)
 
 
   return <>
@@ -875,7 +875,9 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
   elements,
   onClick
 }) => {
-  const [menuListItems,setMenuListItems]=useState<JSX.Element[]>([])
+  const [menuListItems, setMenuListItems] = useState<JSX.Element[]>([])
+  const [displayBgOverlay, setDisplayBgOverlay] = useState(false)
+
   const selected_elements = elements.filter(el => el.selected)
   const textBtn = selected_elements.length > 0 ? selected_elements.map(el => el.label).join(',') : 'Aucune sélection'
   const selecAll = elements.length > 0 ? <>
@@ -890,7 +892,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
   </> : <></>
 
   // Create a function that render list so we can choose when to go throught list (that can be long with big sankey)
-  const renderMenu=()=>elements.map((el, i) => {
+  const renderMenu = () => elements.map((el, i) => {
 
     return <MenuItem
       key={'elements_' + i}
@@ -907,17 +909,27 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
     </MenuItem>
   })
 
+  // Background overlay for when we want to close selector by clicking outside Menu (sometime the DA) we don't trigger any other event
+  const backgroundOverlay = <div style={{
+    display: displayBgOverlay ? 'unset' : 'none',
+    position: 'fixed',
+    top: '0px',
+    right: '0px',
+    bottom: '0px',
+    left: '0px',
+  }} onClick={() => setDisplayBgOverlay(false)}></div>
+
   return <Menu isLazy
     placement='auto'
     variant={'menu_select_elements'}
     closeOnSelect={false}
-    onOpen={()=>setMenuListItems(renderMenu())}
-  >
-    <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant={'text_menu_select'}> {textBtn}</MenuButton>
+    isOpen={displayBgOverlay}
+    onOpen={() => setMenuListItems(renderMenu())}>
+    <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant={'text_menu_select'} onClick={()=>setDisplayBgOverlay(!displayBgOverlay)}> {textBtn}</MenuButton>
+    {backgroundOverlay}
     <MenuList>
       {selecAll}
       {menuListItems}
-
     </MenuList>
   </Menu>
 }

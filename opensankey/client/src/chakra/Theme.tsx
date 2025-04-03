@@ -82,6 +82,7 @@ import {
   text_menu_select,
   template_button_reset,
   menuconfigpanel_move_order_node_io,
+  sizeConfigButton,
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -124,6 +125,7 @@ import {
   menu_button_subnav_account_style,
   menu_button_subnav_style,
   menu_select_elements,
+  menu_select_style,
   menu_subnav_item_demo
 } from './MenuStyles'
 import {
@@ -249,6 +251,7 @@ export const opensankey_theme = extendTheme({
         sizeMenuTopButton,
         sizeMenuTopButtonSaveCache,
         sizeCollapseButton,
+        sizeConfigButton,
       }
     },
     ButtonGroup: {
@@ -319,7 +322,8 @@ export const opensankey_theme = extendTheme({
         menu_button_subnav_style,
         menu_button_subnav_account_style,
         menu_subnav_item_demo,
-        menu_select_elements
+        menu_select_elements,
+        menu_select_style,
       }
     },
     NumberInput: {
@@ -477,7 +481,7 @@ export const opensankey_theme = extendTheme({
     },
     menuconfigpanel_row_droplist: {
       display: 'grid',
-      gridTemplateColumns: '1fr 7fr 1fr 1fr',
+      gridTemplateColumns: '1fr 10fr 1fr 1fr',
       gridColumnGap: '0.25rem',
 
 
