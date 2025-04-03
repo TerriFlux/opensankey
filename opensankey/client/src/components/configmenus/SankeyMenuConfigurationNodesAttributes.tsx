@@ -87,7 +87,7 @@ import {
 } from '../../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { MenuResetAttrLocal, MenuUnit, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
-import { SankeyNodeSelection } from './SankeyMenuConfigurationNodes'
+import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { OSColorPicker } from './OSColorPicker'
 
 export const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -849,7 +849,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   }
 
 
-  const selection_node = menu_for_style ? <></> : <SankeyNodeSelection new_data={new_data} />
+  const selection_node = menu_for_style ? <></> : <SankeyNodeSelectionSimple new_data={new_data} />
 
   return <>
     <React.Fragment key={'selection_node'}>{selection_node}</React.Fragment>
@@ -1376,7 +1376,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   }
 
 
-  const selection_node = menu_for_style ? <></> : <SankeyNodeSelection new_data={new_data} />
+  const selection_node = menu_for_style ? <></> : <SankeyNodeSelectionSimple new_data={new_data} />
 
 
   return <Box layerStyle='box_content_config'>

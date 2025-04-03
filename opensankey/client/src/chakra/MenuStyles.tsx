@@ -49,8 +49,7 @@ export const menu_button_base_style = definePartsStyle({
   },
   item: {
     display: 'grid',
-    textStyle: 'h4',
-    fontSize: '12px',
+    fontSize: '0.6rem',
   }
 })
 
@@ -132,14 +131,32 @@ export const menu_select_elements = definePartsStyle({
   item: {
     display: 'grid',
     gridTemplateColumns: '1fr 9fr',
+    gridColumnGap:'0.25rem',
+    fontSize:'0.6rem',
     span: {
       margin: 0,
       padding: 0
+    },
+    'span.chakra-menu__icon-wrapper':{
+      margin:'auto'
+    },
+    svg:{
+      width:'0.8rem',
+      height:'0.8rem',
     },
     _hover: {
       bg: 'lightgrey'
     }
   },
+  list: {
+    maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+    overflowY: 'auto',
+    border: 'solid 1px',
+    borderColor: 'primaire.5'
+  }
+})
+
+export const menu_select_style=definePartsStyle({
   list: {
     maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
     overflowY: 'auto',
