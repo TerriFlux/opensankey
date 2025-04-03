@@ -58,7 +58,7 @@ export const checkbox_base_style = definePartsStyle({
     borderColor: 'gray.400',
     iconColor: 'white',
     border: 'solid 1px ',
-    borderRadius: '2px',
+    borderRadius: '4px',
     _checked: {
       bg: 'primaire.3',
       borderColor: 'primaire.3',
@@ -96,7 +96,7 @@ export const menuconfigpanel_option_checkbox = definePartsStyle({
   container: {
     h:'1.5rem',
     border: '0px',
-    borderRadius: '6px',
+    borderRadius: '4px',
     borderColor: 'white',
   },
 })
@@ -104,7 +104,7 @@ export const menuconfigpanel_option_checkbox = definePartsStyle({
 export const menuconfigpanel_tag_checkbox = definePartsStyle({
   container: {
     border: '0px',
-    borderRadius: '6px',
+    borderRadius: '4px',
     borderColor: 'white',
   },
   label: {
@@ -163,7 +163,6 @@ export const checkbox_dont_show_again = definePartsStyle({
     borderColor: 'gray.400',
     iconColor: 'white',
     border: 'solid 1px ',
-    borderRadius: '2px',
     _checked: {
       bg: 'primaire.3',
       borderColor: 'primaire.3',

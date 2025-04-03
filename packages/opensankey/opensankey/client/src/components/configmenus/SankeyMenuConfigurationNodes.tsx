@@ -339,6 +339,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
         <OSTooltip label={t('Menu.tooltips.noeud.dns')}>
           <Button
             variant='menuconfigpanel_option_button'
+            size='sizeConfigButton'
             onClick={
               () => {
                 // Update indicator (only visible nodes / all nodes)
