@@ -356,7 +356,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         </InputGroup>
       </Box>
 
-      {additionMenus.additional_link_appearence_items.map((el,) => el(menu_for_style)/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
+      {additionMenus.current.additional_link_appearence_items.map((el,) => el(menu_for_style)/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
     </>
   </WrapperBoxSubSectionMenu>
 
@@ -948,7 +948,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
           }}
         />
         {content_value_specific_flow}
-        {additionMenus.additional_link_appearence_value.map(el => el(menu_for_style))}
+        {additionMenus.current.additional_link_appearence_value.map(el => el(menu_for_style))}
 
         {/* Config Label value unit */}
         <MenuUnit

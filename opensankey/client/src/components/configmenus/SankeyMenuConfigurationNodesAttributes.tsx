@@ -341,7 +341,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
     </Box>
     {shape_visible ? <>
       {/* In this position of the array, there is an input who can change the node visibility (hide if intermediary)(dev) */}
-      {additional_menus.advanced_appearence_content.splice(1, 1)}
+      {additional_menus.current.advanced_appearence_content.splice(1, 1)}
 
       <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
         {t('Menu.edition')}
@@ -783,12 +783,12 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         </OSTooltip>
       </Checkbox>
     </Box> */}
-      {additional_menus.advanced_appearence_content}
+      {additional_menus.current.advanced_appearence_content}
     </> : <></>}
   </Box>
 
 
-  const additional_content = additional_menus.additional_node_config_style.map((el, i) =>
+  const additional_content = additional_menus.current.additional_node_config_style.map((el, i) =>
     <React.Fragment key={'add_node_config_style_' + i}>{el}</React.Fragment>
   )
   let style_node = <></>

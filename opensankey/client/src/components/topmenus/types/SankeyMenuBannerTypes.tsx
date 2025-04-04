@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { MutableRefObject } from 'react'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
 
 export type FType_SetDiagram = (
@@ -40,7 +41,7 @@ export type FCType_ToolBarBottom = {
  */
 export type FCType_ToolbarBuilder = {
   new_data: Type_GenericApplicationData,
-  additionalMenu: Type_AdditionalMenus,
+  additionalMenu: MutableRefObject<Type_AdditionalMenus>,
 }
 
 export type FCType_ToolbarSubComponent = {

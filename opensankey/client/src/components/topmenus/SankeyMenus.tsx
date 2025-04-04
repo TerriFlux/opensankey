@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useRef, useState } from 'react'
+import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
 import Draggable from 'react-draggable'
 
@@ -206,7 +206,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             bottom='0'
             layerStyle='menubottom_layout_style'
           >
-            {additionalMenus.footer}
+            {additionalMenus.current.footer}
             <Box
               display='grid'
               gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
@@ -344,7 +344,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   )
 }
 
-const ConfigMenu: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: Type_AdditionalMenus }> = ({ new_data, additional_menus }) => {
+const ConfigMenu: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { type_menu_configuration_selected, style_config } = new_data.menu_configuration
   const [, setUpdate] = useState(false)
 
@@ -373,7 +373,7 @@ const ConfigMenu: FunctionComponent<{ new_data: Type_GenericApplicationData, add
  * @param {*} { new_data, additional_menus }
  * @return {*} 
  */
-const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: Type_AdditionalMenus }> = ({ new_data, additional_menus }) => {
+const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, ref_to_menu_config_updater } = new_data.menu_configuration
   return <ButtonGroup className='buttonGroupTypeConfig' spacing='0.2rem' style={{
@@ -406,7 +406,7 @@ const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicatio
     >
       {t('Menu.Config.type_style')}
     </Button>
-    {Object.entries(additional_menus.additional_menu_type).map((el, id) => {
+    {Object.entries(additional_menus.current.additional_menu_type).map((el, id) => {
       const keyType = el[0] as keyTypeConfig
       return <Button key={'additional_type_config_' + id} variant={type_menu_configuration_selected == keyType ? 'button_type_config_activated' : 'button_type_config'}
         onClick={() => {
@@ -427,7 +427,7 @@ const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicatio
  * @param {*} { new_data, additional_menus }
  * @return {*} 
  */
-const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: Type_AdditionalMenus }> = ({ new_data, additional_menus }) => {
+const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, elements_configurable_selected } = new_data.menu_configuration
   const elements_in_menu_configuration = elements_configurable_selected[type_menu_configuration_selected]
@@ -450,7 +450,7 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
         <MenuConfigurationLinksData new_data={new_data} contextual={false} />
       </WrapperContentConfig>,
 
-      ...additional_menus.additional_menu_config_content.data
+      ...additional_menus.current.additional_menu_config_content.data
 
     },
 
@@ -468,7 +468,7 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
         <MenuConfigurationNodeContext new_data={new_data} additional_menus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
-      ...additional_menus.additional_menu_config_content.context
+      ...additional_menus.current.additional_menu_config_content.context
 
     },
 
@@ -476,7 +476,7 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
     style: {
       DA: <WrapperContentConfig title={t('Menu.Config.title_style_da')}>
         <>
-          <DrawingAreaStyle new_data={new_data} extra_background_element={additional_menus.extra_background_element} />
+          <DrawingAreaStyle new_data={new_data} extra_background_element={additional_menus.current.extra_background_element} />
           <LegendStyleConfig new_data={new_data} />
         </>
       </WrapperContentConfig>,
@@ -488,9 +488,9 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
       node: <WrapperContentConfig title={t('Menu.Config.title_style_node')}>
         <MenuConfigurationNodeStyle new_data={new_data} additional_menus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
-      ...additional_menus.additional_menu_config_content.style
+      ...additional_menus.current.additional_menu_config_content.style
     },
-    ...additional_menus.additional_new_menu_config_content
+    ...additional_menus.current.additional_new_menu_config_content
 
   }
   const content_empty_config = elements_in_menu_configuration.length == 0 ?
@@ -515,7 +515,7 @@ export type typeButtonElementConfigurable = { [x: string]: { text: string, icon:
  * @param {*} { new_data }
  * @return {*} 
  */
-const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: Type_AdditionalMenus }> = ({ new_data, additional_menus }) => {
+const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, style_config, ref_to_menu_config_updater } = new_data.menu_configuration
   const elements_buttons = style_config[type_menu_configuration_selected].elements_configurable
@@ -525,7 +525,7 @@ const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Type_GenericAppli
     'DA': { icon: new_data.icon_library.icon_graph, text: t('Menu.Config.element_da'), disabled: false },
     'node': { icon: new_data.icon_library.icon_node, text: t('Menu.Config.element_node'), disabled: false },
     'data': { icon: new_data.icon_library.icon_tableau, text: t('Menu.Config.element_data'), disabled: false },
-    ...additional_menus.additional_menu_button_element_configurable
+    ...additional_menus.current.additional_menu_button_element_configurable
   }
 
   return <ButtonGroup spacing='0.2rem' orientation='vertical' style={{

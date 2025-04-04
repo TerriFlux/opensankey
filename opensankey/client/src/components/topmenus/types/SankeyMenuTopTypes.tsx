@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { MutableRefObject } from 'react'
 import {
   IType_DictHookRefSetterShowDialogComponents
 } from '../../../types/MenuConfig'
@@ -50,7 +51,7 @@ export type FCType_OpenSankeySaveButton = {
 
 export type FType_OpenSankeyMenusDictBuilder = (
   new_data: Type_GenericApplicationData,
-  additional_menus: Type_AdditionalMenus,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
   setDiagram: FType_SetDiagram,
 ) => { [s: string]: JSX.Element | JSX.Element[] }
 
