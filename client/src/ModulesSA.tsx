@@ -1,5 +1,5 @@
 
-import React, { Dispatch, FunctionComponent, SetStateAction, useState } from 'react'
+import React, { Dispatch, FunctionComponent, MutableRefObject, SetStateAction, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 
@@ -57,7 +57,7 @@ const logo_sankeytheque = <svg
 export type ExempleMenuTypes = { [_: string]: ExempleMenuTypes | string[] }
 
 type FType_InitializeAdditionalMenusSA = (
-  additional_menus: Type_AdditionalMenus,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
   new_data: Class_ApplicationDataSA,
 ) => void
 
@@ -120,7 +120,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   if (new_data_app.is_static) {
   //Add data sequence in footer
-    additionalMenus.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
+    additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
     return
   }
 
@@ -137,16 +137,20 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   // New modules -------------------------------------------------------------------------
 
-  additionalMenus.additional_nav_item.push(
+  additionalMenus.current.additional_nav_item.push(
     <UserPagesButtons
       new_data_app={new_data_app}
     />
   )
 
-
-
   if (new_data_app.has_sankey_plus) {
-    additionalMenus.external_top_buttons_item['sankeytheque']=(<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
+    new_data_app.menu_configuration.menu_top_order.push(['sankeytheque'])
+    additionalMenus.current.external_top_buttons_item['sankeytheque']=(<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
+  }else{
+    const idx_el=new_data_app.menu_configuration.menu_top_order.findIndex(el=>el.includes('sankeytheque'))
+    if(idx_el!==-1){
+      new_data_app.menu_configuration.menu_top_order.splice(idx_el,1)
+    }
   }
 }
 
