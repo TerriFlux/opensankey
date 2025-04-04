@@ -982,9 +982,9 @@ export class Class_MenuConfig {
 
   // Main menu component ----------------------------------------------------------------
 
-public get ref_rerender_submodules_menus(){
-  return this._ref_rerender_submodules_menus
-}
+  public get ref_rerender_submodules_menus(){
+    return this._ref_rerender_submodules_menus
+  }
   public get ref_to_menu_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_updater
   }
