@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { MutableRefObject } from 'react'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
 
 export type FCType_OpenSankeyConfigurationsMenus = {
@@ -32,6 +33,6 @@ export type FCType_OpenSankeyConfigurationsMenus = {
   menu_configuration_nodes_attributes: JSX.Element,
   menu_config_link_data: JSX.Element,
   menu_config_link_attr: JSX.Element,
-  additional_menus: Type_AdditionalMenus,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
 }
 

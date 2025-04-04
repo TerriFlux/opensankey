@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { CheckboxProps, Tooltip } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
@@ -34,6 +34,9 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import * as d3 from 'd3'
 // Local type imports
 import type { OSTooltpFuncType } from '../components/configmenus/types/SankeyUtilsTypes'
+import { Type_AdditionalMenus, Type_GenericApplicationData } from './Types'
+import { initializeAdditionalMenus } from '../Modules'
+import { FType_InitializeAdditionalMenus } from './FunctionTypes'
 
 // SPECIFIC TYPES ************************************************************************
 
@@ -153,8 +156,8 @@ export const default_style_name = 'Style par default'
 
 // DEDICATED TYPES **********************************************************************
 
-export type Dict_templates_type={[y:string]:{data:string[],image:string[]}}
-export type Templates_builder_type={[y:string]:Dict_templates_type}
+export type Dict_templates_type = { [y: string]: { data: string[], image: string[] } }
+export type Templates_builder_type = { [y: string]: Dict_templates_type }
 
 // DEDICATED FUNCTIONS *******************************************************************
 
@@ -383,9 +386,9 @@ export const GetRandomInt = (max: number) => {
 
 
 export const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
-  d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
-  d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
-  d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
+d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
+d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
+d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
 
 // COMPONENTS ===========================================================================
 // ! Won't work with locales using characters different than Arabic numerals (e.g. *Eastern* Arabic numerals: ١٢٣٬٤٥٦٫٧٨٩)
@@ -415,4 +418,74 @@ export const parseLocaleNumber = (stringNumber: string, locale = navigator.langu
     return NaN
   }
   return Number(trimmedNumberString)
+}
+
+
+export const WrapperInitializeAdditionalMenus: FunctionComponent<{
+  new_data: Type_GenericApplicationData,
+  initializeAdditionalMenus: FType_InitializeAdditionalMenus,
+}> = ({ new_data, initializeAdditionalMenus }) => {
+  const [, setUpdate] = useState(0)
+  new_data.menu_configuration.ref_rerender_submodules_menus.current = () => setUpdate(a => a + 1)
+
+
+   new_data.menu_configuration.additionalMenus.current = {
+  
+      // Top Menu
+      external_edition_item: [],
+      external_file_export_item: [],
+      externale_save_item: [],
+      external_top_buttons_item: {},
+      externale_navbar_item: {},
+      footer: [],
+  
+      // Menu config
+      additional_menu_type: {},
+      additional_menu_button_element_configurable: {},
+      additional_menu_config_content: { data: {}, context: {}, style: {} },
+      additional_new_menu_config_content: {},
+      additional_node_config_style: [],
+  
+      // Mise en page
+      extra_background_element: <></>,
+      apply_transformation_additional_elements: [<></>],
+  
+      // Nodes
+      advanced_appearence_content: [],
+      advanced_label_content: [],
+      context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+      additional_context_node_element: {},
+      // Links
+      additional_menu_configuration_links: {},
+      additional_data_element: [],
+      additional_link_appearence_items: [],
+      additional_link_appearence_value: [],
+      additional_link_visual_filter_content: [],
+      context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
+      additional_context_link_element: {},
+  
+      // Preferences
+      additional_preferences: [],
+  
+  
+      additional_file_save_json_option: [],
+      additional_file_export_item: [],
+  
+      additional_nav_item: [],
+  
+      formations_menu: {},
+  
+      toolbar_order: ['mode_souris',
+        'node_type',
+        'strectch_zdd',
+        'help',
+        'fullscreen'],
+      template_module_key: ['essential'],
+    }
+
+  initializeAdditionalMenus(
+    new_data.menu_configuration.additionalMenus,
+    new_data
+  )
+  return <></>
 }

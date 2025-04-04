@@ -359,7 +359,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     'drag_link_data': button_open_link_data,
     'drag_apparence': button_open_link_appearence,
 
-    ...additionalMenus.additional_context_link_element
+    ...additionalMenus.current.additional_context_link_element
   }
 
   // Box that serve as context menu
@@ -371,7 +371,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       style={{ maxWidth: '100%', position: 'absolute', zIndex: '1', inset: style_c_l }}
     >
       <ButtonGroup orientation='vertical' isAttached>
-        {additionalMenus.context_link_order.map((key, id) => {
+        {additionalMenus.current.context_link_order.map((key, id) => {
           return <React.Fragment key={id}>{content_context_link[key]}</React.Fragment>
         })}
       </ButtonGroup>

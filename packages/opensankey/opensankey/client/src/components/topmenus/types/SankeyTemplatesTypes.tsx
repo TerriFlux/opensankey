@@ -24,13 +24,14 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { MutableRefObject } from 'react'
 import { FType_ProcessFunctions } from '../../../types/FunctionTypes'
 import { Type_GenericApplicationData, Type_AdditionalMenus } from '../../../types/Types'
 
 
 export type FCtype_ModalTemplate = {
   new_data: Type_GenericApplicationData
-  additionalMenu: Type_AdditionalMenus
+  additionalMenu: MutableRefObject<Type_AdditionalMenus>
 }
 
 export type FCType_ModalTuto = {
