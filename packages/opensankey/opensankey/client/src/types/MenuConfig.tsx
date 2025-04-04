@@ -25,10 +25,11 @@
 // ==================================================================================================
 
 // External imports
-import { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
+import React,{ Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 
 // Local imports
 import { Type_MacroTagGroup } from '../types/Utils'
+import { Type_AdditionalMenus } from './Types'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -155,6 +156,9 @@ export class Class_MenuConfig {
   protected _waiting_time_for_processes: number = 50 // ms
 
   // PRIVATE ATTRIBUTES =================================================================
+
+  private _ref_rerender_submodules_menus: MutableRefObject<() => void>
+
 
   // Update component Menu
   private _ref_to_splashscreen_updater: MutableRefObject<() => void>
@@ -301,6 +305,61 @@ export class Class_MenuConfig {
   private _never_see_again: MutableRefObject<boolean> = useRef((localStorage.getItem('dontSeeAgainWelcome') === '1'))
   private _show_splashscreen: boolean = false
 
+
+  private _additionalMenus: MutableRefObject<Type_AdditionalMenus> = useRef({
+    // Top Menu
+    external_edition_item: [],
+    external_file_export_item: [],
+    externale_save_item: [],
+    external_top_buttons_item: {},
+    externale_navbar_item: {},
+    footer: [],
+
+    // Menu config
+    additional_menu_type: {},
+    additional_menu_button_element_configurable: {},
+    additional_menu_config_content: { data: {}, context: {}, style: {} },
+    additional_new_menu_config_content: {},
+    additional_node_config_style: [],
+
+    // Mise en page
+    extra_background_element: <></>,
+    apply_transformation_additional_elements: [<></>],
+
+    // Nodes
+    advanced_appearence_content: [],
+    advanced_label_content: [],
+    context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    additional_context_node_element: {},
+    // Links
+    additional_menu_configuration_links: {},
+    additional_data_element: [],
+    additional_link_appearence_items: [],
+    additional_link_appearence_value: [],
+    additional_link_visual_filter_content: [],
+    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
+    additional_context_link_element: {},
+
+    // Preferences
+    additional_preferences: [],
+
+
+    additional_file_save_json_option: [],
+    additional_file_export_item: [],
+
+    additional_nav_item: [],
+
+    formations_menu: {},
+
+    toolbar_order: ['mode_souris',
+      'node_type',
+      'strectch_zdd',
+      'help',
+      'fullscreen'],
+    template_module_key: ['essential'],
+  })
+
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -310,7 +369,7 @@ export class Class_MenuConfig {
   constructor() {
 
     // Init menu component updater ------------------------------------------------------
-
+    this._ref_rerender_submodules_menus = useRef(() => null)
     this._ref_to_splashscreen_updater = useRef(() => null)
     this._ref_to_menu_updater = useRef(() => null)
     this._ref_to_submenu_updater = useRef(() => null)
@@ -453,7 +512,7 @@ export class Class_MenuConfig {
   public openConfigMenu() {
     if (
       this._ref_menu_opened.current &&
-      this._ref_menu_opened.current[0]===false
+      this._ref_menu_opened.current[0] === false
     ) {
       this._ref_menu_opened.current[1](true)
     }
@@ -466,7 +525,7 @@ export class Class_MenuConfig {
   public closeConfigMenu() {
     if (
       this._ref_menu_opened.current &&
-      this._ref_menu_opened.current[0]===true
+      this._ref_menu_opened.current[0] === true
     ) {
       this._ref_menu_opened.current[1](false)
     }
@@ -483,9 +542,9 @@ export class Class_MenuConfig {
     this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      this._elements_configurable_selected.data=['node']
-      this._elements_configurable_selected.context=['node']
-      this._elements_configurable_selected.style=['node']
+      this._elements_configurable_selected.data = ['node']
+      this._elements_configurable_selected.context = ['node']
+      this._elements_configurable_selected.style = ['node']
       this._ref_to_menu_config_updater.current()
     }, 200)
   }
@@ -499,9 +558,9 @@ export class Class_MenuConfig {
     this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      this._elements_configurable_selected.data=['flow']
-      this._elements_configurable_selected.context=['flow']
-      this._elements_configurable_selected.style=['flow']
+      this._elements_configurable_selected.data = ['flow']
+      this._elements_configurable_selected.context = ['flow']
+      this._elements_configurable_selected.style = ['flow']
       this._ref_to_menu_config_updater.current()
     }, 200)
   }
@@ -804,7 +863,7 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToToolbar()
     this.updateAllComponentsRelatedToLevelTags()
     this.updateAllComponentsRelatedToDataTags()
-    
+
   }
 
   public updateAllComponentsRelatedToLevelTags() {
@@ -866,7 +925,7 @@ export class Class_MenuConfig {
   public updateComponentSaveDiagramJSON() {
     this._ref_to_save_diagram_updater.current()
   }
-  
+
   /**
    * Function to update ApplyLayoutDialog component,
    * can be overrided in submodule if we add subcomponent to ApplyLayoutDialog
@@ -923,7 +982,9 @@ export class Class_MenuConfig {
 
   // Main menu component ----------------------------------------------------------------
 
-
+public get ref_rerender_submodules_menus(){
+  return this._ref_rerender_submodules_menus
+}
   public get ref_to_menu_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_updater
   }
@@ -1164,7 +1225,11 @@ export class Class_MenuConfig {
   public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }
 
   public get style_config(): { [x: string]: { theme: string; elements_configurable: string[] } } { return this._style_config }
-  public get flow_color_origin_type(): string[] {return this._flow_color_origin_type}
+  public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
+
+  public get additionalMenus(): MutableRefObject<Type_AdditionalMenus> {
+    return this._additionalMenus
+  }
 
 }
 

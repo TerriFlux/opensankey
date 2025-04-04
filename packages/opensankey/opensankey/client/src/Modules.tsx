@@ -140,7 +140,7 @@ export const moduleDialogs: FType_ModuleDialogs = (
       dialog_name={'ref_setter_show_menu_layout'}
       content={<OpenSankeyMenuConfigurationLayout
         new_data={new_data}
-        extra_background_element={additional_menus.extra_background_element}
+        extra_background_element={additional_menus.current.extra_background_element}
         contextual={true}
       />}
       title={t('Menu.MEP')}
