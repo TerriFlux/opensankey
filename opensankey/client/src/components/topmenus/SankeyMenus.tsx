@@ -131,7 +131,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   menu_configuration.ref_menu_opened.current = [show_nav, (val) => set_show_nav(val)]
   const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + menu_config_width + '% + ' + new_data.drawing_area.fit_margin + 'px)' : new_data.drawing_area.fit_margin / 2
-  //Switch the variable value that handle opening and closing the configuration menu 
+  //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
   }
@@ -371,7 +371,7 @@ const ConfigMenu: FunctionComponent<{ new_data: Type_GenericApplicationData, add
  * For each kind of menu there is a set of configurable elements (node, flow, drawing area, ...)
  *
  * @param {*} { new_data, additional_menus }
- * @return {*} 
+ * @return {*}
  */
 const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
@@ -425,7 +425,7 @@ const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicatio
  * Return the content of displayed sub menus from a type of configuration
  *
  * @param {*} { new_data, additional_menus }
- * @return {*} 
+ * @return {*}
  */
 const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
@@ -513,7 +513,7 @@ export type typeButtonElementConfigurable = { [x: string]: { text: string, icon:
  * Component for selecting which configurable elements sub menu we want to display in <ConfigContent />
  *
  * @param {*} { new_data }
- * @return {*} 
+ * @return {*}
  */
 const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
@@ -532,7 +532,7 @@ const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Type_GenericAppli
     border: 'none',
     borderRadius: '4px',
     background: 'white',
-    width: '3rem',
+    width: '3.5rem',
     padding: '0.2rem',
   }}>
     {
@@ -549,7 +549,12 @@ const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Type_GenericAppli
           }}
         >
           {dict_buttons_element_to_config[el].icon}
-          <span>{dict_buttons_element_to_config[el].text}</span>
+          <Box
+            as='span'
+            padding='0.2rem 0.1rem 0rem 0.1rem'
+          >
+            {dict_buttons_element_to_config[el].text}
+          </Box>
         </Button>
       })
     }
