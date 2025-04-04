@@ -27,7 +27,13 @@ import {
   modal_account,
   modal_sankeytheque
 } from './ModalStyle'
-import { accordion_sankeytheque } from './AccordionStyles'
+import {
+  accordion_sankeytheque
+} from './AccordionStyles'
+import {
+  input_user_pages,
+  register_input
+} from './InputStyles'
 
 const _text_style_log = {
   fontFamily: 'Open Sans,sans-serif',
@@ -67,6 +73,12 @@ export const Theme_SA = {
       baseStyle: form_base_style,
       variants: {
         form_account_page
+      }
+    },
+    Input: {
+      variants: {
+        input_user_pages,
+        register_input
       }
     },
     Modal: {

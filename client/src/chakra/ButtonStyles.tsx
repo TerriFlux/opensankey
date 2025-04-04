@@ -6,12 +6,31 @@ const _btn_lone_navigation = {
   alignSelf: 'center',
   justifySelf: 'center',
   textAlign: 'center',
-  margin:0,
+  margin: 0,
   borderRadius: '6px',
   border: 'solid 1px ',
 }
 
 export const menutop_button_goto_dashboard = defineStyle({
+  ..._btn_lone_navigation,
+  borderColor: 'primaire.2',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  color: 'white',
+  fill: 'white',
+  _hover: {
+    borderColor: 'secondaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
+  _active: {
+    borderColor: 'secondaire.2',
+    bg: 'secondaire.2',
+    bgColor: 'secondaire.2',
+  },
+})
+
+export const button_terms_of_use_acceptance = defineStyle({
   ..._btn_lone_navigation,
   borderColor: 'primaire.2',
   bg: 'primaire.2',
