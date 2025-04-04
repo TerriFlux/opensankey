@@ -620,26 +620,6 @@ export abstract class ClassTemplate_NodeElementOSP
   public get FO_content(): string { return this._FO_content }
   public set FO_content(value: string) { this._FO_content = value }
 
-  /**
-   * Override setter of shape color to also redraw links (because of gradient)
-   *
-   * @memberof ClassTemplate_NodeElementOSP
-   */
-  public override set shape_color(_: string) {
-    this._display.attributes.shape_color = _
-    this.drawShape()
-    this.drawLinks()
-  }
-
-  public override get shape_color() {
-    if (this._display.attributes.shape_color !== undefined) {
-      return this._display.attributes.shape_color
-    } else if (this._display.style.shape_color !== undefined) {
-      return this._display.style.shape_color
-    }
-    return default_shape_color
-  }
-
 
 }
 

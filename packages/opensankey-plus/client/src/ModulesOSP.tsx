@@ -167,7 +167,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   const { t, has_sankey_plus, icon_library } = new_data_plus
 
   // Add Buttons to open banner of views
-  additionalMenus.external_top_buttons_item['views'] = <BannerViewsOSP new_data_plus={new_data_plus} />
+  additionalMenus.current.external_top_buttons_item['views'] = <BannerViewsOSP new_data_plus={new_data_plus} />
 
   // Add an option for flow color rule
   if (has_sankey_plus) {
@@ -178,111 +178,115 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // TODO : manque implementation des exort svg
   // // Top Menus
-  // additionalMenus.external_file_export_item.push(<OSPItemExport />)
+  // additionalMenus.current.external_file_export_item.push(<OSPItemExport />)
 
   // Page settings
-  additionalMenus.extra_background_element = <ImportImageAsSvgBg
+  additionalMenus.current.extra_background_element = <ImportImageAsSvgBg
     new_data_plus={new_data_plus}
   />
 
   //Context node
-  additionalMenus.context_node_order.push('drag_tag', 'drag_tooltip')
-  additionalMenus.additional_context_node_element['drag_tag'] = <ButtonNodeContextShowTagMenu new_data={new_data_plus} />
-  additionalMenus.additional_context_node_element['drag_tooltip'] = <ButtonNodeContextShowTooltipMenu new_data={new_data_plus} />
-  additionalMenus.additional_context_node_element['animate'] = <ButtonNodeContextStartAnimation new_data={new_data_plus} />
+  if (new_data_plus.has_sankey_plus) {
+
+    additionalMenus.current.context_node_order.push('drag_tag', 'drag_tooltip')
+
+    additionalMenus.current.additional_context_node_element['drag_tag'] = <ButtonNodeContextShowTagMenu new_data={new_data_plus} />
+    additionalMenus.current.additional_context_node_element['drag_tooltip'] = <ButtonNodeContextShowTooltipMenu new_data={new_data_plus} />
+    additionalMenus.current.additional_context_node_element['animate'] = <ButtonNodeContextStartAnimation new_data={new_data_plus} />
+  }
 
   // Get index of seprator in context node that come after masking node shape/label so we can then insert a button to mask value (OSP functionality)
-  const idx_sep_3 = additionalMenus.context_node_order.indexOf('sep_3')
-  additionalMenus.context_node_order.splice(idx_sep_3, 0, 'animate')
+  const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
+  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'animate')
 
 
   // Add dashed config
-  additionalMenus.additional_link_appearence_items.push(
+  additionalMenus.current.additional_link_appearence_items.push(
     (menu_for_style: boolean) => <MenuConfLinkApparenceDashedOSP
       new_data_plus={new_data_plus}
       menu_for_style={menu_for_style}
     />)
 
-  additionalMenus.additional_link_appearence_value.push((menu_for_style: boolean) => <MenuConfLinkScientificPrecision
+  additionalMenus.current.additional_link_appearence_value.push((menu_for_style: boolean) => <MenuConfLinkScientificPrecision
     new_data_plus={new_data_plus}
     menu_for_style={menu_for_style}
   />)
 
 
-  additionalMenus.context_link_order.push('drag_tooltip')
-  additionalMenus.additional_context_link_element['drag_tooltip'] = <ButtonLinkContextShowTooltipMenu new_data={new_data_plus} />
-  additionalMenus.additional_context_link_element['drag_tag'] = <ButtonLinkContextShowTagMenu new_data={new_data_plus} />
-  additionalMenus.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
+  additionalMenus.current.context_link_order.push('drag_tooltip')
+  additionalMenus.current.additional_context_link_element['drag_tooltip'] = <ButtonLinkContextShowTooltipMenu new_data={new_data_plus} />
+  additionalMenus.current.additional_context_link_element['drag_tag'] = <ButtonLinkContextShowTagMenu new_data={new_data_plus} />
+  additionalMenus.current.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
 
   // Insert OSP Button at a specific place in the link context menu
-  const idx_sep_4 = additionalMenus.context_link_order.indexOf('sep_4')
-  additionalMenus.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
+  const idx_sep_4 = additionalMenus.current.context_link_order.indexOf('sep_4')
+  additionalMenus.current.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
 
 
   // Addition chackbox for dialog save JSON dagram
-  additionalMenus.additional_file_save_json_option.push(
+  additionalMenus.current.additional_file_save_json_option.push(
     <MenuEnregistrerViewOSP
       new_data_plus={new_data_plus}
     />
   )
 
   // Place new button in desired order in the toolbar
-  additionalMenus.toolbar_order.splice(1, 0, 'aggregation', 'link_visual_filter', 'node_tag_filter', 'link_tag_filter', 'data_tag_filter')
+  additionalMenus.current.toolbar_order.splice(1, 0, 'aggregation', 'link_visual_filter', 'node_tag_filter', 'link_tag_filter', 'data_tag_filter')
 
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)
 
   // Add buttons in the menu transformation for adding ZDT and views as variable transferable in SuiteUpdateLayout
-  additionalMenus.apply_transformation_additional_elements.push(
+  additionalMenus.current.apply_transformation_additional_elements.push(
     <TransformationElementsOSP
       new_data_plus={new_data_plus}
     />
   )
 
   //Add data sequence in footer
-  additionalMenus.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus} />)
+  additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus} />)
 
 
 
 
-  additionalMenus.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
-  additionalMenus.additional_node_config_style.push(<NodeForeignObjectOSP new_data_plus={new_data_plus} />)
+  additionalMenus.current.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
+  additionalMenus.current.additional_node_config_style.push(<NodeForeignObjectOSP new_data_plus={new_data_plus} />)
 
-  additionalMenus.template_module_key.push('intermediary')
-  additionalMenus.template_module_key.push('advanced')
+  additionalMenus.current.template_module_key.push('intermediary')
+  additionalMenus.current.template_module_key.push('advanced')
 
 
-  additionalMenus.additional_menu_type['presentation'] = 'presentation'
-  additionalMenus.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: !has_sankey_plus }
-  additionalMenus.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
-  additionalMenus.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus },
-  additionalMenus.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus },
-  additionalMenus.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus },
+  additionalMenus.current.additional_menu_type['presentation'] = 'presentation'
+  additionalMenus.current.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: !has_sankey_plus }
+  additionalMenus.current.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
+  additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus },
+    additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus },
+    additionalMenus.current.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus },
 
-  // Add menu for new menu type 'Présentation'
-  additionalMenus.additional_new_menu_config_content['presentation'] = {
-    'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-      <MenuConfigurationFreeLabelsOSP new_data_plus={new_data_plus} />
-    </WrapperContentConfig>,
+    // Add menu for new menu type 'Présentation'
+    additionalMenus.current.additional_new_menu_config_content['presentation'] = {
+      'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
+        <MenuConfigurationFreeLabelsOSP new_data_plus={new_data_plus} />
+      </WrapperContentConfig>,
 
-    'node': <WrapperContentConfig title={t('Flux.IS')}><>
-      <SankeyMenuConfigurationNodesTooltip new_data={new_data_plus} />
-      <NodeHyperLinkOSP new_data_plus={new_data_plus} />
-    </>
-    </WrapperContentConfig>,
+      'node': <WrapperContentConfig title={t('Flux.IS')}><>
+        <SankeyMenuConfigurationNodesTooltip new_data={new_data_plus} />
+        <NodeHyperLinkOSP new_data_plus={new_data_plus} />
+      </>
+      </WrapperContentConfig>,
 
-    'flow': <WrapperContentConfig title={t('Noeud.IS')}>
-      <MenuConfigurationLinksTooltip new_data={new_data_plus} />
-    </WrapperContentConfig>,
+      'flow': <WrapperContentConfig title={t('Noeud.IS')}>
+        <MenuConfigurationLinksTooltip new_data={new_data_plus} />
+      </WrapperContentConfig>,
 
-    'view': <WrapperContentConfig title={t('view.storytelling')}>
-      <ViewsConfig new_data_plus={new_data_plus}
-      />
-    </WrapperContentConfig>,
-  }
+      'view': <WrapperContentConfig title={t('view.storytelling')}>
+        <ViewsConfig new_data_plus={new_data_plus}
+        />
+      </WrapperContentConfig>,
+    }
 
   // Add menu for menu type 'data'
-  additionalMenus.additional_menu_config_content['data'] = {
+  additionalMenus.current.additional_menu_config_content['data'] = {
     'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
       <SankeySettingsEditionElementTags
         new_data={new_data_plus}
@@ -292,7 +296,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   }
 
   // Add menu for menu type 'context'
-  additionalMenus.additional_menu_config_content['context'] = {
+  additionalMenus.current.additional_menu_config_content['context'] = {
     'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
       <>
         <SankeySettingsEditionElementTags
@@ -308,9 +312,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         new_data={new_data_plus}
         elementTagNameProp='flux_taggs'
       />
-      <MenuConfigurationLinksTags
-        new_data={new_data_plus}
-      />
+        <MenuConfigurationLinksTags
+          new_data={new_data_plus}
+        />
       </>
     </WrapperContentConfig>
   }
