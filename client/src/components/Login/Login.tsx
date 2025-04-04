@@ -232,6 +232,8 @@ export const LoginOutButton: FunctionComponent<LoginTypes> = (
         new_data_app,
         () => {
           setOnWait(false)
+          new_data_app.menu_configuration.ref_rerender_submodules_menus.current()
+          new_data_app.menu_configuration.updateAllMenuComponents()
           returnToApp(navigate)
         })
     }}
