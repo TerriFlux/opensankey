@@ -236,18 +236,18 @@ export const template_button_reset = defineStyle({
   minWidth: 'unset',
   width: 'unset',
   textStyle: 'h4',
-  bg: 'primaire.2',
-  bgColor: 'primaire.2',
-  borderColor: 'primaire.2',
+  bg: 'primaire.1',
+  bgColor: 'primaire.1',
+  borderColor: 'primaire.1',
   _hover: {
-    bg: 'secondaire.2',
-    bgColor: 'secondaire.2',
-    borderColor: 'secondaire.2',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+    borderColor: 'secondaire.1',
   },
   _active: {
-    bg: 'tertiaire.2',
-    bgColor: 'tertiaire.2',
-    borderColor: 'tertiaire.2',
+    bg: 'tertiaire.1',
+    bgColor: 'tertiaire.1',
+    borderColor: 'tertiaire.1',
   },
 })
 
