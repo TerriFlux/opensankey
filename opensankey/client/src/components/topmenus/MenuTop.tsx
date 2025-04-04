@@ -387,7 +387,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
         {new_data.icon_library.icon_save_sankey_excel}
         {t('Menu.open_excel')}
       </MenuItem>
-      {additionalMenus.externale_save_item}
+      {additionalMenus.current.externale_save_item}
     </MenuList>
   </ChakraMenu>
 
@@ -438,7 +438,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
         {new_data.icon_library.icon_export_sankey_pdf}
         PDF
       </MenuItem>
-      {additionalMenus.external_file_export_item}
+      {additionalMenus.current.external_file_export_item}
     </MenuList>
   </ChakraMenu>
 
@@ -605,9 +605,8 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
     // Other
     'setting': button_setting,
     'contact': button_contact,
-    ...additionalMenus.external_top_buttons_item
+    ...additionalMenus.current.external_top_buttons_item
   }
-
   return <>
     <Box
       display='grid'
@@ -772,7 +771,7 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
   const constent_additional_nav_item = <>
-    {additionalMenus.additional_nav_item.map((el, i) => {
+    {additionalMenus.current.additional_nav_item.map((el, i) => {
       return <React.Fragment key={'add_menu' + i}>{el}</React.Fragment>
     })}
   </>
