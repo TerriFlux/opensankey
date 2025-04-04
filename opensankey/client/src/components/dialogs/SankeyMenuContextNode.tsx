@@ -85,7 +85,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   let pos_y = 0
 
   const size_Button = 40
-  const size_context_menu = (additionalMenu.context_node_order.filter(key => !key.includes('sep_')).length) * size_Button // Get approx. height of context menu
+  const size_context_menu = (additionalMenu.current.context_node_order.filter(key => !key.includes('sep_')).length) * size_Button // Get approx. height of context menu
   // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if (contextualised_node) {
@@ -816,7 +816,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
     'drag_apparence': dropdown_c_n_apparence,
     'drag_io': selected_nodes.length == 1 ? dropdown_c_n_io : <></>,
-    ...additionalMenu.additional_context_node_element
+    ...additionalMenu.current.additional_context_node_element
   }
 
   // Pop over that serve as context menu
@@ -836,7 +836,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         orientation='vertical'
         isAttached
       >
-        {additionalMenu.context_node_order.map((key, id) => {
+        {additionalMenu.current.context_node_order.map((key, id) => {
           return <React.Fragment key={id}>{context_content[key]}</React.Fragment>
         })}
       </ButtonGroup>
