@@ -74,12 +74,12 @@ export type FCType_Menu = {
   diagramSelector: FType_DiagramSelector,
   external_modal: JSX.Element[],
   apply_transformation_additional_elements: JSX.Element[],
-  additionalMenus: Type_AdditionalMenus,
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }
 
 export type FCType_MenuTop = {
   new_data: Type_GenericApplicationData,
-  additionalMenus: Type_AdditionalMenus,
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }
 
 /**
@@ -99,14 +99,14 @@ export type FType_InitializeApplicationData = (
 ) => Type_GenericApplicationData
 
 export type FType_InitializeAdditionalMenus = (
-  additional_menus: Type_AdditionalMenus,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
   new_data: Type_GenericApplicationData
 ) => void
 
 
 export type FType_ModuleDialogs = (
   new_data: Type_GenericApplicationData,
-  additional_menus: Type_AdditionalMenus,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
   menu_configuration_nodes_attributes: JSX.Element,
   processFunctions: FType_ProcessFunctions
 ) => JSX.Element[]

@@ -26,11 +26,12 @@
 
 import { TFunction } from 'i18next'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
+import { MutableRefObject } from 'react'
 
 export type FCType_MenuConfigurationNodeStyle = {
   new_data: Type_GenericApplicationData,
   menu_for_style: boolean,
-  additional_menus:Type_AdditionalMenus
+  additional_menus:MutableRefObject<Type_AdditionalMenus>
 }
 
 export type SankeyMenuConfigurationNodesAttributesFType = (

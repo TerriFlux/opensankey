@@ -110,7 +110,7 @@ export const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_dat
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ module: additionalMenu.template_module_key })
+      body: JSON.stringify({ module: additionalMenu.current.template_module_key })
     })
       .then(response => {
         response
