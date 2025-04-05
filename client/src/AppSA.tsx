@@ -8,7 +8,7 @@
 
 // External imports =================================================================================
 
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FunctionComponent, useEffect, useRef, useState } from 'react'
 import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
@@ -39,15 +39,16 @@ import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/components/welcome/Mo
 import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
 import { Theme_SankeyApplication } from './chakra/Theme'
 import { initializeAdditionalMenusSA, initializeApplicationDataSA, moduleDialogsSA } from './ModulesSA'
-import Account from './components/UserPages/Account'
-import Dashboard from './components/UserPages/Dashboard'
-import Register from './components/Register/Register'
-import { Login } from './components/Login/Login'
-import { PasswordResetFromMail, PasswordResetFromToken } from './components/Login/PasswordReset'
-import { PrivateRoute } from './components/Routes/PrivateRoutes'
-import { PublicRoute } from './components/Routes/PublicRoutes'
-import { PaiementCheckout, PaiementPage, PaiementReturn } from './components/Paiement/Paiement'
+import Account from './deps/LoginComponent/UserPages/Account'
+import Dashboard from './deps/LoginComponent/UserPages/Dashboard'
+import Register from './deps/LoginComponent/Register/Register'
+import { Login } from './deps/LoginComponent/Login/Login'
+import { PasswordResetFromMail, PasswordResetFromToken } from './deps/LoginComponent/Login/PasswordReset'
+import { LoginRoute, PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
+import { PublicRoute } from './deps/LoginComponent/Routes/PublicRoutes'
+import { PaiementCheckout, PaiementPage, PaiementReturn } from './deps/LoginComponent/Paiement/Paiement'
 import { MetaTags } from './components/MetaTags'
+import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import i18next from 'i18next'
 
 // Specific methods ==================================================================================
@@ -80,6 +81,11 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
   { new_data_app }
 ) => {
 
+  const setUpdate = useRef(()=>{
+    new_data_app.has_sankey_plus = loginComponent().has_account && loginComponent().has_licence
+    new_data_app.menu_configuration.updateAllMenuComponents()
+  })
+
   // Minimal app ------------------------------------------------------------------------------------
   const sankeyApp =
     <OpenSankeyApp
@@ -95,6 +101,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
         initializeAdditionalMenusSA(
           additionalMenus,
           new_data as Class_ApplicationDataSA,
+          setUpdate
         )
       }}
       initializeDiagrammSelector={initializeDiagrammSelectorOSP}
@@ -224,7 +231,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
 
   useEffect(() => {
     setTimeout(() => {
-      new_data_app.checkTokens()
+      loginComponent().checkTokens(setUpdate)
         .then(() => setApp(
           <HelmetProvider>
             <MetaTags
@@ -239,10 +246,16 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                     path='/register'
                     element={
                       <PublicRoute
-                        new_data_app={new_data_app}
                         component={
                           <Register
-                            new_data_app={new_data_app}
+                            t={new_data_app.t}
+                            logo={new_data_app.logo}
+                            logo_sankey_plus={new_data_app.logo_sankey_plus}
+                            loginComponent={loginComponent}
+                            setUpdate={setUpdate}
+                            returnToApp={returnToApp}
+                            theme={Theme_SankeyApplication}
+                            noLicenceAccountRequired={false}
                           />
                         }
                       />
@@ -255,10 +268,13 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                       index
                       element={
                         <PublicRoute
-                          new_data_app={new_data_app}
                           component={
                             <Login
-                              new_data_app={new_data_app}
+                              t={new_data_app.t}
+                              logo={new_data_app.logo}
+                              loginComponent={loginComponent}
+                              setUpdate={setUpdate}
+                              returnToApp={returnToApp}
                             />
                           }
                         />
@@ -268,10 +284,11 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                       path='forgot'
                       element={
                         <PublicRoute
-                          new_data_app={new_data_app}
                           component={
                             <PasswordResetFromMail
-                              new_data_app={new_data_app}
+                              t={new_data_app.t}
+                              logo={new_data_app.logo}
+                              returnToApp={returnToApp}
                             />
                           }
                         />
@@ -281,10 +298,11 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                       path='reset/:token'
                       element={
                         <PublicRoute
-                          new_data_app={new_data_app}
                           component={
                             <PasswordResetFromToken
-                              new_data_app={new_data_app}
+                              t={new_data_app.t}
+                              logo={new_data_app.logo}
+                              returnToApp={returnToApp}
                             />
                           }
                         />
@@ -295,10 +313,13 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                     path='/dashboard'
                     element={
                       <PrivateRoute
-                        new_data_app={new_data_app}
                         component={
                           <Dashboard
-                            new_data_app={new_data_app}
+                            t={new_data_app.t}
+                            logo={new_data_app.logo}
+                            returnToApp={returnToApp}
+                            loginComponent={loginComponent}
+                            setUpdate={setUpdate}
                             exemple_menu={exemple_menu}
                           />
                         }
@@ -312,10 +333,12 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                       index
                       element={
                         <PrivateRoute
-                          new_data_app={new_data_app}
                           component={
                             <PaiementPage
-                              new_data_app={new_data_app}
+                            t={new_data_app.t}
+                            logo={new_data_app.logo}
+                            returnToApp={returnToApp}
+                            logo_sankey_plus={new_data_app.logo_sankey_plus}
                             />
                           }
                         />
@@ -325,7 +348,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                       path='checkout'
                       element={
                         <PrivateRoute
-                          new_data_app={new_data_app}
                           component={
                             <PaiementCheckout />
                           }
@@ -336,7 +358,6 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                       path='return'
                       element={
                         <PrivateRoute
-                          new_data_app={new_data_app}
                           component={
                             <PaiementReturn />
                           }
@@ -348,11 +369,16 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                     path='/account'
                     element={
                       <PrivateRoute
-                        new_data_app={new_data_app}
                         component={
                           <Account
-                            new_data_app={new_data_app}
+                            t={new_data_app.t}
+                            logo={new_data_app.logo}
+                            logo_sankey_plus={new_data_app.logo_sankey_plus}
+                            returnToApp={returnToApp}
+                            loginComponent={loginComponent}
+                            setUpdate={setUpdate}
                             blocker_suite_sankey={blockers}
+                            noLicenceAccountRequired={false}
                           />
                         }
                       />

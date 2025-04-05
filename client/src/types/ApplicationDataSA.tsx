@@ -7,9 +7,6 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   // PROTECTED ATTRIBUTES ===============================================================
 
   protected _menu_configuration: Class_MenuConfigSA
-  protected _has_account: boolean = false // token when user is connected with an account
-  protected _ok_to_check_account = true
-  protected _ok_to_check_account_timeout: NodeJS.Timeout | null = null
 
 
   // CONSTRUCTOR ========================================================================
@@ -40,55 +37,6 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
     return new Class_IconLibrarySA()
   }
   
-  public async checkTokens(force=false) {
-    if (this._ok_to_check_account || force) {
-      // Default token
-      this._has_account = false
-      this._has_sankey_plus = false
-      // Update token
-      await fetch(window.location.origin + '/auth/connected')
-        .then((response) => {
-          // Update booleans
-          if (response.ok)
-            this._has_account = true
-        })
-        .then(() => {
-          // Update account token
-          // Check licenses
-          if (this._has_account)
-            return fetch(window.location.origin + '/auth/license')
-              .then((response) => {
-                let has_license = false
-                if (response.ok)
-                  has_license = true
-                return has_license
-              })
-              .then((has_license) => {
-                this._has_sankey_plus = has_license
-              })
-        })
-        .then(() => {
-          this.menu_configuration.updateComponentsRelatedToSA()
-          this.menu_configuration.updateAllMenuComponents()
-        })
-      // Cannot check for given time
-      this._ok_to_check_account = false
-      if (this._ok_to_check_account_timeout)
-        clearTimeout(this._ok_to_check_account_timeout)
-      this._ok_to_check_account_timeout = setTimeout(
-        () => { this._ok_to_check_account = true },
-        1800,
-      )
-    }
-  }
-
-  public unsetTokens() {
-    this._has_account = false
-    this._has_sankey_plus = false
-    this._ok_to_check_account = true
-    this.menu_configuration.updateComponentsRelatedToSA()
-    this.menu_configuration.updateAllMenuComponents()
-  }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -103,8 +51,6 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
     else
       return this.logo_sankey_plus
   }
-
-  public get has_account() { return this._has_account }
 
   public get icon_library():Class_IconLibrarySA{return this._icon_library as Class_IconLibrarySA}
 }

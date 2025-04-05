@@ -16,6 +16,14 @@ call pnpm install
 @REM Link OpenSankey with other node_modules
 cd %SankeyDir%\client\src\deps\
 echo %SankeyDir%\client\src\deps\
+rmdir LoginComponent
+echo "rmdir LoginComponent"
+mklink /d LoginComponent %SankeyDir%\submodules\LoginComponent\client\src
+echo "mklink"
+
+@REM Link OpenSankey with other node_modules
+cd %SankeyDir%\client\src\deps\
+echo %SankeyDir%\client\src\deps\
 rmdir OpenSankey+
 echo "rmdir OpenSankey+"
 mklink /d OpenSankey+ %SankeyDir%\submodules\OpenSankey+\client\src
