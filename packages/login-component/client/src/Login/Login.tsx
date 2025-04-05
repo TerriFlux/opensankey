@@ -98,7 +98,6 @@ export const Login: FunctionComponent<LoginTypes> = ({
           gridTemplateColumns={template}
         >
           <Box
-            margin='0.25rem'
             alignSelf='center'
             justifySelf='center'
           >
@@ -240,6 +239,7 @@ export const LoginOutButton: FunctionComponent<LoginTypes> = (
 
   return <Button
     variant='menutop_button_logout'
+    size='sizeBtnTextLogin'
     disabled={on_wait}
     onClick={() => {
       setOnWait(true)

@@ -87,7 +87,10 @@ const TermsOfUse: FunctionComponent<{
 
           <ModalFooter>
             <Button
-              variant='menuconfigpanel_option_button'
+              variant='button_terms_of_use_acceptance'
+              width='max-content'
+              marginRight='auto'
+              marginLeft='auto'
               onClick={() => {
                 setOk(true)
                 onClose()

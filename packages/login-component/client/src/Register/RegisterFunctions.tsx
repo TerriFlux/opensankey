@@ -3,7 +3,7 @@ import * as d3 from 'd3'
 import LZString from 'lz-string'
 import i18next from 'i18next'
 import { NavigateFunction } from 'react-router-dom'
-import { LoginComponent } from '../LoginComponent'
+import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
 
 export const app_name_opensankeyplus = 'OpenSankey+'
 export const app_name_sankeysuite = 'SankeySuite'
@@ -72,9 +72,8 @@ export async function userSignUp(
 // Check Licence and register account if everything is Ok
 export async function userValidate(
   token: string,
-  loginComponent:()=>LoginComponent,
-  navigate: NavigateFunction,
-  setUpdate:React.MutableRefObject<() => void>
+  new_data_app: Class_ApplicationDataSA,
+  navigate: NavigateFunction
 ) {
   resetLogs()
 
@@ -100,11 +99,11 @@ export async function userValidate(
       logInfo(i18next.t('Register.validation.msg.' + response['message']))
     })
     .then(() => {
-      return loginComponent().checkTokens(setUpdate,true)
+      return new_data_app.checkTokens(true)
     })
     .then(() => {
       let next_page
-      if (loginComponent().has_account) {
+      if (new_data_app.has_account) {
         logInfo(i18next.t('Register.validation.msg.redirect'))
         next_page = '/license/checkout'
       }

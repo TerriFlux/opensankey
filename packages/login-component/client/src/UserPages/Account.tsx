@@ -834,6 +834,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         </Text>
                         <Input
                           type='text'
+                          variant='input_user_pages'
                           isInvalid={!user_new_firstname_valid}
                           placeholder={user_data.firstname}
                           onChange={e => setUserNewFirstName(e.target.value)}
@@ -854,6 +855,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         </Text>
                         <Input
                           type='text'
+                          variant='input_user_pages'
                           isInvalid={!user_new_lastname_valid}
                           placeholder={user_data.name}
                           onChange={e => setUserNewLastName(e.target.value)}
@@ -986,6 +988,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                         </Text>
                         <Input
                           type='email'
+                          variant='input_user_pages'
                           isInvalid={!user_new_email_valid}
                           placeholder={user_data.email}
                           onChange={e => setUserNewEmail(e.target.value)}
@@ -1005,6 +1008,7 @@ const Account: FunctionComponent<AccountTypes> = ({
                           {t('UserPages.login_modify.pwd')}
                         </Text>
                         <InputGroup
+                          variant='input_user_pages'
                         >
                           <Input
                             type={show_new_password ? 'text' : 'password'}
