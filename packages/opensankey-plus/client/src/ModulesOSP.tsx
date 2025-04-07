@@ -278,6 +278,26 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     'flow': <WrapperContentConfig title={t('Noeud.IS')}>
       <MenuConfigurationLinksTooltip new_data={new_data_plus} />
     </WrapperContentConfig>,
+    'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
+    <>
+      <SankeySettingsEditionElementTags
+        new_data={new_data_plus}
+        elementTagNameProp='node_taggs'
+      />
+      <SankeyMenuConfigurationNodesTags
+        new_data={new_data_plus}
+      /></>
+  </WrapperContentConfig>,
+  'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
+    <><SankeySettingsEditionElementTags
+      new_data={new_data_plus}
+      elementTagNameProp='flux_taggs'
+    />
+    <MenuConfigurationLinksTags
+      new_data={new_data_plus}
+    />
+    </>
+  </WrapperContentConfig>,
 
     'view': <WrapperContentConfig title={t('view.storytelling')}>
       <ViewsConfig new_data_plus={new_data_plus}
@@ -294,32 +314,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       />
     </WrapperContentConfig>
   }
-
-  // Add menu for menu type 'context'
-  additionalMenus.current.additional_menu_config_content['context'] = {
-    'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
-      <>
-        <SankeySettingsEditionElementTags
-          new_data={new_data_plus}
-          elementTagNameProp='node_taggs'
-        />
-        <SankeyMenuConfigurationNodesTags
-          new_data={new_data_plus}
-        /></>
-    </WrapperContentConfig>,
-    'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
-      <><SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='flux_taggs'
-      />
-      <MenuConfigurationLinksTags
-        new_data={new_data_plus}
-      />
-      </>
-    </WrapperContentConfig>
-  }
-
-
 }
 
 // module_dialogsType return a JSX.Element array wich is a react type
