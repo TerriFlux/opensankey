@@ -652,10 +652,11 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
 export const WrapperBoxSubSectionMenu: FunctionComponent<FCType_WrapperBoxSubSectionMenu> = ({
   new_data,
   title,
+  collapse=true,
   children
 }) => {
   // Hooks controlling collapse opening, initiallised at true
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true })
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: collapse })
   return <Box layerStyle='menu_sub_section'>
     <Box layerStyle='menu_sub_section_head'>
       <Button variant='menu_sub_section_collapse_button'

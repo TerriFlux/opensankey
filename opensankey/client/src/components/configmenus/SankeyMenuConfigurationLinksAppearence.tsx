@@ -108,6 +108,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   // Get traduction function
   const { t, icon_library } = new_data
   const { icon_redo, icon_open_selector, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
+  const { icon_order_bottom, icon_order_down, icon_order_top, icon_order_up } = icon_library
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_links } = dict_setter_show_dialog
@@ -292,7 +293,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
 
   // JSX menu components ---------------------------------------------------------------
 
-  const content_shape_color = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.apparence.couleur')}>
+  const content_shape_color = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.apparence.fond')}>
     <>
       {/* Choix de la source de la couleur */}
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
@@ -397,93 +398,91 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
 
   </Box>
 
-  const content_flow_shape = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.apparence.of')}>
-    {/* Orientation du flux */}
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-
-      {/* Flux en recyclage  */}
-      <OSTooltip label={t('Flux.apparence.tooltips.recy')}>
-        <Button
-          className='btn_menu_config'
-          variant={(shape_is_recycling) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => { updateElements('shape_is_recycling', !shape_is_recycling) }}
-        >
-          {icon_redo}
-        </Button>
-
-      </OSTooltip>
-
-      <Box layerStyle='options_4cols' >
-        {/* Horizontal - Horizontal  */}
-        <OSTooltip label={t('Flux.apparence.tooltips.of_hh')}>
-          <Button
-            className='btn_menu_config'
-            value='hh'
-            variant={
-              (shape_orientation === 'hh') ?
-                'menuconfigpanel_option_button_activated_left' :
-                'menuconfigpanel_option_button_left'
-            }
-            onClick={
-              () => { updateElements('shape_orientation', 'hh') }
-            }
-          >
-            {icon_orientation_hh}
-          </Button>
-        </OSTooltip>
-
-        {/* Vertical - Verticale  */}
-        <OSTooltip label={t('Flux.apparence.tooltips.of_vv')}>
-          <Button
-            className='btn_menu_config'
-            value='vv'
-            variant={(shape_orientation === 'vv') ? 'menuconfigpanel_option_button_activated_center' :
-              'menuconfigpanel_option_button_center'}
-            onClick={() => { updateElements('shape_orientation', 'vv') }}
-          >
-            {icon_orientation_vv}
-          </Button>
-        </OSTooltip>
-
-        {/* Vertical - Horizontal  */}
-        <OSTooltip label={t('Flux.apparence.tooltips.of_vh')}>
-          <Button
-            className='btn_menu_config'
-            value='vh'
-            variant={
-              (shape_orientation === 'vh') ?
-                'menuconfigpanel_option_button_activated_center' :
-                'menuconfigpanel_option_button_center'
-            }
-            onClick={() => { updateElements('shape_orientation', 'vh') }}
-
-          >
-            {icon_orientation_vh}
-          </Button>
-        </OSTooltip>
-
-        {/* Horizontal - Vertical  */}
-        <OSTooltip label={t('Flux.apparence.tooltips.of_hv')}>
-          <Button
-            className='btn_menu_config'
-            value='hv'
-            variant={
-              (shape_orientation === 'hv') ?
-                'menuconfigpanel_option_button_activated_right' :
-                'menuconfigpanel_option_button_right'
-            }
-            onClick={() => { updateElements('shape_orientation', 'hv') }}
-          >
-            {icon_orientation_hv}
-          </Button>
-        </OSTooltip>
-      </Box>
-    </Box>
-
-  </WrapperBoxSubSectionMenu>
-
   const content_shape_detail = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.apparence.Forme')}>
     <>
+
+      {/* Orientation du flux */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+
+        {/* Flux en recyclage  */}
+        <OSTooltip label={t('Flux.apparence.tooltips.recy')}>
+          <Button
+            className='btn_menu_config'
+            variant={(shape_is_recycling) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => { updateElements('shape_is_recycling', !shape_is_recycling) }}
+          >
+            {icon_redo}
+          </Button>
+
+        </OSTooltip>
+
+        <Box layerStyle='options_4cols' >
+          {/* Horizontal - Horizontal  */}
+          <OSTooltip label={t('Flux.apparence.tooltips.of_hh')}>
+            <Button
+              className='btn_menu_config'
+              value='hh'
+              variant={
+                (shape_orientation === 'hh') ?
+                  'menuconfigpanel_option_button_activated_left' :
+                  'menuconfigpanel_option_button_left'
+              }
+              onClick={
+                () => { updateElements('shape_orientation', 'hh') }
+              }
+            >
+              {icon_orientation_hh}
+            </Button>
+          </OSTooltip>
+
+          {/* Vertical - Verticale  */}
+          <OSTooltip label={t('Flux.apparence.tooltips.of_vv')}>
+            <Button
+              className='btn_menu_config'
+              value='vv'
+              variant={(shape_orientation === 'vv') ? 'menuconfigpanel_option_button_activated_center' :
+                'menuconfigpanel_option_button_center'}
+              onClick={() => { updateElements('shape_orientation', 'vv') }}
+            >
+              {icon_orientation_vv}
+            </Button>
+          </OSTooltip>
+
+          {/* Vertical - Horizontal  */}
+          <OSTooltip label={t('Flux.apparence.tooltips.of_vh')}>
+            <Button
+              className='btn_menu_config'
+              value='vh'
+              variant={
+                (shape_orientation === 'vh') ?
+                  'menuconfigpanel_option_button_activated_center' :
+                  'menuconfigpanel_option_button_center'
+              }
+              onClick={() => { updateElements('shape_orientation', 'vh') }}
+
+            >
+              {icon_orientation_vh}
+            </Button>
+          </OSTooltip>
+
+          {/* Horizontal - Vertical  */}
+          <OSTooltip label={t('Flux.apparence.tooltips.of_hv')}>
+            <Button
+              className='btn_menu_config'
+              value='hv'
+              variant={
+                (shape_orientation === 'hv') ?
+                  'menuconfigpanel_option_button_activated_right' :
+                  'menuconfigpanel_option_button_right'
+              }
+              onClick={() => { updateElements('shape_orientation', 'hv') }}
+            >
+              {icon_orientation_hv}
+            </Button>
+          </OSTooltip>
+        </Box>
+      </Box>
+
       {/* Forme courbée  */}
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
@@ -495,104 +494,53 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
           <TooltipElementOverloaded k={'shape_is_curved'} />
         </OSTooltip>
       </Checkbox>
-
-      {/* Départ de courbure */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.apparence.starting_curve')}
-          <TooltipElementOverloaded k={'shape_starting_curve'} />
-        </Box>
-        <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
-          <ConfigMenuNumberInput
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[1]}
-            default_value={shape_starting_curve * 100}
-            function_on_blur={(value) => { updateElements('shape_starting_curve', (value ? value / 100 : undefined)) }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            maximum_value={shape_ending_curve * 100}
-            step={1}
-            stepper={true}
-            unit_text='%'
-            multiValue={is_starting_curve_indeterminated}
-          />
-        </OSTooltip>
-      </Box>
-
-      {/* Fin de courbure */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.apparence.ending_curve')}
-          <TooltipElementOverloaded k={'shape_ending_curve'} />
-        </Box>
-        <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
-          <ConfigMenuNumberInput
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[2]}
-            default_value={shape_ending_curve * 100}
-            menu_for_style={menu_for_style}
-            minimum_value={shape_starting_curve * 100}
-            maximum_value={100}
-            step={1}
-            stepper={true}
-            unit_text='%'
-            function_on_blur={(value) => { updateElements('shape_ending_curve', (value ? value / 100 : undefined)) }}
-            multiValue={is_ending_curve_indeterminated}
-          />
-        </OSTooltip>
-      </Box>
-
-
-      {/* Modification de la longueur de la tangente de départ  */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.apparence.starting_tangeant')}
-          <TooltipElementOverloaded k={'shape_starting_tangeant'} />
-        </Box>
-        <InputGroup variant='menuconfigpanel_option_input' >
-          <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
-            <ConfigMenuNumberInput
-              t={new_data.t}
-              ref_to_set_value={ref_set_number_inputs[3]}
-              default_value={shape_starting_tangeant * 100}
-              menu_for_style={menu_for_style}
-              minimum_value={0}
-              step={1}
-              stepper={true}
-              unit_text='%'
-              function_on_blur={(value) => { updateElements('shape_starting_tangeant', (value ? value / 100 : undefined)) }}
-              multiValue={is_starting_tangeant_indeterminated}
-
-            />
+      <Box layerStyle='menuconfigpanel_row_2cols'>
+        {/* Forme fleche droite  */}
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isIndeterminate={is_indeterminate}
+          isChecked={shape_is_arrow}
+          onChange={(evt) => { updateElements('shape_is_arrow', evt.target.checked) }}>
+          <OSTooltip label={t('Flux.apparence.tooltips.fleche')}>
+            {t('Flux.apparence.fleche')}
           </OSTooltip>
-        </InputGroup>
+        </Checkbox>
+
+        {shape_is_arrow ?
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Flux.apparence.arrow_size')}
+              <TooltipElementOverloaded k={'shape_arrow_size'} />
+            </Box>
+            <InputGroup variant='menuconfigpanel_option_input' >
+              <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
+                <ConfigMenuNumberInput
+                  t={new_data.t}
+                  ref_to_set_value={ref_set_number_inputs[0]}
+                  default_value={shape_arrow_size}
+                  menu_for_style={menu_for_style}
+                  minimum_value={1}
+                  stepper={true}
+                  function_on_blur={(value) => { updateElements('shape_arrow_size', value ?? undefined) }}
+                  multiValue={is_arrow_size_indeterminated}
+                />
+              </OSTooltip>
+            </InputGroup>
+          </Box>
+          : <></>}
+
       </Box>
-
-
-      {/* Modification de la longueur de la tangente de fin  */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.apparence.ending_tangeant')}
-          <TooltipElementOverloaded k={'shape_ending_tangeant'} />
-        </Box>
-        <InputGroup variant='menuconfigpanel_option_input' >
-          <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
-            <ConfigMenuNumberInput
-              t={new_data.t}
-              ref_to_set_value={ref_set_number_inputs[4]}
-              default_value={shape_ending_tangeant * 100}
-              menu_for_style={menu_for_style}
-              minimum_value={0}
-              step={1}
-              stepper={true}
-              unit_text='%'
-              function_on_blur={(value) => { updateElements('shape_ending_tangeant', (value ? value / 100 : undefined)) }}
-              multiValue={is_ending_tangeant_indeterminated}
-            />
-          </OSTooltip>
-        </InputGroup>
-      </Box>
-
+      {/* Forme en structure  */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isIndeterminate={is_indeterminate}
+        isChecked={shape_is_structure}
+        onChange={(evt) => { updateElements('shape_is_structure', evt.target.checked) }}>
+        <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
+          {t('Flux.apparence.structure')}
+          <TooltipElementOverloaded k={'shape_is_structure'} />
+        </OSTooltip>
+      </Checkbox>
 
       {/* Value of link local scale to override scale from DA, can be undefined */}
       <Box layerStyle='menuconfigpanel_grid' >
@@ -615,18 +563,107 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
           </>
         </OSTooltip>
       </Box>
+    </>
+  </WrapperBoxSubSectionMenu>
 
-      {/* Forme en structure  */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminate}
-        isChecked={shape_is_structure}
-        onChange={(evt) => { updateElements('shape_is_structure', evt.target.checked) }}>
-        <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
-          {t('Flux.apparence.structure')}
-          <TooltipElementOverloaded k={'shape_is_structure'} />
+  const content_geometry_detail = <WrapperBoxSubSectionMenu collapse={false} new_data={new_data} title={t('Noeud.apparence.Geometry')}>
+    <>
+      {/*Départ de courbure*/}
+      {<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Flux.apparence.starting_curve')}
+          <TooltipElementOverloaded k={'shape_starting_curve'} />
+        </Box>
+        <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
+          <ConfigMenuNumberInput
+            t={new_data.t}
+            ref_to_set_value={ref_set_number_inputs[1]}
+            default_value={shape_starting_curve * 100}
+            function_on_blur={(value) => { updateElements('shape_starting_curve', (value ? value / 100 : undefined)) }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            maximum_value={shape_ending_curve * 100}
+            step={1}
+            stepper={true}
+            unit_text='%'
+            multiValue={is_starting_curve_indeterminated}
+          />
         </OSTooltip>
-      </Checkbox>
+      </Box>}
+
+      {/* Fin de courbure */}
+      {<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Flux.apparence.ending_curve')}
+          <TooltipElementOverloaded k={'shape_ending_curve'} />
+        </Box>
+        <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
+          <ConfigMenuNumberInput
+            t={new_data.t}
+            ref_to_set_value={ref_set_number_inputs[2]}
+            default_value={shape_ending_curve * 100}
+            menu_for_style={menu_for_style}
+            minimum_value={shape_starting_curve * 100}
+            maximum_value={100}
+            step={1}
+            stepper={true}
+            unit_text='%'
+            function_on_blur={(value) => { updateElements('shape_ending_curve', (value ? value / 100 : undefined)) }}
+            multiValue={is_ending_curve_indeterminated}
+          />
+        </OSTooltip>
+      </Box>}
+
+
+      {/* Modification de la longueur de la tangente de départ  */}
+      {<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Flux.apparence.starting_tangeant')}
+          <TooltipElementOverloaded k={'shape_starting_tangeant'} />
+        </Box>
+        <InputGroup variant='menuconfigpanel_option_input' >
+          <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
+            <ConfigMenuNumberInput
+              t={new_data.t}
+              ref_to_set_value={ref_set_number_inputs[3]}
+              default_value={shape_starting_tangeant * 100}
+              menu_for_style={menu_for_style}
+              minimum_value={0}
+              step={1}
+              stepper={true}
+              unit_text='%'
+              function_on_blur={(value) => { updateElements('shape_starting_tangeant', (value ? value / 100 : undefined)) }}
+              multiValue={is_starting_tangeant_indeterminated}
+
+            />
+          </OSTooltip>
+        </InputGroup>
+      </Box>}
+
+
+      {/* Modification de la longueur de la tangente de fin  */}
+      {<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Flux.apparence.ending_tangeant')}
+          <TooltipElementOverloaded k={'shape_ending_tangeant'} />
+        </Box>
+        <InputGroup variant='menuconfigpanel_option_input' >
+          <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
+            <ConfigMenuNumberInput
+              t={new_data.t}
+              ref_to_set_value={ref_set_number_inputs[4]}
+              default_value={shape_ending_tangeant * 100}
+              menu_for_style={menu_for_style}
+              minimum_value={0}
+              step={1}
+              stepper={true}
+              unit_text='%'
+              function_on_blur={(value) => { updateElements('shape_ending_tangeant', (value ? value / 100 : undefined)) }}
+              multiValue={is_ending_tangeant_indeterminated}
+            />
+          </OSTooltip>
+        </InputGroup>
+      </Box>}
     </>
   </WrapperBoxSubSectionMenu>
 
@@ -634,9 +671,8 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
     layerStyle='menuconfigpanel_grid'
   >
     {content_shape_color}
-    {content_arrow}
-    {content_flow_shape}
     {content_shape_detail}
+    {content_geometry_detail}
   </Box>
 
 
@@ -675,8 +711,8 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
               selected_links.map(link => {
                 inchangee = (link.style.id === style.id) ? inchangee : false
               })
-              if(inchangee){
-                ref_selected_style_link.current=style.id
+              if (inchangee) {
+                ref_selected_style_link.current = style.id
               }
             }
             new_data.menu_configuration.updateComponentRelatedToLinksStyles()
@@ -716,12 +752,93 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
 
   }
 
+  const content_zIndex_and_direction = (!menu_for_style) ? <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.dzf')} >
+    <Box layerStyle='options_4cols' >
+      {/* Boutton pour monter le lien sélctionné */}
+      <OSTooltip label={t('Flux.tooltips.up')}>
+        <Button
+          className='btn_menu_config'
+          variant={'menuconfigpanel_option_button_left'}
+          isDisabled={selected_links.length === 0}
+          onClick={() => {
+            const func = () => {
+              selected_links.forEach(link => link.increaseDisplayOrder())
+              refreshThisAndUpdateRelatedComponents()
+            }
+            const inv_func = () => {
+              selected_links.forEach(link => link.decreaseDisplayOrder())
+              refreshThisAndUpdateRelatedComponents()
+            }
+
+            new_data.history.saveUndo(inv_func)
+            new_data.history.saveUndo(func)
+
+            func()
+          }}>
+          {icon_order_up}
+        </Button>
+      </OSTooltip>
+
+      <OSTooltip label={t('Flux.tooltips.upup')}>
+        <Button
+          variant={'menuconfigpanel_option_button_center'}
+          isDisabled={selected_links.length === 0}
+          className='btn_menu_config'
+          onClick={() => {
+            selected_links.forEach(link => link.setTopDisplayOrder())
+            refreshThisAndUpdateRelatedComponents()
+          }}>
+          {icon_order_top}
+        </Button>
+      </OSTooltip>
+
+      {/* Boutton pour baisser le lien sélctionné */}
+      <OSTooltip label={t('Flux.tooltips.dwn')}>
+        <Button
+          variant={'menuconfigpanel_option_button_center'}
+          isDisabled={selected_links.length === 0}
+          className='btn_menu_config'
+          onClick={() => {
+            const inv_func = () => {
+              selected_links.forEach(link => link.increaseDisplayOrder())
+              refreshThisAndUpdateRelatedComponents()
+            }
+            const func = () => {
+              selected_links.forEach(link => link.decreaseDisplayOrder())
+              refreshThisAndUpdateRelatedComponents()
+            }
+
+            new_data.history.saveUndo(inv_func)
+            new_data.history.saveUndo(func)
+
+            func()
+          }}>
+          {icon_order_down}
+        </Button>
+      </OSTooltip>
+
+      <OSTooltip label={t('Flux.tooltips.dwndwn')}>
+        <Button
+          variant={'menuconfigpanel_option_button_right'}
+          isDisabled={selected_links.length === 0}
+          className='btn_menu_config'
+          onClick={() => {
+            selected_links.forEach(link => link.setDownDisplayOrder())
+            refreshThisAndUpdateRelatedComponents()
+          }}>
+          {icon_order_bottom}
+        </Button>
+      </OSTooltip>
+    </Box>
+  </WrapperBoxSubSectionMenu> : <></>
+
   const selection_link = menu_for_style ? <></> : <SankeyLinkSelectionSimple new_data={new_data} />
 
   const content = <Box layerStyle='menuconfigpanel_grid'>
     {selection_link}
     {elements.length > 0 ? <>
       {content_style}
+      {content_zIndex_and_direction}
       {content_config}</> : <></>}
   </Box>
 
@@ -1032,86 +1149,6 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
     {content_name_specific_flow}
   </Box>
 
-  const content_zIndex_and_direction = (!menu_for_style) ? <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.dzf')} >
-    <Box layerStyle='options_4cols' >
-      {/* Boutton pour monter le lien sélctionné */}
-      <OSTooltip label={t('Flux.tooltips.up')}>
-        <Button
-          className='btn_menu_config'
-          variant={'menuconfigpanel_option_button_left'}
-          isDisabled={selected_links.length === 0}
-          onClick={() => {
-            const func = () => {
-              selected_links.forEach(link => link.increaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
-            }
-            const inv_func = () => {
-              selected_links.forEach(link => link.decreaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
-            }
-
-            new_data.history.saveUndo(inv_func)
-            new_data.history.saveUndo(func)
-
-            func()
-          }}>
-          {icon_order_up}
-        </Button>
-      </OSTooltip>
-
-      <OSTooltip label={t('Flux.tooltips.upup')}>
-        <Button
-          variant={'menuconfigpanel_option_button_center'}
-          isDisabled={selected_links.length === 0}
-          className='btn_menu_config'
-          onClick={() => {
-            selected_links.forEach(link => link.setTopDisplayOrder())
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          {icon_order_top}
-        </Button>
-      </OSTooltip>
-
-      {/* Boutton pour baisser le lien sélctionné */}
-      <OSTooltip label={t('Flux.tooltips.dwn')}>
-        <Button
-          variant={'menuconfigpanel_option_button_center'}
-          isDisabled={selected_links.length === 0}
-          className='btn_menu_config'
-          onClick={() => {
-            const inv_func = () => {
-              selected_links.forEach(link => link.increaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
-            }
-            const func = () => {
-              selected_links.forEach(link => link.decreaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
-            }
-
-            new_data.history.saveUndo(inv_func)
-            new_data.history.saveUndo(func)
-
-            func()
-          }}>
-          {icon_order_down}
-        </Button>
-      </OSTooltip>
-
-      <OSTooltip label={t('Flux.tooltips.dwndwn')}>
-        <Button
-          variant={'menuconfigpanel_option_button_right'}
-          isDisabled={selected_links.length === 0}
-          className='btn_menu_config'
-          onClick={() => {
-            selected_links.forEach(link => link.setDownDisplayOrder())
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          {icon_order_bottom}
-        </Button>
-      </OSTooltip>
-    </Box>
-  </WrapperBoxSubSectionMenu> : <></>
-
   const selection_link = menu_for_style ? <></> : <SankeyLinkSelectionSimple new_data={new_data} />
 
 
@@ -1157,20 +1194,20 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
         </OSTooltip>
         <Button
           variant='menuconfigpanel_option_button'
-          onClick={() => { 
+          onClick={() => {
             if (selected_links.length !== 0) {
               const style = selected_links[0].style
               let inchangee = true
               selected_links.map(link => {
                 inchangee = (link.style.id === style.id) ? inchangee : false
               })
-              if(inchangee){
-                ref_selected_style_link.current=style.id
+              if (inchangee) {
+                ref_selected_style_link.current = style.id
               }
             }
             new_data.menu_configuration.updateComponentRelatedToLinksStyles()
 
-            ref_setter_show_modal_styles_links_context.current(true) 
+            ref_setter_show_modal_styles_links_context.current(true)
           }}
         >
           {icon_library.icon_edit_style}
@@ -1211,7 +1248,6 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
     {selection_link}
     <>{elements.length > 0 ? <>
       {content_style}
-      {content_zIndex_and_direction}
       {content_label_value}
       {content_label_text}
     </> : <></>}</>
