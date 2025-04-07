@@ -148,8 +148,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
     
     this._style_config.data.elements_configurable.push('data_tag')
-    this._style_config.context.elements_configurable.push('flow_tag', 'node_tag')
-    this._style_config['presentation']= { 'theme': '#778a95', elements_configurable: ['flow', 'node','object','view'] }
+
+    this._style_config['presentation']= { 'theme': '#778a95', elements_configurable: ['flow', 'node','flow_tag', 'node_tag','object','view'] }
     this._elements_configurable_selected['presentation']= []
 
   }

@@ -467,7 +467,6 @@ export const resources_app_elements = {
         flow_associated_tag:'Flux associés',
         node_associated_tag:'Noeuds associés',
         Config:{
-          presentation:'Présentation',
           element_object:'Objet',
           element_view:'Vues',
         },
