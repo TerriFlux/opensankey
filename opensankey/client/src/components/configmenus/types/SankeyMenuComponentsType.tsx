@@ -103,5 +103,6 @@ export type FCType_SankeyMenuValueLabelComponent = {
 export type FCType_WrapperBoxSubSectionMenu = {
     new_data: Type_GenericApplicationData,
     title: string,
+    collapse?: boolean,
     children: JSX.Element
 }

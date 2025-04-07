@@ -568,9 +568,9 @@ export class Class_MenuConfig {
   public toggleElementInConfigEdition(kt: keyTypeConfig, ke: keyTypeElements) {
     if (this._elements_configurable_selected[kt].includes(ke)) {
       const idx = this._elements_configurable_selected[kt].indexOf(ke)
-      this._elements_configurable_selected[kt].splice(idx, 1)
+      this._elements_configurable_selected[kt].splice(idx,1)
     } else {
-      this._elements_configurable_selected[kt].push(ke)
+      this._elements_configurable_selected[kt].splice(0,0,ke)
     }
   }
 
