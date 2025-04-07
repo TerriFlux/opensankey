@@ -390,14 +390,7 @@ const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicatio
     >
       {t('Menu.Config.type_data')}
     </Button>
-    <Button variant={type_menu_configuration_selected == 'context' ? 'button_type_config_activated' : 'button_type_config'}
-      onClick={() => {
-        new_data.menu_configuration.type_menu_configuration_selected = 'context'
-        ref_to_menu_config_updater.current()
-      }}
-    >
-      {t('Menu.Config.type_context')}
-    </Button>
+
     <Button variant={type_menu_configuration_selected == 'style' ? 'button_type_config_activated' : 'button_type_config'}
       onClick={() => {
         new_data.menu_configuration.type_menu_configuration_selected = 'style'
@@ -405,6 +398,14 @@ const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicatio
       }}
     >
       {t('Menu.Config.type_style')}
+    </Button>
+    <Button variant={type_menu_configuration_selected == 'context' ? 'button_type_config_activated' : 'button_type_config'}
+      onClick={() => {
+        new_data.menu_configuration.type_menu_configuration_selected = 'context'
+        ref_to_menu_config_updater.current()
+      }}
+    >
+      {t('Menu.Config.type_context')}
     </Button>
     {Object.entries(additional_menus.current.additional_menu_type).map((el, id) => {
       const keyType = el[0] as keyTypeConfig
@@ -435,18 +436,18 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
   const dict_config_windows: { [x: string]: { [x: string]: JSX.Element } } = {
     // Menus related to data config
     data: {
-      'data': <WrapperContentConfig title={t('Menu.Config.title_data_table')}>
+      'data': <WrapperContentConfig title={t('Menu.Config.title_table')}>
         <SpreadSheet new_data={new_data} />
       </WrapperContentConfig>,
 
-      'DA': <WrapperContentConfig title={t('Menu.Config.title_data_graph')}>
+      'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <LayoutConfigDAScaleAndLimit new_data={new_data} />
       </WrapperContentConfig>,
-      'node': <WrapperContentConfig title={t('Menu.Config.title_data_node')}>
+      'node': <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <SankeyMenuConfigurationNodesIO new_data={new_data} />
       </WrapperContentConfig>,
 
-      'flow': <WrapperContentConfig title={t('Menu.Config.title_data_flow')} >
+      'flow': <WrapperContentConfig title={t('Menu.Config.title_flow')} >
         <MenuConfigurationLinksData new_data={new_data} contextual={false} />
       </WrapperContentConfig>,
 
@@ -456,15 +457,15 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
 
     // Menus related to context config
     context: {
-      DA: <WrapperContentConfig title={t('Menu.Config.title_context_da')}>
+      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <LegendContextConfig new_data={new_data} />
       </WrapperContentConfig>,
 
-      flow: <WrapperContentConfig title={t('Menu.Config.title_context_flow')} >
+      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
         <MenuConfigurationLinkContext new_data={new_data} additionMenus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
-      node: <WrapperContentConfig title={t('Menu.Config.title_context_node')}>
+      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <MenuConfigurationNodeContext new_data={new_data} additional_menus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
@@ -474,18 +475,18 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
 
     // Menus related to style config
     style: {
-      DA: <WrapperContentConfig title={t('Menu.Config.title_style_da')}>
+      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
           <DrawingAreaStyle new_data={new_data} extra_background_element={additional_menus.current.extra_background_element} />
           <LegendStyleConfig new_data={new_data} />
         </>
       </WrapperContentConfig>,
 
-      flow: <WrapperContentConfig title={t('Menu.Config.title_style_flow')}>
+      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
         <MenuConfigurationLinksStyle new_data={new_data} additionMenus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
-      node: <WrapperContentConfig title={t('Menu.Config.title_style_node')}>
+      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <MenuConfigurationNodeStyle new_data={new_data} additional_menus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
       ...additional_menus.current.additional_menu_config_content.style
@@ -522,7 +523,7 @@ const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Type_GenericAppli
 
   const dict_buttons_element_to_config: typeButtonElementConfigurable = {
     'flow': { icon: new_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
-    'DA': { icon: new_data.icon_library.icon_graph, text: t('Menu.Config.element_da'), disabled: false },
+    'DA': { icon: new_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
     'node': { icon: new_data.icon_library.icon_node, text: t('Menu.Config.element_node'), disabled: false },
     'data': { icon: new_data.icon_library.icon_tableau, text: t('Menu.Config.element_data'), disabled: false },
     ...additional_menus.current.additional_menu_button_element_configurable
