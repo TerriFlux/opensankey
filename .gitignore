@@ -10,6 +10,7 @@ client/coverage
 client/build
 client/dist
 client/src/deps/OpenSankey+
+client/src/deps/LoginComponent
 
 # server
 __pycache__
