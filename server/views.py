@@ -10,6 +10,7 @@ import requests
 
 # Flask imports
 from flask import Blueprint
+from flask import jsonify
 from flask import render_template
 from flask import request
 from flask import redirect
@@ -103,14 +104,20 @@ def check_license():
     Output JSON
     - edd license json response
     '''
-    # Construct request for EDD
-    req_dict = {
-        'edd_action': request.json.get('action'),
-        'license': request.json.get('license_id'),  # License key
-        'item_name': request.json.get('app_name'),  # Product ID
-        'url': 'open-sankey.fr'  # Domain the request is coming from.
+    # # Construct request for EDD
+    # req_dict = {
+    #     'edd_action': request.json.get('action'),
+    #     'license': request.json.get('license_id'),  # License key
+    #     'item_name': request.json.get('app_name'),  # Product ID
+    #     'url': 'open-sankey.fr'  # Domain the request is coming from.
+    # }
+    # # Send POST request
+    # res = requests.post('https://terriflux.com/edd-sl/', req_dict)
+    # # Return EDD response as JSON
+    # return res.json()
+    res = {
+        'success': False,
+        'license': 'disabled'
     }
-    # Send POST request
-    res = requests.post('https://terriflux.com/edd-sl/', req_dict)
     # Return EDD response as JSON
-    return res.json()
+    return jsonify(res), 400
