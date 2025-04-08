@@ -44,7 +44,7 @@ import Dashboard from './deps/LoginComponent/UserPages/Dashboard'
 import Register from './deps/LoginComponent/Register/Register'
 import { Login } from './deps/LoginComponent/Login/Login'
 import { PasswordResetFromMail, PasswordResetFromToken } from './deps/LoginComponent/Login/PasswordReset'
-import { LoginRoute, PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
+import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 import { PublicRoute } from './deps/LoginComponent/Routes/PublicRoutes'
 import { PaiementCheckout, PaiementPage, PaiementReturn } from './deps/LoginComponent/Paiement/Paiement'
 import { MetaTags } from './components/MetaTags'
@@ -335,10 +335,10 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
                         <PrivateRoute
                           component={
                             <PaiementPage
-                            t={new_data_app.t}
-                            logo={new_data_app.logo}
-                            returnToApp={returnToApp}
-                            logo_sankey_plus={new_data_app.logo_sankey_plus}
+                              t={new_data_app.t}
+                              logo={new_data_app.logo}
+                              returnToApp={returnToApp}
+                              logo_sankey_plus={new_data_app.logo_sankey_plus}
                             />
                           }
                         />
