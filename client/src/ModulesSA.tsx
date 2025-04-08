@@ -143,13 +143,16 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     />
   )
 
+  // Index sankeytheque key in menu top order
+  const idx_st = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('sankeytheque'))
   if (new_data_app.has_sankey_plus) {
-    new_data_app.menu_configuration.menu_top_order.push(['sankeytheque'])
+    // Check if sankeytheque is not already in menu top order
+    if (idx_st == -1) new_data_app.menu_configuration.menu_top_order.push(['sankeytheque'])
+
     additionalMenus.current.external_top_buttons_item['sankeytheque']=(<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
   }else{
-    const idx_el=new_data_app.menu_configuration.menu_top_order.findIndex(el=>el.includes('sankeytheque'))
-    if(idx_el!==-1){
-      new_data_app.menu_configuration.menu_top_order.splice(idx_el,1)
+    if(idx_st!==-1){
+      new_data_app.menu_configuration.menu_top_order.splice(idx_st,1)
     }
   }
 }
