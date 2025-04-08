@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -272,7 +272,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
    * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
    *
    * @param {*} {k}
-   * @return {*} 
+   * @return {*}
    */
   const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
     if (menu_for_style)
@@ -360,43 +360,6 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       {additionMenus.current.additional_link_appearence_items.map((el,) => el(menu_for_style)/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
     </>
   </WrapperBoxSubSectionMenu>
-
-  const content_arrow = <Box layerStyle='menu_sub_section'>
-    {/* Forme fleche droite  */}
-    <Checkbox
-      variant='menuconfigpanel_part_title_1_checkbox'
-      isIndeterminate={is_indeterminate}
-      isChecked={shape_is_arrow}
-      onChange={(evt) => { updateElements('shape_is_arrow', evt.target.checked) }}>
-      <OSTooltip label={t('Flux.apparence.tooltips.fleche')}>
-        {t('Flux.apparence.fleche')}
-      </OSTooltip>
-    </Checkbox>
-
-    {shape_is_arrow ?
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.apparence.arrow_size')}
-          <TooltipElementOverloaded k={'shape_arrow_size'} />
-        </Box>
-        <InputGroup variant='menuconfigpanel_option_input' >
-          <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
-            <ConfigMenuNumberInput
-              t={new_data.t}
-              ref_to_set_value={ref_set_number_inputs[0]}
-              default_value={shape_arrow_size}
-              menu_for_style={menu_for_style}
-              minimum_value={1}
-              stepper={true}
-              function_on_blur={(value) => { updateElements('shape_arrow_size', value ?? undefined) }}
-              multiValue={is_arrow_size_indeterminated}
-            />
-          </OSTooltip>
-        </InputGroup>
-      </Box>
-      : <></>}
-
-  </Box>
 
   const content_shape_detail = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.apparence.Forme')}>
     <>
@@ -852,7 +815,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
   // Get traduction function
   const { t, icon_library } = new_data
-  const { icon_open_selector, icon_order_bottom, icon_order_down, icon_order_top, icon_order_up } = icon_library
+  const { icon_open_selector } = icon_library
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_links_context } = dict_setter_show_dialog
@@ -987,7 +950,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
    * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
    *
    * @param {*} {k}
-   * @return {*} 
+   * @return {*}
    */
   const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
     if (menu_for_style)

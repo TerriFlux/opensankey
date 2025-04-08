@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,8 +34,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import * as d3 from 'd3'
 // Local type imports
 import type { OSTooltpFuncType } from '../components/configmenus/types/SankeyUtilsTypes'
-import { Type_AdditionalMenus, Type_GenericApplicationData } from './Types'
-import { initializeAdditionalMenus } from '../Modules'
+import { Type_GenericApplicationData } from './Types'
 import { FType_InitializeAdditionalMenus } from './FunctionTypes'
 
 // SPECIFIC TYPES ************************************************************************
@@ -430,7 +429,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
 
 
   new_data.menu_configuration.additionalMenus.current = {
-  
+
     // Top Menu
     external_edition_item: [],
     external_file_export_item: [],
@@ -438,18 +437,18 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     external_top_buttons_item: {},
     externale_navbar_item: {},
     footer: [],
-  
+
     // Menu config
     additional_menu_type: {},
     additional_menu_button_element_configurable: {},
     additional_menu_config_content: { data: {}, context: {}, style: {} },
     additional_new_menu_config_content: {},
     additional_node_config_style: [],
-  
+
     // Mise en page
     extra_background_element: <></>,
     apply_transformation_additional_elements: [<></>],
-  
+
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
@@ -463,18 +462,18 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     additional_link_visual_filter_content: [],
     context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
     additional_context_link_element: {},
-  
+
     // Preferences
     additional_preferences: [],
-  
-  
+
+
     additional_file_save_json_option: [],
     additional_file_export_item: [],
-  
+
     additional_nav_item: [],
-  
+
     formations_menu: {},
-  
+
     toolbar_order: ['mode_souris',
       'node_type',
       'strectch_zdd',
