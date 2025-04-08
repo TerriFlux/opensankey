@@ -36,7 +36,6 @@ import {
   getStringFromJSON,
   getStringOrUndefinedFromJSON
 } from '../deps/OpenSankey/types/Utils'
-import { default_shape_color } from '../deps/OpenSankey/Elements/NodeAttributes'
 import {
   Class_NodeAttribute,
   Class_NodeStyle

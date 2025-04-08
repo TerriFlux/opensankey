@@ -279,25 +279,25 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       <MenuConfigurationLinksTooltip new_data={new_data_plus} />
     </WrapperContentConfig>,
     'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
-    <>
-      <SankeySettingsEditionElementTags
+      <>
+        <SankeySettingsEditionElementTags
+          new_data={new_data_plus}
+          elementTagNameProp='node_taggs'
+        />
+        <SankeyMenuConfigurationNodesTags
+          new_data={new_data_plus}
+        /></>
+    </WrapperContentConfig>,
+    'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
+      <><SankeySettingsEditionElementTags
         new_data={new_data_plus}
-        elementTagNameProp='node_taggs'
+        elementTagNameProp='flux_taggs'
       />
-      <SankeyMenuConfigurationNodesTags
+      <MenuConfigurationLinksTags
         new_data={new_data_plus}
-      /></>
-  </WrapperContentConfig>,
-  'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
-    <><SankeySettingsEditionElementTags
-      new_data={new_data_plus}
-      elementTagNameProp='flux_taggs'
-    />
-    <MenuConfigurationLinksTags
-      new_data={new_data_plus}
-    />
-    </>
-  </WrapperContentConfig>,
+      />
+      </>
+    </WrapperContentConfig>,
 
     'view': <WrapperContentConfig title={t('view.storytelling')}>
       <ViewsConfig new_data_plus={new_data_plus}
