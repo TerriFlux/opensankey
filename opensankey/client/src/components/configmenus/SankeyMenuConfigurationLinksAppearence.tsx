@@ -1067,7 +1067,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
             refreshThisAndUpdateRelatedComponents()
           }}>
           <OSTooltip label={t('Flux.label.tooltips.percentOutput')}>
-            {t('Flux.label.percentInput') + ' '}
+            {t('Flux.label.percentOutput') + ' '}
           </OSTooltip>
           {
             (!menu_for_style) &&
