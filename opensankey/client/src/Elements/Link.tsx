@@ -1167,7 +1167,7 @@ export abstract class ClassTemplate_LinkElement
           }
           else {
             this.updateValueXYPosition()
-            d3_text_selection?.text(label_to_display)
+            d3_text_selection?.text(this.data_label)
               .attr('spacing', 'exact')
               .attr('method', 'align')
             if (!this.drawing_area.static) {
