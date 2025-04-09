@@ -63,7 +63,7 @@ def is_email_valid(mail_to_check):
     :rtype: _type_
     """
     # regex : https://emailregex.com/
-    regex_mail = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]{2,4}$)"
+    regex_mail = r"(^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z0-9-]{2,4}$)"
     return re.fullmatch(regex_mail, mail_to_check) is not None
 
 

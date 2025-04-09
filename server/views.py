@@ -6,7 +6,6 @@
 # ---------------------------------------------------------------
 # External libs
 import os
-import requests
 
 # Flask imports
 from flask import Blueprint
