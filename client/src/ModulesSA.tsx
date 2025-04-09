@@ -37,8 +37,10 @@ import { initializeAdditionalMenusOSP, moduleDialogsOSP } from './deps/OpenSanke
 
 // Local imports
 import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
-import { LoginOutButton } from './components/Login/Login'
+import { LoginOutButton } from './deps/LoginComponent/Login/Login'
 import { DrawerSequenceDataTagg } from './deps/OpenSankey+/components/UtilsOSP'
+import { loginComponent } from './deps/LoginComponent/LoginComponent'
+import { returnToApp } from './AppSA'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -59,6 +61,7 @@ export type ExempleMenuTypes = { [_: string]: ExempleMenuTypes | string[] }
 type FType_InitializeAdditionalMenusSA = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
   new_data: Class_ApplicationDataSA,
+  setUpdate:React.MutableRefObject<() => void>
 ) => void
 
 type FCType_ModalSankeyTheque = {
@@ -80,6 +83,7 @@ type FCType_SankeyThequeCardsGenerator = {
 
 type FCType_UserPagesButtons = {
   new_data_app: Class_ApplicationDataSA
+  setUpdate:React.MutableRefObject<() => void>
 }
 
 // FUNCTIONCOMPONENT =============================================================
@@ -114,6 +118,7 @@ export const initializeApplicationDataSA = (
 export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   additionalMenus,
   new_data_app,
+  setUpdate
 ) => {
 
   // No initialisation if static --------------------------------------------------------
@@ -133,13 +138,14 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   // Check if user is connected ----------------------------------------------------------
 
-  new_data_app.checkTokens()
+  loginComponent().checkTokens(setUpdate)
 
   // New modules -------------------------------------------------------------------------
 
   additionalMenus.current.additional_nav_item.push(
     <UserPagesButtons
       new_data_app={new_data_app}
+      setUpdate={setUpdate}
     />
   )
 
@@ -158,7 +164,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 }
 
 const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
-  { new_data_app }
+  { new_data_app,setUpdate }
 ) => {
   // Traduction
   const { t } = new_data_app
@@ -215,12 +221,16 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
       {new_data_app.icon_library.icon_user}
     </Button>
     <LoginOutButton
-      new_data_app={new_data_app}
+      t={new_data_app.t}
+      logo={new_data_app.logo}
+      returnToApp={returnToApp}
+      loginComponent={loginComponent}
+      setUpdate={setUpdate}
     />
   </ButtonGroup>
 
 
-  return (!new_data_app.has_account ? user_navigation_bar_free : user_navigation_bar_connected)
+  return (!loginComponent().has_account ? user_navigation_bar_free : user_navigation_bar_connected)
 }
 
 

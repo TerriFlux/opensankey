@@ -13,9 +13,11 @@ exit_if_error() {
 pip install -r requirements.txt  || exit_if_error $?
 
 # Install deps
-cd ./submodules/OpenSankey+
-bash build_server.sh || exit_if_error $?
-cd ../..
+for submodule in OpenSankey+ LoginComponent; do
+  cd ./submodules/$submodule
+  bash build_server.sh || exit_if_error $?
+  cd ../..
+done
 
 # Check PEP
 cd server
