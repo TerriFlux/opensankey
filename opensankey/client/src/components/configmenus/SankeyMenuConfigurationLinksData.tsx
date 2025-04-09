@@ -47,6 +47,7 @@ import {
 } from '../../types/Utils'
 import { default_link_value_label_unit } from '../../Elements/LinkAttributes'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 
 /*************************************************************************************************/
 
@@ -194,12 +195,17 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     _updateTextLinks()
   }
 
+  const is_value_indeterminated = !selected_links.every(el => el.value?.data_value == selected_links[0].value?.data_value)
+  const is_label_indeterminated = !selected_links.every(el => el.value?.text_value == selected_links[0].value?.text_value)
 
   // JSX -------------------------------------------------------------------------------
 
   const content = <Box
-    layerStyle='menuconfigpanel_grid'
+    layerStyle='menu_sub_section'
   >
+    <SankeyLinkSelection
+      new_data={new_data}
+    />
     {
       // Définition des valeurs selon les paramètre dataTags
       list_data_taggs.map(data_tagg => {
@@ -259,6 +265,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
           {t('Flux.data.vpp')}
         </Box>
         <ConfigMenuNumberInput
+          t={new_data.t}
           ref_to_set_value={ref_set_data_value_input}
           default_value={value?.data_value as number | undefined}
           fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
@@ -266,6 +273,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
           minimum_value={0}
           stepper={true}
           step={1}
+          multiValue={is_value_indeterminated}
           unit_text={
             (
               selected_links[0]?.value_label_unit_visible &&
@@ -274,6 +282,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
               selected_links[0]?.value_label_unit :
               undefined
           }
+
         />
       </Box>
     </OSTooltip>
@@ -289,6 +298,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
           ref_to_set_value={ref_set_text_value_input}
           function_get_value={() => { return value?.text_value }}
           function_on_blur={updateTextLinks}
+          multiValue={is_label_indeterminated}
         />
       </Box>
     </OSTooltip>
@@ -333,13 +343,11 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
-
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Update data menu for link
     new_data.menu_configuration.updateComponentRelatedToLinksData()
-    new_data.menu_configuration.ref_to_spreadsheet.current()
     // And update this menu also
     setCount(a => a + 1)
     updateInputsValues()
@@ -379,6 +387,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   }
 
   return <ConfigMenuNumberInput
+    t={new_data.t}
     ref_to_set_value={ref_set_data_value_input}
     default_value={value?.data_value ?? null}
     function_on_blur={updateDataLinks}

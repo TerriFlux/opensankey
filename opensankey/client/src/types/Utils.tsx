@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { FunctionComponent } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import { CheckboxProps, Tooltip } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
@@ -34,6 +34,8 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import * as d3 from 'd3'
 // Local type imports
 import type { OSTooltpFuncType } from '../components/configmenus/types/SankeyUtilsTypes'
+import { Type_GenericApplicationData } from './Types'
+import { FType_InitializeAdditionalMenus } from './FunctionTypes'
 
 // SPECIFIC TYPES ************************************************************************
 
@@ -75,6 +77,7 @@ export const default_black_color = 'black'
 export const default_background_color = '#f2f2f2'
 export const default_grid_color = '#d3d3d3'
 export const default_element_color = '#a9a9a9'
+export const default_element_color_source = 'flow'
 
 export const default_font = 'Arial,sans-serif'
 export const font_families = [
@@ -152,8 +155,8 @@ export const default_style_name = 'Style par default'
 
 // DEDICATED TYPES **********************************************************************
 
-export type Dict_templates_type={[y:string]:{data:string[],image:string[]}}
-export type Templates_builder_type={[y:string]:Dict_templates_type}
+export type Dict_templates_type = { [y: string]: { data: string[], image: string[] } }
+export type Templates_builder_type = { [y: string]: Dict_templates_type }
 
 // DEDICATED FUNCTIONS *******************************************************************
 
@@ -328,8 +331,8 @@ export const check_perf = (f: () => void, name: string) => {
 
 // Tooltipe added to input in menu when add a local value (for nodes & links local attributes)
 export const TooltipValueSurcharge = (k: string, t: TFunction) => {
-  return <OSTooltip label={t('Menu.overcharge_style_value')}>
-    <FontAwesomeIcon style={{ color: '#6cc3d5', height: '12', width: '12', float: 'right' }} icon={faCircleInfo} />
+  return <OSTooltip label={t('Menu.overcharge_style_value')} placement='left'>
+    <FontAwesomeIcon className='tooltip_overload' style={{ color: '#6cc3d5', height: '12', width: '12', float: 'right' }} icon={faCircleInfo} />
   </OSTooltip>
 }
 
@@ -338,7 +341,7 @@ export const OSTooltip: FunctionComponent<OSTooltpFuncType> = (
   {
     label,
     delay = 500,
-    placement = 'top',
+    placement = 'auto',
     isAlwaysOpen = false,
     children
   }
@@ -414,4 +417,74 @@ export const parseLocaleNumber = (stringNumber: string, locale = navigator.langu
     return NaN
   }
   return Number(trimmedNumberString)
+}
+
+
+export const WrapperInitializeAdditionalMenus: FunctionComponent<{
+  new_data: Type_GenericApplicationData,
+  initializeAdditionalMenus: FType_InitializeAdditionalMenus,
+}> = ({ new_data, initializeAdditionalMenus }) => {
+  const [, setUpdate] = useState(0)
+  new_data.menu_configuration.ref_rerender_submodules_menus.current = () => setUpdate(a => a + 1)
+
+
+  new_data.menu_configuration.additionalMenus.current = {
+
+    // Top Menu
+    external_edition_item: [],
+    external_file_export_item: [],
+    externale_save_item: [],
+    external_top_buttons_item: {},
+    externale_navbar_item: {},
+    footer: [],
+
+    // Menu config
+    additional_menu_type: {},
+    additional_menu_button_element_configurable: {},
+    additional_menu_config_content: { data: {}, context: {}, style: {} },
+    additional_new_menu_config_content: {},
+    additional_node_config_style: [],
+
+    // Mise en page
+    extra_background_element: <></>,
+    apply_transformation_additional_elements: [<></>],
+
+    // Nodes
+    advanced_appearence_content: [],
+    advanced_label_content: [],
+    context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    additional_context_node_element: {},
+    // Links
+    additional_menu_configuration_links: {},
+    additional_data_element: [],
+    additional_link_appearence_items: [],
+    additional_link_appearence_value: [],
+    additional_link_visual_filter_content: [],
+    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
+    additional_context_link_element: {},
+
+    // Preferences
+    additional_preferences: [],
+
+
+    additional_file_save_json_option: [],
+    additional_file_export_item: [],
+
+    additional_nav_item: [],
+
+    formations_menu: {},
+
+    toolbar_order: ['mode_souris',
+      'node_type',
+      'strectch_zdd',
+      'help',
+      'fullscreen'],
+    template_module_key: ['essential'],
+  }
+
+  initializeAdditionalMenus(
+    new_data.menu_configuration.additionalMenus,
+    new_data
+  )
+  return <></>
 }

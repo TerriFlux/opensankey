@@ -35,7 +35,8 @@ export const numberinput_base_style = definePartsStyle({
   },
   field: {
     width: '100%',
-    height: '2rem',
+    height: '1.5rem',
+    fontSize: 'unset',
     border: 'solid 1px ',
     borderRadius: '6px',
     borderColor: 'gray.100',
@@ -50,22 +51,43 @@ export const numberinput_base_style = definePartsStyle({
       border: 'solid 2px ',
       borderColor: 'primaire.2',
     }
-  }
+  },
+  stepperGroup: {
+    height: '1.5rem',
+    margin:'0',
+  },
+
 })
 
 export const menuconfigpanel_option_numberinput = definePartsStyle({
   field: {
-    fontSize: '12px',
-    paddingLeft: '0.5rem',
-    paddingRight: '0.5rem'
+    paddingLeft: '0.15rem',
+    paddingRight: '0.15rem'
+  },
+  stepperGroup:{
+    width:'0.8rem'
+  },
+  stepper: {
+    'svg': {
+      width: '0.4rem',
+      height: '0.4rem',
+    }
   }
 })
 
 export const menuconfigpanel_option_numberinput_with_right_addon = definePartsStyle({
   field: {
     borderRadius: '6px 0px 0px 6px',
-    fontSize: '12px',
-    paddingLeft: '0.5rem',
-    paddingRight: '0.5rem',
+    paddingLeft: '0.15rem',
+    paddingRight: '0.15rem',
+  },
+  stepperGroup:{
+    width:'0.8rem'
+  },
+  stepper: {
+    'svg': {
+      width: '0.4rem',
+      height: '0.4rem',
+    }
   }
 })

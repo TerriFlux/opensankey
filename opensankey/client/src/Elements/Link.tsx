@@ -66,7 +66,21 @@ import {
   getStringOrNullFromJSON,
   makeId,
 } from '../types/Utils'
-import { Class_LinkStyle, Class_LinkAttribute, default_shape_arrow_size, default_shape_color, default_shape_curvature, default_shape_ending_curve, default_shape_ending_tangeant, default_shape_is_arrow, default_shape_is_curved, default_shape_is_dashed, default_shape_is_recycling, default_shape_is_structure, default_shape_middle_recyling, default_shape_opacity, default_shape_orientation, default_shape_starting_curve, default_shape_starting_tangeant, Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side, default_link_value_label_horiz, default_link_name_label_horiz, default_link_name_label_vert, default_link_name_label_is_visible, default_link_value_label_color, default_link_value_label_custom_digit, default_link_value_label_font_family, default_link_value_label_font_size, default_link_value_label_is_visible, default_link_value_label_nb_digit, default_link_value_label_nb_significant_digits, default_link_value_label_on_path, default_link_value_label_pos_auto, default_link_value_label_scientific_notation, default_link_value_label_significant_digits, default_link_value_label_unit, default_link_value_label_unit_factor, default_link_value_label_unit_visible, default_link_value_label_vert, default_link_value_label_uppercase, default_link_name_label_color, default_link_name_label_bold, default_link_name_label_font_family, default_link_name_label_font_size, default_link_name_label_italic, default_link_name_label_uppercase, default_link_value_label_bold, default_link_value_label_italic } from './LinkAttributes'
+import { 
+  Class_LinkStyle, Class_LinkAttribute, 
+  default_shape_arrow_size, default_shape_color, default_shape_curvature, default_shape_ending_curve, default_shape_ending_tangeant, 
+  default_shape_is_arrow, default_shape_is_curved, default_shape_is_dashed, default_shape_is_recycling, default_shape_is_structure, 
+  default_shape_middle_recyling, default_shape_opacity, default_shape_orientation, default_shape_starting_curve, default_shape_starting_tangeant, 
+  Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side, default_link_value_label_horiz, default_link_name_label_horiz, 
+  default_link_name_label_vert, default_link_name_label_is_visible, default_link_value_label_color, default_link_value_label_custom_digit, 
+  default_link_value_label_font_family, default_link_value_label_font_size, default_link_value_label_is_visible, default_link_value_label_nb_digit, 
+  default_link_value_label_nb_significant_digits, default_link_value_label_on_path, default_link_value_label_pos_auto, 
+  default_link_value_label_scientific_notation, default_link_value_label_significant_digits, default_link_value_label_unit, 
+  default_link_value_label_unit_factor, default_link_value_label_unit_visible, default_link_value_label_vert, default_link_value_label_uppercase, 
+  default_link_name_label_color, default_link_name_label_bold, default_link_name_label_font_family, default_link_name_label_font_size, 
+  default_link_name_label_italic, default_link_name_label_uppercase, default_link_value_label_bold, default_link_value_label_italic,
+  default_link_value_label_percent_input,default_link_value_label_percent_output
+} from './LinkAttributes'
 
 export type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyAbstractNodeElement>
 type Type_AnyAbstractNodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
@@ -894,9 +908,15 @@ export abstract class ClassTemplate_LinkElement
   }
 
   public getPathColorToUse() {
-    // TODO revoir : la couleur d'un flux devrait aussi être definie par la couleur de ses noeuds sources / target
+    const type_source=this.shape_color_rule
+    if(type_source=='source'){
+      return this.source.getShapeColorToUse()
+    }else if(type_source=='target'){
+      return this.target.getShapeColorToUse()
+    }
     // Default color
     let shape_color = this.shape_color
+    // Test if tagg of flow or data are activated, if so use color from tag associated to link
     const dataTagColorActivated = this.sankey.selected_data_tags_list.filter(tag => tag.group.show_legend)
     // Do we apply color of flux tags ?
     const flux_taggs_activated = this.flux_taggs_list
@@ -914,51 +934,7 @@ export abstract class ClassTemplate_LinkElement
       dataTagColorActivated
         .forEach(tag => shape_color = tag.color)
     }
-    else {
-      const src_taggs_activated = this._source.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => {
-          return this._source.grouped_taggs_dict[grp.id].filter(tag => tag.is_selected).length > 0
-        }).length > 0
-      const trgt_taggs_activated = this._target.taggs_list
-        .filter(tagg => tagg.show_legend).filter(grp => {
-          return (this._target.grouped_taggs_dict[grp.id] ?? []).filter(tag => tag.is_selected).length > 0
-        }).length > 0
-
-
-      // Do we apply colors of node source/target tags ?
-      const tagg_activated = this.sankey.node_taggs_list
-        .filter(tagg => tagg.show_legend)
-
-      const trgt_node_type = this._target.grouped_taggs_dict['type de noeud']
-      const src_node_type = this._source.grouped_taggs_dict['type de noeud']
-
-      // The first common tag is used to défine the color. The code after would take the first tag
-      // of one of the two nodes source or target which is not the same as the first of the common tag
-      if (tagg_activated.length > 0 && this._source.grouped_taggs_dict[tagg_activated[0].id]) {
-        const group_id = tagg_activated[0].id
-        const common_tags = this._source.grouped_taggs_dict[group_id].filter(t => this._target.grouped_taggs_dict[group_id] && this._target.grouped_taggs_dict[group_id].includes(t))
-        if (common_tags.length > 0) {
-          shape_color = common_tags[0].color
-          return shape_color
-        }
-      }
-      // If we apply color from tag then take by prio : src/product > trgt/product > src > trgt
-      if (src_node_type && src_node_type.filter(tag => tag.name == 'produit').length == 1 && src_taggs_activated) {
-        shape_color = this._source.getShapeColorToUse()
-      }
-      else if (trgt_node_type && trgt_node_type.filter(tag => tag.name == 'produit').length == 1 && trgt_taggs_activated) {
-        shape_color = this._target.getShapeColorToUse()
-      }
-      else {
-        if (trgt_taggs_activated) {
-          // If target has a tag from a group of which we display the palette
-          shape_color = this._target.getShapeColorToUse()
-        } else if (src_taggs_activated) {
-          // If source has a tag from a group of which we display the palette
-          shape_color = this._source.getShapeColorToUse()
-        }
-      }
-    }
+   
     return shape_color
   }
 
@@ -1147,6 +1123,11 @@ export abstract class ClassTemplate_LinkElement
     // Add value label
     const link_val = this.data_value
 
+    let total_source = 0
+    this._source.output_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.value!.data_value!)
+    let total_target = 0
+    this._target.input_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.value!.data_value!)
+
     // =======================DRAW VALUE LABEL ============================
     if (
       (this.drawing_area.type_data !== 'structure') &&
@@ -1156,7 +1137,12 @@ export abstract class ClassTemplate_LinkElement
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
-        let label_to_display = link_val as unknown as string
+        let label_to_display = link_val
+        if (this.value_label_percent_input) {
+          label_to_display = label_to_display!/total_source *100
+        } else if (this.value_label_percent_output) {
+          label_to_display = label_to_display!/total_target *100
+        }
 
         // If label is undefined or null, do nothing
         if (label_to_display) {
@@ -1186,11 +1172,17 @@ export abstract class ClassTemplate_LinkElement
               .attr('href', '#' + this.id)
               .attr('side', this.getTextPathSide())
 
-            // Add text directly on textpath object
-            d3_textpath_selection?.text(this.data_label)
-              .attr('spacing', 'exact')
-              .attr('method', 'align')
-
+            if (!this.value_label_percent_input && !this.value_label_percent_output) {
+              // Add text directly on textpath object
+              d3_textpath_selection?.text(this.data_label)
+                .attr('spacing', 'exact')
+                .attr('method', 'align')
+            } else {
+              // Add text directly on textpath object
+              d3_textpath_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %')
+                .attr('spacing', 'exact')
+                .attr('method', 'align')              
+            }
             // Add styling text attributes directly on text object
             // Relative position from starting point of path
             this.updateValueTextPathOffset()
@@ -1206,9 +1198,15 @@ export abstract class ClassTemplate_LinkElement
           }
           else {
             this.updateValueXYPosition()
-            d3_text_selection?.text(label_to_display)
-              .attr('spacing', 'exact')
-              .attr('method', 'align')
+            if (!this.value_label_percent_input && !this.value_label_percent_output) {
+              d3_text_selection?.text(this.data_label)
+                .attr('spacing', 'exact')
+                .attr('method', 'align')
+            } else {
+              d3_text_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %')
+                .attr('spacing', 'exact')
+                .attr('method', 'align')              
+            }
             if (!this.drawing_area.static) {
               d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
                 .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
@@ -3849,6 +3847,26 @@ export abstract class ClassTemplate_LinkElement
   public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawElements() }
 
   /**
+ * TODO Description
+ * @memberof ClassTemplate_LinkElement
+ */
+  public get shape_color_rule() {
+    if (this._display.attributes.shape_color_rule !== undefined) {
+      return this._display.attributes.shape_color_rule
+    } else if (this._display.style.shape_color_rule !== undefined) {
+      return this._display.style.shape_color_rule
+    }
+    return default_shape_color
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set shape_color_rule(_: string) { this._display.attributes.shape_color_rule = _; this.drawElements() }
+
+
+  /**
    * TODO Description
    * @memberof ClassTemplate_LinkElement
    */
@@ -4046,6 +4064,44 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawValue() }
+
+ /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+ public get value_label_percent_input() {
+  if (this._display.attributes.value_label_percent_input !== undefined) {
+    return this._display.attributes.value_label_percent_input
+  } else if (this._display.style.value_label_percent_input !== undefined) {
+    return this._display.style.value_label_percent_input
+  }
+  return default_link_value_label_percent_input
+}
+
+/**
+ * TODO Description
+ * @memberof ClassTemplate_LinkElement
+ */
+public set value_label_percent_output(_: boolean) { this._display.attributes.value_label_percent_output = _; this.drawValue() }
+
+ /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+ public get value_label_percent_output() {
+  if (this._display.attributes.value_label_percent_output !== undefined) {
+    return this._display.attributes.value_label_percent_output
+  } else if (this._display.style.value_label_percent_output !== undefined) {
+    return this._display.style.value_label_percent_output
+  }
+  return default_link_value_label_percent_output
+}
+
+/**
+ * TODO Description
+ * @memberof ClassTemplate_LinkElement
+ */
+public set value_label_percent_input(_: boolean) { this._display.attributes.value_label_percent_input = _; this.drawValue() }
 
   /**
    * TODO Description
