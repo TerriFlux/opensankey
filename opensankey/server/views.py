@@ -60,11 +60,10 @@ from flask import session
 
 # ---------------------------------------------------------------
 # Sankey libs
-import SankeyExcelParser.io_excel as io_excel
 import SankeyExcelParser.su_trace as trace
 
 # Sankey modules
-from SankeyExcelParser.sankey import Sankey
+from SankeyExcelParser.io_excel import IOExcel
 
 # Local modules
 from . import sankeymatic
@@ -149,6 +148,7 @@ def save_excel():
     try:
         cwd = os.getcwd()
         excel_filename = os.path.join(cwd, "tutu.xlsx")
+        io_excel = IOExcel()
         io_excel.write_excel_from_sankey(excel_filename, sankey, mode='w')
         # Ajoute le fichier json dans un onglet layout
         wb = openpyxl.load_workbook(excel_filename)
@@ -357,8 +357,8 @@ def upload_excel_thread(
     trace.logger.info('{:-<{w}}'.format('Loading excel ', w=max_line_length))
     trace.logger.debug("File to load : {}".format(excel_input_filename.split('/')[-1]))
     # Parse to sankey struct
-    sankey = Sankey()
-    ok_load, log_load = io_excel.load_sankey_from_excel_file(excel_input_filename, sankey)
+    io_excel = IOExcel()
+    ok_load, log_load = io_excel.load_sankey_from_excel_file(excel_input_filename)
     if (ok_load):
         trace.logger.info('{:->{w}}'.format(' Success', w=max_line_length))
     else:
@@ -367,6 +367,7 @@ def upload_excel_thread(
         trace.logger.error('{:->{w}}'.format(' FAILED', w=max_line_length))
         return
     # Step 2 : Extract sankey data
+    sankey = io_excel.sankey
     trace.logger.info('{:-<{w}}'.format('Extract diagram structure ', w=max_line_length))
     try:
         sankey_json = converter_funct['extract_json_from_sankey'](sankey)

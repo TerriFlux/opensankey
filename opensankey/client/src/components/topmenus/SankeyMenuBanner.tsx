@@ -24,42 +24,47 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
+// External Imports
 
-export type FType_SetDiagram = (
-  the_diagram: string,
-  new_data: Type_GenericApplicationData
-) => void
+// Internal Types / Classes
+import {
+  SankeyData
+} from '../../types/LegacyType'
+import {
+  FType_SetDiagram,
+} from './types/SankeyMenuBannerTypes'
+
+// Internal functions / Components
 
 
-export type FCType_AddAllDropDownNode = {
-  new_data: Type_GenericApplicationData,
-  level: boolean,
+// CONSTANTS ============================================================================
+
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      sous_filieres: { [key: string]: string }
+      help: { [key: string]: string }
+      excel: string
+      structure: boolean,
+      advanced: boolean
+    } & { [key: string]: SankeyData }
+  }
+
+// FUNCTIONS ============================================================================
+
+export const setDiagram: FType_SetDiagram = (
+  the_diagram,
+  new_data
+) => {
+  const sous_filieres = window.sankey.sous_filieres
+
+  const new_data_as_json = JSON.parse(
+    JSON.stringify(
+      window.sankey[sous_filieres[the_diagram]]
+    )
+  )
+  new_data.fromJSON(new_data_as_json)
 }
 
-/**
- * Function that generate dropdown for each groupTag of linkTags
- * @param {applicationContextType} applicationContext
- * @param {applicationDataType} applicationData
- */
-export type FCType_AddAllDropDownFluxFType = {
-  new_data: Type_GenericApplicationData
-}
-
-/**
- * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
- */
-export type FCType_ToolbarBuilder = {
-  new_data: Type_GenericApplicationData,
-  additionalMenu: Type_AdditionalMenus,
-}
-
-export type FType_StretchButtons = (
-  new_data: Type_GenericApplicationData
-) => JSX.Element
 
 
-export type FCType_DataTagSelector = {
-  new_data: Type_GenericApplicationData,
-  in_popover: boolean
-}

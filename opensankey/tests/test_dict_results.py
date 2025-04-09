@@ -50,8 +50,8 @@ from shutil import copyfile
 from parameterized import parameterized
 
 # Local modules ---------------------------------------------------------------
-from SankeyExcelParser.io_excel import load_sankey_from_excel_file
-from SankeyExcelParser.sankey import Sankey
+from SankeyExcelParser.io_excel import IOExcel
+from SankeyExcelParser.classes.sankey import Sankey
 from SankeyExcelParser import su_trace as su_trace
 from opensankey.server import converter
 
@@ -215,12 +215,10 @@ class DictResultTest(unittest.TestCase):
         if len( [test_to_skip for test_to_skip in TESTS_TO_SKIP if test_to_skip in self._testMethodName]) > 0:
             return
         # Read sankey struct
-        sankey = Sankey()
-        load_sankey_from_excel_file(
-            os.path.join(TESTS_DIR, file_name),
-            sankey)
+        io_excel = IOExcel()
+        io_excel.load_sankey_from_excel_file(os.path.join(TESTS_DIR, file_name))
         # Convert in json format
-        sankey_json = converter.extract_json_from_sankey(sankey)
+        sankey_json = converter.extract_json_from_sankey(io_excel.sankey)
         if not self.generate_results:
             self.check_dict(sankey_json, expected_results)
         else:

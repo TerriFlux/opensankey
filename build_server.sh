@@ -10,8 +10,8 @@ exit_if_error() {
 }
 
 # Install requirements
-pip install -r requirements.txt | grep -v 'already satisfied'
-pip install -r conda_requirements.txt | grep -v 'already satisfied'
+pip install -r requirements.txt  || exit_if_error $?
+pip install -r conda_requirements.txt  || exit_if_error $?
 
 # Install deps
 cd ./submodules/SankeyExcelParser

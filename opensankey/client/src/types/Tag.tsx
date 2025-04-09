@@ -529,7 +529,8 @@ export class Class_DataTag extends Class_ProtoTag {
 
   // Implement function so we can use it in config tags
   // we don't need to ref elements in this function because for DataTag it reference all links (done in constructor)
-  public setReferenceFromIds(list_id: string[]): void {
+  public setReferenceFromIds(): void {
+    // TODO : Not implemented yet
   }
 
   // PROTECTED METHODS ==================================================================

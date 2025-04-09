@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
+import React, { Dispatch, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import i18next, { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -40,16 +40,16 @@ import { useToast } from '@chakra-ui/react'
 import { Class_MenuConfig } from '../types/MenuConfig'
 import { ClassAbstract_ApplicationData } from '../types/Abstract'
 import { ClassTemplate_DrawingArea } from './DrawingArea'
-import { randomId, Type_JSON } from './Utils'
+import { getStringFromJSON, randomId, Type_JSON } from './Utils'
 import { ClassTemplate_NodeElement } from '../Elements/Node'
 import { ClassTemplate_LinkElement } from '../Elements/Link'
 import { ClassTemplate_Sankey } from './Sankey'
 import { FType_ProcessFunctions } from './FunctionTypes'
-import { DataSuiteType } from './LegacyType'
 
 import { Type_SaveDiagramOptions } from '../components/dialogs/types/SankeyPersistenceTypes'
 import { JSONtoExcel, retrieveExcelResults } from '../components/dialogs/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
+import { Class_IconLibrary } from './IconLibrairie'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -73,6 +73,7 @@ export type Type_TextForToastPromise = {
 export const default_save_only_visible_elements = false
 export const default_save_with_values = true
 export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
+export const default_file_name = 'Diagramme de Sankey'
 
 const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
@@ -110,6 +111,8 @@ export abstract class ClassTemplate_ApplicationData
 
   // PROTECTED ATTRIBUTES ==============================================================
 
+  protected _file_name = default_file_name
+
   /**
    * Drawing area
    *
@@ -136,6 +139,17 @@ export abstract class ClassTemplate_ApplicationData
    * @memberof ClassTemplate_ApplicationData
    */
   protected _menu_configuration: Class_MenuConfig
+
+  /**
+ * Librairie containing icon for the app
+ *
+ * @protected
+ * @type {Class_MenuConfig}
+ * @memberof ClassTemplate_ApplicationData
+ */
+  protected _icon_library: Class_IconLibrary
+
+
 
   /**
    * Application logo
@@ -180,14 +194,6 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _is_reconcilied: boolean = false
 
-
-  /**
-   * All item selectable in SankeyMenuPreference
-   * @protected
-   * @type {string[]}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  protected _preference_menu_all_item: string[] = []
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -271,13 +277,6 @@ export abstract class ClassTemplate_ApplicationData
    */
   private _language?: string | undefined
 
-  /**
-   * Ref to checkbox of displayed menu in SankeyMenuPreference
-   * @private
-   * @type {{ [_: string]: RefObject<HTMLInputElement> }}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  private _checkbox_refs: { [_: string]: RefObject<HTMLInputElement> } = {}
 
   // TODO ???
   private _processFunction: FType_ProcessFunctions
@@ -313,11 +312,6 @@ export abstract class ClassTemplate_ApplicationData
    */
   private _steps: StepType[] = []
 
-  // OPTIONNAL ATTRIBUTES ===============================================================
-
-  // File name
-  file_name?: string
-
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -341,7 +335,8 @@ export abstract class ClassTemplate_ApplicationData
     // For published mode only
     this.drawing_area.static = published_mode
     this.fit_screen = published_mode
-
+    // Librairie of icon
+    this._icon_library = this.createNewIconLibrary()
     // Get OpenSankey logo
     this._logo_opensankey = 'logos/logo_opensankey.png'
     // Get TerriFlux logo
@@ -375,6 +370,7 @@ export abstract class ClassTemplate_ApplicationData
 
   public abstract createNewDrawingArea(id?: string): Type_GenericDrawingArea
   public abstract createNewMenuConfiguration(): Class_MenuConfig
+  public abstract createNewIconLibrary(): Class_IconLibrary
 
   // CLEANING METHODS ===================================================================
   /**
@@ -408,7 +404,7 @@ export abstract class ClassTemplate_ApplicationData
   protected _reset() {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
-
+    this._file_name = default_file_name
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -419,9 +415,31 @@ export abstract class ClassTemplate_ApplicationData
     this._is_reconcilied = false
 
     // Reset Class_DataHistory
-    this._history=new Class_ApplicationHistory(this._menu_configuration)
+    this._history = new Class_ApplicationHistory(this._menu_configuration)
     // Update menus
     this.menu_configuration.updateAllMenuComponents()
+  }
+
+  /**
+   * Reset data & delete application data in navigator cache
+   *
+   * @memberof ClassTemplate_ApplicationData
+   */
+  public reinitialization(redraw: boolean = true) {
+    localStorage.removeItem('diff')
+    localStorage.removeItem('data')
+    localStorage.removeItem('last_save')
+    localStorage.removeItem('initial_data')
+    localStorage.removeItem('icon_imported')
+
+    // Reset Class_ApplicationData instance
+    if (redraw) {
+      this.reset()
+      this.draw()
+    }
+
+    sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
+    sessionStorage.setItem('dismiss_warning_sankey_mfa', '0')
   }
 
   // SAVING METHODS =====================================================================
@@ -501,21 +519,9 @@ export abstract class ClassTemplate_ApplicationData
     // Prepare JSON for saving
     const json_data_str = JSON.stringify(json_data, null, 2)
     const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
-    // Set name for file to download
-    const dataAsSuite = (json_data as DataSuiteType)
-    let name = 'Diagramme de Sankey'
-    if (
-      dataAsSuite.view &&
-      dataAsSuite.view.length > 0 &&
-      !dataAsSuite.is_catalog
-    ) {
-      name = 'Diagramme de Sankey avec vues'
-    }
-    else if (dataAsSuite.is_catalog === true) {
-      name = 'Catalogue de vues de diagrammes de Sankey'
-    }
+
     // Trigger file download
-    FileSaver.saveAs(blob, name + '.json')
+    FileSaver.saveAs(blob, this._file_name + '.json')
   }
 
   /**
@@ -529,13 +535,11 @@ export abstract class ClassTemplate_ApplicationData
    */
   public saveToExcel(
     url_prefix: string,
-    file_name = 'sankey'
   ) {
     this.sendWaitingToast(
       () => {
         this._saveToExcel(
-          url_prefix,
-          file_name
+          url_prefix
         )
       },
       {
@@ -560,12 +564,11 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _saveToExcel(
     url_prefix: string,
-    file_name = 'sankey'
   ) {
     JSONtoExcel(
       this._toJSON(),
       url_prefix,
-      file_name
+      this._file_name
     )
   }
 
@@ -582,6 +585,9 @@ export abstract class ClassTemplate_ApplicationData
     // Node label separator attribute
     json_object['node_label_separator'] = this._node_label_separator
     json_object['node_label_separator_part'] = this._node_label_separator_part
+    //File name
+    json_object['name_file'] = this._file_name
+
     // Dump with drawing area & its content in json struct
     return {
       ...json_object,
@@ -634,6 +640,8 @@ export abstract class ClassTemplate_ApplicationData
   ) {
     // Update drawing area
     this._drawing_area.fromJSON(json_object)
+    this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
+
   }
 
   /**
@@ -665,6 +673,7 @@ export abstract class ClassTemplate_ApplicationData
       () => {
         // Processing
         this._updateFromJSON(json_object)
+        this._menu_configuration.updateAllMenuComponents()
       })
   }
 
@@ -679,6 +688,7 @@ export abstract class ClassTemplate_ApplicationData
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
       drawing_area_from_layout.fromJSON(json_layout)
+      this.file_name=getStringFromJSON(json_layout,'name_file',this.file_name)
       this.drawing_area.updateFrom(
         drawing_area_from_layout,
         ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux',/*'tagLevel',*/'icon_catalog']
@@ -776,14 +786,14 @@ export abstract class ClassTemplate_ApplicationData
         selector: '.sideToolBar',
         content: this.t('guide.toolbar'),
         actionAfter: () => {
-          this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+          this.menu_configuration.ref_menu_opened.current[1](true)
           setTimeout(() => { }, 500)
         }
       },
       {
         selector: '.drawer_menu_config ',
         content: this.t('guide.menu_config'),
-        actionAfter: () => this.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+        actionAfter: () => this.menu_configuration.ref_menu_opened.current[1](true)
       },
       {
         selector: '.menutop_button_save_in_cache',
@@ -824,10 +834,10 @@ export abstract class ClassTemplate_ApplicationData
     model: TModel,
     key: TKey,
     value: TModel[TKey],
-    func:(_:TModel[TKey])=>void
+    func: (_: TModel[TKey]) => void
   ) {
     const old_val = model[key]
-    this._history.saveUndo(() => { func(old_val)})
+    this._history.saveUndo(() => { func(old_val) })
     this._history.saveRedo(() => { func(value) })
     func(value)
   }
@@ -912,7 +922,7 @@ export abstract class ClassTemplate_ApplicationData
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {
-      app_ref.menu_configuration.ref_to_btn_toogle_menu.current?.click()
+      app_ref.menu_configuration.ref_menu_opened.current[1](!app_ref.menu_configuration.ref_menu_opened.current[0])
     }
     // Event to restore application display as neutral --------------------------------
     else if (evtKeyEsc) {
@@ -930,7 +940,7 @@ export abstract class ClassTemplate_ApplicationData
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
       // Delete selected elements
-      app_ref.drawing_area.deleteSelection(true,true)
+      app_ref.drawing_area.deleteSelection(true, true)
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -987,12 +997,12 @@ export abstract class ClassTemplate_ApplicationData
       }
     }
     // Undo
-    else if (evtCtrlZ){
+    else if (evtCtrlZ) {
       evt.preventDefault()
       this._history.applyUndo()
     }
     // Redo
-    else if (evtCtrlY || evtCtrlShiftZ){
+    else if (evtCtrlY || evtCtrlShiftZ) {
       evt.preventDefault()
       this._history.applyRedo()
     }
@@ -1111,6 +1121,7 @@ export abstract class ClassTemplate_ApplicationData
   public get is_static(): boolean { return this._drawing_area.static }
 
   public get history(): Class_ApplicationHistory { return this._history }
+  public get icon_library(): Class_IconLibrary { return this._icon_library }
 
   public get steps(): StepType[] { return this._steps }
 
@@ -1141,16 +1152,15 @@ export abstract class ClassTemplate_ApplicationData
   public get processFunction(): FType_ProcessFunctions { return this._processFunction }
 
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
-  public get checkbox_refs(): { [_: string]: RefObject<HTMLInputElement> } { return this._checkbox_refs }
-  public get preference_menu_all_item() { return this._preference_menu_all_item }
 
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }
 
   public get i18n() { return this._i18n }
 
-  public get is_reconcilied(): boolean {
-    return this._is_reconcilied
-  }
+  public get is_reconcilied(): boolean { return this._is_reconcilied }
+
+  public get file_name(): string { return this._file_name }
+  public set file_name(value: string) { this._file_name = value }
 }
 

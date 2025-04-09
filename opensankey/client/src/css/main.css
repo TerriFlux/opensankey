@@ -144,15 +144,27 @@ body {
   padding-left: 10px;
 }
 
-/* React multiselect component */
-.rmsc {
-  --rmsc-radius: 6px !important;
-  --rmsc-h: 2rem !important;
+/* ====================== Scrollbar style ============================== */
+::-webkit-scrollbar {
+  width: 5px;
 }
 
-.rmsc .dropdown-container {
-  height: 2rem !important;
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
 }
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #78A7C2; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+/* ==================================================== */
 
 /* React carroussel overrides */
 .carousel-control-prev-icon,

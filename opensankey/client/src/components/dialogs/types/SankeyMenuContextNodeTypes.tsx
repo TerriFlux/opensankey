@@ -24,9 +24,10 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { MutableRefObject } from 'react'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
 
 export type FCType_ContextMenuNode = {
   new_data: Type_GenericApplicationData,
-  additionalMenu:Type_AdditionalMenus
+  additionalMenu:MutableRefObject<Type_AdditionalMenus>
 }

@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -66,6 +66,8 @@ import {
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
 import { Class_Tag } from './Tag'
+import { Class_NodeAttribute } from '../Elements/NodeAttributes'
+import { Class_LinkAttribute } from '../Elements/LinkAttributes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -343,14 +345,6 @@ export abstract class ClassTemplate_DrawingArea
     // Reset cursor in the end
     .on('end', () => this.d3_selection_zoom_area?.attr('cursor', ''))
 
-
-  public getZoomScale() {
-    const tmp = this.d3_selection_zoom_area?.node()
-    if (tmp && tmp !== null)
-      return d3.zoomTransform(tmp).k
-    else
-      return 1
-  }
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -605,7 +599,6 @@ export abstract class ClassTemplate_DrawingArea
       .attr('id', 'g_drawing')
       .attr('transform', 'translate(' + x + ',' + y + ')')
 
-
     // Add specific groups for drawing background
     this.d3_selection_bg_group = this.d3_selection.append('g').attr('id', 'g_background')
     this.d3_selection_bg = this.d3_selection_bg_group.append('g').attr('id', 'g_color_bg')
@@ -683,6 +676,14 @@ export abstract class ClassTemplate_DrawingArea
     this.selected_links_list.forEach(link => link.draw())
     // Draw nodes selected
     this.selected_nodes_list.forEach(node => node.draw())
+  }
+
+  public getZoomScale() {
+    const tmp = this.d3_selection_zoom_area?.node()
+    if (tmp && tmp !== null)
+      return d3.zoomTransform(tmp).k
+    else
+      return 1
   }
 
   public closeAllMenus() {
@@ -2182,6 +2183,41 @@ export abstract class ClassTemplate_DrawingArea
     })
   }
 
+  /**
+   * Remove a single attribute from local Class_NodeAttribute
+   *
+   * @param {keyof Class_NodeAttribute} k
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public deleteLocalAttrSelectedNode(k: keyof Class_NodeAttribute) {
+    const list_node = this.selected_nodes_list
+
+    list_node.forEach(n => {
+      if (k in n.display.attributes) {
+        delete n.display.attributes[k]
+        n.draw()
+      }
+    })
+    this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+  }
+
+  /**
+   * Remove a single attribute from local Class_LinkAttribute
+   *
+   * @param {keyof Class_LinkAttribute} k
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public deleteLocalAttrSelectedLinks(k: keyof Class_LinkAttribute) {
+    const list_links = this.selected_links_list
+
+    list_links.forEach(link => {
+      if (k in link.display.attributes) {
+        delete link.display.attributes[k]
+        link.drawWithNodes()
+      }
+    })
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+  }
 
   // PRIVATE METHODS ==================================================================
 
@@ -2848,7 +2884,7 @@ export abstract class ClassTemplate_DrawingArea
   public get height() { return this._height }
   public set height(_: number) { this._height = _; this.drawBackground(); this.drawGrid() }
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
-  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin - this.getSideBarWidth() }
+  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin }
 
   // Number of element
   public get number_of_element() { return this._number_of_elements }
@@ -2860,7 +2896,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
-    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 6 * 16 // 16 because we set size in rem in css 1 rem = 16px
+    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5*parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
   /**
@@ -2870,17 +2906,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getBottomBarHeight() {
-    return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * 16 // 16 because we set size in rem in css 1 rem = 16px
-  }
-
-  /**
-   * Return height of the top nav bar
-   *
-   * @return {*}
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public getSideBarWidth() {
-    return (document.getElementsByClassName('openMenu')[0]?.getBoundingClientRect().width) ?? 50
+    return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
   // Color
@@ -2965,4 +2991,5 @@ export abstract class ClassTemplate_DrawingArea
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
 
+  public get fit_margin(): number { return this._fit_margin }
 }

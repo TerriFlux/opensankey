@@ -44,6 +44,13 @@ export type possibleDecoratorName = 'value_label_horiz'
     | 'name_label_font_size'
     | 'name_label_color'
     | 'name_label_font_family'
+    | 'value_label_uppercase'
+    | 'name_label_uppercase'
+    | 'value_label_italic'
+    | 'name_label_italic'
+    | 'value_label_bold'
+    | 'name_label_bold'
+
 
 
 
@@ -59,11 +66,23 @@ export type labelAttributeType = {
 }
 
 export type labelValueAttribute = labelAttributeType & {
-    label_unit_visible: 'value_label_unit_visible',
     label_nb_digit: 'value_label_nb_digit',
+    label_custom_digit: 'value_label_custom_digit',
+
+}
+
+export type UnitAttributeType = {
+    label_unit_visible: 'value_label_unit_visible',
     label_unit: 'value_label_unit',
     label_unit_factor: 'value_label_unit_factor',
-    label_custom_digit: 'value_label_custom_digit',
+}
+
+export type FCType_MenuUnit = {
+    new_data: Type_GenericApplicationData,
+    elements: Class_LinkStyle[] | Type_GenericLinkElement[] | Type_GenericNodeElement[] | Class_NodeStyle[],
+    selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
+    refreshParentComponent: () => void,
+    dict_decorator_name: UnitAttributeType
 }
 
 export type FCType_SankeyMenuLabelComponent = {
@@ -80,4 +99,10 @@ export type FCType_SankeyMenuValueLabelComponent = {
     selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
     refreshParentComponent: () => void,
     dict_decorator_name: labelValueAttribute
+}
+export type FCType_WrapperBoxSubSectionMenu = {
+    new_data: Type_GenericApplicationData,
+    title: string,
+    collapse?: boolean,
+    children: JSX.Element
 }
