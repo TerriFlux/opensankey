@@ -39,13 +39,13 @@ import {
   defaultLinkId,
   sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
-} from'../Elements/Link'
-import { Class_LinkStyle } from'../Elements/LinkAttributes'
+} from '../Elements/Link'
+import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
 import {
   ClassTemplate_NodeElement,
   sortNodesElements
-} from'../Elements/Node'
-import { Class_NodeStyle } from '../Elements/NodeAttributes'
+} from '../Elements/Node'
+import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
 import {
   Class_NodeTagGroup,
   Class_FluxTagGroup,
@@ -61,10 +61,12 @@ import {
   default_main_sankey_id,
   default_style_id,
   Type_MacroTagGroup,
-  randomId
+  randomId,
+  CutName
 } from '../types/Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
 import { DefaultLinkExportStyle, DefaultLinkImportStyle, DefaultNodeExportStyle, DefaultNodeImportStyle, DefaultNodeProductStyle, DefaultNodeSectorStyle } from './Legacy'
+import { Class_NodeElement } from './Types'
 
 
 // LOCAL FUNCTIONS **********************************************************************
@@ -282,7 +284,7 @@ export abstract class ClassTemplate_Sankey
       .forEach(([idx, node_to_copy]) => {
         const node = (this._nodes[idx] ?? this.addNewNode(idx, node_to_copy.name))
         node.copyFrom(node_to_copy)
-        node.keepLinkOrderingFrom(node_to_copy,{}) // Same ordering
+        node.keepLinkOrderingFrom(node_to_copy, {}) // Same ordering
       })
   }
 
@@ -403,7 +405,7 @@ export abstract class ClassTemplate_Sankey
         })
       to_update
         .forEach(id => {
-          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id]?? id],matching_tags_id['nodeTags'][id] )
+          this._node_taggs[id].copyFrom(other_sankey._node_taggs[matching_taggs_id['nodeTags'][id] ?? id], matching_tags_id['nodeTags'][id])
         })
     }
 
@@ -425,7 +427,7 @@ export abstract class ClassTemplate_Sankey
         })
       to_update
         .forEach(id => {
-          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id],matching_tags_id['fluxTags'][id] )
+          this._flux_taggs[id].copyFrom(other_sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id], matching_tags_id['fluxTags'][id])
         })
     }
 
@@ -449,7 +451,7 @@ export abstract class ClassTemplate_Sankey
         })
       to_update
         .forEach(id => {
-          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id],matching_tags_id['dataTags'][id] )
+          this._data_taggs[id].copyFrom(other_sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id], matching_tags_id['dataTags'][id])
         })
     }
 
@@ -585,11 +587,11 @@ export abstract class ClassTemplate_Sankey
             // Source node
             const source = this._nodes[link.source.id]
             const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].source.id]
-            source.keepLinkOrderingFrom(other_source,revert_matching_links_id)
+            source.keepLinkOrderingFrom(other_source, revert_matching_links_id)
             // Target node
             const target = this._nodes[link.target.id]
             const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
-            target.keepLinkOrderingFrom(other_target,revert_matching_links_id)
+            target.keepLinkOrderingFrom(other_target, revert_matching_links_id)
           })
       }
 
@@ -620,11 +622,11 @@ export abstract class ClassTemplate_Sankey
             // Source node
             const source = this._nodes[this._links[id].source.id]
             const other_source = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].source.id]
-            source.keepLinkOrderingFrom(other_source,revert_matching_links_id)
+            source.keepLinkOrderingFrom(other_source, revert_matching_links_id)
             // Target node
             const target = this._nodes[this._links[id].target.id]
             const other_target = other_sankey._nodes[other_sankey._links[matching_links_id[id] ?? id].target.id]
-            target.keepLinkOrderingFrom(other_target,revert_matching_links_id)
+            target.keepLinkOrderingFrom(other_target, revert_matching_links_id)
           })
       }
 
@@ -1010,18 +1012,18 @@ export abstract class ClassTemplate_Sankey
         )
       })
     //if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
-      // Change style if node has default style & 'Type de noeud' tags
-    this.nodes_list.forEach(n=>{
+    // Change style if node has default style & 'Type de noeud' tags
+    this.nodes_list.forEach(n => {
       const tagg = this.node_taggs_dict['type de noeud']
       if (!tagg) {
         return
       }
       const product_tag = tagg.tags_dict['produit']
       const sector_tag = tagg.tags_dict['secteur']
-      if(n.hasGivenTag(product_tag) && n.style.id ==='default'){
-        n.style= this.node_styles_dict['NodeProductStyle']
-      }  else if(n.hasGivenTag(sector_tag) && n.style.id ==='default'){
-        n.style=this.node_styles_dict['NodeSectorStyle']
+      if (n.hasGivenTag(product_tag) && n.style.id === 'default') {
+        n.style = this.node_styles_dict['NodeProductStyle']
+      } else if (n.hasGivenTag(sector_tag) && n.style.id === 'default') {
+        n.style = this.node_styles_dict['NodeSectorStyle']
       }
     })
     //}
@@ -1433,6 +1435,181 @@ export abstract class ClassTemplate_Sankey
     }
   }
 
+
+  /**
+ * Return style of selected nodes
+ *
+ * @return {*} 
+ * @memberof ClassTemplate_Sankey
+ */
+  public getStyleOfSelectedNodes() {
+    const selected_nodes = this.drawing_area.selected_nodes_list
+    if (selected_nodes.length !== 0) {
+      const style = selected_nodes[0].style
+      let inchangee = true
+      selected_nodes.map(node => {
+        inchangee = (node.style.id === style.id) ? inchangee : false
+      })
+      return (inchangee) ?
+        CutName(style.name, 25) :
+        this.drawing_area.application_data.t('Noeud.multi_style')
+    }
+    else {
+      return default_style_id
+    }
+  }
+
+  /**
+  * Function that change selected nodes style and save undo
+  *
+  * @param {Class_NodeStyle} n_style
+  */
+  public switchNodeStyle(n_style: Class_NodeStyle) {
+    const selected_nodes = this.drawing_area.selected_nodes_list
+    const { ref_selected_style_node } = this.drawing_area.application_data.menu_configuration
+    const curr_style: { [x: string]: Class_NodeStyle } = {}
+    selected_nodes.map(node => {
+      curr_style[node.id] = node.style
+    })
+    // Method to get old style via undo
+    const inv_switchToStyle = () => {
+      selected_nodes.map(node => {
+        node.style = curr_style[node.id]
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+
+    // Method to get new style via redo
+    const _switchToStyle = () => {
+      ref_selected_style_node.current = n_style.id
+      selected_nodes.map(node => {
+        node.style = n_style
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(inv_switchToStyle)
+    this.drawing_area.application_data.history.saveRedo(_switchToStyle)
+
+    _switchToStyle()
+  }
+
+  /**
+  *Function to delete all local value of attribute so the value used come from the style
+  *
+  * @memberof ClassTemplate_Sankey
+  */
+  public resetAttrSelectedNodes() {
+    const selected_nodes = this.drawing_area.selected_nodes_list as Class_NodeElement[]
+
+    const curr_attr: { [x: string]: Class_NodeAttribute } = {}
+    selected_nodes.map(node => {
+      curr_attr[node.id] = node.display.attributes
+    })
+    // Method to get old attr via undo
+    const inv_resetAttrToStyleVal = () => {
+      selected_nodes.map(node => node.display.attributes = curr_attr[node.id])
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+    // Method to get new attr via redo
+    const _resetAttrToStyleVal = () => {
+      selected_nodes.map(node => node.resetAttributes())
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(inv_resetAttrToStyleVal)
+    this.drawing_area.application_data.history.saveRedo(_resetAttrToStyleVal)
+    _resetAttrToStyleVal()
+  }
+
+  /**
+   * Return style of selected links
+   *
+   * @return {*} 
+   * @memberof ClassTemplate_Sankey
+   */
+  public getStyleOfSelectedLinks() {
+    const selected_links = this.drawing_area.selected_links_list
+    if (selected_links.length !== 0) {
+      const style = selected_links[0].style
+      let inchangee = true
+      selected_links.map(link => {
+        inchangee = (link.style.id === style.id) ? inchangee : false
+      })
+      return (inchangee) ?
+        CutName(style.name, 25) :
+        this.drawing_area.application_data.t('Noeud.multi_style')
+    }
+    else {
+      return default_style_id
+    }
+  }
+
+  /**
+   * Function that change selected links style and save undo
+   *
+   * @param {Class_LinkStyle} n_style
+   */
+  public switchLinkStyle(n_style: Class_LinkStyle) {
+    const selected_links = this.drawing_area.selected_links_list
+    const { ref_selected_style_link } = this.drawing_area.application_data.menu_configuration
+    const curr_style: { [x: string]: Class_LinkStyle } = {}
+    selected_links.map(link => {
+      curr_style[link.id] = link.style
+    })
+    // Method to get old style via undo
+    const inv_switchToStyle = () => {
+      selected_links.map(link => {
+        link.style = curr_style[link.id]
+        link.drawWithNodes()
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    // Method to get new style via redo
+    const _switchToStyle = () => {
+      ref_selected_style_link.current = n_style.id
+      selected_links.map(link => {
+        link.style = n_style
+        link.drawWithNodes()
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(inv_switchToStyle)
+    this.drawing_area.application_data.history.saveRedo(_switchToStyle)
+
+    _switchToStyle()
+  }
+
+  /**
+    *Function to delete all local value of attribute so the value used come from the style
+    *
+  * @memberof ClassTemplate_Sankey
+  */
+  public resetAttrSelectedLinks() {
+    const selected_links = this.drawing_area.selected_links_list
+
+    const curr_attr: { [x: string]: Class_LinkAttribute } = {}
+    selected_links.map(link => {
+      curr_attr[link.id] = link.display.attributes
+    })
+    // Method to get old attr via undo
+    const inv_resetAttrToStyleVal = () => {
+      selected_links.map(link => link.display.attributes = curr_attr[link.id])
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+    // Method to get new attr via redo
+    const _resetAttrToStyleVal = () => {
+      selected_links.map(link => link.resetAttributes())
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(inv_resetAttrToStyleVal)
+    this.drawing_area.application_data.history.saveRedo(_resetAttrToStyleVal)
+    _resetAttrToStyleVal()
+  }
+
   // Tags related ------------------------------------------------------------------------
 
   public triggerPrimaryLevelTagging(): void {
@@ -1683,37 +1860,37 @@ export abstract class ClassTemplate_Sankey
    * @memberof ClassTemplate_Sankey
    */
   public sortNodes() {
-    const echangeTag = this.node_taggs_dict['type de noeud']?this.node_taggs_dict['type de noeud'].tags_dict['echange']:undefined
-    const sorted_nodes = this.nodes_list.filter(n=>!echangeTag || !n.hasGivenTag(echangeTag))
-    sorted_nodes.sort((n1,n2)=>{
-      if (n1.position_v>=0 || n2.position_v>=0) {
+    const echangeTag = this.node_taggs_dict['type de noeud'] ? this.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const sorted_nodes = this.nodes_list.filter(n => !echangeTag || !n.hasGivenTag(echangeTag))
+    sorted_nodes.sort((n1, n2) => {
+      if (n1.position_v >= 0 || n2.position_v >= 0) {
         return n1.position_v - n2.position_v
       } else {
         return n2.position_v - n1.position_v
       }
     })
-    const import_nodes = this.nodes_list.filter(n=>
+    const import_nodes = this.nodes_list.filter(n =>
       echangeTag && n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
     )
-    import_nodes.sort((n1,n2)=>{
-      if (n1.position_v>=0 || n2.position_v>=0) {
+    import_nodes.sort((n1, n2) => {
+      if (n1.position_v >= 0 || n2.position_v >= 0) {
         return n1.position_v - n2.position_v
       } else {
         return n2.position_v - n1.position_v
       }
     })
-    const export_nodes = this.nodes_list.filter(n=>
-      echangeTag && n.hasGivenTag(echangeTag)  && n.input_links_list.length > 0
+    const export_nodes = this.nodes_list.filter(n =>
+      echangeTag && n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
     )
-    export_nodes.sort((n1,n2)=>{
-      if (n1.position_v>=0 || n2.position_v>=0) {
+    export_nodes.sort((n1, n2) => {
+      if (n1.position_v >= 0 || n2.position_v >= 0) {
         return n1.position_v - n2.position_v
       } else {
         return n2.position_v - n1.position_v
       }
     })
-    const all_nodes = [...sorted_nodes,...import_nodes,...export_nodes]
-    this._nodes = Object.assign({}, ...all_nodes.map((n) => ({[n.id]: n})))
+    const all_nodes = [...sorted_nodes, ...import_nodes, ...export_nodes]
+    this._nodes = Object.assign({}, ...all_nodes.map((n) => ({ [n.id]: n })))
   }
 
   /**

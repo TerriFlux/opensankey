@@ -302,7 +302,7 @@ export const Counter: FunctionComponent<FCType_Counter> = ({
 export const JSONtoExcel: FType_JSONtoExcel = (
   data_as_json,
   url_prefix,
-  file_name = 'sankey'
+  file_name
 ) => {
 
   let root = window.location.origin

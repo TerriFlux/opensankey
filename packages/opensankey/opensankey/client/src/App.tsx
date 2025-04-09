@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,11 +34,9 @@ import { TourProvider } from '@reactour/tour'
 
 /*************************************************************************************************/
 
-import { Menu } from './components/topmenus/SankeyMenuTop'
+import { Menu } from './components/topmenus/SankeyMenus'
 
-import { MenuConfigurationLinksAppearence } from './components/configmenus/SankeyMenuConfigurationLinksAppearence'
-import { MenuConfigurationLinksData } from './components/configmenus/SankeyMenuConfigurationLinksData'
-import { OpenSankeyConfigurationNodesAttributes } from './components/configmenus/SankeyMenuConfigurationNodesAttributes'
+import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesAttributes'
 
 import { ContextMenuLink } from './components/dialogs/SankeyMenuContextLink'
 import { DisaggregationModal, ContextMenuNode, AggregationModal } from './components/dialogs/SankeyMenuContextNode'
@@ -47,8 +45,7 @@ import { ApplySaveJSONDialog } from './components/dialogs/SankeyMenuDialogs'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
 import { ModalPreference } from './components/dialogs/SankeyMenuPreferences'
 
-import { Type_JSON } from './types/Utils'
-import { Type_AdditionalMenus } from './types/Types'
+import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
 
@@ -70,8 +67,6 @@ declare const window: Window &
 
 export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   initializeApplicationData,
-  initializeMenuConfiguration,
-  initializeReinitialization,
   initializeAdditionalMenus,
   initializeDiagrammSelector,
   moduleDialogs,
@@ -96,7 +91,8 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
 
   // Initialize data
   const new_data = initializeApplicationData(initial_data)
-
+  const { menu_configuration } = new_data
+  const { additionalMenus } = menu_configuration
   /*************************************************************************************************/
 
   // If leveltags are present Primaire is desactivated
@@ -108,104 +104,18 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   const menu_config = new_data.menu_configuration
   if (
     (mode_pref) &&
-    (mode_pref === 'expert') &&
-    menu_config.accordions_to_show.length !== 7
+    (mode_pref === 'expert')
+    // menu_config.accordions_to_show.length !== 7
   ) {
-    menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
+    // menu_config.accordions_to_show = ['MEP', 'EN', 'EF', 'ED', 'EL', 'LL', 'Vis']
   }
 
   /*************************************************************************************************/
-
-  const reinitialization = initializeReinitialization(new_data)
-
-  const additionalMenus: Type_AdditionalMenus = {
-
-    // Top Menu
-    external_edition_item: [],
-    external_file_item: [],
-    external_file_export_item: [],
-    externale_save_item: [],
-    externale_navbar_item: {},
-    footer: [],
-    // Mise en page
-    extra_background_element: <></>,
-    apply_transformation_additional_elements: [<></>],
-
-    // Nodes
-    advanced_appearence_content: [],
-    advanced_label_content: [],
-    advanced_label_value_content: [],
-    additional_menu_configuration_nodes: {},
-    additional_node_label_layout_content: [],
-    additional_node_apparence_content: [],
-    context_node_order: ['aggregate', 'desaggregate', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
-    additional_context_node_element: {},
-    // Links
-    additional_menu_configuration_links: {},
-    additional_data_element: [],
-    additional_link_appearence_items: [],
-    additional_link_appearence_value: [],
-    additional_link_visual_filter_content: [],
-    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
-    additional_context_link_element: {},
-
-    // Preferences
-    additional_preferences: [],
-
-    // Configuration Menu
-    additional_configuration_menus_edition_elements: [],
-    additional_configuration_menus_primary_accordion_elements: [],
-
-    additional_edition_item: [],
-    additional_file_save_json_option: [],
-    additional_file_item: [],
-    additional_file_export_item: [],
-
-    sankey_menus: {},
-
-    additional_nav_item: [],
-
-    example_menu: {},
-    formations_menu: {},
-
-    toolbar_elements: {},
-    toolbar_order: ['mode_souris',
-      'node_type',
-      'strectch_zdd',
-      'help',
-      'fullscreen'],
-    template_module_key: ['essential'],
-  }
-
-  initializeAdditionalMenus(
-    additionalMenus,
-    new_data
-  )
-
-  const menu_configuration_nodes_attributes = <OpenSankeyConfigurationNodesAttributes
+  const menu_configuration_nodes_attributes = <MenuConfigurationNodeStyle
     new_data={new_data}
     menu_for_style={false}
     additional_menus={additionalMenus}
   />
-
-  const config_link_data = <MenuConfigurationLinksData
-    new_data={new_data}
-    contextual={false}
-  />
-
-  const config_link_attr = <MenuConfigurationLinksAppearence
-    new_data={new_data}
-    additionMenus={additionalMenus}
-    menu_for_style={false}
-  />
-
-  const menu_configuration = initializeMenuConfiguration(
-    new_data,
-    additionalMenus,
-    config_link_data,
-    config_link_attr,
-    menu_configuration_nodes_attributes,
-  )
 
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
   useEffect(() => {
@@ -219,12 +129,17 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     // Delete potential duplicat
     d3.select('#draw_zoom').remove()
     new_data.draw()
+    new_data.menu_configuration.ref_to_toolbar_bottom_updater.current()//update bottom toolbar to place it above footer
   }, [new_data.language])
 
   /*************************************************************************************************/
   return <TourProvider steps={new_data.steps}>
     <div id='sankey_app' style={{ 'backgroundColor': 'WhiteSmoke' }}>
       <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
+        <WrapperInitializeAdditionalMenus
+          new_data={new_data}
+          initializeAdditionalMenus={initializeAdditionalMenus}
+        />
         {
           moduleDialogs(
             new_data,
@@ -246,22 +161,19 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
         <>
           <Menu
             new_data={new_data}
-            processFunctions={new_data.processFunction}
-            configurations_menus={menu_configuration}
             external_modal={[
               <></>
             ]}
-            reinitialization={reinitialization}
             additionalMenus={
               additionalMenus
             }
-            apply_transformation_additional_elements={additionalMenus.apply_transformation_additional_elements}
+            apply_transformation_additional_elements={additionalMenus.current.apply_transformation_additional_elements}
             diagramSelector={initializeDiagrammSelector(new_data)}
           />
         </>
         <ApplySaveJSONDialog
           new_data={new_data}
-          additional_file_save_json_option={additionalMenus.additional_file_save_json_option}
+          additional_file_save_json_option={additionalMenus.current.additional_file_save_json_option}
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
@@ -291,13 +203,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
       <React.Fragment key={'modale_style_node'}>
         <SankeyModalStyleNode
           new_data={new_data}
-          node_attribute_tab={
-            <OpenSankeyConfigurationNodesAttributes
-              new_data={new_data}
-              menu_for_style={true}
-              additional_menus={additionalMenus}
-            />
-          }
+          additionalMenus={additionalMenus}
         />
       </React.Fragment>
       <React.Fragment key={'modale_preference'}>
@@ -307,6 +213,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
         />
       </React.Fragment>
     </div>
+
   </TourProvider>
 }
 

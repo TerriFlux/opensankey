@@ -26,7 +26,7 @@
 
 // External imports
 import React, { FunctionComponent, useRef, useState } from 'react'
-import { Box, Button, Checkbox, Select } from '@chakra-ui/react'
+import { Box, Button, Select } from '@chakra-ui/react'
 import i18next from 'i18next'
 
 // Internal types / classes
@@ -36,36 +36,21 @@ import {
 
 // Internal components / functions
 import { OSTooltip } from '../../types/Utils'
-import { MenuDraggable } from '../topmenus/SankeyMenuTop'
+import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { ConfigMenuTextInput } from '../configmenus/SankeyMenuConfiguration'
 
 // COMPONENTS ===========================================================================
 export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
   {
-    new_data,
-    additionalMenus
+    new_data
   }
 ) => {
   // Data -------------------------------------------------------------------------------
-  const { t, preference_menu_all_item, checkbox_refs } = new_data
+  const { t } = new_data
 
   // Component updater ------------------------------------------------------------------
   const [, setUpdate] = useState(0)
-  const menus = preference_menu_all_item
-  menus.forEach(menu => checkbox_refs[menu] = useRef<HTMLInputElement>(null))
 
-  const update_checkboxes = (menu_to_show: string[]) => {
-    menus.forEach(menu => {
-      const checkbox_ref = checkbox_refs[menu]?.current ?? undefined
-      const checkbox_checked = checkbox_ref?.checked ?? undefined
-      if (
-        (checkbox_checked !== undefined) &&
-        (checkbox_checked !== menu_to_show.includes(menu))
-      ) {
-        checkbox_ref?.click()
-      }
-    })
-  }
 
   new_data.menu_configuration.ref_to_modal_pref_updater.current = () => {
     setUpdate(a => a + 1)
@@ -78,7 +63,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
 
   // JSX Component ----------------------------------------------------------------------
   const node_label_sep = <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
-    <Box layerStyle='menuconfigpanel_row_2cols' >
+    <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
       <ConfigMenuTextInput
         ref_to_set_value={ref_set_text_value_input}
@@ -93,7 +78,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
   </OSTooltip>
 
   const node_label_sep_pos = <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
-    <Box layerStyle='menuconfigpanel_row_2cols' >
+    <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
       <Box layerStyle='options_2cols'>
         <Button variant={new_data.node_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
@@ -119,8 +104,9 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
       </Box>
     </Box>
   </OSTooltip>
+
   const ui = {
-    'lang': <Box layerStyle='menuconfigpanel_row_2cols' >
+    'lang': <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
 
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.lang')}</Box>
       <Select
@@ -138,76 +124,20 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         <option key={'english'} value={'en'}>English</option>
       </Select>
     </Box>,
-
-    'form': [
-      <Box key={1}>{t('Menu.pref_title_sub_menu')}</Box>,
-      <Box
-        key={2}
-        layerStyle='menuconfigpanel_grid'
-      >
-        <Box layerStyle='options_2cols' >
-
-          <Button variant='menuconfigpanel_option_button_left'
-            onClick={() => {
-              sessionStorage.removeItem('modepref')
-              update_checkboxes([])
-            }}
-          >
-            Mode Simple
-          </Button>
-          <Button variant='menuconfigpanel_option_button_right'
-            onClick={() => {
-              sessionStorage.setItem('modepref', 'expert')
-              update_checkboxes(preference_menu_all_item)
-            }}
-          >
-            Mode Expert
-          </Button>
-        </Box>
-      </Box>,
-
-      <Checkbox
-        isDisabled
-        variant='menuconfigpanel_option_checkbox'
-        isChecked
-      >
-        {t('Menu.MEP')}
-      </Checkbox>,
-
-      <Checkbox
-        key={4}
-        variant='menuconfigpanel_option_checkbox'
-        isChecked
-        disabled
-      >
-        {t('Menu.Noeuds')}
-      </Checkbox>,
-
-      <Checkbox
-        key={6}
-        variant='menuconfigpanel_option_checkbox'
-        isChecked
-        disabled
-      >
-        {t('Menu.flux')}
-      </Checkbox>,
-      additionalMenus.additional_preferences
-    ],
+    
+    'sep':<hr style={{
+      borderStyle: 'none',
+      margin: '10px',
+      color: 'grey',
+      backgroundColor: 'grey',
+      height: 1
+    }}/>,
+    
     'node_label_sep': <>{node_label_sep}{node_label_sep_pos}</>,
   }
 
   const content = <>
-    {Object.values(ui).map((d, i) => {
-      return <><React.Fragment key={i}>{d}</React.Fragment><hr
-        style={{
-          borderStyle: 'none',
-          margin: '10px',
-          color: 'grey',
-          backgroundColor: 'grey',
-          height: 1
-        }}
-      /></>
-    })}
+    {Object.values(ui).map((d, i) => <React.Fragment key={i}>{d}</React.Fragment>)}
   </>
 
   return <MenuDraggable

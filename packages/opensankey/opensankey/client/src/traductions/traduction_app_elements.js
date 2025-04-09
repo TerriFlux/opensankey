@@ -83,8 +83,16 @@ export const resources_app_elements = {
         ajustH: 'Adjust. H',
         ajustV: 'Adjust. V',
 
-        undo:'Undo',
-        redo:'Redo',
+        multiValue:'Multiple values among seleced elements',
+
+        undo: 'Undo',
+        redo: 'Redo',
+        reset_all_attr: 'Reset all attributes overwrite',
+        reset_attr: 'Del. overwrite : ',
+
+        empty_config: 'Click on a button on the right to configure diagram elements',
+
+        sankey_file_name: 'File name',
 
         rcc_titre_princ: 'OpenSankey Application Shortcuts',
         rcc_titre_select: 'With the mouse in selection mode',
@@ -178,6 +186,28 @@ export const resources_app_elements = {
         no_input_file_detected: 'No file has been selected',
         waiting: 'Please wait',
         old_app: 'Legacy app.',
+        Config: {
+          type_data: '1. Structure',
+          type_style: '2. Visuals',
+          type_context: '3. Labels',
+          presentation: '4. Interactions',
+          
+          element_graph: 'Graph',
+          element_node: 'Node',
+          element_flow: 'Flow',
+          element_node_tag: 'Node Label',
+          element_flow_tag: 'Flow Label',
+          
+          element_data: 'Data',
+          element_data_tag: 'Data Label',
+          
+          title_table: 'Flow Table',
+          title_graph: 'Graph',
+          title_node: 'Nodes',
+          title_flow: 'Flows',
+          title_node_tag: 'Node Label Editing',
+          title_flow_tag: 'Flow Label Editing'
+        },
         Transformation: {
           amp_short: 'Layout',
           amp: 'Change the layout',
@@ -261,8 +291,10 @@ export const resources_app_elements = {
           LegBgBorder: 'Add a border to the legend area',
           LegBgColor: 'Choose background color opacity',
           old_app: 'Redirect to the legacy version of OpenSankey',
-          SpreadSheet:'Representation and editing of the diagram in a spreadsheet',
-          ConfigMenu: 'Editing the diagram through a configuration menu'
+          SpreadSheet: 'Representation and editing of the diagram in a spreadsheet',
+          ConfigMenu: 'Editing the diagram through a configuration menu',
+          sankey_file_name: 'Name of diagram : ',
+
         },
       },
       SpreadSheet: {
@@ -346,6 +378,8 @@ export const resources_app_elements = {
         Forme: 'Shape',
         GE: 'Tags\' Group',
         selct: 'Selected',
+        EGE: 'Tag\'s group edition',
+        EEG: 'Tags edition',
         tooltips: {
           pal: 'Apply a random color palette for the tags of the selected group',
           pal_shuffle: 'Change the order of the colors applied to the tags of the selected group',
@@ -367,7 +401,7 @@ export const resources_app_elements = {
       },
       Noeud: {
         Nom: 'Name',
-        Style: 'Style',
+        Style: 'Stylesheet',
         multi_style: 'Selected nodes have different style',
         editStyle: 'Assign a style',
         context_agregate: 'Agregate',
@@ -499,6 +533,7 @@ export const resources_app_elements = {
           vdb: 'Label',
           lb: 'White label',
           l_bg: 'Background',
+          l_bg_color: 'Background color',
           pos: 'Position',
           pos_v: 'Value position',
           tp: 'Font size',
@@ -595,7 +630,7 @@ export const resources_app_elements = {
           données: 'Data',
           vpp: 'Value',
           edit_value: 'Edit value',
-          affichage: 'Display',
+          affichage: 'Label',
           tooltips: {
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
             scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
@@ -604,7 +639,11 @@ export const resources_app_elements = {
         },
         apparence: {
           apparence: 'Appearance',
+          flow:'Fow',
+          source:'Source node',
+          target:'Target node',
           couleur: 'Color',
+          color_source:'Element defining flow color',
           grad: 'Gradient',
           hach: 'Dashed',
           of: 'Orientation',
@@ -623,6 +662,14 @@ export const resources_app_elements = {
           hide_link_lab: 'Hide value',
           data_off_scale: 'Scale',
           tooltips: {
+ 
+            color_source:{
+              def:'Choose what rule define flow color :',
+              flow:' Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
+              source:'Color is defined by node source color',
+              target:'Color is defined by node target color',
+              disabled:'Rule doesn\'t allow to choose flow color'
+            },
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
             hach: 'Applies a hatch effect on the selected link(s)',
@@ -656,6 +703,8 @@ export const resources_app_elements = {
           dessous: 'Above',
           dessus: 'Below',
           pls: 'Manual positioning of the label',
+          percentInput: '% input',
+          percentOutput: '% output',
           scientificNotation: 'Scientific notation',
           significantDigits: 'Significant digits',
           custom_digit: 'Decimals',
@@ -676,6 +725,8 @@ export const resources_app_elements = {
             milieu_v: 'For the selected link(s), allows to position the label inside the link',
             top: 'For the selected stream(s), allows to position the label above the stream',
             pls: 'Combination Alt/left click move the label of the selected stream(s)',
+            percentInput: '% input',
+            percentOutput: '% output',
             scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             significantDigits: 'Maximum number of significant digits',
             custom_digit: 'Maximum number of decimals',
@@ -854,9 +905,11 @@ export const resources_app_elements = {
         ajustH: 'Ajust. H',
         ajustV: 'Ajust. V',
 
-        undo:'Annuler',
-        redo:'Refaire',
-        
+        multiValue:'Différentes valeurs dans la sélection',
+
+        undo: 'Annuler',
+        redo: 'Refaire',
+
         esn: 'Édition style de noeuds',
         esf: 'Édition style de flux',
         rc: 'Raccourcis clavier',
@@ -899,6 +952,11 @@ export const resources_app_elements = {
         last_save: 'Dernière sauvegarde',
         style: 'Styles',
         close: 'Fermer',
+        reset_all_attr: 'Suppr. toutes les surcharges',
+        reset_attr: 'Suppr. surcharge : ',
+        empty_config: 'Cliquez sur les boutons de droite pour configurer les éléments du diagramme',
+        sankey_file_name: 'Nom du fichier',
+
         rcc_titre_princ: 'Raccourcis de l\'application OpenSankey',
         rcc_titre_select: 'Avec la souris en mode sélection',
         rcc_cn_bold: 'Click (noeuds)',
@@ -992,6 +1050,36 @@ export const resources_app_elements = {
         waiting: 'Veuillez patienter',
         old_app: 'Version préc. app.',
 
+        Config: {
+          type_data: '1. Structure',
+          type_style: '2. Visuels',
+          type_context: '3. Libellés',
+          presentation: '4. Interactions',
+
+          element_graph: 'Graphe',
+          element_node: 'Noeud',
+          element_flow: 'Flux',
+          element_node_tag: 'Étiq. Noeud',
+          element_flow_tag: 'Étiq. Flux',
+
+          element_data: 'Données',
+          element_data_tag: 'Étiq. Données',
+
+          title_table: 'Tableau des flux  ',
+          title_graph: 'Graphe',       
+          title_node: 'Noeuds',
+          title_flow: 'Flux',
+          title_node_tag: 'Édition des étiquettes de noeuds',
+          title_flow_tag: 'Édition des étiquettes de flux',
+
+          // title_context_da: 'Graphe',
+          // title_context_node: 'Noeuds',
+          // title_context_flow: 'Flux',
+
+          // title_style_da: 'Graphe',
+          // title_style_node: 'Noeuds',
+          // title_style_flow: 'Flux',
+        },
         Transformation: {
           amp_short: 'M.E.P',
           amp: 'Modifier la mise en page',
@@ -1075,7 +1163,8 @@ export const resources_app_elements = {
           LegBgColor: 'Moddifie la couleur de fond de la légende',
           old_app: 'Redirige vers la version précédente de OpenSankey',
           SpreadSheet: 'Représentation et édition du diagramme dans une spreadsheet',
-          ConfigMenu: 'Edition du diagramme dans un menu de configuration'
+          ConfigMenu: 'Edition du diagramme dans un menu de configuration',
+          sankey_file_name: 'Nom du diagramme : ',
         },
       },
       SpreadSheet: {
@@ -1091,7 +1180,7 @@ export const resources_app_elements = {
         leg_pos: 'Taille et position',
         leg_info: 'Informations',
         leg_show_dataTags: 'Etiquettes de données',
-        leg_show_info_link_void: 'Affiche info concernant les flux null',
+        leg_show_info_link_void: 'Affiche info concernant les flux nuls',
 
         MaxFlux: 'Max',
         MinFlux: 'Min',
@@ -1158,6 +1247,8 @@ export const resources_app_elements = {
         Couleur: 'Couleur',
         Forme: 'Forme',
         GE: 'Étiquettes du groupe',
+        EGE: 'Édition des groupes',
+        EEG: 'Édition des étiquettes d\'un groupe',
         selct: 'Sélectionné',
         tooltips: {
           pal: 'Appliquer une palette de couleurs aléatoires pour les étiquettes du groupe sélectionné',
@@ -1180,7 +1271,7 @@ export const resources_app_elements = {
       },
       Noeud: {
         Nom: 'Nom',
-        Style: 'Style',
+        Style: 'Feuille de style',
         editStyle: 'Assigner un style',
         multi_style: 'Multiple style sélectionné',
         SelectStyle: 'Sélectionner un style',
@@ -1251,7 +1342,8 @@ export const resources_app_elements = {
           Visibilité: 'Forme',
           Couleur: 'Couleur',
           CouleurPérenne: 'Couleur fixe',
-          Forme: 'Géométrie',
+          Geometry: 'Géométrie',
+          Forme: 'Forme',
           Cercle: 'Cercle',
           Rectangle: 'Rectangle',
           TML: 'Largeur minimale',
@@ -1310,6 +1402,7 @@ export const resources_app_elements = {
           vdb: 'Label',
           lb: 'Blanc',
           l_bg: 'Fond',
+          l_bg_color: 'Couleur fond',
           pos: 'Position',
           pos_v: 'Position de la valeur',
           tp: 'Taille de police',
@@ -1407,7 +1500,7 @@ export const resources_app_elements = {
           edit_value: 'Éditer la valeur',
           données: 'Données',
           vpp: 'Valeur',
-          affichage: 'Affichage',
+          affichage: 'Label',
           tooltips: {
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
             scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
@@ -1416,8 +1509,13 @@ export const resources_app_elements = {
         },
         apparence: {
           apparence: 'Apparence',
+          fond: 'Fond',
           couleur: 'Couleur',
           grad: 'Gradient',
+          flow:'Flux',
+          color_source:'Élement définissant la couleur du flux',
+          source:'Noeud source',
+          target:'Noeud cible',
           hach: 'Hachuré',
           of: 'Orientation',
           type: 'Type',
@@ -1430,12 +1528,20 @@ export const resources_app_elements = {
           ending_curve: 'Position fin courbure',
           starting_tangeant: 'Courbure de départ',
           ending_tangeant: 'Courbure de fin',
-          arrow_size: 'Taille de la flèche',
+          arrow_size: 'Taille',
           display_link_lab: 'Afficher la valeur',
           hide_link_lab: 'Masquer la valeur',
           data_off_scale: 'Échelle',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
+            color_source:{
+              def:'Choisir la règle qui définie la couleur du flux',
+              flow:'La couleur est définie avec les paramètres liées au flux (couleur, couleur des étiquettes de flux ou données)',
+              source:'La couleur est définie par la couelur du noeud source',
+              target:'La couleur est définie par la couelur du noeud cible',
+              disabled:'La règle ne permet pas modifier la couleur du flux'
+
+            },
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
             hach: 'Applique un effet de hachure sur le/les flux sélectionné(s)',
             of_vv: 'Permet d\'orienter le début du flux verticalement et la fin du flux verticalement',
@@ -1470,7 +1576,8 @@ export const resources_app_elements = {
           dessus: 'Dessus',
           pls: 'Positionnement manuel du label',
           scientificNotation: 'Notation scientifique',
-
+          percentInput: '% entrées',
+          percentOutput: '% sorties',
           significantDigits: 'Chiffres significatifs',
           custom_digit: 'Décimales',
           NbDigit: 'Nombre maximum de décimales',
@@ -1491,6 +1598,8 @@ export const resources_app_elements = {
             dessus: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label au dessus du flux',
             pls: 'La combinaison Alt/click gauche déplace le label du/des flux sélectionné(s)',
             scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
+            percentInput: '% entrées',
+            percentOutput: '% sorties',
             significantDigits: 'Nombre maximum de chiffres significatifs',
             custom_digit: 'Nombre maximum de décimales fixes',
             NbDigit: 'Nombre maximum de décimales fixes',
@@ -1505,6 +1614,31 @@ export const resources_app_elements = {
         layoutTop: 'Premier plan',
         layoutDown: 'Reculer',
         layoutBottom: 'Dernier plan',
+      },
+
+      Label: {
+        value_title: 'Valeur',
+        name_title: 'Label',
+        police: 'Police',
+        size: 'Taille',
+        bold: 'Gras',
+        italic: 'Italic',
+        uppercase: 'Majuscule',
+        align_v: 'Position vert.',
+        align_h: 'Position horiz.',
+        color: 'Couleur',
+        scientificNotation: 'Notation scientifique',
+
+        significantDigits: 'Chiffres significatifs',
+        custom_digit: 'Décimales',
+        NbDigit: 'Nombre maximum de décimales',
+        unit: 'Unité',
+        unit_name: 'Nom de l\'unité',
+        unit_factor: 'Facteur d\'unité',
+
+        textPath: 'Orienter suivant l\'axe du flux',
+        ajust_label: 'Position vertical ajusté',
+
       },
 
       Banner: {

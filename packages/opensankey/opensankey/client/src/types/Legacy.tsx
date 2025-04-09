@@ -946,7 +946,7 @@ const setTrade = (data:SankeyData) => {
   s.position = 'absolute'
   s.shape_visible = false
   s.shape_min_height = 1
-  s.name_label_visible = true
+  s.name_label_is_visible = true
   s.name_label_horiz = 'left'
   //s.name_label_horiz_shift = -200
   s.value_label_visible = true
@@ -958,7 +958,7 @@ const setTrade = (data:SankeyData) => {
   s.position = 'absolute'
   s.shape_visible = false
   s.shape_min_height = 1
-  s.name_label_visible = true
+  s.name_label_is_visible = true
   s.name_label_horiz = 'right'
   //s.name_label_horiz_shift = 200
   s.value_label_visible = true

@@ -24,12 +24,13 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { MutableRefObject } from 'react'
 import { SankeyData } from '../../../types/LegacyType'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
 
 export type FCType_MenuConfigurationLinksAppearence = {
   new_data: Type_GenericApplicationData,
-  additionMenus:Type_AdditionalMenus,
+  additionMenus:MutableRefObject<Type_AdditionalMenus>,
   menu_for_style: boolean
 }
 

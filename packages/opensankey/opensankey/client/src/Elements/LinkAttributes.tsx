@@ -38,7 +38,8 @@ import {
   getBooleanFromJSON,
   getNumberOrUndefinedFromJSON,
   default_element_color,
-  default_font
+  default_font,
+  default_element_color_source
 } from '../types/Utils'
 
 
@@ -64,6 +65,7 @@ export const default_shape_arrow_size = 10
 
 export const default_shape_is_dashed = false
 export const default_shape_color = default_element_color
+export const default_shape_color_rule = default_element_color_source
 export const default_shape_opacity = 0.85
 
 // default value label attribute value -------------------------
@@ -79,6 +81,8 @@ export const default_link_value_label_vert: Type_PathLabelVPosition = 'middle'
 export const default_link_value_label_on_path = true
 export const default_link_value_label_pos_auto = false
 
+export const default_link_value_label_percent_input = false
+export const default_link_value_label_percent_output = false
 export const default_link_value_label_scientific_notation = false
 export const default_link_value_label_significant_digits = false
 export const default_link_value_label_nb_significant_digits = 3
@@ -118,6 +122,7 @@ export type Type_PathLabelVPosition = 'dragged' | 'top' | 'middle' | 'bottom'
 
 export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   // Scale
@@ -144,6 +149,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   // Shape's Filling attributes
   protected _shape_is_dashed?: boolean
   protected _shape_color?: string
+  protected _shape_color_rule?: string
   protected _shape_opacity?: number
 
   // Value label display - Default params for all labels
@@ -160,6 +166,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   protected _value_label_pos_auto?: boolean
 
   // Value label display - Specific params
+  protected _value_label_percent_input?: boolean
+  protected _value_label_percent_output?: boolean
   protected _value_label_scientific_notation?: boolean
   protected _value_label_significant_digits?: boolean
   protected _value_label_nb_significant_digits?: number
@@ -223,6 +231,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     // Shape's Filling attributes
     if (this._shape_is_dashed !== undefined) json_object['dashed'] = this._shape_is_dashed
     if (this._shape_color !== undefined) json_object['color'] = this._shape_color
+    if (this._shape_color_rule !== undefined) json_object['color_rule'] = this._shape_color_rule
     if (this._shape_opacity !== undefined) json_object['opacity'] = this._shape_opacity
 
     // Value label display - Default params for all labels
@@ -344,6 +353,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     // Shape's Filling attributes
     if (json_local_object['dashed'] !== undefined) this._shape_is_dashed = getBooleanFromJSON(json_local_object, 'dashed', default_shape_is_dashed)
     if (json_local_object['color'] !== undefined) this._shape_color = getStringFromJSON(json_local_object, 'color', default_shape_color)
+    if (json_local_object['color_rule'] !== undefined) this._shape_color_rule = getStringFromJSON(json_local_object, 'color_rule', default_shape_color)
     if (json_local_object['opacity'] !== undefined) this._shape_opacity = getNumberFromJSON(json_local_object, 'opacity', default_shape_opacity)
 
     // Value label display - Default params for all labels
@@ -408,6 +418,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     // Shape's Filling attributes
     this._shape_is_dashed = element._shape_is_dashed
     this._shape_color = element._shape_color
+    this._shape_color_rule = element._shape_color_rule
     this._shape_opacity = element._shape_opacity
 
     // Value label display - Default params for all labels
@@ -459,6 +470,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
    * @memberof Class_LinkAttributes
    */
   public get id() { return 'undefined' }
+  public get name(): string { return 'none' }
 
   public get local_link_scale() { return this._local_link_scale }
 
@@ -483,6 +495,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   // Shape's Filling attributes
   public get shape_is_dashed() { return this._shape_is_dashed }
   public get shape_color() { return this._shape_color }
+  public get shape_color_rule() { return this._shape_color_rule }
   public get shape_opacity() { return this._shape_opacity }
 
   // Value label display - Default params for all labels
@@ -499,6 +512,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   public get value_label_pos_auto() { return this._value_label_pos_auto }
 
   // Value label display - Specific params
+  public get value_label_percent_input() { return this._value_label_percent_input}
+  public get value_label_percent_output() { return this._value_label_percent_output}
   public get value_label_scientific_notation() { return this._value_label_scientific_notation }
   public get value_label_significant_digits() { return this._value_label_significant_digits }
   public get value_label_nb_significant_digits() { return this._value_label_nb_significant_digits }
@@ -656,6 +671,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   // Shape's Filling attributes
   public set shape_is_dashed(_: boolean | undefined) { this._shape_is_dashed = _; this.update() }
   public set shape_color(_: string | undefined) { this._shape_color = _; this.update() }
+  public set shape_color_rule(_: string | undefined) { this._shape_color_rule = _; this.update() }
   public set shape_opacity(_: number | undefined) { this._shape_opacity = _; this.update() }
 
   // Value label display
@@ -701,6 +717,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   }
 
   // Value label display - Specific params
+  public set value_label_percent_input(_: boolean | undefined) { this._value_label_percent_input = _; this.update() }
+  public set value_label_percent_output(_: boolean | undefined) { this._value_label_percent_output = _; this.update() }
   public set value_label_scientific_notation(_: boolean | undefined) { this._value_label_scientific_notation = _; this.update() }
   public set value_label_significant_digits(_: boolean | undefined) { this._value_label_significant_digits = _; this.update() }
   public set value_label_nb_significant_digits(_: number | undefined) { this._value_label_nb_significant_digits = _; this.update() }
@@ -816,6 +834,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     // Shape's Filling attributes
     this._shape_is_dashed = default_shape_is_dashed
     this._shape_color = default_shape_color
+    this._shape_color_rule = default_shape_color_rule
     this._shape_opacity = default_shape_opacity
 
     // Value label display - Default params for all labels
