@@ -50,7 +50,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 /*************************************************************************************************/
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
-import { Type_GenericApplicationData } from '../../types/Types'
+import { Type_GenericApplicationData, Type_GenericNodeElement } from '../../types/Types'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
 
@@ -64,7 +64,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   {
     new_data,
     additionalMenu
-  }
+  }: FCType_ContextMenuNode
 ) => {
 
   // Datas ------------------------------------------------------------------------------
@@ -749,6 +749,51 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     </Button> :
     <></>
 
+  const btn_expand = (
+    (selected_nodes.length === 1) &&
+    (contextualised_node !== undefined) &&
+    (selected_nodes.includes(contextualised_node)) &&
+    (contextualised_node.is_parent)
+  ) ?
+    <Button
+      variant='contextmenu_button'
+      onClick={() => {
+        const list_child_dim = contextualised_node.dimensions_as_parent
+        if (list_child_dim.length === 1) {
+          const children = list_child_dim[0].children
+          if (contextualised_node.input_links_list.length == 0) {
+            const target = contextualised_node.output_links_list[0].target
+            const shift = (children.length-1)/2 * new_data.drawing_area.vertical_spacing
+            children.forEach((c, i) => {
+              const n = new_data.drawing_area.sankey.addNewNode(c.id + 'expand', c.name)
+              console.log(c.dimensions_as_parent)  
+              n.copyFrom(c as Type_GenericNodeElement)
+              console.log(n.dimensions_as_parent)   
+              n.removeDimensionAsChild(n.dimensions_as_child[0])
+              console.log(n.dimensions_as_parent)    
+              n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
+              n.position_y = contextualised_node.position_y+contextualised_node.getShapeHeightToUse()/2 - shift + i * new_data.drawing_area.vertical_spacing
+              n.applyPosition()
+              const l = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
+              l.data_value = target.input_links_dict[c.id+'---'+target.id].data_value
+            })
+          } else if (contextualised_node.output_links_list.length == 0) {
+            children.forEach((c, i) => {
+              const n = new_data.drawing_area.sankey.addNewNode(c.id + 'expand', c.name)
+              n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
+              n.position_y = contextualised_node.position_y + i * new_data.drawing_area.vertical_spacing
+              n.applyPosition()
+              const l = new_data.drawing_area.sankey.addNewLink(contextualised_node, n)
+            })
+          }
+        }
+      }
+      }
+    >
+      {t('Noeud.context_expand')}
+    </Button> :
+    <></>
+
   const btn_mask_shape = <Button
     variant='contextmenu_button'
     onClick={updateShapeVisibility}
@@ -797,6 +842,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   const context_content: { [_: string]: JSX.Element } = {
     'aggregate': btn_aggregate,
     'desaggregate': btn_desagregate,
+    'expand': btn_expand,
     'sep_1': sep,
 
     'align': selected_nodes.length > 1 ? <>{dropdown_c_n_align}{sep}</> : <></>,
