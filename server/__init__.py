@@ -9,6 +9,7 @@ from flask import redirect
 from flask import Flask
 from flask_cors import CORS
 
+
 # ---------------------------------------------------------------
 # Global functions
 def create_app():
@@ -35,7 +36,8 @@ def create_app():
     app.register_blueprint(auth_blueprint)
 
     # BluePrint for User registering / connection part of app
-    from logincomponent.server.user import connected_user as connected_user_blueprint
+    from logincomponent.server.user \
+        import connected_user as connected_user_blueprint
     app.register_blueprint(connected_user_blueprint)
 
     # Blueprint for paiement part
