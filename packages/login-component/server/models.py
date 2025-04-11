@@ -24,6 +24,7 @@ from flask_login import UserMixin
 
 # SQLAlchemy
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 from sqlalchemy.ext.associationproxy import association_proxy
 
 # Itsdangerous - serialize URLs for secured API transactions
@@ -570,7 +571,7 @@ def create_user_from_stripe(
     """
     # Get user related to mail
     user_by_email = User.query\
-        .filter_by(email=user_email)\
+        .filter(func.lower(User.email) == func.lower(user_email))\
         .first()
 
     # Get user related to stripe id
@@ -581,7 +582,7 @@ def create_user_from_stripe(
     # Case 1 : no email related user nor stripe related customer
     if (user_by_email is None) and (user_by_stripe_id is None):
         User(
-            email=user_email,
+            email=user_email.lower(),
             firstname=user_firstname,
             name=user_lastname,
             creation=datetime.now().isoformat(),
@@ -618,7 +619,9 @@ def delete_user_from_stripe(
     """
     # Get user related to mail
     user = User.query\
-        .filter_by(email=user_email, stripe_id=user_stripe_id)\
+        .filter_by(
+            func.lower(User.email) == func.lower(user_email),
+            stripe_id=user_stripe_id)\
         .first()
 
     # Update user if it exists
@@ -893,9 +896,9 @@ def set_licence_checkout_completed(
     """
     # Get user
     user = User.query\
-        .filter_by(
-            id=user_id,
-            email=user_email)\
+        .filter(
+            func.lower(User.email) == func.lower(user_email),
+            id=user_id)\
         .first()
     if user is None:
         return "Invalid user", False
@@ -929,9 +932,9 @@ def set_license_invoice_created(
     # Get user
     # - Matching email & stripe id
     user = User.query\
-        .filter_by(
-            email=user_email,
-            stripe_id=user_stripe_id)\
+        .filter(
+            func.lower(User.email) == func.lower(user_email),
+            User.stripe_id == user_stripe_id)\
         .first()
     # - Then priority on matching stripe id
     if user is None:
@@ -942,8 +945,8 @@ def set_license_invoice_created(
     # - Or get user via email and set stripe id
     if user is None:
         user = User.query\
-            .filter_by(
-                email=user_email)\
+            .filter(
+                func.lower(User.email) == func.lower(user_email))\
             .first()
         if user is not None:
             user.stripe_id = user_stripe_id
