@@ -25,7 +25,7 @@
         },
         {
             "name": "Python: Current File (Integrated Terminal)",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
@@ -37,7 +37,7 @@
         },
         {
             "name": "Python: Reconciliation",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
             "program": "/home/vledoze/sankeysuitemanager/SCMFA/bin/run_reconciliation.py",
             "console": "integratedTerminal",
@@ -52,19 +52,20 @@
         },
         {
             "name": "Python: Flask",
-            "type": "python",
+            "type": "debugpy",
             "request": "launch",
+            "envFile": "${workspaceFolder}/env",
             "module": "flask",
             "justMyCode": false,
             "env": {
-                "FLASK_APP": "SankeyApp/app.py"
+                "FLASK_APP": "app.py"
             },
             "args": [
                 "run",
                 "--no-debugger",
                 "--no-reload"
             ],
-            "jinja": false
+            "jinja": false,
         },
     ]
 }

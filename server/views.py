@@ -17,7 +17,7 @@ from flask import send_from_directory
 
 # ---------------------------------------------------------------
 # Local imports
-from .models import update_metrics
+from logincomponent.server.models import update_metrics
 
 # ---------------------------------------------------------------
 # Create sankey_app app blueprint
