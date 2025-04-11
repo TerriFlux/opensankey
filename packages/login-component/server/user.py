@@ -20,6 +20,9 @@ from flask import request
 from flask_login import current_user
 from flask_login import logout_user
 
+# SQLAlchemy
+from sqlalchemy import func
+
 # Werkzeug
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
@@ -98,13 +101,15 @@ def modify_email():
     password = request.json.get('password')
 
     # Check if other user already have this email
-    other_user = User.query.filter_by(email=new_email).first()
+    other_user = User.query\
+        .filter(func.lower(User.email) == func.lower(new_email))\
+        .first()
     if other_user is not None:
         return 'email_in_use', 400
 
     # Check if email is coherent
     if (
-        (current_user.email == email) and
+        (current_user.email.lower() == email.lower()) and
         (check_password_hash(current_user.password, password))
     ):
         current_user.email = new_email
@@ -132,7 +137,7 @@ def trigger_modify_pwd():
     """
     # Verify email - if OK create reseting url
     try:
-        if current_user.email == request.json.get('email'):
+        if current_user.email.lower() == request.json.get('email').lower():
             current_user.secret_token = \
                 ''.join(secrets.choice(string.digits) for i in range(6))
             current_user.secret_expiry = \

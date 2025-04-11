@@ -24,6 +24,9 @@ from flask_login import LoginManager
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 
+# SQLAlchemy
+from sqlalchemy import func
+
 # Itsdangerous - serialize URLs for secured API transactions
 from itsdangerous import URLSafeTimedSerializer as Serializer
 
@@ -105,7 +108,9 @@ def signup_post():
         return jsonify(response), 200
 
     # if this returns a user, then the email already exists in database
-    user = User.query.filter_by(email=user_infos['email']).first()
+    user = User.query\
+        .filter(func.lower(User.email) == func.lower(user_infos['email']))\
+        .first()
     if user:
         # if a user is found, we want to redirect back to signup page
         # so user can try again
@@ -162,7 +167,7 @@ def signup_confirm():
     # create a new user with the form data. Hash the password so the plaintext
     # version isn't saved.
     new_user = User(
-        email=user_infos['email'],
+        email=user_infos['email'].lower(),
         password=generate_password_hash(
             user_infos['password'],
             method='sha256'),
@@ -206,7 +211,9 @@ def login_post():
     remember = True if request.json.get('remember') else False
 
     # Get user id from mail
-    user = User.query.filter_by(email=email).first()
+    user = User.query\
+        .filter(func.lower(User.email) == func.lower(email))\
+        .first()
 
     # Prepare response
     response = {'message': 'ok'}
@@ -294,7 +301,9 @@ def forgot():
         try:
             email = request.json.get('email')
             if is_email_valid(email):
-                user = User.query.filter_by(email=email).first()
+                user = User.query\
+                    .filter(func.lower(User.email) == func.lower(email))\
+                    .first()
                 if (user is not None):
                     response['user_exists'] = True
                     send_pw_reset_email(user, request.json.get("lang"))
