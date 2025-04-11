@@ -786,32 +786,28 @@ export abstract class ClassTemplate_ApplicationData
         selector: '.sideToolBar',
         content: this.t('guide.toolbar'),
         actionAfter: () => {
-          this.menu_configuration.ref_menu_opened.current[1](true)
-          setTimeout(() => { }, 500)
+          // trigger a click event on DOM button instead of using ref_menu_opened because otherwise the popover doesn't track the menu opening
+          (document.getElementsByClassName('sideToolBar')[0] as HTMLButtonElement).click()
         }
       },
       {
         selector: '.drawer_menu_config ',
         content: this.t('guide.menu_config'),
-        actionAfter: () => this.menu_configuration.ref_menu_opened.current[1](true)
+        actionAfter: () => {
+          this.menu_configuration.ref_menu_opened.current[1](false)
+        }
       },
       {
         selector: '.menutop_button_save_in_cache',
         content: this.t('guide.save_in_cache'),
       },
       {
-        selector: '.TopMenuNav',
+        selector: '.TopMenu',
         content: this.t('guide.nav_menu'),
-      },
-      {
-        selector: '.settings_button',
-        content: this.t('guide.settings_button'),
-        action: () => this.menu_configuration.refs_to_btn_toogle_top_menus['file'].current?.click(),
-      },
+      },      
       {
         selector: '.tutorials_button',
         content: this.t('guide.tutorials_button'),
-        action: () => this.menu_configuration.refs_to_btn_toogle_top_menus['aide'].current?.click(),
       },
     ]
     steps.forEach(step => this._steps.push(step))
