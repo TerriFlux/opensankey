@@ -1178,8 +1178,9 @@ export abstract class ClassTemplate_LinkElement
                 .attr('spacing', 'exact')
                 .attr('method', 'align')
             } else {
+              const suffix = this.value_label_percent_input ? 's' : 'd'
               // Add text directly on textpath object
-              d3_textpath_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %')
+              d3_textpath_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %'+suffix)
                 .attr('spacing', 'exact')
                 .attr('method', 'align')              
             }
@@ -1203,7 +1204,8 @@ export abstract class ClassTemplate_LinkElement
                 .attr('spacing', 'exact')
                 .attr('method', 'align')
             } else {
-              d3_text_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %')
+              const suffix = this.value_label_percent_input ? 's' : 'd'
+              d3_text_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %'+suffix)
                 .attr('spacing', 'exact')
                 .attr('method', 'align')              
             }
