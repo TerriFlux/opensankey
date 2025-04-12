@@ -50,9 +50,10 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 /*************************************************************************************************/
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
-import { Type_GenericApplicationData, Type_GenericNodeElement } from '../../types/Types'
+import { Type_GenericApplicationData, Type_GenericDrawingArea, Type_GenericLinkElement, Type_GenericNodeElement, Type_GenericSankey } from '../../types/Types'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
+import { ClassAbstract_NodeElement } from '../../types/AbstractNode'
 
 /*************************************************************************************************/
 
@@ -753,44 +754,115 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     (selected_nodes.length === 1) &&
     (contextualised_node !== undefined) &&
     (selected_nodes.includes(contextualised_node)) &&
-    (contextualised_node.is_parent)
+    (contextualised_node.is_parent) &&
+    /* For now expansion is possible only at extremities */
+    (contextualised_node.input_links_list.length == 0 || contextualised_node.output_links_list.length == 0) &&
+    /* For now expansion is possible when there is only one dimension */
+    contextualised_node.dimensions_as_parent.length == 1
   ) ?
     <Button
       variant='contextmenu_button'
       onClick={() => {
+        const expand_left = contextualised_node.input_links_list.length == 0
+        new_data.drawing_area.bypass_redraws = true
+        //do not draw until all nodes and links have been created
         const list_child_dim = contextualised_node.dimensions_as_parent
         if (list_child_dim.length === 1) {
-          const children = list_child_dim[0].children
-          if (contextualised_node.input_links_list.length == 0) {
-            const target = contextualised_node.output_links_list[0].target
-            const shift = (children.length-1)/2 * new_data.drawing_area.vertical_spacing
-            children.forEach((c, i) => {
-              const n = new_data.drawing_area.sankey.addNewNode(c.id + 'expand', c.name)
-              console.log(c.dimensions_as_parent)  
-              n.copyFrom(c as Type_GenericNodeElement)
-              console.log(n.dimensions_as_parent)   
-              n.removeDimensionAsChild(n.dimensions_as_child[0])
-              console.log(n.dimensions_as_parent)    
-              n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
-              n.position_y = contextualised_node.position_y+contextualised_node.getShapeHeightToUse()/2 - shift + i * new_data.drawing_area.vertical_spacing
-              n.applyPosition()
-              const l = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
-              l.data_value = target.input_links_dict[c.id+'---'+target.id].data_value
-            })
-          } else if (contextualised_node.output_links_list.length == 0) {
-            children.forEach((c, i) => {
-              const n = new_data.drawing_area.sankey.addNewNode(c.id + 'expand', c.name)
-              n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
-              n.position_y = contextualised_node.position_y + i * new_data.drawing_area.vertical_spacing
-              n.applyPosition()
-              const l = new_data.drawing_area.sankey.addNewLink(contextualised_node, n)
-            })
+          const children = list_child_dim[0].children as Type_GenericNodeElement[]
+          const new_nodes: Type_GenericNodeElement[] = []
+          let original_node = contextualised_node.sibling ?? contextualised_node
+          // the new node is intimely linked to the original child node
+          let root_node: Type_GenericNodeElement
+          if (expand_left) {
+            root_node = original_node.output_links_list[0].target as Type_GenericNodeElement
+          } else {
+            // expand right
+            root_node = original_node.input_links_list[0].source as Type_GenericNodeElement
           }
+          const shift_y = (children.length - 1) / 2 * new_data.drawing_area.vertical_spacing
+          children.forEach((c, i) => {
+            const n = new_data.drawing_area.sankey.addNewNode(c.id + 'expand', c.name)
+            new_nodes.push(n)
+            n.sibling = c
+            n.copyFrom(c)
+            n.shape_color = contextualised_node.shape_color
+            n.shape_opacity = (contextualised_node.shape_opacity > 0.3) ? contextualised_node.shape_opacity - 0.2 : contextualised_node.shape_opacity
+            n.position_type = 'parametric'
+            // n is no more a child (contrary to its sibling)
+            n.removeDimensionAsChild(n.dimensions_as_child[0])
+            if (n.dimensions_as_parent.length !== 0) {
+              // the dimension as parent go up one level
+              n.dimensions_as_parent[0].force_parent_level_tag(contextualised_node.dimensions_as_parent[0].parent_level_tag)
+            }
+            let l : Type_GenericLinkElement 
+            if (expand_left) {
+              l = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
+            } else {
+              l = new_data.drawing_area.sankey.addNewLink(contextualised_node,n)
+            }
+            l.shape_color_rule = 'source'
+            l.shape_opacity = n.shape_opacity
+            if (expand_left) {
+              if (root_node.input_links_dict[n.sibling!.id + '---' + root_node.id]) {
+                l.data_value = root_node.input_links_dict[n.sibling!.id + '---' + root_node.id].data_value
+              }
+              n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
+            } else {
+              if (root_node.output_links_dict[root_node.id + '---' + n.sibling!.id]) {
+                l.data_value = root_node.output_links_dict[root_node.id + '---' + n.sibling!.id].data_value
+              }
+              n.position_x = contextualised_node.position_x + new_data.drawing_area.horizontal_spacing
+            }
+
+            if (i == 0) {
+              n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y - n.getShapeHeightToUse()
+            }
+            n.position_v = -1
+          })
+          new_data.drawing_area.bypass_redraws = false
+          // ready to draw in parametric mode
+          new_data.drawing_area.computeParametrization()
+          new_nodes.forEach(n => {
+            n.resetPositionAttribute('dy')
+            n.applyPosition()
+            n.draw()
+          })
         }
       }
       }
     >
       {t('Noeud.context_expand')}
+    </Button> :
+    <></>
+
+  const btn_contract = (
+    (selected_nodes.length === 1) &&
+    (contextualised_node !== undefined) &&
+    (selected_nodes.includes(contextualised_node)) &&
+    (contextualised_node.sibling) &&
+    /* For now expansion is possible only at extremities */
+    (contextualised_node.input_links_list.length == 0 || contextualised_node.output_links_list.length == 0)
+  ) ?
+    <Button
+      variant='contextmenu_button'
+      onClick={() => {
+        const expand_left = contextualised_node.input_links_list.length == 0
+        new_data.drawing_area.bypass_redraws = true
+        let extremity_node: Type_GenericNodeElement
+        if (expand_left) {
+          extremity_node = contextualised_node.output_links_list[0].target as Type_GenericNodeElement
+        } else {
+          extremity_node = contextualised_node.input_links_list[0].source as Type_GenericNodeElement
+        }
+        const children = expand_left ? extremity_node.input_links_list : extremity_node.output_links_list
+        children.forEach((c, i) => {
+          new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
+        })
+        new_data.drawing_area.draw()
+      }
+      }
+    >
+      {t('Noeud.context_contract')}
     </Button> :
     <></>
 
@@ -841,6 +913,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const context_content: { [_: string]: JSX.Element } = {
     'aggregate': btn_aggregate,
+    'contract':btn_contract,
     'desaggregate': btn_desagregate,
     'expand': btn_expand,
     'sep_1': sep,

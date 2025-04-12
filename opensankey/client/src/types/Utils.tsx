@@ -452,7 +452,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: ['aggregate', 'desaggregate', 'expand','sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    context_node_order: ['aggregate','contract', 'desaggregate', 'expand','sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
     additional_context_node_element: {},
     // Links
     additional_menu_configuration_links: {},

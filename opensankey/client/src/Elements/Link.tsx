@@ -5321,6 +5321,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
         this.free_maxi = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_maxi')
         this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
       } else {
+        this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
         this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
       }
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
