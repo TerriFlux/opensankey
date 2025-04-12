@@ -44,6 +44,7 @@ export const default_shape_arrow_angle_direction: Type_Side = 'right'
 export const default_shape_min_width = 40
 export const default_shape_min_height = 40
 export const default_shape_color = default_element_color
+export const default_shape_opacity = 0.85
 export const default_shape_color_sustainable = false
 
 export const default_node_name_label_is_visible = true
@@ -119,6 +120,7 @@ export class Class_NodeAttribute {
   protected _shape_min_width?: number
   protected _shape_min_height?: number
   protected _shape_color?: string
+  protected _shape_opacity?: number
   protected _shape_color_sustainable?: boolean
 
   // Parameter of node label - Default params for all labels
@@ -193,6 +195,7 @@ export class Class_NodeAttribute {
     if (this._shape_min_width !== undefined) json_object['node_width'] = this._shape_min_width
     if (this._shape_min_height !== undefined) json_object['node_height'] = this._shape_min_height
     if (this._shape_color !== undefined) json_object['color'] = this._shape_color
+    if (this._shape_opacity !== undefined) json_object['opacity'] = this._shape_opacity
     if (this._shape_color_sustainable !== undefined) json_object['colorSustainable'] = this._shape_color_sustainable
 
     // Parameter of node label - Default params for all labels
@@ -307,6 +310,7 @@ export class Class_NodeAttribute {
     if (json_local_object['node_width'] !== undefined) this._shape_min_width = getNumberFromJSON(json_local_object, 'node_width', default_shape_min_width)
     if (json_local_object['node_height'] !== undefined) this._shape_min_height = getNumberFromJSON(json_local_object, 'node_height', default_shape_min_height)
     if (json_local_object['color'] !== undefined) this._shape_color = getStringFromJSON(json_local_object, 'color', default_shape_color)
+    if (json_local_object['opacity'] !== undefined) this._shape_opacity = getNumberFromJSON(json_local_object, 'opacity', default_shape_opacity)
     if (json_local_object['colorSustainable'] !== undefined) this._shape_color_sustainable = getBooleanFromJSON(json_local_object, 'colorSustainable', default_shape_color_sustainable)
 
     // Parameter of node label - Default params for all labels
@@ -366,6 +370,7 @@ export class Class_NodeAttribute {
     this._shape_min_width = element._shape_min_width
     this._shape_min_height = element._shape_min_height
     this._shape_color = element._shape_color
+    this._shape_opacity = element._shape_opacity
     this._shape_color_sustainable = element._shape_color_sustainable
 
     // Parameter of node label - Default params for all labels
@@ -427,6 +432,7 @@ export class Class_NodeAttribute {
   public get shape_min_width() { return this._shape_min_width }
   public get shape_min_height() { return this._shape_min_height }
   public get shape_color() { return this._shape_color }
+  public get shape_opacity() { return this._shape_opacity }
   public get shape_color_sustainable() { return this._shape_color_sustainable }
 
   // Parameter of node label
@@ -481,6 +487,7 @@ export class Class_NodeAttribute {
   public set shape_min_width(_: number | undefined) { this._shape_min_width = _; this.update() }
   public set shape_min_height(_: number | undefined) { this._shape_min_height = _; this.update() }
   public set shape_color(_: string | undefined) { this._shape_color = _; this.update() }
+  public set shape_opacity(_) { this._shape_opacity = _; this.update() }
   public set shape_color_sustainable(_: boolean | undefined) { this._shape_color_sustainable = _; this.update() }
 
   // Parameter of node label
@@ -610,6 +617,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._shape_min_width = default_shape_min_width
     this._shape_min_height = default_shape_min_height
     this._shape_color = default_shape_color
+    this._shape_opacity = default_shape_opacity
     this._shape_color_sustainable = default_shape_color_sustainable
     this._shape_arrow_angle_factor = default_shape_arrow_angle_factor
     this._shape_arrow_angle_direction = default_shape_arrow_angle_direction

@@ -366,6 +366,14 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
     }
   }
 
+  // Current "hack" to allow the mode expansion when desagregating
+  public force_parent_level_tag(_: ClassAbstract_ProtoLevelTag) {
+    this._parent_level_tag = _
+  }
+  public force_child_level_tag(_: ClassAbstract_ProtoLevelTag) {
+    this._child_level_tag = _
+  }
+
   public get child_level_tag() { return this._child_level_tag }
   public set child_level_tag(_: ClassAbstract_ProtoLevelTag) {
     // Do modification only if there is a change & if parent/children tag group are matching
