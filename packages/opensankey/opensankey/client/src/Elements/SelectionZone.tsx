@@ -141,6 +141,13 @@ export abstract class ClassTemplate_ZoneSelection
       .forEach(n => {
         this.drawing_area.addNodeToSelection(n)
       })
+
+    this.drawing_area.sankey.visible_links_list.forEach(link => {
+      // Select links that have their source and target selected
+      if (link.source.is_selected && link.target.is_selected) {
+        this.drawing_area.addLinkToSelection(link)
+      }
+    })
   }
 
   /**
