@@ -1279,7 +1279,7 @@ export const resources_app_elements = {
         SelectStyle: 'Sélectionner un style',
         context_agregate: 'Agréger',
         context_desagregate: 'Désagréger',
-        context_expand: 'Développper',
+        context_expand: 'Expandre',
         context_contract: 'Réduire',
         AS: 'Réinitialiser',
         TS: 'Tout sélectionner',
