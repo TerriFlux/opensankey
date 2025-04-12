@@ -81,6 +81,8 @@ export const default_link_value_label_vert: Type_PathLabelVPosition = 'middle'
 export const default_link_value_label_on_path = true
 export const default_link_value_label_pos_auto = false
 
+export const default_link_value_label_percent_input = false
+export const default_link_value_label_percent_output = false
 export const default_link_value_label_scientific_notation = false
 export const default_link_value_label_significant_digits = false
 export const default_link_value_label_nb_significant_digits = 3
@@ -164,6 +166,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   protected _value_label_pos_auto?: boolean
 
   // Value label display - Specific params
+  protected _value_label_percent_input?: boolean
+  protected _value_label_percent_output?: boolean
   protected _value_label_scientific_notation?: boolean
   protected _value_label_significant_digits?: boolean
   protected _value_label_nb_significant_digits?: number
@@ -244,6 +248,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     if (this._value_label_pos_auto !== undefined) json_object['value_label_pos_auto'] = this._value_label_pos_auto
 
     // Value label display - Specific params
+    if (this._value_label_percent_input !== undefined) json_object['value_label_percent_input'] = this._value_label_percent_input
+    if (this._value_label_percent_output !== undefined) json_object['value_label_percent_output'] = this._value_label_percent_output
     if (this._value_label_scientific_notation !== undefined) json_object['value_label_scientific_notation'] = this._value_label_scientific_notation
     if (this._value_label_significant_digits !== undefined) json_object['value_label_significant_digits'] = this._value_label_significant_digits
     if (this._value_label_nb_significant_digits !== undefined) json_object['value_label_nb_significant_digits'] = this._value_label_nb_significant_digits
@@ -366,6 +372,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     if (json_local_object['value_label_pos_auto'] !== undefined) this._value_label_pos_auto = getBooleanFromJSON(json_local_object, 'value_label_pos_auto', default_link_value_label_pos_auto)
 
     // Value label display - Specific params
+    if (json_local_object['_value_label_percent_output'] !== undefined) this._value_label_percent_output = getBooleanFromJSON(json_local_object, '_value_label_percent_output', default_link_value_label_percent_output)    
+    if (json_local_object['_value_label_percent_input'] !== undefined) this._value_label_percent_input = getBooleanFromJSON(json_local_object, '_value_label_percent_input', default_link_value_label_percent_input)    
     if (json_local_object['value_label_scientific_notation'] !== undefined) this._value_label_scientific_notation = getBooleanFromJSON(json_local_object, 'value_label_scientific_notation', default_link_value_label_scientific_notation)
     if (json_local_object['value_label_significant_digits'] !== undefined) this._value_label_significant_digits = getBooleanFromJSON(json_local_object, 'value_label_significant_digits', default_link_value_label_significant_digits)
     if (json_local_object['value_label_nb_significant_digits'] !== undefined) this._value_label_nb_significant_digits = getNumberFromJSON(json_local_object, 'value_label_nb_significant_digits', default_link_value_label_nb_significant_digits)
@@ -431,6 +439,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     this._value_label_pos_auto = element._value_label_pos_auto
 
     // Value label display - Specific params
+    this._value_label_percent_input = element._value_label_percent_input
+    this._value_label_percent_output = element._value_label_percent_output
     this._value_label_scientific_notation = element._value_label_scientific_notation
     this._value_label_significant_digits = element._value_label_significant_digits
     this._value_label_nb_significant_digits = element._value_label_nb_significant_digits
@@ -508,6 +518,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   public get value_label_pos_auto() { return this._value_label_pos_auto }
 
   // Value label display - Specific params
+  public get value_label_percent_input() { return this._value_label_percent_input}
+  public get value_label_percent_output() { return this._value_label_percent_output}
   public get value_label_scientific_notation() { return this._value_label_scientific_notation }
   public get value_label_significant_digits() { return this._value_label_significant_digits }
   public get value_label_nb_significant_digits() { return this._value_label_nb_significant_digits }
@@ -711,6 +723,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   }
 
   // Value label display - Specific params
+  public set value_label_percent_input(_: boolean | undefined) { this._value_label_percent_input = _; this.update() }
+  public set value_label_percent_output(_: boolean | undefined) { this._value_label_percent_output = _; this.update() }
   public set value_label_scientific_notation(_: boolean | undefined) { this._value_label_scientific_notation = _; this.update() }
   public set value_label_significant_digits(_: boolean | undefined) { this._value_label_significant_digits = _; this.update() }
   public set value_label_nb_significant_digits(_: number | undefined) { this._value_label_nb_significant_digits = _; this.update() }
@@ -843,6 +857,8 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     this._value_label_pos_auto = default_link_value_label_pos_auto
 
     // Value label display - Specific params
+    this._value_label_percent_input = default_link_value_label_percent_input
+    this._value_label_percent_output = default_link_value_label_percent_output
     this._value_label_scientific_notation = default_link_value_label_scientific_notation
     this._value_label_significant_digits = default_link_value_label_significant_digits
     this._value_label_nb_significant_digits = default_link_value_label_nb_significant_digits
