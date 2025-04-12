@@ -365,6 +365,9 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
       old.removeParentLevel(this)
     }
   }
+  public force_parent_level_tag(_: ClassAbstract_ProtoLevelTag) {
+    this._parent_level_tag = _
+  }
 
   public get child_level_tag() { return this._child_level_tag }
   public set child_level_tag(_: ClassAbstract_ProtoLevelTag) {
