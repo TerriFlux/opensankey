@@ -5421,6 +5421,9 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
    * @memberof Class_LinkValue
    */
   public getMaxValue() {
+    if (this.result_value) {
+      return this.result_value
+    }
     return this.data_value
   }
 
