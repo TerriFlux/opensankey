@@ -65,6 +65,8 @@ import {
   getStringFromJSON,
   getStringOrNullFromJSON,
   makeId,
+  getBooleanFromJSON,
+  getStringOrUndefinedFromJSON,
 } from '../types/Utils'
 import { 
   Class_LinkStyle, Class_LinkAttribute, 
@@ -903,7 +905,9 @@ export abstract class ClassTemplate_LinkElement
     if (this.value_label_unit !== _.value_label_unit) {
       return false
     }
-
+    if (this.value_label_unit_factor !== _.value_label_unit_factor) {
+      return false
+    }
     return true
   }
 
@@ -4185,6 +4189,9 @@ public set value_label_percent_input(_: boolean) { this._display.attributes.valu
    * @memberof ClassTemplate_LinkElement
    */
   public get value_label_unit_visible() {
+    if (this.value!.value_label_unit_visible) {
+      return this.value!.value_label_unit_visible
+    }
     if (this._display.attributes.value_label_unit_visible !== undefined) {
       return this._display.attributes.value_label_unit_visible
     } else if (this._display.style.value_label_unit_visible !== undefined) {
@@ -4204,6 +4211,9 @@ public set value_label_percent_input(_: boolean) { this._display.attributes.valu
    * @memberof ClassTemplate_LinkElement
    */
   public get value_label_unit() {
+    if (this.value!.value_label_unit) {
+      return this.value!.value_label_unit
+    }
     if (this._display.attributes.value_label_unit !== undefined) {
       return this._display.attributes.value_label_unit
     } else if (this._display.style.value_label_unit !== undefined) {
@@ -4223,6 +4233,9 @@ public set value_label_percent_input(_: boolean) { this._display.attributes.valu
    * @memberof ClassTemplate_LinkElement
    */
   public get value_label_unit_factor() {
+    if (this.value!.value_label_unit_factor) {
+      return this.value!.value_label_unit_factor
+    }    
     if (this._display.attributes.value_label_unit_factor !== undefined) {
       return this._display.attributes.value_label_unit_factor
     } else if (this._display.style.value_label_unit_factor !== undefined) {
@@ -5202,6 +5215,9 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public free_mini: number | null = null
   public free_maxi: number | null = null
 
+  protected _value_label_unit_visible?: boolean
+  protected _value_label_unit?: string
+  protected _value_label_unit_factor?: number
   // PRIVATE ATTRIBUTES ==================================================================
 
   /**
@@ -5265,6 +5281,9 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       .forEach(flux_tag => {
         flux_tag.addReference(this)
       })
+    this._value_label_unit_visible = element._value_label_unit_visible
+    this._value_label_unit = element._value_label_unit
+    this._value_label_unit_factor = element._value_label_unit_factor
   }
 
   /**
@@ -5289,6 +5308,9 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
             .filter(tag => (tag.group === tagg))
             .map(tag => tag.id)
         ]))
+    if (this._value_label_unit_visible !== undefined) json_object['value_label_unit_visible'] = this._value_label_unit_visible
+    if (this._value_label_unit !== undefined) json_object['value_label_unit'] = this._value_label_unit
+    if (this._value_label_unit_factor !== undefined) json_object['value_label_unit_factor'] = this._value_label_unit_factor
     // Output
     return json_object
   }
@@ -5353,6 +5375,10 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
           .filter(tag => tag_ids.includes(tag.id))
           .forEach(tag => this.addTag(tag))
       })
+    if (json_object['value_label_unit_visible'] !== undefined) this._value_label_unit_visible = getBooleanFromJSON(json_object, 'value_label_unit_visible', default_link_value_label_unit_visible)
+    if (json_object['value_label_unit'] !== undefined) this._value_label_unit = getStringOrUndefinedFromJSON(json_object, 'value_label_unit')
+    if (json_object['value_label_unit_factor'] !== undefined) this._value_label_unit_factor = getNumberFromJSON(json_object, 'value_label_unit_factor', default_link_value_label_unit_factor)
+
   }
 
   // PUBLIC METHODS =====================================================================
@@ -5563,6 +5589,14 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     else
       return null
   }
+
+  public get value_label_unit_visible() { return this._value_label_unit_visible }
+  public get value_label_unit() { return this._value_label_unit }
+  public get value_label_unit_factor() { return this._value_label_unit_factor }
+
+  public set value_label_unit_visible(_: boolean | undefined) { this._value_label_unit_visible = _;this.link?.draw() }
+  public set value_label_unit(_: string | undefined) { this._value_label_unit = _;this.link?.draw() }
+  public set value_label_unit_factor(_: number | undefined) { this._value_label_unit_factor = _;this.link?.draw() }
 }
 
 // CLASS GHOST LINK *********************************************************************
