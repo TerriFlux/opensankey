@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { Class_LinkValue } from '../../../Elements/Link'
 import { Class_LinkStyle } from '../../../Elements/LinkAttributes'
 import { Class_NodeStyle } from '../../../Elements/NodeAttributes'
 import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../../types/Types'
@@ -79,8 +80,8 @@ export type UnitAttributeType = {
 
 export type FCType_MenuUnit = {
     new_data: Type_GenericApplicationData,
-    elements: Class_LinkStyle[] | Type_GenericLinkElement[] | Type_GenericNodeElement[] | Class_NodeStyle[],
-    selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
+    elements: Class_LinkStyle[] | Type_GenericLinkElement[] | Type_GenericNodeElement[] | Class_NodeStyle[] | Class_LinkValue[],
+    selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[] | Class_LinkValue[],
     refreshParentComponent: () => void,
     dict_decorator_name: UnitAttributeType
 }
