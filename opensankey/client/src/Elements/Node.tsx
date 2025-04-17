@@ -77,7 +77,7 @@ import {
   Type_JSON,
 } from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
-import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_is_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible, default_node_name_label_background_color, default_node_value_label_background_color } from './NodeAttributes'
+import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_is_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible, default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity } from './NodeAttributes'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -142,6 +142,9 @@ export abstract class ClassTemplate_NodeElement
   protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+
+  // use for desagregating by expansion. The child node is duplicated and _sibling_node becomes the child node
+  protected _sibling_node : ClassAbstract_NodeElement<Type_GenericDrawingArea,Type_GenericSankey> | undefined = undefined
 
   // Definition of abstract attribut from ClassTemplate_Element
   protected _display: {
@@ -377,7 +380,7 @@ export abstract class ClassTemplate_NodeElement
   public copyDimensionsFrom(node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     // Create a dict of all existing dimensions in this related sankey
     const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
-    this.sankey.level_taggs_list
+    this.level_taggs_list
       .forEach(tagg => {
         (tagg as Class_LevelTagGroup).tags_list
           .forEach(tag => {
@@ -457,7 +460,7 @@ export abstract class ClassTemplate_NodeElement
         }
       })
     // Check antitags
-    node_to_copy.sankey.level_taggs_list
+    node_to_copy.level_taggs_list
       .forEach((level_tagg_to_copy) => {
         const level_tagg = this.sankey.level_taggs_dict[level_tagg_to_copy.id]
         if (level_tagg) {
@@ -1692,11 +1695,11 @@ export abstract class ClassTemplate_NodeElement
       // Apply common properties
       this.d3_selection_g_shape?.selectAll('.node_shape')
         .attr('id', this.id)
-        .attr('fill-opacity', this.shape_visible ? '1' : '0')
+        .attr('fill-opacity', this.shape_visible ? this.shape_opacity : '0')
         .attr('fill', color)
         .attr('stroke', 'black')
         .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
-        .attr('stroke-opacity', this.is_selected ? default_selected_stroke_width : 0)
+        .attr('stroke-opacity', this.is_selected ? 1 : 0)
     }
   }
 
@@ -3588,11 +3591,35 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
+   * Returns the shape opacity
+   * @memberof ClassTemplate_NodeElement
+   */
+  public get shape_opacity() {
+    if (this._display.attributes.shape_opacity !== undefined) {
+      return this._display.attributes.shape_opacity
+    } else if (this._display.style.shape_opacity !== undefined) {
+      return this._display.style.shape_opacity
+    }
+    return default_shape_opacity
+  }
+
+  /**
    * TODO Description
    * @memberof ClassTemplate_NodeElement
    */
   public set shape_color(_: string) {
     this._display.attributes.shape_color = _
+    this.drawShape()
+    this.updateLinksColor()
+    this.drawLinksArrow()
+  }
+
+  /**
+   * Sets the shape opacity
+   * @memberof ClassTemplate_NodeElement
+   */
+  public set shape_opacity(_) {
+    this._display.attributes.shape_opacity = _
     this.drawShape()
     this.updateLinksColor()
     this.drawLinksArrow()
@@ -4450,6 +4477,14 @@ export abstract class ClassTemplate_NodeElement
 
   public set tooltip_text(_: string) {
     this._tooltip_text = _
+  }
+
+  public get sibling() {
+    return this._sibling_node
+  }
+
+  public set sibling(_) {
+    this._sibling_node = _
   }
 
   // PRIVATE GETTER / SETTER ============================================================
