@@ -64,6 +64,7 @@ export abstract class ClassAbstract_LinkElement
   public abstract get target():TypeAbstract_NodeElement;
   public abstract set shape_arrow_path(_: string)
   public abstract get value() : ClassAbstract_LinkValue | null
+  public abstract get data_value() : number | null
   public abstract get style() : Class_LinkStyle
   public abstract set style(s:Class_LinkStyle) 
   public abstract get display():{style:Class_LinkStyle,attributes:Class_LinkAttribute} 
