@@ -78,7 +78,8 @@ import {
   default_link_value_label_scientific_notation, default_link_value_label_significant_digits, default_link_value_label_unit, 
   default_link_value_label_unit_factor, default_link_value_label_unit_visible, default_link_value_label_vert, default_link_value_label_uppercase, 
   default_link_name_label_color, default_link_name_label_bold, default_link_name_label_font_family, default_link_name_label_font_size, 
-  default_link_name_label_italic, default_link_name_label_uppercase, default_link_value_label_bold, default_link_value_label_italic
+  default_link_name_label_italic, default_link_name_label_uppercase, default_link_value_label_bold, default_link_value_label_italic,
+  default_link_value_label_percent_input,default_link_value_label_percent_output
 } from './LinkAttributes'
 
 export type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyAbstractNodeElement>
@@ -1143,6 +1144,11 @@ export abstract class ClassTemplate_LinkElement
     // Add value label
     const link_val = this.data_value
 
+    let total_source = 0
+    this._source.output_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.data_value??0)
+    let total_target = 0
+    this._target.input_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.data_value??0)
+
     // =======================DRAW VALUE LABEL ============================
     if (
       (this.drawing_area.type_data !== 'structure') &&
@@ -1152,7 +1158,13 @@ export abstract class ClassTemplate_LinkElement
       // Failsafe
       if (this._source && this._target) {
         // Compute label to display
-        const label_to_display = link_val
+        let label_to_display = link_val
+        if (this.value_label_percent_input) {
+          label_to_display = label_to_display!/total_source *100
+        } else if (this.value_label_percent_output) {
+          label_to_display = label_to_display!/total_target *100
+        }
+
         // If label is undefined or null, do nothing
         if (label_to_display) {
           // Create text object
@@ -1181,11 +1193,18 @@ export abstract class ClassTemplate_LinkElement
               .attr('href', '#' + this.id)
               .attr('side', this.getTextPathSide())
 
-            // Add text directly on textpath object
-            d3_textpath_selection?.text(this.data_label)
-              .attr('spacing', 'exact')
-              .attr('method', 'align')
-
+            if (!this.value_label_percent_input && !this.value_label_percent_output) {
+              // Add text directly on textpath object
+              d3_textpath_selection?.text(this.data_label)
+                .attr('spacing', 'exact')
+                .attr('method', 'align')
+            } else {
+              const suffix = this.value_label_percent_input ? 's' : 'd'
+              // Add text directly on textpath object
+              d3_textpath_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %'+suffix)
+                .attr('spacing', 'exact')
+                .attr('method', 'align')              
+            }
             // Add styling text attributes directly on text object
             // Relative position from starting point of path
             this.updateValueTextPathOffset()
@@ -1201,9 +1220,16 @@ export abstract class ClassTemplate_LinkElement
           }
           else {
             this.updateValueXYPosition()
-            d3_text_selection?.text(this.data_label)
-              .attr('spacing', 'exact')
-              .attr('method', 'align')
+            if (!this.value_label_percent_input && !this.value_label_percent_output) {
+              d3_text_selection?.text(this.data_label)
+                .attr('spacing', 'exact')
+                .attr('method', 'align')
+            } else {
+              const suffix = this.value_label_percent_input ? 's' : 'd'
+              d3_text_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %'+suffix)
+                .attr('spacing', 'exact')
+                .attr('method', 'align')              
+            }
             if (!this.drawing_area.static) {
               d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
                 .filter(evt => (evt.which == 1) && this.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
@@ -4021,6 +4047,44 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawValue() }
+
+ /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+ public get value_label_percent_input() {
+  if (this._display.attributes.value_label_percent_input !== undefined) {
+    return this._display.attributes.value_label_percent_input
+  } else if (this._display.style.value_label_percent_input !== undefined) {
+    return this._display.style.value_label_percent_input
+  }
+  return default_link_value_label_percent_input
+}
+
+/**
+ * TODO Description
+ * @memberof ClassTemplate_LinkElement
+ */
+public set value_label_percent_output(_: boolean) { this._display.attributes.value_label_percent_output = _; this.drawValue() }
+
+ /**
+   * TODO Description
+   * @memberof ClassTemplate_LinkElement
+   */
+ public get value_label_percent_output() {
+  if (this._display.attributes.value_label_percent_output !== undefined) {
+    return this._display.attributes.value_label_percent_output
+  } else if (this._display.style.value_label_percent_output !== undefined) {
+    return this._display.style.value_label_percent_output
+  }
+  return default_link_value_label_percent_output
+}
+
+/**
+ * TODO Description
+ * @memberof ClassTemplate_LinkElement
+ */
+public set value_label_percent_input(_: boolean) { this._display.attributes.value_label_percent_input = _; this.drawValue() }
 
   /**
    * TODO Description
