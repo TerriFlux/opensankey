@@ -372,8 +372,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     if (json_local_object['value_label_pos_auto'] !== undefined) this._value_label_pos_auto = getBooleanFromJSON(json_local_object, 'value_label_pos_auto', default_link_value_label_pos_auto)
 
     // Value label display - Specific params
-    if (json_local_object['_value_label_percent_output'] !== undefined) this._value_label_percent_output = getBooleanFromJSON(json_local_object, '_value_label_percent_output', default_link_value_label_percent_output)    
-    if (json_local_object['_value_label_percent_input'] !== undefined) this._value_label_percent_input = getBooleanFromJSON(json_local_object, '_value_label_percent_input', default_link_value_label_percent_input)    
+    if (json_local_object['value_label_percent_output'] !== undefined) this._value_label_percent_output = getBooleanFromJSON(json_local_object, 'value_label_percent_output', default_link_value_label_percent_output)    
+    if (json_local_object['value_label_percent_input'] !== undefined) this._value_label_percent_input = getBooleanFromJSON(json_local_object, 'value_label_percent_input', default_link_value_label_percent_input)    
     if (json_local_object['value_label_scientific_notation'] !== undefined) this._value_label_scientific_notation = getBooleanFromJSON(json_local_object, 'value_label_scientific_notation', default_link_value_label_scientific_notation)
     if (json_local_object['value_label_significant_digits'] !== undefined) this._value_label_significant_digits = getBooleanFromJSON(json_local_object, 'value_label_significant_digits', default_link_value_label_significant_digits)
     if (json_local_object['value_label_nb_significant_digits'] !== undefined) this._value_label_nb_significant_digits = getNumberFromJSON(json_local_object, 'value_label_nb_significant_digits', default_link_value_label_nb_significant_digits)
