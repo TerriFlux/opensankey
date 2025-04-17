@@ -889,7 +889,9 @@ export abstract class ClassTemplate_LinkElement
     if (this.value_label_unit !== _.value_label_unit) {
       return false
     }
-
+    if (this.value_label_unit_factor !== _.value_label_unit_factor) {
+      return false
+    }
     return true
   }
 
