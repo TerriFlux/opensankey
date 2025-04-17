@@ -383,7 +383,7 @@ export abstract class ClassTemplate_LinkElement
     // Add control points
     this._control_points = this.initControlPoints(drawing_area)
     // Values
-    this._values = new Class_LinkValue(this)
+    this._values = this.createLinkValue()
     drawing_area.sankey.data_taggs_list
       .forEach(data_tagg => {
         this._values = this._values.expand(data_tagg as Class_DataTagGroup)
@@ -393,6 +393,10 @@ export abstract class ClassTemplate_LinkElement
     this._source_visibility_fingerprint = source.visibility_fingerprint
     this._target = target
     this._target_visibility_fingerprint = target.visibility_fingerprint
+  }
+
+  public createLinkValue() {
+    return new Class_LinkValue(this)
   }
 
   protected initControlPoints(
@@ -537,7 +541,22 @@ export abstract class ClassTemplate_LinkElement
     this.copyAttrFrom(_)
     // Values
     if (_._values instanceof Class_LinkValue) {
-      this._values = new Class_LinkValue(this)
+      this._values = this.createLinkValue()
+      this._values.copyFrom(_._values)
+    }
+    else if (_._values instanceof Class_LinkValueTree) {
+      const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
+      if (first_data_tag_group) {
+        this._values = new Class_LinkValueTree(this, first_data_tag_group)
+        this._values.copyFrom(_._values)
+      }
+    }
+  }
+
+  public copyValues(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+    // Values
+    if (_._values instanceof Class_LinkValue) {
+      this._values = this.createLinkValue()
       this._values.copyFrom(_._values)
     }
     else if (_._values instanceof Class_LinkValueTree) {
@@ -4647,8 +4666,15 @@ export class Class_LinkValueTree {
     // Instanciate children
     this.children = {}
     data_tag_group.tags_list.forEach(tag => {
-      this.children[tag.id] = new Class_LinkValue(this)
+      this.children[tag.id] = this.createLinkValue()
     })
+  }
+
+  protected createLinkValue():Class_LinkValue {
+    if (this.parent instanceof Class_LinkValueTree) {
+      return this.parent.createLinkValue()
+    }
+    return this.parent.createLinkValue()
   }
 
   // CLEANING METHODS ====================================================================
@@ -4697,7 +4723,7 @@ export class Class_LinkValueTree {
           new_child.copyFrom(child_to_copy)
         }
         else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
-          const new_child = new Class_LinkValue(this)
+          const new_child = this.createLinkValue()
           this.children[tag_id] = new_child
           new_child.copyFrom(child_to_copy)
         }
@@ -4812,7 +4838,7 @@ export class Class_LinkValueTree {
       if (data_tag.group === this.data_tag_group) {
         // If not already existing, create a new child // given data_tag
         if (!this.children[data_tag.id]) {
-          const _ = new Class_LinkValue(this)
+          const _ = this.createLinkValue()
           this.children[data_tag.id] = _
         }
         // Return child // given data_tag
