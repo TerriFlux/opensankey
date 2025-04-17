@@ -813,12 +813,12 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             l.shape_opacity = n.shape_opacity
             if (expand_left) {
               if (root_node.input_links_dict[n.sibling!.id + '---' + root_node.id]) {
-                l.data_value = root_node.input_links_dict[n.sibling!.id + '---' + root_node.id].data_value
+                l.copyValues(root_node.input_links_dict[n.sibling!.id + '---' + root_node.id])
               }
               n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
             } else {
               if (root_node.output_links_dict[root_node.id + '---' + n.sibling!.id]) {
-                l.data_value = root_node.output_links_dict[root_node.id + '---' + n.sibling!.id].data_value
+                l.copyValues(root_node.output_links_dict[root_node.id + '---' + n.sibling!.id])
               }
               n.position_x = contextualised_node.position_x + new_data.drawing_area.horizontal_spacing
             }
