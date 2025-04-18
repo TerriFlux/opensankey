@@ -48,6 +48,7 @@ import {
 import { default_link_value_label_unit } from '../../Elements/LinkAttributes'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
+import { MenuUnit } from './SankeyMenuComponents'
 
 /*************************************************************************************************/
 
@@ -302,6 +303,19 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         />
       </Box>
     </OSTooltip>
+
+        {/* Config Label value unit */}
+        {value?<MenuUnit
+          new_data={new_data}
+          elements={[value!]}
+          selectedElements={[value!]}
+          refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+          dict_decorator_name={{
+            label_unit_visible: 'value_label_unit_visible',
+            label_unit: 'value_label_unit',
+            label_unit_factor: 'value_label_unit_factor',
+          }}
+        />:<></>}
   </Box>
 
   // Return JSX component
