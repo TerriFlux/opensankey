@@ -3309,10 +3309,9 @@ export abstract class ClassTemplate_NodeElement
     // & finally we divide the sum by the power of 10 used to get Integer out of Float.
 
     // It's probably not the most optimized way to resolve this problem but it work for now
-
     let max_digit_in = 0 //var to stock the maximum number of digit after decimal in link value visible linked to node
     const link_in = this.input_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.data_value).split('.')[1]
+      const decimal_digit = String(link.value?.valueNumber).split('.')[1]
       if (decimal_digit !== undefined) { // sometime link value are already integer so we don't count their decimal digit
         max_digit_in = Math.max(max_digit_in, decimal_digit.length)
       }
@@ -3320,12 +3319,12 @@ export abstract class ClassTemplate_NodeElement
     })
 
     const pow_in = Math.pow(10, max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value
-    link_in.forEach(link => input_val += (link.value?.data_value ?? 0) * pow_in)
+    link_in.forEach(link => input_val += (link.value?.valueNumber ?? 0) * pow_in)
 
     // Do the same we did for input links to output links
     let max_digit_out = 0
     const link_out = this.output_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.data_value).split('.')[1]
+      const decimal_digit = String(link.value?.valueNumber).split('.')[1]
       if (decimal_digit !== undefined) {
         max_digit_out = Math.max(max_digit_out, decimal_digit.length)
       }
@@ -3333,7 +3332,7 @@ export abstract class ClassTemplate_NodeElement
     })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.value?.data_value ?? 0) * pow_out)
+    link_out.forEach(link => output_val += (link.value?.valueNumber ?? 0) * pow_out)
     const display_unit = this.value_label_unit_visible && this.value_label_unit != ''
     const factor_unit = display_unit && this.value_label_unit_factor > 1 ? this.value_label_unit_factor : 1
     const label_unit = display_unit ? this.value_label_unit : ''

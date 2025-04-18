@@ -64,7 +64,9 @@ import {
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringOrNullFromJSON,
-  makeId
+  makeId,
+  getBooleanFromJSON,
+  getStringOrUndefinedFromJSON
 } from '../types/Utils'
 import { 
   Class_LinkStyle, Class_LinkAttribute, 
@@ -3218,35 +3220,10 @@ export abstract class ClassTemplate_LinkElement
     if (this.drawing_area.type_data === 'structure')
       return null
 
-    if (this.drawing_area.type_data === 'data') {
-      const value = this.value
-      // Cast as number
-      if (value !== null && value.data_value) return value.data_value
-      else return null
-    }
-    if (this.drawing_area.type_data === 'free_interval') {
-      const value = this.value
-      // Cast as number
-      if (value !== null && value.result_value) return value.result_value
-      if (value !== null && value.data_value) return value.data_value
-      else return null
-    }
-    if (this.drawing_area.type_data === 'free_value') {
-      const value = this.value
-      // Cast as number
-      if (value !== null && value.result_value) return value.result_value
-      if (value !== null && value.data_value) return value.data_value
-      else return null
-    }    
-
-    if (this.drawing_area.type_data === 'reconciled') {
-      const value = this.value
-      // Cast as number
-      if (value !== null && value.result_value) return value.result_value
-      if (value !== null && value.data_value) return value.data_value
-      else return null
-    }
-    return null
+    const value = this.value
+    // Cast as number
+    if (value !== null) return value.data_value
+    else return null
   }
 
   /**
@@ -3292,11 +3269,6 @@ export abstract class ClassTemplate_LinkElement
 
   public get data_label() {
     // Init
-    if (this.drawing_area.type_data === 'free_interval' ) {
-      if ( this.value!.free_mini != undefined ) {
-        return '['+this.value!.free_mini+','+this.value!.free_maxi+']'           
-      }
-    }
     let data_value = this.data_value
     let text_value = '-'
     // Create data label
@@ -3424,11 +3396,6 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public get thickness() {
-    if (this.drawing_area.type_data === 'reconciled' ) {
-      if (this.value?.free_mini != undefined) {
-        return 2
-      }
-    }
     // Get link value for current dataTaggs selected
     const data_value = this.data_value
     // Scale this value for the drawing area
@@ -3755,11 +3722,6 @@ export abstract class ClassTemplate_LinkElement
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this.drawControlPoint() }
 
   public get shape_is_structure() {
-    if (this.sankey.drawing_area.type_data == 'reconciled') {
-      if (this.value?.free_mini != undefined) {
-        return true
-      }
-    }
     if (this._display.attributes.shape_is_structure !== undefined) {
       return this._display.attributes.shape_is_structure
     } else if (this._display.style.shape_is_structure !== undefined) {
@@ -5231,13 +5193,14 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   // PUBLIC ATTRIBUTES ==================================================================
 
   public parent: Class_LinkValueTree | Type_AnyLinkElement
+
+  public get valueNumber() {
+    return this.data_value
+  }
+
   public data_value: number | null = null
   public text_value: string | null = null
 
-  // TODO moved in a derived class in MFASankey
-  public result_value: number | null = null
-  public free_mini: number | null = null
-  public free_maxi: number | null = null
 
   protected _value_label_unit_visible?: boolean
   protected _value_label_unit?: string
@@ -5361,16 +5324,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       this.fromJSONLegacy(json_object)
     }
     else {
-      if ('extension' in json_object && (json_object['extension'] as Type_JSON).data_value) {
-        this.data_value = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'data_value')
-        this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
-      } else if ('extension' in json_object && (json_object['extension'] as Type_JSON).free_mini !== undefined) {
-        this.free_mini = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_mini')
-        this.free_maxi = getNumberOrNullFromJSON(json_object['extension'] as Type_JSON, 'free_maxi')
-        this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
-      } else {
-        this.result_value = getNumberOrNullFromJSON(json_object, 'data_value')
-      }
+      this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
     }
     // Get Flux tags
@@ -5471,9 +5425,6 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
    * @memberof Class_LinkValue
    */
   public getMaxValue() {
-    if (this.result_value) {
-      return this.result_value
-    }
     return this.data_value
   }
 
