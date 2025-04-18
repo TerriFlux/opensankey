@@ -5182,6 +5182,11 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   // PUBLIC ATTRIBUTES ==================================================================
 
   public parent: Class_LinkValueTree | Type_AnyLinkElement
+
+  public get valueNumber() {
+    return this.data_value
+  }
+  
   public data_value: number | null = null
   public text_value: string | null = null
 
