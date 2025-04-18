@@ -77,7 +77,24 @@ import {
   Type_JSON,
 } from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
-import { Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, default_node_name_label_is_visible, default_node_name_label_vert, default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, default_node_value_label_significant_digits, default_node_value_label_unit, default_node_value_label_unit_factor, default_node_value_label_unit_visible, default_node_value_label_background, default_node_value_label_is_visible, default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity } from './NodeAttributes'
+import { 
+  Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, 
+  default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, 
+  default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, 
+  default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, 
+  default_node_name_label_is_visible, default_node_name_label_vert, 
+  default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, 
+  default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, 
+  default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, 
+  default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, 
+  default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, 
+  default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, 
+  default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, 
+  default_node_value_label_significant_digits, default_node_value_label_unit, 
+  default_node_value_label_unit_factor, default_node_value_label_unit_visible, 
+  default_node_value_label_background, default_node_value_label_is_visible, 
+  default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity 
+} from './NodeAttributes'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -3292,10 +3309,9 @@ export abstract class ClassTemplate_NodeElement
     // & finally we divide the sum by the power of 10 used to get Integer out of Float.
 
     // It's probably not the most optimized way to resolve this problem but it work for now
-
     let max_digit_in = 0 //var to stock the maximum number of digit after decimal in link value visible linked to node
     const link_in = this.input_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.data_value).split('.')[1]
+      const decimal_digit = String(link.value?.valueNumber).split('.')[1]
       if (decimal_digit !== undefined) { // sometime link value are already integer so we don't count their decimal digit
         max_digit_in = Math.max(max_digit_in, decimal_digit.length)
       }
@@ -3303,12 +3319,12 @@ export abstract class ClassTemplate_NodeElement
     })
 
     const pow_in = Math.pow(10, max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value
-    link_in.forEach(link => input_val += (link.value?.data_value ?? 0) * pow_in)
+    link_in.forEach(link => input_val += (link.value?.valueNumber ?? 0) * pow_in)
 
     // Do the same we did for input links to output links
     let max_digit_out = 0
     const link_out = this.output_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.data_value).split('.')[1]
+      const decimal_digit = String(link.value?.valueNumber).split('.')[1]
       if (decimal_digit !== undefined) {
         max_digit_out = Math.max(max_digit_out, decimal_digit.length)
       }
@@ -3316,7 +3332,7 @@ export abstract class ClassTemplate_NodeElement
     })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.value?.data_value ?? 0) * pow_out)
+    link_out.forEach(link => output_val += (link.value?.valueNumber ?? 0) * pow_out)
     const display_unit = this.value_label_unit_visible && this.value_label_unit != ''
     const factor_unit = display_unit && this.value_label_unit_factor > 1 ? this.value_label_unit_factor : 1
     const label_unit = display_unit ? this.value_label_unit : ''
