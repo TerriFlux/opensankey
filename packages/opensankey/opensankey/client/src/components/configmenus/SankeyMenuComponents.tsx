@@ -39,13 +39,13 @@ import {
 } from '@chakra-ui/react'
 import { t, TFunction } from 'i18next'
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
-import { ClassTemplate_LinkElement } from '../../Elements/Link'
+import { Class_LinkValue, ClassTemplate_LinkElement } from '../../Elements/Link'
 import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
 import { FCType_WrapperBoxSubSectionMenu, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName, FCType_MenuUnit, UnitAttributeType } from './types/SankeyMenuComponentsType'
-import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
+import { Class_NodeElement, Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
 import { ClassTemplate_NodeElement } from '../../Elements/Node'
 import {
   Class_NodeAttribute,
@@ -69,6 +69,8 @@ import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 import { OSColorPicker } from './OSColorPicker'
+import { ClassAbstract_NodeElement } from '../../types/AbstractNode'
+import { ClassAbstract_LinkElement } from '../../types/AbstractLink'
 
 
 /**
@@ -179,7 +181,7 @@ const updateElements = (data: Type_GenericApplicationData,
  * @param {() => void} refreshParentComponent
  */
 const updateElementsUnit = (data: Type_GenericApplicationData,
-  elements: elementsType[],
+  elements: elementsType[] | Class_LinkValue[],
   _dict_decorator_name: UnitAttributeType, // declare var can be both type so we can use the function in SankeyMenuLabelComponent & SankeyMenuValueLabelComponent 
   k: keyof UnitAttributeType, // key of labelValueAttribute also contain key of labelAttributeType (since labelValueAttribute is a composite type with labelAttributeType)
   val: valueElementsType,
@@ -740,7 +742,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
   refreshParentComponent,
   dict_decorator_name
 }) => {
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
+  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle|| elements[0] instanceof Class_LinkValue)
 
   // Declare var used to set default attribute value in inputs 
   let get_label_unit_visible = default_node_value_label_unit_visible
@@ -767,11 +769,13 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
   const TooltipElementOverloaded: FunctionComponent<{ k: possibleDecoratorName }> = ({ k }) => {
     if (menu_for_style)
       return <></>
-
-    const isOverwritted = isElementAttributeOverloaded(selectedElements, k)
-    return isOverwritted ? (
-      <>{TooltipValueSurcharge('el_var_', t)}</>
-    ) : <></>
+   if (selectedElements[0] instanceof ClassAbstract_NodeElement || selectedElements[0] instanceof ClassAbstract_LinkElement) {
+      const isOverwritted = isElementAttributeOverloaded(selectedElements as Class_NodeElement[], k)
+      return isOverwritted ? (
+        <>{TooltipValueSurcharge('el_var_', t)}</>
+      ) : <></>
+    }
+    return <></>
   }
 
   // Link to ConfigMenuNumberInput state variable
