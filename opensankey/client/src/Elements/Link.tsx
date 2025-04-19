@@ -3220,7 +3220,7 @@ export abstract class ClassTemplate_LinkElement
 
     const value = this.value
     // Cast as number
-    if (value !== null) return value.valueNumber
+    if (value !== null) return value.data_value
     else return null
   }
 
@@ -3233,7 +3233,7 @@ export abstract class ClassTemplate_LinkElement
     const value = this.value
     // Cast as number
     if (value !== null) {
-      value.valueNumber = _
+      value.data_value = _
       this.redrawNodesSourceTarget()
     }
   }
@@ -5000,14 +5000,14 @@ export class Class_LinkValueTree {
   public setDataValueForDataTags(data_tags: Class_DataTag[], val: number | null) {
     const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
-      value.valueNumber = val
+      value.data_value = val
     }
   }
 
   public getDataValueForDataTags(data_tags: Class_DataTag[]): number | null {
     const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
-      return value.valueNumber
+      return value.data_value
     }
     else {
       return null
@@ -5184,14 +5184,10 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public parent: Class_LinkValueTree | Type_AnyLinkElement
 
   public get valueNumber() {
-    console.log('warning')
     return this.data_value
   }
-  public set valueNumber(_) {
-    this.data_value = _
-  }
   
-  protected data_value: number | null = null
+  public data_value: number | null = null
   public text_value: string | null = null
 
   // PRIVATE ATTRIBUTES ==================================================================

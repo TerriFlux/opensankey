@@ -78,8 +78,7 @@ export abstract class ClassAbstract_LinkValue {
   public abstract getAllValues(): { [_: string]: [ClassAbstract_LinkValue, ClassAbstract_ProtoTag[] | undefined]; };
   // Mandatory getters / setters
   public abstract get id(): string
-  public abstract get valueNumber() : number | null
-  public abstract set valueNumber(_: number | null)
+  public abstract get data_value() : number | null
 }
 
 export abstract class ClassAbstract_LinkStyle {
