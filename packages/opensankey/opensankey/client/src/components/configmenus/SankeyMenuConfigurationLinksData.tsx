@@ -90,7 +90,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     const value_update = updated_selected_links[0]?.value
 
     // Update input data value
-    ref_set_data_value_input.current(String(value_update?.data_value ?? ''))
+    ref_set_data_value_input.current(String(value_update?.valueNumber ?? ''))
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
   }
@@ -195,7 +195,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     _updateTextLinks()
   }
 
-  const is_value_indeterminated = !selected_links.every(el => el.value?.data_value == selected_links[0].value?.data_value)
+  const is_value_indeterminated = !selected_links.every(el => el.value?.valueNumber == selected_links[0].value?.valueNumber)
   const is_label_indeterminated = !selected_links.every(el => el.value?.text_value == selected_links[0].value?.text_value)
 
   // JSX -------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         <ConfigMenuNumberInput
           t={new_data.t}
           ref_to_set_value={ref_set_data_value_input}
-          default_value={value?.data_value as number | undefined}
+          default_value={value?.valueNumber as number | undefined}
           fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
           function_on_blur={updateValueAndHistory}
           minimum_value={0}
@@ -338,7 +338,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Update input data value
-    ref_set_data_value_input.current(String(value?.data_value ?? ''))
+    ref_set_data_value_input.current(String(value?.valueNumber ?? ''))
   }
 
   // Function used to force this component to reload
@@ -389,7 +389,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   return <ConfigMenuNumberInput
     t={new_data.t}
     ref_to_set_value={ref_set_data_value_input}
-    default_value={value?.data_value ?? null}
+    default_value={value?.valueNumber ?? null}
     function_on_blur={updateDataLinks}
     minimum_value={0}
     stepper={true}
