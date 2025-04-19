@@ -4742,8 +4742,8 @@ export abstract class ClassTemplate_NodeElement
   private get tooltip_html() {
     let input_val = 0
     let output_val = 0
-    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.data_value ?? 0)
-    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.data_value ?? 0)
+    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.valueNumber ?? 0)
+    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.valueNumber ?? 0)
     // Title
     let tooltip_html = '<p class="title" style="margin-bottom: 5px;">' +
       this.name.split('\\n').join(' ') +
