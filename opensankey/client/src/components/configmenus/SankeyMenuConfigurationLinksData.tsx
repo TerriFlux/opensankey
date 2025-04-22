@@ -48,8 +48,10 @@ import {
 import { default_link_value_label_unit } from '../../Elements/LinkAttributes'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
+import { ValueOptionType } from '../../Elements/Link'
 
 /*************************************************************************************************/
+export const default_value_option = 'value'
 
 export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurationLinksData> = ({
   new_data,
@@ -70,6 +72,8 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     // Only visible links
     selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
   }
+  const element_ref = selected_links[0]
+  const value_option = (element_ref?.value?.value_option ?? default_value_option)
 
   // Data tags and values --------------------------------------------------------------
   const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
@@ -90,7 +94,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     const value_update = updated_selected_links[0]?.value
 
     // Update input data value
-    ref_set_data_value_input.current(String(value_update?.valueNumber ?? ''))
+    ref_set_data_value_input.current(String(value_update?.valueData ?? ''))
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
   }
@@ -126,12 +130,12 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   const updateValueAndHistory = (_: number | null | undefined) => {
     // Save old values in dict so the undo reset value for previous value of each link
     const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.data_value)
+    selected_links.forEach(l => dict_old_val[l.id] = l.valueData)
     // Undo link value
     const inv_updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.data_value = dict_old_val[link.id]
+        link.valueData = dict_old_val[link.id]
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -142,7 +146,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     const _updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.data_value = (_ ?? null)
+        link.valueData = (_ ?? null)
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -195,7 +199,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     _updateTextLinks()
   }
 
-  const is_value_indeterminated = !selected_links.every(el => el.value?.valueNumber == selected_links[0].value?.valueNumber)
+  const is_value_indeterminated = !selected_links.every(el => el.value?.valueData == selected_links[0].value?.valueData)
   const is_label_indeterminated = !selected_links.every(el => el.value?.text_value == selected_links[0].value?.text_value)
 
   // JSX -------------------------------------------------------------------------------
@@ -252,6 +256,25 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       })
     }
 
+      {/* Choix de la source de la couleur */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {'Type de donnée'}
+        </Box>
+        <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
+          <Select
+            value={value_option}
+            onChange={(evt) => {
+              selected_links.forEach(l=>l.value!.value_option = evt.target.value as ValueOptionType)
+              refreshThis()
+            }}
+          >
+            {new_data.menu_configuration.data_type.map(el => {
+              return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{el}</OSTooltip></></option>
+            })}
+          </Select>
+        </OSTooltip>
+      </Box>
     {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
 
     <OSTooltip label={t('Flux.data.tooltips.vpp')}>
@@ -267,7 +290,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         <ConfigMenuNumberInput
           t={new_data.t}
           ref_to_set_value={ref_set_data_value_input}
-          default_value={value?.valueNumber as number | undefined}
+          default_value={value?.valueData as number | undefined}
           fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
           function_on_blur={updateValueAndHistory}
           minimum_value={0}
@@ -338,7 +361,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Update input data value
-    ref_set_data_value_input.current(String(value?.valueNumber ?? ''))
+    ref_set_data_value_input.current(String(value?.valueData ?? ''))
   }
 
   // Function used to force this component to reload
@@ -356,12 +379,12 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   const updateDataLinks = (_: number | null | undefined) => {
     // Save old values in dict so the undo reset value for previous value of each link
     const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.data_value)
+    selected_links.forEach(l => dict_old_val[l.id] = l.valueData)
     // Undo link value
     const inv_updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.data_value = dict_old_val[link.id]
+        link.valueData = dict_old_val[link.id]
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -372,7 +395,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
     const _updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.data_value = (_ ?? null)
+        link.valueData = (_ ?? null)
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -389,7 +412,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   return <ConfigMenuNumberInput
     t={new_data.t}
     ref_to_set_value={ref_set_data_value_input}
-    default_value={value?.valueNumber ?? null}
+    default_value={value?.valueData ?? null}
     function_on_blur={updateDataLinks}
     minimum_value={0}
     stepper={true}
