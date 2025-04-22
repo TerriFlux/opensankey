@@ -66,6 +66,15 @@ interface IType_SpreadSheetFlux {
   source: string // Source node of the flow
   target: string // Target node of the flow
   value?: number // Value of the flow (optional)
+  type?: string
+}
+
+const type_map={
+  'value':'v',
+  '% input':'%s',
+  '% output':'%d',
+  '% input parent':'%sp',
+  '% output parent':'%dp',   
 }
 
 // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
@@ -76,11 +85,12 @@ const getFluxFromSankey = (new_data: Type_GenericApplicationData): IType_SpreadS
         id: l.id, //Link id
         source: l.source.name, // Get source node name
         target: l.target.name, // Get target node name
-        value: l.data_value!,  // Get the value of the link
+        value: l.value?.valueData as number|undefined,  // Get the value of the link
+        type: l.value? type_map[l.value.value_option]:undefined
       }
     })
   // Add an empty row for new flux input
-  a.push({ id: 'empty', source: '', target: '' })
+  a.push({ id: 'empty', source: '', target: '',type: 'v' })
   return a
 }
 
@@ -97,6 +107,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       { type: 'header', text: new_data.t('Flux.src') },
       { type: 'header', text: new_data.t('Flux.trgt') },
       { type: 'header', text: new_data.t('Flux.value') },
+      { type: 'header', text: new_data.t('Flux.type') },
     ]
   }
 
@@ -109,7 +120,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         cells: [
           { type: 'text', text: flux.source },
           { type: 'text', text: flux.target },
-          { type: 'number', value: flux.value as number }
+          { type: 'number', value: flux.value as number  },
+          { type: 'text', text: flux.type as string }
         ]
       }
     })
@@ -121,9 +133,10 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   const innerW = window.innerWidth
   // Define the spreadsheet columns and their properties
   const [columns, setColumns] = useState<Column[]>([
-    { columnId: 'source', width: innerW * 0.055, resizable: true },
-    { columnId: 'target', width: innerW * 0.055, resizable: true },
-    { columnId: 'value', width: innerW * 0.045, resizable: true }
+    { columnId: 'source', width: innerW * 0.050, resizable: true },
+    { columnId: 'target', width: innerW * 0.050, resizable: true },
+    { columnId: 'value', width: innerW * 0.045, resizable: true },
+    { columnId: 'type', width: innerW * 0.010, resizable: true }
   ])
 
   // Map node and link names to their IDs for quick lookups
@@ -190,7 +203,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       )
       // Set the value of the link, if provided
       if (cur_flux.value) {
-        l.data_value = +cur_flux.value
+        l.value!.valueData = +cur_flux.value
       }
 
       return [{ id: l.id, idSrc: l.source.id, idTrgt: l.target.id }, createdNodes]
@@ -209,7 +222,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       line.split('\t').map((textValue) => ({
         type: 'text',
         text: textValue,
-        value: parseLocaleNumber(textValue),
+        value: parseLocaleNumber(textValue)
       }))
     )
   }
@@ -245,13 +258,13 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           synchronizeSpreadSheetWithSankey()
           return
         }
-        dict_old_val[l.id] = l.data_value //save old link value in dict for undo
+        dict_old_val[l.id] = l.valueData //save old link value in dict for undo
         if (l) {
           if (isNaN((change.newCell as NumberCell).value)) {
-            l.data_value = null
+            l.value!.valueData = null
             dict_new_val[l.id] = null //save new link value in dict for redo
           } else {
-            l.data_value = (change.newCell as NumberCell).value
+            l.value!.valueData = (change.newCell as NumberCell).value
             dict_new_val[l.id] = (change.newCell as NumberCell).value //save new link value in dict for redo
           }
           new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -262,7 +275,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       // Create undo of original function ----------------------------
       const undoUpdateLinksValues = () => {
         Object.entries(dict_old_val).forEach(ent_l => {
-          new_data.drawing_area.sankey.links_dict[ent_l[0]].data_value = ent_l[1]
+          new_data.drawing_area.sankey.links_dict[ent_l[0]].value!.valueData = ent_l[1]
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
         setSpreadSheetFlux([...spreadSheetFlux])//Update Table
@@ -272,7 +285,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       // Create redo of original function ----------------------------
       const redoUpdateLinksValues = () => {
         Object.entries(dict_new_val).forEach(ent_l => {
-          new_data.drawing_area.sankey.links_dict[ent_l[0]].data_value = ent_l[1]
+          new_data.drawing_area.sankey.links_dict[ent_l[0]].value!.valueData = ent_l[1]
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
         setSpreadSheetFlux([...spreadSheetFlux])//Update Table
