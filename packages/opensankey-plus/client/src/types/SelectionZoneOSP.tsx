@@ -72,6 +72,6 @@ export class ClassTemplate_ZoneSelectionOSP
         this.drawing_area.addContainerToSelection(container as Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>)
       })
 
-      return nbtype
+    return nbtype
   }
 }
