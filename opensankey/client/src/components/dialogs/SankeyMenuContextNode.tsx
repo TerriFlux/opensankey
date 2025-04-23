@@ -771,7 +771,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         if (list_child_dim.length === 1) {
           const children = list_child_dim[0].children as Type_GenericNodeElement[]
           const new_nodes: Type_GenericNodeElement[] = []
-          let original_node = contextualised_node.sibling ?? contextualised_node
+          const original_node = contextualised_node.sibling ?? contextualised_node
           // the new node is intimely linked to the original child node
           let root_node: Type_GenericNodeElement
           if (expand_left) {
