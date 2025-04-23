@@ -775,6 +775,8 @@ export const ExcelModal: FunctionComponent<FCType_ExcelModal> = (
       <Box />
       <Button
         variant="menuconfigpanel_option_button_secondary"
+        isActive
+        size='sizeButtonDialog'
         onClick={
           () => {
             // Reset navigator data without redrawing sankey (uploadExcelImpl will do it after downloading data from server)

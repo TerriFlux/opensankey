@@ -30,8 +30,8 @@ import { defineStyle } from '@chakra-ui/react'
 export const button_base_style = defineStyle({
   width: '100%',
   margin: '0',
-  fontSize:'0.6rem',
-  color:'white',
+  fontSize: '0.6rem',
+  color: 'white',
   minW: 'unset',
   border: 'solid 1px ',
   borderRadius: '6px',
@@ -73,7 +73,7 @@ export const menuconfigpanel_option_button = defineStyle({
 
 export const menuconfigpanel_move_order_node_io = defineStyle({
   height: '1.5rem',
-  width:'3.5rem',
+  width: '3.5rem',
   padding: '0.5rem',
   fontSize: 'unset',
   backgroundColor: 'white',
@@ -134,8 +134,6 @@ export const menuconfigpanel_option_button_in_table = defineStyle({
 })
 
 export const menuconfigpanel_add_button = defineStyle({
-  height: '1.5rem',
-  width: '1.5rem',
   bg: 'primaire.2',
   bgColor: 'primaire.2',
   borderColor: 'primaire.2',
@@ -153,8 +151,6 @@ export const menuconfigpanel_add_button = defineStyle({
 })
 
 export const menuconfigpanel_del_button = defineStyle({
-  height: '1.5rem',
-  width: '1.5rem',
   borderColor: 'primaire.1',
   bg: 'primaire.1',
   bgColor: 'primaire.1',
@@ -212,25 +208,6 @@ export const menuconfigpanel_del_button_in_table = defineStyle({
   },
 })
 
-export const menuconfigpanel_option_button_secondary = defineStyle({
-  height: '2rem',
-  minWidth: '4.5rem',
-  textStyle: 'h4',
-  bg: 'primaire.2',
-  bgColor: 'primaire.2',
-  borderColor: 'primaire.2',
-  _hover: {
-    bg: 'secondaire.2',
-    bgColor: 'secondaire.2',
-    borderColor: 'secondaire.2',
-  },
-  _active: {
-    bg: 'tertiaire.2',
-    bgColor: 'tertiaire.2',
-    borderColor: 'tertiaire.2',
-  },
-})
-
 export const template_button_reset = defineStyle({
   height: '2rem',
   minWidth: 'unset',
@@ -251,14 +228,40 @@ export const template_button_reset = defineStyle({
   },
 })
 
-export const menuconfigpanel_option_button_secondary_activated = defineStyle({
-  height: '2rem',
-  minWidth: '4.5rem',
+
+export const menuconfigpanel_option_button_primary = defineStyle({
   textStyle: 'h4',
+  color: 'tertiaire.3',
+  bg: 'none',
+  bgColor: 'none',
+  borderColor: 'tertiaire.3',
+  border: 'solid 2px',
+  _hover: {
+    bg: 'secondaire.3',
+    bgColor: 'secondaire.3',
+    borderColor: 'secondaire.3',
+  },
+  _active: {
+    bg: 'primaire.3',
+    bgColor: 'primaire.3',
+    borderColor: 'primaire.3',
+  },
+})
+
+export const menuconfigpanel_option_button_primary_activated = defineStyle({
+  ...menuconfigpanel_option_button_primary,
+  color: 'white',
+  bg: 'primaire.3',
+  bgColor: 'primaire.3',
+})
+
+
+export const menuconfigpanel_option_button_secondary = defineStyle({
+  textStyle: 'h4',
+  bg: 'none',
   color: 'tertiaire.2',
-  bg: 'primaire.2',
-  bgColor: 'primaire.2',
-  borderColor: 'tertiaire.2',
+  bgColor: 'none',
+  borderColor: 'none',
   border: 'solid 2px',
   _hover: {
     bg: 'secondaire.2',
@@ -266,19 +269,31 @@ export const menuconfigpanel_option_button_secondary_activated = defineStyle({
     borderColor: 'secondaire.2',
   },
   _active: {
-    bg: 'primaire.2',
-    bgColor: 'primaire.2',
-    borderColor: 'primaire.2',
+    color: 'white',
+    bg: 'tertiaire.2',
+    bgColor: 'tertiaire.2',
+    borderColor: 'tertiaire.2',
   },
 })
 
+
+
+
+export const menuconfigpanel_option_button_secondary_activated = defineStyle({
+  ...menuconfigpanel_option_button_secondary,
+  color: 'white',
+  bg: 'primaire.2',
+  bgColor: 'primaire.2',
+  borderColor: 'tertiaire.2',
+})
+
 export const menuconfigpanel_option_button_tertiary = defineStyle({
-  height: '2rem',
-  minWidth: '4.5rem',
   textStyle: 'h4',
-  bg: 'primaire.4',
-  bgColor: 'primaire.4',
+  color: 'tertiaire.4',
+  bg: 'none',
+  bgColor: 'none',
   borderColor: 'primaire.4',
+  border: 'solid 2px',
   _hover: {
     bg: 'secondaire.4',
     bgColor: 'secondaire.4',
@@ -292,24 +307,11 @@ export const menuconfigpanel_option_button_tertiary = defineStyle({
 })
 
 export const menuconfigpanel_option_button_tertiary_activated = defineStyle({
-  height: '2rem',
-  minWidth: '4.5rem',
-  textStyle: 'h4',
-  color: 'tertiaire.4',
+  ...menuconfigpanel_option_button_tertiary,
+  color: 'white',
   bg: 'primaire.4',
   bgColor: 'primaire.4',
   borderColor: 'tertiaire.4',
-  border: 'solid 2px',
-  _hover: {
-    bg: 'secondaire.4',
-    bgColor: 'secondaire.4',
-    borderColor: 'secondaire.4',
-  },
-  _active: {
-    bg: 'primaire.4',
-    bgColor: 'primaire.4',
-    borderColor: 'primaire.4',
-  },
 })
 
 export const toolbar_button_mouse_mode = defineStyle({
@@ -796,11 +798,11 @@ export const text_menu_select = defineStyle({
   'svg': {
     float: 'right'
   },
-  _active:{
-    color:'white'
+  _active: {
+    color: 'white'
   },
-  _hover:{
-    color:'white'
+  _hover: {
+    color: 'white'
   }
 })
 
@@ -841,5 +843,12 @@ export const sizeMenuTopButtonSaveCache = defineStyle({
   height: '2rem',
   width: '2rem',
   minW: 'unset',
+})
+
+export const sizeButtonDialog = defineStyle({
+  height: '2rem',
+  minWidth: 'unset',
+  padding: '0.3rem',
+  fontSize: '0.8rem',
 })
 
