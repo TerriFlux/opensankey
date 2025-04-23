@@ -36,7 +36,7 @@ import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Type_GenericSankey } from './Types'
 
 type TypeAbstract_LinkElement = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
-type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+export type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 type Type_GenericDrawingArea = ClassAbstract_DrawingArea
 
 export abstract class ClassAbstract_ApplicationData {

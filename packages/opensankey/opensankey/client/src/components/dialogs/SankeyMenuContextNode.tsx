@@ -771,7 +771,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         if (list_child_dim.length === 1) {
           const children = list_child_dim[0].children as Type_GenericNodeElement[]
           const new_nodes: Type_GenericNodeElement[] = []
-          let original_node = contextualised_node.sibling ?? contextualised_node
+          const original_node = contextualised_node.sibling ?? contextualised_node
           // the new node is intimely linked to the original child node
           let root_node: Type_GenericNodeElement
           if (expand_left) {
@@ -1039,6 +1039,8 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
             <ButtonGroup>
               <Button
                 variant="menuconfigpanel_option_button_secondary"
+                isActive
+                size='sizeButtonDialog'
                 onClick={() => {
                   new_data.drawing_area.node_contextualised?.drawChildren((selected_grp.current?.id ?? ''))
                   // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
@@ -1049,6 +1051,7 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
               </Button>
               <Button
                 variant="menuconfigpanel_del_button"
+                size='sizeButtonDialog'
                 onClick={() => {
                   closeModal()
                 }}
@@ -1128,6 +1131,8 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
             <ButtonGroup>
               <Button
                 variant="menuconfigpanel_option_button_secondary"
+                isActive
+                size='sizeButtonDialog'
                 onClick={() => {
                   new_data.drawing_area.node_contextualised?.drawParent((selected_grp.current?.id ?? ''))
                   // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
@@ -1138,6 +1143,7 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
               </Button>
               <Button
                 variant="menuconfigpanel_del_button"
+                size='sizeButtonDialog'
                 onClick={() => {
                   closeModal()
                 }}
