@@ -4199,6 +4199,8 @@ export abstract class ClassTemplate_LinkElement
   public get value_label_unit_visible() {
     if (this._display.attributes.value_label_unit_visible !== undefined) {
       return this._display.attributes.value_label_unit_visible
+    } else if (this.sankey.unit_data_tag) {
+      return true
     } else if (this._display.style.value_label_unit_visible !== undefined) {
       return this._display.style.value_label_unit_visible
     }
@@ -4218,6 +4220,8 @@ export abstract class ClassTemplate_LinkElement
   public get value_label_unit() {
     if (this._display.attributes.value_label_unit !== undefined) {
       return this._display.attributes.value_label_unit
+    } else if (this.sankey.unit_data_tag) {
+        return this.sankey.unit_data_tag
     } else if (this._display.style.value_label_unit !== undefined) {
       return this._display.style.value_label_unit
     }
@@ -4235,6 +4239,9 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public get value_label_unit_factor() {
+    // if (this.value!.value_label_unit_factor) {
+    //   return this.value!.value_label_unit_factor
+    // }    
     if (this._display.attributes.value_label_unit_factor !== undefined) {
       return this._display.attributes.value_label_unit_factor
     } else if (this._display.style.value_label_unit_factor !== undefined) {
@@ -5201,7 +5208,7 @@ export class Class_LinkValueTree {
   }
 }
 
-export type ValueOptionType = 'value' | '% input' | '% output' | '% input parent' | '% output parent'
+export type ValueOptionType = 'value' | '% input' | '% output' | '% input parent' | '% output parent' | 'unit conversion'
 
 // CLASS LINK VALUE *********************************************************************
 /**
@@ -5216,8 +5223,20 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   public parent: Class_LinkValueTree | Type_AnyLinkElement
 
-  public get valueResult() {
-    if (this.value_option == 'value') {
+  public get valueResult() : number | null {
+    if (this.value_option == 'unit conversion') {
+      if (this.unit_factor) {
+        const children_with_data = Object.values((this.parent as Class_LinkValueTree).children).filter(c=>c.valueData)
+        if (children_with_data.length == 0) {
+          return null
+        }
+        const child_with_data = children_with_data[0] as Class_LinkValue
+        const conv_factor = child_with_data.unit_factor
+        const this_conv_factor = this.unit_factor
+        const multiplier = this_conv_factor/conv_factor!
+        return child_with_data.valueResult!*multiplier
+      }
+    } else if (this.value_option == 'value') {
       return this.data_value
     } else if (this.value_option == '% input') {
       let total_source = 0
@@ -5261,6 +5280,8 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   protected data_value: number | null = null
   public text_value: string | null = null
+
+  protected _unit_factor: number = 1
 
   // PRIVATE ATTRIBUTES ==================================================================
 
@@ -5325,6 +5346,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       .forEach(flux_tag => {
         flux_tag.addReference(this)
       })
+    this._unit_factor = element._unit_factor
   }
 
   /**
@@ -5341,6 +5363,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     json_object['id'] = this._id
     if (this.data_value) json_object['data_value'] = this.data_value
     if (this.text_value) json_object['text_value'] = this.text_value
+    if (this._unit_factor !== undefined) json_object['_unit_factor'] = this._unit_factor
     json_object['tags'] = Object.fromEntries(
       this.flux_taggs_list
         .map(tagg => [
@@ -5377,6 +5400,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     else {
       this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
+      this.unit_factor = getNumberFromJSON(json_object, 'unit_factor',1)
     }
     // Get Flux tags
     // In JSON here are how supposed tags var is :
@@ -5611,6 +5635,9 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     else
       return null
   }
+
+  public get unit_factor() { return this._unit_factor }
+  public set unit_factor(_) { this._unit_factor = _ }
 }
 
 // CLASS GHOST LINK *********************************************************************

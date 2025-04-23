@@ -74,7 +74,8 @@ const type_map={
   '% input':'%s',
   '% output':'%d',
   '% input parent':'%sp',
-  '% output parent':'%dp',   
+  '% output parent':'%dp',
+  'unit conversion':'uc'
 }
 
 // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
