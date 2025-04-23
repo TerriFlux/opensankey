@@ -293,6 +293,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
         <OSTooltip label={t('Menu.tooltips.noeud.plus')}>
           <Button
             variant='menuconfigpanel_add_button'
+            size='sizeConfigButton'
             onClick={addNode}>
             {icon_add_element}
           </Button>
@@ -324,6 +325,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
         <OSTooltip label={t('Menu.tooltips.noeud.rm')}>
           <Button
             variant='menuconfigpanel_del_button'
+            size='sizeConfigButton'
             isDisabled={selected_nodes.length === 0}
             onClick={
               () => {

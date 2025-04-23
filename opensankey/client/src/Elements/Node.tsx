@@ -2165,7 +2165,10 @@ export abstract class ClassTemplate_NodeElement
     else if (drawing_area.isInSelectionMode() && event.button === 0) {
       // SHIFT
       if (event.shiftKey) {
-        this.addOrRemoveNodeFromSelection()
+        if (!this.drawing_area.selected_nodes_list.includes(this)) {
+          // add node to selection
+          this.drawing_area.addNodeToSelection(this)
+        }
         // Open related menu
         this.menu_config.openConfigMenuElementsNodes()
         // Update components related to node edition

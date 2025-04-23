@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React,{ Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
+import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 
 // Local imports
 import { Type_MacroTagGroup } from '../types/Utils'
@@ -552,6 +552,22 @@ export class Class_MenuConfig {
   }
 
   /**
+  * Open config menu if closed and show sub-menu node and flow in type config data
+  * @memberof Class_MenuConfig
+  */
+  public openConfigMenuElementsNodesLinks() {
+    // Element config menu must be opened first
+    this.openConfigMenu()
+    // Leave enough time for menus to open
+    setTimeout(() => {
+      this._elements_configurable_selected.data = ['node', 'flow']
+      this._elements_configurable_selected.context = ['node', 'flow']
+      this._elements_configurable_selected.style = ['node', 'flow']
+      this._ref_to_menu_config_updater.current()
+    }, 200)
+  }
+
+  /**
    * Open config menu if closed and show sub-menu flow in type config data
    * @memberof Class_MenuConfig
    */
@@ -570,9 +586,9 @@ export class Class_MenuConfig {
   public toggleElementInConfigEdition(kt: keyTypeConfig, ke: keyTypeElements) {
     if (this._elements_configurable_selected[kt].includes(ke)) {
       const idx = this._elements_configurable_selected[kt].indexOf(ke)
-      this._elements_configurable_selected[kt].splice(idx,1)
+      this._elements_configurable_selected[kt].splice(idx, 1)
     } else {
-      this._elements_configurable_selected[kt].splice(0,0,ke)
+      this._elements_configurable_selected[kt].splice(0, 0, ke)
     }
   }
 
@@ -984,7 +1000,7 @@ export class Class_MenuConfig {
 
   // Main menu component ----------------------------------------------------------------
 
-  public get ref_rerender_submodules_menus(){
+  public get ref_rerender_submodules_menus() {
     return this._ref_rerender_submodules_menus
   }
   public get ref_to_menu_updater(): MutableRefObject<() => void> {

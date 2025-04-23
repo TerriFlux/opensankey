@@ -126,6 +126,7 @@ const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
       {/* Boutton pour ajouter un style */}
       <Button
         variant='menuconfigpanel_add_button'
+        size='sizeConfigButton'
         onClick={() => {
           // Create defaut style
           const new_style = new_data.drawing_area.sankey.addNewDefaultNodeStyle()
@@ -175,6 +176,7 @@ const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
       {/* Boutton pour supprimer le noeud selectionné */}
       <Button
         variant='menuconfigpanel_del_button'
+        size='sizeConfigButton'
         isDisabled={(ref_selected_style_node.current === default_style_id)}
         onClick={() => {
           // Delete style - everything is done inside Sankey Class & NodeStyle Class
@@ -311,6 +313,7 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
       {/* Boutton pour ajouter un style */}
       <Button
         variant='menuconfigpanel_add_button'
+        size='sizeConfigButton'
         onClick={() => {
           // Create default new style
           const new_style = new_data.drawing_area.sankey.addNewDefaultLinkStyle()
@@ -361,6 +364,7 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
       {/* Boutton pour supprimer le noeud selectionné */}
       <Button
         variant='menuconfigpanel_del_button'
+        size='sizeConfigButton'
         isDisabled={(ref_selected_style_link.current === default_style_id)}
         onClick={() => {
           // Delete link style from Sankey
