@@ -1039,6 +1039,8 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
             <ButtonGroup>
               <Button
                 variant="menuconfigpanel_option_button_secondary"
+                isActive
+                size='sizeButtonDialog'
                 onClick={() => {
                   new_data.drawing_area.node_contextualised?.drawChildren((selected_grp.current?.id ?? ''))
                   // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
@@ -1049,6 +1051,7 @@ export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
               </Button>
               <Button
                 variant="menuconfigpanel_del_button"
+                size='sizeButtonDialog'
                 onClick={() => {
                   closeModal()
                 }}
@@ -1128,6 +1131,8 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
             <ButtonGroup>
               <Button
                 variant="menuconfigpanel_option_button_secondary"
+                isActive
+                size='sizeButtonDialog'
                 onClick={() => {
                   new_data.drawing_area.node_contextualised?.drawParent((selected_grp.current?.id ?? ''))
                   // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
@@ -1138,6 +1143,7 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
               </Button>
               <Button
                 variant="menuconfigpanel_del_button"
+                size='sizeButtonDialog'
                 onClick={() => {
                   closeModal()
                 }}
