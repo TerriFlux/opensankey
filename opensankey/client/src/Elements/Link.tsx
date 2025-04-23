@@ -4051,43 +4051,43 @@ export abstract class ClassTemplate_LinkElement
    */
   public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawValue() }
 
- /**
+  /**
    * TODO Description
    * @memberof ClassTemplate_LinkElement
    */
- public get value_label_percent_input() {
-  if (this._display.attributes.value_label_percent_input !== undefined) {
-    return this._display.attributes.value_label_percent_input
-  } else if (this._display.style.value_label_percent_input !== undefined) {
-    return this._display.style.value_label_percent_input
+  public get value_label_percent_input() {
+    if (this._display.attributes.value_label_percent_input !== undefined) {
+      return this._display.attributes.value_label_percent_input
+    } else if (this._display.style.value_label_percent_input !== undefined) {
+      return this._display.style.value_label_percent_input
+    }
+    return default_link_value_label_percent_input
   }
-  return default_link_value_label_percent_input
-}
 
-/**
+  /**
  * TODO Description
  * @memberof ClassTemplate_LinkElement
  */
-public set value_label_percent_output(_: boolean) { this._display.attributes.value_label_percent_output = _; this.drawValue() }
+  public set value_label_percent_output(_: boolean) { this._display.attributes.value_label_percent_output = _; this.drawValue() }
 
- /**
+  /**
    * TODO Description
    * @memberof ClassTemplate_LinkElement
    */
- public get value_label_percent_output() {
-  if (this._display.attributes.value_label_percent_output !== undefined) {
-    return this._display.attributes.value_label_percent_output
-  } else if (this._display.style.value_label_percent_output !== undefined) {
-    return this._display.style.value_label_percent_output
+  public get value_label_percent_output() {
+    if (this._display.attributes.value_label_percent_output !== undefined) {
+      return this._display.attributes.value_label_percent_output
+    } else if (this._display.style.value_label_percent_output !== undefined) {
+      return this._display.style.value_label_percent_output
+    }
+    return default_link_value_label_percent_output
   }
-  return default_link_value_label_percent_output
-}
 
-/**
+  /**
  * TODO Description
  * @memberof ClassTemplate_LinkElement
  */
-public set value_label_percent_input(_: boolean) { this._display.attributes.value_label_percent_input = _; this.drawValue() }
+  public set value_label_percent_input(_: boolean) { this._display.attributes.value_label_percent_input = _; this.drawValue() }
 
   /**
    * TODO Description
