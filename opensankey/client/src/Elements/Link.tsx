@@ -384,7 +384,7 @@ export abstract class ClassTemplate_LinkElement
     // Add control points
     this._control_points = this.initControlPoints(drawing_area)
     // Values
-    this._values = this.createLinkValue()
+    this._values = this.createLinkValue(this)
     drawing_area.sankey.data_taggs_list
       .forEach(data_tagg => {
         this._values = this._values.expand(data_tagg as Class_DataTagGroup)
@@ -396,8 +396,10 @@ export abstract class ClassTemplate_LinkElement
     this._target_visibility_fingerprint = target.visibility_fingerprint
   }
 
-  public createLinkValue() {
-    return new Class_LinkValue(this)
+  public createLinkValue(
+    parent:Class_LinkValueTree|ClassAbstract_LinkElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>
+  ) {
+    return new Class_LinkValue(parent as Type_AnyLinkElement)
   }
 
   protected initControlPoints(
@@ -542,7 +544,7 @@ export abstract class ClassTemplate_LinkElement
     this.copyAttrFrom(_)
     // Values
     if (_._values instanceof Class_LinkValue) {
-      this._values = this.createLinkValue()
+      this._values = this.createLinkValue(this)
       this._values.copyFrom(_._values)
     }
     else if (_._values instanceof Class_LinkValueTree) {
@@ -557,7 +559,7 @@ export abstract class ClassTemplate_LinkElement
   public copyValues(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
     // Values
     if (_._values instanceof Class_LinkValue) {
-      this._values = this.createLinkValue()
+      this._values = this.createLinkValue(this)
       this._values.copyFrom(_._values)
     }
     else if (_._values instanceof Class_LinkValueTree) {
@@ -4705,7 +4707,7 @@ export class Class_LinkValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  public parent: Class_LinkValueTree | Type_AnyLinkElement
+  public parent: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>
   public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
 
   public data_tag_group: Class_DataTagGroup
@@ -4723,7 +4725,7 @@ export class Class_LinkValueTree {
    * @memberof Class_LinkValueTree
    */
   constructor(
-    parent: Class_LinkValueTree | Type_AnyLinkElement,
+    parent: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>,
     data_tag_group: Class_DataTagGroup
   ) {
     // Instanciate parent
@@ -4733,15 +4735,15 @@ export class Class_LinkValueTree {
     // Instanciate children
     this.children = {}
     data_tag_group.tags_list.forEach(tag => {
-      this.children[tag.id] = this.createLinkValue()
+      this.children[tag.id] = this.createLinkValue(this)
     })
   }
 
-  protected createLinkValue():Class_LinkValue {
+  protected createLinkValue(_:Class_LinkValueTree|ClassAbstract_LinkElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>):Class_LinkValue {
     if (this.parent instanceof Class_LinkValueTree) {
-      return this.parent.createLinkValue()
+      return this.parent.createLinkValue(_)
     }
-    return this.parent.createLinkValue()
+    return (this.parent as Type_AnyLinkElement).createLinkValue(_)
   }
 
   // CLEANING METHODS ====================================================================
@@ -4790,7 +4792,7 @@ export class Class_LinkValueTree {
           new_child.copyFrom(child_to_copy)
         }
         else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
-          const new_child = this.createLinkValue()
+          const new_child = this.createLinkValue(this)
           this.children[tag_id] = new_child
           new_child.copyFrom(child_to_copy)
         }
@@ -4905,7 +4907,7 @@ export class Class_LinkValueTree {
       if (data_tag.group === this.data_tag_group) {
         // If not already existing, create a new child // given data_tag
         if (!this.children[data_tag.id]) {
-          const _ = this.createLinkValue()
+          const _ = this.createLinkValue(this)
           this.children[data_tag.id] = _
         }
         // Return child // given data_tag
@@ -5162,7 +5164,7 @@ export class Class_LinkValueTree {
 
   public get link(): Type_AnyLinkElement | null {
     if (this.parent instanceof Class_LinkValueTree) return this.parent.link
-    else return this.parent
+    else return this.parent as Type_AnyLinkElement
   }
 
   public get data_tag() {
