@@ -157,7 +157,7 @@ const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
             <Box>
               {
                 processing ? (
-                  <Button variant="menuconfigpanel_option_button_tertiary">
+                  <Button variant="menuconfigpanel_option_button_tertiary_activated">
                     <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
                     {t('Menu.load_file')}
                   </Button>) : (
@@ -167,11 +167,13 @@ const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
                     {
                       is_computing ? (
                         <Button
-                          variant='menuconfigpanel_option_button_secondary'>
+                          variant='menuconfigpanel_option_button_secondary_activated'
+                          size='sizeButtonDialog'
+                        >
                           {t('Menu.compute_file')}
                         </Button>) : (
                         <Button
-                          variant="menuconfigpanel_option_button"
+                          variant="menuconfigpanel_option_button_primary_activated"
                           onClick={() => {
                             successAction()
                             set_show_load_dialog(false)
@@ -184,9 +186,9 @@ const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
             </Box>
 
             <Box layerStyle='options_3cols'>
-              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} >Infos</Button>
-              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} >Erreurs</Button>
-              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} >Debug</Button>
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_primary_activated' : 'menuconfigpanel_option_button_primary'} size='sizeButtonDialog'>Infos</Button>
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} size='sizeButtonDialog'>Erreurs</Button>
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} size='sizeButtonDialog'>Debug</Button>
             </Box>
             {processing ? (
               <Counter
