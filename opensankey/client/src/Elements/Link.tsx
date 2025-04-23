@@ -894,10 +894,10 @@ export abstract class ClassTemplate_LinkElement
   }
 
   public getPathColorToUse() {
-    const type_source=this.shape_color_rule
-    if(type_source=='source'){
+    const type_source = this.shape_color_rule
+    if (type_source == 'source') {
       return this.source.getShapeColorToUse()
-    }else if(type_source=='target'){
+    } else if (type_source == 'target') {
       return this.target.getShapeColorToUse()
     }
     // Default color
@@ -920,7 +920,7 @@ export abstract class ClassTemplate_LinkElement
       dataTagColorActivated
         .forEach(tag => shape_color = tag.color)
     }
-   
+
     return shape_color
   }
 
@@ -1318,7 +1318,10 @@ export abstract class ClassTemplate_LinkElement
     else if (drawing_area.isInSelectionMode()) {
       // SHIFT
       if (event.shiftKey) {
-        this.addOrRemoveLinkFromSelection()
+        if (!this.drawing_area.selected_links_list.includes(this)) {
+          // add link to selection
+          this.drawing_area.addLinkToSelection(this)
+        }
         // Open related menu
         this.menu_config.openConfigMenuElementsLinks()
         // Update components related to link edition
