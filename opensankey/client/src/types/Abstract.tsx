@@ -153,6 +153,7 @@ export abstract class ClassAbstract_Sankey {
   public abstract get list_combinatorial_data_taggs_path(): string[][]
   public abstract get level_taggs_dict(): { [id: string]: ClassAbstract_ProtoLevelTagGroup }
   public abstract get level_taggs_list(): ClassAbstract_ProtoLevelTagGroup[]
+  public abstract get unit_data_tag(): string | null | undefined
   // Mandatory methods
   public abstract draw(): void
   public abstract addNewDefaultNode(): TypeAbstract_NodeElement

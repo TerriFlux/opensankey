@@ -84,6 +84,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   // Refs used to trigger refreshing of number & text inputs
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+  const ref_set_number_input = useRef((_: string | null | undefined) => null)
 
   const updateInputsValues = () => {
     // Recreate a updated_selected_links list in the function because it can be called before re-rendering <MenuConfigurationLinksData/>
@@ -97,6 +98,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     ref_set_data_value_input.current(String(value_update?.valueData ?? ''))
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
+    ref_set_number_input.current(String(value_update?.unit_factor))
   }
 
   // Function used to force this component to reload
@@ -325,8 +327,30 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         />
       </Box>
     </OSTooltip>
-  </Box>
 
+
+    {/* Change unit factor*/}
+    {list_data_taggs.length>0 && list_data_taggs.filter(g=>g.banner == 'unit').length>0 ? 
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {'Conversion '+new_data.drawing_area.sankey.unit_data_tag+'/'+new_data.drawing_area.sankey.unit_first_data_tag }
+      </Box>
+      <OSTooltip label={t('Flux.label.tooltips.unit_factor')}>
+        <ConfigMenuNumberInput
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_input}
+          default_value={value?.unit_factor}
+          function_on_blur={(_) => {
+            value!.unit_factor = _ as number
+          }}
+          minimum_value={0}
+          step={0.1}
+          stepper={true}
+        />
+      </OSTooltip>
+    </Box>:<></>
+    }
+    </Box>
   // Return JSX component
   return content
 }
