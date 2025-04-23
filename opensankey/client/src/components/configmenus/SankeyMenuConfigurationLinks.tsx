@@ -182,6 +182,7 @@ export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurati
         label={t('Menu.tooltips.flux.plus')}>
         <Button
           variant='menuconfigpanel_add_button'
+          size='sizeConfigButton'
           onClick={addLinkConfig}>
           {icon_add_element}
         </Button>
@@ -212,6 +213,7 @@ export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurati
       <OSTooltip label={t('Menu.tooltips.flux.rm')}>
         <Button
           variant='menuconfigpanel_del_button'
+          size='sizeConfigButton'
           onClick={
             () => {
               // Delete all selected links

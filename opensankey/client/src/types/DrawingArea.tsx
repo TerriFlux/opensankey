@@ -2643,7 +2643,17 @@ export abstract class ClassTemplate_DrawingArea
         this.purgeSelection()
       }
       // Select element inside the selection zone & reset it (hide the zone)
-      this._selection_zone.selectElementsInside()
+      const nb_type_el_sel = this._selection_zone.selectElementsInside()
+      if (event.shiftKey) {
+        // If 2 types of element were selected, open config for nodes & flow
+        if (nb_type_el_sel == 2) {
+          this.application_data.menu_configuration.openConfigMenuElementsNodesLinks()
+        } else if (nb_type_el_sel == 1) {
+          // else if 1 type of element was selected, open config for nodes 
+          // (can't select flow without selecting nodes so if we have 1 type of element selected it's the nodes)
+          this.application_data.menu_configuration.openConfigMenuElementsNodes()
+        }
+      }
       this._selection_zone.reset()
     }
   }
@@ -2896,7 +2906,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
-    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5*parseFloat(getComputedStyle(document.documentElement).fontSize)
+    return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5 * parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
   /**
