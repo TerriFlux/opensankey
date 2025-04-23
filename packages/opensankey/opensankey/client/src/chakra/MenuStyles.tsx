@@ -74,6 +74,7 @@ export const menu_button_subnav_style = definePartsStyle({
   },
   item: {
     gridTemplateColumns: '1.5rem auto',
+    fontSize:'0.8rem',
   }
 })
 
