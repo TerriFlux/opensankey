@@ -30,7 +30,8 @@ import type {
 } from '../types/MenuConfig'
 import type {
   ClassAbstract_DrawingArea,
-  ClassAbstract_Sankey
+  ClassAbstract_Sankey,
+  TypeAbstract_NodeElement
 } from '../types/Abstract'
 
 // Local modules imports
@@ -121,6 +122,7 @@ export abstract class ClassTemplate_ZoneSelection
    * @memberof ClassTemplate_ZoneSelection
    */
   public selectElementsInside() {
+    const newly_selected:TypeAbstract_NodeElement[]=[]
     this.drawing_area.sankey.visible_nodes_list
       .filter(n => {
         // Check if node is horizontally in selection zone
@@ -139,15 +141,27 @@ export abstract class ClassTemplate_ZoneSelection
         return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
       })
       .forEach(n => {
+        newly_selected.push(n)
         this.drawing_area.addNodeToSelection(n)
       })
 
+      const newly_selected_links=[]
     this.drawing_area.sankey.visible_links_list.forEach(link => {
       // Select links that have their source and target selected
-      if (link.source.is_selected && link.target.is_selected) {
+      if (link.source.is_selected && newly_selected.includes(link.source) && link.target.is_selected && newly_selected.includes(link.target) ) {
         this.drawing_area.addLinkToSelection(link)
+        newly_selected_links.push(link)
       }
     })
+
+    // Return number of type of elements we selected, it will be used to open menu 
+    if(newly_selected.length>0){
+      if(newly_selected_links.length>0){
+        return 2
+      }
+      return 1
+    }
+    return 0
   }
 
   /**
