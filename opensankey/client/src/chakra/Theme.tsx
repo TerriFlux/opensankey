@@ -83,6 +83,9 @@ import {
   template_button_reset,
   menuconfigpanel_move_order_node_io,
   sizeConfigButton,
+  sizeButtonDialog,
+  menuconfigpanel_option_button_primary_activated,
+  menuconfigpanel_option_button_primary,
 } from './ButtonStyles'
 import {
   buttongroup_base_style,
@@ -213,6 +216,8 @@ export const opensankey_theme = extendTheme({
         menuconfigpanel_option_button_in_table,
         menuconfigpanel_option_button_left,
         menuconfigpanel_option_button_right,
+        menuconfigpanel_option_button_primary_activated,
+        menuconfigpanel_option_button_primary,
         menuconfigpanel_option_button_secondary_activated,
         menuconfigpanel_option_button_secondary,
         menuconfigpanel_option_button_tertiary_activated,
@@ -251,6 +256,7 @@ export const opensankey_theme = extendTheme({
         sizeMenuTopButtonSaveCache,
         sizeCollapseButton,
         sizeConfigButton,
+        sizeButtonDialog,
       }
     },
     ButtonGroup: {
@@ -290,9 +296,9 @@ export const opensankey_theme = extendTheme({
     CloseButton: {
       baseStyle: close_button_base_style
     },
-    Editable:{
-      baseStyle:editable_base_style,
-      variants:{
+    Editable: {
+      baseStyle: editable_base_style,
+      variants: {
         name_file_editable,
       }
     },
@@ -570,6 +576,10 @@ export const opensankey_theme = extendTheme({
       alignSelf: 'center',
       justifySelf: 'center'
     },
+    menucontext_layout: {
+      display: 'grid',
+      gridRowGap: '0.25rem',
+    },
     option_with_activation: {
       display: 'grid',
       gridTemplateColumns: '2fr 1fr',
@@ -780,16 +790,16 @@ export const opensankey_theme = extendTheme({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
     },
-    topbar_file_name:{
-      margin:'auto',
+    topbar_file_name: {
+      margin: 'auto',
     },
-    toolbar_save_and_file_name:{
-      position:'absolute',
-      right:0,
-      zIndex:2,
-      display:'grid',
-      gridColumnGap:'0.25rem',
-      gridTemplateColumns:'auto auto',
+    toolbar_save_and_file_name: {
+      position: 'absolute',
+      right: 0,
+      zIndex: 2,
+      display: 'grid',
+      gridColumnGap: '0.25rem',
+      gridTemplateColumns: 'auto auto',
     }
 
   },

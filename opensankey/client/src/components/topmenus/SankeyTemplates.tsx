@@ -209,6 +209,7 @@ export const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_dat
                     .map(difficulty => {
                       return <Button
                         variant='menuconfigpanel_option_button_secondary'
+                        size='sizeButtonDialog'
                         isActive={difficulty == selectedDifficulty}
                         isDisabled={!(difficulty in index)}
                         onClick={() => setSelectedDifficulty(difficulty)}
