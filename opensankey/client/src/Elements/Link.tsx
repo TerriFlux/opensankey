@@ -41,6 +41,7 @@ import type {
 // Local modules
 import {
   ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoTag,
   ClassAbstract_Sankey,
 } from '../types/Abstract'
 import {
@@ -1065,7 +1066,7 @@ export abstract class ClassTemplate_LinkElement
       const shape_color = this.getPathColorToUse()
       const shape_opacity = this.shape_opacity
       // Check to choose how to draw
-      const show_as_dash = this.shape_is_dashed || this.valueData == null || this.shape_is_structure
+      const show_as_dash = this.shape_is_dashed || this.valueData == null && this.value?.valueResult == null || this.shape_is_structure
       const x0 = this.position_x_start
       const y0 = this.position_y_start
       const xf = this.position_x_end
@@ -3200,6 +3201,13 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
+  public valueForTags(_:ClassAbstract_ProtoTag[]) {
+    if (this._values instanceof Class_LinkValue)
+      return this._values
+    else
+      return this._values.getValueForDataTags(_ as Class_DataTag[])    
+  }
+
   /**
    * Get value object.
    * Either search correct current value with data_taggs,
@@ -3297,6 +3305,15 @@ export abstract class ClassTemplate_LinkElement
   }
 
   public get data_label() {
+    if ( this.sankey.drawing_area.type_data == 'data' ) {
+      if (this.value?.value_option == '% input' ) {
+        return this.value?.valueData + '%s'
+      } else if (this.value?.value_option == '% output' ) {
+        return this.value?.valueData + '%d'
+      } else if (this.value?.value_option == 'unit conversion' ) {
+        return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
+      }
+    }
     // Init
     let data_value = this.valueResult
     let text_value = '-'
@@ -3751,6 +3768,12 @@ export abstract class ClassTemplate_LinkElement
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this.drawControlPoint() }
 
   public get shape_is_structure() {
+    if ( this.sankey.drawing_area.type_data == 'data' ) {
+      if (this.value?.value_option != 'value' ) {
+        return true
+      }
+    }
+
     if (this._display.attributes.shape_is_structure !== undefined) {
       return this._display.attributes.shape_is_structure
     } else if (this._display.style.shape_is_structure !== undefined) {
@@ -5226,29 +5249,50 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public get valueResult() : number | null {
     if (this.value_option == 'unit conversion') {
       if (this.unit_factor) {
-        const children_with_data = Object.values((this.parent as Class_LinkValueTree).children).filter(c=>c.valueData)
+        const children_with_data = Object.values((this.parent as Class_LinkValueTree).children).filter(c=>c.id!=this.id && c.valueResult !== null)
         if (children_with_data.length == 0) {
           return null
         }
         const child_with_data = children_with_data[0] as Class_LinkValue
         const conv_factor = child_with_data.unit_factor
+        if (!conv_factor) return null
         const this_conv_factor = this.unit_factor
-        const multiplier = this_conv_factor/conv_factor!
+        if (!this_conv_factor) return null
+        const multiplier = this_conv_factor/conv_factor
         return child_with_data.valueResult!*multiplier
       }
     } else if (this.value_option == 'value') {
       return this.data_value
     } else if (this.value_option == '% input') {
-      let total_source = 0
-      this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueResult??0)
-      return total_source*this.data_value!
+      if (this.data_value == null ) {
+        return null
+      }
+      if (this.parent == this.link) {
+        let total_source = 0
+        this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.value?.valueResult??0)
+        return total_source*this.data_value!
+      } else {
+        const data_tags_id = this.data_tags_id
+        const data_tags : ClassAbstract_ProtoTag[]= []
+        this.link?.sankey.data_taggs_list.forEach((tagg,i)=>data_tags.push(tagg.tags_dict[data_tags_id[i]]))
+        let total_source = 0
+        this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueForTags(data_tags)?.valueResult??0)
+        return total_source*this.data_value!      
+      }
+
     } else if (this.value_option == '% output') {
+      if (this.data_value == null ) {
+        return null
+      }
       let total_target = 0
       this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
       return total_target*this.data_value!
     } else if (this.value_option == '% input parent') {
       const parent = this.link!.target.dimensions_as_child[0].parent
       const parent_link = this.link?.sankey.links_dict[this.link.source.name + ' --> ' + parent.name]
+      if (!parent_link || parent_link.valueResult == null ) {
+        return null
+      }      
       return parent_link!.valueResult!*this.data_value!
     }
     return null
@@ -5337,6 +5381,8 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public copyFrom(element: Class_LinkValue) {
     this.data_value = element.data_value
     this.text_value = element.text_value
+    this.unit_factor = element.unit_factor
+    this.value_option = element.value_option
     // Tags - Cleaning
     this.flux_tags_list.forEach(tag => tag.removeReference(this))
     this._flux_tags = []
@@ -5346,7 +5392,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       .forEach(flux_tag => {
         flux_tag.addReference(this)
       })
-    this._unit_factor = element._unit_factor
+
   }
 
   /**
@@ -5363,7 +5409,8 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     json_object['id'] = this._id
     if (this.data_value) json_object['data_value'] = this.data_value
     if (this.text_value) json_object['text_value'] = this.text_value
-    if (this._unit_factor !== undefined) json_object['_unit_factor'] = this._unit_factor
+    if (this._unit_factor !== undefined) json_object['unit_factor'] = this._unit_factor
+    json_object['value_option'] = this.value_option
     json_object['tags'] = Object.fromEntries(
       this.flux_taggs_list
         .map(tagg => [
@@ -5401,6 +5448,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
       this.unit_factor = getNumberFromJSON(json_object, 'unit_factor',1)
+      this.value_option = getStringFromJSON(json_object, 'value_option','value') as ValueOptionType
     }
     // Get Flux tags
     // In JSON here are how supposed tags var is :
