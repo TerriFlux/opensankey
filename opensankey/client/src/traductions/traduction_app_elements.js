@@ -1250,7 +1250,7 @@ export const resources_app_elements = {
         Visible: 'Visible',
         Couleur: 'Couleur',
         Forme: 'Forme',
-        GE: 'Étiquettes du groupe',
+        GE: 'Groupe',
         EGE: 'Édition des groupes',
         EEG: 'Édition des étiquettes d\'un groupe',
         selct: 'Sélectionné',
