@@ -633,9 +633,17 @@ export const resources_app_elements = {
         data: {
           données: 'Data',
           vpp: 'Value',
+          data_type: 'Data type',
+          value: 'Value',
+          ratio_input: 'Ratio total input',
+          ratio_output:'Ratio total output',
+          ratio_source_parent: 'Ratio parent flux(left)',
+          ratio_target_parent: 'Ratio parent flux(right)',
+          unit_conversion: 'Coeff. units conversion',
           edit_value: 'Edit value',
           affichage: 'Label',
           tooltips: {
+            data_type: 'Data type',
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
             scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram'
@@ -1508,8 +1516,16 @@ export const resources_app_elements = {
           edit_value: 'Éditer la valeur',
           données: 'Données',
           vpp: 'Valeur',
+          data_type: 'Type de données',
+          value: 'Valeur',
+          ratio_input: 'Ratio total entrées',
+          ratio_output:'Ratio total sorties',
+          ratio_source_parent: 'Ratio flux parent(à gauche)',
+          ratio_target_parent: 'Ratio flux parent(à droite)',
+          unit_conversion: 'Coeff. conversion unités',
           affichage: 'Label',
           tooltips: {
+            data_type: 'Type de données',
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
             scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
             affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey'
