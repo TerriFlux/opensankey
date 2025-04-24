@@ -41,6 +41,7 @@ import type {
 // Local modules
 import {
   ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoTag,
   ClassAbstract_Sankey,
 } from '../types/Abstract'
 import {
@@ -3200,6 +3201,13 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
+  public valueForTags(_:ClassAbstract_ProtoTag[]) {
+    if (this._values instanceof Class_LinkValue)
+      return this._values
+    else
+      return this._values.getValueForDataTags(_ as Class_DataTag[])    
+  }
+
   /**
    * Get value object.
    * Either search correct current value with data_taggs,
@@ -4173,6 +4181,8 @@ export abstract class ClassTemplate_LinkElement
   public get value_label_unit_visible() {
     if (this._display.attributes.value_label_unit_visible !== undefined) {
       return this._display.attributes.value_label_unit_visible
+    } else if (this.sankey.unit_data_tag) {
+      return true
     } else if (this._display.style.value_label_unit_visible !== undefined) {
       return this._display.style.value_label_unit_visible
     }
@@ -4192,6 +4202,8 @@ export abstract class ClassTemplate_LinkElement
   public get value_label_unit() {
     if (this._display.attributes.value_label_unit !== undefined) {
       return this._display.attributes.value_label_unit
+    } else if (this.sankey.unit_data_tag) {
+        return this.sankey.unit_data_tag
     } else if (this._display.style.value_label_unit !== undefined) {
       return this._display.style.value_label_unit
     }
