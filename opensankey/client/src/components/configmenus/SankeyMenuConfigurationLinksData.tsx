@@ -268,17 +268,22 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
             value={value_option}
             onChange={(evt) => {
               selected_links.forEach(l=>l.value!.value_option = evt.target.value as ValueOptionType)
-              refreshThis()
+              new_data.drawing_area.updateScaleAtLinkValueSetting()
+              // Update this menu
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             {new_data.menu_configuration.data_type.map(el => {
+              if (el=='unit conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
+                return <></>
+              }
               return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{el}</OSTooltip></></option>
             })}
           </Select>
         </OSTooltip>
       </Box>
     {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
-
+    {value_option!=='unit conversion'?
     <OSTooltip label={t('Flux.data.tooltips.vpp')}>
       <Box
         as='span'
@@ -310,7 +315,33 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
         />
       </Box>
-    </OSTooltip>
+    </OSTooltip>:<></>}
+
+    {/* Change unit factor*/}
+    {/* list_data_taggs.length>0 && list_data_taggs.filter(g=>g.banner == 'unit').length>0 &&  */}
+    {value_option=='unit conversion'? 
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {'Conversion '+new_data.drawing_area.sankey.unit_data_tag+'/'+new_data.drawing_area.sankey.unit_first_datatag }
+      </Box>
+      <OSTooltip label={t('Flux.label.tooltips.unit_factor')}>
+        <ConfigMenuNumberInput
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_input}
+          default_value={value?.unit_factor}
+          function_on_blur={(_) => {
+            value!.unit_factor = _ as number
+            new_data.drawing_area.updateScaleAtLinkValueSetting()
+            // Update this menu
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          minimum_value={0}
+          step={0.1}
+          stepper={true}
+        />
+      </OSTooltip>
+    </Box>:<></>
+    }
 
     <OSTooltip
       label={t('Flux.data.tooltips.affichage')}
@@ -327,29 +358,6 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         />
       </Box>
     </OSTooltip>
-
-
-    {/* Change unit factor*/}
-    {list_data_taggs.length>0 && list_data_taggs.filter(g=>g.banner == 'unit').length>0 ? 
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {'Conversion '+new_data.drawing_area.sankey.unit_data_tag+'/'+new_data.drawing_area.sankey.unit_first_data_tag }
-      </Box>
-      <OSTooltip label={t('Flux.label.tooltips.unit_factor')}>
-        <ConfigMenuNumberInput
-          t={new_data.t}
-          ref_to_set_value={ref_set_number_input}
-          default_value={value?.unit_factor}
-          function_on_blur={(_) => {
-            value!.unit_factor = _ as number
-          }}
-          minimum_value={0}
-          step={0.1}
-          stepper={true}
-        />
-      </OSTooltip>
-    </Box>:<></>
-    }
     </Box>
   // Return JSX component
   return content
