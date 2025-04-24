@@ -18,7 +18,7 @@ export const DataTagGroupFilter: FunctionComponent<FCType_DataTagGroupFilter> = 
   // Data -------------------------------------------------------------------------------
   const data_taggs = new_data.drawing_area.sankey.data_taggs_dict
   const data_taggs_with_banner = Object.values(data_taggs)
-    .filter(tagg => { return (tagg.banner == 'one' || tagg.banner == 'multi') })
+    .filter(tagg => { return (tagg.banner == 'one' || tagg.banner == 'multi'|| tagg.banner == 'unit') })
   let show_legend_for_data_taggs = (data_taggs_with_banner.length > 0) // False if no data taggs
   data_taggs_with_banner
     .forEach(tagg => show_legend_for_data_taggs = show_legend_for_data_taggs && tagg.show_legend)
@@ -31,7 +31,7 @@ export const DataTagGroupFilter: FunctionComponent<FCType_DataTagGroupFilter> = 
   const SelectorOfTagsByGroup = data_taggs_with_banner
     .map(tagg => {
       let selector = <></>
-      if (tagg.banner == 'one') {
+      if (tagg.banner == 'one' || tagg.banner == 'unit') {
         const selected_tag_id = tagg.selected_tags_list[0]?.id ?? ''
         selector = <Select
           key={tagg.id}

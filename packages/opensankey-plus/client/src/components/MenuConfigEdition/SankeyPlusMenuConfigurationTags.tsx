@@ -1,6 +1,6 @@
 // External imports
 import * as d3 from 'd3'
-import React, { useState, FunctionComponent } from 'react'
+import React, { useState, FunctionComponent, useRef } from 'react'
 import colormap from 'colormap'
 import {
   Box,
@@ -46,6 +46,7 @@ import {
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Link'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { OSColorPicker } from '../../deps/OpenSankey/components/configmenus/OSColorPicker'
+import { ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -259,13 +260,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-        id: tag.id,
-        name: tag.name,
-        elementsRef: dict_ref_element,
-        grp: tag.group,
-        color: tag.color,
-        dict_link_value: {}
-      }
+      id: tag.id,
+      name: tag.name,
+      elementsRef: dict_ref_element,
+      grp: tag.group,
+      color: tag.color,
+      dict_link_value: {}
+    }
 
     if (tag instanceof Class_DataTag) {
       // Save value of each links in dict
@@ -340,13 +341,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-        id: tagg.id,
-        name: tagg.name,
-        activated: tagg.show_legend,
-        banner: tagg.banner,
-        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
-        dict_link_value: {}
-      }
+      id: tagg.id,
+      name: tagg.name,
+      activated: tagg.show_legend,
+      banner: tagg.banner,
+      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+      dict_link_value: {}
+    }
 
     if (tagg instanceof Class_DataTagGroup) {
       new_data.drawing_area.sankey.links_list.forEach(l => {
@@ -608,9 +609,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   }
 
   // Tags tables ------------------------------------------------------------------------
-  let variant_table_edit_tag = 'table_edit_tag_node'
-  if (elementTagNameProp == 'flux_taggs' || elementTagNameProp == 'node_taggs') variant_table_edit_tag = 'table_edit_tag_link'
-  if (elementTagNameProp == 'data_taggs') variant_table_edit_tag = 'table_edit_tag_data'
+  let variant_table_edit_tag = 'table_edit_tag_link'
+  // if (elementTagNameProp == 'flux_taggs' || elementTagNameProp == 'node_taggs') variant_table_edit_tag = 'table_edit_tag_link'
+  // if (elementTagNameProp == 'data_taggs') variant_table_edit_tag = 'table_edit_tag_data'
+
+  const ref_set_unit_input = useRef((_: string | null | undefined) => null)
 
   const tagSetting = (<WrapperBoxSubSectionMenu new_data={new_data} title={t('Tags.EEG')}>
     <>
@@ -713,10 +716,15 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
               <Th>
                 {t('Tags.Couleur')}
               </Th>
+              {elementTagNameProp === 'data_taggs' && tags_group_entry && tags_group_entry.banner == 'unit' ?
+                <Th>
+                  {'Unité'}
+                </Th> : <></>
+              }
             </Tr>
           </Thead>
 
-          {/* Tableau des étqiuettes du groupe  */}
+          {/* Tableau des étiquettes du groupe  */}
           <Tbody>
             {
               tags_entry.length > 0 ?
@@ -791,7 +799,21 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                             /></Box>
                         </OSTooltip>
                       </Td>
-
+                      {/* Choix de l'unité*/}
+                      {
+                        elementTagNameProp === 'data_taggs' && tag.group.banner == 'unit' ?
+                          <Td >
+                            <ConfigMenuTextInput
+                              ref_to_set_value={ref_set_unit_input}
+                              function_get_value={() => { return (tag as Class_DataTag).unit_name }}
+                              function_on_blur={(_) => {
+                                if ((_ !== undefined) && (_ !== null)) {
+                                  (tag as Class_DataTag).unit_name = _
+                                }
+                              }}
+                            />
+                          </Td> : <></>
+                      }
                     </Tr>
                   )
                 }) :
@@ -899,7 +921,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                         <Select
                           variant='menuconfigpanel_option_select_table'
                           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
-                            handleBanner(tag_group, (evt.target.value as tag_banner_type))}
+                            handleBanner(tag_group, (evt.target.value as tag_banner_type))
+                          }
                           value={tag_group.banner}
                         >
                           {
@@ -927,6 +950,14 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                           >
                             {t('Tags.Multiple')}
                           </option>
+                          (elementTagNameProp != 'data_taggs') ?
+                          <option
+                            key={'unit' + tag_group.id}
+                            id='Unit'
+                            value='unit'
+                          >
+                            {t('Tags.Unit')}
+                          </option>:<></>
                         </Select>
                       </OSTooltip>
                     </Td>

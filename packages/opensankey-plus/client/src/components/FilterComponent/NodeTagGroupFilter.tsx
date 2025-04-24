@@ -159,7 +159,7 @@ export const NodeTagGroupFilter: FunctionComponent<FCType_NodeTagGroupFilter> = 
     // Create the tag selector
     // It can either select one tag at the time or multiple at the time
     let selector = <></>
-    if (tagg.banner == 'one') {
+    if (tagg.banner == 'one' ) {
       selector = <Select
         key={tagg.name}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
