@@ -693,6 +693,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                 <OSTooltip label={t('Tags.tooltips.add')}>
                   <Button
                     variant='menuconfigpanel_add_button'
+                    size='sizeConfigButton'
                     value='+'
                     onClick={handleAddTagButton}>
                     {icon_add_element}
@@ -817,6 +818,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                 <OSTooltip label={t('Tags.tooltips.add_grp')}>
                   <Button
                     variant='menuconfigpanel_add_button'
+                    size='sizeConfigButton'
                     onClick={handleAddTagGrpButton}>
                     {icon_add_element}
                   </Button>

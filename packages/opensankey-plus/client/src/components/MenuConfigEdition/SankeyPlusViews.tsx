@@ -24,7 +24,8 @@ import {
   ModalOverlay,
   ButtonGroup,
   useDisclosure,
-  Fade} from '@chakra-ui/react'
+  Fade
+} from '@chakra-ui/react'
 
 // OpenSankey Libs
 import {

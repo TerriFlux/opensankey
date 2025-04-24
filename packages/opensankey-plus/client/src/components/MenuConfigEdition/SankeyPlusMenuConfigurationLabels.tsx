@@ -508,6 +508,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         <Button
           isDisabled={!new_data_plus.has_sankey_plus}
           variant='menuconfigpanel_add_button'
+          size='sizeConfigButton'
           onClick={addFreeLAbel}>
           {icon_add_element}
         </Button>
@@ -516,6 +517,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 
         <Button
           variant='menuconfigpanel_del_button'
+          size='sizeConfigButton'
           isDisabled={disable_options}
           onClick={deleteSelectedLabels}>
           {icon_remove_element}

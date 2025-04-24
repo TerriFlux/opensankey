@@ -49,7 +49,7 @@ export class ClassTemplate_ZoneSelectionOSP
    */
   public selectElementsInside() {
     // Get OpenSankey standard elements
-    super.selectElementsInside()
+    const nbtype=super.selectElementsInside()
     // Adds OpenSankey+ elements
     this.drawing_area.sankey.containers_list
       .filter(container => {
@@ -71,5 +71,7 @@ export class ClassTemplate_ZoneSelectionOSP
       .forEach(container => {
         this.drawing_area.addContainerToSelection(container as Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>)
       })
+
+    return nbtype
   }
 }
