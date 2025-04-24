@@ -118,7 +118,7 @@ export class Class_MenuConfig {
   ]
 
   protected _flow_color_origin_type: string[] = ['flow', 'source', 'target']
-  protected _data_type: ValueOptionType[] = ['value', '% input', '% output', '% input parent' , '% output parent', 'unit conversion']
+  protected _data_type: ValueOptionType[] = ['value', 'ratio_input', 'ratio_output', 'ratio_source_parent' , 'ratio_target_parent', 'unit_conversion']
 
   /**
    * Variable that determine what kind of element we are configuring in the config menu

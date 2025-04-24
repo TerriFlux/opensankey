@@ -71,11 +71,11 @@ interface IType_SpreadSheetFlux {
 
 const type_map={
   'value':'v',
-  '% input':'%s',
-  '% output':'%d',
-  '% input parent':'%sp',
-  '% output parent':'%dp',
-  'unit conversion':'uc'
+  'ratio_input':'%s',
+  'ratio_output':'%d',
+  'ratio_source_parent':'%sp',
+  'ratio_target_parent':'%dp',
+  'unit_conversion':'uc'
 }
 
 // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
