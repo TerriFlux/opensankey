@@ -3306,11 +3306,11 @@ export abstract class ClassTemplate_LinkElement
 
   public get data_label() {
     if ( this.sankey.drawing_area.type_data == 'data' ) {
-      if (this.value?.value_option == '% input' ) {
-        return this.value?.valueData + '%s'
-      } else if (this.value?.value_option == '% output' ) {
+      if (this.value?.value_option == 'ratio_input' && this.value?.valueData) {
+        return this.value.valueData*100 + '%s'
+      } else if (this.value?.value_option == 'ratio_output' && this.value?.valueData) {
         return this.value?.valueData + '%d'
-      } else if (this.value?.value_option == 'unit conversion' ) {
+      } else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }
     }
@@ -5231,7 +5231,7 @@ export class Class_LinkValueTree {
   }
 }
 
-export type ValueOptionType = 'value' | '% input' | '% output' | '% input parent' | '% output parent' | 'unit conversion'
+export type ValueOptionType = 'value' | 'ratio_input' | 'ratio_output' | 'ratio_source_parent' | 'ratio_target_parent' | 'unit_conversion'
 
 // CLASS LINK VALUE *********************************************************************
 /**
@@ -5247,7 +5247,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public parent: Class_LinkValueTree | Type_AnyLinkElement
 
   public get valueResult() : number | null {
-    if (this.value_option == 'unit conversion') {
+    if (this.value_option == 'unit_conversion') {
       if (this.unit_factor) {
         const children_with_data = Object.values((this.parent as Class_LinkValueTree).children).filter(c=>c.id!=this.id && c.valueResult !== null)
         if (children_with_data.length == 0) {
@@ -5263,7 +5263,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       }
     } else if (this.value_option == 'value') {
       return this.data_value
-    } else if (this.value_option == '% input') {
+    } else if (this.value_option == 'ratio_input') {
       if (this.data_value == null ) {
         return null
       }
@@ -5280,14 +5280,14 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
         return total_source*this.data_value!      
       }
 
-    } else if (this.value_option == '% output') {
+    } else if (this.value_option == 'ratio_output') {
       if (this.data_value == null ) {
         return null
       }
       let total_target = 0
       this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
       return total_target*this.data_value!
-    } else if (this.value_option == '% input parent') {
+    } else if (this.value_option == 'ratio_source_parent') {
       const parent = this.link!.target.dimensions_as_child[0].parent
       const parent_link = this.link?.sankey.links_dict[this.link.source.name + ' --> ' + parent.name]
       if (!parent_link || parent_link.valueResult == null ) {
@@ -5301,11 +5301,11 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public set valueResult(_) {
     if (this.value_option == 'value') {
       this.data_value = _
-    } else if (this.value_option == '% input') {    
+    } else if (this.value_option == 'ratio_input') {    
       let total_source = 0
       this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueResult??0)
       this.data_value = _!/total_source
-    } else if (this.value_option == '% output') {
+    } else if (this.value_option == 'ratio_output') {
       let total_target = 0
       this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
       this.data_value = _!/total_target
