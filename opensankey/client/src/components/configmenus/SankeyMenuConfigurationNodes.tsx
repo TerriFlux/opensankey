@@ -28,7 +28,8 @@ import React, { FunctionComponent, useRef, useState } from 'react'
 
 import {
   Box,
-  Button
+  Button,
+  Checkbox
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -81,7 +82,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
   const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_nodes.includes(d) } })
-
+  const is_expand_child = selected_nodes[0]?.is_expand_child
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload
@@ -375,6 +376,15 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
           </OSTooltip>
         </Box>
       </Box>
+
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={is_expand_child}
+        onChange={(evt) => { selected_nodes.forEach(l=>l.is_expand_child = evt.target.checked) }}>
+        <OSTooltip label={t('Flux.tooltips.is_expand_child')}>
+          {t('Flux.is_expand_child')}
+        </OSTooltip>
+      </Checkbox>
     </Box>
   )
 }
