@@ -3342,7 +3342,13 @@ export abstract class ClassTemplate_NodeElement
 
     // value is the final processed value
     const value = Math.max(input_val / pow_in, output_val / pow_out) / factor_unit
-    return String(value) + label_unit
+
+    let str_val=String(value)
+    // Rounded value only apparent when value_label_nb_digit is inferior to the number of decimal of the value 
+    if(this.value_label_custom_digit) 
+      str_val = String(parseFloat(value.toFixed(this.value_label_nb_digit)))
+
+    return str_val + label_unit
   }
 
   /**
