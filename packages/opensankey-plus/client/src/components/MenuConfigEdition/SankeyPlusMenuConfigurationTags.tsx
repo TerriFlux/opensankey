@@ -780,7 +780,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                           <></>
                       }
                       {/* Choix de la couleur*/}
-                      <Td >
+                      <Td w='100%'>
                         <OSTooltip label={t('Tags.tooltips.couleur')}>
                           <Box>
                             <OSColorPicker
