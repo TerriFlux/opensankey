@@ -34,6 +34,7 @@ import {
   ClassAbstract_NodeElement,
   ClassAbstract_NodeDimension
 } from '../types/AbstractNode'
+import { Class_LevelTag, Class_LevelTagGroup } from '../types/Tag'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -341,6 +342,31 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
     this._is_currently_in_unsetting_recursion = false
     // Return set of all nodes that need to be redrawn
     return nodes_to_redraw
+  }
+
+  public shift_level_tags() {
+    const idx = this.parent_level_tag.group.tags_list.indexOf(this.parent_level_tag)
+    const tagg = this.parent_level_tag.group
+    this._parent_level_tag = tagg.tags_list[idx+1]
+    this.child_level_tag = tagg.tags_list[idx+2]    
+  }
+
+  public normalize() {
+    const group = this.parent_level_tag.group as Class_LevelTagGroup
+    const last_tag = group.tags_list[this.parent_level_tag.group.tags_list.length-1]
+    this.children.forEach(c=>{
+      let ok = false
+      c.dimensions_as_child.forEach(cdim=>{
+      if (cdim.child_level_tag == last_tag) {
+        ok = true
+      }}) 
+      if (ok) return     
+      let parent_dimension = c.nodeDimensionAsParent(group)
+      if (!parent_dimension) {
+        parent_dimension = (this.child_level_tag as Class_LevelTag).getOrCreateLowerDimension(c,c,last_tag)
+      }
+      parent_dimension.normalize()
+    })
   }
 
   // GETTERS / SETTERS ==================================================================
