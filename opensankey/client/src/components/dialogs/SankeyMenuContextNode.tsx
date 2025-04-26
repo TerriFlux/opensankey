@@ -50,10 +50,13 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 /*************************************************************************************************/
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
-import { 
-  Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
+import {
+  Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement
+} from '../../types/Types'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
+import { Class_LevelTag, Class_LevelTagGroup, Class_ProtoLevelTag } from '../../types/Tag'
+import { ClassAbstract_ProtoLevelTag } from '../../types/Abstract'
 
 
 /*************************************************************************************************/
@@ -751,6 +754,80 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     </Button> :
     <></>
 
+  const btn_set_child = <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      const sankey = new_data.drawing_area.sankey
+      // If Tag group 'Primaire' does not exist creates it
+      let tagg = sankey.level_taggs_dict['Primaire'] as Class_LevelTagGroup
+      if (!tagg) {
+        tagg = sankey.addLevelTagGroup('Primaire', 'Primaire') as Class_LevelTagGroup
+        tagg.activated = true
+        tagg.addTag('1', '1')
+      }
+      let new_tag = false
+      selected_nodes.forEach(n=>{
+        if (new_tag) {
+          return
+        }
+        // If node being set as child is set as parent we must create a new level
+        let this_parent_dim = n.nodeDimensionAsParent(tagg)
+        if (this_parent_dim) {
+          new_tag = true
+          if (!tagg.tags_dict['3']) {
+            // temporary
+            tagg.addTag('3', '3') as Class_LevelTag
+          }
+          this_parent_dim.shift_level_tags()
+        }
+      })
+      const root_node = selected_nodes[0].input_links_list[0].source
+      let root_parent_dim = root_node.nodeDimensionAsParent(tagg)
+      let parent_level_tag: ClassAbstract_ProtoLevelTag
+      let child_level_tag: ClassAbstract_ProtoLevelTag
+      if (!root_parent_dim) {
+        parent_level_tag = sankey.level_taggs_dict['Primaire'].tags_list[0]
+        if (sankey.level_taggs_dict['Primaire'].tags_list.length == 1) {
+
+          (sankey.level_taggs_dict['Primaire'] as Class_LevelTagGroup).addTag(
+            String(+parent_level_tag.id + 1),
+            String(+parent_level_tag.id + 1)
+          )
+        }
+        (parent_level_tag as Class_LevelTag).setSelected()
+        child_level_tag = sankey.level_taggs_dict['Primaire'].tags_list[1]
+      } else {
+        child_level_tag = root_parent_dim.child_level_tag
+      }
+
+      selected_nodes.forEach(n => {
+        const expand_left = n.output_links_list.length == 0
+        if (expand_left) {
+          const desagregation_link = n.input_links_list[0]
+          root_node.input_links_list.forEach(supply_link => {
+            const new_link = n.sankey.addNewLink(supply_link.source, n);
+            (new_link as Type_GenericLinkElement).copyValues(desagregation_link);
+            n.nodeDimensionAsParent(tagg)?.children.forEach(c=>{
+              const link2copy = (c as Type_GenericNodeElement).input_links_list[0]
+              const child_link = n.sankey.addNewLink(supply_link.source, c as Type_GenericNodeElement);
+              (child_link as Type_GenericLinkElement).copyValues(link2copy)
+              n.sankey.drawing_area.deleteLink(link2copy)
+            });
+            (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag);
+            (child_level_tag as Class_ProtoLevelTag).setSelected()
+            n.dimensionsUpdated()
+            root_node.dimensionsUpdated()
+            supply_link.source.reorganizeIOLinks()
+          })
+          n.sankey.drawing_area.deleteLink(desagregation_link)
+          root_node.nodeDimensionAsParent(tagg)!.normalize()
+        } else {
+          const root_node = n.output_links_list[0].target
+        }
+      })
+    }}
+  >{t('Noeud.context_set_child')}</Button>
+
   const btn_expand = (
     (selected_nodes.length === 1) &&
     (contextualised_node !== undefined) &&
@@ -791,8 +868,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             n.position_type = 'parametric'
             // n is no more a child (contrary to its sibling)
 
-            if (contextualised_node.dimensions_as_child.length == 0 ) {
-              n.removeDimensionAsChild(n.dimensions_as_child[0])
+            if (contextualised_node.dimensions_as_child.length == 0) {
+              n.dimensions_as_child.forEach(cdim=>n.removeDimensionAsChild(cdim))
             } else {
               n.dimensions_as_child[0].force_child_level_tag(contextualised_node.dimensions_as_child[0].child_level_tag)
               n.dimensions_as_child[0].force_parent_level_tag(contextualised_node.dimensions_as_child[0].parent_level_tag)
@@ -803,11 +880,11 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
               n.dimensions_as_parent[0].force_parent_level_tag(contextualised_node.dimensions_as_parent[0].parent_level_tag)
               n.dimensions_as_parent[0].force_child_level_tag(contextualised_node.dimensions_as_parent[0].child_level_tag)
             }
-            let l : Type_GenericLinkElement 
+            let l: Type_GenericLinkElement
             if (expand_left) {
               l = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
             } else {
-              l = new_data.drawing_area.sankey.addNewLink(contextualised_node,n)
+              l = new_data.drawing_area.sankey.addNewLink(contextualised_node, n)
             }
             l.shape_color_rule = 'source'
             l.shape_opacity = n.shape_opacity
@@ -922,9 +999,10 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const context_content: { [_: string]: JSX.Element } = {
     'aggregate': btn_aggregate,
-    'contract':btn_contract,
+    'contract': btn_contract,
     'desaggregate': btn_desagregate,
     'expand': btn_expand,
+    'set_as_child': btn_set_child,
     'sep_1': sep,
 
     'align': selected_nodes.length > 1 ? <>{dropdown_c_n_align}{sep}</> : <></>,
