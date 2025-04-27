@@ -265,7 +265,7 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
    * Force to set this dimension's children as visibles
    * @memberof Class_NodeDimension
    */
-  public setForceToShowChildren(fromJSON:boolean=false) {
+  public setForceToShowChildren(fromJSON: boolean = false) {
     // Speed-up computation
     if (this._force_show_children && !this._force_show_parent)
       return
@@ -345,25 +345,35 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   }
 
   public shift_level_tags() {
-    const idx = this.parent_level_tag.group.tags_list.indexOf(this.parent_level_tag)
-    const tagg = this.parent_level_tag.group
-    this._parent_level_tag = tagg.tags_list[idx+1]
-    this.child_level_tag = tagg.tags_list[idx+2]    
+    const tagg = this.parent_level_tag.group as Class_LevelTagGroup
+    const idx = tagg.tags_list.indexOf(this.parent_level_tag as Class_LevelTag)
+    this._parent_level_tag = tagg.tags_list[idx + 1]
+    if (tagg.tags_list.length == idx + 2) {
+      const new_tags = String(+this._parent_level_tag.id + 1)
+      if (!tagg.tags_dict[new_tags]) {
+        tagg.addTag(new_tags, new_tags) as Class_LevelTag
+      }
+      this._child_level_tag = tagg.tags_list[idx + 2]
+    } else {
+      this._child_level_tag = tagg.tags_list[idx + 2]
+      this.children.forEach(c => c.dimensions_as_parent.forEach(pdim => (pdim as Class_NodeDimension).shift_level_tags()))
+    }
   }
 
   public normalize() {
     const group = this.parent_level_tag.group as Class_LevelTagGroup
-    const last_tag = group.tags_list[this.parent_level_tag.group.tags_list.length-1]
-    this.children.forEach(c=>{
+    const last_tag = group.tags_list[this.parent_level_tag.group.tags_list.length - 1]
+    this.children.forEach(c => {
       let ok = false
-      c.dimensions_as_child.forEach(cdim=>{
-      if (cdim.child_level_tag == last_tag) {
-        ok = true
-      }}) 
-      if (ok) return     
+      c.dimensions_as_child.forEach(cdim => {
+        if (cdim.child_level_tag == last_tag) {
+          ok = true
+        }
+      })
+      if (ok) return
       let parent_dimension = c.nodeDimensionAsParent(group)
       if (!parent_dimension) {
-        parent_dimension = (this.child_level_tag as Class_LevelTag).getOrCreateLowerDimension(c,c,last_tag)
+        parent_dimension = (this.child_level_tag as Class_LevelTag).getOrCreateLowerDimension(c, c, last_tag)
       }
       parent_dimension.normalize()
     })
