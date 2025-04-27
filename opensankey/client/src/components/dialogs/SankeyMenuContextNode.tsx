@@ -758,6 +758,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     variant='contextmenu_button'
     onClick={() => {
       const sankey = new_data.drawing_area.sankey
+      new_data.drawing_area.bypass_redraws = true
       // If Tag group 'Primaire' does not exist creates it
       let tagg = sankey.level_taggs_dict['Primaire'] as Class_LevelTagGroup
       if (!tagg) {
@@ -766,7 +767,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         tagg.addTag('1', '1')
       }
       let new_tag = false
-      selected_nodes.forEach(n=>{
+      selected_nodes.forEach(n => {
         if (new_tag) {
           return
         }
@@ -781,7 +782,10 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           this_parent_dim.shift_level_tags()
         }
       })
-      const root_node = selected_nodes[0].input_links_list[0].source
+      const expand_left = selected_nodes[0].output_links_list.length == 0
+      const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+      const source_or_target_attr = expand_left ? 'source' : 'target'
+      const root_node = selected_nodes[0][input_or_output_attr][0][source_or_target_attr]
       let root_parent_dim = root_node.nodeDimensionAsParent(tagg)
       let parent_level_tag: ClassAbstract_ProtoLevelTag
       let child_level_tag: ClassAbstract_ProtoLevelTag
@@ -794,37 +798,38 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             String(+parent_level_tag.id + 1)
           )
         }
-        (parent_level_tag as Class_LevelTag).setSelected()
         child_level_tag = sankey.level_taggs_dict['Primaire'].tags_list[1]
       } else {
         child_level_tag = root_parent_dim.child_level_tag
       }
 
       selected_nodes.forEach(n => {
-        const expand_left = n.output_links_list.length == 0
-        if (expand_left) {
-          const desagregation_link = n.input_links_list[0]
-          root_node.input_links_list.forEach(supply_link => {
-            const new_link = n.sankey.addNewLink(supply_link.source, n);
-            (new_link as Type_GenericLinkElement).copyValues(desagregation_link);
-            n.nodeDimensionAsParent(tagg)?.children.forEach(c=>{
-              const link2copy = (c as Type_GenericNodeElement).input_links_list[0]
-              const child_link = n.sankey.addNewLink(supply_link.source, c as Type_GenericNodeElement);
+        const desagregation_link = n[input_or_output_attr][0]
+        root_node[input_or_output_attr].forEach(supply_link => {
+          const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
+          (new_link as Type_GenericLinkElement).copyValues(desagregation_link);
+          const pdim = n.nodeDimensionAsParent(tagg)
+          if (pdim) {
+            (pdim.children as Type_GenericNodeElement[]).forEach(c => {
+              const link2copy = (c as Type_GenericNodeElement)[input_or_output_attr][0]
+              const child_link = n.sankey.addNewLink(expand_left ? supply_link.source : c, expand_left ? c : supply_link.target);
               (child_link as Type_GenericLinkElement).copyValues(link2copy)
               n.sankey.drawing_area.deleteLink(link2copy)
             });
-            (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag);
-            (child_level_tag as Class_ProtoLevelTag).setSelected()
-            n.dimensionsUpdated()
-            root_node.dimensionsUpdated()
-            supply_link.source.reorganizeIOLinks()
-          })
-          n.sankey.drawing_area.deleteLink(desagregation_link)
-          root_node.nodeDimensionAsParent(tagg)!.normalize()
-        } else {
-          const root_node = n.output_links_list[0].target
-        }
+          }
+
+          (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag);
+          (child_level_tag as Class_ProtoLevelTag).setSelected()
+          n.dimensionsUpdated()
+          root_node.dimensionsUpdated()
+          supply_link[source_or_target_attr].reorganizeIOLinks()
+        })
+        n.sankey.drawing_area.deleteLink(desagregation_link)
+        root_node.nodeDimensionAsParent(tagg)!.normalize()
       })
+      sankey.level_taggs_dict['Primaire'].tags_list[0].setSelected()
+      new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+      new_data.drawing_area.draw()
     }}
   >{t('Noeud.context_set_child')}</Button>
 
@@ -869,7 +874,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             // n is no more a child (contrary to its sibling)
 
             if (contextualised_node.dimensions_as_child.length == 0) {
-              n.dimensions_as_child.forEach(cdim=>n.removeDimensionAsChild(cdim))
+              n.dimensions_as_child.forEach(cdim => n.removeDimensionAsChild(cdim))
             } else {
               n.dimensions_as_child[0].force_child_level_tag(contextualised_node.dimensions_as_child[0].child_level_tag)
               n.dimensions_as_child[0].force_parent_level_tag(contextualised_node.dimensions_as_child[0].parent_level_tag)
