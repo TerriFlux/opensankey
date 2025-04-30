@@ -78,6 +78,55 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
   protected _original_current_view: Type_GenericDrawingArea | undefined
 
+  protected _list_color_palette: string[] = [
+    'custom',
+    'jet',
+    'hsv',
+    'hot',
+    'cool',
+    'spring',
+    'summer',
+    'autumn',
+    'winter',
+    'bone',
+    'copper',
+    'greys',
+    'YIGnBu',
+    'greens',
+    'YIOrRd',
+    'bluered',
+    'RdBu',
+    'picnic',
+    'rainbow',
+    'portland',
+    'blackbody',
+    'earth',
+    'electric',
+    'viridis',
+    'inferno',
+    'magma',
+    'plasma',
+    'warm',
+    'cool',
+    'rainbow-soft',
+    'bathymetry',
+    'cdom',
+    'chlorophyll',
+    'density',
+    'freesurface-blue',
+    'freesurface-red',
+    'oxygen',
+    'par',
+    'phase',
+    'salinity',
+    'temperature',
+    'turbidity',
+    'velocity-blue',
+    'velocity-green',
+    'cubehelix',
+  ]
+
+
   /**
    * Override all possible attr to update in copyFrom
    *
@@ -633,7 +682,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
     delete this._waiting_to_set_view
   }
 
-  /**
+  /**e
    * Function used to push view id in order array,
    * it check if the id isn't already in order because duplicate id can cause so issue when navigating views
    *
@@ -645,7 +694,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
       this._views_order.splice(this._views_order.indexOf(id), 1)
     }
     this._views_order.push(id)
-  }
+  }   
 
   // GETTERS / SETTERS ==================================================================
 
@@ -704,5 +753,9 @@ export abstract class ClassTemplate_ApplicationDataOSP
       return default_main_sankey_id in this._views
     else
       return false
+  }
+
+  public get list_color_palette(): string[] {
+    return this._list_color_palette
   }
 }

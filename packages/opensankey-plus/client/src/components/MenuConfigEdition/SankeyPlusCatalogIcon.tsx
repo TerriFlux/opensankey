@@ -227,7 +227,7 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
     >
       <CardBody>
         <Heading>{ki}</Heading>
-        <Divider />
+        <Divider/>
         <svg viewBox={import_svg.current[ki].Vb} width={50} height={50}><g><path fill='black' d={import_svg.current[ki].path}></path></g></svg>
       </CardBody>
     </Card>

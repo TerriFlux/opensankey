@@ -23,7 +23,6 @@ import {
   OSTooltip
 } from '../../deps/OpenSankey/types/Utils'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
-import { OSColorPicker } from '../../deps/OpenSankey/components/configmenus/OSColorPicker'
 
 
 
@@ -36,7 +35,7 @@ declare const window: Window &
 export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   new_data_plus,
 }) => {
-  const { t, icon_library } = new_data_plus
+  const { t, icon_library, OSColorPicker } = new_data_plus
   const { icon_locked, icon_unlocked, icon_import_file_image } = icon_library
   const is_activated = new_data_plus.has_sankey_plus
 

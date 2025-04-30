@@ -263,8 +263,9 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
 
   // If multiple dataTagg are a sequence we can add a Menu to choose which one we want to launch
   const select_active_grp = list_grp_seq.length > 1 ? <>
-    {list_grp_seq.map(el => {
+    {list_grp_seq.map((el, idx) => {
       return <MenuItem
+        key={'select_grp_seq_' + idx}
         onClick={() => setActiveGrp(el.id)}
         icon={active_grp === el.id ? icon_activated : <></>}
         style={{ display: 'block' }}

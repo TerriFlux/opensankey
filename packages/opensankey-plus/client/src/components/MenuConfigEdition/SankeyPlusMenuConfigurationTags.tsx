@@ -45,7 +45,6 @@ import {
 } from '../../deps/OpenSankey/types/Utils'
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Link'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
-import { OSColorPicker } from '../../deps/OpenSankey/components/configmenus/OSColorPicker'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -79,7 +78,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, icon_library } = new_data
+  const { t, icon_library,OSColorPicker } = new_data
   const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible, icon_random, icon_palette_color } = icon_library
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
@@ -89,8 +88,12 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   const tags_group_entry = tags_group_dict[tags_group_entry_id]
   const tags_entry = tags_group_entry?.tags_list ?? []
 
-  // Trigger reloading of this component ------------------------------------------------
+  // Failsafe if selected tag group is not in dict of group 
+  if (tags_group_list.length>0 && !(tags_group_entry_id in tags_group_dict))
+    setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
 
+
+  // Trigger reloading of this component ------------------------------------------------
   const [, setCount] = useState(0)
   const updateThis = () => {
     if (tags_group_dict[tags_group_entry_id])
@@ -103,53 +106,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   // Chosen color palette used ----------------------------------------------------------
   // Couleur issues de : https://github.com/d3/d3-scale-chromatic
   const [color_map, setColorMap] = useState('jet')
-  const color_maps = [
-    'custom',
-    'jet',
-    'hsv',
-    'hot',
-    'cool',
-    'spring',
-    'summer',
-    'autumn',
-    'winter',
-    'bone',
-    'copper',
-    'greys',
-    'YIGnBu',
-    'greens',
-    'YIOrRd',
-    'bluered',
-    'RdBu',
-    'picnic',
-    'rainbow',
-    'portland',
-    'blackbody',
-    'earth',
-    'electric',
-    'viridis',
-    'inferno',
-    'magma',
-    'plasma',
-    'warm',
-    'cool',
-    'rainbow-soft',
-    'bathymetry',
-    'cdom',
-    'chlorophyll',
-    'density',
-    'freesurface-blue',
-    'freesurface-red',
-    'oxygen',
-    'par',
-    'phase',
-    'salinity',
-    'temperature',
-    'turbidity',
-    'velocity-blue',
-    'velocity-green',
-    'cubehelix'
-  ]
+  const color_maps = new_data.list_color_palette
 
   // Update function --------------------------------------------------------------------
 
@@ -570,9 +527,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     if (_ === 'custom') {
       return
     }
-
     const dict_old_val = Object.fromEntries(tags_entry.map(tag => [tag.id, tag.color]))
-
 
     const _handleUsePalette = () => {
       // Get random colors from color palette
@@ -726,7 +681,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                       key={tag.id}
                     >
                       {/* Supprimer une etiquette  */}
-                      <Td >
+                      <Td>
                         <OSTooltip label={t('Tags.tooltips.rm')}>
                           <Button
                             variant='menuconfigpanel_del_button_in_table'
@@ -805,7 +760,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   )
 
   // Tag group menu ---------------------------------------------------------------------
-  return (<>
+  return (<Box layerStyle='menuconfigpanel_grid'>
     <WrapperBoxSubSectionMenu new_data={new_data} title={t('Tags.EGE')}>
       {/* Groupe d'étiquette  */}
       <TableContainer>
@@ -942,7 +897,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
     </WrapperBoxSubSectionMenu>
     {tags_group_list.length > 0 ? tagSetting : <></>}
 
-  </>
+  </Box>
   )
 }
 
