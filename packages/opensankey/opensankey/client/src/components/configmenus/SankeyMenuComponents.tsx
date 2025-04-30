@@ -68,7 +68,6 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
-import { OSColorPicker } from './OSColorPicker'
 
 
 /**
@@ -215,7 +214,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
   refreshParentComponent,
   dict_decorator_name
 }) => {
-
+  const { OSColorPicker } = new_data
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
 
   const check_indeterminate = (curr: Type_GenericLinkElement | Type_GenericNodeElement) => {
@@ -652,7 +651,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
 export const WrapperBoxSubSectionMenu: FunctionComponent<FCType_WrapperBoxSubSectionMenu> = ({
   new_data,
   title,
-  collapse=true,
+  collapse = true,
   children
 }) => {
   // Hooks controlling collapse opening, initiallised at true
@@ -926,7 +925,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
     closeOnSelect={false}
     isOpen={displayBgOverlay}
     onOpen={() => setMenuListItems(renderMenu())}>
-    <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant={'text_menu_select'} onClick={()=>setDisplayBgOverlay(!displayBgOverlay)}> {textBtn}</MenuButton>
+    <MenuButton as={Button} rightIcon={<ChevronDownIcon />} variant={'text_menu_select'} onClick={() => setDisplayBgOverlay(!displayBgOverlay)}> {textBtn}</MenuButton>
     {backgroundOverlay}
     <MenuList>
       {selecAll}
