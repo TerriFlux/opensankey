@@ -42,7 +42,6 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 import { FCType_ContextMenuZdd } from './types/SankeyMenuContextZDDTypes'
 import { GetRandomInt, list_palette_color } from '../../types/Utils'
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
-import { OSColorPicker } from '../configmenus/OSColorPicker'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
@@ -51,7 +50,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   new_data,
 }) => {
 
-  const { t } = new_data
+  const { t,OSColorPicker } = new_data
   const [forceUpdate, setForceUpdate] = useState(false)
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
   ref_set_number_inputs.current(String(new_data.drawing_area.scale))
