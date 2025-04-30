@@ -7,6 +7,10 @@ import {
   btn_accountpage_danger,
   btn_accountpage_embedded,
   btn_accountpage_negative,
+  btn_add_color_to_palette,
+  btn_create_color_palette,
+  btn_del_color_from_palette,
+  btn_delete_color_palette,
   btn_lone_navigation,
   btn_lone_navigation_primary,
   btn_lone_navigation_secondary,
@@ -17,6 +21,7 @@ import {
   button_sankey_open_json,
   menutop_button_goto_dashboard,
   menutop_button_logout,
+  preference_del_button,
   sizeBtnTextLogin
 } from './ButtonStyles'
 import {
@@ -25,7 +30,8 @@ import {
 } from './FormControl'
 import {
   modal_account,
-  modal_sankeytheque
+  modal_sankeytheque,
+  modal_user_preference
 } from './ModalStyle'
 import {
   accordion_sankeytheque
@@ -34,6 +40,8 @@ import {
   input_user_pages,
   register_input
 } from './InputStyles'
+import { tabs_variant_preference, tabs_variant_preference_style, tabs_variant_preference_tags } from './TabStyle'
+import { cards_user, cards_user_import } from './CardsStyles'
 
 const _text_style_log = {
   fontFamily: 'Open Sans,sans-serif',
@@ -64,9 +72,20 @@ export const Theme_SA = {
         button_open_card_sankeytheque,
         button_sankey_open_json,
         button_sankey_open_excel,
+        preference_del_button,
+        btn_create_color_palette,
+        btn_delete_color_palette,
+        btn_add_color_to_palette,
+        btn_del_color_from_palette,
       },
-      sizes:{
+      sizes: {
         sizeBtnTextLogin,
+      }
+    },
+    Card: {
+      variants: {
+        cards_user,
+        cards_user_import,
       }
     },
     Form: {
@@ -84,7 +103,16 @@ export const Theme_SA = {
     Modal: {
       variants: {
         modal_account,
-        modal_sankeytheque
+        modal_sankeytheque,
+        modal_user_preference,
+      }
+    },
+    Tabs: {
+      variants: {
+        tabs_variant_preference,
+        tabs_variant_preference_tags,
+        tabs_variant_preference_style
+
       }
     }
   },

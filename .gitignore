@@ -53,3 +53,4 @@ client/public/meta/apple-touch-icon.png
 client/public/meta/favicon-16x16.png
 client/public/meta/favicon-32x32.png
 client/public/meta/manifest.json
+env.bat

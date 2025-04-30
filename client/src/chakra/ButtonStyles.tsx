@@ -68,6 +68,80 @@ export const menutop_button_logout = defineStyle({
   },
 })
 
+export const preference_del_button=defineStyle({
+  height:'1.2rem',
+  fontSize:'1rem',
+  borderColor: 'primaire.1',
+  bg: 'primaire.1',
+  bgColor: 'primaire.1',
+  _hover: {
+    borderColor: 'secondaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+  },
+  _active: {
+    borderColor: 'secondaire.1',
+    bg: 'secondaire.1',
+    bgColor: 'secondaire.1',
+  },
+})
+
+export const btn_create_color_palette = defineStyle({
+  height: '1.5rem',
+  width: '100%',
+  borderRadius: '6px',
+  textStyle: 'h4',
+  fontSize: '1rem',
+  background: 'none',
+  backgroundColor: 'none',
+  border: 'solid 1px',
+  borderColor: 'primaire.5',
+  color: 'primaire.5',
+  gridRowGap: '0',
+  padding: '0.2rem',
+})
+export const btn_delete_color_palette = defineStyle({
+  height: '1.5rem',
+  width: '100%',
+  borderRadius: '6px',
+  textStyle: 'h4',
+  fontSize: '1rem',
+  background: 'none',
+  backgroundColor: 'none',
+  border: 'solid 1px',
+  borderColor: 'primaire.1',
+  color: 'primaire.1',
+  gridRowGap: '0',
+  padding: '0.2rem',
+  _hover: {
+    color: 'white',
+    backgroundColor: 'primaire.1',
+    borderColor: 'primaire.1',
+  }
+})
+
+export const btn_add_color_to_palette = defineStyle({
+  height: '1.5rem',
+  color: 'white',
+  width: '1.5rem',
+  borderRadius: '6px',
+  borderColor: 'primaire.5',
+  background: 'primaire.5',
+  backgroundColor: 'primaire.5',
+  padding:'0',
+})
+
+export const btn_del_color_from_palette = defineStyle({
+  height: '1.5rem',
+  color: 'white',
+  width: '1.5rem',
+  borderRadius: '6px',
+  borderColor: 'primaire.1',
+  background: 'primaire.1',
+  backgroundColor: 'primaire.1',
+  padding:'0',
+})
+
 
 export const btn_lone_navigation = defineStyle(_btn_lone_navigation)
 

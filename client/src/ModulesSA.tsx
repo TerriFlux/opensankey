@@ -26,6 +26,7 @@ import {
   ModalOverlay,
 } from '@chakra-ui/react'
 
+
 // OpenSankey imports
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
 import { OSTooltip, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
@@ -34,11 +35,12 @@ import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/components/dia
 
 // OpenSankey+ imports
 import { initializeAdditionalMenusOSP, moduleDialogsOSP } from './deps/OpenSankey+/ModulesOSP'
+import { DrawerSequenceDataTagg } from './deps/OpenSankey+/components/UtilsOSP'
 
 // Local imports
 import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
 import { LoginOutButton } from './deps/LoginComponent/Login/Login'
-import { DrawerSequenceDataTagg } from './deps/OpenSankey+/components/UtilsOSP'
+import { ModalPreference } from './components/Preferences/Preferences'
 import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import { returnToApp } from './AppSA'
 
@@ -61,7 +63,7 @@ export type ExempleMenuTypes = { [_: string]: ExempleMenuTypes | string[] }
 type FType_InitializeAdditionalMenusSA = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
   new_data: Class_ApplicationDataSA,
-  setUpdate:React.MutableRefObject<() => void>
+  setUpdate: React.MutableRefObject<() => void>
 ) => void
 
 type FCType_ModalSankeyTheque = {
@@ -83,14 +85,20 @@ type FCType_SankeyThequeCardsGenerator = {
 
 type FCType_UserPagesButtons = {
   new_data_app: Class_ApplicationDataSA
-  setUpdate:React.MutableRefObject<() => void>
+  setUpdate: React.MutableRefObject<() => void>
+}
+
+
+export type FCType_ModalPreference = {
+  new_data: Class_ApplicationDataSA,
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>
 }
 
 // FUNCTIONCOMPONENT =============================================================
 
 /**
  * Overrides : OS initializeApplicationData
- * Init data with JSON cache data if present.
+ * Init user_data with JSON cache user_data if present.
  *
  * @param {Class_ApplicationDataSA} new_data_app
  * @param {(Type_JSON | undefined)} initial_data
@@ -101,7 +109,7 @@ export const initializeApplicationDataSA = (
   initial_data: Type_JSON | undefined,
 
 ) => {
-  // Read data from cache if it exist
+  // Read user_data from cache if it exist
   if (initial_data !== undefined) {
     new_data_app.fromJSON(initial_data)
   }
@@ -124,7 +132,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   // No initialisation if static --------------------------------------------------------
 
   if (new_data_app.is_static) {
-  //Add data sequence in footer
+    //Add user_data sequence in footer
     additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
     return
   }
@@ -151,20 +159,26 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   // Index sankeytheque key in menu top order
   const idx_st = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('sankeytheque'))
+  const idx_reg = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('setting'))
   if (new_data_app.has_sankey_plus) {
     // Check if sankeytheque is not already in menu top order
     if (idx_st == -1) new_data_app.menu_configuration.menu_top_order.push(['sankeytheque'])
+    if (idx_reg == -1) new_data_app.menu_configuration.menu_top_order.push(['setting'])
 
-    additionalMenus.current.external_top_buttons_item['sankeytheque']=(<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
-  }else{
-    if(idx_st!==-1){
-      new_data_app.menu_configuration.menu_top_order.splice(idx_st,1)
+    additionalMenus.current.external_top_buttons_item['sankeytheque'] = (<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
+    additionalMenus.current.external_top_buttons_item['setting'] = (<ButtonOpenUSerPreference new_data={new_data_app} />)
+  } else {
+    if (idx_st !== -1) {
+      new_data_app.menu_configuration.menu_top_order.splice(idx_st, 1)
+    }
+    if (idx_reg !== -1) {
+      new_data_app.menu_configuration.menu_top_order.splice(idx_reg, 1)
     }
   }
 }
 
 const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
-  { new_data_app,setUpdate }
+  { new_data_app, setUpdate }
 ) => {
   // Traduction
   const { t } = new_data_app
@@ -256,7 +270,8 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
 
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
-      <ModalSankeyTheque new_data={new_data_SA} />
+      <ModalSankeyTheque new_data={new_data_SA} />,
+      <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
     )
   }
 
@@ -267,31 +282,66 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
 }
 
 const ButtonOpenModalSankeyTheque: FunctionComponent<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
+  const [, setUpdate] = useState(0)
+  new_data.menu_configuration.ref_to_btn_top_sankeytheque_updater.current = () => setUpdate(a => a + 1)
 
-  return <Box>
+  return <Button
+    variant='menutop_button'
+    size='sizeMenuTopButton'
+    onClick={() => {
+      new_data.menu_configuration.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(true)
+    }}
+  >
+    <Box
+      layerStyle='menutop_button_style'
+    >
+      <Box
+        gridRow='1'
+      >
+        {logo_sankeytheque}
+      </Box>
+      <Box
+        gridRow='2'
+      >
+        {new_data.t('Menu.sankeytheque')}
+      </Box>
+    </Box>
+  </Button>
+}
+
+const ButtonOpenUSerPreference: FunctionComponent<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
+  const [, setUpdate] = useState(0)
+  new_data.menu_configuration.ref_to_btn_top_pref_updater.current = () => setUpdate(a => a + 1)
+  const { t, menu_configuration } = new_data
+  const { ref_setter_show_modal_preference } = menu_configuration.dict_setter_show_dialog
+  return <OSTooltip
+    placement='bottom'
+    label={t('Menu.tooltips.preference')}
+  >
     <Button
       variant='menutop_button'
+      size='sizeMenuTopButton'
       onClick={() => {
-        new_data.menu_configuration.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(true)
+        ref_setter_show_modal_preference.current(true)
       }}
+      className='settings_button'
     >
       <Box
         layerStyle='menutop_button_style'
       >
         <Box
           gridRow='1'
-          padding='0.1rem 0 0.1rem 0'
         >
-          {logo_sankeytheque}
+          {new_data.icon_library.icon_setting}
         </Box>
         <Box
           gridRow='2'
         >
-          SankeyThèque
+          {t('Menu.preference')}
         </Box>
       </Box>
     </Button>
-  </Box>
+  </OSTooltip>
 }
 
 
@@ -314,7 +364,7 @@ export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({
   const path = window.location.origin
   const url = path + '/opensankey//menus/examples'
 
-  // On first render fetch sankeytheque data then re-render to have component with sankeytheque
+  // On first render fetch sankeytheque user_data then re-render to have component with sankeytheque
   if (firstRender) {
     fetch(url, {
       method: 'POST',
@@ -375,26 +425,26 @@ export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({
  * @return {*}
  */
 const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccordionGenerator> = ({ new_data, theque_tree, path, setPathToCard }) => {
-  const {icon_popup_menu}=new_data.icon_library
+  const { icon_popup_menu } = new_data.icon_library
   const entries_tree = Object.entries(theque_tree)
   const sub_acc_item = entries_tree.filter(ent => ent[0] !== 'Files').map(ent => {
     let btn_open = <></>
-    const child_etudes = Object.entries(ent[1]).filter(e=>e[0] =='Etude')
-    if (child_etudes.length>0) {
+    const child_etudes = Object.entries(ent[1]).filter(e => e[0] == 'Etude')
+    if (child_etudes.length > 0) {
       if (Object.keys(ent[1]['Etude']).length == 1) {
         return <AccordionItem>
           <Button
             variant='button_open_card_sankeytheque'
             rightIcon={icon_popup_menu}
-            onClick={() => setPathToCard([...path, ent[0],'Etude'])}
+            onClick={() => setPathToCard([...path, ent[0], 'Etude'])}
           >
             {ent[0]}
           </Button>
         </AccordionItem>
       }
     }
-    const child_files = Object.entries(ent[1]).filter(e=>e[0] =='Files')
-    if (child_files.length>0 && Object.keys(ent[1]).length==1) {
+    const child_files = Object.entries(ent[1]).filter(e => e[0] == 'Files')
+    if (child_files.length > 0 && Object.keys(ent[1]).length == 1) {
       return <AccordionItem>
         <Button
           variant='button_open_card_sankeytheque'
