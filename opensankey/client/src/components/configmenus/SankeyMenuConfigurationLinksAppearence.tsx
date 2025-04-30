@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { Fragment, FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
 import {
   Box,
@@ -83,7 +83,6 @@ import {
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit } from './SankeyMenuComponents'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
-import { OSColorPicker } from './OSColorPicker'
 
 /*************************************************************************************************/
 // Declare custom logo used for some button
@@ -108,7 +107,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t, icon_library } = new_data
+  const { t, icon_library, OSColorPicker } = new_data
   const { icon_redo, icon_open_selector, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
   const { icon_order_bottom, icon_order_down, icon_order_top, icon_order_up } = icon_library
   // Get data
@@ -229,10 +228,9 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   // State variable to trigger this menu refreshing
   const [, setCount] = useState(0)
   const [, setCountStyle] = useState(0)
-
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_links_apparence_updater.current = () => setCount(a => a + 1)
+    new_data.menu_configuration.ref_to_menu_config_nodes_apparence_visual_updater.current = () => setCount(a => a + 1)
   } else {
     new_data.menu_configuration.ref_to_menu_config_links_styles_updater.current = () => setCountStyle(a => a + 1)
   }
@@ -311,7 +309,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
             }}
           >
             {new_data.menu_configuration.flow_color_origin_type.map(el => {
-              return <option key={'value_' + el} value={el}><><OSTooltip label={t('Flux.apparence.tooltips.color_source.' + el)}>{t('Flux.apparence.' + el)}</OSTooltip></></option>
+              return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
             })}
           </Select>
         </OSTooltip>
@@ -359,7 +357,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         </InputGroup>
       </Box>
 
-      {additionMenus.current.additional_link_appearence_items.map((el,) => el(menu_for_style)/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
+      {additionMenus.current.additional_link_appearence_items.map((el, idx) => <Fragment key={'additional_apparence_' + idx}>{el(menu_for_style)}</Fragment>/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
     </>
   </WrapperBoxSubSectionMenu>
 
@@ -829,7 +827,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_links_apparence_updater.current = () => setCount(a => a + 1)
+    new_data.menu_configuration.ref_to_menu_config_links_apparence_context_updater.current = () => setCount(a => a + 1)
   } else {
     new_data.menu_configuration.ref_to_menu_config_links_styles_updater.current = () => setCountStyle(a => a + 1)
   }
@@ -1031,7 +1029,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
           }}
         />
         {content_value_specific_flow}
-        {additionMenus.current.additional_link_appearence_value.map(el => el(menu_for_style))}
+        {additionMenus.current.additional_link_appearence_value.map((el, idx) => <Fragment key={'additional_apparence_' + idx}>{el(menu_for_style)}</Fragment>)}
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
           isChecked={value_label_percent_input}
