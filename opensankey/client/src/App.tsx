@@ -43,7 +43,6 @@ import { DisaggregationModal, ContextMenuNode, AggregationModal } from './compon
 import { ContextMenuZdd } from './components/dialogs/SankeyMenuContextZDD'
 import { ApplySaveJSONDialog } from './components/dialogs/SankeyMenuDialogs'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
-import { ModalPreference } from './components/dialogs/SankeyMenuPreferences'
 
 import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
@@ -202,12 +201,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
       </React.Fragment>
       <React.Fragment key={'modale_style_node'}>
         <SankeyModalStyleNode
-          new_data={new_data}
-          additionalMenus={additionalMenus}
-        />
-      </React.Fragment>
-      <React.Fragment key={'modale_preference'}>
-        <ModalPreference
           new_data={new_data}
           additionalMenus={additionalMenus}
         />

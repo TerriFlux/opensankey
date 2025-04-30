@@ -47,3 +47,9 @@ export const heading_template_sankey = defineStyle({
   textStyle:'h2',
 })
 
+export const heading_tab_pref=defineStyle({
+  textAlign:'center',
+  fontSize:'1.3rem',
+  textStyle:'h2',
+})
+
