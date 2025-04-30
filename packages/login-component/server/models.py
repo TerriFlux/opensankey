@@ -58,6 +58,13 @@ def init_db(app):
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
     db.init_app(app)
 
+    path_directory_user_pref = ''
+    # Check if dir of pref user exist, if not then create it
+    if 'USER_PREF_REP' in os.environ:
+        path_directory_user_pref = os.environ['USER_PREF_REP']
+        if (not os.path.exists(path_directory_user_pref)):
+            os.mkdir(path_directory_user_pref)
+
 
 # ---------------------------------------------------------------
 # Define models
@@ -81,6 +88,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(256))
     firstname = db.Column(db.String(64))
     name = db.Column(db.String(64))
+    dir = db.Column(db.String(1024))
     # Old Licenses infos - TODO remove
     license_opensankeyplus = db.Column(db.String(1024))
     license_sankeysuite = db.Column(db.String(1024))

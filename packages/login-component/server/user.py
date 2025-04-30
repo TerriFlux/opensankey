@@ -5,14 +5,18 @@
 
 # ---------------------------------------------------------------
 
+import hashlib
+import json
+import random
 import secrets
 import string
+import os
 
 from datetime import datetime
 from datetime import timedelta
 
 # Flask imports
-from flask import Blueprint
+from flask import Blueprint, Response
 from flask import jsonify
 from flask import request
 
@@ -26,7 +30,8 @@ from sqlalchemy import func
 # Werkzeug
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
-
+# Sankey libs
+import SankeyExcelParser.su_trace as trace
 
 # ---------------------------------------------------------------
 # Local imports
@@ -391,3 +396,139 @@ def user_infos_is_developer():
     }
     # Send back response
     return jsonify(response)
+
+
+@connected_user.route('/user/set_preference', methods=['POST'])
+@login_required
+def set_preference():
+    """
+    HTTP POST to set user preference info
+
+    Input JSON containg elements from user
+    -
+    Output JSON response
+    - ok
+    """
+    path_dir_user = check_user_has_pref_dir()
+    # Dump user preference in files
+
+    # Dump user palette
+    if ('palette' in request.json):
+        with open(os.path.join(path_dir_user,
+                               'palette.json'), 'w') as file:
+            json.dump(request.json.get('palette'), file)
+
+    # Dump user icon catalog
+    if ('icon_catalog' in request.json):
+        with open(os.path.join(path_dir_user,
+                               'icon.json'), 'w') as file:
+            json.dump(request.json.get('icon_catalog'), file)
+
+    # Dump user taggs
+    with open(os.path.join(path_dir_user, 'taggs.json'), 'w') as file:
+        taggs = {}
+        if ('node_taggs' in request.json):
+            taggs['node_taggs'] = request.json.get('node_taggs')
+        if ('flow_taggs' in request.json):
+            taggs['flow_taggs'] = request.json.get('flow_taggs')
+        if ('data_taggs' in request.json):
+            taggs['data_taggs'] = request.json.get('data_taggs')
+
+        json.dump(taggs, file)
+
+    # Dump user style
+    with open(os.path.join(path_dir_user, 'style.json'), 'w') as file:
+        style = {}
+        if ('style_node' in request.json):
+            style['style_node'] = request.json.get('style_node')
+        if ('style_link' in request.json):
+            style['style_link'] = request.json.get('style_link')
+        json.dump(style, file)
+
+    # Send back response
+    return 'ok', 200
+
+
+@login_required
+def check_user_has_pref_dir():
+    """
+   Function that check if user preference directory exist, \
+    if not then create it
+
+    Output str
+    - user_pref_dir : path to user preference directory
+    """
+    if (current_user.dir is None):
+        # Create a user directory name with name of user + a random suffix
+        user_id: str = current_user.name.replace(
+            ' ', '_')+''.join(random.choice(string.ascii_lowercase) for i
+                              in range(5))
+        current_user.dir = hashlib.sha256(user_id.encode()).hexdigest()
+        db.session.commit()  # update database with new dir path
+
+    name_directory_user_pref = os.environ['USER_PREF_REP']
+    user_pref_dir = os.path.join(name_directory_user_pref, current_user.dir)
+    if (not os.path.exists(user_pref_dir)):
+        # create a directory for user if not present
+        os.mkdir(user_pref_dir)
+    # Return path to user dir
+    return user_pref_dir
+
+
+@connected_user.route('/user/get_preference', methods=['POST'])
+@login_required
+def get_preference():
+    """
+    HTTP POST to set user preference info
+
+    Input JSON containing elements from user
+    -
+    Output JSON response
+    - json containing user peference
+    """
+    path_dir_user = check_user_has_pref_dir()
+    preference = {}
+    try:
+        path_palette = os.path.join(path_dir_user, 'palette.json')
+        path_icon = os.path.join(path_dir_user, 'icon.json')
+        path_taggs = os.path.join(path_dir_user, 'taggs.json')
+        path_style = os.path.join(path_dir_user, 'style.json')
+
+        # Get user palette if file exist
+        if (os.path.exists(path_palette)):
+            with open(path_palette, 'r') as file:
+                preference['palette'] = json.load(file)
+
+        # Get user icon catalog if file exist
+        if (os.path.exists(path_icon)):
+            with open(path_icon, 'r') as file:
+                preference['icon_catalog'] = json.load(file)
+
+        # Get user taggs if file exist
+        if (os.path.exists(path_taggs)):
+            with open(path_taggs, 'r') as file:
+                taggs = json.load(file)
+                for key, value in taggs.items():
+                    preference[key] = value
+
+        # Get user style if file exist
+        if (os.path.exists(path_style)):
+            with open(path_style, 'r') as file:
+                style = json.load(file)
+                for key, value in style.items():
+                    preference[key] = value
+
+        # Send back response
+        return Response(
+            json.dumps(preference),
+            status=200,
+            mimetype='application/json'
+        )
+    except Exception:
+        trace.logger.error('get user preference failed')
+        response = Response(
+            json.dumps('{}'),
+            status=500,
+            mimetype='application/json'
+        )
+        return response
