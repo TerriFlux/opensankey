@@ -57,3 +57,27 @@ export const modal_sankeytheque = definePartsStyle({
   footer: {
   }
 })
+
+export const modal_user_preference = definePartsStyle({
+  dialogContainer: {
+    background: 'blackAlpha.500'
+  },
+  dialog:{
+    display: 'inherit',
+    width: '36vw',
+    height:'80vh',
+    alignSelf: 'center'
+  },
+  header: {
+    minWidth: 'inherit',
+    maxWidth: 'inherit',
+    width: '100%'
+  },
+  body: {
+    minWidth: 'inherit',
+    overflow:'unset',
+    maxWidth: 'inherit',
+  },
+  footer: {
+  }
+})
