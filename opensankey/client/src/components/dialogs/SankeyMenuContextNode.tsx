@@ -57,6 +57,7 @@ import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
 import { Class_LevelTag, Class_LevelTagGroup, Class_ProtoLevelTag } from '../../types/Tag'
 import { ClassAbstract_ProtoLevelTag } from '../../types/Abstract'
+import { default_style_id } from '../../types/Utils'
 
 
 /*************************************************************************************************/
@@ -716,7 +717,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.drawing_area.draw()
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
-          new_data.drawing_area.areaAutoFit()
+          new_data.drawing_area.areaAutoFit(false)
           refreshThisAndToggleSaving()
         }
 
@@ -744,7 +745,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.drawing_area.draw()//Redraw all node visible because some link position where not computed before disaggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
-          new_data.drawing_area.areaAutoFit()
+          new_data.drawing_area.areaAutoFit(false)
           refreshThisAndToggleSaving()
         }
 
@@ -868,9 +869,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           const new_nodes: Type_GenericNodeElement[] = []
           const original_node = contextualised_node.sibling ?? contextualised_node
           // the new node is intimely linked to the original child node
-          let root_node: Type_GenericNodeElement
+          let root_node: Type_GenericNodeElement |undefined
           if (expand_left) {
-            root_node = original_node.output_links_list[0].target as Type_GenericNodeElement
+            root_node = original_node.output_links_list.length>0?original_node.output_links_list[0].target as Type_GenericNodeElement:undefined
           } else {
             // expand right
             root_node = original_node.input_links_list[0].source as Type_GenericNodeElement
@@ -883,7 +884,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             n.copyFrom(c)
             n.shape_color = contextualised_node.shape_color
             n.shape_opacity = (contextualised_node.shape_opacity > 0.3) ? contextualised_node.shape_opacity - 0.2 : contextualised_node.shape_opacity
-            n.position_type = 'parametric'
+            //n.position_type = 'parametric'
             // n is no more a child (contrary to its sibling)
 
             if (contextualised_node.dimensions_as_child.length == 0) {
@@ -907,18 +908,22 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             l.shape_color_rule = 'source'
             l.shape_opacity = n.shape_opacity
             if (expand_left) {
-              if (root_node.input_links_dict[n.sibling!.id + '---' + root_node.id]) {
+              if (root_node?.input_links_dict[n.sibling!.id + '---' + root_node.id]) {
                 l.copyValues(root_node.input_links_dict[n.sibling!.id + '---' + root_node.id])
               }
-              n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
+              if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type == 'parametric') {
+                n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
+              }
             } else {
-              if (root_node.output_links_dict[root_node.id + '---' + n.sibling!.id]) {
+              if (root_node?.output_links_dict[root_node.id + '---' + n.sibling!.id]) {
                 l.copyValues(root_node.output_links_dict[root_node.id + '---' + n.sibling!.id])
               }
-              n.position_x = contextualised_node.position_x + new_data.drawing_area.horizontal_spacing
+              if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type == 'parametric') {
+                n.position_x = contextualised_node.position_x + new_data.drawing_area.horizontal_spacing
+              }
             }
 
-            if (i == 0) {
+            if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type == 'parametric' && i==0) {
               n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y - n.getShapeHeightToUse()
             }
             n.position_v = -1
