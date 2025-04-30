@@ -264,7 +264,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._add_waiting_process(
       'updateComponentRelatedToLinksApparence',
       (_this: Class_MenuConfig) => {
-        _this.ref_to_menu_config_links_apparence_updater.current()
+        _this.ref_to_menu_config_links_apparence_visual_updater.current()
+        _this.ref_to_menu_config_links_apparence_context_updater.current()
         this._ref_to_menu_config_link_scientific_precision_updater.current()
       }
     )

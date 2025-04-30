@@ -14,10 +14,10 @@ export const sequenceStepper = definePartsStyle({
     gap:'0.5rem'
   },
   step: {
-    '-webkit-user-select': 'none',  /* Chrome all / Safari all */
-    '-moz-user-select': 'none',     /* Firefox all */
-    '-ms-user-select': 'none',      /* IE 10+ */
-    'user-select': 'none',
+    WebkitUserSelect: 'none',  /* Chrome all / Safari all */
+    MozUserSelect: 'none',     /* Firefox all */
+    msUserSelect: 'none',      /* IE 10+ */
+    userSelect: 'none',
   },
   separator: {
     margin: '0'
