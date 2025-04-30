@@ -2100,8 +2100,10 @@ export abstract class ClassTemplate_DrawingArea
     })
     let current_y = node.position_y
     desagregated_nodes.forEach(nn => {
-      nn.display.position.x = node.position_x
-      nn.display.position.u = node.position_u
+      if (!nn.sibling) {
+        nn.display.position.x = node.position_x
+        nn.display.position.u = node.position_u
+      }
       nn.display.position.y = current_y
       current_y += 20
       new_current_v = this.apply_v_desagregate(nn, new_current_v)
