@@ -159,14 +159,14 @@ const ComponetStretchButtons: FunctionComponent<FCType_ToolbarSubComponent> = ({
     <OSTooltip placement='top' label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
         size='sizeToolbarButton'
-        onClick={() => new_data.drawing_area.areaFitHorizontally(true)}>
+        onClick={() => new_data.drawing_area.areaFitHorizontally()}>
         {new_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
     <OSTooltip placement='top' label={t('Banner.tooltipAdjustV')}>
       <Button variant='toolbar_button_6'
         size='sizeToolbarButton'
-        onClick={() => new_data.drawing_area.areaFitVertically(true)}>
+        onClick={() => new_data.drawing_area.areaFitVertically()}>
         {new_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>
