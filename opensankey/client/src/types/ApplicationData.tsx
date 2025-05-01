@@ -624,6 +624,7 @@ export abstract class ClassTemplate_ApplicationData
         // Then draw if asked
         if (draw) {
           this._drawing_area.draw()
+          this._drawing_area.areaAutoFit()
           this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
         }
       })
@@ -1084,7 +1085,7 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _pre_process_export_svg() {
     this.drawing_area.purgeSelection()
-    this.drawing_area.areaAutoFit(true)
+    this.drawing_area.areaAutoFit()
 
     const svg = this.drawing_area.d3_selection_zoom_area
     const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
