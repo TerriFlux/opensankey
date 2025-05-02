@@ -713,7 +713,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.drawing_area.draw()
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
-          new_data.drawing_area.areaAutoFit()
+          new_data.drawing_area.areaAutoFit(false)
           refreshThisAndToggleSaving()
         }
 
@@ -741,7 +741,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           new_data.drawing_area.draw()//Redraw all node visible because some link position where not computed before disaggregation
           new_data.drawing_area.purgeSelection()
           new_data.drawing_area.node_contextualised = undefined
-          new_data.drawing_area.areaAutoFit()
+          new_data.drawing_area.areaAutoFit(false)
           refreshThisAndToggleSaving()
         }
 
