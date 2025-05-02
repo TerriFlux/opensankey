@@ -1105,7 +1105,7 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _pre_process_export_svg() {
     this.drawing_area.purgeSelection()
-    this.drawing_area.areaAutoFit()
+    this.drawing_area.areaAutoFit(true)
 
     const svg = this.drawing_area.d3_selection_zoom_area
     const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
