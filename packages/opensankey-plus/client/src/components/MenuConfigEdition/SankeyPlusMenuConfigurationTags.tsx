@@ -216,13 +216,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-        id: tag.id,
-        name: tag.name,
-        elementsRef: dict_ref_element,
-        grp: tag.group,
-        color: tag.color,
-        dict_link_value: {}
-      }
+      id: tag.id,
+      name: tag.name,
+      elementsRef: dict_ref_element,
+      grp: tag.group,
+      color: tag.color,
+      dict_link_value: {}
+    }
 
     if (tag instanceof Class_DataTag) {
       // Save value of each links in dict
@@ -297,13 +297,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-        id: tagg.id,
-        name: tagg.name,
-        activated: tagg.show_legend,
-        banner: tagg.banner,
-        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
-        dict_link_value: {}
-      }
+      id: tagg.id,
+      name: tagg.name,
+      activated: tagg.show_legend,
+      banner: tagg.banner,
+      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+      dict_link_value: {}
+    }
 
     if (tagg instanceof Class_DataTagGroup) {
       new_data.drawing_area.sankey.links_list.forEach(l => {
@@ -564,13 +564,16 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
   // Tags tables ------------------------------------------------------------------------
   let variant_table_edit_tag = 'table_edit_tag_node'
+  let title = t('Tags.EEG')
   if (elementTagNameProp == 'flux_taggs' || elementTagNameProp == 'node_taggs') variant_table_edit_tag = 'table_edit_tag_link'
   if (elementTagNameProp == 'data_taggs') variant_table_edit_tag = 'table_edit_tag_data'
+  if (elementTagNameProp == 'flux_taggs' || elementTagNameProp == 'node_taggs') variant_table_edit_tag = 'table_edit_tag_link'
+  if (elementTagNameProp == 'level_taggs') title = t('Tags.EditDimensionLevel')
 
-  const tagSetting = (<WrapperBoxSubSectionMenu new_data={new_data} title={t('Tags.EEG')}>
+  const tagSetting = (<WrapperBoxSubSectionMenu new_data={new_data} title={title}>
     <>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <span>{t('Tags.GE')}:</span>
+        <span>{elementTagNameProp == 'level_taggs' ? t('Tags.Dimension') : t('Tags.GE')}:</span>
         <Select
           variant='menuconfigpanel_option_select'
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -591,7 +594,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
         </Select>
       </Box>
 
-      <Box display='grid' gridTemplateColumns='1fr 1fr 1fr'>
+      {elementTagNameProp !== 'level_taggs' ? <Box display='grid' gridTemplateColumns='1fr 1fr 1fr'>
         {/* Boutons des palettes de couleur  -------------------------------------------- */}
 
         {/* Palette de couleur aléatoire  */}
@@ -635,7 +638,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
             }
           </Select>
         </OSTooltip>
-      </Box>
+      </Box> : <></>}
 
       {/* Tableaux d'étiquettes  -------------------------------------------------------- */}
       {/* Entete du Tableau des étiquettes  */}
@@ -665,9 +668,11 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                   {t('Tags.Visible')}
                 </Th> : <></>
               }
-              <Th>
-                {t('Tags.Couleur')}
-              </Th>
+              {elementTagNameProp !== 'level_taggs' ?
+                <Th>
+                  {t('Tags.Couleur')}
+                </Th> : <></>
+              }
             </Tr>
           </Thead>
 
@@ -735,18 +740,21 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                           <></>
                       }
                       {/* Choix de la couleur*/}
-                      <Td w='100%'>
-                        <OSTooltip label={t('Tags.tooltips.couleur')}>
-                          <Box>
-                            <OSColorPicker
-                              initialColor={tag.color}
-                              functionOnBlur={(new_color) => {
-                                handleTagColor(tag, new_color)
-                              }}
-                            /></Box>
-                        </OSTooltip>
-                      </Td>
-
+                      {
+                        elementTagNameProp !== 'level_taggs' ?
+                        <Td w='100%'>
+                            <OSTooltip label={t('Tags.tooltips.couleur')}>
+                              <Box>
+                                <OSColorPicker
+                                  initialColor={tag.color}
+                                  functionOnBlur={(new_color) => {
+                                    handleTagColor(tag, new_color)
+                                  }}
+                                /></Box>
+                            </OSTooltip>
+                          </Td> :
+                          <></>
+                      }
                     </Tr>
                   )
                 }) :
@@ -760,8 +768,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   )
 
   // Tag group menu ---------------------------------------------------------------------
+<<<<<<< Updated upstream
   return (<Box layerStyle='menuconfigpanel_grid'>
     <WrapperBoxSubSectionMenu new_data={new_data} title={t('Tags.EGE')}>
+=======
+  return (<>
+    <WrapperBoxSubSectionMenu new_data={new_data} title={elementTagNameProp == 'level_taggs' ? t('Tags.EditDimension') : t('Tags.EGE')}>
+>>>>>>> Stashed changes
       {/* Groupe d'étiquette  */}
       <TableContainer>
         <Table variant={elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'}>
@@ -781,7 +794,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
               </Th>
               {/* Autre entetes  */}
               <Th>{t('Tags.Nom')}</Th>
-              <Th>{t('Tags.Bannière')}</Th>
+              {(elementTagNameProp !== 'level_taggs') ? <Th>{t('Tags.Bannière')}</Th> : <></>}
               {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.sequence')}</Th> : <></>}
             </Tr>
           </Thead>
@@ -849,42 +862,41 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                       </OSTooltip>
                     </Td>
                     {/* Banniere  */}
-                    <Td>
-                      <OSTooltip label={t('Tags.tooltips.banner')}>
-                        <Select
-                          variant='menuconfigpanel_option_select_table'
-                          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
-                            handleBanner(tag_group, (evt.target.value as tag_banner_type))}
-                          value={tag_group.banner}
+                    {(elementTagNameProp !== 'level_taggs') ? <Td><OSTooltip label={t('Tags.tooltips.banner')}>
+                      <Select
+                        variant='menuconfigpanel_option_select_table'
+                        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
+                          handleBanner(tag_group, (evt.target.value as tag_banner_type))}
+                        value={tag_group.banner}
+                      >
+                        {
+                          (elementTagNameProp != 'data_taggs') ?
+                            <option
+                              key={'none' + tag_group.id}
+                              id='NoneBaner'
+                              value='none'
+                            >
+                              {t('Menu.Aucun')}
+                            </option> :
+                            <></>
+                        }
+                        <option
+                          key={'one' + tag_group.id}
+                          id='OneBaner'
+                          value='one'
                         >
-                          {
-                            (elementTagNameProp != 'data_taggs') ?
-                              <option
-                                key={'none' + tag_group.id}
-                                id='NoneBaner'
-                                value='none'
-                              >
-                                {t('Menu.Aucun')}
-                              </option> :
-                              <></>
-                          }
-                          <option
-                            key={'one' + tag_group.id}
-                            id='OneBaner'
-                            value='one'
-                          >
-                            {t('Tags.Unique')}
-                          </option>
-                          <option
-                            key={'multi' + tag_group.id}
-                            id='MultipleBaner'
-                            value='multi'
-                          >
-                            {t('Tags.Multiple')}
-                          </option>
-                        </Select>
-                      </OSTooltip>
-                    </Td>
+                          {t('Tags.Unique')}
+                        </option>
+                        <option
+                          key={'multi' + tag_group.id}
+                          id='MultipleBaner'
+                          value='multi'
+                        >
+                          {t('Tags.Multiple')}
+                        </option>
+                      </Select>
+                    </OSTooltip>
+                    </Td> : <></>}
                     {/* is Sequence  */}
                     {dataTagg_special_column}
                   </Tr>

@@ -64,7 +64,7 @@ export const NodeTagGroupFilter: FunctionComponent<FCType_NodeTagGroupFilter> = 
     const nb_of_level_taggs = Object.values(level_taggs).filter(tagg => tagg.has_tags).length
     if (nb_of_level_taggs > 1) {
       taggs_in_banner = Object.values(level_taggs)
-        .filter(tagg => (tagg.has_tags))
+        .filter(tagg => tagg.has_tags)
     }
     else {
       taggs_in_banner = Object.values(level_taggs)
@@ -164,6 +164,7 @@ export const NodeTagGroupFilter: FunctionComponent<FCType_NodeTagGroupFilter> = 
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // Set tag with given id as selected : other are unselected
           tagg.selectTagsFromId(evt.target.value)
+          new_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}

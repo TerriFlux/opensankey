@@ -148,6 +148,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
     
     this._style_config.data.elements_configurable.push('data_tag')
+    this._style_config.data.elements_configurable.push('level_tag')
 
     this._style_config['presentation']= { 'theme': '#778a95', elements_configurable: ['flow', 'node','flow_tag', 'node_tag','object','view'] }
     this._elements_configurable_selected['presentation']= []
@@ -192,7 +193,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this.ref_to_toolbar_node_tag_updater.current()
     this.ref_to_toolbar_link_tag_updater.current()
     this.ref_to_toolbar_data_tag_updater.current()
-    this.ref_to_leveltag_filter_updater.current()
+    this.ref_to_toolbar_level_tag_filter_updater.current()
   }
 
   /**
@@ -273,9 +274,10 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   public override updateAllComponentsRelatedToTags() {
     super.updateAllComponentsRelatedToTags()
-    this._ref_to_toolbar_node_tag_updater.current()
-    this._ref_to_toolbar_link_tag_updater.current()
-    this._ref_to_toolbar_data_tag_updater.current()
+    this.ref_to_toolbar_node_tag_updater.current()
+    this.ref_to_toolbar_link_tag_updater.current()
+    this.ref_to_toolbar_data_tag_updater.current()
+    this.ref_to_toolbar_level_tag_filter_updater.current()
   }
 
   public override updateAllComponentsRelatedToNodeTags() {

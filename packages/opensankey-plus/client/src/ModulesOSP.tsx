@@ -115,6 +115,7 @@ import {
   ImportImageAsSvgBg,
 } from './components/UtilsOSP'
 import { ToolbarFilter } from './components/FilterComponent/TagsFilterComponent'
+import { SankeyMenuConfigurationLevelTags } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLevlTags'
 
 declare const window: Window &
   typeof globalThis & {
@@ -259,9 +260,10 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.current.additional_menu_type['presentation'] = 'presentation'
   additionalMenus.current.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
-  additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus },
-  additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus },
-  additionalMenus.current.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus },
+  additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus }
+  additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus }
+  additionalMenus.current.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus }
+  additionalMenus.current.additional_menu_button_element_configurable['level_tag'] = { icon: has_sankey_plus ? icon_library.icon_level_tag : icon_library.icon_level_tag_diabled, text: t('Menu.Config.element_level_tag'), disabled: !has_sankey_plus }
 
   // Add menu for new menu type 'Présentation'
   additionalMenus.current.additional_new_menu_config_content['presentation'] = {
@@ -298,7 +300,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       />
       </>
     </WrapperContentConfig>,
-
     'view': <WrapperContentConfig title={t('view.storytelling')}>
       <ViewsConfig new_data_plus={new_data_plus}
       />
@@ -312,7 +313,17 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         new_data={new_data_plus}
         elementTagNameProp='data_taggs'
       />
-    </WrapperContentConfig>
+    </WrapperContentConfig>,
+    'level_tag': <WrapperContentConfig title={t('Menu.Hierarchy')} >
+    <><SankeySettingsEditionElementTags
+      new_data={new_data_plus}
+      elementTagNameProp='level_taggs'
+    />
+    <SankeyMenuConfigurationLevelTags
+      new_data={new_data_plus}
+    />
+    </>
+  </WrapperContentConfig>
   }
 }
 

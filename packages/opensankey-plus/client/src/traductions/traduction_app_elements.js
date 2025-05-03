@@ -44,6 +44,7 @@ export const resources_app_elements = {
         view_actual_file: 'Views',
         other_file: 'Other file',
         trade_close: 'Close to node',
+        level:'Level\'s tags',
         flow_associated_tag:'Flow associated to tag',
         node_associated_tag:'Nodes associated to tag',
         Config:{
@@ -247,6 +248,10 @@ export const resources_app_elements = {
       'elements_sankey+_blocked_long': 'Some Sankey elements are not visible because they come from OpenSankey+ and your account does not have this module',
       'elements_mfa_blocked_long': 'Some Sankey elements are not visible because they come from MFASankey and your account does not have this module',
       Tags:{
+        siblings:'Siblings',
+        tooltips:{
+          sibling:'List of group level tag that can\'t be activated at the same time as this one'
+        },
         sequence:'Sequence',
         sequence_timeout:'Timeout between steps',
         tooltips:{
@@ -464,6 +469,8 @@ export const resources_app_elements = {
         view_actual_file: 'Vues',
         other_file: 'Autre fichier',
         trade_close: 'Près du noeud',
+        level:'Étiquette d\'agrégation',
+
         flow_associated_tag:'Flux associés',
         node_associated_tag:'Noeuds associés',
         Config:{
@@ -643,6 +650,10 @@ export const resources_app_elements = {
       'elements_sankey+_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de OpenSankey+ et votre compte ne possède pas ce module',
       'elements_mfa_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de MFASankey et votre compte ne possède pas ce module',
       Tags:{
+        siblings:'Antagoniste',
+        tooltips:{
+          sibling:'Liste des groupes d\'agrégation qui ne peuvent pas être activé en même temps que celui-ci'
+        },
         sequence:'Séquence',
         sequence_timeout:'Délai entre étapes',
         tooltips:{
