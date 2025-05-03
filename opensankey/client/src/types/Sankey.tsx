@@ -877,6 +877,10 @@ export abstract class ClassTemplate_Sankey
             matching_tags_id[json_entry][_] ?? {})
         })
     }
+
+    if (Object.keys(this._level_taggs).length>1) {
+      this.removeTagGroupWithId('level_taggs','Primaire')
+    }
     json_entry = 'nodeTags'
     if (json_object[json_entry] !== undefined) {
       // Set node tag & tag group from json data

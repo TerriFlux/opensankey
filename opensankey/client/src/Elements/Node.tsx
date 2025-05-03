@@ -681,6 +681,9 @@ export abstract class ClassTemplate_NodeElement
   ) {
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
+    if (dimensions_as_JSON && Object.keys(dimensions_as_JSON).length > 1) {
+      delete dimensions_as_JSON['Primaire']
+    }
     // For each dimension in dimensions JSON Struct, create the parent / child relation
     if (dimensions_as_JSON) {
       Object.keys(dimensions_as_JSON)
