@@ -885,6 +885,7 @@ export const resources_app_elements = {
         EF: 'Étiquettes des flux',
         EdF: 'Édition des flux',
         ED: 'Étiquettes des données',
+        Hierarchy: 'Hiérarchie',
         Leg: 'Légende',
         LegX: 'Position horizontale',
         LegY: 'Position verticale',
@@ -1066,6 +1067,7 @@ export const resources_app_elements = {
           element_flow: 'Flux',
           element_node_tag: 'Étiq. Noeud',
           element_flow_tag: 'Étiq. Flux',
+          element_level_tag: 'Hiérarchie',
 
           element_data: 'Données',
           element_data_tag: 'Étiq. Données',
@@ -1254,6 +1256,10 @@ export const resources_app_elements = {
         GE: 'Étiquettes du groupe',
         EGE: 'Édition des groupes',
         EEG: 'Édition des étiquettes d\'un groupe',
+        Dimension: 'Dimension',
+        EditDimension: 'Édition des dimensions',
+        EditDimensionLevel: 'Édition des niveaux d\'une dimension',
+
         selct: 'Sélectionné',
         tooltips: {
           pal: 'Appliquer une palette de couleurs aléatoires pour les étiquettes du groupe sélectionné',
