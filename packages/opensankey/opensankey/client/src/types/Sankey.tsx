@@ -1613,20 +1613,6 @@ export abstract class ClassTemplate_Sankey
     _resetAttrToStyleVal()
   }
 
-  // Tags related ------------------------------------------------------------------------
-
-  public triggerPrimaryLevelTagging(): void {
-    // TODO deal with siblings tags
-    if ('Primaire' in this._level_taggs) {
-      if (this.level_taggs_list.length > 1) {
-        this._level_taggs['Primaire'].activated = false
-      }
-      else {
-        this._level_taggs['Primaire'].activated = true
-      }
-    }
-  }
-
   public addLevelTagGroup(
     id: string,
     name: string
