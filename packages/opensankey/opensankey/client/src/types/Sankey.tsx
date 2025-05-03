@@ -62,7 +62,8 @@ import {
   default_style_id,
   Type_MacroTagGroup,
   randomId,
-  CutName
+  CutName,
+  makeId
 } from '../types/Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
 import { DefaultLinkExportStyle, DefaultLinkImportStyle, DefaultNodeExportStyle, DefaultNodeImportStyle, DefaultNodeProductStyle, DefaultNodeSectorStyle } from './Legacy'
@@ -1353,8 +1354,9 @@ export abstract class ClassTemplate_Sankey
    */
   public addNewDefaultNodeStyle() {
     const _ = String(this.node_styles_list.length)
+    const id = makeId('id')
     return this.addNewNodeStyle(
-      'style_node_' + _,
+      'style_node_' + id,
       'Style ' + _)
   }
 
@@ -1398,8 +1400,9 @@ export abstract class ClassTemplate_Sankey
    */
   public addNewDefaultLinkStyle() {
     const _ = String(this.link_styles_list.length)
+    const id = makeId('id')
     return this.addNewLinkStyle(
-      'style_link_' + _,
+      'style_link_' + id,
       'Style ' + _)
   }
 
@@ -1609,20 +1612,6 @@ export abstract class ClassTemplate_Sankey
     this.drawing_area.application_data.history.saveUndo(inv_resetAttrToStyleVal)
     this.drawing_area.application_data.history.saveRedo(_resetAttrToStyleVal)
     _resetAttrToStyleVal()
-  }
-
-  // Tags related ------------------------------------------------------------------------
-
-  public triggerPrimaryLevelTagging(): void {
-    // TODO deal with siblings tags
-    if ('Primaire' in this._level_taggs) {
-      if (this.level_taggs_list.length > 1) {
-        this._level_taggs['Primaire'].activated = false
-      }
-      else {
-        this._level_taggs['Primaire'].activated = true
-      }
-    }
   }
 
   public addLevelTagGroup(

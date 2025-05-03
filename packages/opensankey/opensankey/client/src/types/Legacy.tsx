@@ -1306,22 +1306,25 @@ const convert_tags: convert_tagsFuncType = (
   if (!data.levelTags) {
     data.levelTags = {}
   }
-  if (!('Primaire' in data.levelTags)) {
-    data.levelTags['Primaire'] = {
-      group_name: 'Primaire',
-      show_legend: false,
-      color_map: 'custom',
-      tags: {
-        '1': { name: '1', selected: true, color: '#696969' }
-      },
-      banner: 'level',
-      activated: true,
-      siblings: []
-    }
-  }
-  if (Object.values(data.levelTags).length > 1) {
-    data.levelTags['Primaire'].activated = false
-  }
+  // if (!('Primaire' in data.levelTags)) {
+  //   data.levelTags['Primaire'] = {
+  //     group_name: 'Primaire',
+  //     show_legend: false,
+  //     color_map: 'custom',
+  //     tags: {
+  //       '1': { name: '1', selected: true, color: '#696969' }
+  //     },
+  //     banner: 'level',
+  //     activated: true,
+  //     siblings: []
+  //   }
+  // }
+  // if (Object.values(data.levelTags).length > 1) {
+  //   data.levelTags['Primaire'].activated = false
+  // }
+  if (('Primaire' in data.levelTags) && Object.values(data.levelTags).length > 1) {
+    delete data.levelTags['Primaire']
+  } 
   // Convertie les anciens groupTag des données issu d'un excel qui ont pour valeur 1 ou 0 pour signifier un boolean
   Object.values(data.nodeTags).forEach(t => {
     t.show_legend = typeof (t.show_legend) == 'boolean' ? t.show_legend : ((t.show_legend === 1))
@@ -1615,9 +1618,9 @@ const convert_nodes: convert_nodesFuncType = (
       n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
       n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
     }
-    if (!('Primaire' in n.dimensions)) {
-      n.dimensions['Primaire'] = { level: 1, parent_name: undefined }
-    }
+    // if (!('Primaire' in n.dimensions)) {
+    //   n.dimensions['Primaire'] = { level: 1, parent_name: undefined }
+    // }
     if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior') {
       n.tags['type de noeud'] = ['echange']
       if ( n.outputLinksId.length > 0 ) {
@@ -1656,7 +1659,7 @@ const convert_nodes: convert_nodesFuncType = (
     // Nodes with type Echanges did not have the correct dimensions
     if (n.tags['Echanges']) {
       const new_dimensions = {
-        'Primaire': n.dimensions['Primaire'],
+        //'Primaire': n.dimensions['Primaire'],
         'Echanges': n.dimensions['Echanges']
       }
       n.dimensions = new_dimensions

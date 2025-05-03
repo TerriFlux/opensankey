@@ -830,7 +830,7 @@ export abstract class ClassTemplate_NodeElement
 
   /**
    * Agregate node
-   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, agregate with 'Primaire'
+   * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
   public drawParent(id?: string) {
@@ -871,7 +871,7 @@ export abstract class ClassTemplate_NodeElement
 
   /**
    * Disagregate node
-   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, disagregate with 'Primaire'
+   * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
   public drawChildren(id: string) {
@@ -3266,13 +3266,13 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
-   *Return ture if nod eis in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
+   *Return ture if nod eis in multiple nodeDimension has a parent.
    *
    * @readonly
    * @memberof ClassTemplate_NodeElement
    */
   public get is_multi_parent() {
-    return (Object.values(this._dimensions_as_parent).filter(dim => dim.related_level_tagg.id != 'Primaire').length > 1)
+    return (Object.values(this._dimensions_as_parent).length > 1)
   }
 
   /**
@@ -3286,13 +3286,13 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
-   *Return ture if node is in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
+   *Return ture if node is in multiple nodeDimension has a parent.
    *
    * @readonly
    * @memberof ClassTemplate_NodeElement
    */
   public get is_multi_children() {
-    return (Object.values(this._dimensions_as_child).filter(dim => dim.parent_level_tag.group.id != 'Primaire').length > 1)
+    return (Object.values(this._dimensions_as_child).length > 1)
   }
 
   /**

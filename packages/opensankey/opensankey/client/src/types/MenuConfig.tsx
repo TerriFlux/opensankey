@@ -112,7 +112,6 @@ export class Class_MenuConfig {
     ],
     [
       'contact',
-      'setting',
     ]
   ]
 
@@ -194,7 +193,8 @@ export class Class_MenuConfig {
   private _ref_to_menu_config_nodes_selection_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationNodesAttributes
-  private _ref_to_menu_config_nodes_apparence_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_nodes_apparence_visual_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_nodes_apparence_context_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationNodesAttributes
   private _ref_to_menu_config_nodes_styles_updater: MutableRefObject<() => void>
@@ -217,7 +217,8 @@ export class Class_MenuConfig {
   private _ref_to_menu_contextual_config_links_data_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationLinksAttributes
-  private _ref_to_menu_config_links_apparence_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_apparence_visual_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_apparence_context_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationLinksAttributes
   private _ref_to_menu_config_links_styles_updater: MutableRefObject<() => void>
@@ -383,7 +384,8 @@ export class Class_MenuConfig {
 
     // Nodes
     this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_apparence_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_apparence_visual_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_apparence_context_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_styles_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_styles_editor_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_tags_updater = useRef(() => null)
@@ -394,7 +396,8 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_links_selection_updater = useRef(() => null)
     this._ref_to_menu_config_links_data_updater = useRef(() => null)
     this._ref_to_menu_contextual_config_links_data_updater = useRef(() => null)
-    this._ref_to_menu_config_links_apparence_updater = useRef(() => null)
+    this._ref_to_menu_config_links_apparence_visual_updater = useRef(() => null)
+    this._ref_to_menu_config_links_apparence_context_updater = useRef(() => null)
     this._ref_to_menu_config_links_styles_updater = useRef(() => null)
     this._ref_to_menu_config_links_styles_editor_updater = useRef(() => null)
     this._ref_to_menu_config_links_tags_updater = useRef(() => null)
@@ -723,7 +726,8 @@ export class Class_MenuConfig {
     this._add_waiting_process(
       'updateComponentRelatedToLinksApparence',
       (_this: Class_MenuConfig) => {
-        _this._ref_to_menu_config_links_apparence_updater.current()
+        _this._ref_to_menu_config_links_apparence_visual_updater.current()
+        _this._ref_to_menu_config_links_apparence_context_updater.current()
       }
     )
   }
@@ -991,7 +995,8 @@ export class Class_MenuConfig {
   }
 
   protected _updateComponentRelatedToNodesApparence() {
-    this._ref_to_menu_config_nodes_apparence_updater.current()
+    this._ref_to_menu_config_nodes_apparence_visual_updater.current()
+    this._ref_to_menu_config_nodes_apparence_context_updater.current()
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -1072,9 +1077,15 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_nodes_selection_updater
   }
 
-  public get ref_to_menu_config_nodes_apparence_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_nodes_apparence_updater
+  public get ref_to_menu_config_nodes_apparence_visual_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_apparence_visual_updater
   }
+
+  
+  public get ref_to_menu_config_nodes_apparence_context_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_apparence_context_updater
+  }
+
 
   public get ref_to_menu_config_nodes_styles_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_nodes_styles_updater
@@ -1123,8 +1134,12 @@ export class Class_MenuConfig {
     return this._ref_to_menu_contextual_config_links_data_updater
   }
 
-  public get ref_to_menu_config_links_apparence_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_links_apparence_updater
+  public get ref_to_menu_config_links_apparence_visual_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_apparence_visual_updater
+  }
+
+  public get ref_to_menu_config_links_apparence_context_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_apparence_context_updater
   }
 
   public get ref_to_menu_config_links_styles_updater(): MutableRefObject<() => void> {
