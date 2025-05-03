@@ -358,6 +358,8 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
       this._child_level_tag = tagg.tags_list[idx + 2]
       this.children.forEach(c => c.dimensions_as_parent.forEach(pdim => (pdim as Class_NodeDimension).shift_level_tags()))
     }
+    this.parent.dimensionsUpdated()
+    this.children.forEach(c => c.dimensionsUpdated())
   }
 
   public normalize() {
@@ -365,7 +367,8 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
     const last_tag = group.tags_list[this.parent_level_tag.group.tags_list.length - 1]
     this.children.forEach(c => {
       let ok = false
-      c.dimensions_as_child.forEach(cdim => {
+      const child_dimensions = c.dimensions_as_child.filter(c=>c.parent_level_tag.group.id == group.id)
+      child_dimensions.forEach(cdim => {
         if (cdim.child_level_tag == last_tag) {
           ok = true
         }
@@ -373,7 +376,12 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
       if (ok) return
       let parent_dimension = c.nodeDimensionAsParent(group)
       if (!parent_dimension) {
-        parent_dimension = (this.child_level_tag as Class_LevelTag).getOrCreateLowerDimension(c, c, last_tag)
+        //const child_dimensions = c.dimensions_as_child.filter(c=>c.parent_level_tag.group.id == group.id)
+        const last_child_dimension = child_dimensions[child_dimensions.length-1]
+        const last_child_dimension_tag = last_child_dimension.child_level_tag as Class_LevelTag
+        const idx = group.tags_list.indexOf(last_child_dimension_tag)
+        const new_tag = group.tags_list[idx+1]
+        parent_dimension = (this.child_level_tag as Class_LevelTag).getOrCreateLowerDimension(c, c, new_tag)
       }
       parent_dimension.normalize()
     })
