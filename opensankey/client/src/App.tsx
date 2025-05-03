@@ -43,7 +43,6 @@ import { DisaggregationModal, ContextMenuNode, AggregationModal } from './compon
 import { ContextMenuZdd } from './components/dialogs/SankeyMenuContextZDD'
 import { ApplySaveJSONDialog } from './components/dialogs/SankeyMenuDialogs'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
-import { ModalPreference } from './components/dialogs/SankeyMenuPreferences'
 
 import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
@@ -93,11 +92,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   const new_data = initializeApplicationData(initial_data)
   const { menu_configuration } = new_data
   const { additionalMenus } = menu_configuration
-  /*************************************************************************************************/
-
-  // If leveltags are present Primaire is desactivated
-  new_data.drawing_area.sankey.triggerPrimaryLevelTagging()
-
   /*************************************************************************************************/
 
   const mode_pref = sessionStorage.getItem('modepref')
@@ -202,12 +196,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
       </React.Fragment>
       <React.Fragment key={'modale_style_node'}>
         <SankeyModalStyleNode
-          new_data={new_data}
-          additionalMenus={additionalMenus}
-        />
-      </React.Fragment>
-      <React.Fragment key={'modale_preference'}>
-        <ModalPreference
           new_data={new_data}
           additionalMenus={additionalMenus}
         />

@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { Fragment, FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
 import Draggable from 'react-draggable'
 
@@ -204,7 +204,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             bottom='0'
             layerStyle='menubottom_layout_style'
           >
-            {additionalMenus.current.footer}
+            {additionalMenus.current.footer.map((add_footer,idx)=><Fragment key={'additional_footer_'+idx}>{add_footer}</Fragment>)}
             <Box
               display='grid'
               gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
