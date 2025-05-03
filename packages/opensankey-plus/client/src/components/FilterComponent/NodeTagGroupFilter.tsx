@@ -64,8 +64,7 @@ export const NodeTagGroupFilter: FunctionComponent<FCType_NodeTagGroupFilter> = 
     const nb_of_level_taggs = Object.values(level_taggs).filter(tagg => tagg.has_tags).length
     if (nb_of_level_taggs > 1) {
       taggs_in_banner = Object.values(level_taggs)
-        .filter(tagg => (tagg.name !== 'Primaire') &&
-          (tagg.has_tags))
+        .filter(tagg => (tagg.has_tags))
     }
     else {
       taggs_in_banner = Object.values(level_taggs)
