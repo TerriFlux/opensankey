@@ -761,87 +761,149 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       const sankey = new_data.drawing_area.sankey
       new_data.drawing_area.bypass_redraws = true
       // If Tag group 'Primaire' does not exist creates it
-      let tagg = sankey.level_taggs_dict['Primaire'] as Class_LevelTagGroup
+
+
+      let new_tag = false
+      let this_parent_dim :Class_NodeDimension|undefined
+      let this_child_dim :Class_NodeDimension|undefined
+
+      let root_node: Type_GenericNodeElement
+
+
+      const expand_left = selected_nodes[0].output_links_list.length == 0
+      const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+      const source_or_target_attr = expand_left ? 'source' : 'target'
+
+      let possible_root_nodes : Set<string> = new Set
+      let tagg = sankey.level_taggs_dict['dimension_1'] as Class_LevelTagGroup
       if (!tagg) {
-        tagg = sankey.addLevelTagGroup('Primaire', 'Primaire') as Class_LevelTagGroup
+        tagg = sankey.addLevelTagGroup('dimension_1', 'Dimension 1') as Class_LevelTagGroup
         tagg.activated = true
         tagg.addTag('1', '1')
       }
-
-      let new_tag = false
       selected_nodes.forEach(n => {
         if (new_tag) {
           return
         }
         // If node being set as child is set as parent we must create a new level
-        let this_parent_dim = n.nodeDimensionAsParent(tagg)
+        this_parent_dim = n.dimensions_as_parent[0] // TODO > 1
+        this_child_dim = this_child_dim?this_child_dim:n.dimensions_as_child[0]
         if (this_parent_dim) {
           new_tag = true
-          this_parent_dim.shift_level_tags()
+          if ((this_parent_dim.children as Type_GenericNodeElement[])[0].dimensions_as_child.length == 1) {
+            this_parent_dim.shift_level_tags()
+            tagg = this_parent_dim.parent_level_tag.group as Class_LevelTagGroup
+          } else {
+            // On croise
+            const other_dim = (this_parent_dim.children as Type_GenericNodeElement[])[0].dimensions_as_child.filter(cdim=>cdim.parent_level_tag.group != this_parent_dim?.parent_level_tag.group)[0]
+            tagg = other_dim.parent_level_tag.group as Class_LevelTagGroup
+          }
+        }
+        if (possible_root_nodes.size !== 0) {
+          possible_root_nodes = new Set(n[input_or_output_attr].map(l=>l[source_or_target_attr].id)).intersection(possible_root_nodes)
+        } else {
+          possible_root_nodes = new Set(n[input_or_output_attr].map(l=>l[source_or_target_attr].id))
         }
       })
+      root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
+      //root_node = selected_nodes[0][input_or_output_attr][0][source_or_target_attr]
 
-      const expand_left = selected_nodes[0].output_links_list.length == 0
-      const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-      const source_or_target_attr = expand_left ? 'source' : 'target'
-      const root_node = selected_nodes[0][input_or_output_attr][0][source_or_target_attr]
-      let root_parent_dim = root_node.nodeDimensionAsParent(tagg)
+      // let tagg = this_parent_dim ? 
+      //   this_parent_dim.parent_level_tag.group as Class_LevelTagGroup :
+      //   sankey.level_taggs_dict['dimension_1'] as Class_LevelTagGroup
+
+
+      let root_has_parent = root_node.dimensions_as_parent.filter(dim=>dim.parent_level_tag.group.id==tagg.id).length !== 0
       let parent_level_tag: ClassAbstract_ProtoLevelTag
       let child_level_tag: ClassAbstract_ProtoLevelTag
-      if (!root_parent_dim) {
-        parent_level_tag = sankey.level_taggs_dict['Primaire'].tags_list[0]
-        if (sankey.level_taggs_dict['Primaire'].tags_list.length == 1) {
-
-          (sankey.level_taggs_dict['Primaire'] as Class_LevelTagGroup).addTag(
+      let idx = 1
+      if (!root_has_parent && !this_child_dim) {
+        parent_level_tag = tagg.tags_list[0]
+        if (tagg.tags_list.length == 1) {
+          tagg.addTag(
             String(+parent_level_tag.id + 1),
             String(+parent_level_tag.id + 1)
           )
         }
-        child_level_tag = sankey.level_taggs_dict['Primaire'].tags_list[1]
+        //if (this_parent_dim) {
+          // PC parent child
+          //parent_level_tag = this_parent_dim.parent_level_tag
+          //hild_level_tag = this_parent_dim.child_level_tag
+        //} else {
+        child_level_tag = tagg.tags_list[1]
+        //} 
+      } else if (root_has_parent && !this_child_dim) {
+        // New dimension
+        idx = root_node.dimensions_as_parent.length+1
+        tagg = sankey.addLevelTagGroup(
+          'dimension_'+idx, 
+          'Dimension '+idx,
+        ) as Class_LevelTagGroup
+        tagg.activated = true
+        tagg.addTag('1', '1')
+        tagg.addTag('2', '2')
+        parent_level_tag = sankey.level_taggs_dict['dimension_'+idx].tags_list[0]
+        child_level_tag = sankey.level_taggs_dict['dimension_'+idx].tags_list[1]      
       } else {
-        child_level_tag = root_parent_dim.child_level_tag
+        if (this_child_dim == undefined ) return
+        // this_child_dim is defined
+        // New dimension
+        tagg = Object.values(sankey.level_taggs_dict).filter(tagg=>tagg !== this_child_dim?.parent_level_tag.group)[0]
+        if (!tagg) {
+          idx = Object.values(sankey.level_taggs_dict).length+1
+          tagg = sankey.addLevelTagGroup(
+            'dimension_'+idx, 
+            'Dimension '+idx,
+          ) as Class_LevelTagGroup
+          tagg.activated = true
+          tagg.addTag('1', '1')
+          tagg.addTag('2', '2')
+        }
+        parent_level_tag = tagg.tags_list[0]
+        child_level_tag = tagg.tags_list[1];
       }
 
-      function addNewLinks(n:Type_GenericNodeElement,extremity_node:Type_GenericNodeElement) {
-        const pdim = n.nodeDimensionAsParent(tagg)
-        if (pdim) {
-          (pdim.children as Type_GenericNodeElement[]).forEach(c => {
-            const link2copy = (c as Type_GenericNodeElement)[input_or_output_attr][0]
-            const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
-            (child_link as Type_GenericLinkElement).copyValues(link2copy)
-            //n.sankey.drawing_area.deleteLink(link2copy)
-            addNewLinks(c,extremity_node)
-          })
-        }
-      }
+      // function addNewLinks(n:Type_GenericNodeElement,extremity_node:Type_GenericNodeElement) {
+      //   const pdim = n.nodeDimensionAsParent(tagg)
+      //   if (pdim) {
+      //     (pdim.children as Type_GenericNodeElement[]).forEach(c => {
+      //       const link2copy = (c as Type_GenericNodeElement)[input_or_output_attr][0]
+      //       const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
+      //       (child_link as Type_GenericLinkElement).copyValues(link2copy)
+      //       //n.sankey.drawing_area.deleteLink(link2copy)
+      //       addNewLinks(c,extremity_node)
+      //     })
+      //   }
+      // }
       function removeLinks(n:Type_GenericNodeElement) {
         const pdim = n.nodeDimensionAsParent(tagg)
         if (pdim) {
           (pdim.children as Type_GenericNodeElement[]).forEach(c => {
-            n.sankey.drawing_area.deleteLink((c as Type_GenericNodeElement)[input_or_output_attr][0])
-            removeLinks(c)
+            sankey.drawing_area.deleteLink((c as Type_GenericNodeElement)[input_or_output_attr][0])
+            //removeLinks(c)
           })
         }        
       }
 
       selected_nodes.forEach(n => {
-        (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag);
-        (child_level_tag as Class_ProtoLevelTag).setSelected()
+        (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)
+        //(child_level_tag as Class_ProtoLevelTag).setSelected()
         n.dimensionsUpdated()
         root_node.dimensionsUpdated()
         root_node.nodeDimensionAsParent(tagg)!.normalize()
 
-        const desagregation_link = n[input_or_output_attr][0]
-        root_node[input_or_output_attr].forEach(supply_link => {
-          const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
-          (new_link as Type_GenericLinkElement).copyValues(desagregation_link);
-          addNewLinks(n,expand_left?supply_link.source:supply_link.target);
-          supply_link[source_or_target_attr].reorganizeIOLinks()
-        })
-        n.sankey.drawing_area.deleteLink(desagregation_link)
-        removeLinks(n)
+        const desagregation_link = n[input_or_output_attr].filter(l=>l[source_or_target_attr].id == root_node.id )[0]
+        // root_node[input_or_output_attr].forEach(supply_link => {
+        //   const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
+        //   (new_link as Type_GenericLinkElement).copyValues(desagregation_link);
+        //   addNewLinks(n,expand_left?supply_link.source:supply_link.target);
+        //   supply_link[source_or_target_attr].reorganizeIOLinks()
+        // })
+        sankey.drawing_area.deleteLink(desagregation_link)
+        //removeLinks(n)
       })
-      sankey.level_taggs_dict['Primaire'].tags_list[0].setSelected()
+      sankey.nodes_list.forEach(n=>n.dimensionsUpdated())
+      tagg.tags_list[0].setSelected()
       new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
       new_data.drawing_area.draw()
     }}
