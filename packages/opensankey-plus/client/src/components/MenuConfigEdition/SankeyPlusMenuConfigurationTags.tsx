@@ -768,13 +768,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   )
 
   // Tag group menu ---------------------------------------------------------------------
-<<<<<<< Updated upstream
   return (<Box layerStyle='menuconfigpanel_grid'>
-    <WrapperBoxSubSectionMenu new_data={new_data} title={t('Tags.EGE')}>
-=======
-  return (<>
     <WrapperBoxSubSectionMenu new_data={new_data} title={elementTagNameProp == 'level_taggs' ? t('Tags.EditDimension') : t('Tags.EGE')}>
->>>>>>> Stashed changes
       {/* Groupe d'étiquette  */}
       <TableContainer>
         <Table variant={elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'}>
