@@ -99,6 +99,16 @@ export const table_edit_tag_data = definePartsStyle({
   },
 })
 
+// Style of table to edit node link io
+export const table_edit_node_io = definePartsStyle({
+  ...default_table,
+  tr: {
+    minHeight: minHeightTableRow,
+    gridTemplateColumns: '2fr 2fr',
+    display: 'grid',
+  },
+})
+
 export const table_welcome_buttons = definePartsStyle({
   table: {
     margin: '1rem',

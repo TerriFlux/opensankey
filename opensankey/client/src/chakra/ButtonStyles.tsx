@@ -806,6 +806,7 @@ export const text_menu_select = defineStyle({
   }
 })
 
+
 // Styles for sizes ===========================================
 
 export const sizeToolbarButton = defineStyle({

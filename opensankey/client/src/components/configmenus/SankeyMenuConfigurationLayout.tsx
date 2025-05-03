@@ -27,13 +27,13 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import {
   Box,
+  Button,
   Checkbox,
 } from '@chakra-ui/react'
 import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
-import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
-import { OSColorPicker } from './OSColorPicker'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -68,7 +68,7 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t, OSColorPicker } = new_data
 
   // Components updaters ---------------------------------------------------------------
 
@@ -181,8 +181,6 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
     </>
   </WrapperBoxSubSectionMenu>
 }
-
-
 
 /**
  * Component to config scale of DA and limit to flow thickness
@@ -372,7 +370,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
  */
 export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
 
-  const { t } = new_data
+  const { t, OSColorPicker } = new_data
   const [, setCount] = useState(0)
 
 
@@ -656,6 +654,11 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
   const [, setCount] = useState(0)
 
 
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+
+  // Update input data value
+  ref_set_text_value_input.current(new_data.node_label_separator)
+
   /**
    * Function used to reset menu UI
    */
@@ -707,7 +710,53 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
   }
 
 
+
+
   return <>
+    {/* Masquer une partie des noms des noeuds */}
+    <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
+      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
+        <ConfigMenuTextInput
+          ref_to_set_value={ref_set_text_value_input}
+          function_get_value={() => { return new_data.node_label_separator }}
+          function_on_blur={(_) => {
+            const tmp = _ ? _ : ''
+            new_data.node_label_separator = tmp
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+          }}
+        />
+      </Box>
+    </OSTooltip>
+
+    <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
+      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
+        <Box layerStyle='options_2cols'>
+          <Button variant={new_data.node_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            onClick={() => {
+              new_data.node_label_separator_part = 'before'
+              new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+              setCount(a => a + 1)
+            }
+            }
+          >
+            {t('Menu.before')}
+          </Button>
+          <Button variant={new_data.node_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+            onClick={() => {
+              new_data.node_label_separator_part = 'after'
+              new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+              setCount(a => a + 1)
+            }
+            }
+          >
+            {t('Menu.after')}
+          </Button>
+        </Box>
+      </Box>
+    </OSTooltip>
+
     <Box
       as='span'
       layerStyle='menu_sub_section_title'
@@ -751,5 +800,9 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
     >
       {t('MEP.leg_show_info_link_void')}
     </Checkbox>
+
+
+
+
   </>
 }

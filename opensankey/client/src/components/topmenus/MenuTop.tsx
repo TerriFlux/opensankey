@@ -31,8 +31,11 @@ import React,
   FunctionComponent,
   useState,
   useRef,
-  ChangeEvent
+  ChangeEvent,
+  Fragment
 } from 'react'
+
+import ReactCountryFlag from "react-country-flag"
 
 // External imports
 
@@ -50,7 +53,9 @@ import {
   Select,
   Image,
   Text,
-  Divider
+  Divider,
+  Menu,
+  Portal
 } from '@chakra-ui/react'
 import {
   faCheck,
@@ -179,7 +184,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
 }) => {
   const { t } = new_data
   const {
-    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_preference, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
+    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
   const [show_tuto, set_show_tuto] = useState(false)
@@ -442,35 +447,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
     </MenuList>
   </ChakraMenu>
 
-  // Button to open setting of application
-  const button_setting = <OSTooltip
-    placement='bottom'
-    label={t('Menu.tooltips.preference')}
-  >
-    <Button
-      variant='menutop_button'
-      size='sizeMenuTopButton'
-      onClick={() => {
-        ref_setter_show_modal_preference.current!(true)
-      }}
-      className='settings_button'
-    >
-      <Box
-        layerStyle='menutop_button_style'
-      >
-        <Box
-          gridRow='1'
-        >
-          {new_data.icon_library.icon_setting}
-        </Box>
-        <Box
-          gridRow='2'
-        >
-          {t('Menu.preference')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
+
 
   // Button to open sankey formating
   const button_mep = <OSTooltip
@@ -603,7 +580,6 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
     'tutoriel': button_tutoriel,
     'documentation': button_documentation,
     // Other
-    'setting': button_setting,
     'contact': button_contact,
     ...additionalMenus.current.external_top_buttons_item
   }
@@ -616,7 +592,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
       {
         new_data.menu_configuration.menu_top_order
           .map((arr, i) => {
-            return <>
+            return <Fragment key={'top_grp_'+i}>
               <ButtonGroup
                 marginRight='1rem'
                 marginLeft='1rem'
@@ -639,7 +615,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
                   :
                   <></>
               }
-            </>
+            </Fragment>
           })
       }
     </Box>
@@ -766,7 +742,7 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
  */
 export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
   const { logo, logo_terriflux } = new_data
-
+  const [flag, setFlag] = useState('fr')
   const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
@@ -775,6 +751,14 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
       return <React.Fragment key={'add_menu' + i}>{el}</React.Fragment>
     })}
   </>
+
+  const changeLang = (lang: string) => {
+    new_data.language = lang
+    new_data.saveInCache() // Save data in cache because change language re-render the app from index
+    new_data.i18n.changeLanguage(lang)
+    new_data.menu_configuration.updateAllMenuComponents()
+    new_data.draw()
+  }
 
   return <Box
     zIndex='1'
@@ -843,10 +827,22 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
         alignSelf='center'
         justifySelf='end'
         display='grid'
-        gridTemplateColumns='1fr'
+        gridTemplateColumns='1fr 2fr'
         gridColumnGap='0.25rem'
-        width='min-content'
+        width='unset'
       >
+        <Menu variant='selector_lang'>
+          <MenuButton>
+            <ReactCountryFlag countryCode={flag} svg style={{ height: '0.75rem', width: '1rem', margin: 'auto' }} title={flag} />
+            <ChevronDownIcon />
+          </MenuButton>
+          <Portal>
+            <MenuList>
+              <MenuItem onClick={() => { setFlag('fr'); changeLang('fr') }}><ReactCountryFlag countryCode={'fr'} svg />Français</MenuItem>
+              <MenuItem onClick={() => { setFlag('gb'); changeLang('en') }}><ReactCountryFlag countryCode={'gb'} svg />English</MenuItem>
+            </MenuList>
+          </Portal>
+        </Menu>
 
         {constent_additional_nav_item}
       </Box>

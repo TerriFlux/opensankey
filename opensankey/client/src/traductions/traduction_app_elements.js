@@ -30,7 +30,7 @@ export const resources_app_elements = {
         enregistrer: 'DL',
         exporter: 'Export',
         exporter_to: 'To ',
-        preference: 'Settings',
+        preference: 'Preferences',
         esn: 'Edit nodes style',
         esf: 'Edit links style',
         rc: 'Keyboard Shortcuts',
@@ -84,6 +84,7 @@ export const resources_app_elements = {
         ajustV: 'Adjust. V',
 
         multiValue:'Multiple values among seleced elements',
+
 
         undo: 'Undo',
         redo: 'Redo',
@@ -171,7 +172,7 @@ export const resources_app_elements = {
         open_json: 'Sankey diagram (JSON file)',
         open_excel: 'Data (Excel file)',
         open_sankeymatic: 'SankeyMATIC (Text file)',
-        title_pref: 'Application setting',
+        title_pref: 'User personnal themes',
         lang: 'Language',
         new: 'New',
         pref_title_sub_menu: 'Choose sub-menu visible in configuration menu',
@@ -191,16 +192,16 @@ export const resources_app_elements = {
           type_style: '2. Visuals',
           type_context: '3. Labels',
           presentation: '4. Interactions',
-          
+
           element_graph: 'Graph',
           element_node: 'Node',
           element_flow: 'Flow',
           element_node_tag: 'Node Label',
           element_flow_tag: 'Flow Label',
-          
+
           element_data: 'Data',
           element_data_tag: 'Data Label',
-          
+
           title_table: 'Flow Table',
           title_graph: 'Graph',
           title_node: 'Nodes',
@@ -280,7 +281,7 @@ export const resources_app_elements = {
           new: 'Create a new Sankey diagram from scratch or using a template.',
           ouvrir: 'Open a file',
           enregistrer: 'Save as',
-          preference: 'Set parameters of the application',
+          preference: 'Set & Modify your own applications settings (saved in your OpenSankey+ account)',
           amp: 'Modify the layout of the diagram',
           style: 'Define style of nodes or links',
           DisplayWelcome: 'Display welcome message',
@@ -376,9 +377,9 @@ export const resources_app_elements = {
         Visible: 'Visible',
         Couleur: 'Color',
         Forme: 'Shape',
-        GE: 'Tags\' Group',
+        GE: 'Tags Group',
         selct: 'Selected',
-        EGE: 'Tag\'s group edition',
+        EGE: 'Tags group edition',
         EEG: 'Tags edition',
         tooltips: {
           pal: 'Apply a random color palette for the tags of the selected group',
@@ -625,7 +626,7 @@ export const resources_app_elements = {
           upup: 'Put the selected stream(s) in the foreground',
           dwn: 'Go down one step to the last plane',
           dwndwn: 'Move the selected stream(s) to the last plane',
-          as: 'Allow to apply a predefined style in the preference menu to the selected link(s)',
+          as: 'Allow to apply a predefined style in the preferences menu to the selected link(s)',
           IB: 'Tooltip : text formatted in HTML and displayed with the tooltip of the link. This tooltip pops on graphic space with SHIFT + MOUSE on the link.',
           ajust_label: 'Reposition links labels above the links if they\'re taller than link stroke',
           inv: 'Inverse the target and the source'
@@ -667,7 +668,7 @@ export const resources_app_elements = {
           hide_link_lab: 'Hide value',
           data_off_scale: 'Scale',
           tooltips: {
- 
+
             color_source:{
               def:'Choose what rule define flow color :',
               flow:' Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
@@ -901,7 +902,7 @@ export const resources_app_elements = {
         new: 'Nouv.',
         exporter: 'Exporter',
         exporter_to: 'En',
-        preference: 'Réglages',
+        preference: 'Préférences',
         reinit: 'Réinit.',
         Elements: 'Éléments',
         Etiquettes: 'Étiquettes',
@@ -1039,7 +1040,7 @@ export const resources_app_elements = {
         open_json: 'Diagramme de Sankey (fichier JSON)',
         open_excel: 'Données (fichier Excel)',
         open_sankeymatic: 'SankeyMATIC (fichier text)',
-        title_pref: 'Paramétrage de l\'application',
+        title_pref: 'Thèmes utilisateur',
         lang: 'Langue',
         pref_title_sub_menu: 'Choix des sous-menus visibles dans l\'interface',
         overcharge_style_value: 'La valeur de la variable surcharge celle du style',
@@ -1071,7 +1072,7 @@ export const resources_app_elements = {
           element_data_tag: 'Étiq. Données',
 
           title_table: 'Tableau des flux  ',
-          title_graph: 'Graphe',       
+          title_graph: 'Graphe',
           title_node: 'Noeuds',
           title_flow: 'Flux',
           title_node_tag: 'Édition des étiquettes de noeuds',
@@ -1156,7 +1157,7 @@ export const resources_app_elements = {
           new: 'Créez un nouveau diagramme de Sankey à partir de zéro ou en utilisant un modèle.',
           ouvrir: 'Ouvrir un fichier',
           enregistrer: 'Enregistrer sous',
-          preference: 'Choisir les paramètres de l\'application',
+          preference: 'Créez & Modifiez vos paramètres personnalisés d\'utilisation (liés à votre compte OpenSankey+)',
           amp: 'Modifier la mise en page du diagramme',
           style: 'Définir des styles par groupe de noeuds ou de flux',
           DisplayWelcome: 'Afficher le message d\'accueil',
