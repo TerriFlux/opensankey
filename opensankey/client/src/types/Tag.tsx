@@ -2230,7 +2230,11 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     id: string | undefined = undefined
   ): Class_LevelTag {
     const tag = new Class_LevelTag(name, this, this._ref_sankey, id)
-    tag.setUnSelected()
+    if (Object.keys(this._tags).length == 0) {
+      tag.setSelected()
+    } else {
+      tag.setUnSelected()
+    }
     return tag
   }
 
