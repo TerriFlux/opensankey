@@ -635,7 +635,6 @@ export abstract class ClassTemplate_ApplicationData
         // Then draw if asked
         if (draw) {
           this._drawing_area.draw()
-          this._drawing_area.areaAutoFit()
           this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
         }
       })
