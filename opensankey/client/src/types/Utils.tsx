@@ -146,7 +146,7 @@ export const default_element_position: Type_ElementPosition = {
   x: const_default_position_x,
   y: const_default_position_y,
   u: 0,
-  v: 0
+  v: -1
 }
 
 export const default_style_id = 'default'
