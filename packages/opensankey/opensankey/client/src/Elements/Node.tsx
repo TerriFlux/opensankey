@@ -1591,7 +1591,7 @@ export abstract class ClassTemplate_NodeElement
           (this.position_type === 'relative') ||
           (this.position_type === 'parametric')
         ) &&
-        (!this._drag)
+        (!this._drag) && (!this.sankey.drawing_area.ghost_link)
       ) {
         // Apply relative position
         if (this.position_type === 'relative') {

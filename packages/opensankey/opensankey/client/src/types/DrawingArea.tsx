@@ -568,7 +568,7 @@ export abstract class ClassTemplate_DrawingArea
     this.drawElements()
 
     // Fit area
-    this.areaAutoFit(false)
+    this.areaAutoFit(true)
 
     // Added events listeners
     this.setEventsListeners()
@@ -2100,8 +2100,10 @@ export abstract class ClassTemplate_DrawingArea
     })
     let current_y = node.position_y
     desagregated_nodes.forEach(nn => {
-      nn.display.position.x = node.position_x
-      nn.display.position.u = node.position_u
+      if (!nn.sibling) {
+        nn.display.position.x = node.position_x
+        nn.display.position.u = node.position_u
+      }
       nn.display.position.y = current_y
       current_y += 20
       new_current_v = this.apply_v_desagregate(nn, new_current_v)
@@ -2637,6 +2639,12 @@ export abstract class ClassTemplate_DrawingArea
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+        if (this.sankey.default_node_style.position.type == 'parametric' ) {
+          this.application_data.sendWaitingToast(
+            () => {
+          this.computeParametrization()
+            })
+        }
       }
     } else if (this.isInSelectionMode() && event.button == 0) {
       if ((!event.shiftKey) && (!event.ctrlKey)) {
