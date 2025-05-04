@@ -278,7 +278,7 @@ export const NodeTagGroupFilter: FunctionComponent<FCType_NodeTagGroupFilter> = 
   return SelectorOfTagsByGroup.length > 0 ? (<FilterWrapperBox
     new_data={new_data}
     title={t('Banner.' + title)}>
-    {title_filter_column(new_data)}
+    {level?'':title_filter_column(new_data)}
     {SelectorOfTagsByGroup}
   </FilterWrapperBox>) : <></>
 }

@@ -3,18 +3,14 @@ import React, { FunctionComponent, useState, useRef } from 'react'
 import {
   Box,
   Checkbox,
-  Select,
   Button
 } from '@chakra-ui/react'
 
 // Local types
-import type { Class_LevelTag, Class_LevelTagGroup, Class_Tag } from '../../deps/OpenSankey/types/Tag'
+import type { Class_LevelTagGroup} from '../../deps/OpenSankey/types/Tag'
 import type { Type_GenericApplicationData, Type_GenericNodeElement } from '../../deps/OpenSankey/types/Types'
-// import type {
-//   FCType_SankeyMenuConfigurationLevelTags
-// } from './types/SankeyMenuConfigurationLevelTagsTypes'
+
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
-//import { SankeyNodeSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
 import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 import { Class_NodeDimension } from '../../deps/OpenSankey/Elements/NodeDimension'
@@ -38,22 +34,25 @@ export const SankeyLevelSelectionSimple: FunctionComponent<FCType_SankeyLevelEdi
 
   // Nodes to select --------------------------------------------------------------------
 
-  //let nodes: Type_GenericNodeElement[]
+  let nodes: Type_GenericNodeElement[]
   let selected_nodes: Type_GenericNodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
-    //nodes = new_data.drawing_area.sankey.nodes_list_sorted
+    nodes = new_data.drawing_area.sankey.nodes_list_sorted
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted.filter(n=>n.dimensions_as_parent.length> 0)
   }
   else {
     // Only visible nodes
-    //nodes = new_data.drawing_area.sankey.visible_nodes_list_sorted
+    nodes = new_data.drawing_area.sankey.visible_nodes_list_sorted
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted.filter(n=>n.dimensions_as_parent.length> 0)
   }
+  let nodes_dimensions: Class_NodeDimension[] =[]
+  nodes.forEach(n=>n.dimensions_as_parent.forEach(dim=>nodes_dimensions.push(dim)))
+
   let selected_nodes_dimensions: Class_NodeDimension[] =[]
   selected_nodes.forEach(n=>n.dimensions_as_parent.forEach(dim=>selected_nodes_dimensions.push(dim)))
 
-  const entries_for_nodes: typeElementSelectable = selected_nodes_dimensions.map((d) => { 
+  const entries_for_nodes: typeElementSelectable = nodes_dimensions.map((d) => { 
     return { 
       'value': d.id, 
       'label': d.parent.name + '->(' + d.children.map(c=>c.name+' ')+')', selected: selected_nodes_dimensions.includes(d) 
@@ -68,18 +67,18 @@ export const SankeyLevelSelectionSimple: FunctionComponent<FCType_SankeyLevelEdi
   new_data.menu_configuration.ref_to_menu_config_nodes_dim_selection_updater.current = () => {
     const value_to_show = (new_data.drawing_area.selected_nodes_list.filter(n=>n.dimensions_as_parent.length> 0).length != 1) ? '' : new_data.drawing_area.selected_nodes_list.filter(n=>n.dimensions_as_parent.length> 0)[0].name
     // Update text input of node name
-    ref_set_text_value_input.current(String(value_to_show))
+    //ref_set_text_value_input.current(String(value_to_show))
     setCount(a => a + 1)
   }
 
-  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+  //const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   // Function used to reset menu UI -----------------------------------------------------
 
   const refreshThisAndToggleSaving = () => {
     // Toogle saving indicator
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    ref_set_text_value_input.current(String((selected_nodes_dimensions.length != 1) ? '' : selected_nodes_dimensions[0].id))
+    //ref_set_text_value_input.current(String((selected_nodes_dimensions.length != 1) ? '' : selected_nodes_dimensions[0].id))
 
     // Refresh this menu
     setCount(a => a + 1)
@@ -87,7 +86,7 @@ export const SankeyLevelSelectionSimple: FunctionComponent<FCType_SankeyLevelEdi
 
   const refreshThisAndUpdateRelatedComponents = () => {
     // Update values displayed in menus for node's configuration
-    new_data.menu_configuration.updateAllComponentsRelatedToNodesConfig()
+    new_data.menu_configuration.updateComponentRelatedToNodesDimTags()
     // Update and update saving indicator
     refreshThisAndToggleSaving()
   }
@@ -98,15 +97,16 @@ export const SankeyLevelSelectionSimple: FunctionComponent<FCType_SankeyLevelEdi
     elements={entries_for_nodes}
     onClick={(entries: typeElementSelectable) => {
       // Update selection list
+      selected_nodes.forEach(n=>new_data.drawing_area.removeNodeFromSelection(n))
       const entries_values = entries.map(d => d.value)
-      //TODO selected nodes
-      selected_nodes_dimensions.forEach(n => {
-        if (entries_values.includes(n.id)) {
-          new_data.drawing_area.addNodeToSelection(n.parent as Type_GenericNodeElement)
+      const selected_nodes_set = new Set<Type_GenericNodeElement>()
+      nodes_dimensions.forEach(dim => {
+        if (entries_values.includes(dim.id)) {
+          selected_nodes_set.add(dim.parent as Type_GenericNodeElement)
         }
-        else {
-          new_data.drawing_area.removeNodeFromSelection(n.parent as Type_GenericNodeElement)
-        }
+      });
+      [...selected_nodes_set].forEach(n => {
+          new_data.drawing_area.addNodeToSelection(n as Type_GenericNodeElement)
       })
       // Update all menus
       refreshThisAndUpdateRelatedComponents()
@@ -168,7 +168,7 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
   const list_level_taggs = new_data.drawing_area.sankey.level_taggs_list
   const has_level_taggs = list_level_taggs.length > 0
   const [level_tagg_entry_index, setNodeTaggEntryIndex] = useState(0)
-  const level_tagg_entry = list_level_taggs[level_tagg_entry_index]
+  //const level_tagg_entry = list_level_taggs[level_tagg_entry_index]
 
   // Selected nodes ---------------------------------------------------------------------
 
@@ -210,6 +210,9 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
   const haveAllSelectedLevelGivenTag = (
     tagg: Class_LevelTagGroup
   ) => {
+    if (selected_nodes_dimensions.length == 0) {
+      return [false, true]
+    }
     let allTrue = true
     let allFalse = true
     selected_nodes_dimensions
@@ -224,7 +227,9 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
   // JSX content ------------------------------------------------------------------------
 
   // Return nothing if there is no tag or no nodes are selected
-  if (!has_level_taggs || selected_nodes.length==0)
+  // if (!has_level_taggs || selected_nodes.length==0)
+  //   return <></>
+  if (!has_level_taggs)
     return <></>
 
   const content = <>
@@ -248,6 +253,15 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
                 isChecked={allTrue}
                 onChange={(evt) => {
                   const visible = evt.target.checked
+                  if (visible) {
+                    selected_nodes_dimensions.forEach(dim=>{
+                      const new_parent_level_tag = level_tagg.tags_list[0]
+                      const new_child_level_tag = level_tagg.tags_list[1]
+                      dim.children.forEach(c=>new_parent_level_tag.getOrCreateLowerDimension(dim.parent,c,new_child_level_tag))
+                      dim.delete()
+                    })
+                    updateThis()
+                  }
                   //new_data.drawing_area.updateSelectedLevelTagAssignation(visible, level_tag)
                 }}
               >
