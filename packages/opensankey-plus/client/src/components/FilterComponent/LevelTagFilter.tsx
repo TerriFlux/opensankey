@@ -73,7 +73,7 @@ export const SimpleLevelTagFilter: FunctionComponent<FType_AddSimpleLevelDropDow
             // recall node.draw because selectTagsFromId doesn't lead to applyPositionOnLinks wich compute endpoints
             // (it isn't done for link not directly displayed after fromJSON)
             new_data.drawing_area.draw()
-            new_data.drawing_area.areaAutoFit()
+            new_data.drawing_area.areaAutoFit(false)
           }}
         >
           {level_taggs['Primaire'].tags_list

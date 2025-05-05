@@ -78,7 +78,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, icon_library,OSColorPicker } = new_data
+  const { t, icon_library, OSColorPicker } = new_data
   const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible, icon_random, icon_palette_color } = icon_library
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
@@ -89,7 +89,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
   const tags_entry = tags_group_entry?.tags_list ?? []
 
   // Failsafe if selected tag group is not in dict of group 
-  if (tags_group_list.length>0 && !(tags_group_entry_id in tags_group_dict))
+  if (tags_group_list.length > 0 && !(tags_group_entry_id in tags_group_dict))
     setTagsGroupEntryId(new_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
 
 
@@ -216,13 +216,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-        id: tag.id,
-        name: tag.name,
-        elementsRef: dict_ref_element,
-        grp: tag.group,
-        color: tag.color,
-        dict_link_value: {}
-      }
+      id: tag.id,
+      name: tag.name,
+      elementsRef: dict_ref_element,
+      grp: tag.group,
+      color: tag.color,
+      dict_link_value: {}
+    }
 
     if (tag instanceof Class_DataTag) {
       // Save value of each links in dict
@@ -297,13 +297,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-        id: tagg.id,
-        name: tagg.name,
-        activated: tagg.show_legend,
-        banner: tagg.banner,
-        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
-        dict_link_value: {}
-      }
+      id: tagg.id,
+      name: tagg.name,
+      activated: tagg.show_legend,
+      banner: tagg.banner,
+      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+      dict_link_value: {}
+    }
 
     if (tagg instanceof Class_DataTagGroup) {
       new_data.drawing_area.sankey.links_list.forEach(l => {
@@ -781,7 +781,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
               </Th>
               {/* Autre entetes  */}
               <Th>{t('Tags.Nom')}</Th>
-              <Th>{t('Tags.Bannière')}</Th>
+              {(elementTagNameProp !== 'data_taggs') ? <Th>{t('Tags.Bannière')}</Th> : <></>}
               {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.sequence')}</Th> : <></>}
             </Tr>
           </Thead>
@@ -849,7 +849,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                       </OSTooltip>
                     </Td>
                     {/* Banniere  */}
-                    <Td>
+                    {elementTagNameProp != 'data_taggs' ? <Td>
                       <OSTooltip label={t('Tags.tooltips.banner')}>
                         <Select
                           variant='menuconfigpanel_option_select_table'
@@ -857,17 +857,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                             handleBanner(tag_group, (evt.target.value as tag_banner_type))}
                           value={tag_group.banner}
                         >
-                          {
-                            (elementTagNameProp != 'data_taggs') ?
-                              <option
-                                key={'none' + tag_group.id}
-                                id='NoneBaner'
-                                value='none'
-                              >
-                                {t('Menu.Aucun')}
-                              </option> :
-                              <></>
-                          }
+                          <option
+                            key={'none' + tag_group.id}
+                            id='NoneBaner'
+                            value='none'
+                          >
+                            {t('Menu.Aucun')}
+                          </option>
                           <option
                             key={'one' + tag_group.id}
                             id='OneBaner'
@@ -884,7 +880,8 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                           </option>
                         </Select>
                       </OSTooltip>
-                    </Td>
+                    </Td> : <></>}
+
                     {/* is Sequence  */}
                     {dataTagg_special_column}
                   </Tr>
