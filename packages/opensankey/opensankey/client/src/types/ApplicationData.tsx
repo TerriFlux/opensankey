@@ -1071,7 +1071,7 @@ export abstract class ClassTemplate_ApplicationData
             this._toast_processes.splice(0, 1) // pop process from processes list
             resolve(200) // end
           },
-            500) // Leave 500ms of delay in order to give enough time to load spinner component
+          500) // Leave 500ms of delay in order to give enough time to load spinner component
         }),
         {
           success: {

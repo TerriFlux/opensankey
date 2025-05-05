@@ -35,7 +35,7 @@ import React,
   Fragment
 } from 'react'
 
-import ReactCountryFlag from "react-country-flag"
+import ReactCountryFlag from 'react-country-flag'
 
 // External imports
 
