@@ -906,7 +906,7 @@ def set_licence_checkout_completed(
     user = User.query\
         .filter(
             func.lower(User.email) == func.lower(user_email),
-            id=user_id)\
+            User.id == user_id)\
         .first()
     if user is None:
         return "Invalid user", False
