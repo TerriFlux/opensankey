@@ -192,6 +192,9 @@ export class Class_MenuConfig {
   // Update component SankeyNodeEdition
   private _ref_to_menu_config_nodes_selection_updater: MutableRefObject<() => void>
 
+  // Update component SankeyNodeDimEdition
+  private _ref_to_menu_config_nodes_dim_selection_updater: MutableRefObject<() => void>
+
   // Update component OpenSankeyConfigurationNodesAttributes
   private _ref_to_menu_config_nodes_apparence_visual_updater: MutableRefObject<() => void>
   private _ref_to_menu_config_nodes_apparence_context_updater: MutableRefObject<() => void>
@@ -202,6 +205,9 @@ export class Class_MenuConfig {
 
   // update SankeyMenuConfigurationNodesTags
   private _ref_to_menu_config_nodes_tags_updater: MutableRefObject<() => void>
+
+  // update SankeyMenuConfigurationNodesDimTags
+  private _ref_to_menu_config_nodes_dim_tags_updater: MutableRefObject<() => void>
 
   // Update component SankeyMenuConfigurationNodesIO
   private _ref_to_menu_config_nodes_io_updater: MutableRefObject<(() => void)>
@@ -382,8 +388,13 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_layout_updater = useRef(() => null)
     this._ref_to_menu_contextual_config_layout_updater = useRef(() => null) //contextual ref updater
 
+    // Dimensions
+    this._ref_to_menu_config_nodes_dim_selection_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_dim_tags_updater= useRef(() => null)
+    
     // Nodes
     this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
+
     this._ref_to_menu_config_nodes_apparence_visual_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_apparence_context_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_styles_updater = useRef(() => null)
@@ -628,6 +639,19 @@ export class Class_MenuConfig {
    * Update component with timeOut to avoid multiple refreshs
    * @memberof Class_MenuConfig
    */
+  public updateComponentRelatedToNodesDimSelection() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesSelection',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_dim_selection_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
   public updateComponentRelatedToNodesApparence() {
     this._add_waiting_process(
       'updateMenuConfigNodeApparence',
@@ -660,6 +684,19 @@ export class Class_MenuConfig {
       'updateComponentRelatedToNodesTags',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_nodes_tags_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNodesDimTags() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesTags',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_dim_tags_updater.current()
       }
     )
   }
@@ -887,6 +924,8 @@ export class Class_MenuConfig {
   }
 
   public updateAllComponentsRelatedToLevelTags() {
+    this._ref_to_leveltag_filter_updater.current()
+    this.updateComponentRelatedToNodesDimTags()
     this._ref_to_menu_config_tags_updater['level_taggs'].current()
   }
 
@@ -1077,6 +1116,10 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_nodes_selection_updater
   }
 
+  public get ref_to_menu_config_nodes_dim_selection_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_dim_selection_updater
+  }
+
   public get ref_to_menu_config_nodes_apparence_visual_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_nodes_apparence_visual_updater
   }
@@ -1096,6 +1139,10 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_nodes_tags_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_nodes_tags_updater
+  }
+
+  public get ref_to_menu_config_nodes_dim_tags_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_dim_tags_updater
   }
 
   public get ref_to_menu_config_nodes_io_updater(): MutableRefObject<(() => void)> {
