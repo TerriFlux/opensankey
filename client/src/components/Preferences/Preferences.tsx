@@ -487,8 +487,8 @@ const TabUserIcon: FunctionComponent<{ user_data: Class_ApplicationDataSA, app_d
               setUpdate(a => a + 1)
             }
           }}
-            maxWidth={'8vw'}
-            overflow={'hidden'}
+          maxWidth={'8vw'}
+          overflow={'hidden'}
           >
             <EditablePreview />
             <EditableInput />
