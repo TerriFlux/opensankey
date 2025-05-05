@@ -98,8 +98,8 @@ export function defaultLinkId(
   source: Type_AnyAbstractNodeElement,
   target: Type_AnyAbstractNodeElement
 ) {
-  // coherent with code in python (Constructor of flux)
-  return source.id + '---' + target.id
+  // TODO ajouter makeID pour crer id unique
+  return source.name + ' --> ' + target.name
 }
 
 /**
