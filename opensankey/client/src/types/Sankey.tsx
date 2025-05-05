@@ -877,6 +877,10 @@ export abstract class ClassTemplate_Sankey
             matching_tags_id[json_entry][_] ?? {})
         })
     }
+
+    if (Object.keys(this._level_taggs).length>1) {
+      this.removeTagGroupWithId('level_taggs','Primaire')
+    }
     json_entry = 'nodeTags'
     if (json_object[json_entry] !== undefined) {
       // Set node tag & tag group from json data
@@ -1611,20 +1615,6 @@ export abstract class ClassTemplate_Sankey
     this.drawing_area.application_data.history.saveUndo(inv_resetAttrToStyleVal)
     this.drawing_area.application_data.history.saveRedo(_resetAttrToStyleVal)
     _resetAttrToStyleVal()
-  }
-
-  // Tags related ------------------------------------------------------------------------
-
-  public triggerPrimaryLevelTagging(): void {
-    // TODO deal with siblings tags
-    if ('Primaire' in this._level_taggs) {
-      if (this.level_taggs_list.length > 1) {
-        this._level_taggs['Primaire'].activated = false
-      }
-      else {
-        this._level_taggs['Primaire'].activated = true
-      }
-    }
   }
 
   public addLevelTagGroup(
