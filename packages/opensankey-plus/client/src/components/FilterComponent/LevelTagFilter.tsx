@@ -6,7 +6,7 @@ import { NodeTagGroupFilter } from './NodeTagGroupFilter'
  * Component return either simple levelTag filter (when there is only primary level group) or a selector for each level group
  *
  * @param {*} { new_data_plus }
- * @return {*} 
+ * @return {*}
  */
 export const LevelTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
   const [, setCount] = useState(0)

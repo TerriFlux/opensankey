@@ -794,8 +794,8 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
     closeContextMenu()
   }}
-    variant='contextmenu_button'
-    rightIcon={new_data_plus.icon_library.icon_popup_menu}
+  variant='contextmenu_button'
+  rightIcon={new_data_plus.icon_library.icon_popup_menu}
   >{t('Menu.LL')} </Button>
 
   return zdt_to_contextualise ? <Box
