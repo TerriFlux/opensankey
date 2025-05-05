@@ -86,6 +86,11 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
     const [displayColorPicker, setDisplayColorPicker] = useState(false)
     const [color, setColor] = useState(initialColor)
 
+    // Update swatch color when we change color from outside picker
+    if(!displayColorPicker && color !==initialColor){
+      setColor(initialColor)
+    }
+
     /**
      *Event when we click on the 'button
      *
