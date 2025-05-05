@@ -94,11 +94,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   const { additionalMenus } = menu_configuration
   /*************************************************************************************************/
 
-  // If leveltags are present Primaire is desactivated
-  new_data.drawing_area.sankey.triggerPrimaryLevelTagging()
-
-  /*************************************************************************************************/
-
   const mode_pref = sessionStorage.getItem('modepref')
   const menu_config = new_data.menu_configuration
   if (
