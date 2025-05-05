@@ -840,11 +840,18 @@ export abstract class ClassTemplate_NodeElement
     if (this.is_child) {
       //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
       // Force to show parent
-      if ((id !== undefined) && (this._dimensions_as_child[id]))
+      if ((id !== undefined) && (this._dimensions_as_child[id])) {
         this._dimensions_as_child[id].setForceToShowParent()
-      else {
+        const parent = this._dimensions_as_child[id].parent
+        parent.input_links_list.forEach(l=>l.source.draw())
+        parent.output_links_list.forEach(l=>l.target.draw())
+      } else {
         //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
-        Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
+        const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
+        dim.setForceToShowParent()
+        const parent = dim.parent
+        parent.input_links_list.forEach(l=>{l.source.draw()})
+        parent.output_links_list.forEach(l=>{l.target.draw()})
       }
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
