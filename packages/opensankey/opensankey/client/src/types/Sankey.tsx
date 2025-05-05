@@ -1634,6 +1634,7 @@ export abstract class ClassTemplate_Sankey
     if (!this._level_taggs[id]) {
       // Create
       const tag_group = new Class_LevelTagGroup(id, name, this)
+      tag_group.activated = true
       // Update
       this._level_taggs[id] = tag_group
       // Return
