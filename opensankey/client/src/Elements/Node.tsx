@@ -492,12 +492,12 @@ export abstract class ClassTemplate_NodeElement
   // SAVING METHODS =====================================================================
 
   /**
-   * Convert node to JSON
-   *
-   *
-   * @return {*}
-   * @memberof ClassTemplate_NodeElement
-   */
+    * Convert node to JSON
+    *
+    *
+    * @return {*}
+    * @memberof ClassTemplate_NodeElement
+    */
   protected _toJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
@@ -526,40 +526,38 @@ export abstract class ClassTemplate_NodeElement
     )
     // Dimension - relations
     let dimensions: { [_: string]: Type_JSON } = {}
-    if (this.is_child) {
-      //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
-      //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
-      const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim => dim.related_level_tagg.id))]
-      all_child_taggs.forEach(tagg_id => {
-        Object.values(this._dimensions_as_child).filter(dim => dim.related_level_tagg.id == tagg_id)
-          .forEach(dimension => {
-            if (!(dimension.related_level_tagg.id in dimensions)) {
-              dimensions[dimension.related_level_tagg.id] = {
-                'parent_name': dimension.parent.id,
-                'parent_tag': dimension.parent_level_tag.id,
-                'children_tags': [dimension.child_level_tag.id],
-                'antitag': false,
-                'force_show_children': dimension.force_show_children,
-                'force_show_parent': dimension.force_show_parent
-              }
-            } else {
-              const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
-              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags, dimension.child_level_tag.id]
+    //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
+    //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
+    const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim => dim.related_level_tagg.id))]
+    all_child_taggs.forEach(tagg_id => {
+      Object.values(this._dimensions_as_child).filter(dim => dim.related_level_tagg.id == tagg_id)
+        .forEach(dimension => {
+          if (!(dimension.related_level_tagg.id in dimensions)) {
+            dimensions[dimension.related_level_tagg.id] = {
+              'parent_name': dimension.parent.id,
+              'parent_tag': dimension.parent_level_tag.id,
+              'children_tags': [dimension.child_level_tag.id],
+              'antitag': false,
+              'force_show_children': dimension.force_show_children,
+              'force_show_parent': dimension.force_show_parent
             }
+          } else {
+            const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
+            dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags, dimension.child_level_tag.id]
           }
-          )
-      }
-      )
+        }
+        )
     }
-    else {
-      dimensions = Object.fromEntries(
-        Object.values(this._dimensions_as_parent)
-          .map(dimension => [
-            dimension.parent_level_tag.group.id,
-            {}
-          ])
-      )
-    }
+    )
+    // we write parent dimensions for which the node is a root.
+    const parent_dimensions = Object.fromEntries(
+      Object.values(this._dimensions_as_parent).filter(dim => !all_child_taggs.includes(dim.parent_level_tag.group.id))
+        .map(dimension => [
+          dimension.parent_level_tag.group.id,
+          {}
+        ])
+    )
+    dimensions = { ...dimensions, ...parent_dimensions }
     // Dimensions - antitag
     this._leveltaggs_as_antitagged
       .forEach(leveltagg => {
