@@ -571,6 +571,21 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
+  public addValues(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+    // Values
+    if (_._values instanceof Class_LinkValue) {
+      //this._values = this.createLinkValue(this)
+      (this._values as Class_LinkValue).addFrom(_._values)
+    }
+    else if (_._values instanceof Class_LinkValueTree) {
+      const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
+      if (first_data_tag_group) {
+        //this._values = new Class_LinkValueTree(this, first_data_tag_group)
+        (this._values as Class_LinkValueTree).addFrom(_._values)
+      }
+    }
+  }
+
   protected _toJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
@@ -4799,6 +4814,22 @@ export class Class_LinkValueTree {
       })
   }
 
+  public addFrom(element: Class_LinkValueTree) {
+    // Check types of children
+    const [allValues, allTrees] = element.kindOfChildren()
+    // Copy children recursively
+    Object.keys(element.children)
+      .forEach(tag_id => {
+        const child_to_copy = element.children[tag_id]
+        if ((child_to_copy instanceof Class_LinkValueTree) && (allTrees)) {
+          (this.children[tag_id] as Class_LinkValueTree).addFrom(child_to_copy)
+        }
+        else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
+          (this.children[tag_id] as Class_LinkValue).addFrom(child_to_copy)
+        }
+      })
+  }
+
   public toJSON() {
     const json_object: Type_JSON = {}
     json_object['datatag_group'] = this.data_tag_group.id
@@ -5258,6 +5289,10 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       .forEach(flux_tag => {
         flux_tag.addReference(this)
       })
+  }
+
+  public addFrom(element: Class_LinkValue) {
+    this.data_value = this.data_value!+element.data_value!
   }
 
   /**

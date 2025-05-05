@@ -1084,7 +1084,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public checkAndUpdateAreaSize(
-    recenter: boolean = true
+    recenter: boolean = false
   ) {
     // Get bounding box for all elements
     const bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
@@ -2098,7 +2098,9 @@ export abstract class ClassTemplate_DrawingArea
       desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
       desagregated_nodes = [...new Set(desagregated_nodes)]
     })
-    let current_y = node.position_y
+    const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
+    if (desagregated_nodes.length>0) {
+      let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
     desagregated_nodes.forEach(nn => {
       if (!nn.sibling) {
         nn.display.position.x = node.position_x
@@ -2108,6 +2110,7 @@ export abstract class ClassTemplate_DrawingArea
       current_y += 20
       new_current_v = this.apply_v_desagregate(nn, new_current_v)
     })
+    }
     return new_current_v + 1
   }
 
