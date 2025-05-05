@@ -856,19 +856,20 @@ class SankeyToJson(object):
         self._create_nodes_json(sankey, nodes)
         # Create primary level tag if necessary
         if (sankey.max_nodes_level > 1):
-            levelTags['Primaire'] = {
-                'name': 'Primaire',
-                'show_legend': False,
-                'tags': {},
-                'banner': 'level',
-                'activated': True
-            }
-            for tag in range(1, sankey.max_nodes_level+1):
-                levelTags['Primaire']['tags'][str(tag)] = {
-                    'name': str(tag),
-                    'selected': (tag == 1),
-                    'color': ''
+            if (len(sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values()) == 0):
+                levelTags['Primaire'] = {
+                    'name': 'Primaire',
+                    'show_legend': False,
+                    'tags': {},
+                    'banner': 'level',
+                    'activated': True
                 }
+                for tag in range(1, sankey.max_nodes_level+1):
+                    levelTags['Primaire']['tags'][str(tag)] = {
+                        'name': str(tag),
+                        'selected': (tag == 1),
+                        'color': ''
+                    }
 
     def _create_nodes_json(
         self,
@@ -941,6 +942,11 @@ class SankeyToJson(object):
         :param nodes: nodes json struct
         :type nodes: dict (modified)
         """
+        # Check if we must create 'Primaire' or not
+        if (len(sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values()) > 1):
+            create_primary = False
+        else:
+            create_primary = True
         # Create node struct
         node_json = {
             'idNode': node.id,
@@ -951,10 +957,11 @@ class SankeyToJson(object):
             'label_visible': True,
             'shape_visible': True,
             'tags': {},
-            'dimensions': {
-                'Primaire': {}
-            }
+            'dimensions': {}
         }
+        if create_primary:
+            node_json['dimensions']['Primaire'] = {}
+
         # Update tags
         for tag in node.tags:
             tag_group_name = tag.group.name
@@ -965,11 +972,12 @@ class SankeyToJson(object):
             node_json['tags'][tag_group_name].append(tag.name)
         # Parents relations -> TODO duplicate node for each parent
         if (node.has_parents()):
-            node_json['dimensions']['Primaire']['parent_name'] = node.parents[0].id
-            node_json['dimensions']['Primaire']['parent_tag'] = str(node.parents[0].level)
-            node_json['dimensions']['Primaire']['children_tags'] = [str(node.level)]
-            node_json['dimensions']['Primaire']['level'] = int(node.level)
-            node_json['dimensions']['Primaire']['antitag'] = False
+            if create_primary:
+                node_json['dimensions']['Primaire']['parent_name'] = node.parents[0].id
+                node_json['dimensions']['Primaire']['parent_tag'] = str(node.parents[0].level)
+                node_json['dimensions']['Primaire']['children_tags'] = [str(node.level)]
+                node_json['dimensions']['Primaire']['level'] = int(node.level)
+                node_json['dimensions']['Primaire']['antitag'] = False
             # Level tag parent relations
             for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values():
                 # Check all current node level tags groups
@@ -1249,32 +1257,32 @@ class JsonToSankey(object):
             # before applying parenthood relations between nodes
             for (level_tagg_id, level_attr) in node_json['dimensions'].items():
                 # Get corresponding tagg group
-                if level_tagg_id in DEFAULT_LEVEL_TAGGS:
-                    # If there are other hierarchy than Primaire we skip Primaire
-                    if len(node_json['dimensions']) > 1:
-                        continue
-                    level_tagg = level_tagg_id
-                else:
-                    level_tagg = self._leveltaggs_corresp[level_tagg_id]
-                    # Check if we had this level registered in taggroups
-                    if level_tagg not in parent_children_per_levels.keys():
-                        parent_children_per_levels[level_tagg] = {}
-                    # Apply tag to node
-                    ok_tag = False
-                    # - Check antitag
-                    if (not ok_tag) and ('antitag' in level_attr.keys()):
-                        if level_attr['antitag'] is True:
-                            level_tag = level_tagg.get_or_create_tag(ANTI_TAGS_NAME)
-                            node.add_tag(level_tag)
-                            ok_tag = True
-                    if (not ok_tag) and ('children_tags' in level_attr.keys()):
-                        for level_tag_id in level_attr['children_tags']:
-                            level_tag = level_tagg.get_or_create_tag(level_tag_id)
-                            node.add_tag(level_tag)
-                            ok_tag = True
-                    if (not ok_tag):
-                        level_tag = next(iter(level_tagg.tags.values()))  # Get first tag
+                # if level_tagg_id in DEFAULT_LEVEL_TAGGS:
+                #     # If there are other hierarchy than Primaire we skip Primaire
+                #     if len(node_json['dimensions']) > 1:
+                #         continue
+                #     level_tagg = level_tagg_id
+                # else:
+                level_tagg = self._leveltaggs_corresp[level_tagg_id]
+                # Check if we had this level registered in taggroups
+                if level_tagg not in parent_children_per_levels.keys():
+                    parent_children_per_levels[level_tagg] = {}
+                # Apply tag to node
+                ok_tag = False
+                # - Check antitag
+                if (not ok_tag) and ('antitag' in level_attr.keys()):
+                    if level_attr['antitag'] is True:
+                        level_tag = level_tagg.get_or_create_tag(ANTI_TAGS_NAME)
                         node.add_tag(level_tag)
+                        ok_tag = True
+                if (not ok_tag) and ('children_tags' in level_attr.keys()):
+                    for level_tag_id in level_attr['children_tags']:
+                        level_tag = level_tagg.get_or_create_tag(level_tag_id)
+                        node.add_tag(level_tag)
+                        ok_tag = True
+                if (not ok_tag):
+                    level_tag = next(iter(level_tagg.tags.values()))  # Get first tag
+                    node.add_tag(level_tag)
                 # Save parent name for latter
                 if 'parent_name' in level_attr.keys():
                     parent_id = level_attr['parent_name']
