@@ -79,23 +79,23 @@ import {
   Type_JSON,
 } from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
-import { 
-  Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable, 
-  default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible, 
-  default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert, 
-  default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos, 
-  default_node_name_label_is_visible, default_node_name_label_vert, 
-  default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift, 
-  default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction, 
-  default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background, 
-  default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color, 
-  default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic, 
-  default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit, 
-  default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation, 
-  default_node_value_label_significant_digits, default_node_value_label_unit, 
-  default_node_value_label_unit_factor, default_node_value_label_unit_visible, 
-  default_node_value_label_background, default_node_value_label_is_visible, 
-  default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity 
+import {
+  Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable,
+  default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible,
+  default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert,
+  default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos,
+  default_node_name_label_is_visible, default_node_name_label_vert,
+  default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift,
+  default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction,
+  default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background,
+  default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color,
+  default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic,
+  default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit,
+  default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation,
+  default_node_value_label_significant_digits, default_node_value_label_unit,
+  default_node_value_label_unit_factor, default_node_value_label_unit_visible,
+  default_node_value_label_background, default_node_value_label_is_visible,
+  default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity
 } from './NodeAttributes'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
@@ -163,7 +163,7 @@ export abstract class ClassTemplate_NodeElement
   protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
   // use for desagregating by expansion. The child node is duplicated and _sibling_node becomes the child node
-  protected _sibling_node : ClassAbstract_NodeElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey> | undefined = undefined
+  protected _sibling_node: ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined = undefined
 
   // Definition of abstract attribut from ClassTemplate_Element
   protected _display: {
@@ -229,6 +229,7 @@ export abstract class ClassTemplate_NodeElement
 
   // Other 
   private _drag_start_pos: { [x: string]: [number, number] } = {} //attr used to cancel drag undo function (LMB event can trigger drag event therefore a undo function )
+  private first_drag_move = true //boolean to cancel a strange phenomenon when dragTextMove is use just after dragTextStart dx & dy are way off chart causing problem
 
   // CONSTRUCTOR ========================================================================
 
@@ -493,12 +494,12 @@ export abstract class ClassTemplate_NodeElement
   // SAVING METHODS =====================================================================
 
   /**
-   * Convert node to JSON
-   *
-   *
-   * @return {*}
-   * @memberof ClassTemplate_NodeElement
-   */
+    * Convert node to JSON
+    *
+    *
+    * @return {*}
+    * @memberof ClassTemplate_NodeElement
+    */
   protected _toJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
@@ -527,40 +528,38 @@ export abstract class ClassTemplate_NodeElement
     )
     // Dimension - relations
     let dimensions: { [_: string]: Type_JSON } = {}
-    if (this.is_child) {
-      //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
-      //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
-      const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim => dim.related_level_tagg.id))]
-      all_child_taggs.forEach(tagg_id => {
-        Object.values(this._dimensions_as_child).filter(dim => dim.related_level_tagg.id == tagg_id)
-          .forEach(dimension => {
-            if (!(dimension.related_level_tagg.id in dimensions)) {
-              dimensions[dimension.related_level_tagg.id] = {
-                'parent_name': dimension.parent.id,
-                'parent_tag': dimension.parent_level_tag.id,
-                'children_tags': [dimension.child_level_tag.id],
-                'antitag': false,
-                'force_show_children': dimension.force_show_children,
-                'force_show_parent': dimension.force_show_parent
-              }
-            } else {
-              const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
-              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags, dimension.child_level_tag.id]
+    //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
+    //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
+    const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim => dim.related_level_tagg.id))]
+    all_child_taggs.forEach(tagg_id => {
+      Object.values(this._dimensions_as_child).filter(dim => dim.related_level_tagg.id == tagg_id)
+        .forEach(dimension => {
+          if (!(dimension.related_level_tagg.id in dimensions)) {
+            dimensions[dimension.related_level_tagg.id] = {
+              'parent_name': dimension.parent.id,
+              'parent_tag': dimension.parent_level_tag.id,
+              'children_tags': [dimension.child_level_tag.id],
+              'antitag': false,
+              'force_show_children': dimension.force_show_children,
+              'force_show_parent': dimension.force_show_parent
             }
+          } else {
+            const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
+            dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags, dimension.child_level_tag.id]
           }
-          )
-      }
-      )
+        }
+        )
     }
-    else {
-      dimensions = Object.fromEntries(
-        Object.values(this._dimensions_as_parent)
-          .map(dimension => [
-            dimension.parent_level_tag.group.id,
-            {}
-          ])
-      )
-    }
+    )
+    // we write parent dimensions for which the node is a root.
+    const parent_dimensions = Object.fromEntries(
+      Object.values(this._dimensions_as_parent).filter(dim => !all_child_taggs.includes(dim.parent_level_tag.group.id))
+        .map(dimension => [
+          dimension.parent_level_tag.group.id,
+          {}
+        ])
+    )
+    dimensions = { ...dimensions, ...parent_dimensions }
     // Dimensions - antitag
     this._leveltaggs_as_antitagged
       .forEach(leveltagg => {
@@ -682,6 +681,9 @@ export abstract class ClassTemplate_NodeElement
   ) {
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
+    if (dimensions_as_JSON && Object.keys(dimensions_as_JSON).length > 1) {
+      delete dimensions_as_JSON['Primaire']
+    }
     // For each dimension in dimensions JSON Struct, create the parent / child relation
     if (dimensions_as_JSON) {
       Object.keys(dimensions_as_JSON)
@@ -829,7 +831,7 @@ export abstract class ClassTemplate_NodeElement
 
   /**
    * Agregate node
-   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, agregate with 'Primaire'
+   * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
   public drawParent(id?: string) {
@@ -870,7 +872,7 @@ export abstract class ClassTemplate_NodeElement
 
   /**
    * Disagregate node
-   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, disagregate with 'Primaire'
+   * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
   public drawChildren(id: string) {
@@ -2527,6 +2529,7 @@ export abstract class ClassTemplate_NodeElement
     this.name_label_horiz = 'dragged'
     this.name_label_vert = 'dragged'
 
+
     // Undo function 
     const inv_dragTextStart = () => {
       this._display.position_x_label = old_val[0]
@@ -2535,6 +2538,7 @@ export abstract class ClassTemplate_NodeElement
       this.name_label_vert = old_val[3]
       this.menu_config.updateAllComponentsRelatedToLinks()
       this.drawNameLabel()
+
     }
     // Save undo
     this._display.drawing_area.application_data.history.saveUndo(inv_dragTextStart)
@@ -2548,10 +2552,13 @@ export abstract class ClassTemplate_NodeElement
    * @memberof ClassTemplate_NodeElement
    */
   private dragTextMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-
-    this._display.position_x_label = ((this._display.position_x_label !== undefined) ? this._display.position_x_label : 0) + event.dx // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
-    this._display.position_y_label = ((this._display.position_y_label !== undefined) ? this._display.position_y_label : 0) + event.dy // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
-
+    // When we go throught this func just after dragTextStart dx & dy are incredibly high, moving text way off the mouse so we limit potential shift
+    if (!this.first_drag_move) {
+      this._display.position_x_label = ((this._display.position_x_label !== undefined) ? this._display.position_x_label : 0) + event.dx // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
+      this._display.position_y_label = ((this._display.position_y_label !== undefined) ? this._display.position_y_label : 0) + event.dy // there is a security that check if label relative pos is not undefind, if so it use 0 but shouldn't be triggered since we initialize value in dragTextStart
+    } else {
+      this.first_drag_move = false
+    }
     this.updateNameLabelPos()
   }
 
@@ -2559,6 +2566,7 @@ export abstract class ClassTemplate_NodeElement
     this.drawNameLabel()
     this.menu_config.updateAllComponentsRelatedToNodes()
     const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [this._display.position_x_label, this._display.position_y_label, this.name_label_horiz, this.name_label_vert]
+    this.first_drag_move = true
     // redo function 
     const _dragTextend = () => {
       this._display.position_x_label = old_val[0]
@@ -3259,13 +3267,13 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
-   *Return ture if nod eis in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
+   *Return ture if nod eis in multiple nodeDimension has a parent.
    *
    * @readonly
    * @memberof ClassTemplate_NodeElement
    */
   public get is_multi_parent() {
-    return (Object.values(this._dimensions_as_parent).filter(dim => dim.related_level_tagg.id != 'Primaire').length > 1)
+    return (Object.values(this._dimensions_as_parent).length > 1)
   }
 
   /**
@@ -3279,13 +3287,13 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
-   *Return ture if node is in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
+   *Return ture if node is in multiple nodeDimension has a parent.
    *
    * @readonly
    * @memberof ClassTemplate_NodeElement
    */
   public get is_multi_children() {
-    return (Object.values(this._dimensions_as_child).filter(dim => dim.parent_level_tag.group.id != 'Primaire').length > 1)
+    return (Object.values(this._dimensions_as_child).length > 1)
   }
 
   /**
@@ -3344,7 +3352,13 @@ export abstract class ClassTemplate_NodeElement
 
     // value is the final processed value
     const value = Math.max(input_val / pow_in, output_val / pow_out) / factor_unit
-    return String(value) + label_unit
+
+    let str_val = String(value)
+    // Rounded value only apparent when value_label_nb_digit is inferior to the number of decimal of the value 
+    if (this.value_label_custom_digit)
+      str_val = String(parseFloat(value.toFixed(this.value_label_nb_digit)))
+
+    return str_val + label_unit
   }
 
   /**

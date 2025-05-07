@@ -395,7 +395,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
       {
         <>
           <Table
-            variant='striped'
+            variant='table_edit_node_io'
           >
             <Thead>
               <Tr>

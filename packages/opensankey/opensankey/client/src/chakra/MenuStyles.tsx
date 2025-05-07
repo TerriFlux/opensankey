@@ -165,3 +165,27 @@ export const menu_select_style=definePartsStyle({
     borderColor: 'primaire.5'
   }
 })
+
+export const selector_lang=definePartsStyle({
+  button:{
+    margin:'auto',
+    border:'1px solid',
+    borderColor:'primaire.5',
+    height:'1.5rem',
+    width:'2rem',
+    'span':{
+      display:'grid',
+      gridTemplateColumns:'4fr 1fr',
+      alignItems:'center',
+    }
+  },
+  item:{
+    display:'grid',
+    gridTemplateColumns:'1fr 3fr',
+    gridColumnGap:'0.25rem',
+
+  },
+  list:{
+    zIndex:'3'
+  }
+})
