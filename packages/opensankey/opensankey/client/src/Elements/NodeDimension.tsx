@@ -34,6 +34,7 @@ import {
   ClassAbstract_NodeElement,
   ClassAbstract_NodeDimension
 } from '../types/AbstractNode'
+import { Class_LevelTag, Class_LevelTagGroup } from '../types/Tag'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -264,7 +265,7 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
    * Force to set this dimension's children as visibles
    * @memberof Class_NodeDimension
    */
-  public setForceToShowChildren(fromJSON:boolean=false) {
+  public setForceToShowChildren(fromJSON: boolean = false) {
     // Speed-up computation
     if (this._force_show_children && !this._force_show_parent)
       return
@@ -341,6 +342,49 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
     this._is_currently_in_unsetting_recursion = false
     // Return set of all nodes that need to be redrawn
     return nodes_to_redraw
+  }
+
+  public shift_level_tags() {
+    const tagg = this.parent_level_tag.group as Class_LevelTagGroup
+    const idx = tagg.tags_list.indexOf(this.parent_level_tag as Class_LevelTag)
+    this._parent_level_tag = tagg.tags_list[idx + 1]
+    if (tagg.tags_list.length == idx + 2) {
+      const new_tags = String(+this._parent_level_tag.id + 1)
+      if (!tagg.tags_dict[new_tags]) {
+        tagg.addTag(new_tags, new_tags) as Class_LevelTag
+      }
+      this._child_level_tag = tagg.tags_list[idx + 2]
+    } else {
+      this._child_level_tag = tagg.tags_list[idx + 2]
+      this.children.forEach(c => c.dimensions_as_parent.forEach(pdim => (pdim as Class_NodeDimension).shift_level_tags()))
+    }
+    this.parent.dimensionsUpdated()
+    this.children.forEach(c => c.dimensionsUpdated())
+  }
+
+  public normalize() {
+    const group = this.parent_level_tag.group as Class_LevelTagGroup
+    const last_tag = group.tags_list[this.parent_level_tag.group.tags_list.length - 1]
+    this.children.forEach(c => {
+      let ok = false
+      const child_dimensions = c.dimensions_as_child.filter(c=>c.parent_level_tag.group.id == group.id)
+      child_dimensions.forEach(cdim => {
+        if (cdim.child_level_tag == last_tag) {
+          ok = true
+        }
+      })
+      if (ok) return
+      let parent_dimension = c.nodeDimensionAsParent(group)
+      if (!parent_dimension) {
+        //const child_dimensions = c.dimensions_as_child.filter(c=>c.parent_level_tag.group.id == group.id)
+        const last_child_dimension = child_dimensions[child_dimensions.length-1]
+        const last_child_dimension_tag = last_child_dimension.child_level_tag as Class_LevelTag
+        const idx = group.tags_list.indexOf(last_child_dimension_tag)
+        const new_tag = group.tags_list[idx+1]
+        parent_dimension = (this.child_level_tag as Class_LevelTag).getOrCreateLowerDimension(c, c, new_tag)
+      }
+      parent_dimension.normalize()
+    })
   }
 
   // GETTERS / SETTERS ==================================================================
