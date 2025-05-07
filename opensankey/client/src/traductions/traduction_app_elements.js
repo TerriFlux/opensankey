@@ -30,7 +30,7 @@ export const resources_app_elements = {
         enregistrer: 'DL',
         exporter: 'Export',
         exporter_to: 'To ',
-        preference: 'Settings',
+        preference: 'Preferences',
         esn: 'Edit nodes style',
         esf: 'Edit links style',
         rc: 'Keyboard Shortcuts',
@@ -84,6 +84,7 @@ export const resources_app_elements = {
         ajustV: 'Adjust. V',
 
         multiValue:'Multiple values among seleced elements',
+
 
         undo: 'Undo',
         redo: 'Redo',
@@ -171,7 +172,7 @@ export const resources_app_elements = {
         open_json: 'Sankey diagram (JSON file)',
         open_excel: 'Data (Excel file)',
         open_sankeymatic: 'SankeyMATIC (Text file)',
-        title_pref: 'Application setting',
+        title_pref: 'User personnal themes',
         lang: 'Language',
         new: 'New',
         pref_title_sub_menu: 'Choose sub-menu visible in configuration menu',
@@ -191,16 +192,16 @@ export const resources_app_elements = {
           type_style: '2. Visuals',
           type_context: '3. Labels',
           presentation: '4. Interactions',
-          
+
           element_graph: 'Graph',
           element_node: 'Node',
           element_flow: 'Flow',
           element_node_tag: 'Node Label',
           element_flow_tag: 'Flow Label',
-          
+
           element_data: 'Data',
           element_data_tag: 'Data Label',
-          
+
           title_table: 'Flow Table',
           title_graph: 'Graph',
           title_node: 'Nodes',
@@ -280,7 +281,7 @@ export const resources_app_elements = {
           new: 'Create a new Sankey diagram from scratch or using a template.',
           ouvrir: 'Open a file',
           enregistrer: 'Save as',
-          preference: 'Set parameters of the application',
+          preference: 'Set & Modify your own applications settings (saved in your OpenSankey+ account)',
           amp: 'Modify the layout of the diagram',
           style: 'Define style of nodes or links',
           DisplayWelcome: 'Display welcome message',
@@ -377,9 +378,9 @@ export const resources_app_elements = {
         Visible: 'Visible',
         Couleur: 'Color',
         Forme: 'Shape',
-        GE: 'Tags\' Group',
+        GE: 'Tags Group',
         selct: 'Selected',
-        EGE: 'Tag\'s group edition',
+        EGE: 'Tags group edition',
         EEG: 'Tags edition',
         tooltips: {
           pal: 'Apply a random color palette for the tags of the selected group',
@@ -477,7 +478,8 @@ export const resources_app_elements = {
           Visibilité: 'Shape',
           Couleur: 'Color',
           CouleurPérenne: 'Static color',
-          Forme: 'Geometry',
+          Forme: 'Shape',
+          Geometry: 'Geometry',
           Cercle: 'Circle',
           Rectangle: 'Rectangle',
           TML: 'Minimum width',
@@ -625,7 +627,7 @@ export const resources_app_elements = {
           upup: 'Put the selected stream(s) in the foreground',
           dwn: 'Go down one step to the last plane',
           dwndwn: 'Move the selected stream(s) to the last plane',
-          as: 'Allow to apply a predefined style in the preference menu to the selected link(s)',
+          as: 'Allow to apply a predefined style in the preferences menu to the selected link(s)',
           IB: 'Tooltip : text formatted in HTML and displayed with the tooltip of the link. This tooltip pops on graphic space with SHIFT + MOUSE on the link.',
           ajust_label: 'Reposition links labels above the links if they\'re taller than link stroke',
           inv: 'Inverse the target and the source'
@@ -651,7 +653,8 @@ export const resources_app_elements = {
         },
         apparence: {
           apparence: 'Appearance',
-          flow:'Fow',
+          flow:'Flow',
+          fond:'shape background',
           source:'Source node',
           target:'Target node',
           couleur: 'Color',
@@ -674,7 +677,7 @@ export const resources_app_elements = {
           hide_link_lab: 'Hide value',
           data_off_scale: 'Scale',
           tooltips: {
- 
+
             color_source:{
               def:'Choose what rule define flow color :',
               flow:' Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
@@ -760,7 +763,7 @@ export const resources_app_elements = {
         filter: 'Filter',
         fdf: 'Link filtering',
         fdn: 'Node Filtering',
-        ndd: 'Levels of detail',
+        ndd: 'Hierarchy per Dimension',
         ndd_lst: 'Tags groups',
         ndd_chk: 'Apply the groups\' colors',
         sdr: 'Data type',
@@ -857,7 +860,7 @@ export const resources_app_elements = {
       menuTuto: 'Open tutorials menu',
       desire_to_know_more: 'Learn more',
       contribute_to_os: 'En savoir +',
-      legal: 'Legal information',
+      legal: 'Legal informations',
       tdr: 'All right reserved',
       fullscreen: 'Activate fullscreen',
       exitFullscreen: 'Exit fullscreen',
@@ -879,6 +882,7 @@ export const resources_app_elements = {
   fr: {
     translation: {
       Menu: {
+        level_associated_tag:'Association des hiérarchie de noeuds avec les dimensions',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         Aucun: 'Aucun',
@@ -892,6 +896,7 @@ export const resources_app_elements = {
         EF: 'Étiquettes des flux',
         EdF: 'Édition des flux',
         ED: 'Étiquettes des données',
+        Hierarchy: 'Hiérarchie',
         Leg: 'Légende',
         LegX: 'Position horizontale',
         LegY: 'Position verticale',
@@ -908,7 +913,7 @@ export const resources_app_elements = {
         new: 'Nouv.',
         exporter: 'Exporter',
         exporter_to: 'En',
-        preference: 'Réglages',
+        preference: 'Préférences',
         reinit: 'Réinit.',
         Elements: 'Éléments',
         Etiquettes: 'Étiquettes',
@@ -1046,7 +1051,7 @@ export const resources_app_elements = {
         open_json: 'Diagramme de Sankey (fichier JSON)',
         open_excel: 'Données (fichier Excel)',
         open_sankeymatic: 'SankeyMATIC (fichier text)',
-        title_pref: 'Paramétrage de l\'application',
+        title_pref: 'Thèmes utilisateur',
         lang: 'Langue',
         pref_title_sub_menu: 'Choix des sous-menus visibles dans l\'interface',
         overcharge_style_value: 'La valeur de la variable surcharge celle du style',
@@ -1073,12 +1078,13 @@ export const resources_app_elements = {
           element_flow: 'Flux',
           element_node_tag: 'Étiq. Noeud',
           element_flow_tag: 'Étiq. Flux',
+          element_level_tag: 'Hiérarchie',
 
           element_data: 'Données',
           element_data_tag: 'Étiq. Données',
 
           title_table: 'Tableau des flux  ',
-          title_graph: 'Graphe',       
+          title_graph: 'Graphe',
           title_node: 'Noeuds',
           title_flow: 'Flux',
           title_node_tag: 'Édition des étiquettes de noeuds',
@@ -1163,7 +1169,7 @@ export const resources_app_elements = {
           new: 'Créez un nouveau diagramme de Sankey à partir de zéro ou en utilisant un modèle.',
           ouvrir: 'Ouvrir un fichier',
           enregistrer: 'Enregistrer sous',
-          preference: 'Choisir les paramètres de l\'application',
+          preference: 'Créez & Modifiez vos paramètres personnalisés d\'utilisation (liés à votre compte OpenSankey+)',
           amp: 'Modifier la mise en page du diagramme',
           style: 'Définir des styles par groupe de noeuds ou de flux',
           DisplayWelcome: 'Afficher le message d\'accueil',
@@ -1262,6 +1268,10 @@ export const resources_app_elements = {
         GE: 'Étiquettes du groupe',
         EGE: 'Édition des groupes',
         EEG: 'Édition des étiquettes d\'un groupe',
+        Dimension: 'Dimension',
+        EditDimension: 'Édition des dimensions',
+        EditDimensionLevel: 'Édition des niveaux d\'une dimension',
+
         selct: 'Sélectionné',
         tooltips: {
           pal: 'Appliquer une palette de couleurs aléatoires pour les étiquettes du groupe sélectionné',
@@ -1670,7 +1680,7 @@ export const resources_app_elements = {
         filter: 'Filtres',
         fdf: 'Filtrage des flux',
         fdn: 'Filtrage des noeuds',
-        ndd: 'Niveaux de détail',
+        ndd: 'Hiérarchies par Dimension',
         ndd_lst: 'Groupes d\'étiquettes',
         ndd_chk: 'Appliquer les couleurs associées',
         sdr: 'Choisir le type de données affichées',
@@ -1766,7 +1776,7 @@ export const resources_app_elements = {
       menuTuto: 'Ouvrir menu tutoriel',
       desire_to_know_more: 'En savoir +',
       contribute_to_os: 'En savoir +',
-      legal: 'Mention légales',
+      legal: 'Mentions légales',
       tdr: 'Tous droits réservées',
       fullscreen: 'Activer le mode plein écran',
       exitFullscreen: 'Quitter le mode plein écran',
