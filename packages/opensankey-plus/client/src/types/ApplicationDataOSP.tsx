@@ -24,6 +24,7 @@ import { ClassTemplate_NodeElementOSP } from './NodeOSP'
 import { ClassTemplate_SankeyOSP } from './SankeyOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_IconLibraryOSP } from './IconLibrairieOSP'
+import { Type_GenericNodeElementOSP } from './TypesOSP'
 
 export interface Type_SaveDiagramOptionsOSP extends Type_SaveDiagramOptions {
   only_current_view?: boolean
@@ -191,7 +192,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * Reset data & delete application data in navigator cache   *
    * @memberof ClassTemplate_ApplicationDataOSP
    */
-  public override reinitialization(redraw:boolean=true): void {
+  public override reinitialization(redraw: boolean = true): void {
     super.reinitialization(redraw)
     localStorage.removeItem('icon_imported')
     sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
@@ -486,6 +487,189 @@ export abstract class ClassTemplate_ApplicationDataOSP
     this.setCurrentView(new_drawing_area.id)
   }
 
+  /**
+   * Function to generate a unitary sankey from a node.
+   * 
+   * An unitary sankey is a sub-sankey containing one node and it's input/ouput
+   *
+   * @param {Type_GenericNodeElementOSP} node_ref
+   * @memberof ClassTemplate_ApplicationDataOSP
+   */
+  public createUnitaryNewView(node_ref: Type_GenericNodeElementOSP) {
+    // If no base sankey is given, we take the currently active sankey
+    const base_drawing_area = this._drawing_area
+    base_drawing_area.purgeSelection()
+    // If no view existed previously, we add the active sankey as master sankey
+    if (this.views.length === 0) {
+      this._views[default_main_sankey_id] = this._drawing_area
+      this.pushViewIdInViewOrder(default_main_sankey_id)
+    }
+    // Create the new sankey
+    const new_drawing_area = this.createNewDrawingArea(makeId('unitary_view'))
+    // Copy current sankey
+    const name = 'Unitary view of ' + node_ref.name
+    const id = new_drawing_area.id
+    const copy = base_drawing_area.toJSON()
+    copy.id = id
+    new_drawing_area.fromJSON(copy) // /!\ CopyFrom overwrites drawing area's name
+    new_drawing_area.name = name
+
+
+
+    // Edit view
+
+    new_drawing_area.removeMinimumLinkThickness()
+    new_drawing_area.removeMaximumLinkThickness()
+
+    new_drawing_area.filter_label = 0
+    new_drawing_area.filter_link_value = 0
+
+    new_drawing_area.sankey.containers_list.forEach(cont => {
+      new_drawing_area.deleteContainer(cont)
+    })
+
+
+
+    // Create style for nodes linked to unitary node
+    const InNodeStyle = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeInputStyle', 'Input node')
+    InNodeStyle.name_label_horiz = 'left'
+    InNodeStyle.name_label_vert = 'middle'
+    InNodeStyle.name_label_font_size = 40
+    InNodeStyle.shape_min_width = 1
+    InNodeStyle.shape_min_height = 1
+    InNodeStyle.shape_visible = false
+    InNodeStyle.name_label_box_width = 300
+
+    const OutNodeStyle = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeOutputStyle', 'Output node')
+    OutNodeStyle.name_label_horiz = 'right'
+    OutNodeStyle.name_label_vert = 'middle'
+    OutNodeStyle.name_label_font_size = 40
+    OutNodeStyle.shape_min_width = 1
+    OutNodeStyle.shape_min_height = 1
+    OutNodeStyle.shape_visible = false
+    OutNodeStyle.name_label_box_width = 300
+
+    const unitaryNode = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeStyle', 'Unitary node')
+    unitaryNode.name_label_horiz = 'middle'
+    unitaryNode.name_label_vert = 'bottom'
+    unitaryNode.name_label_font_size = 40
+    unitaryNode.shape_min_width = 200
+    unitaryNode.name_label_bold = true
+    unitaryNode.name_label_uppercase = true
+    unitaryNode.name_label_box_width = 300
+
+    const InLink = new_drawing_area.sankey.addNewLinkStyle('LinkInUnitaryStyle', 'Link In Unitary')
+    InLink.name_label_font_size = 40
+    InLink.value_label_horiz = 'left'
+    InLink.value_label_pos_auto = true
+    InLink.value_label_percent_input = true
+
+    const OutLink = new_drawing_area.sankey.addNewLinkStyle('LinkOutUnitaryStyle', 'Link Out Unitary')
+    OutLink.name_label_font_size = 40
+    OutLink.value_label_horiz = 'right'
+    OutLink.value_label_pos_auto = true
+    OutLink.value_label_percent_output = true
+
+
+    const visible_links = new_drawing_area.sankey.visible_links_list.map(l => l.id)
+    let maxLinkValue = 1
+    new_drawing_area.sankey.links_list
+      .forEach(link => {
+        // Delete link node not attached to node_ref
+        // Compare id instead of object because node_ref come from original DA while links come from copied DA
+        // which wouldn't work as intended
+        if ((link.source.id !== node_ref.id && link.target.id !== node_ref.id) || !visible_links.includes(link.id)) {
+          new_drawing_area.deleteLink(link)
+        } else {
+          // Normalize attribute
+          link.resetAttributes()
+          if (link.source.id == node_ref.id) {
+            link.style = InLink
+          } else {
+            link.style = OutLink
+          }
+          // Search for max link value in unitary sankey to re-scale sankey
+          const link_val = link.getMaxValue() ?? 1
+          maxLinkValue = (link_val > maxLinkValue) ? link_val : maxLinkValue
+
+        }
+      })
+    // Set new scale for unitary sankey
+    new_drawing_area.scale = maxLinkValue / 2
+
+    new_drawing_area.sankey.nodes_list
+      .forEach(node => {
+        // Delete nodes without IO links
+        if (node.links_order.length == 0) {
+          new_drawing_area.deleteNode(node)
+        } else {
+          // Normalize attribute
+          node.resetAttributes()
+          // Affect style depending on IO
+          if (node.input_links_list.length == 0) {
+            node.style = InNodeStyle
+          } else if (node.output_links_list.length == 0) {
+            node.style = OutNodeStyle
+          }
+        }
+      })
+    new_drawing_area.sankey.nodes_dict[node_ref.id].style = unitaryNode
+
+    // Remove tag group
+    new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
+      new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
+      tagg.show_legend = false
+    })
+    new_drawing_area.sankey.flux_taggs_list.forEach(tagg => {
+      tagg.show_legend = false
+    })
+    new_drawing_area.sankey.level_taggs_list.forEach(tagg => {
+      new_drawing_area.sankey.removeTagGroup('level_taggs', tagg)
+    })
+    new_drawing_area.sankey.data_taggs_list.forEach(tagg => {
+      tagg.show_legend = false
+    })
+
+    new_drawing_area.horizontal_spacing = 300
+    new_drawing_area.callComputeAutoSankey(false)
+    new_drawing_area.sankey.nodes_list
+      .forEach(node => {
+        node.reorganizeIOLinks()
+        node.position_y += 50
+        node.position_x -= 100
+      })
+
+    const cont = new_drawing_area.sankey.addNewFreeLabel('unitary_container_')
+
+    let min_x = new_drawing_area.sankey.nodes_list[0].position_x,
+      min_y = new_drawing_area.sankey.nodes_list[0].position_y,
+      max_x = 0,
+      max_y = 0
+
+    new_drawing_area.sankey.nodes_list.forEach(node => {
+
+      min_x = node.position_x < min_x ? node.position_x : min_x
+      max_x = node.position_x > max_x ? node.position_x : max_x
+
+      min_y = node.position_y < min_y ? node.position_y : min_y
+      max_y = node.position_y > max_y ? node.position_y : max_y
+    })
+
+    cont.setPosXY(0, 0)
+
+    cont.label_width = new_drawing_area.width * 0.9
+    cont.label_height = new_drawing_area.height * 0.9
+
+    cont.content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
+
+
+    // Add new sankey to views
+    this._views[new_drawing_area.id] = new_drawing_area
+    this.pushViewIdInViewOrder(new_drawing_area.id)
+    // Shown sankey = new sanke
+    // this.setCurrentView(new_drawing_area.id)
+  }
+
   public setCurrentView(id: string) {
     // Embedded in waiting function
     this.sendWaitingToast(
@@ -694,7 +878,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
       this._views_order.splice(this._views_order.indexOf(id), 1)
     }
     this._views_order.push(id)
-  }   
+  }
 
   // GETTERS / SETTERS ==================================================================
 
@@ -702,13 +886,13 @@ export abstract class ClassTemplate_ApplicationDataOSP
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
 
   public get has_sankey_plus() { return this._has_sankey_plus }
-  public set has_sankey_plus(_) { this._has_sankey_plus = _}
+  public set has_sankey_plus(_) { this._has_sankey_plus = _ }
 
   // Override getter & setter so we can get new type
   public get menu_configuration(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
   public set menu_configuration(_: Class_MenuConfigOSP) { this._menu_configuration = _ }
 
-  public get icon_library():Class_IconLibraryOSP { return this._icon_library as Class_IconLibraryOSP }
+  public get icon_library(): Class_IconLibraryOSP { return this._icon_library as Class_IconLibraryOSP }
 
   // Views
   public get views(): Type_GenericDrawingArea[] {

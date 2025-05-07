@@ -78,6 +78,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_: boolean) => void>
   private _ref_to_save_diagram_only_view_updater: MutableRefObject<(() => void)>
   private _ref_to_drawer_sequence_data_tag_updater: MutableRefObject<(() => void)>
+  private _ref_show_modal_unitary_view: MutableRefObject<(_: boolean) => void>
+  private _ref_update_modal_unitary_view: MutableRefObject<() => void>
 
   /* ========================================
   Updater of component for node plus related menus
@@ -119,6 +121,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_to_save_diagram_only_view_updater = useRef(() => null)
     this._ref_to_drawer_sequence_data_tag_updater = useRef(() => null)
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
+    this._ref_show_modal_unitary_view = useRef((_: boolean) => null)
+    this._ref_update_modal_unitary_view = useRef(() => null)
     this._r_setter_editor_content_fo_node = useRef(() => null)
     this._r_editor_content_fo_node_updater = useRef(() => null)
     this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
@@ -282,6 +286,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     super.updateAllComponentsRelatedToNodeTags()
     this._ref_to_toolbar_node_tag_updater.current()
     this._ref_to_toolbar_level_tag_filter_updater.current()
+    this._ref_update_modal_unitary_view.current()
   }
 
   public override updateAllComponentsRelatedToFluxTags() {
@@ -299,6 +304,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     super.updateAllComponentsRelatedToLevelTags()
     this._ref_to_toolbar_level_tag_filter_updater.current()
     this._ref_to_drawer_sequence_data_tag_updater.current()
+    this._ref_update_modal_unitary_view.current()
   }
 
   /**
@@ -389,6 +395,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_to_banner_views_opened(){return this._ref_to_banner_views_opened}
   public get ref_to_views_config_updater(): MutableRefObject<() => void> { return this._ref_to_views_config_updater }
   public get ref_to_modal_view_attributes_switcher(): MutableRefObject<(_: boolean) => void> { return this._ref_to_modal_view_attributes_switcher }
+  public get ref_show_modal_unitary_view(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_unitary_view }
+  public get ref_update_modal_unitary_view(): MutableRefObject<() => void> { return this._ref_update_modal_unitary_view }
 
   public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_save_diagram_only_view_updater }
 
