@@ -138,6 +138,7 @@ export const collapse_filter = defineStyle({
   bg: 'white',
   color: 'primaire.5',
   bgColor: 'white',
+  margin:'auto',
   borderColor: 'primaire.5',
   _hover: {
     bg: 'secondaire.5',
@@ -240,6 +241,17 @@ export const menuconfigpanel_button_load_file_da_bg=defineStyle({
 
   _active:{
     color:'white  '
+  }
+})
+
+export const btn_create_unitary_from_nodes=defineStyle({
+  height: '1.5rem',
+  padding:'0.5rem',
+  fontSize: 'unset',
+  backgroundColor: 'primaire.2',
+  color: 'white',
+  _active:{
+    backgroundColor:'secondaire.2  '
   }
 })
 

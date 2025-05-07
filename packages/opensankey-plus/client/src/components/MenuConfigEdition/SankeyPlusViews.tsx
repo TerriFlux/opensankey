@@ -1,5 +1,5 @@
 // Standard libs
-import React, { ChangeEvent, FunctionComponent, useRef, useState } from 'react'
+import React, { ChangeEvent, FunctionComponent, useEffect, useRef, useState } from 'react'
 
 // Imported libs
 import {
@@ -24,12 +24,20 @@ import {
   ModalOverlay,
   ButtonGroup,
   useDisclosure,
-  Fade
+  Fade,
+  Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
+  Spinner
+
 } from '@chakra-ui/react'
 
 // OpenSankey Libs
 import {
   default_main_sankey_id,
+  makeId,
   OSTooltip,
   Type_JSON,
 } from '../../deps/OpenSankey/types/Utils'
@@ -47,7 +55,10 @@ import {
   FCType_ModalTransparentViewAttrOSP
 } from './types/SankeyPlusViewsTypes'
 
-import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { Class_ApplicationDataOSP, Type_GenericApplicationDataOSP, Type_GenericNodeElementOSP } from '../../types/TypesOSP'
+import { LevelTagFilter } from '../FilterComponent/LevelTagFilter'
+import { FilterWrapperBox } from '../FilterComponent/TagsFilterComponent'
 
 
 export const logo_view = <svg
@@ -88,7 +99,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
   // Data -------------------------------------------------------------------------------
 
   const { t, icon_library } = new_data_plus
-  const { icon_add_element, icon_remove_element, icon_welcome, icon_next, icon_previous, icon_attr_view, icon_copy, icon_locked, icon_collapse_down, icon_collapse_up } = icon_library
+  const { icon_add_element, icon_remove_element, icon_welcome, icon_next, icon_previous, icon_attr_view, icon_unit_view, icon_copy, icon_locked, icon_collapse_down, icon_collapse_up } = icon_library
   // Component updater ------------------------------------------------------------------
 
   // Local updater ----------------------------------------------------------------------
@@ -363,6 +374,38 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
     </Button>
   </OSTooltip>
 
+  const button_to_show_modal_create_unitary_view = <OSTooltip
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        (t('Menu.sankeyOSPDisabled')) :
+        t('view.tooltips.buttonOpenModalUnitary')
+    }>
+    <Button
+      variant='button_banner_view'
+      size='sizeMenuTopButton'
+      isDisabled={!has_sankey_plus}
+      onClick={
+        () => {
+          new_data_plus.menu_configuration.ref_show_modal_unitary_view.current(true)
+        }
+      }>
+      <Box layerStyle='banner_view_buttons' >
+        <Box
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
+        >
+          {icon_unit_view}
+          {
+            (!has_sankey_plus) ? logo_locked : <></>}
+        </Box>
+        <Box gridRow="2" >
+          {t('view.unit')}
+        </Box>
+      </Box>
+    </Button>
+  </OSTooltip>
+
   // Button to load views as a catalog of view (ie  JSON containing only views) ---------
 
   const activate_create_data_catalog = has_sankey_plus // TODO need only license ?
@@ -484,6 +527,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
         <>
           {button_to_delete_actual_view}
           {button_to_show_view_attr_transfert_modal}
+          {button_to_show_modal_create_unitary_view}
         </>
     }
     <Button
@@ -521,7 +565,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
 
   return <>
     {buttonShowBanner}
-    <Fade in={isOpen}>
+    <Fade in={isOpen} style={{ display: isOpen ? 'unset' : 'none' }} >
       {buttonGroupView}
     </Fade>
   </>
@@ -1157,6 +1201,372 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
       </ModalContent>
     </Modal>
   }
+  return <></>
+}
+
+/**
+ * Modal to generate unitary sankey either from local sankey or from excel file
+ *
+ * @param {*} { new_data_plus }
+ * @return {*}  {JSX.Element}
+ */
+export const ModalCreateUnitaryViewOSP: FunctionComponent<FCType_ModalTransparentViewAttrOSP> = (
+  { new_data_plus }
+): JSX.Element => {
+
+  const { t } = new_data_plus
+
+  const [state, setState] = useState(false)
+  const [, setUpdater] = useState(0)
+
+  const switchThis = (_: boolean) => {
+    setState(_)
+  }
+
+  new_data_plus.menu_configuration.ref_show_modal_unitary_view.current = switchThis
+
+  const updateComponent = () => {
+    setUpdater(a => a + 1)
+  }
+  new_data_plus.menu_configuration.ref_update_modal_unitary_view.current = updateComponent
+
+  const has_sankey_plus = new_data_plus.has_sankey_plus
+
+  if (has_sankey_plus) {
+
+    return <Modal
+      isOpen={state}
+      onClose={
+        () => {
+          switchThis(false)
+        }}
+      variant='modal_dialog'
+    >
+      <ModalOverlay />
+      <ModalContent w={'33%'} >
+        <ModalHeader>{t('view.create_unit')}</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody w={'unset'}>
+          <Tabs isFitted variant='tabs_data_source_for_unitary' >
+            <TabList>
+              <Tab>{t('view.unit_tab_local')}</Tab>
+              <Tab>{t('view.unit_tab_excel')}</Tab>
+            </TabList>
+            <TabPanels>
+              <TabPanel><TabLocalDataForUnitary new_data_plus={new_data_plus} /></TabPanel>
+              <TabPanel><TabImportExcelDataForUnitary new_data_plus={new_data_plus} /></TabPanel>
+            </TabPanels>
+          </Tabs>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  }
+  return <></>
+}
+
+/**
+ * Tab to create unitary sankey from local sankey
+ *
+ * @param {*} { new_data_plus }
+ * @return {*} 
+ */
+const TabLocalDataForUnitary: FunctionComponent<{ new_data_plus: Type_GenericApplicationDataOSP }> = ({ new_data_plus }) => {
+  const { t } = new_data_plus
+  const list_selected_nodes_for_unitary = useRef<Type_GenericNodeElementOSP[]>([])
+  const [, setUpdater] = useState(0)
+  const entries_for_nodes: typeElementSelectable = new_data_plus.drawing_area.sankey.visible_nodes_list_sorted.map((d) => { return { 'label': d.name, 'value': d.id, selected: list_selected_nodes_for_unitary.current.includes(d) } })
+
+  const updateComponent = () => {
+    setUpdater(a => a + 1)
+  }
+
+  return <Box display={'grid'} gridRowGap='0.2rem'>
+    <FilterWrapperBox new_data={new_data_plus} title={t('view.title_rule_modal_unit')}>
+      <ul style={{ display: 'grid', gridRowGap: '0.2rem' }}>
+        <li>-{t('view.rule_modal_unit_1')}</li>
+        <li>-{t('view.rule_modal_unit_2')}</li>
+        <li>-{t('view.rule_modal_unit_3')}</li>
+      </ul>
+    </FilterWrapperBox>
+
+    {/* LevelTagFilter for current imported data */}
+    <LevelTagFilter new_data_plus={new_data_plus} />
+
+    {/* List of visible node for current imported data 
+      (visible as it would be visible if imported data were displayed, depend in majority to level tag)*/}
+    <OSMultiSelect
+      t={t}
+      elements={entries_for_nodes}
+      onClick={(entries: typeElementSelectable) => {
+        // Update selection list
+        const entries_values = entries.map(d => d.value)
+        new_data_plus.drawing_area.sankey.nodes_list.forEach(n => {
+          if (entries_values.includes(n.id) && !list_selected_nodes_for_unitary.current.includes(n)) {
+            list_selected_nodes_for_unitary.current.push(n)
+          } else if (!entries_values.includes(n.id) && list_selected_nodes_for_unitary.current.includes(n)) {
+            const n_to_del = list_selected_nodes_for_unitary.current.indexOf(n)
+            list_selected_nodes_for_unitary.current.splice(n_to_del, 1)
+          }
+
+        })
+        // Update all menus
+        updateComponent()
+      }}
+    />
+
+    {/* Button to create unitary sankey from selected nodes */}
+    <OSTooltip label={list_selected_nodes_for_unitary.current.length == 0 ? t('view.dis_createFromSelected') : ''}>
+      <Button
+        variant='btn_create_unitary_from_nodes'
+        isDisabled={list_selected_nodes_for_unitary.current.length == 0}
+        onClick={() => {
+          new_data_plus.sendWaitingToast(
+            () => {
+              list_selected_nodes_for_unitary.current.forEach(element => {
+                new_data_plus.createUnitaryNewView(element)
+              })
+              new_data_plus.menu_configuration.updateComponentRelatedToViews()
+              new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+            },
+            {
+              success: {
+                title: t('toast.u_v_loaded'),
+              },
+              loading: {
+                title: t('toast.u_v_loading'),
+              }
+            }
+          )
+        }}>
+        {t('view.create')}
+      </Button>
+    </OSTooltip>
+  </Box>
+}
+
+/**
+ * Tab to create unitary sankey from sankey imported via excel file
+ *
+ * @param {*} { new_data_plus }
+ * @return {*} 
+ */
+const TabImportExcelDataForUnitary: FunctionComponent<{ new_data_plus: Type_GenericApplicationDataOSP }> = ({ new_data_plus }) => {
+  const { t, url_prefix } = new_data_plus
+  const [input_file_blob, set_input_file_blob] = useState<Blob | undefined>(undefined)
+  const [checkStatus, setCheckStatus] = useState(false)
+  const [launchRetriveResult, setLaunchRetriveResult] = useState(false)
+  const [file_name, set_file_name] = useState<string>('')
+  const [selected_data_id, set_selected_data_id] = useState<string>('')
+  const [, setUpdate] = useState(0)
+  const local_app_data = useRef(new Class_ApplicationDataOSP(false))
+  const list_data = useRef<{ [x: string]: { name: string, data: Type_JSON } }>({})
+  const list_selected_nodes_for_unitary = useRef<Type_GenericNodeElementOSP[]>([])
+  const entries_for_nodes: typeElementSelectable = local_app_data.current.drawing_area.sankey.visible_nodes_list_sorted.map((d) => { return { 'label': d.name, 'value': d.id, selected: list_selected_nodes_for_unitary.current.includes(d) } })
+
+  const list_node_selected_data = local_app_data.current.drawing_area.sankey.visible_nodes_list_sorted
+
+
+  // Failesafe if there is data but no selected data 
+  if (Object.keys(list_data.current).length > 0 && !(selected_data_id in list_data.current)) {
+    list_selected_nodes_for_unitary.current = []
+    const new_sel_key = Object.keys(list_data.current)[0]
+    local_app_data.current.drawing_area.fromJSON(list_data.current[new_sel_key].data)
+    set_selected_data_id(new_sel_key)
+  }
+
+
+  // Function to retrieve data from server & add it to data list 
+  const localRetriveResust = () => {
+    const root = window.location.origin
+    const url = root + url_prefix + 'excel/upload/retrieve_results'
+
+    const form_data = new FormData()
+    const fetchData = {
+      method: 'POST',
+      body: form_data
+    }
+    fetch(url, fetchData).then(response => {
+      response.text()
+        .then(text => {
+          if (text === '{}')
+            return
+          // Extract JSON struct
+          const data_as_json = JSON.parse(text) as Type_JSON
+          data_as_json['version'] = local_app_data.current.version // Avoid converter process
+          // Extract sankey datas from JSON
+          list_data.current[makeId('data_src_')] = { name: file_name, data: data_as_json }
+          setLaunchRetriveResult(false)
+          set_file_name('')
+        })
+
+    })
+  }
+
+  // Function launched at the end of server process to get data from server
+  if (launchRetriveResult) {
+    localRetriveResust()
+  }
+
+  /**
+   *Function to launch read & convert of excel file by the server 
+   *
+   */
+  const ProcessExcelFile = () => {
+    const root = window.location.origin
+    const url = root + url_prefix + 'excel/upload/launch'
+    const form_data = new FormData()
+    form_data.append(
+      'file', input_file_blob as Blob
+    )
+    const fetchData = {
+      method: 'POST',
+      body: form_data
+    }
+    fetch(url, fetchData).then(() => {
+      setCheckStatus(true)
+    })
+  }
+
+  return <Box
+    layerStyle='menuconfigpanel_grid'
+  >
+    <Box>
+      {t('Menu.input_file_excel')}
+      <Input
+        type="file"
+        accept='.xlsx'
+        height='unset'
+        onChange={(evt: ChangeEvent) => {
+          set_file_name((evt.target as HTMLFormElement).files[0].name)
+          set_input_file_blob((evt.target as HTMLFormElement).files[0])
+        }}
+      />
+    </Box>
+
+    <Button
+      variant="menuconfigpanel_option_button_secondary"
+      onClick={ProcessExcelFile}
+    >{t('Menu.ouvrir')}
+    </Button>
+
+    {/* Spinner to show there is a background process */}
+    {(checkStatus || launchRetriveResult) ? <Spinner /> : <></>}
+
+    {/* Regulary check server process to know if the function is processing /success/failed */}
+    {checkStatus ? <CheckLoad new_data_plus={new_data_plus} setCheckStatus={setCheckStatus} setLaunchRetriveResult={setLaunchRetriveResult} /> : <></>}
+
+    {/* List of data imported from excel */}
+    {Object.keys(list_data.current).length > 0 ? <>
+      <Select
+        value={selected_data_id}
+        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+          list_selected_nodes_for_unitary.current = []
+          local_app_data.current.fromJSON(list_data.current[evt.target.value].data)
+          set_selected_data_id(evt.target.value)
+        }}
+      >
+        {Object.entries(list_data.current).map((data, i) => {
+          return <option key={'data_src_' + i} value={data[0]}>{data[1].name}</option>
+        })}
+      </Select>
+    </> : <></>}
+
+    {/* LevelTagFilter for current imported data */}
+    <LevelTagFilter new_data_plus={local_app_data.current} />
+
+    {/* List of visible node for current imported data 
+      (visible as it would be visible if imported data were displayed, depend in majority to level tag)*/}
+    {list_node_selected_data.length > 0 ? <Box>
+      <OSMultiSelect
+        t={t}
+        elements={entries_for_nodes}
+        onClick={(entries: typeElementSelectable) => {
+          // Update selection list
+          const entries_values = entries.map(d => d.value)
+          local_app_data.current.drawing_area.sankey.nodes_list.forEach(n => {
+            if (entries_values.includes(n.id) && !list_selected_nodes_for_unitary.current.includes(n)) {
+              list_selected_nodes_for_unitary.current.push(n)
+            } else if (!entries_values.includes(n.id) && list_selected_nodes_for_unitary.current.includes(n)) {
+              const n_to_del = list_selected_nodes_for_unitary.current.indexOf(n)
+              list_selected_nodes_for_unitary.current.splice(n_to_del, 1)
+            }
+          })
+          // Update component
+          setUpdate(a => a + 1)
+        }}
+      />
+
+      {/* Button to create unitary sankey from selected nodes */}
+      <Button
+        variant='btn_create_unitary_from_nodes'
+        isDisabled={list_selected_nodes_for_unitary.current.length == 0}
+        onClick={() => {
+          new_data_plus.sendWaitingToast(
+            () => {
+              list_selected_nodes_for_unitary.current.forEach(element => {
+                local_app_data.current.createUnitaryNewView(element)
+              })
+              const obj_view: Type_JSON = {}
+              local_app_data.current.views.forEach(v => obj_view[v.id] = v.toJSON())
+              new_data_plus.extractViewsFromJSON({ views: obj_view })
+              new_data_plus.menu_configuration.updateComponentRelatedToViews()
+            },
+            {
+              success: {
+                title: t('toast.u_v_loaded'),
+              },
+              loading: {
+                title: t('toast.u_v_loading'),
+              }
+            }
+          )
+        }}
+      >
+        {t('view.create')}
+      </Button>
+    </Box> : <></>}
+  </Box>
+}
+
+/**
+ * Ghost component that check the loading process of the excel file in the server & set signal when it finish or fail
+ *
+ * @param {*} { new_data_plus, setCheckStatus, setLaunchRetriveResult }
+ * @return {*} 
+ */
+const CheckLoad: FunctionComponent<{
+  new_data_plus: Type_GenericApplicationDataOSP
+  setCheckStatus: (b: boolean) => void,
+  setLaunchRetriveResult: (b: boolean) => void
+}> = ({ new_data_plus, setCheckStatus, setLaunchRetriveResult }) => {
+  const { url_prefix } = new_data_plus
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const root = window.location.origin
+      const url = root + url_prefix + 'excel/upload/check_process'
+      const fetchData = {
+        method: 'POST',
+        body: ''
+      }
+      fetch(url, fetchData).then(
+        function (response) {
+          if (response.ok) {
+            response.json().then(
+              function (data) {
+                if (data.output.includes('FINISHED')) {
+                  setCheckStatus(false)
+                  setLaunchRetriveResult(true)
+                } else if (data.output.includes('FAILED')) {
+                  setCheckStatus(false)
+
+                }
+              }
+            )
+          }
+        })
+    }, 5000)
+    return () => clearInterval(interval)
+  })
   return <></>
 }
 

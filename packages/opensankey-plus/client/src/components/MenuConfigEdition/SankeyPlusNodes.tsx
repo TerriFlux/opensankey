@@ -649,6 +649,43 @@ export const ButtonNodeContextShowTooltipMenu: FunctionComponent<FCType_ButtonNo
   </Button>
 }
 
+export const ButtonNodeContextCreateUnitaryView: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+  const { t } = new_data
+
+  const closeContextMenu = () => {
+    // Unset contextualized node
+    new_data.drawing_area.node_contextualised = undefined
+    // Refresh this menu
+    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+  }
+
+  return <Button
+    onClick={() => {
+      new_data.sendWaitingToast(
+        () => {
+          if (new_data.drawing_area.node_contextualised)
+            new_data.createUnitaryNewView(new_data.drawing_area.node_contextualised)
+          new_data.menu_configuration.updateComponentRelatedToViews()
+          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+          closeContextMenu()
+
+        },
+        {
+          success: {
+            title: t('toast.u_v_loaded'),
+          },
+          loading: {
+            title: t('toast.u_v_loading'),
+          }
+        }
+      )
+    }}
+    variant='contextmenu_button'
+  >
+    {t('view.context_node_unit')}
+  </Button>
+}
+
 
 export const ButtonNodeContextStartAnimation: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
   const { t } = new_data

@@ -64,6 +64,7 @@ import {
   ContextZDTOSP,
 } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLabels'
 import {
+  ButtonNodeContextCreateUnitaryView,
   ButtonNodeContextShowTagMenu,
   ButtonNodeContextShowTooltipMenu,
   ButtonNodeContextStartAnimation,
@@ -77,6 +78,7 @@ import {
   ModalViewNotSavedOSP,
   BannerViewsOSP,
   ViewsConfig,
+  ModalCreateUnitaryViewOSP,
 } from './components/MenuConfigEdition/SankeyPlusViews'
 import {
   SankeyMenuConfigurationNodesTooltip
@@ -193,11 +195,14 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     additionalMenus.current.additional_context_node_element['drag_tag'] = <ButtonNodeContextShowTagMenu new_data={new_data_plus} />
     additionalMenus.current.additional_context_node_element['drag_tooltip'] = <ButtonNodeContextShowTooltipMenu new_data={new_data_plus} />
     additionalMenus.current.additional_context_node_element['animate'] = <ButtonNodeContextStartAnimation new_data={new_data_plus} />
+    additionalMenus.current.additional_context_node_element['unitary'] = <ButtonNodeContextCreateUnitaryView new_data={new_data_plus} />
+
   }
 
   // Get index of seprator in context node that come after masking node shape/label so we can then insert a button to mask value (OSP functionality)
   const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
   additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'animate')
+  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'unitary')
 
 
   // Add dashed config
@@ -358,6 +363,9 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       new_data_plus={new_data_plus}
     />,
     <ModalSelectionIconsOSP
+      new_data_plus={new_data_plus}
+    />,
+    <ModalCreateUnitaryViewOSP
       new_data_plus={new_data_plus}
     />,
     <MenuDraggable

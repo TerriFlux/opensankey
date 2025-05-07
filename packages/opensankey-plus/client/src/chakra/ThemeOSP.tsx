@@ -29,6 +29,7 @@ import { extendTheme } from '@chakra-ui/react'
 import { opensankey_theme } from '../deps/OpenSankey/chakra/Theme'
 
 import {
+  btn_create_unitary_from_nodes,
   button_banner_view,
   button_collapse_banner_view,
   button_dataTagg_sequence_menu_pause,
@@ -55,6 +56,7 @@ import { slider_filter_link_value } from './SliderOSP'
 import { title_filter_tagg } from './HeadingOSP'
 import { view_select } from './SelectOSP'
 import { table_view } from './TableOSP'
+import { tabs_data_source_for_unitary } from './TabsStyle'
 
 export const opensankeyplus_theme = {
   components: {
@@ -72,6 +74,7 @@ export const opensankeyplus_theme = {
         button_collapse_banner_view,
         menutop_button_view_activated,
         menuconfigpanel_button_load_file_da_bg,
+        btn_create_unitary_from_nodes,
       },
       sizes:{
         sizeBtnCollapseFilter
@@ -97,6 +100,11 @@ export const opensankeyplus_theme = {
     Table: {
       variants: {
         table_view,
+      }
+    },
+    Tabs:{
+      variants:{
+        tabs_data_source_for_unitary
       }
     },
     Select: {
