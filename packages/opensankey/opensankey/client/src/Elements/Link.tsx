@@ -274,6 +274,8 @@ export abstract class ClassTemplate_LinkElement
     position_offset_name?: number // optional var used when name label is dragged (if label follow link path)
   }
 
+  public sibling: ClassTemplate_LinkElement<Type_GenericDrawingArea,Type_GenericSankey,Type_GenericNodeElement> | undefined
+
   // Visibility memorized - source & target
   protected _source_visibility_fingerprint: string
   protected _target_visibility_fingerprint: string
@@ -945,7 +947,10 @@ export abstract class ClassTemplate_LinkElement
     return true
   }
 
-  public getPathColorToUse() {
+  public getPathColorToUse() : string {
+    if (this.sibling) {
+      return this.sibling.getPathColorToUse()
+    }
     const type_source = this.shape_color_rule
     if (type_source == 'source') {
       return this.source.getShapeColorToUse()

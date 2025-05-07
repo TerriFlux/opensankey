@@ -380,6 +380,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   data_as_json['version'] = new_data.version // Avoid converter process
   // Extract sankey datas from JSON
   new_data.fromJSON(data_as_json, false)
+
   // Case 1 : Apply extracted layout if present -> contains positions
   if (data_as_json['layout']) {
     new_data.updateFromJSON(data_as_json)
@@ -392,6 +393,10 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   // Redraw
   new_data.sendWaitingToast(
     () => {
+      new_data.drawing_area.sankey.default_node_style.position.type = 'parametric'
+      if (new_data.drawing_area.sankey.node_taggs_list.length>0) {
+        new_data.drawing_area.sankey.node_taggs_list[0].show_legend = true
+      }
       new_data.draw()
     })
   //new_data.draw()
