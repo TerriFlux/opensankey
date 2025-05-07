@@ -375,15 +375,6 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
           </OSTooltip>
         </Box>
       </Box>
-
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={is_expand_child}
-        onChange={(evt) => { selected_nodes.forEach(l=>l.is_expand_child = evt.target.checked) }}>
-        <OSTooltip label={t('Flux.tooltips.is_expand_child')}>
-          {t('Flux.is_expand_child')}
-        </OSTooltip>
-      </Checkbox>
     </Box>
   )
 }
