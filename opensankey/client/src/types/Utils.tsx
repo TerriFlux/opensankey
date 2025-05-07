@@ -77,7 +77,7 @@ export const default_black_color = 'black'
 export const default_background_color = '#f2f2f2'
 export const default_grid_color = '#d3d3d3'
 export const default_element_color = '#a9a9a9'
-export const default_element_color_source = 'flow'
+export const default_element_color_source = 'source'
 
 export const default_font = 'Arial,sans-serif'
 export const font_families = [
@@ -452,7 +452,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: ['create_flux','set_as_child','aggregate','contract', 'desaggregate', 'expand','sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    context_node_order: ['create_flux','set_as_child','aggregate','desaggregate', 'expand_right','expand_left','contract','sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
     additional_context_node_element: {},
     // Links
     additional_menu_configuration_links: {},

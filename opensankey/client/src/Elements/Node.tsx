@@ -528,7 +528,7 @@ export abstract class ClassTemplate_NodeElement
     )
     // Dimension - relations
     let dimensions: { [_: string]: Type_JSON } = {}
-    if (this.is_child) {
+    //if (this.is_child) {
       //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
       //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
       const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim => dim.related_level_tagg.id))]
@@ -552,16 +552,16 @@ export abstract class ClassTemplate_NodeElement
           )
       }
       )
-    }
-    else {
-      dimensions = Object.fromEntries(
-        Object.values(this._dimensions_as_parent)
+    //} else if (this.is_parent && !this.is_child)
+      const parent_dimensions = Object.fromEntries(
+        Object.values(this._dimensions_as_parent).filter(dim=>!all_child_taggs.includes(dim.parent_level_tag.group.id))
           .map(dimension => [
             dimension.parent_level_tag.group.id,
             {}
           ])
       )
-    }
+      dimensions = {...dimensions,...parent_dimensions}
+    //}
     // Dimensions - antitag
     this._leveltaggs_as_antitagged
       .forEach(leveltagg => {
@@ -2310,14 +2310,43 @@ export abstract class ClassTemplate_NodeElement
       this.saveUndo(undo)
       this.saveRedoAteventMouseDragEnd()
     }
-
+    // End of drag
+    this._drag = false
     // Move all elements so none of them are outside the DA
     this.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
     this.drawing_area.computeParametricV()
+    const drawing_area = this.drawing_area
+    const nodes_selected = drawing_area.selected_nodes_list
+
+    if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
+      // EDITION MODE ===========================================================
+      if (drawing_area.isInEditionMode()) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position
+        nodes_selected
+          .forEach(n => {
+            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          })
+      }
+    }
+    else {
+      if (drawing_area.isInEditionMode()) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position
+        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+      }
+    }
     this.drawing_area.checkAndUpdateAreaSize()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // End of drag
-    this._drag = false
+
   }
 
 
