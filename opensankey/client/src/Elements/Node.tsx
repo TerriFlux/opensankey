@@ -3447,58 +3447,6 @@ export abstract class ClassTemplate_NodeElement
    */
   public set link_dragged(value: Type_GenericLinkElement | undefined) { this._link_dragged = value }
 
-    private _is_expand_child = false
-  
-    public get is_expand_child() {
-      return this._is_expand_child
-    }
-  
-    public set is_expand_child(_) {
-      this._is_expand_child = _
-      if (this._is_expand_child) {
-        const expand_left = this.output_links_list.length == 0
-        let root_node = this.input_links_list[0].source
-        if (expand_left) {
-          const l = this.input_links_list[0]
-          root_node = this.input_links_list[0].source
-          this.sankey.drawing_area.deleteLink(l)
-          root_node.input_links_list.forEach(l=>{
-  
-            this.sankey.addNewLink(l.source, this)
-            
-            let tagg = this.sankey.level_taggs_dict['Primaire'] as Class_LevelTagGroup
-            if (!tagg) {
-              tagg = this.sankey.addLevelTagGroup('Primaire','Primaire') as Class_LevelTagGroup
-              tagg.activated = true
-              tagg.addTag('1','1')
-            }
-            let parent_dim = root_node.nodeDimensionAsParent(tagg)
-            let parent_level_tag: ClassAbstract_ProtoLevelTag
-            let child_level_tag: ClassAbstract_ProtoLevelTag
-            if (!parent_dim) {
-              parent_level_tag = this.sankey.level_taggs_dict['Primaire'].tags_list[0]
-              if (this.sankey.level_taggs_dict['Primaire'].tags_list.length==1) {
-  
-                (this.sankey.level_taggs_dict['Primaire'] as Class_LevelTagGroup).addTag(
-                  String(+parent_level_tag.id+1),
-                  String(+parent_level_tag.id+1)
-                )
-              }
-              child_level_tag = this.sankey.level_taggs_dict['Primaire'].tags_list[1]
-            } else {
-              parent_level_tag = parent_dim.parent_level_tag
-              child_level_tag = parent_dim.child_level_tag
-            }
-            (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node,this,child_level_tag as Class_LevelTag);
-            (child_level_tag as Class_ProtoLevelTag).setSelected()
-            this.dimensionsUpdated()
-            root_node.dimensionsUpdated()
-          })
-        } else {
-          root_node = this.output_links_list[0].target
-        }
-      }
-    }
   // Style / Local attributes related ---------------------------------------------------
 
   /**
