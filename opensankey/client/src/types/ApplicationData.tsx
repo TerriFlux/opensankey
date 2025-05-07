@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { Dispatch, MutableRefObject, SetStateAction, useRef } from 'react'
+import React, { Dispatch, FunctionComponent, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import i18next, { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -50,6 +50,7 @@ import { Type_SaveDiagramOptions } from '../components/dialogs/types/SankeyPersi
 import { JSONtoExcel, retrieveExcelResults } from '../components/dialogs/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from './IconLibrairie'
+import { OSColorPicker } from '../components/configmenus/OSColorPicker'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -66,6 +67,13 @@ export type Type_TextForToastPromise = {
     title?: string,
     desc?: string
   }
+}
+
+export type OSColorPickerProps = {
+  initialColor: string;
+  functionOnBlur: (x: string) => void;
+  isDisabled?: boolean,
+  textDisabled?: string
 }
 
 // SPECIFIC CONSTANTS ******************************************************************/
@@ -112,6 +120,7 @@ export abstract class ClassTemplate_ApplicationData
   // PROTECTED ATTRIBUTES ==============================================================
 
   protected _file_name = default_file_name
+
 
   /**
    * Drawing area
@@ -362,8 +371,10 @@ export abstract class ClassTemplate_ApplicationData
         this._processFunction.ref_result.current('')
       }
     }
-    // Link keyboard listener with app key down detection
-    document.onkeydown = this._keyboardEventListener(this)
+    if (!published_mode) {
+      // Link keyboard listener with app key down detection
+      document.onkeydown = this._keyboardEventListener(this)
+    }
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -688,7 +699,7 @@ export abstract class ClassTemplate_ApplicationData
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
       drawing_area_from_layout.fromJSON(json_layout)
-      this.file_name=getStringFromJSON(json_layout,'name_file',this.file_name)
+      this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
       this.drawing_area.updateFrom(
         drawing_area_from_layout,
         ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux',/*'tagLevel',*/'icon_catalog']
@@ -837,6 +848,16 @@ export abstract class ClassTemplate_ApplicationData
     this._history.saveRedo(() => { func(value) })
     func(value)
   }
+
+  public OSColorPicker: FunctionComponent<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled }) => {
+    return <OSColorPicker
+      isDisabled={isDisabled}
+      initialColor={initialColor}
+      functionOnBlur={functionOnBlur}
+      textDisabled={textDisabled}
+    />
+  }
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -1084,7 +1105,7 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _pre_process_export_svg() {
     this.drawing_area.purgeSelection()
-    this.drawing_area.areaAutoFit()
+    this.drawing_area.areaAutoFit(true)
 
     const svg = this.drawing_area.d3_selection_zoom_area
     const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
@@ -1158,5 +1179,6 @@ export abstract class ClassTemplate_ApplicationData
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }
+
 }
 

@@ -107,7 +107,7 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
   </>
 }
 
-const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
+export const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 
@@ -198,7 +198,8 @@ const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
     <Box
       as='span'
       layerStyle='menuconfigpanel_row_2cols'
-      gridTemplateColumns='1fr 7fr'
+      display='flex'
+      gap='0.4rem'
     >
       <Box
         layerStyle='menuconfigpanel_option_name'
@@ -206,7 +207,7 @@ const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
       >
         {t('Menu.ns')}
       </Box>
-      <Box>
+      <Box flex='auto'>
         <InputGroup
           variant='menuconfigpanel_option_input'
         >
@@ -296,7 +297,7 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
   </>
 }
 
-const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
+export const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 
@@ -384,7 +385,8 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
     <Box
       as='span'
       layerStyle='menuconfigpanel_row_2cols'
-      gridTemplateColumns='1fr 7fr'
+      display='flex'
+      gap='0.4rem'
     >
       <Box
         layerStyle='menuconfigpanel_option_name'
@@ -392,7 +394,7 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
       >
         {t('Menu.ns')}
       </Box>
-      <Box>
+      <Box flex='auto'>
         <InputGroup variant='menuconfigpanel_option_input' >
           <Input
             variant='menuconfigpanel_option_input'

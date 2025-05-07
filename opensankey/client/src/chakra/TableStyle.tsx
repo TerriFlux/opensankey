@@ -64,7 +64,7 @@ export const table_edit_grp_tag_data = definePartsStyle({
   ...default_table,
   tr: {
     minHeight: minHeightTableRow,
-    gridTemplateColumns: '0.75fr 2fr 1.5fr 1.5fr',
+    gridTemplateColumns: '0.5fr 2fr 1.5fr',
     display: 'grid',
   },
 })
@@ -95,6 +95,16 @@ export const table_edit_tag_data = definePartsStyle({
   tr: {
     minHeight: minHeightTableRow,
     gridTemplateColumns: '0.5fr 1.5fr 0.75fr',
+    display: 'grid',
+  },
+})
+
+// Style of table to edit node link io
+export const table_edit_node_io = definePartsStyle({
+  ...default_table,
+  tr: {
+    minHeight: minHeightTableRow,
+    gridTemplateColumns: '2fr 2fr',
     display: 'grid',
   },
 })

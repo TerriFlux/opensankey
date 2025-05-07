@@ -568,7 +568,7 @@ export abstract class ClassTemplate_DrawingArea
     this.drawElements()
 
     // Fit area
-    this.areaAutoFit()
+    this.areaAutoFit(false)
 
     // Added events listeners
     this.setEventsListeners()
@@ -1155,8 +1155,8 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @memberof ClassTemplate_DrawingArea
    */
-  public areaFitHorizontally() {
-    this.checkAndUpdateAreaSize(true)
+  public areaFitHorizontally(autocenter:boolean) {
+    this.checkAndUpdateAreaSize(autocenter)
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_width / this.width
@@ -1177,8 +1177,8 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @memberof ClassTemplate_DrawingArea
    */
-  public areaFitVertically() {
-    this.checkAndUpdateAreaSize(true)
+  public areaFitVertically(autocenter:boolean) {
+    this.checkAndUpdateAreaSize(autocenter)
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_height / this.height
@@ -1519,7 +1519,7 @@ export abstract class ClassTemplate_DrawingArea
               n.reorganizeIOFromListIds(node_pos[n.id].links_order)
               n.draw()
             })
-            this.areaAutoFit()
+            this.areaAutoFit(true)
 
           }
           this.saveUndo(inv_computeAutoSankey)
@@ -1554,7 +1554,7 @@ export abstract class ClassTemplate_DrawingArea
           })
         }
         // Update area
-        this.areaAutoFit()
+        this.areaAutoFit(true)
         // Toggle saving indicator
         this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -1574,7 +1574,7 @@ export abstract class ClassTemplate_DrawingArea
               n.reorganizeIOFromListIds(node_pos[n.id].links_order)
               n.draw()
             })
-            this.areaAutoFit()
+            this.areaAutoFit(true)
 
           }
           this.saveRedo(_computeAutoSankey)
@@ -2168,17 +2168,17 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @memberof ClassTemplate_DrawingArea
    */
-  public areaAutoFit() {
+  public areaAutoFit(autocenter:boolean) {
     this._process_or_bypass(() => {
       // Ratios
       const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
       const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
       // Fit from ratio
       if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
-        this.areaFitHorizontally()
+        this.areaFitHorizontally(autocenter)
       }
       else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
-        this.areaFitVertically()
+        this.areaFitVertically(autocenter)
       }
     })
   }
@@ -2933,7 +2933,7 @@ export abstract class ClassTemplate_DrawingArea
       this._scaleValueToPx.domain([0, value])
       this.application_data.menu_configuration.updateComponentRelatedToLayoutApparence()
       this.drawElements()
-      this.areaAutoFit()
+      this.areaAutoFit(false)
     }
   }
 
