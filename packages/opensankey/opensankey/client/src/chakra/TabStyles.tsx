@@ -55,9 +55,6 @@ export const tabs_base_style = definePartsStyle({
     }
   },
   tablist: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    gridColumnGap: '0.25rem',
     border: '0 !important',
     margin: '0.5rem !important'
   },
