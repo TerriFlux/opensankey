@@ -65,7 +65,7 @@ import {
   ClassAbstract_ApplicationData,
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
-import { Class_Tag } from './Tag'
+import { Class_LevelTagGroup, Class_Tag } from './Tag'
 import { Class_NodeAttribute } from '../Elements/NodeAttributes'
 import { Class_LinkAttribute } from '../Elements/LinkAttributes'
 
@@ -568,7 +568,7 @@ export abstract class ClassTemplate_DrawingArea
     this.drawElements()
 
     // Fit area
-    this.areaAutoFit(false)
+    this.areaAutoFit(true)
 
     // Added events listeners
     this.setEventsListeners()
@@ -2035,13 +2035,15 @@ export abstract class ClassTemplate_DrawingArea
         }
       })
     })
-    Object.values(columns).forEach(column => {
-      column.sort((n1, n2) => n1.position_y - n2.position_y)
-      let current_v = 0
-      column.forEach(n => current_v = this.apply_v_desagregate(n, current_v))
-    })
-    Object.values(columns).forEach(column => {
-      column.forEach(n => this.apply_v_agregate(n))
+    this.sankey.level_taggs_list.forEach(tagGroup => {
+      Object.values(columns).forEach(column => {
+        column.sort((n1, n2) => n1.position_y - n2.position_y)
+        let current_v = 0
+        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v,tagGroup))
+      })
+      Object.values(columns).forEach(column => {
+        column.forEach(n => this.apply_v_agregate(n,tagGroup))
+      })
     })
     this.sankey.sortNodes()
   }
@@ -2051,28 +2053,21 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public apply_v_agregate(
-    node: Type_AnyNodeElement
+    node: Type_AnyNodeElement,
+    tagGroup: Class_LevelTagGroup
   ) {
-    let agregated_nodes: Type_GenericNodeElement[] = []
-    this.sankey.level_taggs_list.forEach(tagGroup => {
-      const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
-      if (!nodeDimParent) {
-        return
-      }
-      if (nodeDimParent.parent.display.position.v != -1) {
-        // v is computed at the first path
-        return
-      }
-      agregated_nodes = [...agregated_nodes, nodeDimParent.parent as Type_GenericNodeElement]
-      agregated_nodes = [...new Set(agregated_nodes)]
-    })
-    agregated_nodes.forEach(nn => {
-      nn.display.position.x = node.position_x
-      nn.display.position.y = node.position_y
-      nn.display.position.u = node.position_u
-      nn.display.position.v = node.position_v
-      this.apply_v_agregate(nn)
-    })
+    const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
+    if (!nodeDimParent) {
+      return
+    }
+    if (nodeDimParent.parent.display.position.v != -1) {
+      // v is computed at the first path
+      return
+    }
+    nodeDimParent.parent.display.position.y = node.position_y
+    nodeDimParent.parent.display.position.u = node.position_u
+    nodeDimParent.parent.display.position.v = node.position_v
+    this.apply_v_agregate(nodeDimParent.parent as Type_AnyNodeElement,tagGroup)
   }
 
   /**
@@ -2082,30 +2077,38 @@ export abstract class ClassTemplate_DrawingArea
    */
   public apply_v_desagregate(
     node: Type_AnyNodeElement,
-    current_v: number
+    current_v: number,
+    tagGroup: Class_LevelTagGroup
   ) {
+    if (node.sibling) {
+      return current_v
+    }
     if (node.display.position.v == -1) {
       // v is computed at the first path
       node.display.position.v = current_v
     }
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
-    this.sankey.level_taggs_list.forEach(tagGroup => {
-      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-      if (!nodeDimParent) {
+    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+    if (!nodeDimParent) {
+      return new_current_v
+    }
+    desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
+    desagregated_nodes = [...new Set(desagregated_nodes)]
+    const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
+    if (desagregated_nodes.length>0) {
+      let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
+    desagregated_nodes.forEach(nn => {
+      if (nn.sibling) {
         return
       }
-      desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
-      desagregated_nodes = [...new Set(desagregated_nodes)]
-    })
-    let current_y = node.position_y
-    desagregated_nodes.forEach(nn => {
       nn.display.position.x = node.position_x
       nn.display.position.u = node.position_u
       nn.display.position.y = current_y
       current_y += 20
-      new_current_v = this.apply_v_desagregate(nn, new_current_v)
+      new_current_v = this.apply_v_desagregate(nn, new_current_v,tagGroup)
     })
+    }
     return new_current_v + 1
   }
 
@@ -2637,6 +2640,12 @@ export abstract class ClassTemplate_DrawingArea
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+        if (this.sankey.default_node_style.position.type == 'parametric' ) {
+          this.application_data.sendWaitingToast(
+            () => {
+          this.computeParametrization()
+            })
+        }
       }
     } else if (this.isInSelectionMode() && event.button == 0) {
       if ((!event.shiftKey) && (!event.ctrlKey)) {
