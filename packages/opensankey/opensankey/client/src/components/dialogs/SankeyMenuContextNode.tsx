@@ -930,7 +930,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
         const desagregation_link = n[input_or_output_attr].filter(l => l[source_or_target_attr].id == root_node.id)[0]
         if (n.input_links_list.length==0 || n.output_links_list.length==0) {
           root_node[input_or_output_attr].forEach(supply_link => {
-            if (!supply_link.data_value) {
+            if (!supply_link.value?.valueData) {
               return
             }
             const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
