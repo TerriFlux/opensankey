@@ -31,3 +31,4 @@ opensankey/client/src/images/*
 opensankey/client/node_modules
 **/OpenSankey.egg-info/*
 opensankey/client/pnpm-lock.yaml
+.vscode/sphinx.mustache
