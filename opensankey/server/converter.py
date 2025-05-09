@@ -405,6 +405,7 @@ class SankeyToJson(object):
         :param level_tags_json: nodes tags json struct
         :type level_tags_json: dict (modified)
         """
+        unactivated_dimensions = []
         for i, dimension in enumerate(sankey.dimensions.values()):
             # Dimension infos
             tags = {
@@ -414,16 +415,17 @@ class SankeyToJson(object):
                     'color': ''
                 } for level in range(1, dimension.depth+1)
             }
+            # Siblings
+            siblings = [_ for _ in sankey.dimensions.values() if (dimension.is_antagonist(_) and _ != dimension)]
+            unactivated_dimensions += siblings
             # Dimension dict
             level_tags_json[dimension.id] = {
                 'name': dimension.name,
                 'show_legend': False,
                 'tags': tags,
                 'banner': 'level',
-                # 'activated': i == 0,
-                # 'siblings': [_.id for _ in sankey.dimensions.values() if _ != dimension]
-                'activated': True,
-                'siblings': []
+                'activated': dimension not in unactivated_dimensions,
+                'siblings': [_.id for _ in siblings]
             }
 
     def _parse_flux_tags(self, taggs, flux_tags_json):
