@@ -73,7 +73,8 @@ import {
   default_node_name_label_vert_shift,
   default_node_name_label_background_color,
   default_node_value_label_background_color,
-  Class_NodeAttribute
+  Class_NodeAttribute,
+  default_shape_opacity
 } from '../../Elements/NodeAttributes'
 import { type Class_NodeStyle } from '../../Elements/NodeAttributes'
 import {
@@ -232,6 +233,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   const shape_arrow_angle_factor = (element_ref?.shape_arrow_angle_factor ?? default_shape_arrow_angle_factor)
   const shape_arrow_angle_direction = (element_ref?.shape_arrow_angle_direction ?? default_shape_arrow_angle_direction)
   const shape_color_sustainable = (element_ref?.shape_color_sustainable ?? default_shape_color_sustainable)
+  const shape_opacity = (element_ref?.shape_opacity ?? default_shape_opacity)
 
 
   const position_type = menu_for_style ?
@@ -280,7 +282,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   }
 
   // Node to ConfigMenuNumberInput state variable
-  const number_of_input = 11
+  const number_of_input = 7
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
@@ -292,10 +294,12 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   ref_set_number_inputs[3].current(String(position_dy))
   ref_set_number_inputs[4].current(String(position_relative_dx))
   ref_set_number_inputs[5].current(String(position_relative_dy))
+  ref_set_number_inputs[6].current(String(shape_opacity))
 
 
   const is_shape_min_height_indeterminated = !elements.every(el => el.shape_min_height == element_ref.shape_min_height)
   const is_shape_min_width_indeterminated = !elements.every(el => el.shape_min_width == element_ref.shape_min_width)
+  const is_shape_opacity_indeterminated = !elements.every(el => el.shape_opacity == element_ref.shape_opacity)
 
 
 
@@ -554,6 +558,31 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
           </Box> :
           <></>
       }
+
+      {/* Shape Opacity */}
+      <OSTooltip label={t('Noeud.apparence.tooltips.opacity')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.apparence.opacity')}
+            <TooltipElementOverloaded k='shape_opacity' />
+          </Box>
+          <ConfigMenuNumberInput
+            t={new_data.t}
+            ref_to_set_value={ref_set_number_inputs[6]}
+            default_value={shape_opacity}
+            function_on_blur={(value) => {
+              updateElements('shape_opacity', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            maximum_value={1}
+            step={0.1}
+            stepper={true}
+            unit_text='%'
+            multiValue={is_shape_opacity_indeterminated}
+          />
+        </Box>
+      </OSTooltip>
 
       <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
         {t('Noeud.size')}
