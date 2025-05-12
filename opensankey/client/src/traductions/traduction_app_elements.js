@@ -318,7 +318,7 @@ export const resources_app_elements = {
         link_size_limit: 'Link size limit',
         TCG: 'Grid',
         TCG_shift: 'Shift',
-
+        MN: 'Nodes magnetic to grid',
         SLIP: 'Legend',
         AN: 'Arrange the nodes on the grid',
         Horizontal: 'Horizontal spacing between nodes',
@@ -346,6 +346,7 @@ export const resources_app_elements = {
           MaxFlux: 'Change the maximum size (in pixels) for the display of the links',
           MinFlux: 'Change the minimum size (in pixels) for the display of the links',
           TCG: 'Size of the background grid tiles (in pixels)',
+          MN: 'Dragged nodes move by "step" instead of continuously following the mouse',
           SLIP: 'Enable/Disable the presence of the legend when palette of color from elements tags are displayed',
           GV: 'Enable or disable the display of the background grid',
           AN: 'Automatically arrange nodes: ie come and paste the upper left corner of the nodes on the nearest grid corner',
@@ -1198,6 +1199,8 @@ export const resources_app_elements = {
         link_size_limit: 'Taille limite des flux',
         TCG: 'Quadrillage',
         TCG_shift: 'Espacement',
+        MN: 'Noeuds aimantés à la grille',
+
         SLIP: 'Légende',
         AN: 'Arranger les noeuds sur le quadrillage',
         Horizontal: 'Ecartement horizontal',
@@ -1226,6 +1229,7 @@ export const resources_app_elements = {
           MaxFlux: 'Modifier la taille maximale (en pixel) pour l\'affichage des flux',
           MinFlux: 'Modifier la taille minimale (en pixel) pour l\'affichage des flux',
           TCG: 'Taille des carreaux de la grille de fond (en pixel)',
+          MN: 'Les noeuds déplacés bougent par "marche" au lieux de suivre continuellement la souris',
           SLIP: 'Active/désactive l\'affichage de la légende quand les palettes de couleurs des étiquettes sont affichées',
           GV: 'Activer ou désactiver l\'affichage de la grille de fond',
           AN: 'Arrangement automatiquement les noeuds : ie venir coller le coin supérieur gauche des noeuds sur le coin de grille le plus proche',
