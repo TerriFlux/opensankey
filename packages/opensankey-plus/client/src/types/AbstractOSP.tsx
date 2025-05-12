@@ -55,12 +55,14 @@ export abstract class ClassAbstract_DrawingAreaOSP
   public abstract moveSelectedNodesFromDragEvent(event: d3.D3DragEvent<SVGGElement, unknown, unknown>): void
   public abstract moveSelectedContainerFromDragEvent(event: d3.D3DragEvent<SVGGElement, unknown, unknown>): void
   public abstract addContainerElement(): number
-  public abstract orderElementsConatianer():void
-  public abstract saveUndoLabelSelectedPos():void
-  public abstract saveRedoLabelSelectedPos():void
+  public abstract orderElementsConatianer(): void
+  public abstract saveUndoLabelSelectedPos(): void
+  public abstract saveRedoLabelSelectedPos(): void
 
   public abstract get selected_containers_list(): Class_ContainerElement<ClassAbstract_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
   public abstract get heredited_attr(): string[]
+  public abstract get contextualised_container():Class_ContainerElement<ClassAbstract_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>|undefined
+  public abstract set contextualised_container(v:Class_ContainerElement<ClassAbstract_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>|undefined)
 }
 
 export abstract class ClassAbstract_SankeyOSP

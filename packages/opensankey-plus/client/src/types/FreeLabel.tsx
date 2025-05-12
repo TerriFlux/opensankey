@@ -20,7 +20,8 @@ import {
   default_element_position,
   getBooleanFromJSON,
   getNumberFromJSON,
-  getStringFromJSON
+  getStringFromJSON,
+  getStringListFromJSON
 } from '../deps/OpenSankey/types/Utils'
 
 // Local imports
@@ -29,7 +30,8 @@ import {
   ClassAbstract_SankeyOSP
 } from './AbstractOSP'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
-import { Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP } from './TypesOSP'
+import { ClassTemplate_NodeElementOSP } from './NodeOSP'
+import { Type_GenericDrawingAreaOSP, Type_GenericLinkElementOSP, Type_GenericSankeyOSP } from './TypesOSP'
 
 
 export const default_container_content = 'Text Label ...'
@@ -44,7 +46,7 @@ export const default_container_is_image = false
 export const default_container_image_src = ''
 
 
-type Type_AnyContainerElement = Class_ContainerElement<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP>
+export type Type_AnyContainerElement = Class_ContainerElement<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP>
 
 /**
  * Allow to sort  by their z-ordre on the drawing area
@@ -123,6 +125,11 @@ export class Class_ContainerElement
 
   private _label_height: number
 
+  private _tied_to_nodes: boolean
+  private _attached_node: ClassTemplate_NodeElementOSP<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP, Type_GenericLinkElementOSP>[]
+  private _margin_from_attached_nodes: number
+
+
   private _drag_handler: {
     top: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
     bottom: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
@@ -162,6 +169,10 @@ export class Class_ContainerElement
     this._transparent_border = default_container_transparent_border
     this._is_image = default_container_is_image
     this._image_src = default_container_image_src
+
+    this._tied_to_nodes = false
+    this._attached_node = []
+    this._margin_from_attached_nodes = 50
 
     // Free labels drag handlers
     this._drag_handler = {
@@ -267,6 +278,9 @@ export class Class_ContainerElement
     json_object['label_width'] = this._label_width
     json_object['label_height'] = this._label_height
     json_object['displaying_order'] = this._display.displaying_order
+    json_object['tiedToNode'] = this._tied_to_nodes
+    json_object['margin'] = this._margin_from_attached_nodes
+    json_object['attachedNodes'] = this._attached_node.map(n => n.id)
 
   }
 
@@ -293,7 +307,15 @@ export class Class_ContainerElement
     this._label_width = getNumberFromJSON(json_object, 'label_width', this.label_width)
     this._label_height = getNumberFromJSON(json_object, 'label_height', this.label_height)
     this._display.displaying_order = getNumberFromJSON(json_object, 'displaying_order', this._display.displaying_order)
-
+    this._tied_to_nodes = getBooleanFromJSON(json_object, 'tiedToNode', this._tied_to_nodes)
+    this._margin_from_attached_nodes = getNumberFromJSON(json_object, 'margin', this._margin_from_attached_nodes)
+    const list_id_nodes = getStringListFromJSON(json_object, 'attachedNodes', [])
+    const present_node_id = this.drawing_area.sankey.nodes_dict
+    list_id_nodes.forEach(id_n => {
+      if (id_n in present_node_id) {
+        this._attached_node.push(this.drawing_area.sankey.nodes_dict[id_n])
+      }
+    })
   }
 
 
@@ -320,6 +342,12 @@ export class Class_ContainerElement
   public _drawShape() {
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.zdt_shape').remove()
+    if (this._tied_to_nodes && this._attached_node.filter(node => node.is_visible).length > 0) {
+      this.computeSizeAndPositionFromAttachedNodes()
+    }
+    if (this._is_selected) {
+      this.drawDragHandlers()
+    }
 
     // Apply shape value
     this.d3_selection_g_shape?.append('rect')
@@ -331,7 +359,7 @@ export class Class_ContainerElement
     // Apply common properties
     this.d3_selection_g_shape?.selectAll('.zdt_shape')
       .attr('id', this.id)
-      .attr('fill-opacity',this._color_visible? this._opacity / 100:0)
+      .attr('fill-opacity', this._color_visible ? this._opacity / 100 : 0)
       .attr('fill', this._color)
       .attr('stroke', this._color_border)
       .attr('stroke-opacity', (this._transparent_border) ? 0 : 1)
@@ -468,7 +496,7 @@ export class Class_ContainerElement
   private dragHandleEnd() {
     return () => {
       this.menu_config.ref_to_menu_config_containers_updater.current()
-      
+
       const old_val = {
         x: this.position_x,
         y: this.position_y,
@@ -579,6 +607,38 @@ export class Class_ContainerElement
     this._drag_handler.right.position_y = this.position_y + this._label_height / 2
   }
 
+  /**
+   * Compute position & size of container according to nodes tied to it, 
+   * it also add a margin to compute size that can be modified 
+   *
+   * @private
+   * @memberof Class_ContainerElement
+   */
+  private computeSizeAndPositionFromAttachedNodes() {
+    let min_x = this.drawing_area.width, min_y = this.drawing_area.height, max_x = 0, max_y = 0
+
+    this._attached_node.forEach(node => {
+      if (node.is_visible) {
+        // Use bbox to take into account he label of the node
+        const bbox = node.d3_selection?.node()?.getBBox() ?? { x: 0, y: 0, width: 0, height: 0 }
+
+        const node_topiest_pos = node.position_y + bbox.y
+        const node_leftiest_pos = node.position_x + bbox.x
+        const node_righiest_pos = node.position_x + bbox.width
+        const node_bottomiest_pos = node.position_y + bbox.height
+
+        min_x = (node_leftiest_pos < min_x) ? node_leftiest_pos : min_x
+        min_y = (node_topiest_pos < min_y) ? node_topiest_pos : min_y
+        max_x = (node_righiest_pos > max_x) ? node_righiest_pos : max_x
+        max_y = (node_bottomiest_pos > max_y) ? node_bottomiest_pos : max_y
+      }
+    })
+
+    this.setPosXY(min_x - this._margin_from_attached_nodes, min_y - this._margin_from_attached_nodes)
+    this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+    this._label_height = (max_y - min_y) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+  }
+
   // PROTECTED METHODS ==================================================================
 
   // Mouse Events -----------------------------------------------------------------------
@@ -654,6 +714,16 @@ export class Class_ContainerElement
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventSimpleRMBCLick(_event)
+    if (this.drawing_area.isInSelectionMode()) {
+      _event.preventDefault()
+      this.drawing_area.pointer_pos = [_event.pageX, _event.pageY]
+      if (!this.drawing_area.selected_containers_list.includes(this)) {
+        this.drawing_area.addContainerToSelection(this)
+      }
+      this.menu_config.ref_to_menu_config_containers_updater.current();
+      this.drawing_area.contextualised_container = this
+      this.menu_config.ref_to_menu_context_container_updater.current()
+    }
   }
 
   /**
@@ -732,7 +802,7 @@ export class Class_ContainerElement
     if (containers_selected.includes(this)) {
       drawing_area.saveUndoLabelSelectedPos()
       drawing_area.checkAndUpdateAreaSize()
-    } else {
+    } else if (!this._tied_to_nodes) {
       // Memorize for undo
       const old_x = this._display.position.x
       const old_y = this._display.position.y
@@ -761,7 +831,7 @@ export class Class_ContainerElement
     const zdt_selected = drawing_area.selected_containers_list
 
     if (zdt_selected.length == 0) {
-      if (drawing_area.isInSelectionMode()) {
+      if (drawing_area.isInSelectionMode() && !this.tied_to_nodes) {
         this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
         this.drawing_area.checkAndUpdateAreaSize()
       }
@@ -776,8 +846,10 @@ export class Class_ContainerElement
         // Set position
         // Update free label position
         zdt_selected
-          .forEach(n => {
-            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          .forEach(zdt => {
+            if (!zdt._tied_to_nodes) {
+              zdt.setPosXY(zdt.position_x + event.dx, zdt.position_y + event.dy)
+            }
           })
         this.drawing_area.moveSelectedNodesFromDragEvent(event)
       }
@@ -796,14 +868,12 @@ export class Class_ContainerElement
     if (this.drawing_area.isInSelectionMode()) {
       this.drawing_area.checkAndUpdateAreaSize()
 
-
-
       // Save redo label pos
       const drawing_area = this.drawing_area
       const containers_selected = drawing_area.selected_containers_list
       if (containers_selected.includes(this)) {
         drawing_area.saveRedoLabelSelectedPos()
-      } else {
+      } else if (!this._tied_to_nodes) {
         // Memorize for redo
         const old_x = this._display.position.x
         const old_y = this._display.position.y
@@ -846,7 +916,7 @@ export class Class_ContainerElement
 
   public get color_visible(): boolean { return this._color_visible }
   public set color_visible(value: boolean) { this._color_visible = value }
-  
+
   public get color_border(): string { return this._color_border }
   public set color_border(value: string) { this._color_border = value }
 
@@ -865,7 +935,14 @@ export class Class_ContainerElement
   public get label_height(): number { return this._label_height }
   public set label_height(value: number) { this._label_height = value }
 
+  public get attached_node() { return this._attached_node }
+
+  public get tied_to_nodes(): boolean { return this._tied_to_nodes }
+  public set tied_to_nodes(b: boolean) { this._tied_to_nodes = b }
 
   public get displaying_order() { return this._display.displaying_order }
   public set displaying_order(_: number) { this._display.displaying_order = _ }
+
+  public get margin_from_attached_nodes(): number { return this._margin_from_attached_nodes }
+  public set margin_from_attached_nodes(value: number) { this._margin_from_attached_nodes = value }
 }
