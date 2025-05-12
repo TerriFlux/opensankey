@@ -1790,9 +1790,6 @@ const convert_nodes: convert_nodesFuncType = (
     const local_aggregation = n.local?.local_aggregation
     if (local_aggregation != undefined && !is_exchange) {
       Object.entries(n.dimensions).forEach(dim => {
-        if (!data.levelTags[dim[0]]) {
-          return
-        }
         if (!data.levelTags[dim[0]].activated) {
           return
         }
@@ -1860,7 +1857,7 @@ const convert_nodes: convert_nodesFuncType = (
           Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && 
             Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1 
         ) {
-          if (n.dimensions['Primaire'] && n.dimensions['Primaire'].parent_name) {
+          if (n.dimensions['Primaire'].parent_name) {
             let parent_tag: number | undefined
             const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
             if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
@@ -1907,9 +1904,6 @@ const convert_nodes: convert_nodesFuncType = (
         return
       }
       Object.entries(data.nodes[pid].dimensions).forEach(([pk,pdim])=>{
-        if (!data.levelTags[pk]) {
-          return
-        }
         if (!data.levelTags[pk].activated) {
           return
         }
