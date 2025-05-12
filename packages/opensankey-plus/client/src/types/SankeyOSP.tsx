@@ -16,6 +16,7 @@ import type { ClassTemplate_NodeElementOSP, Class_NodeStyleOSP } from './NodeOSP
 import type { ClassTemplate_LinkElementOSP, Class_LinkStyleOSP } from './LinkOSP'
 import { type ClassAbstract_DrawingAreaOSP, ClassAbstract_SankeyOSP } from './AbstractOSP'
 import { Class_ContainerElement } from './FreeLabel'
+import { Type_GenericContainerElement, Type_GenericNodeElementOSP } from './TypesOSP'
 
 // CLASS SANKEY PLUS *********************************************************************
 
@@ -229,6 +230,64 @@ export abstract class ClassTemplate_SankeyOSP
 
     // Icon catalog
     this._icon_catalog = getJSONFromJSON(json_object, 'icon_catalog', this._icon_catalog) as { [x: string]: string }
+  }
+  
+  /**
+   * Add node ref to container attribute attached_node
+   *
+   * @param {Type_GenericNodeElementOSP} node
+   * @param {Type_GenericContainerElement} cont
+   * @memberof ClassTemplate_SankeyOSP
+   */
+  public attachNodeToCont(node: Type_GenericNodeElementOSP, cont: Type_GenericContainerElement) {
+    if (!cont.attached_node.includes(node)) {
+      cont.attached_node.push(node)
+      this.attachNodeToCont(node, cont)
+    }
+  }
+
+  /**
+   * Add container ref to node attribute attached_container
+   *
+   * @param {Type_GenericContainerElement} cont
+   * @param {Type_GenericNodeElementOSP} node
+   * @memberof ClassTemplate_SankeyOSP
+   */
+  public attachContToNode(cont: Type_GenericContainerElement, node: Type_GenericNodeElementOSP): void {
+    if (!node.attached_container.includes(cont)) {
+      node.attached_container.push(cont)
+      this.attachContToNode(cont, node)
+    }
+  }
+
+  /**
+   * Remove ref of container in node attached_node attribute
+   *
+   * @param {Type_GenericNodeElementOSP} node
+   * @param {Type_GenericContainerElement} cont
+   * @memberof ClassTemplate_SankeyOSP
+   */
+  public dettachNodeFromCont(node: Type_GenericNodeElementOSP, cont: Type_GenericContainerElement) {
+    if (cont.attached_node.includes(node)) {
+      const idx = cont.attached_node.indexOf(node)
+      cont.attached_node.splice(idx, 1)
+      this.dettachNodeFromCont(node, cont)
+    }
+  }
+
+  /**
+   * Remove ref of container in node attached_container attribute
+   *
+   * @param {Type_GenericContainerElement} cont
+   * @param {Type_GenericNodeElementOSP} node
+   * @memberof ClassTemplate_SankeyOSP
+   */
+  public dettachContFromNode(cont: Type_GenericContainerElement, node: Type_GenericNodeElementOSP): void {
+    if (node.attached_container.includes(cont)) {
+      const idx = node.attached_container.indexOf(cont)
+      node.attached_container.splice(idx, 1)
+      this.dettachContFromNode(cont, node)
+    }
   }
 
   // PUBLIC METHODS =====================================================================

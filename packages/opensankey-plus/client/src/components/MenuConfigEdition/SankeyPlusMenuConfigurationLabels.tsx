@@ -146,7 +146,39 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     return (display_value) ? visible : false
   }
 
+  const allLabelTiedToNodes = () => {
+    let display_value = true
+    let visible = false
+    if (selected_zdt.length !== 0) {
+      visible = selected_zdt[0].tied_to_nodes
+    }
+    selected_zdt.map((d) => {
+      display_value = (d.tied_to_nodes === visible) ? display_value : false
+    })
+    return (display_value) ? visible : false
+  }
 
+  const allNodesTiedToZDTRef = () => {
+    if (selected_zdt.length > 0)
+      return selected_zdt[0].attached_node
+    else
+      return []
+  }
+
+  const allLabelMargin = () => {
+    let display_size = true
+    let margin = 0
+    if (selected_zdt.length !== 0) {
+      margin = selected_zdt[0].margin_from_attached_nodes
+    }
+    selected_zdt.map((d) => {
+      display_size = (d.margin_from_attached_nodes === margin) ? display_size : false
+    })
+    return (display_size) ? margin : 0
+  }
+
+  const list_node_tied = allNodesTiedToZDTRef()
+  const options_selector_node_tied = new_data_plus.drawing_area.sankey.nodes_list_sorted.map((node) => { return { 'label': node.name, 'value': node.id, selected: list_node_tied.includes(node) } })
   const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
   const valAllLabelBorderTransparentIndeterminate = !selected_zdt.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
@@ -154,6 +186,9 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   const valAllLabelBgVisible = selected_zdt[0]?.color_visible ?? false
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
   const valAllLabelBgVisibleIndeterminate = !selected_zdt.every(zdt => zdt.color_visible == valAllLabelBgVisible)
+
+  const valAllLabeTiedToNode = selected_zdt[0]?.tied_to_nodes ?? false
+  const valAllLabelTiedToNodeIndeterminate = !selected_zdt.every(zdt => zdt.tied_to_nodes == valAllLabeTiedToNode)
 
 
   const modules = {
@@ -455,8 +490,53 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     _updateLabelBgVisible()
   }
 
+  const updateLabelTiedToNodes = (_: boolean) => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.tied_to_nodes]))
+    const _updateLabelTiedToNodes = () => {
+      selected_zdt.map(d => d.tied_to_nodes = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateLabelTiedToNodes = () => {
+      selected_zdt.map(d => d.tied_to_nodes = dict_old_val[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateLabelTiedToNodes)
+    new_data_plus.history.saveRedo(_updateLabelTiedToNodes)
+    // Execute original attr mutation
+    _updateLabelTiedToNodes()
+  }
+
+  const updateMargin = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) //Failsafe
+      return
+
+    const dict_old_title = Object.fromEntries(selected_zdt.map(d => [d.id, d.margin_from_attached_nodes]))
+    const _updateMargin = () => {
+      selected_zdt.map(d => d.margin_from_attached_nodes = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateMargin = () => {
+      selected_zdt.map(d => d.margin_from_attached_nodes = dict_old_title[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateMargin)
+    new_data_plus.history.saveRedo(_updateMargin)
+    // Execute original attr mutation
+    _updateMargin()
+  }
+
   // Ref to number input setter --------------------------------------
-  const number_of_input = 3
+  const number_of_input = 4
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
   for (let i = 0; i < number_of_input; i++)
     ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
@@ -464,6 +544,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   ref_set_number_inputs[0].current(String(allLabelHeight()))
   ref_set_number_inputs[1].current(String(allLabelWidth()))
   ref_set_number_inputs[2].current(String(allLabelTransparent()))
+  ref_set_number_inputs[3].current(String(allLabelMargin()))
 
   const content_image = <>
     {/* Import image */}
@@ -497,6 +578,88 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
       </Box>
     </OSTooltip>
   </>
+
+  // Content for when selecteds container have their pos & size managed by the container itself
+  const content_pos_not_tied_to_nodes = <Box
+    as='span'
+    layerStyle='menuconfigpanel_row_2cols'
+  >
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('LL.hl')}
+      </Box>
+      <ConfigMenuNumberInput
+        t={new_data_plus.t}
+        disabled={disable_options}
+        ref_to_set_value={ref_set_number_inputs[0]}
+        default_value={allLabelHeight()}
+        function_on_blur={updateHeight}
+        minimum_value={1}
+        stepper={true}
+      />
+
+    </Box>
+    <Box
+      as='span'
+      layerStyle='menuconfigpanel_row_2cols'
+    >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('LL.ll')}
+      </Box>
+      <ConfigMenuNumberInput
+        t={new_data_plus.t}
+        disabled={disable_options}
+        ref_to_set_value={ref_set_number_inputs[1]}
+        default_value={allLabelWidth()}
+        function_on_blur={updateWidth}
+        minimum_value={1}
+        stepper={true}
+      />
+    </Box>
+  </Box>
+
+  // Content for when selecteds container have their pos & size tied to nodes associated
+  const content_pos_tied_to_nodes = <Box>
+    <OSMultiSelect
+      t={new_data_plus.t}
+      elements={options_selector_node_tied}
+      onClick={(entries) => {
+        // Update selection list
+        const entries_values = entries.map(d => d.value)
+        new_data_plus.drawing_area.sankey.nodes_list.forEach(node => {
+          if (entries_values.includes(node.id)) {
+            new_data_plus.drawing_area.selected_containers_list.forEach(zdt => { new_data_plus.drawing_area.sankey.attachNodeToCont(node, zdt) })
+          } else {
+            new_data_plus.drawing_area.selected_containers_list.forEach(zdt => { new_data_plus.drawing_area.sankey.dettachNodeFromCont(node, zdt) })
+          }
+        })
+        redrawAndRefresh()
+      }}
+    />
+
+    <OSTooltip label={t('LL.tooltips.margin')} placement='left'>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('LL.margin')}
+        </Box>
+        <ConfigMenuNumberInput
+          t={new_data_plus.t}
+          disabled={disable_options}
+          ref_to_set_value={ref_set_number_inputs[3]}
+          default_value={allLabelMargin()}
+          function_on_blur={updateMargin}
+          minimum_value={1}
+          stepper={true}
+        />
+      </Box>
+    </OSTooltip>
+  </Box>
 
   const content_menu_zdt = <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
     <Box layerStyle='menuconfigpanel_grid'>
@@ -614,46 +777,19 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         }}
       /></Box> : content_image}
 
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          as='span'
-          layerStyle='menuconfigpanel_row_2cols'
-        >
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t('LL.hl')}
-          </Box>
-          <ConfigMenuNumberInput
-            t={new_data_plus.t}
-            disabled={disable_options}
-            ref_to_set_value={ref_set_number_inputs[0]}
-            default_value={allLabelHeight()}
-            function_on_blur={updateHeight}
-            minimum_value={1}
-            stepper={true}
-          />
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        iconColor={valAllLabelTiedToNodeIndeterminate ? '#78C2AD' : 'white'}
+        isDisabled={disable_options}
+        isIndeterminate={valAllLabelTiedToNodeIndeterminate}
+        isChecked={allLabelTiedToNodes()}
+        onChange={(evt) => updateLabelTiedToNodes(evt.target.checked)}>
+        <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>
+          {t('LL.tiedToNodes')}
+        </OSTooltip>
+      </Checkbox>
 
-        </Box>
-        <Box
-          as='span'
-          layerStyle='menuconfigpanel_row_2cols'
-        >
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t('LL.ll')}
-          </Box>
-          <ConfigMenuNumberInput
-            t={new_data_plus.t}
-            disabled={disable_options}
-            ref_to_set_value={ref_set_number_inputs[1]}
-            default_value={allLabelWidth()}
-            function_on_blur={updateWidth}
-            minimum_value={1}
-            stepper={true}
-          />
-        </Box>
-      </Box>
+      {allLabelTiedToNodes() ? content_pos_tied_to_nodes : content_pos_not_tied_to_nodes}
 
       <Box
         as='span'
@@ -743,10 +879,14 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
   const zdt_to_contextualise = new_data_plus.drawing_area.contextualised_container
 
   const [, setCount] = useState(0)
-
+  new_data_plus.menu_configuration.ref_to_menu_context_container_updater.current = () => setCount(a => a + 1)
   let style_c_zdd = '0px 0px auto auto'
   if (zdt_to_contextualise) {
     style_c_zdd = (new_data_plus.drawing_area.pointer_pos[1] - 20) + 'px auto auto ' + (new_data_plus.drawing_area.pointer_pos[0] + 10) + 'px'
+  }
+  else {
+    // Early return in case zdt zdt_to_contextualise isn't defined, it avoid testing if zdt is defined in each function
+    return <></>
   }
 
   const redrawAndRefresh = () => {
@@ -798,13 +938,47 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
   rightIcon={new_data_plus.icon_library.icon_popup_menu}
   >{t('Menu.LL')} </Button>
 
+  // Add selected nodes to tied nodes to ZDT
+  const button_add_selected_nodes_to_tied_nodes = <Button onClick={() => {
+    zdt_to_contextualise.tied_to_nodes = true
+    new_data_plus.drawing_area.selected_nodes_list.forEach(node => {
+      new_data_plus.drawing_area.selected_containers_list.forEach(zdt => { new_data_plus.drawing_area.sankey.attachNodeToCont(node, zdt) })
+    })
+    zdt_to_contextualise.draw()
+    closeContextMenu()
+  }}
+    variant='contextmenu_button'
+  >{t('Menu.TieNodes')} </Button>
+
+  // Detach all nodes from ZDT 
+  const button_detach_all_tied_nodes = <Button onClick={() => {
+    // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array 
+    for (let i = zdt_to_contextualise.attached_node.length - 1; i >= 0; i--) {
+      new_data_plus.drawing_area.sankey.dettachNodeFromCont(zdt_to_contextualise.attached_node[i], zdt_to_contextualise)
+    }
+    zdt_to_contextualise.tied_to_nodes = false
+    zdt_to_contextualise.draw()
+    closeContextMenu()
+  }}
+    variant='contextmenu_button'
+  >{t('Menu.detachTiedNodes')} </Button>
+
   return zdt_to_contextualise ? <Box
     layerStyle='context_menu'
     id="context_zdd_pop_over"
-    style={{ maxWidth: '100%', inset: style_c_zdd, zIndex: 4 }}>
+    style={{
+      inset: style_c_zdd,
+      maxWidth: '100%',
+      position: 'absolute',
+      zIndex: '1',
+
+    }}>
     <ButtonGroup orientation='vertical' isAttached>
       {btn_mask_border}
       {btn_change_color}
+      {sep}
+      {button_add_selected_nodes_to_tied_nodes}
+      {button_detach_all_tied_nodes}
       {sep}
       {button_open_layout}
     </ButtonGroup>

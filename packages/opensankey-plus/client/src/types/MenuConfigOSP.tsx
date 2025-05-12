@@ -59,6 +59,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     Updater of component for containers related menus
     ========================================*/
   private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
+  private _ref_to_menu_context_container_updater: MutableRefObject<(() => void)>
 
   /* ========================================
     Updater of component for toolbar tags related menus
@@ -113,6 +114,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     super()
     // Init value for menu_config plus variable
     this._ref_to_menu_config_container_updater = useRef(() => null)
+    this._ref_to_menu_context_container_updater = useRef(() => null)
     this._ref_to_banner_views_updater = useRef(() => null)
     this._ref_to_banner_views_opened=useRef(false)
     this._ref_to_views_config_updater = useRef(() => null)
@@ -204,6 +206,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
       'updateComponentRelatedToContainers',
       (_this: Class_MenuConfigOSP) => {
         _this._ref_to_menu_config_container_updater.current()
+        _this._ref_to_menu_context_container_updater.current()
       }
     )
   }
@@ -382,7 +385,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get dict_setter_show_dialog_plus(): OSPShowMenuComponentsVarType { return this._dict_setter_show_dialog_plus }
 
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
-
+  public get ref_to_menu_context_container_updater(){return this._ref_to_menu_context_container_updater}
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
 
   public get ref_to_banner_views_updater(): MutableRefObject<() => void> { return this._ref_to_banner_views_updater }

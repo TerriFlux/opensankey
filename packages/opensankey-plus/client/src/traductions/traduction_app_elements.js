@@ -46,6 +46,8 @@ export const resources_app_elements = {
         trade_close: 'Close to node',
         flow_associated_tag:'Flow associated to tag',
         node_associated_tag:'Nodes associated to tag',
+        TieNodes:'Tie all selected nodes',
+        detachTiedNodes:'Untie all tied nodes',
         Config:{
           presentation:'Presentation',
           element_object:'Object',
@@ -163,7 +165,13 @@ export const resources_app_elements = {
         'display_border': 'Display border',
         'cbl': 'Border Color',
         'labels': 'Labels',
-        'title': 'Title'
+        'title': 'Title',
+        tiedToNodes:'Tie position & size to nodes',
+        margin:'Margin',
+        tooltips:{
+          tiedToNodes:'Associates nodes with the object so that it is positioned to encompass the selected nodes',
+          margin:'Margin between the border of the object & the nodes at extremities'
+        },
       },
       view: {
         'unit': 'Unit.',
@@ -466,6 +474,8 @@ export const resources_app_elements = {
         trade_close: 'Près du noeud',
         flow_associated_tag:'Flux associés',
         node_associated_tag:'Noeuds associés',
+        TieNodes:'Attacher les noeuds sélectionnés',
+        detachTiedNodes:'Détacher tous les noeuds attachés',
         Config:{
           element_object:'Objet',
           element_view:'Vues',
@@ -558,7 +568,13 @@ export const resources_app_elements = {
         'cbl': 'Couleur bordure',
         'labels': 'Style police',
 
-        'title': 'Titre'
+        'title': 'Titre',
+        tiedToNodes:'Lie la position et taille aux noeuds',
+        margin:'Marge',
+        tooltips:{
+          tiedToNodes:'Associe des noeuds à l\'objet pour que celui ce place de manière à englober les noeuds sélectionnés',
+          margin:'Marge entre la bordure de l\'objet et les nœuds aux extrémités'
+        },
       },
       view: {
         'unit': 'Unit.',
