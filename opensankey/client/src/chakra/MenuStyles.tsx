@@ -186,6 +186,6 @@ export const selector_lang=definePartsStyle({
 
   },
   list:{
-zIndex:'3'
+    zIndex:'3'
   }
 })

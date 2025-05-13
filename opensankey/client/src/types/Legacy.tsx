@@ -1306,22 +1306,25 @@ const convert_tags: convert_tagsFuncType = (
   if (!data.levelTags) {
     data.levelTags = {}
   }
-  if (!('Primaire' in data.levelTags)) {
-    data.levelTags['Primaire'] = {
-      group_name: 'Primaire',
-      show_legend: false,
-      color_map: 'custom',
-      tags: {
-        '1': { name: '1', selected: true, color: '#696969' }
-      },
-      banner: 'level',
-      activated: true,
-      siblings: []
-    }
-  }
-  if (Object.values(data.levelTags).length > 1) {
-    data.levelTags['Primaire'].activated = false
-  }
+  // if (!('Primaire' in data.levelTags)) {
+  //   data.levelTags['Primaire'] = {
+  //     group_name: 'Primaire',
+  //     show_legend: false,
+  //     color_map: 'custom',
+  //     tags: {
+  //       '1': { name: '1', selected: true, color: '#696969' }
+  //     },
+  //     banner: 'level',
+  //     activated: true,
+  //     siblings: []
+  //   }
+  // }
+  // if (Object.values(data.levelTags).length > 1) {
+  //   data.levelTags['Primaire'].activated = false
+  // }
+  if (('Primaire' in data.levelTags) && Object.values(data.levelTags).length > 1) {
+    delete data.levelTags['Primaire']
+  } 
   // Convertie les anciens groupTag des données issu d'un excel qui ont pour valeur 1 ou 0 pour signifier un boolean
   Object.values(data.nodeTags).forEach(t => {
     t.show_legend = typeof (t.show_legend) == 'boolean' ? t.show_legend : ((t.show_legend === 1))
@@ -1615,9 +1618,9 @@ const convert_nodes: convert_nodesFuncType = (
       n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
       n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
     }
-    if (!('Primaire' in n.dimensions)) {
-      n.dimensions['Primaire'] = { level: 1, parent_name: undefined }
-    }
+    // if (!('Primaire' in n.dimensions)) {
+    //   n.dimensions['Primaire'] = { level: 1, parent_name: undefined }
+    // }
     if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior') {
       n.tags['type de noeud'] = ['echange']
       if ( n.outputLinksId.length > 0 ) {
@@ -1656,7 +1659,7 @@ const convert_nodes: convert_nodesFuncType = (
     // Nodes with type Echanges did not have the correct dimensions
     if (n.tags['Echanges']) {
       const new_dimensions = {
-        'Primaire': n.dimensions['Primaire'],
+        //'Primaire': n.dimensions['Primaire'],
         'Echanges': n.dimensions['Echanges']
       }
       n.dimensions = new_dimensions
@@ -1787,6 +1790,9 @@ const convert_nodes: convert_nodesFuncType = (
     const local_aggregation = n.local?.local_aggregation
     if (local_aggregation != undefined && !is_exchange) {
       Object.entries(n.dimensions).forEach(dim => {
+        if (!data.levelTags[dim[0]]) {
+          return
+        }
         if (!data.levelTags[dim[0]].activated) {
           return
         }
@@ -1854,7 +1860,7 @@ const convert_nodes: convert_nodesFuncType = (
           Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && 
             Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1 
         ) {
-          if (n.dimensions['Primaire'].parent_name) {
+          if (n.dimensions['Primaire'] && n.dimensions['Primaire'].parent_name) {
             let parent_tag: number | undefined
             const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
             if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
@@ -1901,6 +1907,9 @@ const convert_nodes: convert_nodesFuncType = (
         return
       }
       Object.entries(data.nodes[pid].dimensions).forEach(([pk,pdim])=>{
+        if (!data.levelTags[pk]) {
+          return
+        }
         if (!data.levelTags[pk].activated) {
           return
         }

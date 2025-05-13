@@ -65,7 +65,7 @@ import {
   ClassAbstract_ApplicationData,
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
-import { Class_Tag } from './Tag'
+import { Class_LevelTagGroup, Class_Tag } from './Tag'
 import { Class_NodeAttribute } from '../Elements/NodeAttributes'
 import { Class_LinkAttribute } from '../Elements/LinkAttributes'
 
@@ -1590,6 +1590,11 @@ export abstract class ClassTemplate_DrawingArea
       }
     )
   }
+  public callComputeAutoSankey(
+    launched_from_process: boolean,
+  ){
+    this._computeAutoSankey(launched_from_process)
+  }
 
   /**
    * Compute the position of the nodes which are not trade nodes
@@ -1860,18 +1865,23 @@ export abstract class ClassTemplate_DrawingArea
     // compute total height of nodes that belong to the same column,
     // then compute the spaces between them and their positions.
     const v_margin = this.vertical_spacing
+
+    let prev_col_width = 0
+
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       // Pass if no nodes for this horizontal_index
       // TODO : if it is the case -> something was wrong before
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
+      let max_w_col=0
 
       // Loop on horizontal_index node
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-      const h_position_for_index = h_left_margin + horizontal_index * this.horizontal_spacing
+      const h_position_for_index = prev_col_width+h_left_margin + horizontal_index * this.horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
       let upper_node_height_and_margin = v_margin_for_index
+
       if (center_biggest_nodes === true) {
         // From the bottom to the top : plot node every two index
         let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
@@ -1883,6 +1893,10 @@ export abstract class ClassTemplate_DrawingArea
           // Update upper margin for next node
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
+          // Test if node width is the largest of column
+          const node_w = this.sankey.nodes_dict[node_id].shape_min_width
+          if (node_w > max_w_col)
+            max_w_col = node_w
           // Update last index
           last_index = index
         }
@@ -1899,6 +1913,10 @@ export abstract class ClassTemplate_DrawingArea
           // Update upper margin for next node
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
+          // Test if node width is the largest of column
+          const node_w = this.sankey.nodes_dict[node_id].shape_min_width
+          if (node_w > max_w_col)
+            max_w_col = node_w
         }
       }
       else {
@@ -1910,8 +1928,14 @@ export abstract class ClassTemplate_DrawingArea
             // Update upper margin for next node
             const node_height = height_per_nodes_ids[node_id]
             upper_node_height_and_margin += node_height + v_margin
+            // Test if node width is the largest of column
+            const node_w = this.sankey.nodes_dict[node_id].shape_min_width
+            if (node_w > max_w_col)
+              max_w_col = node_w
           })
       }
+      // Add colmun width to horiz shift for next col pos x
+      prev_col_width+=max_w_col
     }
 
     const possible_witdh = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
@@ -2035,26 +2059,28 @@ export abstract class ClassTemplate_DrawingArea
         }
       })
     })
+    this.sankey.level_taggs_list.forEach(tagGroup => {
     Object.values(columns).forEach(column => {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
-      column.forEach(n => current_v = this.apply_v_desagregate(n, current_v))
+        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v,tagGroup))
     })
     Object.values(columns).forEach(column => {
-      column.forEach(n => this.apply_v_agregate(n))
+        column.forEach(n => this.apply_v_agregate(n,tagGroup))
+      })
     })
     this.sankey.sortNodes()
   }
+
   /**
    * Computes v for nodes in the drawing area
    *
    * @memberof ClassTemplate_DrawingArea
    */
   public apply_v_agregate(
-    node: Type_AnyNodeElement
+    node: Type_AnyNodeElement,
+    tagGroup: Class_LevelTagGroup
   ) {
-    let agregated_nodes: Type_GenericNodeElement[] = []
-    this.sankey.level_taggs_list.forEach(tagGroup => {
       const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
       if (!nodeDimParent) {
         return
@@ -2063,16 +2089,10 @@ export abstract class ClassTemplate_DrawingArea
         // v is computed at the first path
         return
       }
-      agregated_nodes = [...agregated_nodes, nodeDimParent.parent as Type_GenericNodeElement]
-      agregated_nodes = [...new Set(agregated_nodes)]
-    })
-    agregated_nodes.forEach(nn => {
-      nn.display.position.x = node.position_x
-      nn.display.position.y = node.position_y
-      nn.display.position.u = node.position_u
-      nn.display.position.v = node.position_v
-      this.apply_v_agregate(nn)
-    })
+    nodeDimParent.parent.display.position.y = node.position_y
+    nodeDimParent.parent.display.position.u = node.position_u
+    nodeDimParent.parent.display.position.v = node.position_v
+    this.apply_v_agregate(nodeDimParent.parent as Type_AnyNodeElement,tagGroup)
   }
 
   /**
@@ -2082,23 +2102,27 @@ export abstract class ClassTemplate_DrawingArea
    */
   public apply_v_desagregate(
     node: Type_AnyNodeElement,
-    current_v: number
+    current_v: number,
+    tagGroup: Class_LevelTagGroup
   ) {
+    if (node.sibling) {
+      return current_v
+    }
     if (node.display.position.v == -1) {
       // v is computed at the first path
       node.display.position.v = current_v
     }
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
-    this.sankey.level_taggs_list.forEach(tagGroup => {
       const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
       if (!nodeDimParent) {
-        return
+      return new_current_v
       }
       desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
       desagregated_nodes = [...new Set(desagregated_nodes)]
-    })
-    let current_y = node.position_y
+    const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
+    if (desagregated_nodes.length>0) {
+      let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
     desagregated_nodes.forEach(nn => {
       if (!nn.sibling) {
         nn.display.position.x = node.position_x
@@ -2106,8 +2130,9 @@ export abstract class ClassTemplate_DrawingArea
       }
       nn.display.position.y = current_y
       current_y += 20
-      new_current_v = this.apply_v_desagregate(nn, new_current_v)
+      new_current_v = this.apply_v_desagregate(nn, new_current_v,tagGroup)
     })
+    }
     return new_current_v + 1
   }
 

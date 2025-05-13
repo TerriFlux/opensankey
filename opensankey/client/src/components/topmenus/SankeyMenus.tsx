@@ -100,8 +100,6 @@ export declare const window: Window &
 
 /*************************************************************************************************/
 
-// export type Type_MenuSelectionEntry = { 'label': string; 'value': string }
-
 export const menu_config_width = 20
 
 /*************************************************************************************************/

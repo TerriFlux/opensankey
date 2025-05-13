@@ -482,6 +482,7 @@ export const resources_app_elements = {
           Cercle: 'Circle',
           Rectangle: 'Rectangle',
           TML: 'Minimum width',
+          opacity:'Opacity',
           TMH: 'Minimum height',
           geometry: 'Mode',
           geometry_absolute: 'Position',
@@ -519,6 +520,8 @@ export const resources_app_elements = {
             override_type_node_shape: 'Override the default forced shape of product and sector type nodes',
             arrow_angle: 'Change the angle of node arrow',
             angle_orientation: 'Change the orientation of the node',
+            opacity:'Opacity of the shape of the node',
+
           }
         },
         node_value: {
@@ -753,7 +756,7 @@ export const resources_app_elements = {
         filter: 'Filter',
         fdf: 'Link filtering',
         fdn: 'Node Filtering',
-        ndd: 'Levels of detail',
+        ndd: 'Hierarchy per Dimension',
         ndd_lst: 'Tags groups',
         ndd_chk: 'Apply the groups\' colors',
         sdr: 'Data type',
@@ -872,6 +875,7 @@ export const resources_app_elements = {
   fr: {
     translation: {
       Menu: {
+        level_associated_tag:'Association des hiérarchie de noeuds avec les dimensions',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         Aucun: 'Aucun',
@@ -885,6 +889,7 @@ export const resources_app_elements = {
         EF: 'Étiquettes des flux',
         EdF: 'Édition des flux',
         ED: 'Étiquettes des données',
+        Hierarchy: 'Hiérarchie',
         Leg: 'Légende',
         LegX: 'Position horizontale',
         LegY: 'Position verticale',
@@ -1066,6 +1071,7 @@ export const resources_app_elements = {
           element_flow: 'Flux',
           element_node_tag: 'Étiq. Noeud',
           element_flow_tag: 'Étiq. Flux',
+          element_level_tag: 'Hiérarchie',
 
           element_data: 'Données',
           element_data_tag: 'Étiq. Données',
@@ -1254,6 +1260,10 @@ export const resources_app_elements = {
         GE: 'Étiquettes du groupe',
         EGE: 'Édition des groupes',
         EEG: 'Édition des étiquettes d\'un groupe',
+        Dimension: 'Dimension',
+        EditDimension: 'Édition des dimensions',
+        EditDimensionLevel: 'Édition des niveaux d\'une dimension',
+
         selct: 'Sélectionné',
         tooltips: {
           pal: 'Appliquer une palette de couleurs aléatoires pour les étiquettes du groupe sélectionné',
@@ -1355,6 +1365,7 @@ export const resources_app_elements = {
           Rectangle: 'Rectangle',
           TML: 'Largeur minimale',
           TMH: 'Hauteur minimale',
+          opacity:'Opacité',
           geometry: 'Mode',
           geometry_absolute: 'Position',
           geometry_relative: 'Décalage',
@@ -1391,6 +1402,8 @@ export const resources_app_elements = {
             override_type_node_shape: 'Permet de changer la forme forcée par défaut sur les noeuds de types produits et secteur',
             arrow_angle: 'Change l\'angle du noeud en forme  de flèche',
             angle_orientation: 'Change l\'orientation du noeud en forme  de flèche',
+            opacity:'Opacité de la forme du noeud',
+
           }
         },
         node_value: {
@@ -1653,7 +1666,7 @@ export const resources_app_elements = {
         filter: 'Filtres',
         fdf: 'Filtrage des flux',
         fdn: 'Filtrage des noeuds',
-        ndd: 'Niveaux de détail',
+        ndd: 'Hiérarchies par Dimension',
         ndd_lst: 'Groupes d\'étiquettes',
         ndd_chk: 'Appliquer les couleurs associées',
         sdr: 'Choisir le type de données affichées',
