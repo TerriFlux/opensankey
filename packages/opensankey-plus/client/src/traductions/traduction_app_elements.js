@@ -47,6 +47,8 @@ export const resources_app_elements = {
         level:'Level\'s tags',
         flow_associated_tag:'Flow associated to tag',
         node_associated_tag:'Nodes associated to tag',
+        TieNodes:'Tie all selected nodes',
+        detachTiedNodes:'Untie all tied nodes',
         Config:{
           presentation:'Presentation',
           element_object:'Object',
@@ -164,7 +166,13 @@ export const resources_app_elements = {
         'display_border': 'Display border',
         'cbl': 'Border Color',
         'labels': 'Labels',
-        'title': 'Title'
+        'title': 'Title',
+        tiedToNodes:'Tie position & size to nodes',
+        margin:'Margin',
+        tooltips:{
+          tiedToNodes:'Associates nodes with the object so that it is positioned to encompass the selected nodes',
+          margin:'Margin between the border of the object & the nodes at extremities'
+        },
       },
       view: {
         'unit': 'Unit.',
@@ -218,7 +226,14 @@ export const resources_app_elements = {
         unit_sankey_percent_links: 'Display links value as percent',
         unit_sankey_normalize_links: 'Display links value normalized by one or more links value',
         default_unit_view_name: 'Unitary view of node ',
-
+        title_rule_modal_unit: 'Information concerning unitary sankey création',
+        rule_modal_unit_1: 'Unit sankeys are sub-process snapshots of the current sankey, therefore non-visible elements are not kept in unit sankeys.',
+        rule_modal_unit_2: 'The selectable node list does not represent all the nodes of the sankey only those visible so it is possible to modify the level of details of the sankey before creating subprocesses.',
+        rule_modal_unit_3: 'Once the desired nodes are selected, press the bottom button to generate the unit sankeys.',
+        dis_createFromSelected: 'No node selected, can\'t create an unitary sankey',
+        unit_tab_local: 'From local sankey',
+        unit_tab_excel: 'From excel file',
+        context_node_unit: 'Create unitary sankey from this node',
         tooltips: {
           keep_master_var: 'Allow to choose variable value of the sankey view to be from the sankey master',
           catalog_data: 'Generate a catalog of views : gather views from different files',
@@ -234,12 +249,16 @@ export const resources_app_elements = {
           buttonCloneMasterAttrView: 'Tranfer value from master data to the view elements',
           button_delete_actual_view: 'Delete actual view',
           unit_from_excel: 'Excel  Generate views from one or more excel files',
-          choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher Choose links values to display'
+          choose_link_ref_sankey_unit: 'Choose links values to display',
+          buttonOpenModalUnitary:'Open modal for creation of unitary sankey',
+
         }
       },
       toast:{
         v_loaded:'View loaded',
-        v_loading:'Loadig new view'
+        v_loading:'Loadig new view',
+        u_v_loading:'Creation unitary sankey',
+        u_v_loaded:'Unitary sankey created',
       },
       'useTemplate': 'Use this template',
       'dl': 'Download excel',
@@ -473,6 +492,8 @@ export const resources_app_elements = {
 
         flow_associated_tag:'Flux associés',
         node_associated_tag:'Noeuds associés',
+        TieNodes:'Attacher les noeuds sélectionnés',
+        detachTiedNodes:'Détacher tous les noeuds attachés',
         Config:{
           element_object:'Objet',
           element_view:'Vues',
@@ -565,7 +586,13 @@ export const resources_app_elements = {
         'cbl': 'Couleur bordure',
         'labels': 'Style police',
 
-        'title': 'Titre'
+        'title': 'Titre',
+        tiedToNodes:'Lie la position et taille aux noeuds',
+        margin:'Marge',
+        tooltips:{
+          tiedToNodes:'Associe des noeuds à l\'objet pour que celui ce place de manière à englober les noeuds sélectionnés',
+          margin:'Marge entre la bordure de l\'objet et les nœuds aux extrémités'
+        },
       },
       view: {
         'unit': 'Unit.',
@@ -619,8 +646,15 @@ export const resources_app_elements = {
         unit_sankey_values_links: 'Afficher les valeurs des flux',
         unit_sankey_percent_links: 'Afficher les pourcentages des flux',
         unit_sankey_normalize_links: 'Afficher les valeurs des flux normalisés par rapport à des un/des flux de référence',
-        default_unit_view_name: 'Vue unitaire du noeud ',
-
+        default_unit_view_name: 'Aucun noeud sélectionné, impossible de créer des sankey unitaire',
+        title_rule_modal_unit: 'Informations concernant la création de sankey unitaire',
+        rule_modal_unit_1: 'Les sankey unitaires sont des \'instantanés\' de sous-processus du sankey actuel, par conséquent les éléments non visibles ne sont pas gardés dans les sankey unitaires.',
+        rule_modal_unit_2: 'La liste de noeud sélectionnable ne represente pas l\'entièreté des noeuds du sankey seulement ceux visibles c\'est pourquoi il est possible de modifer le niveaux de détails du sankey avant création des sous-process.',
+        rule_modal_unit_3: 'Une fois les noeuds désirés sélectionnés appuyer sur le bouton du bas pour générer les sankey unitaires',
+        dis_createFromSelected: 'Aucun noeud sélectionnés',
+        unit_tab_local: 'Depuis sankey local',
+        unit_tab_excel: 'Depuis fichier excel',
+        context_node_unit: 'Génère un sankey untaire depuis ce noeud',
         tooltips: {
           keep_master_var: 'Permet de choisir des variables qui ont pour valeur ceux du sankey maître',
           catalog_data: 'Générer un catalogue de vues : rassembler des vues issues de fichiers différents',
@@ -637,11 +671,14 @@ export const resources_app_elements = {
           button_delete_actual_view: 'Supprimer la vue actuelle',
           unit_from_excel: 'Générer une ou plusieurs vue(s) unitaire(s) à partir d\'un ou plusieurs fichier(s) Excel',
           choose_link_ref_sankey_unit: 'Choisir les valeurs des flux à afficher',
+          buttonOpenModalUnitary:'Ouvrir le modal de création de sankey unitaire',
         }
       },
       toast:{
         v_loaded:'Vue chargée',
-        v_loading:'Chargement de la vue'
+        v_loading:'Chargement de la vue',
+        u_v_loading:'Création sankey unitaire',
+        u_v_loaded:'Sankey unitaire crée',
       },
       'useTemplate': 'Utiliser ce modèle',
       'dl': 'Télécharger (excel)',

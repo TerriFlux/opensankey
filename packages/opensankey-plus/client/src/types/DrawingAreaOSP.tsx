@@ -189,7 +189,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
    * @memberof ClassTemplate_DrawingAreaOSP
    */
   public saveUndoLabelSelectedPos() {
-    const containers_selected = this.selected_containers_list
+    const containers_selected = this.selected_containers_list.filter(cont => !cont.tied_to_nodes) // desn't keep track of tied to nodes containers
     const nodes_selected = this.selected_nodes_list
     const dict_old_pos_label: { [x: string]: [number, number] } = {}
     const dict_old_pos_node: { [x: string]: [number, number] } = {}
@@ -219,7 +219,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
    * @memberof ClassTemplate_DrawingAreaOSP
    */
   public saveRedoLabelSelectedPos() {
-    const containers_selected = this.selected_containers_list
+    const containers_selected = this.selected_containers_list.filter(zdt => !zdt.tied_to_nodes) // desn't keep track of tied to nodes containers
     const nodes_selected = this.selected_nodes_list
     const dict_old_pos_label: { [x: string]: [number, number] } = {}
     const dict_old_pos_node: { [x: string]: [number, number] } = {}
@@ -464,9 +464,57 @@ export abstract class ClassTemplate_DrawingAreaOSP
   ) {
     this.selected_containers_list
       .forEach(n => {
-        n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-        n.drawDragHandlers()
+        if (!n.tied_to_nodes) {
+          n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          n.drawDragHandlers()
+        }
       })
+  }
+
+  /**
+   * Checks if it is possible to directly deal with events
+   * @return {boolean}
+   * @memberof ClassTemplate_DrawingAreaOSP
+   */
+  public override eventsEnabled(): boolean {
+    // Deal with node events in priority
+    const mouse_over_nodes = this.isMouseOverAnExistingContainer()
+    if (mouse_over_nodes === true) {
+      return false
+    }
+
+    // super event
+    return super.eventsEnabled()
+  }
+
+  /**
+   * Context menus are directly diplayed in drawing area when deal with them directly here
+   * @memberof ClassTemplate_DrawingAreaOSP
+   */
+  public override closeAllContextMenus() {
+    super.closeAllContextMenus()
+    // Reset contextualised elements
+    this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
+    // Update components
+    this.contextualised_container = undefined
+  }
+
+  // PRIVATE METHODS =====================================================================
+
+/**
+ * Test if mouse is over some containers
+ *
+ * @private
+ * @return {*}
+ * @memberof ClassTemplate_DrawingAreaOSP
+ */
+  private isMouseOverAnExistingContainer(): boolean {
+    let cont_id: string
+    for (cont_id in this.sankey.containers_dict) {
+      if (this.sankey.containers_dict[cont_id].isMouseOver())
+        return true
+    }
+    return false
   }
 
   // /**

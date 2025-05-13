@@ -40,6 +40,7 @@ import {
   Class_NodeAttribute,
   Class_NodeStyle
 } from '../deps/OpenSankey/Elements/NodeAttributes'
+import { Type_AnyContainerElement } from './FreeLabel'
 
 // SPECIFIC FUNCTIONS *******************************************************************
 
@@ -51,7 +52,6 @@ export function isAttributeOverloaded(
   nodes.forEach(node => overloaded = (overloaded || node.isAttributeOverloaded(attr)))
   return overloaded
 }
-
 // CLASS NODE ELEMENT PLUS **************************************************************
 
 /**
@@ -114,6 +114,8 @@ export abstract class ClassTemplate_NodeElementOSP
 
   private _hyperlink: string
 
+  private _attached_container: Type_AnyContainerElement[]
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -146,6 +148,7 @@ export abstract class ClassTemplate_NodeElementOSP
     this._is_image = false
     this._image_src = ''
     this._hyperlink = ''
+    this._attached_container = []
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -513,7 +516,7 @@ export abstract class ClassTemplate_NodeElementOSP
           // Get color of target (can be used if link_animated was a gradient)
           const colorTarget = Target.shape_visible ? Target.getShapeColorToUse() : (Target.iconVisible ? Target.iconColor : 'grey')
 
-          const l_grad = link_animated.shape_color_rule=='gradient'
+          const l_grad = link_animated.shape_color_rule == 'gradient'
           const t = (l_grad) ? colorTarget : link_animated.getPathColorToUse()
           if (t) {
             arrow.attr('fill', t)
@@ -555,6 +558,20 @@ export abstract class ClassTemplate_NodeElementOSP
     // SELECTION MODE =========================================================
     if (drawing_area.isInSelectionMode()) {
       this.drawing_area.moveSelectedContainerFromDragEvent(event)
+    }
+  }
+
+  protected override eventMouseDragEnd(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    // Apply parent behavior first
+    super.eventMouseDragEnd(event)
+    // Get related drawing area
+    const drawing_area = this.drawing_area
+    // SELECTION MODE =========================================================
+    if (drawing_area.isInSelectionMode()) {
+      // Redraw attached container since we moved the node it influence containers size/position
+      this._attached_container.forEach(cont=>cont.draw())
     }
   }
 
@@ -619,6 +636,7 @@ export abstract class ClassTemplate_NodeElementOSP
   public get FO_content(): string { return this._FO_content }
   public set FO_content(value: string) { this._FO_content = value }
 
+  public get attached_container(): Type_AnyContainerElement[] {return this._attached_container}
 
 }
 

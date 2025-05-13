@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 
-import { faCopy, faDeleteLeft, faIcons, faListCheck, faRepeat } from '@fortawesome/free-solid-svg-icons'
+import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup, faRepeat } from '@fortawesome/free-solid-svg-icons'
 import { Class_IconLibrary } from '../deps/OpenSankey/types/IconLibrairie'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
@@ -698,6 +698,9 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
 
   protected _icon_level_tag_diabled = logo_node_tag_disabled
   protected _icon_level_tag = logo_node_tag_unselected
+  protected _icon_filter_level = <FontAwesomeIcon icon={faFolderTree} />
+
+  protected _icon_unit_view = <FontAwesomeIcon icon={faObjectUngroup} />
 
   // Constructor ===================================
   constructor() {
@@ -728,6 +731,8 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
   public get icon_node_tag() { return this._icon_node_tag }
   public get icon_level_tag_diabled() { return this._icon_level_tag_diabled }
   public get icon_level_tag() { return this._icon_level_tag }
+  public get icon_filter_level() { return this._icon_filter_level }
+  public get icon_unit_view() { return this._icon_unit_view }
 
 
 }

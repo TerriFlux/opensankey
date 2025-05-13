@@ -7,7 +7,7 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import type { Class_LevelTagGroup} from '../../deps/OpenSankey/types/Tag'
+import type { Class_LevelTag, Class_LevelTagGroup} from '../../deps/OpenSankey/types/Tag'
 import type { Type_GenericApplicationData, Type_GenericNodeElement } from '../../deps/OpenSankey/types/Types'
 
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
@@ -51,15 +51,16 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted.filter(n=>n.dimensions_as_parent.length> 0)
   }
   let nodes_dimensions: Class_NodeDimension[] =[]
-  nodes.forEach(n=>n.dimensions_as_parent.forEach(dim=>nodes_dimensions.push(dim)))
+  nodes.forEach(n=>n.dimensions_as_parent.filter(dim=>!dim.children.includes(dim.parent)).forEach(dim=>nodes_dimensions.push(dim)))
 
   const [selectedNodesDimensions,setSelectedNodesDimensions] = useState<Class_NodeDimension[]>([])
   //selected_nodes.forEach(n=>n.dimensions_as_parent.forEach(dim=>selected_nodes_dimensions.push(dim)))
 
   const entries_for_nodes: typeElementSelectable = nodes_dimensions.map((d) => { 
     return { 
-      'value': d.id, 
-      'label': d.parent.name + '->(' + d.children.map(c=>c.name+' ')+')', selected: selectedNodesDimensions.includes(d) 
+      'value': d.parent.name + '->(' + d.children.map(c=>c.name+' ')+')',
+      'label': d.parent.name + '->(' + d.children.map(c=>c.name+' ')+')', 
+      selected: selectedNodesDimensions.includes(d) 
     } }
   )
 
@@ -137,14 +138,14 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
                 const entries_values = entries.map(d => d.value)
                 const selected_nodes_set = new Set<Type_GenericNodeElement>()
                 const selected_nodes_dimensions = nodes_dimensions.filter(dim => {
-                  if (entries_values.includes(dim.id)) {
+                  if (entries_values.includes(dim.parent.name + '->(' + dim.children.map(c=>c.name+' ')+')')) {
                     return true
                   }
                   return false
                 })
                 setSelectedNodesDimensions(selected_nodes_dimensions)
                 nodes_dimensions.forEach(dim => {
-                  if (entries_values.includes(dim.id)) {
+                  if (entries_values.includes(dim.parent.name + '->(' + dim.children.map(c=>c.name+' ')+')')) {
                     selected_nodes_set.add(dim.parent as Type_GenericNodeElement)
                   }
                 });
@@ -193,18 +194,35 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
                 onChange={(evt) => {
                   const visible = evt.target.checked
                   if (visible) {
+                    const new_selected_nodes_dimensions : Class_NodeDimension[] = []
                     selectedNodesDimensions.forEach(dim => {
-                      const new_parent_level_tag = level_tagg.tags_list[0]
-                      const new_child_level_tag = level_tagg.tags_list[1]
-                      const children_id = dim.children.map(n=>n.id)
+                      let new_parent_level_tag = level_tagg.tags_list[0]
+                      let new_child_level_tag = level_tagg.tags_list[1]
+                      const new_parent_dim = dim.parent.nodeDimensionAsChild(level_tagg)
+                      if (new_parent_dim) {
+                        new_parent_level_tag = new_parent_dim.child_level_tag as Class_LevelTag
+                        const idx = level_tagg.tags_list.indexOf(new_parent_level_tag)
+                        new_child_level_tag = level_tagg.tags_list[idx+1]
+                      }
+                      const children_id = dim.children.filter(c=>c!=dim.parent).map(n=>n.id)
                       const parent_id = dim.parent.id
                       dim.delete()
-                      children_id.forEach(cid => 
-                        new_parent_level_tag.getOrCreateLowerDimension(
+                      children_id.forEach(cid => {
+                        const new_dim = new_parent_level_tag.getOrCreateLowerDimension(
                           sankey.nodes_dict[parent_id], sankey.nodes_dict[cid], new_child_level_tag
                         )
+                        if (new_dim.children.includes(new_dim.parent)) {
+                          new_dim.removeNodeFromChildren(new_dim.parent)
+                          new_dim.parent.removeDimensionAsChild(new_dim)
+                        }
+                        if (!new_selected_nodes_dimensions.includes(new_dim)) {
+                          new_selected_nodes_dimensions.push(new_dim)
+                        }
+                      }
                       )
                     })
+                    nodes_dimensions.forEach(dim=>dim.normalize())
+                    setSelectedNodesDimensions(new_selected_nodes_dimensions)
                     updateThis()
                   }
                   //new_data.drawing_area.updateSelectedLevelTagAssignation(visible, level_tag)
