@@ -207,13 +207,13 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
                       const children_id = dim.children.filter(c=>c!=dim.parent).map(n=>n.id)
                       const parent_id = dim.parent.id
                       dim.delete()
+                      nodes_dimensions = nodes_dimensions.filter(d=>d!=dim)
                       children_id.forEach(cid => {
                         const new_dim = new_parent_level_tag.getOrCreateLowerDimension(
                           sankey.nodes_dict[parent_id], sankey.nodes_dict[cid], new_child_level_tag
                         )
                         if (new_dim.children.includes(new_dim.parent)) {
                           new_dim.removeNodeFromChildren(new_dim.parent)
-                          new_dim.parent.removeDimensionAsChild(new_dim)
                         }
                         if (!new_selected_nodes_dimensions.includes(new_dim)) {
                           new_selected_nodes_dimensions.push(new_dim)
@@ -221,7 +221,9 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
                       }
                       )
                     })
-                    nodes_dimensions.forEach(dim=>dim.normalize())
+                    nodes_dimensions.forEach(dim=>{
+                      dim.normalize()
+                    })
                     setSelectedNodesDimensions(new_selected_nodes_dimensions)
                     updateThis()
                   }
