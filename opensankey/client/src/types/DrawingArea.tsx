@@ -2115,7 +2115,7 @@ export abstract class ClassTemplate_DrawingArea
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
       const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-      if (!nodeDimParent) {
+      if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
       return new_current_v
       }
       desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
