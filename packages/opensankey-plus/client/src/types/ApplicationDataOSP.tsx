@@ -641,24 +641,10 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
     const cont = new_drawing_area.sankey.addNewFreeLabel('unitary_container_')
 
-    let min_x = new_drawing_area.sankey.nodes_list[0].position_x,
-      min_y = new_drawing_area.sankey.nodes_list[0].position_y,
-      max_x = 0,
-      max_y = 0
-
+    cont.tied_to_nodes = true
     new_drawing_area.sankey.nodes_list.forEach(node => {
-
-      min_x = node.position_x < min_x ? node.position_x : min_x
-      max_x = node.position_x > max_x ? node.position_x : max_x
-
-      min_y = node.position_y < min_y ? node.position_y : min_y
-      max_y = node.position_y > max_y ? node.position_y : max_y
+      new_drawing_area.sankey.attachNodeToCont(node, cont)
     })
-
-    cont.setPosXY(0, 0)
-
-    cont.label_width = new_drawing_area.width * 0.9
-    cont.label_height = new_drawing_area.height * 0.9
 
     cont.content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
 
