@@ -107,8 +107,8 @@ export function sortNodesElements(
   a: Type_AnyNodeElement | Class_NodeStyle,
   b: Type_AnyNodeElement | Class_NodeStyle
 ) {
-  if (a.id > b.id) return 1
-  else if (a.id < b.id) return -1
+  if (a.name > b.name) return 1
+  else if (a.name < b.name) return -1
   else return 0
 }
 
@@ -492,12 +492,12 @@ export abstract class ClassTemplate_NodeElement
   // SAVING METHODS =====================================================================
 
   /**
-   * Convert node to JSON
-   *
-   *
-   * @return {*}
-   * @memberof ClassTemplate_NodeElement
-   */
+    * Convert node to JSON
+    *
+    *
+    * @return {*}
+    * @memberof ClassTemplate_NodeElement
+    */
   protected _toJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
@@ -526,40 +526,38 @@ export abstract class ClassTemplate_NodeElement
     )
     // Dimension - relations
     let dimensions: { [_: string]: Type_JSON } = {}
-    if (this.is_child) {
-      //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
-      //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
-      const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim => dim.related_level_tagg.id))]
-      all_child_taggs.forEach(tagg_id => {
-        Object.values(this._dimensions_as_child).filter(dim => dim.related_level_tagg.id == tagg_id)
-          .forEach(dimension => {
-            if (!(dimension.related_level_tagg.id in dimensions)) {
-              dimensions[dimension.related_level_tagg.id] = {
-                'parent_name': dimension.parent.id,
-                'parent_tag': dimension.parent_level_tag.id,
-                'children_tags': [dimension.child_level_tag.id],
-                'antitag': false,
-                'force_show_children': dimension.force_show_children,
-                'force_show_parent': dimension.force_show_parent
-              }
-            } else {
-              const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
-              dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags, dimension.child_level_tag.id]
+    //On parse les tags groupes et on écrit la dimension pour ce tag groupe.
+    //Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux neouds mutli niveaux
+    const all_child_taggs = [...new Set(Object.values(this._dimensions_as_child).map(dim => dim.related_level_tagg.id))]
+    all_child_taggs.forEach(tagg_id => {
+      Object.values(this._dimensions_as_child).filter(dim => dim.related_level_tagg.id == tagg_id)
+        .forEach(dimension => {
+          if (!(dimension.related_level_tagg.id in dimensions)) {
+            dimensions[dimension.related_level_tagg.id] = {
+              'parent_name': dimension.parent.id,
+              'parent_tag': dimension.parent_level_tag.id,
+              'children_tags': [dimension.child_level_tag.id],
+              'antitag': false,
+              'force_show_children': dimension.force_show_children,
+              'force_show_parent': dimension.force_show_parent
             }
+          } else {
+            const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
+            dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags, dimension.child_level_tag.id]
           }
-          )
-      }
-      )
+        }
+        )
     }
-    else {
-      dimensions = Object.fromEntries(
-        Object.values(this._dimensions_as_parent)
-          .map(dimension => [
-            dimension.parent_level_tag.group.id,
-            {}
-          ])
-      )
-    }
+    )
+    // we write parent dimensions for which the node is a root.
+    const parent_dimensions = Object.fromEntries(
+      Object.values(this._dimensions_as_parent).filter(dim => !all_child_taggs.includes(dim.parent_level_tag.group.id))
+        .map(dimension => [
+          dimension.parent_level_tag.group.id,
+          {}
+        ])
+    )
+    dimensions = { ...dimensions, ...parent_dimensions }
     // Dimensions - antitag
     this._leveltaggs_as_antitagged
       .forEach(leveltagg => {
@@ -681,6 +679,9 @@ export abstract class ClassTemplate_NodeElement
   ) {
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
+    if (dimensions_as_JSON && Object.keys(dimensions_as_JSON).length > 1) {
+      delete dimensions_as_JSON['Primaire']
+    }
     // For each dimension in dimensions JSON Struct, create the parent / child relation
     if (dimensions_as_JSON) {
       Object.keys(dimensions_as_JSON)
@@ -828,7 +829,7 @@ export abstract class ClassTemplate_NodeElement
 
   /**
    * Agregate node
-   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, agregate with 'Primaire'
+   * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
   public drawParent(id?: string) {
@@ -869,7 +870,7 @@ export abstract class ClassTemplate_NodeElement
 
   /**
    * Disagregate node
-   * @param {string | undefined} [id] id of dimension to agregate. If undefined or not found, disagregate with 'Primaire'
+   * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
   public drawChildren(id: string) {
@@ -1682,7 +1683,6 @@ export abstract class ClassTemplate_NodeElement
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.node_shape').remove()
     // Do the rest only if shape is visible
-    if (this.shape_visible) {
       // Compute shape attributes
       const width = this.getShapeWidthToUse()
       const height = this.getShapeHeightToUse()
@@ -1718,7 +1718,6 @@ export abstract class ClassTemplate_NodeElement
         .attr('stroke', 'black')
         .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
         .attr('stroke-opacity', this.is_selected ? 1 : 0)
-    }
   }
 
   /**
@@ -2009,29 +2008,29 @@ export abstract class ClassTemplate_NodeElement
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-                break
-              case 'top':
-                node_face_size = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size = sumLinkTop
-                break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size2 = sumLinkRight
-                break
-              case 'top':
-                node_face_size2 = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size2 = sumLinkTop
-                break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -3264,13 +3263,13 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
-   *Return ture if nod eis in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
+   *Return ture if nod eis in multiple nodeDimension has a parent.
    *
    * @readonly
    * @memberof ClassTemplate_NodeElement
    */
   public get is_multi_parent() {
-    return (Object.values(this._dimensions_as_parent).filter(dim => dim.related_level_tagg.id != 'Primaire').length > 1)
+    return (Object.values(this._dimensions_as_parent).length > 1)
   }
 
   /**
@@ -3284,13 +3283,13 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
-   *Return ture if node is in multiple nodeDimension has a parent but without taking into account 'Primaire' levelTaggs
+   *Return ture if node is in multiple nodeDimension has a parent.
    *
    * @readonly
    * @memberof ClassTemplate_NodeElement
    */
   public get is_multi_children() {
-    return (Object.values(this._dimensions_as_child).filter(dim => dim.parent_level_tag.group.id != 'Primaire').length > 1)
+    return (Object.values(this._dimensions_as_child).length > 1)
   }
 
   /**
