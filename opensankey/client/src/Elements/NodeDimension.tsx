@@ -327,6 +327,9 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
       this._parent,
       ...this._children
     ])
+    if (this.children.length == 0) {
+      return nodes_to_redraw
+    }
     if (this.children[0].id !== this.parent.id) {
       this._children
         .forEach(child => {
