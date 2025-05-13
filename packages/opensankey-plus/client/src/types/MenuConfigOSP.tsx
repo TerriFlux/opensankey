@@ -49,6 +49,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   private _ref_to_node_hyperlink_updater: MutableRefObject<(() => void)>
 
+  private _ref_to_btn_top_pref_updater: MutableRefObject<(() => void)>
 
   //Var used for the dataTagg sequence component
   private _is_playing_sequence: boolean = false
@@ -134,6 +135,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_to_toolbar_link_tag_updater = useRef(() => null)
     this._ref_to_toolbar_data_tag_updater = useRef(() => null)
     this._ref_to_toolbar_level_tag_filter_updater = useRef(() => null)
+    this._ref_to_btn_top_pref_updater = useRef(() => null)
 
 
     this._ref_to_toolbar_link_visual_filter_updater = useRef(() => null)
@@ -171,6 +173,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this.updateComponentRelatedToContainers()
     this.updateComponentRelatedToViews()
     this._ref_to_config_DA_bg_image_updater.current()
+    this._ref_to_btn_top_pref_updater.current()
   }
 
   public openConfigMenuElementsContainers() {
@@ -434,8 +437,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get timeout_sequence(): number { return this._timeout_sequence }
   public set timeout_sequence(value: number) { this._timeout_sequence = value }
 
-
   public get ref_close_filter_drawer(): MutableRefObject<((_:boolean) => void)> { return this._ref_close_filter_drawer }
 
+  public get ref_to_btn_top_pref_updater() { return this._ref_to_btn_top_pref_updater }
 
 }
