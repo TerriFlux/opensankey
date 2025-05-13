@@ -1171,7 +1171,7 @@ export abstract class ClassTemplate_NodeElement
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
-      (!_.children.includes(this)) &&
+      /*(!_.children.includes(this)) &&*/
       (!this._dimensions_as_parent[_.id])
     ) {
       this.dimensionsUpdated() // Reset visibility indicator
@@ -4638,7 +4638,7 @@ export abstract class ClassTemplate_NodeElement
       ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
     })
     // Check dimensions where node is tagged as a parent
-    Object.values(this._dimensions_as_parent)
+    Object.values(this._dimensions_as_parent).filter(dim=>!dim.children.includes(this))
       .forEach(dim => {
         if (dim.force_show_parent || dim.force_show_children) {
           has_forced_dimensions = true
