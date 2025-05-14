@@ -486,6 +486,7 @@ export const resources_app_elements = {
           Cercle: 'Circle',
           Rectangle: 'Rectangle',
           TML: 'Minimum width',
+          opacity:'Opacity',
           TMH: 'Minimum height',
           geometry: 'Mode',
           geometry_absolute: 'Position',
@@ -523,6 +524,8 @@ export const resources_app_elements = {
             override_type_node_shape: 'Override the default forced shape of product and sector type nodes',
             arrow_angle: 'Change the angle of node arrow',
             angle_orientation: 'Change the orientation of the node',
+            opacity:'Opacity of the shape of the node',
+
           }
         },
         node_value: {
@@ -1380,6 +1383,7 @@ export const resources_app_elements = {
           Rectangle: 'Rectangle',
           TML: 'Largeur minimale',
           TMH: 'Hauteur minimale',
+          opacity:'Opacité',
           geometry: 'Mode',
           geometry_absolute: 'Position',
           geometry_relative: 'Décalage',
@@ -1416,6 +1420,8 @@ export const resources_app_elements = {
             override_type_node_shape: 'Permet de changer la forme forcée par défaut sur les noeuds de types produits et secteur',
             arrow_angle: 'Change l\'angle du noeud en forme  de flèche',
             angle_orientation: 'Change l\'orientation du noeud en forme  de flèche',
+            opacity:'Opacité de la forme du noeud',
+
           }
         },
         node_value: {

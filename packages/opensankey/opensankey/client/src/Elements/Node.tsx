@@ -109,8 +109,8 @@ export function sortNodesElements(
   a: Type_AnyNodeElement | Class_NodeStyle,
   b: Type_AnyNodeElement | Class_NodeStyle
 ) {
-  if (a.id > b.id) return 1
-  else if (a.id < b.id) return -1
+  if (a.name > b.name) return 1
+  else if (a.name < b.name) return -1
   else return 0
 }
 
@@ -1180,7 +1180,7 @@ export abstract class ClassTemplate_NodeElement
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
-      (!_.children.includes(this)) &&
+      /*(!_.children.includes(this)) &&*/
       (!this._dimensions_as_parent[_.id])
     ) {
       this.dimensionsUpdated() // Reset visibility indicator
@@ -1692,7 +1692,6 @@ export abstract class ClassTemplate_NodeElement
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.node_shape').remove()
     // Do the rest only if shape is visible
-    if (this.shape_visible) {
       // Compute shape attributes
       const width = this.getShapeWidthToUse()
       const height = this.getShapeHeightToUse()
@@ -1728,7 +1727,6 @@ export abstract class ClassTemplate_NodeElement
         .attr('stroke', 'black')
         .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
         .attr('stroke-opacity', this.is_selected ? 1 : 0)
-    }
   }
 
   /**
@@ -4678,7 +4676,7 @@ export abstract class ClassTemplate_NodeElement
       ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
     })
     // Check dimensions where node is tagged as a parent
-    Object.values(this._dimensions_as_parent)
+    Object.values(this._dimensions_as_parent).filter(dim=>!dim.children.includes(this))
       .forEach(dim => {
         if (dim.force_show_parent || dim.force_show_children) {
           has_forced_dimensions = true
