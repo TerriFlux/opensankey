@@ -58,6 +58,7 @@ import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
 import { Class_LevelTag, Class_LevelTagGroup } from '../../types/Tag'
 import { ClassAbstract_ProtoLevelTag } from '../../types/Abstract'
+import { default_style_id } from '../../types/Utils'
 
 
 /*************************************************************************************************/
@@ -766,7 +767,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       variant='contextmenu_button'
       onClick={() => {
         function addNewLinks(n: Type_GenericNodeElement) {
-          n.dimensions_as_parent.forEach(dim => {
+          n.dimensions_as_parent_pure.forEach(dim => {
             dim.children.forEach(c => {
               
               if (c.input_links_list.length === 0 ) {

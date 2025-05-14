@@ -2118,6 +2118,9 @@ export abstract class ClassTemplate_DrawingArea
     if (!nodeDimParent) {
       return new_current_v
     }
+    if (nodeDimParent.children.includes(nodeDimParent.parent)) {
+      return new_current_v
+    }
     desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
     desagregated_nodes = [...new Set(desagregated_nodes)]
     const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
