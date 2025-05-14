@@ -51,15 +51,15 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted.filter(n=>n.dimensions_as_parent.length> 0)
   }
   let nodes_dimensions: Class_NodeDimension[] =[]
-  nodes.forEach(n=>n.dimensions_as_parent.filter(dim=>!dim.children.includes(dim.parent)).forEach(dim=>nodes_dimensions.push(dim)))
+  nodes.forEach(n=>n.dimensions_as_parent_pure.forEach(dim=>nodes_dimensions.push(dim)))
 
   const [selectedNodesDimensions,setSelectedNodesDimensions] = useState<Class_NodeDimension[]>([])
   //selected_nodes.forEach(n=>n.dimensions_as_parent.forEach(dim=>selected_nodes_dimensions.push(dim)))
 
   const entries_for_nodes: typeElementSelectable = nodes_dimensions.map((d) => { 
     return { 
-      'value': d.parent.name + '->(' + d.children.map(c=>c.name+' ')+')',
-      'label': d.parent.name + '->(' + d.children.map(c=>c.name+' ')+')', 
+      'value': d.short_name,
+      'label':  d.short_name, 
       selected: selectedNodesDimensions.includes(d) 
     } }
   )
@@ -138,14 +138,14 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
                 const entries_values = entries.map(d => d.value)
                 const selected_nodes_set = new Set<Type_GenericNodeElement>()
                 const selected_nodes_dimensions = nodes_dimensions.filter(dim => {
-                  if (entries_values.includes(dim.parent.name + '->(' + dim.children.map(c=>c.name+' ')+')')) {
+                  if (entries_values.includes(dim.short_name)) {
                     return true
                   }
                   return false
                 })
                 setSelectedNodesDimensions(selected_nodes_dimensions)
                 nodes_dimensions.forEach(dim => {
-                  if (entries_values.includes(dim.parent.name + '->(' + dim.children.map(c=>c.name+' ')+')')) {
+                  if (entries_values.includes(dim.short_name)) {
                     selected_nodes_set.add(dim.parent as Type_GenericNodeElement)
                   }
                 });
