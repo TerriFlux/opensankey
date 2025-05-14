@@ -486,7 +486,6 @@ export const resources_app_elements = {
           Cercle: 'Circle',
           Rectangle: 'Rectangle',
           TML: 'Minimum width',
-          opacity:'Opacity',
           TMH: 'Minimum height',
           geometry: 'Mode',
           geometry_absolute: 'Position',

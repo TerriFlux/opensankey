@@ -51,13 +51,13 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
 import {
-  Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement
+  Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement,
+  Type_GenericSankey
 } from '../../types/Types'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
-import { Class_LevelTag, Class_LevelTagGroup, Class_ProtoLevelTag } from '../../types/Tag'
+import { Class_LevelTag, Class_LevelTagGroup } from '../../types/Tag'
 import { ClassAbstract_ProtoLevelTag } from '../../types/Abstract'
-import { default_style_id } from '../../types/Utils'
 
 
 /*************************************************************************************************/
@@ -807,150 +807,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
     }
   })
-  const btn_set_child_ok = [...possible_root_nodes].length > 0
+  // const btn_set_child_ok = [...possible_root_nodes].length > 0
 
-  function addNewLinks(n:Type_GenericNodeElement,extremity_node:Type_GenericNodeElement,tagg:Class_LevelTagGroup) {
-    const pdim = n.nodeDimensionAsParent(tagg)
-    if (pdim) {
-      (pdim.children as Type_GenericNodeElement[]).forEach(c => {
-        const link2copy = (c as Type_GenericNodeElement)[input_or_output_attr][0]
-        const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
-        (child_link as Type_GenericLinkElement).copyValues(link2copy)
-        //n.sankey.drawing_area.deleteLink(link2copy)
-        addNewLinks(c,extremity_node,tagg)
-      })
-    }
-  }
-  function removeLinks(n:Type_GenericNodeElement,tagg:Class_LevelTagGroup) {
-    const pdim = n.nodeDimensionAsParent(tagg)
-    if (pdim) {
-      (pdim.children as Type_GenericNodeElement[]).forEach(c => {
-        n.sankey.drawing_area.deleteLink((c as Type_GenericNodeElement)[input_or_output_attr][0])
-        removeLinks(c,tagg)
-      })
-    }        
-  }
 
-  const btn_set_child = btn_set_child_ok ? <Button
-    variant='contextmenu_button'
-    onClick={() => {
-      new_data.drawing_area.bypass_redraws = true
-
-      let new_tag = false
-      let this_parent_dim: Class_NodeDimension | undefined
-      let this_child_dim: Class_NodeDimension | undefined
-
-      let root_node: Type_GenericNodeElement
-
-      let tagg = sankey.level_taggs_dict['dimension_1'] as Class_LevelTagGroup
-      if (!tagg) {
-        tagg = sankey.addLevelTagGroup('dimension_1', 'Dimension 1') as Class_LevelTagGroup
-        tagg.activated = true
-        tagg.addTag('1', '1')
-      }
-      selected_nodes.forEach(n => {
-        if (new_tag) {
-          return
-        }
-        // If node being set as child is set as parent we must create a new level
-        this_parent_dim = n.dimensions_as_parent[0] // TODO > 1
-        this_child_dim = this_child_dim ? this_child_dim : n.dimensions_as_child[0]
-        if (this_parent_dim) {
-          new_tag = true
-          if ((this_parent_dim.children as Type_GenericNodeElement[])[0].dimensions_as_child.length == 1) {
-            this_parent_dim.shift_level_tags()
-            tagg = this_parent_dim.parent_level_tag.group as Class_LevelTagGroup
-          } else {
-            // On croise
-            const other_dim = (this_parent_dim.children as Type_GenericNodeElement[])[0].dimensions_as_child.filter(cdim => cdim.parent_level_tag.group != this_parent_dim?.parent_level_tag.group)[0]
-            if (other_dim) {
-              tagg = other_dim.parent_level_tag.group as Class_LevelTagGroup
-            }
-          }
-        }
-      })
-      root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
-
-      let root_has_parent = root_node.dimensions_as_parent.filter(dim => dim.parent_level_tag.group.id == tagg.id).length !== 0
-      let parent_level_tag: ClassAbstract_ProtoLevelTag
-      let child_level_tag: ClassAbstract_ProtoLevelTag
-      let idx = 1
-      if (!root_has_parent && !this_child_dim) {
-        parent_level_tag = tagg.tags_list[0]
-        if (tagg.tags_list.length == 1) {
-          tagg.addTag(
-            String(+parent_level_tag.id + 1),
-            String(+parent_level_tag.id + 1)
-          )
-        }
-        //if (this_parent_dim) {
-        // PC parent child
-        //parent_level_tag = this_parent_dim.parent_level_tag
-        //hild_level_tag = this_parent_dim.child_level_tag
-        //} else {
-        child_level_tag = tagg.tags_list[1]
-        //} 
-      } else if (root_has_parent && !this_child_dim) {
-        // New dimension
-        idx = root_node.dimensions_as_parent.length + 1
-        tagg = sankey.addLevelTagGroup(
-          'dimension_' + idx,
-          'Dimension ' + idx,
-        ) as Class_LevelTagGroup
-        tagg.activated = true
-        tagg.addTag('1', '1')
-        tagg.addTag('2', '2')
-        parent_level_tag = sankey.level_taggs_dict['dimension_' + idx].tags_list[0]
-        child_level_tag = sankey.level_taggs_dict['dimension_' + idx].tags_list[1]
-      } else {
-        if (this_child_dim == undefined) return
-        // this_child_dim is defined
-        // New dimension
-        tagg = Object.values(sankey.level_taggs_dict).filter(tagg => tagg !== this_child_dim?.parent_level_tag.group)[0]
-        if (!tagg) {
-          idx = Object.values(sankey.level_taggs_dict).length + 1
-          tagg = sankey.addLevelTagGroup(
-            'dimension_' + idx,
-            'Dimension ' + idx,
-          ) as Class_LevelTagGroup
-          tagg.activated = true
-          tagg.addTag('1', '1')
-          tagg.addTag('2', '2')
-        }
-        parent_level_tag = tagg.tags_list[0]
-        child_level_tag = tagg.tags_list[1];
-      }
-
-      selected_nodes.forEach(n => {
-        (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)
-        n.dimensionsUpdated()
-        root_node.dimensionsUpdated()
-        root_node.nodeDimensionAsParent(tagg)!.normalize()
-
-        const desagregation_link = n[input_or_output_attr].filter(l => l[source_or_target_attr].id == root_node.id)[0]
-        if (n.input_links_list.length==0 || n.output_links_list.length==0) {
-          root_node[input_or_output_attr].forEach(supply_link => {
-            if (!supply_link.value?.valueData) {
-              return
-            }
-            const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
-            (new_link as Type_GenericLinkElement).copyValues(desagregation_link);
-            addNewLinks(n,expand_left?supply_link.source:supply_link.target,tagg);
-            supply_link[source_or_target_attr].reorganizeIOLinks()
-          })
-          removeLinks(n,tagg)
-        }
-        sankey.drawing_area.deleteLink(desagregation_link)
-      })
-      sankey.nodes_list.forEach(n => {
-        n.dimensionsUpdated();
-        n.updateVisibilityFingerprint()
-      })
-      tagg.tags_list[0].setSelected()
-      new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-      new_data.drawing_area.draw()
-    }}
-  >{t('Noeud.context_set_child')}</Button> : <></>
 
   const dropdown_expand_right = (
     (selected_nodes.length === 1) &&
@@ -1012,6 +871,156 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     </Button>:<></>}
     </MenuList>
   </Menu>:<></>
+
+  function addNewLinks(n: Type_GenericNodeElement, extremity_node: Type_GenericNodeElement, tagg: Class_LevelTagGroup) {
+    const pdim = n.nodeDimensionAsParent(tagg)
+    if (!pdim) {
+      return
+    }
+    if (pdim.children.includes(pdim.parent)) {
+      return
+    }
+    (pdim.children as Type_GenericNodeElement[]).forEach(c => {
+      const link2copy = (c as Type_GenericNodeElement)[input_or_output_attr][0]
+      const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
+      (child_link as Type_GenericLinkElement).copyValues(link2copy)
+      //n.sankey.drawing_area.deleteLink(link2copy)
+      addNewLinks(c, extremity_node, tagg)
+    })
+  }
+
+  function removeLinks(n: Type_GenericNodeElement, tagg: Class_LevelTagGroup) {
+    const pdim = n.nodeDimensionAsParent(tagg)
+    if (!pdim) {
+      return
+    }
+    if (pdim.children.includes(pdim.parent)) {
+      return
+    }
+    (pdim.children as Type_GenericNodeElement[]).forEach(c => {
+      n.sankey.drawing_area.deleteLink((c as Type_GenericNodeElement)[input_or_output_attr][0])
+      removeLinks(c, tagg)
+    })
+  }
+  function applyDimension(
+    parent_level_tag: Class_LevelTag,
+    root_node: Type_GenericNodeElement,
+    child_level_tag: Class_LevelTag,
+    tagg: Class_LevelTagGroup) {
+    selected_nodes.forEach(n => {
+      (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)
+      n.dimensionsUpdated()
+      const desagregation_links = n[input_or_output_attr].filter(l => l[source_or_target_attr].id == root_node.id)
+      if (desagregation_links.length > 1) {
+        return
+      }
+      const desagregation_link = desagregation_links[0]
+      if (n.input_links_list.length == 0 || n.output_links_list.length == 0) {
+        root_node[input_or_output_attr].forEach(supply_link => {
+          if (!supply_link.value?.valueData) {
+            return
+          }
+          const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
+          (new_link as Type_GenericLinkElement).copyValues(desagregation_link)
+          addNewLinks(n, expand_left ? supply_link.source : supply_link.target, tagg)
+          supply_link[source_or_target_attr].reorganizeIOLinks()
+        })
+        removeLinks(n, tagg)
+      }
+      root_node.dimensionsUpdated()
+      root_node.nodeDimensionAsParent(tagg)!.normalize()
+      sankey.drawing_area.deleteLink(desagregation_link)
+    })
+    sankey.nodes_list.forEach(n => {
+      n.dimensionsUpdated()
+      n.updateVisibilityFingerprint()
+      n.input_links_list.forEach(l => l.updateVisibilityFingerprint())
+      n.output_links_list.forEach(l => l.updateVisibilityFingerprint())
+    })
+  }
+
+  const btn_set_child_ok = [...possible_root_nodes].length > 0 && contextualised_node
+
+  const btn_set_child = btn_set_child_ok ? <Menu placement='end'>
+    <MenuButton
+      variant='contextmenu_button'
+      as={Button}
+      rightIcon={<ChevronRightIcon />}
+      className="dropdown-basic"
+    >
+      {t('Noeud.context_set_child')}
+    </MenuButton>
+    <MenuList>
+      {sankey.level_taggs_list.map(tagg => <Button
+        variant='contextmenu_button'
+        onClick={() => {
+          new_data.drawing_area.bypass_redraws = true
+
+          // let new_tag = false
+          let this_parent_dim: Class_NodeDimension | null = null
+          let this_child_dim: Class_NodeDimension | null = null
+
+          let root_node: Type_GenericNodeElement
+          selected_nodes.forEach(n => {
+            // if (new_tag) {
+            //   return
+            // }
+            // If node being set as child is set as parent we must create a new level
+            this_parent_dim = n.nodeDimensionAsParent(tagg as Class_LevelTagGroup)
+            //this_child_dim = n.nodeDimensionAsChild(tagg as Class_LevelTagGroup)
+            if (this_parent_dim) {
+              // new_tag = true
+              //if ((this_parent_dim.children as Type_GenericNodeElement[])[0].dimensions_as_child.filter(dim=>!dim.children.includes(dim.parent)).length == 1) {
+              this_parent_dim.shift_level_tags()
+              //}
+            }
+          })
+          root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
+
+          let root_has_parent = root_node.dimensions_as_parent.filter(dim => dim.parent_level_tag.group.id == tagg.id).length !== 0
+          let parent_level_tag: Class_LevelTag
+          let child_level_tag: Class_LevelTag
+          if (!root_has_parent && !this_child_dim) {
+            parent_level_tag = tagg.tags_list[0]
+            if (tagg.tags_list.length == 1) {
+              tagg.addTag(
+                String(+parent_level_tag.id + 1),
+                String(+parent_level_tag.id + 1)
+              )
+            }
+            child_level_tag = tagg.tags_list[1]
+          } else {
+            return
+          }
+
+          applyDimension(parent_level_tag, root_node, child_level_tag, tagg)
+
+          tagg.tags_list[0].setSelected()
+          new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+          new_data.drawing_area.draw()
+        }}
+      >{tagg.name}</Button>)}
+      <Button
+        variant='contextmenu_button'
+        onClick={() => {
+          new_data.drawing_area.bypass_redraws = true
+
+          const tagg_idx = sankey.level_taggs_list.length + 1
+          const tagg = sankey.addLevelTagGroup('dimension_' + tagg_idx, 'Dimension ' + tagg_idx) as Class_LevelTagGroup
+          tagg.activated = true
+          tagg.addTag('1', '1')
+          tagg.addTag('2', '2')
+          let parent_level_tag = sankey.level_taggs_dict['dimension_' + tagg_idx].tags_list[0]
+          let child_level_tag = sankey.level_taggs_dict['dimension_' + tagg_idx].tags_list[1]
+          const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
+
+          applyDimension(parent_level_tag, root_node, child_level_tag, tagg)
+          tagg.tags_list[0].setSelected()
+          new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+          new_data.drawing_area.draw()
+        }}
+      >{'Nouvelle dimension'}</Button>
+    </MenuList></Menu> : <></>
 
   const btn_mask_shape = <Button
     variant='contextmenu_button'

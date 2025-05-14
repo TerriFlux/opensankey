@@ -3321,6 +3321,16 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
+   * Retun list of dimensions where this node is the parent
+   *
+   * @readonly
+   * @memberof ClassTemplate_NodeElement
+   */
+  public get dimensions_as_parent_pure() {
+    return Object.values(this._dimensions_as_parent).filter(dim=>!dim.children.includes(dim.parent))
+  }
+
+  /**
    *Return ture if node is in multiple nodeDimension has a parent.
    *
    * @readonly
@@ -3338,6 +3348,16 @@ export abstract class ClassTemplate_NodeElement
    */
   public get dimensions_as_child() {
     return Object.values(this._dimensions_as_child)
+  }
+
+  /**
+   * Retun list of dimensions where this node is a child
+   *
+   * @readonly
+   * @memberof ClassTemplate_NodeElement
+   */
+  public get dimensions_as_child_pure() {
+    return Object.values(this._dimensions_as_child).filter(dim=>!dim.children.includes(dim.parent))
   }
 
   // Links related ----------------------------------------------------------------------
@@ -4676,7 +4696,7 @@ export abstract class ClassTemplate_NodeElement
       ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
     })
     // Check dimensions where node is tagged as a parent
-    Object.values(this._dimensions_as_parent).filter(dim=>!dim.children.includes(this))
+    this.dimensions_as_parent_pure
       .forEach(dim => {
         if (dim.force_show_parent || dim.force_show_children) {
           has_forced_dimensions = true
