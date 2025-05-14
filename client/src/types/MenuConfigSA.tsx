@@ -15,7 +15,6 @@ export class Class_MenuConfigSA extends Class_MenuConfigOSP {
 
   private _ref_to_additional_menus_updater: MutableRefObject<(() => void)>
   private _ref_to_btn_top_sankeytheque_updater: MutableRefObject<(() => void)>
-  private _ref_to_btn_top_pref_updater: MutableRefObject<(() => void)>
 
   private _dict_setter_show_dialog_SA: SAShowMenuComponentsVarType
 
@@ -31,7 +30,6 @@ export class Class_MenuConfigSA extends Class_MenuConfigOSP {
     // New attributes
     this._ref_to_additional_menus_updater = useRef(() => null)
     this._ref_to_btn_top_sankeytheque_updater = useRef(() => null)
-    this._ref_to_btn_top_pref_updater = useRef(() => null)
     this._dict_setter_show_dialog_SA = {
       ref_setter_show_modal_sankeytheque: useRef(() => null)
     }
@@ -41,7 +39,6 @@ export class Class_MenuConfigSA extends Class_MenuConfigOSP {
 
   public updateComponentsRelatedToSA() {
     this._ref_to_additional_menus_updater.current()
-    this._ref_to_btn_top_pref_updater.current()
     this._ref_to_btn_top_sankeytheque_updater.current()
   }
 
@@ -63,6 +60,5 @@ export class Class_MenuConfigSA extends Class_MenuConfigOSP {
 
   public get ref_to_additional_menus_updater() { return this._ref_to_additional_menus_updater }
   public get ref_to_btn_top_sankeytheque_updater() { return this._ref_to_btn_top_sankeytheque_updater }
-  public get ref_to_btn_top_pref_updater() { return this._ref_to_btn_top_pref_updater }
   public get dict_setter_show_dialog_SA() { return this._dict_setter_show_dialog_SA }
 }

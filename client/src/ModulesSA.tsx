@@ -40,9 +40,10 @@ import { DrawerSequenceDataTagg } from './deps/OpenSankey+/components/UtilsOSP'
 // Local imports
 import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
 import { LoginOutButton } from './deps/LoginComponent/Login/Login'
-import { ModalPreference } from './components/Preferences/Preferences'
 import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import { returnToApp } from './AppSA'
+import { ButtonOpenUSerPreference, ModalPreference } from './deps/LoginComponent/Preferences/Preferences'
+import { Class_ApplicationDataOSP } from './deps/LoginComponent/deps/OpenSankey+/types/TypesOSP'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -88,11 +89,6 @@ type FCType_UserPagesButtons = {
   setUpdate: React.MutableRefObject<() => void>
 }
 
-
-export type FCType_ModalPreference = {
-  new_data: Class_ApplicationDataSA,
-  additionalMenus: MutableRefObject<Type_AdditionalMenus>
-}
 
 // FUNCTIONCOMPONENT =============================================================
 
@@ -144,6 +140,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     new_data_app
   )
 
+
   // Check if user is connected ----------------------------------------------------------
 
   loginComponent().checkTokens(setUpdate)
@@ -166,7 +163,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     if (idx_reg == -1) new_data_app.menu_configuration.menu_top_order.push(['setting'])
 
     additionalMenus.current.external_top_buttons_item['sankeytheque'] = (<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
-    additionalMenus.current.external_top_buttons_item['setting'] = (<ButtonOpenUSerPreference new_data={new_data_app} />)
+    additionalMenus.current.external_top_buttons_item['setting'] = (<ButtonOpenUSerPreference new_data={new_data_app as unknown as Class_ApplicationDataOSP} />)
   } else {
     if (idx_st !== -1) {
       new_data_app.menu_configuration.menu_top_order.splice(idx_st, 1)
@@ -271,7 +268,7 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
       <ModalSankeyTheque new_data={new_data_SA} />,
-      <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
+      <ModalPreference new_data={new_data_SA as unknown as Class_ApplicationDataOSP} additionalMenus={additional_menus} />
     )
   }
 
@@ -309,40 +306,7 @@ const ButtonOpenModalSankeyTheque: FunctionComponent<{ new_data: Class_Applicati
   </Button>
 }
 
-const ButtonOpenUSerPreference: FunctionComponent<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
-  const [, setUpdate] = useState(0)
-  new_data.menu_configuration.ref_to_btn_top_pref_updater.current = () => setUpdate(a => a + 1)
-  const { t, menu_configuration } = new_data
-  const { ref_setter_show_modal_preference } = menu_configuration.dict_setter_show_dialog
-  return <OSTooltip
-    placement='bottom'
-    label={t('Menu.tooltips.preference')}
-  >
-    <Button
-      variant='menutop_button'
-      size='sizeMenuTopButton'
-      onClick={() => {
-        ref_setter_show_modal_preference.current(true)
-      }}
-      className='settings_button'
-    >
-      <Box
-        layerStyle='menutop_button_style'
-      >
-        <Box
-          gridRow='1'
-        >
-          {new_data.icon_library.icon_setting}
-        </Box>
-        <Box
-          gridRow='2'
-        >
-          {t('Menu.preference')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
-}
+
 
 
 /**
