@@ -263,6 +263,8 @@ export const menuconfigpanel_option_button_secondary = defineStyle({
   bgColor: 'none',
   borderColor: 'none',
   border: 'solid 2px',
+  fill:'white',
+  stroke:'white',
   _hover: {
     bg: 'secondaire.2',
     bgColor: 'secondaire.2',
