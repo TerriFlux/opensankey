@@ -1590,6 +1590,11 @@ export abstract class ClassTemplate_DrawingArea
       }
     )
   }
+  public callComputeAutoSankey(
+    launched_from_process: boolean,
+  ){
+    this._computeAutoSankey(launched_from_process)
+  }
 
   /**
    * Compute the position of the nodes which are not trade nodes
@@ -1860,18 +1865,23 @@ export abstract class ClassTemplate_DrawingArea
     // compute total height of nodes that belong to the same column,
     // then compute the spaces between them and their positions.
     const v_margin = this.vertical_spacing
+
+    let prev_col_width = 0
+
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       // Pass if no nodes for this horizontal_index
       // TODO : if it is the case -> something was wrong before
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
+      let max_w_col=0
 
       // Loop on horizontal_index node
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-      const h_position_for_index = h_left_margin + horizontal_index * this.horizontal_spacing
+      const h_position_for_index = prev_col_width+h_left_margin + horizontal_index * this.horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
       let upper_node_height_and_margin = v_margin_for_index
+
       if (center_biggest_nodes === true) {
         // From the bottom to the top : plot node every two index
         let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
@@ -1883,6 +1893,10 @@ export abstract class ClassTemplate_DrawingArea
           // Update upper margin for next node
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
+          // Test if node width is the largest of column
+          const node_w = this.sankey.nodes_dict[node_id].shape_min_width
+          if (node_w > max_w_col)
+            max_w_col = node_w
           // Update last index
           last_index = index
         }
@@ -1899,6 +1913,10 @@ export abstract class ClassTemplate_DrawingArea
           // Update upper margin for next node
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
+          // Test if node width is the largest of column
+          const node_w = this.sankey.nodes_dict[node_id].shape_min_width
+          if (node_w > max_w_col)
+            max_w_col = node_w
         }
       }
       else {
@@ -1910,8 +1928,14 @@ export abstract class ClassTemplate_DrawingArea
             // Update upper margin for next node
             const node_height = height_per_nodes_ids[node_id]
             upper_node_height_and_margin += node_height + v_margin
+            // Test if node width is the largest of column
+            const node_w = this.sankey.nodes_dict[node_id].shape_min_width
+            if (node_w > max_w_col)
+              max_w_col = node_w
           })
       }
+      // Add colmun width to horiz shift for next col pos x
+      prev_col_width+=max_w_col
     }
 
     const possible_witdh = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
@@ -2047,6 +2071,7 @@ export abstract class ClassTemplate_DrawingArea
     })
     this.sankey.sortNodes()
   }
+
   /**
    * Computes v for nodes in the drawing area
    *
