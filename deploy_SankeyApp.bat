@@ -13,7 +13,7 @@ echo %SankeyDir%
 cd %SankeyDir%\client
 call pnpm install
 
-@REM Link OpenSankey with other node_modules
+@REM Link LoginComponent with other node_modules
 cd %SankeyDir%\client\src\deps\
 echo %SankeyDir%\client\src\deps\
 rmdir LoginComponent
@@ -21,7 +21,15 @@ echo "rmdir LoginComponent"
 mklink /d LoginComponent %SankeyDir%\submodules\LoginComponent\client\src
 echo "mklink"
 
-@REM Link OpenSankey with other node_modules
+@REM Link OpenSankey+ with LoginComponent
+cd %SankeyDir%\client\src\deps\LoginComponent\deps\
+echo %SankeyDir%\client\src\deps\LoginComponent\deps\
+rmdir OpenSankey+
+echo "rmdir OpenSankey+ in LoginComponent"
+mklink /d OpenSankey+ %SankeyDir%\submodules\OpenSankey+\client\src
+echo "mklink OpenSankey+ in LoginComponent"
+
+@REM Link OpenSankey+ with other node_modules
 cd %SankeyDir%\client\src\deps\
 echo %SankeyDir%\client\src\deps\
 rmdir OpenSankey+

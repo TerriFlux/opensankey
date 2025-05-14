@@ -107,7 +107,7 @@ printf "OK ------------------------------------------------------------------\n"
 
 # Recreate links with submodules
 printf "Linking dependencies ------------------------------------------------\n"
-# - Src
+# -Src
 for submodule in OpenSankey+ LoginComponent; do
   cd $SCRIPT_DIR/client/src/deps
   if [ -h $submodule ]; then
@@ -115,6 +115,16 @@ for submodule in OpenSankey+ LoginComponent; do
   fi
   ln -s "$SCRIPT_DIR/submodules/$submodule/client/src" $submodule
 done
+
+# -In LoginComponent
+for submodule in OpenSankey+; do
+  cd $SCRIPT_DIR/client/src/deps/LoginComponent/deps
+  if [ -h $submodule ]; then
+    rm $submodule
+  fi
+  ln -s "$SCRIPT_DIR/submodules/$submodule/client/src" $submodule
+done
+
 # - Public dir
 cd $SCRIPT_DIR/client
 if [ -d "public" ]; then
