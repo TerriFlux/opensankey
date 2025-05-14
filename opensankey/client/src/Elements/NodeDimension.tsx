@@ -344,6 +344,11 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
     return nodes_to_redraw
   }
 
+  /**
+   * While adding a root level we must shift the previous level
+   * 1->2 2->3 ...
+   * @memberof Class_NodeDimension
+   */
   public shift_level_tags() {
     const tagg = this.parent_level_tag.group as Class_LevelTagGroup
     const idx = tagg.tags_list.indexOf(this.parent_level_tag as Class_LevelTag)
