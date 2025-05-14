@@ -50,10 +50,14 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 /*************************************************************************************************/
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
-import { 
-  Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
+import {
+  Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement,
+  Type_GenericSankey
+} from '../../types/Types'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
+import { Class_LevelTag, Class_LevelTagGroup } from '../../types/Tag'
+import { ClassAbstract_ProtoLevelTag } from '../../types/Abstract'
 
 
 /*************************************************************************************************/
@@ -791,7 +795,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             n.position_type = 'parametric'
             // n is no more a child (contrary to its sibling)
 
-            if (contextualised_node.dimensions_as_child.length == 0 ) {
+            if (contextualised_node.dimensions_as_child.length == 0) {
               n.removeDimensionAsChild(n.dimensions_as_child[0])
             } else {
               n.dimensions_as_child[0].force_child_level_tag(contextualised_node.dimensions_as_child[0].child_level_tag)
@@ -803,11 +807,11 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
               n.dimensions_as_parent[0].force_parent_level_tag(contextualised_node.dimensions_as_parent[0].parent_level_tag)
               n.dimensions_as_parent[0].force_child_level_tag(contextualised_node.dimensions_as_parent[0].child_level_tag)
             }
-            let l : Type_GenericLinkElement 
+            let l: Type_GenericLinkElement
             if (expand_left) {
               l = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
             } else {
-              l = new_data.drawing_area.sankey.addNewLink(contextualised_node,n)
+              l = new_data.drawing_area.sankey.addNewLink(contextualised_node, n)
             }
             l.shape_color_rule = 'source'
             l.shape_opacity = n.shape_opacity
@@ -875,6 +879,169 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     </Button> :
     <></>
 
+  const sankey = new_data.drawing_area.sankey
+  const expand_left = selected_nodes.length > 0 ? selected_nodes[0].output_links_list.length == 0 : true
+  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+  const source_or_target_attr = expand_left ? 'source' : 'target'
+  let possible_root_nodes: Set<string> = new Set
+  selected_nodes.forEach(n => {
+    if (possible_root_nodes.size !== 0) {
+      possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id)).intersection(possible_root_nodes)
+    } else {
+      possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
+    }
+  })
+
+  function addNewLinks(n: Type_GenericNodeElement, extremity_node: Type_GenericNodeElement, tagg: Class_LevelTagGroup) {
+    const pdim = n.nodeDimensionAsParent(tagg)
+    if (!pdim) {
+      return
+    }
+    if (pdim.children.includes(pdim.parent)) {
+      return
+    }
+    (pdim.children as Type_GenericNodeElement[]).forEach(c => {
+      const link2copy = (c as Type_GenericNodeElement)[input_or_output_attr][0]
+      const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
+      (child_link as Type_GenericLinkElement).copyValues(link2copy)
+      //n.sankey.drawing_area.deleteLink(link2copy)
+      addNewLinks(c, extremity_node, tagg)
+    })
+  }
+
+  function removeLinks(n: Type_GenericNodeElement, tagg: Class_LevelTagGroup) {
+    const pdim = n.nodeDimensionAsParent(tagg)
+    if (!pdim) {
+      return
+    }
+    if (pdim.children.includes(pdim.parent)) {
+      return
+    }
+    (pdim.children as Type_GenericNodeElement[]).forEach(c => {
+      n.sankey.drawing_area.deleteLink((c as Type_GenericNodeElement)[input_or_output_attr][0])
+      removeLinks(c, tagg)
+    })
+  }
+  function applyDimension(
+    parent_level_tag: Class_LevelTag,
+    root_node: Type_GenericNodeElement,
+    child_level_tag: Class_LevelTag,
+    tagg: Class_LevelTagGroup) {
+    selected_nodes.forEach(n => {
+      (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)
+      n.dimensionsUpdated()
+      const desagregation_links = n[input_or_output_attr].filter(l => l[source_or_target_attr].id == root_node.id)
+      if (desagregation_links.length > 1) {
+        return
+      }
+      const desagregation_link = desagregation_links[0]
+      if (n.input_links_list.length == 0 || n.output_links_list.length == 0) {
+        root_node[input_or_output_attr].forEach(supply_link => {
+          if (!supply_link.value?.data_value) {
+            return
+          }
+          const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
+          (new_link as Type_GenericLinkElement).copyValues(desagregation_link)
+          addNewLinks(n, expand_left ? supply_link.source : supply_link.target, tagg)
+          supply_link[source_or_target_attr].reorganizeIOLinks()
+        })
+        removeLinks(n, tagg)
+      }
+      root_node.dimensionsUpdated()
+      root_node.nodeDimensionAsParent(tagg)!.normalize()
+      sankey.drawing_area.deleteLink(desagregation_link)
+    })
+    sankey.nodes_list.forEach(n => {
+      n.dimensionsUpdated()
+      n.updateVisibilityFingerprint()
+      n.input_links_list.forEach(l => l.updateVisibilityFingerprint())
+      n.output_links_list.forEach(l => l.updateVisibilityFingerprint())
+    })
+  }
+
+  const btn_set_child_ok = [...possible_root_nodes].length > 0 && contextualised_node
+
+  const btn_set_child = btn_set_child_ok ? <Menu placement='end'>
+    <MenuButton
+      variant='contextmenu_button'
+      as={Button}
+      rightIcon={<ChevronRightIcon />}
+      className="dropdown-basic"
+    >
+      {t('Noeud.context_set_child')}
+    </MenuButton>
+    <MenuList>
+      {sankey.level_taggs_list.map(tagg => <Button
+        variant='contextmenu_button'
+        onClick={() => {
+          new_data.drawing_area.bypass_redraws = true
+
+          // let new_tag = false
+          let this_parent_dim: Class_NodeDimension | null = null
+          let this_child_dim: Class_NodeDimension | null = null
+
+          let root_node: Type_GenericNodeElement
+          selected_nodes.forEach(n => {
+            // if (new_tag) {
+            //   return
+            // }
+            // If node being set as child is set as parent we must create a new level
+            this_parent_dim = n.nodeDimensionAsParent(tagg as Class_LevelTagGroup)
+            //this_child_dim = n.nodeDimensionAsChild(tagg as Class_LevelTagGroup)
+            if (this_parent_dim) {
+              // new_tag = true
+              //if ((this_parent_dim.children as Type_GenericNodeElement[])[0].dimensions_as_child.filter(dim=>!dim.children.includes(dim.parent)).length == 1) {
+              this_parent_dim.shift_level_tags()
+              //}
+            }
+          })
+          root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
+
+          let root_has_parent = root_node.dimensions_as_parent.filter(dim => dim.parent_level_tag.group.id == tagg.id).length !== 0
+          let parent_level_tag: Class_LevelTag
+          let child_level_tag: Class_LevelTag
+          if (!root_has_parent && !this_child_dim) {
+            parent_level_tag = tagg.tags_list[0]
+            if (tagg.tags_list.length == 1) {
+              tagg.addTag(
+                String(+parent_level_tag.id + 1),
+                String(+parent_level_tag.id + 1)
+              )
+            }
+            child_level_tag = tagg.tags_list[1]
+          } else {
+            return
+          }
+
+          applyDimension(parent_level_tag, root_node, child_level_tag, tagg)
+
+          tagg.tags_list[0].setSelected()
+          new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+          new_data.drawing_area.draw()
+        }}
+      >{tagg.name}</Button>)}
+      <Button
+        variant='contextmenu_button'
+        onClick={() => {
+          new_data.drawing_area.bypass_redraws = true
+
+          const tagg_idx = sankey.level_taggs_list.length + 1
+          const tagg = sankey.addLevelTagGroup('dimension_' + tagg_idx, 'Dimension ' + tagg_idx) as Class_LevelTagGroup
+          tagg.activated = true
+          tagg.addTag('1', '1')
+          tagg.addTag('2', '2')
+          let parent_level_tag = sankey.level_taggs_dict['dimension_' + tagg_idx].tags_list[0]
+          let child_level_tag = sankey.level_taggs_dict['dimension_' + tagg_idx].tags_list[1]
+          const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
+
+          applyDimension(parent_level_tag, root_node, child_level_tag, tagg)
+          tagg.tags_list[0].setSelected()
+          new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+          new_data.drawing_area.draw()
+        }}
+      >{'Nouvelle dimension'}</Button>
+    </MenuList></Menu> : <></>
+
   const btn_mask_shape = <Button
     variant='contextmenu_button'
     onClick={updateShapeVisibility}
@@ -922,8 +1089,9 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const context_content: { [_: string]: JSX.Element } = {
     'aggregate': btn_aggregate,
-    'contract':btn_contract,
+    'contract': btn_contract,
     'desaggregate': btn_desagregate,
+    'set_as_child': btn_set_child,
     'expand': btn_expand,
     'sep_1': sep,
 
@@ -1157,3 +1325,4 @@ export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
     )
   }
 }
+
