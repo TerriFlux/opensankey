@@ -68,31 +68,20 @@ then
 fi
 printf "OK ------------------------------------------------------------------\n"
 
-# Clean deps first
-printf "\nClean deps ----------------------------------------------------------\n"
-bash $SCRIPT_DIR/submodules/OpenSankey+/build_client.sh &> /dev/null || exit_if_error $?
-for dir in node_modules dist build; do
-  if [ -d "$SCRIPT_DIR/submodules/OpenSankey+/client/$dir" ] ; then
-    echo "removing $SCRIPT_DIR/submodules/OpenSankey+/client/$dir"
-    rm -r "$SCRIPT_DIR/submodules/OpenSankey+/client/$dir" || exit_if_error $?
-  fi
-done
-printf "OK ------------------------------------------------------------------\n"
-
 # Recreate links with submodules
 printf "\nLinking dependencies ------------------------------------------------\n"
 cd $SCRIPT_DIR/client/src/deps
 if [ -h "OpenSankey+" ]; then
   rm OpenSankey+
 fi
-ln -s "$SCRIPT_DIR/submodules/OpenSankey+/client/src" OpenSankey+
+ln -s "$SCRIPT_DIR/../MFASankey/submodules/OpenSankey+/client/src" OpenSankey+
 # - Public dir
 cd $SCRIPT_DIR/sankeytools/client
 if [ -d "public" ]; then
   rm -r public
   git restore public
 fi
-cp -rs $SCRIPT_DIR/submodules/OpenSankey+/client/public .
+# cp -rs $SCRIPT_DIR/submodules/OpenSankey+/client/public .
 cd $SCRIPT_DIR
 printf "OK ------------------------------------------------------------------\n"
 
