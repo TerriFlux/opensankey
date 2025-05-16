@@ -127,6 +127,14 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
     }
   }
 
+  const eventMagneticNodes = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.magnetic_nodes = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area, 'magnetic_nodes', evt.target.checked, f)
+  }
+
 
   return <WrapperBoxSubSectionMenu title={t('Menu.background')} new_data={new_data} >
     <>
@@ -178,6 +186,17 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
           />
         </OSTooltip>
       </Box>
+      {/* Nodes move by steps */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={new_data.drawing_area.magnetic_nodes}
+        icon={<CustomFaEyeCheckIcon />}
+        onChange={eventMagneticNodes}
+      >
+        <OSTooltip label={t('MEP.tooltips.MN')}>
+          {t('MEP.MN')}
+        </OSTooltip>
+      </Checkbox>
     </>
   </WrapperBoxSubSectionMenu>
 }
