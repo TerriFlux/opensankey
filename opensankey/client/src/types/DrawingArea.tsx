@@ -228,6 +228,8 @@ export abstract class ClassTemplate_DrawingArea
   protected _grid_visible: boolean = default_grid_visible
   protected _grid_size: number = default_grid_size
 
+  protected _magnetic_nodes: boolean = false
+
   // Objects containeds in drawing area -------------------------------------------------
 
   protected _sankey: Type_GenericSankey
@@ -473,6 +475,7 @@ export abstract class ClassTemplate_DrawingArea
     json_object['filter_link_value'] = this._filter_link_value
     json_object['show_structure'] = this._type_data
     json_object['number_of_elements'] = this._number_of_elements
+    json_object['magnetic_nodes'] = this._magnetic_nodes
     // Dump with json of contained elements
     const out = {
       ...json_object,
@@ -534,6 +537,7 @@ export abstract class ClassTemplate_DrawingArea
     this._type_data = getStringFromJSON(json_object, 'show_structure', this._type_data) as Type_Structure
     this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
     this._width = getNumberFromJSON(json_object, 'width', this._width)
+    this._magnetic_nodes = getBooleanFromJSON(json_object, 'magnetic_nodes', this._magnetic_nodes)
 
     // Update legend
     this._legend.fromJSON(json_object)
@@ -1155,7 +1159,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @memberof ClassTemplate_DrawingArea
    */
-  public areaFitHorizontally(autocenter:boolean) {
+  public areaFitHorizontally(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
@@ -1177,7 +1181,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @memberof ClassTemplate_DrawingArea
    */
-  public areaFitVertically(autocenter:boolean) {
+  public areaFitVertically(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
@@ -1224,7 +1228,7 @@ export abstract class ClassTemplate_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-        (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+      (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -1592,7 +1596,7 @@ export abstract class ClassTemplate_DrawingArea
   }
   public callComputeAutoSankey(
     launched_from_process: boolean,
-  ){
+  ) {
     this._computeAutoSankey(launched_from_process)
   }
 
@@ -1874,11 +1878,11 @@ export abstract class ClassTemplate_DrawingArea
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
-      let max_w_col=0
+      let max_w_col = 0
 
       // Loop on horizontal_index node
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-      const h_position_for_index = prev_col_width+h_left_margin + horizontal_index * this.horizontal_spacing
+      const h_position_for_index = prev_col_width + h_left_margin + horizontal_index * this.horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
       let upper_node_height_and_margin = v_margin_for_index
 
@@ -1935,7 +1939,7 @@ export abstract class ClassTemplate_DrawingArea
           })
       }
       // Add colmun width to horiz shift for next col pos x
-      prev_col_width+=max_w_col
+      prev_col_width += max_w_col
     }
 
     const possible_witdh = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
@@ -2060,13 +2064,13 @@ export abstract class ClassTemplate_DrawingArea
       })
     })
     this.sankey.level_taggs_list.forEach(tagGroup => {
-    Object.values(columns).forEach(column => {
-      column.sort((n1, n2) => n1.position_y - n2.position_y)
-      let current_v = 0
-        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v,tagGroup))
-    })
-    Object.values(columns).forEach(column => {
-        column.forEach(n => this.apply_v_agregate(n,tagGroup))
+      Object.values(columns).forEach(column => {
+        column.sort((n1, n2) => n1.position_y - n2.position_y)
+        let current_v = 0
+        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v, tagGroup))
+      })
+      Object.values(columns).forEach(column => {
+        column.forEach(n => this.apply_v_agregate(n, tagGroup))
       })
     })
     this.sankey.sortNodes()
@@ -2081,18 +2085,18 @@ export abstract class ClassTemplate_DrawingArea
     node: Type_AnyNodeElement,
     tagGroup: Class_LevelTagGroup
   ) {
-      const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
-      if (!nodeDimParent) {
-        return
-      }
-      if (nodeDimParent.parent.display.position.v != -1) {
-        // v is computed at the first path
-        return
-      }
+    const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
+    if (!nodeDimParent) {
+      return
+    }
+    if (nodeDimParent.parent.display.position.v != -1) {
+      // v is computed at the first path
+      return
+    }
     nodeDimParent.parent.display.position.y = node.position_y
     nodeDimParent.parent.display.position.u = node.position_u
     nodeDimParent.parent.display.position.v = node.position_v
-    this.apply_v_agregate(nodeDimParent.parent as Type_AnyNodeElement,tagGroup)
+    this.apply_v_agregate(nodeDimParent.parent as Type_AnyNodeElement, tagGroup)
   }
 
   /**
@@ -2117,11 +2121,11 @@ export abstract class ClassTemplate_DrawingArea
       const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
       if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
       return new_current_v
-      }
-      desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
-      desagregated_nodes = [...new Set(desagregated_nodes)]
+    }
+    desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
+    desagregated_nodes = [...new Set(desagregated_nodes)]
     const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
-    if (desagregated_nodes.length>0) {
+    if (desagregated_nodes.length > 0) {
       let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
     desagregated_nodes.forEach(nn => {
       if (!nn.sibling) {
@@ -2195,7 +2199,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @memberof ClassTemplate_DrawingArea
    */
-  public areaAutoFit(autocenter:boolean) {
+  public areaAutoFit(autocenter: boolean) {
     this._process_or_bypass(() => {
       // Ratios
       const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
@@ -3035,4 +3039,7 @@ export abstract class ClassTemplate_DrawingArea
   public set filter_link_value(value: number) { this._filter_link_value = value }
 
   public get fit_margin(): number { return this._fit_margin }
+
+  public get magnetic_nodes(): boolean { return this._magnetic_nodes }
+  public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
 }
