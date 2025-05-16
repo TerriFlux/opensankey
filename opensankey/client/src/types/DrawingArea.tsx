@@ -41,6 +41,7 @@ import {
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
+  getStringListFromJSON,
   getStringOrUndefinedFromJSON,
   list_palette_color
 } from '../types/Utils'
@@ -64,7 +65,7 @@ import {
   ClassAbstract_DrawingArea,
   ClassAbstract_ApplicationData,
 } from '../types/Abstract'
-import { ClassTemplate_ProtoElement } from '../Elements/Element'
+import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
 import { Class_NodeAttribute } from '../Elements/NodeAttributes'
 import { Class_LinkAttribute } from '../Elements/LinkAttributes'
@@ -90,6 +91,15 @@ type Type_AnyLinkElement = ClassTemplate_LinkElement<Type_AnyDrawingArea, Type_A
 type Type_AnyNodeElement = ClassTemplate_NodeElement<Type_AnyDrawingArea, Type_AnySankey, Type_AnyLinkElement>
 type Type_AnySankey = ClassTemplate_Sankey<Type_AnyDrawingArea, Type_AnyNodeElement, Type_AnyLinkElement>
 type Type_AnyDrawingArea = ClassTemplate_DrawingArea<Type_AnySankey, Type_AnyNodeElement, Type_AnyLinkElement>
+
+// Function ****************************************************************************
+
+function sortElementByIdOrder(
+  el_a: Type_AnyProtoElement,
+  el_b: Type_AnyProtoElement,
+  list: string[]) {
+  return list.indexOf(el_a.id) - list.indexOf(el_b.id)
+}
 
 // CLASS DRAWING AREA *******************************************************************
 /**
@@ -161,14 +171,14 @@ export abstract class ClassTemplate_DrawingArea
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
    * @memberof ClassTemplate_DrawingArea
    */
-  public d3_selection_nodes: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  // public d3_selection_nodes: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area links
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
    * @memberof ClassTemplate_DrawingArea
    */
-  public d3_selection_links: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  // public d3_selection_links: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area legend elements
@@ -200,6 +210,8 @@ export abstract class ClassTemplate_DrawingArea
 
   public bypass_redraws: boolean = false
 
+  protected _list_g_element: string[] = []
+
   // PROTECTED ATTRIBUTES ===============================================================
 
   // Attributes that describe drawing area ----------------------------------------------
@@ -229,6 +241,8 @@ export abstract class ClassTemplate_DrawingArea
   protected _grid_size: number = default_grid_size
 
   protected _magnetic_nodes: boolean = false
+
+  protected _group_to_select: string = '.gg_nodes,.gg_links'
 
   // Objects containeds in drawing area -------------------------------------------------
 
@@ -476,6 +490,7 @@ export abstract class ClassTemplate_DrawingArea
     json_object['show_structure'] = this._type_data
     json_object['number_of_elements'] = this._number_of_elements
     json_object['magnetic_nodes'] = this._magnetic_nodes
+    json_object['order_g_elements']=this._list_g_element
     // Dump with json of contained elements
     const out = {
       ...json_object,
@@ -544,6 +559,9 @@ export abstract class ClassTemplate_DrawingArea
 
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
+
+    this._list_g_element=getStringListFromJSON(json_object,'order_g_elements',this._list_g_element)
+
   }
 
   // ABSTRACT METHODS ==================================================================
@@ -574,7 +592,6 @@ export abstract class ClassTemplate_DrawingArea
     // Fit area
     this.areaAutoFit(false)
 
-    // Added events listeners
     this.setEventsListeners()
 
     // Unset saving indicator
@@ -613,8 +630,10 @@ export abstract class ClassTemplate_DrawingArea
 
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
-    this.d3_selection_links = this.d3_selection_elements_group.append('g').attr('id', 'g_links')
-    this.d3_selection_nodes = this.d3_selection_elements_group.append('g').attr('id', 'g_nodes')
+    // this.d3_selection_links =
+    //  this.d3_selection_elements_group.append('g').attr('id', 'g_links')
+    // this.d3_selection_nodes =
+    //  this.d3_selection_elements_group.append('g').attr('id', 'g_nodes')
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
   }
@@ -658,7 +677,7 @@ export abstract class ClassTemplate_DrawingArea
       this.d3_selection_grid?.raise()
     }
   }
-
+  
   /**
    * Draw all elements inside drawing area
    * @memberof ClassTemplate_DrawingArea
@@ -673,6 +692,9 @@ export abstract class ClassTemplate_DrawingArea
     this._sankey.draw()
     // Draw legend
     this._legend.draw()
+
+
+    
   }
 
   public drawSelected() {
@@ -2248,6 +2270,26 @@ export abstract class ClassTemplate_DrawingArea
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
+  public elementFromId(id: string) {
+    if (id in this._sankey.nodes_dict) {
+      return this._sankey.nodes_dict[id]
+    }
+    if (id in this._sankey.links_dict) {
+      return this._sankey.links_dict[id]
+    }
+
+    return { name: id, is_selected: false, is_visible: false }
+  }
+
+  public orderElementOnDA() {
+
+    this.d3_selection_elements_group
+      ?.selectAll(this._group_to_select)
+      ?.sort((a, b) => {return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, this._list_g_element)})
+      .order()
+  }
+
+
   // PRIVATE METHODS ==================================================================
 
   /**
@@ -3034,4 +3076,6 @@ export abstract class ClassTemplate_DrawingArea
 
   public get magnetic_nodes(): boolean { return this._magnetic_nodes }
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
+
+  public get list_g_element() { return this._list_g_element }
 }

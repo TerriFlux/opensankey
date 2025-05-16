@@ -66,20 +66,20 @@ import {
   getStringOrNullFromJSON,
   makeId
 } from '../types/Utils'
-import { 
-  Class_LinkStyle, Class_LinkAttribute, 
-  default_shape_arrow_size, default_shape_color, default_shape_curvature, default_shape_ending_curve, default_shape_ending_tangeant, 
-  default_shape_is_arrow, default_shape_is_curved, default_shape_is_dashed, default_shape_is_recycling, default_shape_is_structure, 
-  default_shape_middle_recyling, default_shape_opacity, default_shape_orientation, default_shape_starting_curve, default_shape_starting_tangeant, 
-  Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side, default_link_value_label_horiz, default_link_name_label_horiz, 
-  default_link_name_label_vert, default_link_name_label_is_visible, default_link_value_label_color, default_link_value_label_custom_digit, 
-  default_link_value_label_font_family, default_link_value_label_font_size, default_link_value_label_is_visible, default_link_value_label_nb_digit, 
-  default_link_value_label_nb_significant_digits, default_link_value_label_on_path, default_link_value_label_pos_auto, 
-  default_link_value_label_scientific_notation, default_link_value_label_significant_digits, default_link_value_label_unit, 
-  default_link_value_label_unit_factor, default_link_value_label_unit_visible, default_link_value_label_vert, default_link_value_label_uppercase, 
-  default_link_name_label_color, default_link_name_label_bold, default_link_name_label_font_family, default_link_name_label_font_size, 
+import {
+  Class_LinkStyle, Class_LinkAttribute,
+  default_shape_arrow_size, default_shape_color, default_shape_curvature, default_shape_ending_curve, default_shape_ending_tangeant,
+  default_shape_is_arrow, default_shape_is_curved, default_shape_is_dashed, default_shape_is_recycling, default_shape_is_structure,
+  default_shape_middle_recyling, default_shape_opacity, default_shape_orientation, default_shape_starting_curve, default_shape_starting_tangeant,
+  Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side, default_link_value_label_horiz, default_link_name_label_horiz,
+  default_link_name_label_vert, default_link_name_label_is_visible, default_link_value_label_color, default_link_value_label_custom_digit,
+  default_link_value_label_font_family, default_link_value_label_font_size, default_link_value_label_is_visible, default_link_value_label_nb_digit,
+  default_link_value_label_nb_significant_digits, default_link_value_label_on_path, default_link_value_label_pos_auto,
+  default_link_value_label_scientific_notation, default_link_value_label_significant_digits, default_link_value_label_unit,
+  default_link_value_label_unit_factor, default_link_value_label_unit_visible, default_link_value_label_vert, default_link_value_label_uppercase,
+  default_link_name_label_color, default_link_name_label_bold, default_link_name_label_font_family, default_link_name_label_font_size,
   default_link_name_label_italic, default_link_name_label_uppercase, default_link_value_label_bold, default_link_value_label_italic,
-  default_link_value_label_percent_input,default_link_value_label_percent_output
+  default_link_value_label_percent_input, default_link_value_label_percent_output
 } from './LinkAttributes'
 
 export type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyAbstractNodeElement>
@@ -380,7 +380,7 @@ export abstract class ClassTemplate_LinkElement
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super(id, menu_config, 'g_links')
+    super(id, menu_config, 'g_elements')
     // Add control points
     this._control_points = this.initControlPoints(drawing_area)
     // Values
@@ -394,10 +394,12 @@ export abstract class ClassTemplate_LinkElement
     this._source_visibility_fingerprint = source.visibility_fingerprint
     this._target = target
     this._target_visibility_fingerprint = target.visibility_fingerprint
+    drawing_area.list_g_element.push(id)
+
   }
 
   public createLinkValue(
-    parent:Class_LinkValueTree|ClassAbstract_LinkElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>
+    parent: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
   ) {
     return new Class_LinkValue(parent as Type_AnyLinkElement)
   }
@@ -1008,6 +1010,7 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
+
   // PROTECTED METHODS ==================================================================
 
   /**
@@ -1037,6 +1040,12 @@ export abstract class ClassTemplate_LinkElement
       // Draw elements
       this._drawElements()
     }
+
+    // Launch timer to reorder element on DA
+    this.drawing_area.application_data._add_waiting_process('order_elements_on_da', () => {
+      this.drawing_area.orderElementOnDA()
+    })
+
   }
 
   protected _initDraw(): void {
@@ -1147,9 +1156,9 @@ export abstract class ClassTemplate_LinkElement
     const link_val = this.data_value
 
     let total_source = 0
-    this._source.output_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.data_value??0)
+    this._source.output_links_list.filter(l => l.is_visible).forEach(l => total_source += l.data_value ?? 0)
     let total_target = 0
-    this._target.input_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.data_value??0)
+    this._target.input_links_list.filter(l => l.is_visible).forEach(l => total_target += l.data_value ?? 0)
 
     // =======================DRAW VALUE LABEL ============================
     if (
@@ -1162,9 +1171,9 @@ export abstract class ClassTemplate_LinkElement
         // Compute label to display
         let label_to_display = link_val
         if (this.value_label_percent_input) {
-          label_to_display = label_to_display!/total_source *100
+          label_to_display = label_to_display! / total_source * 100
         } else if (this.value_label_percent_output) {
-          label_to_display = label_to_display!/total_target *100
+          label_to_display = label_to_display! / total_target * 100
         }
 
         // If label is undefined or null, do nothing
@@ -1203,9 +1212,9 @@ export abstract class ClassTemplate_LinkElement
             } else {
               const suffix = this.value_label_percent_input ? 's' : 'd'
               // Add text directly on textpath object
-              d3_textpath_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %'+suffix)
+              d3_textpath_selection?.text(label_to_display.toFixed(this.value_label_nb_digit) + ' %' + suffix)
                 .attr('spacing', 'exact')
-                .attr('method', 'align')              
+                .attr('method', 'align')
             }
             // Add styling text attributes directly on text object
             // Relative position from starting point of path
@@ -1228,9 +1237,9 @@ export abstract class ClassTemplate_LinkElement
                 .attr('method', 'align')
             } else {
               const suffix = this.value_label_percent_input ? 's' : 'd'
-              d3_text_selection?.text(label_to_display.toFixed(this.value_label_nb_digit)+ ' %'+suffix)
+              d3_text_selection?.text(label_to_display.toFixed(this.value_label_nb_digit) + ' %' + suffix)
                 .attr('spacing', 'exact')
-                .attr('method', 'align')              
+                .attr('method', 'align')
             }
             if (!this.drawing_area.static) {
               d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
@@ -4707,7 +4716,7 @@ export class Class_LinkValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  public parent: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>
+  public parent: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
   public children: { [tag_id: string]: Class_LinkValue } | { [tag_id: string]: Class_LinkValueTree }
 
   public data_tag_group: Class_DataTagGroup
@@ -4725,7 +4734,7 @@ export class Class_LinkValueTree {
    * @memberof Class_LinkValueTree
    */
   constructor(
-    parent: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>,
+    parent: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>,
     data_tag_group: Class_DataTagGroup
   ) {
     // Instanciate parent
@@ -4739,7 +4748,7 @@ export class Class_LinkValueTree {
     })
   }
 
-  protected createLinkValue(_:Class_LinkValueTree|ClassAbstract_LinkElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>):Class_LinkValue {
+  protected createLinkValue(_: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>): Class_LinkValue {
     if (this.parent instanceof Class_LinkValueTree) {
       return this.parent.createLinkValue(_)
     }
