@@ -60,6 +60,10 @@ def _get_value_if_in_dict(dict, key):
     except Exception:
         return None
 
+# Private Functions -----------------------------------------------------------
+def _update_dict_if_value(dict, key, value):
+    if value is not None:
+        dict[key] = value
 
 # Public Functions ------------------------------------------------------------
 def extract_json_from_sankey(sankey: Sankey):
@@ -748,7 +752,13 @@ class SankeyToJson(object):
         if flux.has_result():
             for result in flux.results:
                 has_data |= result.value is not None
-                self._parse_data(sankey, result, default_data_strct, datas_json)
+                raw_data = result.alterego
+                self._parse_result(
+                    sankey,
+                    result,
+                    raw_data,
+                    default_data_strct,
+                    datas_json)
         elif flux.has_data():
             for data in flux.datas:
                 has_data |= data.value is not None
@@ -881,6 +891,99 @@ class SankeyToJson(object):
                     # Update fluxtags struct
                     data_json["tags"][tagg_name].append(tag_name)
         return data_json
+
+    def _parse_result(
+        self,
+        sankey: Sankey,
+        result,
+        raw_data,
+        default_data_strct: dict,
+        datas_strct: dict
+    ):
+        """
+        Extract datas from link struct for json data format.
+
+        Struct for *datas_json* :
+        {
+            'dataTag1_dataTagGroup1': {
+                dataTag1_dataTagGroup2: {
+                    ... :{
+                            dataTag1_dataTagGroupN: *data_json*
+                        }
+                },
+                dataTag2_dataTagGroup2: {
+                    ...
+                },
+                ...
+            },
+            'dataTag2_dataTagGroup1': {
+                ...
+            },
+            ...
+        }
+
+        Struct for *data_json* :
+        {
+            'value': <float>,
+            'display_value': <str>,
+            'tags': {
+                'fluxTagGroup1': ['fluxTagX1_fluxTagGroup1','fluxTagY1_fluxTagGroup1'],
+                'fluxTagGroup2': ['fluxTagY1_fluxTagGroup2'],
+                ...
+            },
+            extensions: {
+                'free_mini': float, (Optional)
+                'free_maxi': float, (Optional)
+                'data_min': float, (Optional)
+                'data_max': float, (Optional)
+                'data_value': float, (Optional)
+                'data_source': str (Optional)
+            }
+        }
+
+        Parameters
+        ----------
+        :param data: sankey struct
+        :type data: Sankey
+
+        :param data: Input data object
+        :type data: Data
+
+        :param default_data_strct: Default data json struct
+        :type default_data_strct: dict
+
+        :param datas_strct: Output json struct that contains all datas
+        :type datas_strct: dict (modified)
+        """
+        # Reccurent function specific to this function
+        def add_data_to_datas(tags, datas_strct, data_strct):
+            # Check if we reached the last data tag
+            if len(tags) == 0:
+                datas_strct.update(data_strct)
+                return
+            # Otherwise we have a reccurence
+            for tag in tags:
+                if tag.name in datas_strct.keys():
+                    tags.remove(tag)
+                    add_data_to_datas(
+                        tags,
+                        datas_strct[tag.name],
+                        data_strct)
+                    return
+            # TODO : Mettre gestion erreur aucun tag trouvé ?
+        # Initialize result structure
+        data_strct = self._init_data_struct(sankey, result, default_data_strct)
+        # Update extensions
+        _update_dict_if_value(data_strct["extension"], "free_mini", result.min_val)
+        _update_dict_if_value(data_strct["extension"], "free_maxi", result.max_val)
+        if raw_data is not None:
+            _update_dict_if_value(data_strct["extension"], "data_min", raw_data.min_val)
+            _update_dict_if_value(data_strct["extension"], "data_max", raw_data.max_val)
+            _update_dict_if_value(data_strct["extension"], "data_value", raw_data.value)
+            _update_dict_if_value(data_strct["extension"], "data_source", raw_data.source)
+        # Reference result struct from data tags
+        tags = [tag for tag in result.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)]
+        add_data_to_datas(tags, datas_strct, data_strct)
 
     def parse_nodes(self, sankey: Sankey, nodes: dict, levelTags):
         """
