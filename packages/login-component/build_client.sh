@@ -74,9 +74,9 @@ cd $SCRIPT_DIR/client/src/deps
 if [ -h "OpenSankey+" ]; then
   rm OpenSankey+
 fi
-ln -s "$SCRIPT_DIR/../MFASankey/submodules/OpenSankey+/client/src" OpenSankey+
+ln -s "$SCRIPT_DIR/../OpenSankey+/client/src" OpenSankey+
 # - Public dir
-cd $SCRIPT_DIR/sankeytools/client
+cd $SCRIPT_DIR/client
 if [ -d "public" ]; then
   rm -r public
   git restore public
