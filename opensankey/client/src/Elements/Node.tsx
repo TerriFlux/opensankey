@@ -840,11 +840,18 @@ export abstract class ClassTemplate_NodeElement
     if (this.is_child) {
       //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
       // Force to show parent
-      if ((id !== undefined) && (this._dimensions_as_child[id]))
+      if ((id !== undefined) && (this._dimensions_as_child[id])) {
         this._dimensions_as_child[id].setForceToShowParent()
-      else {
+        const parent = this._dimensions_as_child[id].parent
+        parent.input_links_list.forEach(l=>l.source.draw())
+        parent.output_links_list.forEach(l=>l.target.draw())
+      } else {
         //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
-        Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
+        const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
+        dim.setForceToShowParent()
+        const parent = dim.parent
+        parent.input_links_list.forEach(l=>{l.source.draw()})
+        parent.output_links_list.forEach(l=>{l.target.draw()})
       }
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
@@ -2310,14 +2317,43 @@ export abstract class ClassTemplate_NodeElement
       this.saveUndo(undo)
       this.saveRedoAteventMouseDragEnd()
     }
-
+    // End of drag
+    this._drag = false
     // Move all elements so none of them are outside the DA
     this.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
     this.drawing_area.computeParametricV()
+    const drawing_area = this.drawing_area
+    const nodes_selected = drawing_area.selected_nodes_list
+
+    if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
+      // EDITION MODE ===========================================================
+      if (drawing_area.isInEditionMode()) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position
+        nodes_selected
+          .forEach(n => {
+            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          })
+      }
+    }
+    else {
+      if (drawing_area.isInEditionMode()) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position
+        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+      }
+    }
     this.drawing_area.checkAndUpdateAreaSize()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // End of drag
-    this._drag = false
+
   }
 
 
@@ -3374,7 +3410,7 @@ export abstract class ClassTemplate_NodeElement
     // It's probably not the most optimized way to resolve this problem but it work for now
     let max_digit_in = 0 //var to stock the maximum number of digit after decimal in link value visible linked to node
     const link_in = this.input_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.valueNumber).split('.')[1]
+      const decimal_digit = String(link.value?.valueResult).split('.')[1]
       if (decimal_digit !== undefined) { // sometime link value are already integer so we don't count their decimal digit
         max_digit_in = Math.max(max_digit_in, decimal_digit.length)
       }
@@ -3382,12 +3418,12 @@ export abstract class ClassTemplate_NodeElement
     })
 
     const pow_in = Math.pow(10, max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value
-    link_in.forEach(link => input_val += (link.value?.valueNumber ?? 0) * pow_in)
+    link_in.forEach(link => input_val += (link.value?.valueResult ?? 0) * pow_in)
 
     // Do the same we did for input links to output links
     let max_digit_out = 0
     const link_out = this.output_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.valueNumber).split('.')[1]
+      const decimal_digit = String(link.value?.valueResult).split('.')[1]
       if (decimal_digit !== undefined) {
         max_digit_out = Math.max(max_digit_out, decimal_digit.length)
       }
@@ -3395,7 +3431,7 @@ export abstract class ClassTemplate_NodeElement
     })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.value?.valueNumber ?? 0) * pow_out)
+    link_out.forEach(link => output_val += (link.value?.valueResult ?? 0) * pow_out)
     const display_unit = this.value_label_unit_visible && this.value_label_unit != ''
     const factor_unit = display_unit && this.value_label_unit_factor > 1 ? this.value_label_unit_factor : 1
     const label_unit = display_unit ? this.value_label_unit : ''
@@ -4811,8 +4847,8 @@ export abstract class ClassTemplate_NodeElement
   private get tooltip_html() {
     let input_val = 0
     let output_val = 0
-    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.data_value ?? 0)
-    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.data_value ?? 0)
+    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.valueResult ?? 0)
+    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.valueResult ?? 0)
     // Title
     let tooltip_html = '<p class="title" style="margin-bottom: 5px;">' +
       this.name.split('\\n').join(' ') +
@@ -4848,7 +4884,7 @@ export abstract class ClassTemplate_NodeElement
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (input_val > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / input_val) * 100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.valueResult ?? 0) / input_val) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -4895,7 +4931,7 @@ export abstract class ClassTemplate_NodeElement
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (output_val > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / output_val) * 100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.valueResult ?? 0) / output_val) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
