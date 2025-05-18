@@ -572,7 +572,7 @@ export abstract class ClassTemplate_DrawingArea
     this.drawElements()
 
     // Fit area
-    this.areaAutoFit(false)
+    this.areaAutoFit(true)
 
     // Added events listeners
     this.setEventsListeners()
@@ -2118,8 +2118,8 @@ export abstract class ClassTemplate_DrawingArea
     }
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
-    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-    if (!nodeDimParent) {
+      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+      if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
       return new_current_v
     }
     desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
@@ -2128,8 +2128,10 @@ export abstract class ClassTemplate_DrawingArea
     if (desagregated_nodes.length > 0) {
       let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
       desagregated_nodes.forEach(nn => {
-        nn.display.position.x = node.position_x
-        nn.display.position.u = node.position_u
+        if (!nn.sibling) {
+          nn.display.position.x = node.position_x
+          nn.display.position.u = node.position_u
+        }
         nn.display.position.y = current_y
         current_y += 20
         new_current_v = this.apply_v_desagregate(nn, new_current_v, tagGroup)
@@ -2666,6 +2668,12 @@ export abstract class ClassTemplate_DrawingArea
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+        if (this.sankey.default_node_style.position.type == 'parametric' ) {
+          this.application_data.sendWaitingToast(
+            () => {
+          this.computeParametrization()
+            })
+        }
       }
     } else if (this.isInSelectionMode() && event.button == 0) {
       if ((!event.shiftKey) && (!event.ctrlKey)) {
