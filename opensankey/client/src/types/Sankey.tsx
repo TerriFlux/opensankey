@@ -796,10 +796,14 @@ export abstract class ClassTemplate_Sankey
     // Add links
     json_object['links'] = json_object_links
     const links_list = (only_visible_elements ? this.visible_links_list : this.links_list)
+
+    let has_results = false
+    links_list.forEach(l=>has_results = has_results || l.has_result)
+
     links_list
       .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
       .forEach(link => {
-        json_object_links[link.id] = link.toJSON({ 'with_values': with_values })
+        json_object_links[link.id] = link.toJSON({ 'with_values': with_values, 'has_results': has_results})
       })
     // Out
     return json_object
