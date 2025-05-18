@@ -112,8 +112,11 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract get filter_label(): number
   public abstract set filter_label(_: number)
   public abstract get type_data(): string
+  public abstract get grid_size(): number
   // MAndatory setters
   public abstract set scale(_: number)
+  public abstract get magnetic_nodes(): boolean
+  public abstract set magnetic_nodes(b: boolean)
 }
 
 export abstract class ClassAbstract_Sankey {
