@@ -1076,9 +1076,9 @@ export abstract class ClassTemplate_DrawingArea
    */
   public updateScaleAtLinkValueSetting() {
     // Update scaling if only one link
-    const links = this.sankey.links_list.filter(l => l.value != null && l.value.data_value != null && l.value.data_value != 0)
+    const links = this.sankey.links_list.filter(l => l.value != null && l.value.valueResult != null && l.value.valueResult != 0)
     if (links.length == 1) {
-      this.scale = links[0].value!.data_value! // will redraw everything // will redraw everything
+      this.scale = links[0].value!.valueResult! // will redraw everything // will redraw everything
     }
   }
 
@@ -2118,8 +2118,11 @@ export abstract class ClassTemplate_DrawingArea
     }
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
-      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-      if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
+    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+    if (!nodeDimParent) {
+      return new_current_v
+    }
+    if (nodeDimParent.children.includes(nodeDimParent.parent)) {
       return new_current_v
     }
     desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
@@ -2127,15 +2130,16 @@ export abstract class ClassTemplate_DrawingArea
     const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
     if (desagregated_nodes.length > 0) {
       let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
-      desagregated_nodes.forEach(nn => {
-        if (!nn.sibling) {
-          nn.display.position.x = node.position_x
-          nn.display.position.u = node.position_u
-        }
-        nn.display.position.y = current_y
-        current_y += 20
-        new_current_v = this.apply_v_desagregate(nn, new_current_v, tagGroup)
-      })
+    desagregated_nodes.forEach(nn => {
+      if (nn.sibling) {
+        return
+      }
+      nn.display.position.x = node.position_x
+      nn.display.position.u = node.position_u
+      nn.display.position.y = current_y
+      current_y += 20
+      new_current_v = this.apply_v_desagregate(nn, new_current_v,tagGroup)
+    })
     }
     return new_current_v + 1
   }
