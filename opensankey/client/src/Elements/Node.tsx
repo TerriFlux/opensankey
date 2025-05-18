@@ -31,6 +31,7 @@ import { textwrap } from 'd3-textwrap'
 // Local types imports
 import type {
   ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoLevelTag,
   ClassAbstract_Sankey
 } from '../types/Abstract'
 import type { Type_Side } from './LinkAttributes'
@@ -42,7 +43,8 @@ import type {
   Class_Tag,
   Class_TagGroup,
   Class_LevelTagGroup,
-  Class_LevelTag
+  Class_LevelTag,
+  Class_ProtoLevelTag
 } from '../types/Tag'
 import type {
   Class_MenuConfig
@@ -1182,7 +1184,7 @@ export abstract class ClassTemplate_NodeElement
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
-      (!_.children.includes(this)) &&
+      /*(!_.children.includes(this)) &&*/
       (!this._dimensions_as_parent[_.id])
     ) {
       this.dimensionsUpdated() // Reset visibility indicator
@@ -3373,6 +3375,16 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
+   * Retun list of dimensions where this node is the parent
+   *
+   * @readonly
+   * @memberof ClassTemplate_NodeElement
+   */
+  public get dimensions_as_parent_pure() {
+    return Object.values(this._dimensions_as_parent).filter(dim=>!dim.children.includes(dim.parent))
+  }
+
+  /**
    *Return ture if node is in multiple nodeDimension has a parent.
    *
    * @readonly
@@ -3390,6 +3402,16 @@ export abstract class ClassTemplate_NodeElement
    */
   public get dimensions_as_child() {
     return Object.values(this._dimensions_as_child)
+  }
+
+  /**
+   * Retun list of dimensions where this node is a child
+   *
+   * @readonly
+   * @memberof ClassTemplate_NodeElement
+   */
+  public get dimensions_as_child_pure() {
+    return Object.values(this._dimensions_as_child).filter(dim=>!dim.children.includes(dim.parent))
   }
 
   // Links related ----------------------------------------------------------------------
@@ -4728,7 +4750,7 @@ export abstract class ClassTemplate_NodeElement
       ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
     })
     // Check dimensions where node is tagged as a parent
-    Object.values(this._dimensions_as_parent)
+    this.dimensions_as_parent_pure
       .forEach(dim => {
         if (dim.force_show_parent || dim.force_show_children) {
           has_forced_dimensions = true
@@ -4857,7 +4879,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {

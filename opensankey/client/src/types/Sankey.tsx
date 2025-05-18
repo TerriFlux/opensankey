@@ -1023,6 +1023,7 @@ export abstract class ClassTemplate_Sankey
     //if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
     // Change style if node has default style & 'Type de noeud' tags
     this.nodes_list.forEach(n => {
+      n.dimensions_as_parent.forEach(pdim=>pdim.normalize())
       const tagg = this.node_taggs_dict['type de noeud']
       if (!tagg) {
         return
@@ -2094,6 +2095,36 @@ export abstract class ClassTemplate_Sankey
 
   public get data_tags_fingerprint() {
     return this._data_tags_fingerprint
+  }
+
+  public get unit_first_datatag() {
+    const unit_taggs = this.data_taggs_list.filter(data_tagg =>data_tagg.banner == 'unit')
+    if (unit_taggs.length == 0) {
+      return null
+    }
+    const unit_tags = unit_taggs[0].tags_list
+    if (unit_tags.length == 0) {
+      return null
+    }
+    return unit_tags[0].unit_name
+  }
+
+  /**
+   * Return an array  of id of tag selected of that data_taggs
+   *
+   * @readonly
+   * @memberof ClassTemplate_Sankey
+   */
+  public get unit_data_tag() {
+    const unit_taggs = this.data_taggs_list.filter(data_tagg =>data_tagg.banner == 'unit')
+    if (unit_taggs.length == 0) {
+      return null
+    }
+    const selected_tags = unit_taggs[0].selected_tags_list
+    if (selected_tags.length == 0) {
+      return null
+    }
+    return selected_tags[0].unit_name
   }
 
   /**

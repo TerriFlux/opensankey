@@ -2067,10 +2067,10 @@ export abstract class ClassTemplate_DrawingArea
       Object.values(columns).forEach(column => {
         column.sort((n1, n2) => n1.position_y - n2.position_y)
         let current_v = 0
-        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v, tagGroup))
+        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v,tagGroup))
       })
       Object.values(columns).forEach(column => {
-        column.forEach(n => this.apply_v_agregate(n, tagGroup))
+        column.forEach(n => this.apply_v_agregate(n,tagGroup))
       })
     })
     this.sankey.sortNodes()
