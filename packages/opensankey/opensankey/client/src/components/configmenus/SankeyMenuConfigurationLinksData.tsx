@@ -288,16 +288,15 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
             }}
           >
             {new_data.menu_configuration.data_type.map(el => {
-              if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
-                return <></>
-              }
+              // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
+              //   return <></>
+              // }
               return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.data.'+el)}</OSTooltip></></option>
             })}
           </Select>
         </OSTooltip>
       </Box>
     {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
-    {value_option!=='unit_conversion'?
     <OSTooltip label={t('Flux.data.tooltips.vpp')}>
       <Box
         as='span'
