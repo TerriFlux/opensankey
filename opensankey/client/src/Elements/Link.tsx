@@ -3201,6 +3201,13 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
+  public valueForTags(_:ClassAbstract_ProtoTag[]) {
+    if (this._values instanceof Class_LinkValue)
+      return this._values
+    else
+      return this._values.getValueForDataTags(_ as Class_DataTag[])    
+  }
+
   /**
    * Get value object.
    * Either search correct current value with data_taggs,
