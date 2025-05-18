@@ -64,7 +64,7 @@ export const table_edit_grp_tag_data = definePartsStyle({
   ...default_table,
   tr: {
     minHeight: minHeightTableRow,
-    gridTemplateColumns: '0.5fr 2fr 1.5fr',
+    gridTemplateColumns: '0.75fr 2fr 1.5fr 1.5fr',
     display: 'grid',
   },
 })
