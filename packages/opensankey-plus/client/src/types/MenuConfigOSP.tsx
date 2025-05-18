@@ -22,6 +22,10 @@ import { Class_DataTag, Class_DataTagGroup } from '../deps/OpenSankey/types/Tag'
 export type keyTypeConfigOSP = keyTypeConfig | 'presentation'
 export type keyTypeElementsOSP = keyTypeElements | 'data_tag' | 'tag_flow' | 'tag_node' | 'view'
 
+type AFMSankeyShowMenuComponentsVarType ={
+  ref_setter_show_split_trade : MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_reconciliation : MutableRefObject<Dispatch<SetStateAction<boolean>>>
+}
 
 // CLASS MENU CONFIG PLUS ***************************************************************
 
@@ -35,7 +39,10 @@ export type keyTypeElementsOSP = keyTypeElements | 'data_tag' | 'tag_flow' | 'ta
 export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   // Override order of top menu buttons to add OSP buttons components
-  protected override _menu_top_order=[...super.menu_top_order,['views']]
+  protected override _menu_top_order=[...super.menu_top_order,['views','afm']]
+
+  private _dict_setter_show_dialog_afm: AFMSankeyShowMenuComponentsVarType
+  private _action_type: string
 
   /**
    * Dict containing ref to setter show draggable modale
@@ -160,6 +167,12 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._style_config['presentation']= { 'theme': '#778a95', elements_configurable: ['flow', 'node','flow_tag', 'node_tag','object','view'] }
     this._elements_configurable_selected['presentation']= []
 
+    // Init new attr
+    this._action_type = 'optim'
+    this._dict_setter_show_dialog_afm = {
+      ref_setter_show_split_trade: useRef(() => null),
+      ref_setter_show_reconciliation: useRef(() => null)
+    }
   }
 
   // PUBLIC METHODS ====================================================================
@@ -440,5 +453,9 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_close_filter_drawer(): MutableRefObject<((_:boolean) => void)> { return this._ref_close_filter_drawer }
 
   public get ref_to_btn_top_pref_updater() { return this._ref_to_btn_top_pref_updater }
+  
+  public get action_type() { return this._action_type}
+  public set action_type(_) { this._action_type = _}
 
+  public get dict_setter_show_dialog_afm() { return this._dict_setter_show_dialog_afm }
 }
