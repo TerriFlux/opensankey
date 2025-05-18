@@ -600,7 +600,7 @@ export abstract class ClassTemplate_LinkElement
     json_object['tooltip_text'] = this._tooltip_text
     // Values
     if (!(kwargs && kwargs['without_values']))
-      json_object['value'] = this._values.toJSON()
+      json_object['value'] = this._values.toJSON(kwargs)
     // Out
     return json_object
   }
@@ -3031,6 +3031,10 @@ export abstract class ClassTemplate_LinkElement
     return defaultLinkId(this._source, this._target)
   }
 
+  public get has_result() {
+    return this._values.has_result
+  }
+
   public get is_visible() {
     return (
       super.is_visible &&
@@ -4848,12 +4852,23 @@ export class Class_LinkValueTree {
       })
   }
 
-  public toJSON() {
+  public get has_result() {
+    let has_result = false
+    Object.values(this.children)
+      .forEach(child => {
+        has_result = has_result || child.has_result
+      })  
+    return has_result
+  }
+
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
     const json_object: Type_JSON = {}
     json_object['datatag_group'] = this.data_tag_group.id
     Object.entries(this.children)
       .forEach(([id, child]) => {
-        json_object[id] = child.toJSON()
+        json_object[id] = child.toJSON(kwargs)
       })
     return json_object
   }
@@ -5239,7 +5254,14 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   public parent: Class_LinkValueTree | Type_AnyLinkElement
 
+  public get has_result() {
+    return this.value_option != 'value'
+  }
+
   public get valueResult() : number | null {
+    if (this.result_value) {
+      return this.result_value
+    }
     /*if (this.value_option == 'unit_conversion') {
       if (this.unit_factor) {
         const children_with_data = Object.values((this.parent as Class_LinkValueTree).children).filter(c=>c.id!=this.id && c.valueResult !== null)
@@ -5292,17 +5314,18 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   }
 
   public set valueResult(_) {
-    if (this.value_option == 'value') {
-      this.data_value = _
-    } else if (this.value_option == 'ratio_input') {    
-      let total_source = 0
-      this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueResult??0)
-      this.data_value = _!/total_source
-    } else if (this.value_option == 'ratio_output') {
-      let total_target = 0
-      this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
-      this.data_value = _!/total_target
-    }
+    this.result_value = _
+    // if (this.value_option == 'value') {
+    //   this.data_value = _
+    // } else if (this.value_option == 'ratio_input') {    
+    //   let total_source = 0
+    //   this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueResult??0)
+    //   this.data_value = _!/total_source
+    // } else if (this.value_option == 'ratio_output') {
+    //   let total_target = 0
+    //   this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
+    //   this.data_value = _!/total_target
+    // }
   }
 
   public get valueData() {
@@ -5316,6 +5339,13 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public value_option : ValueOptionType = 'value'
 
   protected data_value: number | null = null
+  protected data_min: number | null = null
+  protected data_max: number | null = null
+
+  protected result_value: number | null = null
+  protected result_min: number | null = null
+  protected result_max: number | null = null
+
   public text_value: string | null = null
 
 
@@ -5372,6 +5402,13 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   public copyFrom(element: Class_LinkValue) {
     this.data_value = element.data_value
+    this.data_min = element.data_min
+    this.data_max = element.data_max
+
+    this.result_value = element.result_value
+    this.result_min = element.result_min
+    this.result_max = element.result_max
+
     this.text_value = element.text_value
     this.value_option = element.value_option
     // Tags - Cleaning
@@ -5391,13 +5428,25 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
    * @return {*}
    * @memberof Class_LinkValue
    */
-  public toJSON() {
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
     // Init output JSON
     const json_object: Type_JSON = {}
     json_object['id'] = this._id
     // Fill data
     json_object['id'] = this._id
     if (this.data_value) json_object['data_value'] = this.data_value
+    if (this.data_min) json_object['data_min'] = this.data_min
+    if (this.data_max) json_object['data_max'] = this.data_max
+    
+    if (this.result_value) json_object['result_value'] = this.result_value
+    if (kwargs && kwargs['has_results']) {
+      json_object['result_value'] = this.valueResult!
+    }
+    if (this.result_min) json_object['result_min'] = this.result_min
+    if (this.result_max) json_object['result_max'] = this.result_max
+
     if (this.text_value) json_object['text_value'] = this.text_value
     json_object['value_option'] = this.value_option
     json_object['tags'] = Object.fromEntries(
@@ -5435,6 +5484,13 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     }
     else {
       this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
+      this.data_max = getNumberOrNullFromJSON(json_object, 'data_max')
+      this.data_min = getNumberOrNullFromJSON(json_object, 'data_min')
+
+      this.result_value = getNumberOrNullFromJSON(json_object, 'result_value')
+      this.result_max = getNumberOrNullFromJSON(json_object, 'result_max')
+      this.result_min = getNumberOrNullFromJSON(json_object, 'result_min')
+
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
       this.value_option = getStringFromJSON(json_object, 'value_option','value') as ValueOptionType
     }
