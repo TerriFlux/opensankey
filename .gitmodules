@@ -4,3 +4,6 @@
 [submodule "submodules/LoginComponent"]
 	path = submodules/LoginComponent
 	url = git@gitlab.com:su-model/logincomponent.git
+[submodule "submodules/MFAProblem"]
+	path = submodules/MFAProblem
+	url = git@gitlab.com:su-model/mfa_problem.git
