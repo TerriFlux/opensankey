@@ -13,7 +13,7 @@ exit_if_error() {
 pip install -r requirements.txt  || exit_if_error $?
 
 # Install deps
-for submodule in OpenSankey+ LoginComponent; do
+for submodule in OpenSankey+ LoginComponent MFAProblem; do
   cd ./submodules/$submodule
   bash build_server.sh || exit_if_error $?
   cd ../..
