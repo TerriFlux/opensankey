@@ -142,14 +142,9 @@ export const resources_app_elements = {
           reconcil: 'Reconcile data',
           tool_afm: 'Use annex tools for reconciliation',
         },
-        afm: 'AFM',
-        afm_tools: 'Outils',
         xl_check: 'Excel checks',
-        featureBeta: 'Beta-test',
         ter_gen: 'Gen. Supply-Use table',
-        afm_reconcil: 'Reconciliation',
-        afm_reconcil_json: 'Reconciling actual sankey diagram',
-        afm_reconcil_excel: 'Reconciling an excel file'
+        afm_reconcil: 'Reconciliation'
       },
       ModalAFM: {
         title: 'Reconciliation',
@@ -637,7 +632,6 @@ export const resources_app_elements = {
         'setResolutionPNG': 'Choisissez la résolution désirée pour l\'exportation',
         'sankeyPlusDisabled': 'Paramètre désactivé car vous n\'avez pas OpenSankey+',
         'featureLocked': 'Licence',
-        'featureBeta': 'Beta-test',
 
         'home': 'Maître',
         'addView': 'Ajout',
@@ -658,9 +652,6 @@ export const resources_app_elements = {
         'presentation_OSP': 'OpenSankey+ est une licence payante qui permet de débloquer de nouvelles fonctionnalités pour la réalisation de beaux diagrammes de Sankey pour des présentations.\n\n Cette licence inclut des fonctionnalités de mise en forme avancées comme l\'ajout d\'images ou d\'icônes illustratifs pour les noeuds, l\'ajout de gradients de couleurs sur les flux et d\'animations, etc.\n\n Mais surtout, OpenSankey+ permet de générer des diaporamas explicatifs de vos diagrammes de Sankey grâce au mécanisme des "Vues", qui enregistre les états visuel de celui-ci (avec / sans certains filtres activés par exemple) pour simplifier la navigation entre eux.\n\n',
         'presentation_OSS': 'SankeySuite est une licence payante qui permet de débloquer toutes les usages avancés de réalisation et d\'analyse des diagrammes de Sankey.\n\nCette licence inclut les fonctionnalités de réconciliation des données de flux afin de relever des incohérences ou de calculer des flux dont les valeurs ne sont pas accessibles directement.\n\n Elle inclut aussi les fonctionnalités de OpenSankey+.\n\n',
         sankeytheque:'Sankeythèque',
-
-        afm_reconcil_json: 'Réconcilier le diagramme de Sankey actuel',
-        afm_reconcil_excel: 'Réconcilier un fichier Excel',
         view_actual_file: 'Vues',
         other_file: 'Autre fichier',
         trade_close: 'Près du noeud',
@@ -732,8 +723,6 @@ export const resources_app_elements = {
           reconcil: 'Réconcilier les données',
           tool_afm: 'Utiliser des outils annexes à la réconciliation',
         },
-        afm: 'AFM',
-        afm_tools: 'Tools',
         xl_check: 'Vérif. excel',
         featureBeta: 'Experimental',
         ter_gen: 'Génération T.E.R',
