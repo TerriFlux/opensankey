@@ -31,7 +31,6 @@ import { textwrap } from 'd3-textwrap'
 // Local types imports
 import type {
   ClassAbstract_DrawingArea,
-  ClassAbstract_ProtoLevelTag,
   ClassAbstract_Sankey
 } from '../types/Abstract'
 import type { Type_Side } from './LinkAttributes'
@@ -43,8 +42,7 @@ import type {
   Class_Tag,
   Class_TagGroup,
   Class_LevelTagGroup,
-  Class_LevelTag,
-  Class_ProtoLevelTag
+  Class_LevelTag
 } from '../types/Tag'
 import type {
   Class_MenuConfig
@@ -1184,7 +1182,7 @@ export abstract class ClassTemplate_NodeElement
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
-      /*(!_.children.includes(this)) &&*/
+      (!_.children.includes(this)) &&
       (!this._dimensions_as_parent[_.id])
     ) {
       this.dimensionsUpdated() // Reset visibility indicator
@@ -3432,7 +3430,7 @@ export abstract class ClassTemplate_NodeElement
     // It's probably not the most optimized way to resolve this problem but it work for now
     let max_digit_in = 0 //var to stock the maximum number of digit after decimal in link value visible linked to node
     const link_in = this.input_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.valueNumber).split('.')[1]
+      const decimal_digit = String(link.value?.valueResult).split('.')[1]
       if (decimal_digit !== undefined) { // sometime link value are already integer so we don't count their decimal digit
         max_digit_in = Math.max(max_digit_in, decimal_digit.length)
       }
@@ -3440,12 +3438,12 @@ export abstract class ClassTemplate_NodeElement
     })
 
     const pow_in = Math.pow(10, max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value
-    link_in.forEach(link => input_val += (link.value?.valueNumber ?? 0) * pow_in)
+    link_in.forEach(link => input_val += (link.value?.valueResult ?? 0) * pow_in)
 
     // Do the same we did for input links to output links
     let max_digit_out = 0
     const link_out = this.output_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.valueNumber).split('.')[1]
+      const decimal_digit = String(link.value?.valueResult).split('.')[1]
       if (decimal_digit !== undefined) {
         max_digit_out = Math.max(max_digit_out, decimal_digit.length)
       }
@@ -3453,7 +3451,7 @@ export abstract class ClassTemplate_NodeElement
     })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.value?.valueNumber ?? 0) * pow_out)
+    link_out.forEach(link => output_val += (link.value?.valueResult ?? 0) * pow_out)
     const display_unit = this.value_label_unit_visible && this.value_label_unit != ''
     const factor_unit = display_unit && this.value_label_unit_factor > 1 ? this.value_label_unit_factor : 1
     const label_unit = display_unit ? this.value_label_unit : ''
@@ -4869,8 +4867,8 @@ export abstract class ClassTemplate_NodeElement
   private get tooltip_html() {
     let input_val = 0
     let output_val = 0
-    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.data_value ?? 0)
-    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.data_value ?? 0)
+    this.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.valueResult ?? 0)
+    this.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.valueResult ?? 0)
     // Title
     let tooltip_html = '<p class="title" style="margin-bottom: 5px;">' +
       this.name.split('\\n').join(' ') +
@@ -4879,7 +4877,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {
@@ -4906,7 +4904,7 @@ export abstract class ClassTemplate_NodeElement
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (input_val > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / input_val) * 100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.valueResult ?? 0) / input_val) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -4953,7 +4951,7 @@ export abstract class ClassTemplate_NodeElement
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (output_val > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.data_value ?? 0) / output_val) * 100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.valueResult ?? 0) / output_val) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
