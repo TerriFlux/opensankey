@@ -231,6 +231,10 @@ export abstract class ClassTemplate_NodeElement
   private _drag_start_pos: { [x: string]: [number, number] } = {} //attr used to cancel drag undo function (LMB event can trigger drag event therefore a undo function )
   private first_drag_move = true //boolean to cancel a strange phenomenon when dragTextMove is use just after dragTextStart dx & dy are way off chart causing problem
 
+  // Used for node magnetic to grid, track current node shift & once a threshold is exceeded it move the node by the threshold & reset tracker
+  private _node_current_dx = 0
+  private _node_current_dy = 0
+
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -2246,7 +2250,7 @@ export abstract class ClassTemplate_NodeElement
     super.eventMouseDrag(event)
     // Get related drawing area
     const drawing_area = this.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list
+    const nodes_selected = drawing_area.selected_nodes_list as Type_AnyNodeElement[]
 
     if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
@@ -2256,11 +2260,13 @@ export abstract class ClassTemplate_NodeElement
       // SELECTION MODE =========================================================
       else {
         // Set position
-        // Update node position
-        nodes_selected
-          .forEach(n => {
-            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-          })
+        if (drawing_area.magnetic_nodes)
+          this.moveMagneticNode(event, nodes_selected)
+        else
+          nodes_selected
+            .forEach(n => {
+              n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+            })
       }
     }
     else {
@@ -2271,7 +2277,11 @@ export abstract class ClassTemplate_NodeElement
       else {
         // Set position
         // Update node position
-        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+        if (drawing_area.magnetic_nodes)
+          this.moveMagneticNode(event, [this])
+        else
+          this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+
       }
     }
   }
@@ -2286,6 +2296,9 @@ export abstract class ClassTemplate_NodeElement
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Apply parent behavior first
     super.eventMouseDragEnd(event)
+    // Reset current tracked node shift
+    this._node_current_dx = 0
+    this._node_current_dy = 0
 
     if (event.sourceEvent.shiftKey) {
       return
@@ -2343,6 +2356,47 @@ export abstract class ClassTemplate_NodeElement
     this.drawing_area.checkAndUpdateAreaSize()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
+  }
+
+
+  /**
+   * Move dragged nodes following steps method (nodes move from a step only when mouse shift exceed a threshold from last step)
+   *
+   * @private
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @param {Type_AnyNodeElement[]} node_to_move
+   * @memberof ClassTemplate_NodeElement
+   */
+  private moveMagneticNode(event: d3.D3DragEvent<SVGGElement, unknown, unknown>, node_to_move: Type_AnyNodeElement[]) {
+    const drawing_area = this.drawing_area
+    const limit_magnetic_node = drawing_area.grid_size / 4
+    this._node_current_dx += event.dx
+    this._node_current_dy += event.dy
+
+    const shift_x = Math.abs(this._node_current_dx)
+    const shift_y = Math.abs(this._node_current_dy)
+    const sign_x = Math.sign(this._node_current_dx)
+    const sign_y = Math.sign(this._node_current_dy)
+    // if event shift is greater than twice the limit_magnetic_node then keep track of how much step we move at once
+    const multi_shift_x = Math.floor(shift_x / limit_magnetic_node)
+    const multi_shift_y = Math.floor(shift_y / limit_magnetic_node)
+
+
+    // Update node position if threshold is exceeded
+
+    if (shift_x >= limit_magnetic_node) {
+      node_to_move.forEach(node => {
+        node.setPosXY(node.position_x + (limit_magnetic_node * sign_x * multi_shift_x), node.position_y)
+      })
+      this._node_current_dx %= limit_magnetic_node
+    }
+
+    if (shift_y >= limit_magnetic_node) {
+      node_to_move.forEach(node => {
+        node.setPosXY(node.position_x, node.position_y + (limit_magnetic_node * sign_y * multi_shift_y))
+      })
+      this._node_current_dy %= limit_magnetic_node
+    }
   }
 
 
