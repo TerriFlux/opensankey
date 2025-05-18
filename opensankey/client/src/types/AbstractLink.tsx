@@ -35,6 +35,7 @@ import {
 import { ClassAbstract_NodeElement } from '../types/AbstractNode'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
 import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
+import { Class_LinkValue } from '../Elements/Link'
 
 
 type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
@@ -58,6 +59,7 @@ export abstract class ClassAbstract_LinkElement
   public abstract getAllValues(): { [_: string]: [ClassAbstract_LinkValue, ClassAbstract_ProtoTag[] | undefined]; };
   public abstract hasGivenTag(tag: ClassAbstract_ProtoTag):boolean
   public abstract resetAttributes():void
+  public abstract valueForTags(_:ClassAbstract_ProtoTag[]): Class_LinkValue | null
 
   // Mandatory getters / setters
   public abstract get source():TypeAbstract_NodeElement;
