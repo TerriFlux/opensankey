@@ -118,6 +118,8 @@ import {
 } from './components/UtilsOSP'
 import { ToolbarFilter } from './components/FilterComponent/TagsFilterComponent'
 import { SankeyMenuConfigurationLevelTags } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLevlTags'
+import { AFMEditionMenu } from './components/AFM/AFMSankeyMenu'
+import { SupplyUseModelisationProd } from './components/AFM/SankeyReconciliation'
 
 declare const window: Window &
   typeof globalThis & {
@@ -177,6 +179,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus.menu_configuration.flow_color_origin_type.push('gradient')
   }
 
+  additionalMenus.current.external_top_buttons_item['afm'] = <AFMEditionMenu
+    application_data_mfa={new_data_plus}
+  />
   // TODO OTHER JSX ELEMENTS -----------------------------------------------------------
 
   // TODO : manque implementation des exort svg
@@ -430,6 +435,10 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     <ToolbarFilter
       new_data={new_data_plus}
     />,
+    <SupplyUseModelisationProd
+      application_data_mfa={new_data_plus}
+      launch={processFunctions.launch}
+    />
   ]
 
   return [

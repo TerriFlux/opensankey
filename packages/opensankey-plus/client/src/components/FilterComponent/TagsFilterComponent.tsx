@@ -287,15 +287,13 @@ export const FilterDataType: FunctionComponent<FCType_ToolbarFilter> = ({ new_da
         <option key='structure' value='structure' >{t('Banner.t_v_s')}</option>
         <option key='data' value='data' >{t('Banner.t_v_c')}</option>
         {/* If data is reconcilied add option*/}
-        {new_data.is_reconcilied ?
-          <option key='reconciled' value='reconciled' >{t('Banner.t_v_r')}</option> : <></>
-        }
+        <option key='reconciled' value='reconciled' >{t('Banner.t_v_r')}</option> : <></>
       </Select>
     </Box>
 
     <Box
       layerStyle='menuconfig_grid'
-      display={s_is_data_type_reconcilied ? '' : 'none'}
+      display={s_is_data_type_reconcilied && new_data.is_reconcilied ? '' : 'none'}
     >
       <Box fontStyle='h3' >
         {t('Banner.indetermined_value')}
