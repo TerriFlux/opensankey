@@ -31,6 +31,7 @@ import { textwrap } from 'd3-textwrap'
 // Local types imports
 import type {
   ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoLevelTag,
   ClassAbstract_Sankey
 } from '../types/Abstract'
 import type { Type_Side } from './LinkAttributes'
@@ -42,7 +43,8 @@ import type {
   Class_Tag,
   Class_TagGroup,
   Class_LevelTagGroup,
-  Class_LevelTag
+  Class_LevelTag,
+  Class_ProtoLevelTag
 } from '../types/Tag'
 import type {
   Class_MenuConfig
@@ -840,11 +842,18 @@ export abstract class ClassTemplate_NodeElement
     if (this.is_child) {
       //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
       // Force to show parent
-      if ((id !== undefined) && (this._dimensions_as_child[id]))
+      if ((id !== undefined) && (this._dimensions_as_child[id])) {
         this._dimensions_as_child[id].setForceToShowParent()
-      else {
+        const parent = this._dimensions_as_child[id].parent
+        parent.input_links_list.forEach(l=>l.source.draw())
+        parent.output_links_list.forEach(l=>l.target.draw())
+      } else {
         //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
-        Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].setForceToShowParent()
+        const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
+        dim.setForceToShowParent()
+        const parent = dim.parent
+        parent.input_links_list.forEach(l=>{l.source.draw()})
+        parent.output_links_list.forEach(l=>{l.target.draw()})
       }
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
@@ -2310,14 +2319,43 @@ export abstract class ClassTemplate_NodeElement
       this.saveUndo(undo)
       this.saveRedoAteventMouseDragEnd()
     }
-
+    // End of drag
+    this._drag = false
     // Move all elements so none of them are outside the DA
     this.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
     this.drawing_area.computeParametricV()
+    const drawing_area = this.drawing_area
+    const nodes_selected = drawing_area.selected_nodes_list
+
+    if (nodes_selected.includes(this)) { // Only trigger the drag if we drag a selected node
+      // EDITION MODE ===========================================================
+      if (drawing_area.isInEditionMode()) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position
+        nodes_selected
+          .forEach(n => {
+            n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          })
+      }
+    }
+    else {
+      if (drawing_area.isInEditionMode()) {
+        // /* TODO définir  */
+      }
+      // SELECTION MODE =========================================================
+      else {
+        // Set position
+        // Update node position
+        this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+      }
+    }
     this.drawing_area.checkAndUpdateAreaSize()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // End of drag
-    this._drag = false
+
   }
 
 
@@ -4841,7 +4879,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {

@@ -2125,13 +2125,14 @@ export abstract class ClassTemplate_DrawingArea
     desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
     desagregated_nodes = [...new Set(desagregated_nodes)]
     const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
-    if (desagregated_nodes.length > 0) {
+    if (desagregated_nodes.length>0) {
       let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
     desagregated_nodes.forEach(nn => {
-      if (!nn.sibling) {
-        nn.display.position.x = node.position_x
-        nn.display.position.u = node.position_u
+      if (nn.sibling) {
+        return
       }
+      nn.display.position.x = node.position_x
+      nn.display.position.u = node.position_u
       nn.display.position.y = current_y
       current_y += 20
       new_current_v = this.apply_v_desagregate(nn, new_current_v,tagGroup)
