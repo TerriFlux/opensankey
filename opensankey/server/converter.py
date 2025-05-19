@@ -60,10 +60,12 @@ def _get_value_if_in_dict(dict, key):
     except Exception:
         return None
 
+
 # Private Functions -----------------------------------------------------------
 def _update_dict_if_value(dict, key, value):
     if value is not None:
         dict[key] = value
+
 
 # Public Functions ------------------------------------------------------------
 def extract_json_from_sankey(sankey: Sankey):
@@ -1603,7 +1605,7 @@ class JsonToSankey(object):
                 # # Apply tags
                 # for tag in datatags_list + fluxtags_list:
                 #     result.add_tag(tag)
-            ## else:
+            # else:
                 # Update value
 
             return
