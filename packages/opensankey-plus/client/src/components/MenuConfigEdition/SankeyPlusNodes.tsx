@@ -686,6 +686,55 @@ export const ButtonNodeContextCreateUnitaryView: FunctionComponent<FCType_Button
   </Button>
 }
 
+export const ButtonNodeContextCreateZDTAroundSelectedNode: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+  const { t } = new_data
+
+  const closeContextMenu = () => {
+    // Unset contextualized node
+    new_data.drawing_area.node_contextualised = undefined
+    // Refresh this menu
+    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+  }
+
+  return <Button
+    onClick={() => {
+      const cont = new_data.drawing_area.sankey.addNewDefaultFreeLabel()
+      cont.tied_to_nodes=true
+      new_data.drawing_area.selected_nodes_list.forEach(node => {
+        new_data.drawing_area.sankey.attachNodeToCont(node, cont)
+      })
+      cont.draw()
+      closeContextMenu()
+    }}
+    variant='contextmenu_button'
+  >
+    {t('Noeud.create_tied_zdt')}
+  </Button>
+}
+
+export const ButtonNodeContextSelectDescendantOFSelectedNodes: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+  const { t } = new_data
+
+  const closeContextMenu = () => {
+    // Unset contextualized node
+    new_data.drawing_area.node_contextualised = undefined
+    // Refresh this menu
+    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+  }
+  return <Button onClick={() => {
+      new_data.drawing_area.selected_nodes_list
+      .forEach(n => {
+        // Select all descendant of n
+        n.getListDescendantOfNode().forEach(node=>{
+          new_data.drawing_area.addNodeToSelection(node)
+        })
+      })
+    closeContextMenu()
+  }}
+    variant='contextmenu_button'
+  >{t('Noeud.SND')}
+  </Button>
+}
 
 export const ButtonNodeContextStartAnimation: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
   const { t } = new_data

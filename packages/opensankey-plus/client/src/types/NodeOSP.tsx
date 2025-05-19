@@ -394,6 +394,28 @@ export abstract class ClassTemplate_NodeElementOSP
     return max
   }
 
+  /**
+   * Recursive function to return list of child of 'this' node & their children recursivly
+   *
+   * @return {*} 
+   * @memberof ClassTemplate_NodeElementOSP
+   */
+  public getListDescendantOfNode() {
+    let node_list: ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[] = []
+    this.dimensions_as_parent.forEach(dim => {
+      // Get child of 'this' node (from all dimensions)
+      node_list = [...node_list, ...(dim.children as ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[])]
+
+      // Get descendant of 'this' node childs
+      dim.children.forEach(child => {
+        const cast_child = child as ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+        node_list = [...node_list, ...cast_child.getListDescendantOfNode()]
+      })
+    })
+
+    return [...new Set(node_list)]
+  }
+
   // PROTECTED METHODS ====================================================================
 
   protected _draw() {
@@ -571,7 +593,7 @@ export abstract class ClassTemplate_NodeElementOSP
     // SELECTION MODE =========================================================
     if (drawing_area.isInSelectionMode()) {
       // Redraw attached container since we moved the node it influence containers size/position
-      this._attached_container.forEach(cont=>cont.draw())
+      this._attached_container.forEach(cont => cont.draw())
     }
   }
 
@@ -636,7 +658,7 @@ export abstract class ClassTemplate_NodeElementOSP
   public get FO_content(): string { return this._FO_content }
   public set FO_content(value: string) { this._FO_content = value }
 
-  public get attached_container(): Type_AnyContainerElement[] {return this._attached_container}
+  public get attached_container(): Type_AnyContainerElement[] { return this._attached_container }
 
 }
 
