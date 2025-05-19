@@ -158,6 +158,31 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     return (display_value) ? visible : false
   }
 
+  const allLabelTiedToNodesAtExtremity = () => {
+    let display_value = true
+    let visible = false
+    if (selected_zdt.length !== 0) {
+      visible = selected_zdt[0].at_extremity_of_attached_nodes
+    }
+    selected_zdt.map((d) => {
+      display_value = (d.at_extremity_of_attached_nodes === visible) ? display_value : false
+    })
+    return (display_value) ? visible : false
+  }
+  
+  const allLabelTiedToNodesAtExtremityTop = () => {
+    let display_value = false
+    let position = 'top'
+    if (selected_zdt.length !== 0) {
+      display_value = true
+      position = selected_zdt[0].extremity_position
+    }
+    selected_zdt.map((d) => {
+      display_value = (d.extremity_position === position) ? display_value : false
+    })
+    return (display_value) ? position : false
+  }
+
   const allNodesTiedToZDTRef = () => {
     if (selected_zdt.length > 0)
       return selected_zdt[0].attached_node
@@ -511,6 +536,48 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     _updateLabelTiedToNodes()
   }
 
+  const updateLabelTiedToNodesAtExtremity = (_: boolean) => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.at_extremity_of_attached_nodes]))
+    const _updateLabelTiedToNodes = () => {
+      selected_zdt.map(d => d.at_extremity_of_attached_nodes = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateLabelTiedToNodes = () => {
+      selected_zdt.map(d => d.at_extremity_of_attached_nodes = dict_old_val[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateLabelTiedToNodes)
+    new_data_plus.history.saveRedo(_updateLabelTiedToNodes)
+    // Execute original attr mutation
+    _updateLabelTiedToNodes()
+  }
+
+  const updateLabelExtremityPos = (_: 'top' | 'bottom') => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.extremity_position]))
+    const _updateLabelTiedToNodes = () => {
+      selected_zdt.map(d => d.extremity_position = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateLabelTiedToNodes = () => {
+      selected_zdt.map(d => d.extremity_position = dict_old_val[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateLabelTiedToNodes)
+    new_data_plus.history.saveRedo(_updateLabelTiedToNodes)
+    // Execute original attr mutation
+    _updateLabelTiedToNodes()
+  }
+
   const updateMargin = (_: number | null | undefined) => {
     if (_ == undefined || _ == null) //Failsafe
       return
@@ -545,6 +612,8 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   ref_set_number_inputs[1].current(String(allLabelWidth()))
   ref_set_number_inputs[2].current(String(allLabelTransparent()))
   ref_set_number_inputs[3].current(String(allLabelMargin()))
+
+  const is_zdt_at_extremity_top = allLabelTiedToNodesAtExtremityTop()
 
   const content_image = <>
     {/* Import image */}
@@ -659,6 +728,33 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         />
       </Box>
     </OSTooltip>
+
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      iconColor={valAllLabelTiedToNodeIndeterminate ? '#78C2AD' : 'white'}
+      isDisabled={disable_options}
+      isIndeterminate={valAllLabelTiedToNodeIndeterminate}
+      isChecked={allLabelTiedToNodesAtExtremity()}
+      onChange={(evt) => updateLabelTiedToNodesAtExtremity(evt.target.checked)}>
+      <OSTooltip label={t('LL.tooltips.tiedToNodesExtremity')} placement='left'>
+        {t('LL.tiedToNodesExtremity')}
+      </OSTooltip>
+    </Checkbox>
+    {allLabelTiedToNodesAtExtremity() ?
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('LL.extremityPos')}
+        </Box>
+        <ButtonGroup isAttached>
+          <Button variant={is_zdt_at_extremity_top ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { updateLabelExtremityPos('top') }}>{t('LL.tiedToNodesExtremityTop')}</Button>
+          <Button variant={!is_zdt_at_extremity_top ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { updateLabelExtremityPos('bottom') }}>{t('LL.tiedToNodesExtremityBottom')}</Button>
+        </ButtonGroup>
+
+      </Box>
+      : <></>}
   </Box>
 
   const content_menu_zdt = <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
@@ -905,6 +1001,28 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
 
   }
 
+  /**
+   * Return a list of node which position are inside contextualised zdt
+   *
+   */
+  const getNodeInsideContextZDT = () => new_data_plus.drawing_area.sankey.visible_nodes_list
+    .filter(n => {
+      // Check if node is horizontally in zdt
+      const is_node_horizontally_in_zone = (
+        (n.position_x >= zdt_to_contextualise.position_x) &&
+        (n.position_x <= (zdt_to_contextualise.position_x + zdt_to_contextualise.label_width)) &&
+        ((n.position_x + n.getShapeWidthToUse()) <= (zdt_to_contextualise.position_x + zdt_to_contextualise.label_width))
+      )
+      // Check if node is vertically in zdt
+      const is_node_vertically_in_zone = (
+        (n.position_y >= zdt_to_contextualise.position_y) &&
+        (n.position_y <= (zdt_to_contextualise.position_y + zdt_to_contextualise.label_height)) &&
+        ((n.position_y + n.getShapeHeightToUse()) <= (zdt_to_contextualise.position_y + zdt_to_contextualise.label_height))
+      )
+      // Must be in zdt
+      return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
+    })
+
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
   const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
 
@@ -934,8 +1052,8 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
     closeContextMenu()
   }}
-  variant='contextmenu_button'
-  rightIcon={new_data_plus.icon_library.icon_popup_menu}
+    variant='contextmenu_button'
+    rightIcon={new_data_plus.icon_library.icon_popup_menu}
   >{t('Menu.LL')} </Button>
 
   // Add selected nodes to tied nodes to ZDT
@@ -963,6 +1081,21 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     variant='contextmenu_button'
   >{t('Menu.detachTiedNodes')} </Button>
 
+  // Select nodes 'inside' zdt
+  const btn_select_node_inside = <Button onClick={() => {
+    new_data_plus.drawing_area.purgeSelection()
+    getNodeInsideContextZDT()
+      .forEach(n => {
+        new_data_plus.drawing_area.addNodeToSelection(n)
+      })
+    zdt_to_contextualise.draw()
+    closeContextMenu()
+  }}
+    variant='contextmenu_button'
+  >{t('Menu.SNI')}
+  </Button>
+
+
   return zdt_to_contextualise ? <Box
     layerStyle='context_menu'
     id="context_zdd_pop_over"
@@ -974,6 +1107,8 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
 
     }}>
     <ButtonGroup orientation='vertical' isAttached>
+      {btn_select_node_inside}
+      {sep}
       {btn_mask_border}
       {btn_change_color}
       {sep}

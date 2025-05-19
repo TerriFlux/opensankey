@@ -128,6 +128,8 @@ export class Class_ContainerElement
   private _tied_to_nodes: boolean
   private _attached_node: ClassTemplate_NodeElementOSP<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP, Type_GenericLinkElementOSP>[]
   private _margin_from_attached_nodes: number
+  private _at_extremity_of_attached_nodes: boolean
+  private _extremity_position: 'top' | 'bottom'
 
 
   private _drag_handler: {
@@ -173,6 +175,8 @@ export class Class_ContainerElement
     this._tied_to_nodes = false
     this._attached_node = []
     this._margin_from_attached_nodes = 50
+    this._at_extremity_of_attached_nodes = false
+    this._extremity_position = 'top'
 
     // Free labels drag handlers
     this._drag_handler = {
@@ -634,9 +638,26 @@ export class Class_ContainerElement
       }
     })
 
-    this.setPosXY(min_x - this._margin_from_attached_nodes, min_y - this._margin_from_attached_nodes)
-    this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
-    this._label_height = (max_y - min_y) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+    if (this._at_extremity_of_attached_nodes) {
+      const bbox = this.drawing_area.d3_selection_nodes?.node()?.getBBox() ?? undefined
+
+      // No bounding box -> return
+      if (bbox == undefined)
+        return
+
+      // compute position x of container so that it center is aligned with the center of the group of nodes attached 
+      const center_pox_x = ((min_x + max_x) / 2) - this._label_width / 2
+      if (this._extremity_position == 'top') {
+        this.setPosXY(center_pox_x, bbox.y - this._label_height - this._margin_from_attached_nodes)
+      } else if (this._extremity_position == 'bottom') {
+        this.setPosXY(center_pox_x, bbox.y + bbox.height + this._margin_from_attached_nodes)
+      }
+
+    } else {
+      this.setPosXY(min_x - this._margin_from_attached_nodes, min_y - this._margin_from_attached_nodes)
+      this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+      this._label_height = (max_y - min_y) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+    }
   }
 
   // PROTECTED METHODS ==================================================================
@@ -945,4 +966,10 @@ export class Class_ContainerElement
 
   public get margin_from_attached_nodes(): number { return this._margin_from_attached_nodes }
   public set margin_from_attached_nodes(value: number) { this._margin_from_attached_nodes = value }
+
+  public get at_extremity_of_attached_nodes(): boolean { return this._at_extremity_of_attached_nodes }
+  public set at_extremity_of_attached_nodes(value: boolean) { this._at_extremity_of_attached_nodes = value }
+
+  public get extremity_position(): 'top' | 'bottom' { return this._extremity_position }
+  public set extremity_position(value: 'top' | 'bottom') { this._extremity_position = value }
 }
