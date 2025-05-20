@@ -231,7 +231,7 @@ export abstract class ClassTemplate_SankeyOSP
     // Icon catalog
     this._icon_catalog = getJSONFromJSON(json_object, 'icon_catalog', this._icon_catalog) as { [x: string]: string }
   }
-  
+
   /**
    * Add node ref to container attribute attached_node
    *
@@ -242,7 +242,7 @@ export abstract class ClassTemplate_SankeyOSP
   public attachNodeToCont(node: Type_GenericNodeElementOSP, cont: Type_GenericContainerElement) {
     if (!cont.attached_node.includes(node)) {
       cont.attached_node.push(node)
-      this.attachNodeToCont(node, cont)
+      this.attachContToNode(cont, node)
     }
   }
 
@@ -256,7 +256,7 @@ export abstract class ClassTemplate_SankeyOSP
   public attachContToNode(cont: Type_GenericContainerElement, node: Type_GenericNodeElementOSP): void {
     if (!node.attached_container.includes(cont)) {
       node.attached_container.push(cont)
-      this.attachContToNode(cont, node)
+      this.attachNodeToCont(node, cont)
     }
   }
 

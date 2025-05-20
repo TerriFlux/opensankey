@@ -65,6 +65,8 @@ import {
 } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLabels'
 import {
   ButtonNodeContextCreateUnitaryView,
+  ButtonNodeContextCreateZDTAroundSelectedNode,
+  ButtonNodeContextSelectDescendantOFSelectedNodes,
   ButtonNodeContextShowTagMenu,
   ButtonNodeContextShowTooltipMenu,
   ButtonNodeContextStartAnimation,
@@ -202,6 +204,8 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     additionalMenus.current.additional_context_node_element['drag_tooltip'] = <ButtonNodeContextShowTooltipMenu new_data={new_data_plus} />
     additionalMenus.current.additional_context_node_element['animate'] = <ButtonNodeContextStartAnimation new_data={new_data_plus} />
     additionalMenus.current.additional_context_node_element['unitary'] = <ButtonNodeContextCreateUnitaryView new_data={new_data_plus} />
+    additionalMenus.current.additional_context_node_element['create_tied_zdt'] = <ButtonNodeContextCreateZDTAroundSelectedNode new_data={new_data_plus} />
+    additionalMenus.current.additional_context_node_element['select_descendant'] = <ButtonNodeContextSelectDescendantOFSelectedNodes new_data={new_data_plus} />
 
   }
 
@@ -209,6 +213,8 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
   additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'animate')
   additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'unitary')
+  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'create_tied_zdt')
+  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'select_descendant')
 
 
   // Add dashed config
