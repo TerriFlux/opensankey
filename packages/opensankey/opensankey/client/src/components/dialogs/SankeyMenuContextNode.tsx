@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -50,7 +50,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 /*************************************************************************************************/
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
-import { 
+import {
   Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
@@ -803,7 +803,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
               n.dimensions_as_parent[0].force_parent_level_tag(contextualised_node.dimensions_as_parent[0].parent_level_tag)
               n.dimensions_as_parent[0].force_child_level_tag(contextualised_node.dimensions_as_parent[0].child_level_tag)
             }
-            let l : Type_GenericLinkElement 
+            let l : Type_GenericLinkElement
             if (expand_left) {
               l = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
             } else {
@@ -864,7 +864,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
           extremity_node = contextualised_node.input_links_list[0].source as Type_GenericNodeElement
         }
         const children = expand_left ? extremity_node.input_links_list : extremity_node.output_links_list
-        children.forEach((c, i) => {
+        children.forEach((c, _) => {
           new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
         })
         new_data.drawing_area.draw()
