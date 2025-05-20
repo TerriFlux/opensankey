@@ -854,10 +854,9 @@ export const GraphElementsOrdoner: FunctionComponent<{ new_data: Type_GenericApp
             {
               new_data.drawing_area.list_g_element
                 .map((id_element, link_idx) => {
-                  const element = new_data.drawing_area.nameOfElementFromId(id_element)
+                  const element = new_data.drawing_area.elementFromId(id_element)
                   if (!element.is_visible)
                     return <></>
-                  console.log(element.is_selected)
                   return (
                     <Draggable key={id_element} index={link_idx} draggableId={'line_drag_' + id_element}>
                       {(provided, snapshot) => (
