@@ -41,6 +41,7 @@ import type {
 // Local modules
 import {
   ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoTag,
   ClassAbstract_Sankey,
 } from '../types/Abstract'
 import {
@@ -601,7 +602,7 @@ export abstract class ClassTemplate_LinkElement
     json_object['tooltip_text'] = this._tooltip_text
     // Values
     if (!(kwargs && kwargs['without_values']))
-      json_object['value'] = this._values.toJSON()
+      json_object['value'] = this._values.toJSON(kwargs)
     // Out
     return json_object
   }
@@ -1074,7 +1075,7 @@ export abstract class ClassTemplate_LinkElement
       const shape_color = this.getPathColorToUse()
       const shape_opacity = this.shape_opacity
       // Check to choose how to draw
-      const show_as_dash = this.shape_is_dashed || this.data_value == null || this.shape_is_structure
+      const show_as_dash = this.shape_is_dashed || this.valueData == null && this.value?.valueResult == null || this.shape_is_structure
       const x0 = this.position_x_start
       const y0 = this.position_y_start
       const xf = this.position_x_end
@@ -1153,12 +1154,12 @@ export abstract class ClassTemplate_LinkElement
     // Clean previous label
     this.d3_selection?.selectAll('.link_value').remove()
     // Add value label
-    const link_val = this.data_value
+    const link_val = this.valueResult
 
     let total_source = 0
-    this._source.output_links_list.filter(l => l.is_visible).forEach(l => total_source += l.data_value ?? 0)
+    this._source.output_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueResult??0)
     let total_target = 0
-    this._target.input_links_list.filter(l => l.is_visible).forEach(l => total_target += l.data_value ?? 0)
+    this._target.input_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
 
     // =======================DRAW VALUE LABEL ============================
     if (
@@ -3039,6 +3040,10 @@ export abstract class ClassTemplate_LinkElement
     return defaultLinkId(this._source, this._target)
   }
 
+  public get has_result() {
+    return this._values.has_result
+  }
+
   public get is_visible() {
     return (
       super.is_visible &&
@@ -3209,6 +3214,13 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
+  public valueForTags(_:ClassAbstract_ProtoTag[]) {
+    if (this._values instanceof Class_LinkValue)
+      return this._values
+    else
+      return this._values.getValueForDataTags(_ as Class_DataTag[])    
+  }
+
   /**
    * Get value object.
    * Either search correct current value with data_taggs,
@@ -3228,13 +3240,13 @@ export abstract class ClassTemplate_LinkElement
    *  or return directly the value when there is no data_taggs
    * @memberof ClassTemplate_LinkElement
    */
-  public get data_value() {
+  public get valueResult() {
     if (this.drawing_area.type_data === 'structure')
       return null
 
     const value = this.value
     // Cast as number
-    if (value !== null) return value.data_value
+    if (value !== null) return value.valueResult
     else return null
   }
 
@@ -3243,11 +3255,37 @@ export abstract class ClassTemplate_LinkElement
    *  or set directly the value when there is no data_taggs
    * @memberof ClassTemplate_LinkElement
    */
-  public set data_value(_: number | null) {
+  public set valueResult(_: number | null) {
     const value = this.value
     // Cast as number
     if (value !== null) {
-      value.data_value = _
+      value.valueResult = _
+      this.redrawNodesSourceTarget()
+    }
+  }
+
+  /**
+   * Either search correct current value with data_taggs,
+   *  or return directly the value when there is no data_taggs
+   * @memberof ClassTemplate_LinkElement
+   */
+  public get valueData() {
+    const value = this.value
+    // Cast as number
+    if (value !== null) return value.valueData
+    else return null
+  }
+
+  /**
+   * Either set correct current value with data_taggs,
+   *  or set directly the value when there is no data_taggs
+   * @memberof ClassTemplate_LinkElement
+   */
+  public set valueData(_: number | null) {
+    const value = this.value
+    // Cast as number
+    if (value !== null) {
+      value.valueData = _
       this.redrawNodesSourceTarget()
     }
   }
@@ -3280,8 +3318,17 @@ export abstract class ClassTemplate_LinkElement
   }
 
   public get data_label() {
+    if ( this.sankey.drawing_area.type_data == 'data' ) {
+      if (this.value?.value_option == 'ratio_input' && this.value?.valueData) {
+        return this.value.valueData*100 + '%s'
+      } else if (this.value?.value_option == 'ratio_output' && this.value?.valueData) {
+        return this.value?.valueData + '%d'
+      } /*else if (this.value?.value_option == 'unit_conversion' ) {
+        return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
+      }*/
+    }
     // Init
-    let data_value = this.data_value
+    let data_value = this.valueResult
     let text_value = '-'
     // Create data label
     if (data_value !== null) {
@@ -3303,7 +3350,7 @@ export abstract class ClassTemplate_LinkElement
       else if (this.value_label_significant_digits == true) {
         // 12345.67 avec nb_sign = 4 devient 12340
         text_value = String(parseFloat(data_value.toPrecision(this.value_label_nb_significant_digits)))
-        if (text_value[text_value.length - 1] == '0' && text_value.length == this.value_label_nb_significant_digits && text_value == String(this.data_value)) {
+        if (text_value[text_value.length - 1] == '0' && text_value.length == this.value_label_nb_significant_digits && text_value == String(this.valueResult)) {
           text_value += '.'
         }
       } else if (this.value_label_custom_digit) {
@@ -3409,7 +3456,7 @@ export abstract class ClassTemplate_LinkElement
    */
   public get thickness() {
     // Get link value for current dataTaggs selected
-    const data_value = this.data_value
+    const data_value = this.valueResult
     // Scale this value for the drawing area
     const linkValueInPx = (data_value !== null && (!this.shape_is_structure)) ? this.scaleValueToPx(data_value) : 2
 
@@ -3734,6 +3781,12 @@ export abstract class ClassTemplate_LinkElement
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this.drawControlPoint() }
 
   public get shape_is_structure() {
+    if ( this.sankey.drawing_area.type_data == 'data' ) {
+      if (this.value?.value_option != 'value' ) {
+        return true
+      }
+    }
+
     if (this._display.attributes.shape_is_structure !== undefined) {
       return this._display.attributes.shape_is_structure
     } else if (this._display.style.shape_is_structure !== undefined) {
@@ -4597,7 +4650,7 @@ export abstract class ClassTemplate_LinkElement
       (this._datatags_fingerprint !== this.sankey.data_tags_fingerprint)
     ) {
       // Recompute visibility value
-      const is_not_null = (this.data_value !== 0)
+      const is_not_null = (this.valueData !== 0)
       // Update  fingerprint if needed
       // -> This condition allows to avoid unecessary visibility recomputing on related elements
       //    that check this link's visibility fingerprint
@@ -4659,7 +4712,7 @@ export abstract class ClassTemplate_LinkElement
     if (this.drawing_area.filter_link_value == 0) {
       return true
     } else {
-      return Number(this.data_value) >= this.drawing_area.filter_link_value
+      return Number(this.valueResult) >= this.drawing_area.filter_link_value
     }
   }
 
@@ -4808,12 +4861,23 @@ export class Class_LinkValueTree {
       })
   }
 
-  public toJSON() {
+  public get has_result() {
+    let has_result = false
+    Object.values(this.children)
+      .forEach(child => {
+        has_result = has_result || child.has_result
+      })  
+    return has_result
+  }
+
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
     const json_object: Type_JSON = {}
     json_object['datatag_group'] = this.data_tag_group.id
     Object.entries(this.children)
       .forEach(([id, child]) => {
-        json_object[id] = child.toJSON()
+        json_object[id] = child.toJSON(kwargs)
       })
     return json_object
   }
@@ -5014,14 +5078,14 @@ export class Class_LinkValueTree {
   public setDataValueForDataTags(data_tags: Class_DataTag[], val: number | null) {
     const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
-      value.data_value = val
+      value.valueResult = val
     }
   }
 
   public getDataValueForDataTags(data_tags: Class_DataTag[]): number | null {
     const value = this.getValueForDataTags(data_tags)
     if (value !== null) {
-      return value.data_value
+      return value.valueResult
     }
     else {
       return null
@@ -5184,6 +5248,8 @@ export class Class_LinkValueTree {
   }
 }
 
+export type ValueOptionType = 'value' | 'ratio_input' | 'ratio_output' | 'ratio_source_parent' | 'ratio_target_parent' /*| 'unit_conversion'*/
+
 // CLASS LINK VALUE *********************************************************************
 /**
  * Define a link value object
@@ -5197,12 +5263,100 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   public parent: Class_LinkValueTree | Type_AnyLinkElement
 
-  public get valueNumber() {
+  public get has_result() {
+    return this.value_option != 'value'
+  }
+
+  public get valueResult() : number | null {
+    if (this.result_value) {
+      return this.result_value
+    }
+    /*if (this.value_option == 'unit_conversion') {
+      if (this.unit_factor) {
+        const children_with_data = Object.values((this.parent as Class_LinkValueTree).children).filter(c=>c.id!=this.id && c.valueResult !== null)
+        if (children_with_data.length == 0) {
+          return null
+        }
+        const child_with_data = children_with_data[0] as Class_LinkValue
+        const conv_factor = child_with_data.unit_factor
+        if (!conv_factor) return null
+        const this_conv_factor = this.unit_factor
+        if (!this_conv_factor) return null
+        const multiplier = this_conv_factor/conv_factor
+        return child_with_data.valueResult!*multiplier
+      }
+    } else*/ if (this.value_option == 'value') {
+      return this.data_value
+    } else if (this.value_option == 'ratio_input') {
+      if (this.data_value == null ) {
+        return null
+      }
+      if (this.parent == this.link) {
+        let total_source = 0
+        this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.value?.valueResult??0)
+        return total_source*this.data_value!
+      } else {
+        const data_tags_id = this.data_tags_id
+        const data_tags : ClassAbstract_ProtoTag[]= []
+        this.link?.sankey.data_taggs_list.forEach((tagg,i)=>data_tags.push(tagg.tags_dict[data_tags_id[i]]))
+        let total_source = 0
+        this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueForTags(data_tags)?.valueResult??0)
+        return total_source*this.data_value!      
+      }
+
+    } else if (this.value_option == 'ratio_output') {
+      if (this.data_value == null ) {
+        return null
+      }
+      let total_target = 0
+      this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
+      return total_target*this.data_value!
+    } else if (this.value_option == 'ratio_source_parent') {
+      const parent = this.link!.target.dimensions_as_child[0].parent
+      const parent_link = this.link?.sankey.links_dict[this.link.source.name + ' --> ' + parent.name]
+      if (!parent_link || parent_link.valueResult == null ) {
+        return null
+      }      
+      return parent_link!.valueResult!*this.data_value!
+    }
+    return null
+  }
+
+  public set valueResult(_) {
+    this.result_value = _
+    // if (this.value_option == 'value') {
+    //   this.data_value = _
+    // } else if (this.value_option == 'ratio_input') {    
+    //   let total_source = 0
+    //   this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueResult??0)
+    //   this.data_value = _!/total_source
+    // } else if (this.value_option == 'ratio_output') {
+    //   let total_target = 0
+    //   this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
+    //   this.data_value = _!/total_target
+    // }
+  }
+
+  public get valueData() {
     return this.data_value
   }
+
+  public set valueData(_) {
+    this.data_value = _
+  }
   
-  public data_value: number | null = null
+  public value_option : ValueOptionType = 'value'
+
+  protected data_value: number | null = null
+  protected data_min: number | null = null
+  protected data_max: number | null = null
+
+  protected result_value: number | null = null
+  protected result_min: number | null = null
+  protected result_max: number | null = null
+
   public text_value: string | null = null
+
 
   // PRIVATE ATTRIBUTES ==================================================================
 
@@ -5257,7 +5411,15 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   public copyFrom(element: Class_LinkValue) {
     this.data_value = element.data_value
+    this.data_min = element.data_min
+    this.data_max = element.data_max
+
+    this.result_value = element.result_value
+    this.result_min = element.result_min
+    this.result_max = element.result_max
+
     this.text_value = element.text_value
+    this.value_option = element.value_option
     // Tags - Cleaning
     this.flux_tags_list.forEach(tag => tag.removeReference(this))
     this._flux_tags = []
@@ -5275,14 +5437,27 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
    * @return {*}
    * @memberof Class_LinkValue
    */
-  public toJSON() {
+  public toJSON(
+    kwargs?: Type_JSON
+  ) {
     // Init output JSON
     const json_object: Type_JSON = {}
     json_object['id'] = this._id
     // Fill data
     json_object['id'] = this._id
     if (this.data_value) json_object['data_value'] = this.data_value
+    if (this.data_min) json_object['data_min'] = this.data_min
+    if (this.data_max) json_object['data_max'] = this.data_max
+    
+    if (this.result_value) json_object['result_value'] = this.result_value
+    if (kwargs && kwargs['has_results']) {
+      json_object['result_value'] = this.valueResult!
+    }
+    if (this.result_min) json_object['result_min'] = this.result_min
+    if (this.result_max) json_object['result_max'] = this.result_max
+
     if (this.text_value) json_object['text_value'] = this.text_value
+    json_object['value_option'] = this.value_option
     json_object['tags'] = Object.fromEntries(
       this.flux_taggs_list
         .map(tagg => [
@@ -5318,7 +5493,15 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     }
     else {
       this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
+      this.data_max = getNumberOrNullFromJSON(json_object, 'data_max')
+      this.data_min = getNumberOrNullFromJSON(json_object, 'data_min')
+
+      this.result_value = getNumberOrNullFromJSON(json_object, 'result_value')
+      this.result_max = getNumberOrNullFromJSON(json_object, 'result_max')
+      this.result_min = getNumberOrNullFromJSON(json_object, 'result_min')
+
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
+      this.value_option = getStringFromJSON(json_object, 'value_option','value') as ValueOptionType
     }
     // Get Flux tags
     // In JSON here are how supposed tags var is :
