@@ -178,6 +178,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Add an option for flow color rule
   if (has_sankey_plus) {
     new_data_plus.menu_configuration.flow_color_origin_type.push('gradient')
+    new_data_plus.menu_configuration.flow_color_origin_type.push('auto')
   }
 
   additionalMenus.current.external_top_buttons_item['afm'] = <AFMEditionMenu

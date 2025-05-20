@@ -255,6 +255,10 @@ export class Class_ContainerElement
     this._image_src = container_to_copy._image_src
     this._label_width = container_to_copy._label_width
     this._label_height = container_to_copy._label_height
+    this._tied_to_nodes = container_to_copy._tied_to_nodes
+    this._margin_from_attached_nodes = container_to_copy._margin_from_attached_nodes
+    this._at_extremity_of_attached_nodes = container_to_copy._at_extremity_of_attached_nodes
+    this._extremity_position = container_to_copy._extremity_position
   }
 
   // SAVING METHODS =====================================================================
@@ -285,6 +289,8 @@ export class Class_ContainerElement
     json_object['tiedToNode'] = this._tied_to_nodes
     json_object['margin'] = this._margin_from_attached_nodes
     json_object['attachedNodes'] = this._attached_node.map(n => n.id)
+    json_object['attachedNodesExtremity'] = this._at_extremity_of_attached_nodes
+    json_object['extremityPos'] = this._extremity_position
 
   }
 
@@ -320,6 +326,8 @@ export class Class_ContainerElement
         this._attached_node.push(this.drawing_area.sankey.nodes_dict[id_n])
       }
     })
+    this._at_extremity_of_attached_nodes = getBooleanFromJSON(json_object, 'attachedNodesExtremity', this._at_extremity_of_attached_nodes)
+    this._extremity_position = getStringFromJSON(json_object, 'extremityPos', this._extremity_position) as 'top' | 'bottom'
   }
 
 

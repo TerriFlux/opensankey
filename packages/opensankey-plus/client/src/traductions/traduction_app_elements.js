@@ -151,7 +151,8 @@ export const resources_app_elements = {
       Flux: {
         'asf': 'Apply style to links having this style',
         apparence: {
-          gradient: 'Gradient source -> target'
+          gradient: 'Gradient source -> target',
+          auto: 'Dependent on source/target color palette',
         },
         data: {
           'scientificNotation': 'Display the value in scientific notation',
@@ -575,7 +576,8 @@ export const resources_app_elements = {
       Flux: {
         'asf': 'Appliquer le Style aux flux',
         apparence: {
-          gradient: 'Dégradé source -> cible'
+          gradient: 'Dégradé source -> cible',
+          auto: 'En fonction des palettes source ou cible'
         },
         data: {
           'scientificNotation': 'En notation scientifique',
