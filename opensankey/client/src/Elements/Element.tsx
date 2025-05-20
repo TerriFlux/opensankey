@@ -52,7 +52,7 @@ import {
 } from '../types/Utils'
 
 
-type Type_AnyProtoElement = ClassTemplate_ProtoElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+export type Type_AnyProtoElement = ClassTemplate_ProtoElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS PROTO ELEMENT ******************************************************************
 
