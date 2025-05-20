@@ -169,7 +169,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     })
     return (display_value) ? visible : false
   }
-  
+
   const allLabelTiedToNodesAtExtremityTop = () => {
     let display_value = false
     let position = 'top'
@@ -977,8 +977,21 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
   const [, setCount] = useState(0)
   new_data_plus.menu_configuration.ref_to_menu_context_container_updater.current = () => setCount(a => a + 1)
   let style_c_zdd = '0px 0px auto auto'
+  let pos_x = new_data_plus.drawing_area.pointer_pos[0] + 10
+  let pos_y = new_data_plus.drawing_area.pointer_pos[1] - 20
+  let is_top = true
+  const size_context_menu = 6 * 40 // Get approx. height of context menu
+
   if (zdt_to_contextualise) {
-    style_c_zdd = (new_data_plus.drawing_area.pointer_pos[1] - 20) + 'px auto auto ' + (new_data_plus.drawing_area.pointer_pos[0] + 10) + 'px'
+    if (new_data_plus.drawing_area.pointer_pos[0] + 450 > window.innerWidth) {
+      pos_x = new_data_plus.drawing_area.pointer_pos[0] - 455
+    }
+
+    if (new_data_plus.drawing_area.pointer_pos[1] + size_context_menu > window.innerHeight) {
+      pos_y = new_data_plus.drawing_area.pointer_pos[1] - size_context_menu
+      is_top = false
+    }
+    style_c_zdd = pos_y + 'px auto auto ' + pos_x + 'px'
   }
   else {
     // Early return in case zdt zdt_to_contextualise isn't defined, it avoid testing if zdt is defined in each function
