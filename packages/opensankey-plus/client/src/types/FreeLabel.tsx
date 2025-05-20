@@ -686,6 +686,12 @@ export class Class_ContainerElement
     }
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode() && event.button === 0) {
+      // Close context menu of node & flow
+      this.drawing_area.node_contextualised = undefined
+      this.drawing_area.link_contextualised = undefined
+      this.drawing_area.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
+      this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+
       // SHIFT
       if (event.shiftKey) {
         // Add free label to selection
