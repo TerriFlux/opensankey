@@ -48,8 +48,7 @@ export abstract class ClassTemplate_LinkElementOSP
     Type_GenericDrawingArea,
     Type_GenericSankey,
     Type_GenericNodeElement
-  >
-{
+  > {
   // ABSTRACT ATTRIBUTES ===============================================================
 
   /**
@@ -118,9 +117,9 @@ export abstract class ClassTemplate_LinkElementOSP
     // this.draw()
   }
 
-  public override _draw(){
+  public override _draw() {
     // Don't put this condition in is_visible because we need node to take into account link value of links visualy filtered for node size
-    if(this.is_value_above_threshold){
+    if (this.is_value_above_threshold) {
       super._draw()
     }
   }
@@ -131,7 +130,7 @@ export abstract class ClassTemplate_LinkElementOSP
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
     // Apply gradient if needed
-    if (this.shape_color_rule=='gradient') {
+    if (this.shape_color_rule == 'gradient') {
 
       const defGradient = this.drawing_area.d3_selection_def_gradient
       const n_source = this.source
@@ -272,6 +271,12 @@ export abstract class ClassTemplate_LinkElementOSP
       // }
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
+    } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.show_legend).length == 0) {
+      if(this.source.taggs_list.filter(tagg => tagg.show_legend).length>0){
+        return this.source.getShapeColorToUse()
+      }else if(this.target.taggs_list.filter(tagg => tagg.show_legend).length>0){
+        return this.target.getShapeColorToUse()
+      }
     }
 
     // Otherwise use default
@@ -279,7 +284,7 @@ export abstract class ClassTemplate_LinkElementOSP
   }
 
   public getArrowColorToUse() {
-    if (this.shape_color_rule=='gradient') {
+    if (this.shape_color_rule == 'gradient') {
       const link_arrow_side_right = this.target_side == 'right'
       const link_arrow_side_bottom = this.target_side == 'bottom'
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
@@ -345,8 +350,8 @@ export class Class_LinkAttributeOSP extends Class_LinkAttribute {
     super.fromLegacyJSON(json_local_object)
     if (json_local_object['version'] === undefined) {
       const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', default_shape_shape_is_gradient) as boolean
-      if(was_gradient){
-        this._shape_color_rule='gradient'
+      if (was_gradient) {
+        this._shape_color_rule = 'gradient'
       }
     }
 
@@ -393,5 +398,5 @@ export class Class_LinkStyleOSP extends Class_LinkStyle {
 
   // GETTERS ============================================================================
   public get shape_is_gradient(): boolean { return this._shape_is_gradient }
-  public set shape_is_gradient(value: boolean) { this._shape_is_gradient = value;this.update() }
+  public set shape_is_gradient(value: boolean) { this._shape_is_gradient = value; this.update() }
 }
