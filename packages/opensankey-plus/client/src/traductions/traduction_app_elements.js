@@ -50,6 +50,8 @@ export const resources_app_elements = {
         node_associated_tag: 'Nodes associated to tag',
         TieNodes: 'Tie all selected nodes',
         detachTiedNodes: 'Untie all tied nodes',
+        ElOrder:'Order overlaps of elements',
+
         Config: {
           presentation: 'Presentation',
           element_object: 'Object',
@@ -500,6 +502,7 @@ export const resources_app_elements = {
         node_associated_tag: 'Noeuds associés',
         TieNodes: 'Attacher les noeuds sélectionnés',
         detachTiedNodes: 'Détacher tous les noeuds attachés',
+        ElOrder:'Ordonner la superposition des éléments',
         Config: {
           element_object: 'Objet',
           element_view: 'Vues',
