@@ -57,7 +57,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
 
   // Datas ------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t, drawing_area } = new_data
   const {
     ref_setter_show_menu_link_appearence,
     ref_setter_show_menu_link_data,
@@ -189,6 +189,19 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     _updateValueVisibility()
   }
 
+  const moveToFirstPlan = () => {
+    drawing_area.selected_links_list.forEach(link => {
+      const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
+      drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
+    })
+  }
+  const moveToLastPlan = () => {
+    drawing_area.selected_links_list.forEach(link => {
+      const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
+      drawing_area.moveOrderElementInDA(idx_to_shift, 0)
+    })
+  }
+
   // JSX Components ---------------------------------------------------------------------
 
   const button_open_link_appearence = (contextualised_link !== undefined) ?
@@ -257,44 +270,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     </Menu> :
     <></>
 
-  // Set stacking order of links
-  const dropdown_c_l_layout = (contextualised_link !== undefined) ?
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={new_data.icon_library.icon_open_selector}
-        className="dropdown-basic"
-      >
-        {t('Flux.layout')}
-      </MenuButton>
-      <MenuList >
-        <MenuItem
-          onClick={() => selected_links.forEach(l => l.setTopDisplayOrder())}
-        >
-          {t('Flux.layoutTop')}
-        </MenuItem>
 
-        <MenuItem
-          onClick={() => selected_links.forEach(l => l.increaseDisplayOrder())}
-        >
-          {t('Flux.layoutUp')}
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => selected_links.forEach(l => l.decreaseDisplayOrder())}
-        >
-          {t('Flux.layoutDown')}
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => selected_links.forEach(l => l.setDownDisplayOrder())}
-        >
-          {t('Flux.layoutBottom')}
-        </MenuItem>
-
-      </MenuList>
-    </Menu> : <></>
 
   const button_open_link_data = (contextualised_link !== undefined) ?
     <Button
@@ -320,6 +296,17 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       }
     </Button> :
     <></>
+
+  const btn_move_to_first_plan = <Button
+    variant='contextmenu_button'
+    onClick={moveToFirstPlan}>
+    {t('Noeud.firstPlan')}
+  </Button>
+  const btn_move_to_last_plan = <Button
+    variant='contextmenu_button'
+    onClick={moveToLastPlan}>
+    {t('Noeud.lastPlan')}
+  </Button>
 
 
   // Inverse source & target of the link
@@ -352,7 +339,8 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     'sep_1': sep,
     'style': dropdown_c_l_style,
     'sep_2': sep,
-    'zIndex': dropdown_c_l_layout,
+    'firstPlan': btn_move_to_first_plan,
+    'lastPlan': btn_move_to_last_plan,
     'mask_label': button_mask_link_label,
     'edit_value': btn_edit_value,
     'sep_4': sep,

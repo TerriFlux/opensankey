@@ -102,7 +102,6 @@ export const menuconfigpanel_option_button_center = defineStyle({
 
 export const menuconfigpanel_option_button_activated = defineStyle({
   height: '1.5rem',
-  width: '1.rem',
   padding: '0.5rem',
   color: 'tertiaire.3',
   fill: 'tertiaire.3',
