@@ -52,7 +52,7 @@ import {
 } from '../types/Utils'
 
 
-type Type_AnyProtoElement = ClassTemplate_ProtoElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+export type Type_AnyProtoElement = ClassTemplate_ProtoElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS PROTO ELEMENT ******************************************************************
 
@@ -295,7 +295,6 @@ export abstract class ClassTemplate_ProtoElement
   ) {
     this._id = getStringFromJSON(json_object, 'id', this._id)
     this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
-    this._svg_parent_group = getStringFromJSON(json_object, 'svg_parent_group', this._svg_parent_group)
   }
 
   // PUBLIC METHODS ====================================================================
