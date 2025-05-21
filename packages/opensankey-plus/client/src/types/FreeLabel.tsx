@@ -152,7 +152,7 @@ export class Class_ContainerElement
     menu_config: Class_MenuConfigOSP,
     drawing_area: Type_GenericDrawingArea,
   ) {
-    super(id, menu_config, 'g_labels')
+    super(id, menu_config, 'g_elements')
     this._display = {
       drawing_area: drawing_area,
       sankey: drawing_area.sankey,
@@ -217,6 +217,13 @@ export class Class_ContainerElement
         this.dragHandleEnd(),
         { class: 'zdt_right_handle' }),
     }
+    drawing_area.list_g_element.push(id)
+
+    // Launch timer to reorder elemeent on DA
+    this.drawing_area.application_data._add_waiting_process('order_elements_on_da', () => {
+      this.drawing_area.orderElementOnDA()
+    })
+
   }
 
 
@@ -647,7 +654,13 @@ export class Class_ContainerElement
     })
 
     if (this._at_extremity_of_attached_nodes) {
-      const bbox = this.drawing_area.d3_selection_nodes?.node()?.getBBox() ?? undefined
+      const bbox ={x:0,y:0,height:0}
+      
+      this.drawing_area.d3_selection_elements_group?.selectAll('.gg_nodes')?.nodes().forEach(el=>{
+        const box=(el as SVGGElement).getBBox()
+        bbox.x=(box.x<bbox.x)?box.x:bbox.x
+        bbox.y=(box.y<bbox.y)?box.y:bbox.y
+      })
 
       // No bounding box -> return
       if (bbox == undefined)
@@ -699,7 +712,8 @@ export class Class_ContainerElement
       this.drawing_area.link_contextualised = undefined
       this.drawing_area.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
       this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-
+      this.drawing_area.contextualised_container = undefined
+      this.menu_config.ref_to_menu_context_container_updater.current()
       // SHIFT
       if (event.shiftKey) {
         // Add free label to selection
