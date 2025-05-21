@@ -117,10 +117,6 @@ export abstract class ClassTemplate_ApplicationData
   // Attributes to transfer between sankeys
   public data_var_to_update: MutableRefObject<string[]> = React.useRef([])
 
-  protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
-  protected _waiting_time_for_processes: number = 50 // ms
-
-
   // PROTECTED ATTRIBUTES ==============================================================
 
   protected _file_name = default_file_name
@@ -819,7 +815,7 @@ export abstract class ClassTemplate_ApplicationData
       {
         selector: '.TopMenu',
         content: this.t('guide.nav_menu'),
-      },
+      },      
       {
         selector: '.tutorials_button',
         content: this.t('guide.tutorials_button'),
@@ -860,41 +856,6 @@ export abstract class ClassTemplate_ApplicationData
       functionOnBlur={functionOnBlur}
       textDisabled={textDisabled}
     />
-  }
-
-  /**
-   * Create a timed out process - Used to avoid multiple reloading of components
-   *
-   * The process_func is meant to be use by setTimeout(),
-   * and inside setTimeOut 'this' keyword has another meaning,
-   * so the current object must be passed directly as an argument.
-   * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
-   *
-   * @protected
-   * @param {string} process_id
-   * @param {() => void} process_func
-   * @memberof Class_MenuConfig
-   */
-  public _add_waiting_process(
-    process_id: string,
-    process_func: () => void
-  ) {
-    this._cancel_waiting_process(process_id)
-    this._waiting_processes[process_id] = setTimeout(
-      (_this) => { process_func() },
-      this._waiting_time_for_processes,
-      this
-    )
-  }
-  /**
-  * Cancel a timed out process - It wont happen
-  * @protected
-  * @param {string} process_id
-  * @memberof Class_MenuConfig
-  */
-  protected _cancel_waiting_process(process_id: string) {
-    if (this._waiting_processes[process_id] !== undefined)
-      clearTimeout(this._waiting_processes[process_id])
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1110,7 +1071,7 @@ export abstract class ClassTemplate_ApplicationData
             this._toast_processes.splice(0, 1) // pop process from processes list
             resolve(200) // end
           },
-            500) // Leave 500ms of delay in order to give enough time to load spinner component
+          500) // Leave 500ms of delay in order to give enough time to load spinner component
         }),
         {
           success: {

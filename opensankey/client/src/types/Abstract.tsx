@@ -45,10 +45,6 @@ export abstract class ClassAbstract_ApplicationData {
     funct: () => void,
     intake?: object
   ): void
-  public abstract _add_waiting_process(
-    process_id: string,
-    process_func: () => void
-  ):void
   // Mandatory attributes
   public abstract version: string
   // Mandatory getters
@@ -93,7 +89,6 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract updateFrom(other_drawing_area: ClassAbstract_DrawingArea, mode: string[]): void
   public abstract draw(): void
   public abstract orderElements(): void
-  public abstract orderElementOnDA(): void
   public abstract computeParametricV(): void
   public abstract getNavBarHeight(): number
   // Mandatory getters
@@ -122,8 +117,6 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract set scale(_: number)
   public abstract get magnetic_nodes(): boolean
   public abstract set magnetic_nodes(b: boolean)
-  public abstract get list_g_element(): string[]
-
 }
 
 export abstract class ClassAbstract_Sankey {
@@ -198,7 +191,7 @@ export abstract class ClassAbstract_ProtoLevelTagGroup {
 
 export abstract class ClassAbstract_ProtoTag {
 
-  public abstract setReferenceFromIds(list_id: string[]): void
+  public abstract setReferenceFromIds(list_id:string[]):void
 
   public abstract get id(): string
   public abstract get name(): string
