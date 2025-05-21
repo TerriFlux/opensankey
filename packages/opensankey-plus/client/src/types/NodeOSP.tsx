@@ -503,7 +503,7 @@ export abstract class ClassTemplate_NodeElementOSP
   ) {
 
     // Get d3 selection of all visible link who have for source this
-    const glinks = new_data.drawing_area.d3_selection_links?.selectAll('.gg_links')
+    const glinks = new_data.drawing_area.d3_selection_elements_group?.selectAll('.gg_links')
       .filter(d => {
         const link = d as Type_GenericLinkElementOSP
         return link.source.id === this.id
