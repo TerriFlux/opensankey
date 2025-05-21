@@ -62,6 +62,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
      * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
      * @memberof ClassTemplate_DrawingArea
      */
+  public d3_selection_free_label: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   // PROTECTED ATTRIBUTES ===============================================================
@@ -321,6 +322,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
    */
   protected _initDraw() {
     super._initDraw()
+    this.d3_selection_free_label = this.d3_selection_elements_group?.insert('g', '#g_links').attr('id', 'g_labels') ?? null
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
   }
 
