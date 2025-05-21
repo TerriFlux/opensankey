@@ -249,7 +249,7 @@ export abstract class ClassTemplate_NodeElement
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super(id, menu_config, 'g_elements')
+    super(id, menu_config, 'g_nodes')
     // Init other class attributes
     this._name = name
     this._display = {
@@ -261,7 +261,6 @@ export abstract class ClassTemplate_NodeElement
     }
     // Link with default style
     this._display.style.addReference(this)
-    this.drawing_area.list_g_element.push(id)
   }
 
   // CLEANING METHODS ===================================================================
@@ -1566,16 +1565,12 @@ export abstract class ClassTemplate_NodeElement
     // Draw label
     this._drawNameLabel()
     this._drawValueLabel()
-    // Launch timer to reorder elemeent on DA
-    this.drawing_area.application_data._add_waiting_process('order_elements_on_da', () => {
-      this.drawing_area.orderElementOnDA()
-    })
   }
 
   protected _initDraw() {
     super._initDraw()
     // Update class attributes
-    this.d3_selection?.attr('class', 'gg_nodes').datum(this)
+    this.d3_selection?.attr('class', 'gg_nodes')
     // Apply styles
     this.d3_selection?.style('display', 'inline')
     this.d3_selection?.attr('font-family', this.name_label_font_family)
@@ -1699,41 +1694,41 @@ export abstract class ClassTemplate_NodeElement
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.node_shape').remove()
     // Do the rest only if shape is visible
-    // Compute shape attributes
-    const width = this.getShapeWidthToUse()
-    const height = this.getShapeHeightToUse()
-    const color = this.getShapeColorToUse()
-    // Apply shape value
-    if (this.shape_type === 'rect') {
-      this.d3_selection_g_shape?.append('rect')
-        .classed('node', true)
-        .classed('node_shape', true)
-        .attr('width', width)
-        .attr('height', height)
-    }
-    else if (this.shape_type === 'ellipse') {
-      this.d3_selection_g_shape?.append('ellipse')
-        .classed('node', true)
-        .classed('node_shape', true)
-        .attr('cx', width / 2)
-        .attr('cy', height / 2)
-        .attr('rx', width / 2)
-        .attr('ry', height / 2)
-    }
-    else if (this.shape_type === 'arrow') {
-      this.d3_selection_g_shape?.append('path')
-        .classed('node', true)
-        .classed('node_shape', true)
-        .attr('d', this.getArrowPath())
-    }
-    // Apply common properties
-    this.d3_selection_g_shape?.selectAll('.node_shape')
-      .attr('id', this.id)
-      .attr('fill-opacity', this.shape_visible ? this.shape_opacity : '0')
-      .attr('fill', color)
-      .attr('stroke', 'black')
-      .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
-      .attr('stroke-opacity', this.is_selected ? 1 : 0)
+      // Compute shape attributes
+      const width = this.getShapeWidthToUse()
+      const height = this.getShapeHeightToUse()
+      const color = this.getShapeColorToUse()
+      // Apply shape value
+      if (this.shape_type === 'rect') {
+        this.d3_selection_g_shape?.append('rect')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('width', width)
+          .attr('height', height)
+      }
+      else if (this.shape_type === 'ellipse') {
+        this.d3_selection_g_shape?.append('ellipse')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('cx', width / 2)
+          .attr('cy', height / 2)
+          .attr('rx', width / 2)
+          .attr('ry', height / 2)
+      }
+      else if (this.shape_type === 'arrow') {
+        this.d3_selection_g_shape?.append('path')
+          .classed('node', true)
+          .classed('node_shape', true)
+          .attr('d', this.getArrowPath())
+      }
+      // Apply common properties
+      this.d3_selection_g_shape?.selectAll('.node_shape')
+        .attr('id', this.id)
+        .attr('fill-opacity', this.shape_visible ? this.shape_opacity : '0')
+        .attr('fill', color)
+        .attr('stroke', 'black')
+        .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
+        .attr('stroke-opacity', this.is_selected ? 1 : 0)
   }
 
   /**
@@ -2024,29 +2019,29 @@ export abstract class ClassTemplate_NodeElement
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-                break
-              case 'top':
-                node_face_size = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size = sumLinkTop
-                break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size2 = sumLinkRight
-                break
-              case 'top':
-                node_face_size2 = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size2 = sumLinkTop
-                break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2357,7 +2352,6 @@ export abstract class ClassTemplate_NodeElement
       }
     }
     this.drawing_area.checkAndUpdateAreaSize()
-    this.drawing_area.orderElementOnDA()
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
   }
