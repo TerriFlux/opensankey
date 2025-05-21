@@ -34,6 +34,9 @@ import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenS
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
+import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
+import { Type_GenericApplicationData } from '../../types/Types'
+import { t } from 'i18next'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -728,9 +731,6 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
     new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'masked', !evt.target.checked, f)
   }
 
-
-
-
   return <>
     {/* Masquer une partie des noms des noeuds */}
     <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
@@ -824,4 +824,82 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
 
 
   </>
+}
+
+export const GraphElementsOrdoner: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+  const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
+  const [, setUpdate] = useState(0)
+
+  new_data.menu_configuration.ref_to_GraphElementsOrdoner_updater.current = () => setUpdate(a => a + 1)
+
+  // Function that return style of element draggable depending on it's state (isDragging)
+  const style_TableLineDragging = (isDragging: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined, is_selected: boolean) => ({
+    // change background colour if dragging
+    // border:isDragging ? '1px solid #78A7C2' : 'unset',
+    borderColor: is_selected ? 'red' : 'black',
+    // styles we need to apply on draggables
+    ...draggableStyle
+  })
+  return <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={new_data} collapse={false}>
+    <DragDropContext onDragEnd={(evt) => {
+      // Reorganise links order at drop event
+      if (evt.destination && evt.destination.index !== undefined) {
+        new_data.drawing_area.moveOrderElementInDA(evt.source.index, evt.destination.index)
+      }
+    }}>
+      <Droppable droppableId="droppable">
+        {(provided,) => (
+          <Box
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            style={{ display: 'grid', gridRowGap: '0.2rem' }}
+          >
+            {
+              new_data.drawing_area.list_g_element
+                .map((id_element, element_idx) => {
+                  const element = new_data.drawing_area.elementFromId(id_element)
+                  if (!element.is_visible)
+                    return <></>
+                  return (
+                    <Draggable key={id_element} index={element_idx} draggableId={'line_drag_' + id_element}>
+                      {(provided, snapshot) => (
+                        <Box key={id_element} layerStyle='drag_line_element_order' ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
+                        >
+                          <Box className='name_element'>{element.name}</Box>
+                          <Box layerStyle="options_2cols">
+                            <Button
+                              variant='menuconfigpanel_move_order_node_io'
+                              minWidth='0'
+                              onClick={() => {
+                                new_data.drawing_area.moveOrderElementInDA(element_idx, element_idx - 1)
+                                setUpdate(a => a + 1)
+                              }}
+                            >
+                              {icon_move_element_up}
+                            </Button>
+                            <Button
+                              variant='menuconfigpanel_move_order_node_io'
+                              minWidth='0'
+                              onClick={() => {
+                                new_data.drawing_area.moveOrderElementInDA(element_idx, element_idx + 1)
+                                setUpdate(a => a + 1)
+                              }}
+                            >
+                              {icon_move_element_down}
+                            </Button>
+                          </Box>
+                        </Box>)}
+                    </Draggable>
+                  )
+                })
+            }
+            {provided.placeholder}
+          </Box>
+        )}
+      </Droppable>
+    </DragDropContext>
+  </WrapperBoxSubSectionMenu>
 }
