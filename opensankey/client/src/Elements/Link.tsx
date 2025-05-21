@@ -3311,7 +3311,7 @@ export abstract class ClassTemplate_LinkElement
   public get data_label() {
     if ( this.sankey.drawing_area.type_data == 'data' ) {
       if (this.value?.value_option == 'ratio_input' && this.value?.valueData) {
-        return this.value.valueData*100 + '%s'
+        return this.value.valueData + '%s'
       } else if (this.value?.value_option == 'ratio_output' && this.value?.valueData) {
         return this.value?.valueData + '%d'
       } /*else if (this.value?.value_option == 'unit_conversion' ) {
@@ -5282,26 +5282,37 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       if (this.data_value == null ) {
         return null
       }
+      const multiplier = this.data_value/100 
       if (this.parent == this.link) {
         let total_source = 0
         this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.value?.valueResult??0)
-        return total_source*this.data_value!
+        return total_source*multiplier
       } else {
         const data_tags_id = this.data_tags_id
         const data_tags : ClassAbstract_ProtoTag[]= []
         this.link?.sankey.data_taggs_list.forEach((tagg,i)=>data_tags.push(tagg.tags_dict[data_tags_id[i]]))
         let total_source = 0
         this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueForTags(data_tags)?.valueResult??0)
-        return total_source*this.data_value!      
+        return total_source*multiplier     
       }
 
     } else if (this.value_option == 'ratio_output') {
       if (this.data_value == null ) {
         return null
       }
-      let total_target = 0
-      this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
-      return total_target*this.data_value!
+      const multiplier = this.data_value/100 
+      if (this.parent == this.link) {
+        let total_target = 0
+        this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.value?.valueResult??0)
+        return total_target*multiplier
+      } else {
+        const data_tags_id = this.data_tags_id
+        const data_tags : ClassAbstract_ProtoTag[]= []
+        this.link?.sankey.data_taggs_list.forEach((tagg,i)=>data_tags.push(tagg.tags_dict[data_tags_id[i]]))
+        let total_target = 0
+        this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueForTags(data_tags)?.valueResult??0)
+        return total_target*multiplier     
+      }
     } else if (this.value_option == 'ratio_source_parent') {
       const parent = this.link!.target.dimensions_as_child[0].parent
       const parent_link = this.link?.sankey.links_dict[this.link.source.name + ' --> ' + parent.name]
