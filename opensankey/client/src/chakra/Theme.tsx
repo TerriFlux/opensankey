@@ -625,7 +625,7 @@ export const opensankey_theme = extendTheme({
     },
     menustylepanel_row_droplist: {
       display: 'flex',
-      gap:'0.6rem',
+      gap: '0.6rem',
     },
     popover_sidebar_row_tag_filter: {
       display: 'grid',
@@ -807,6 +807,20 @@ export const opensankey_theme = extendTheme({
       display: 'grid',
       gridColumnGap: '0.25rem',
       gridTemplateColumns: 'auto auto',
+    },
+    drag_line_element_order: {
+      display: 'grid',
+      gridTemplateColumns: '6fr 3fr',
+      border: '1px solid',
+      borderRadius: '3px',
+
+      '.name_element': {
+        margin: 'auto',
+        maxW: '7rem',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }
     }
 
   },
