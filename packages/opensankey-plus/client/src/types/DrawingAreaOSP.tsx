@@ -14,7 +14,7 @@ import {
 } from './AbstractOSP'
 import { ClassTemplate_SankeyOSP } from './SankeyOSP'
 import type { ClassTemplate_NodeElementOSP } from './NodeOSP'
-import { sortElementsContainersByDisplayingOrders, type Class_ContainerElement } from './FreeLabel'
+import { type Class_ContainerElement } from './FreeLabel'
 import type { ClassTemplate_LinkElementOSP } from './LinkOSP'
 import { ClassTemplate_ZoneSelectionOSP } from './SelectionZoneOSP'
 import {
@@ -62,7 +62,6 @@ export abstract class ClassTemplate_DrawingAreaOSP
      * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
      * @memberof ClassTemplate_DrawingArea
      */
-  public d3_selection_free_label: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   // PROTECTED ATTRIBUTES ===============================================================
@@ -98,6 +97,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
     super(application_data, id)
     // Overrides
     this.application_data = application_data
+    this._group_to_select += ',.gg_labels'
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -138,23 +138,6 @@ export abstract class ClassTemplate_DrawingAreaOSP
     // ie : element1 order = 0, element0 order = 2, element3 order = 4
     this._number_of_containers = this._number_of_containers + 2
     return this._number_of_containers
-  }
-
-  public orderElementsConatianer() {
-    // Sort containers
-    let new_order = 0
-    this.sankey.containers_list
-      .sort((a, b) => sortElementsContainersByDisplayingOrders(a, b))
-      .forEach(cont => {
-        if (cont.is_visible) {
-          cont.d3_selection?.raise()
-        }
-        // Re-update display order as consecutive
-        cont.displaying_order = new_order
-        new_order = new_order + 2
-      })
-    // Update number of elements
-    this._number_of_containers = new_order
   }
 
 
@@ -322,7 +305,6 @@ export abstract class ClassTemplate_DrawingAreaOSP
    */
   protected _initDraw() {
     super._initDraw()
-    this.d3_selection_free_label = this.d3_selection_elements_group?.insert('g', '#g_links').attr('id', 'g_labels') ?? null
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
   }
 
@@ -499,15 +481,31 @@ export abstract class ClassTemplate_DrawingAreaOSP
     this.contextualised_container = undefined
   }
 
+  /**
+   * Return element (node,flow,zdt) from id 
+   *
+   * @param {string} id
+   * @return {*} 
+   * @memberof ClassTemplate_DrawingAreaOSP
+   */
+  public elementFromId(id: string) {
+    if (id in this._sankey.containers_dict) {
+      const cont = this._sankey.containers_dict[id]
+      return { id: cont.id, name: cont.title, is_selected: cont.is_selected, is_visible: cont.is_visible }
+    }
+
+    return super.elementFromId(id)
+  }
+
   // PRIVATE METHODS =====================================================================
 
-/**
- * Test if mouse is over some containers
- *
- * @private
- * @return {*}
- * @memberof ClassTemplate_DrawingAreaOSP
- */
+  /**
+   * Test if mouse is over some containers
+   *
+   * @private
+   * @return {*}
+   * @memberof ClassTemplate_DrawingAreaOSP
+   */
   private isMouseOverAnExistingContainer(): boolean {
     let cont_id: string
     for (cont_id in this.sankey.containers_dict) {

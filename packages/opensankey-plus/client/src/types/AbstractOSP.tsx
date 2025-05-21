@@ -55,7 +55,6 @@ export abstract class ClassAbstract_DrawingAreaOSP
   public abstract moveSelectedNodesFromDragEvent(event: d3.D3DragEvent<SVGGElement, unknown, unknown>): void
   public abstract moveSelectedContainerFromDragEvent(event: d3.D3DragEvent<SVGGElement, unknown, unknown>): void
   public abstract addContainerElement(): number
-  public abstract orderElementsConatianer(): void
   public abstract saveUndoLabelSelectedPos(): void
   public abstract saveRedoLabelSelectedPos(): void
 
