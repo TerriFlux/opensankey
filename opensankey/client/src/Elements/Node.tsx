@@ -249,7 +249,7 @@ export abstract class ClassTemplate_NodeElement
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super(id, menu_config, 'g_nodes')
+    super(id, menu_config, 'g_elements_sankey')
     // Init other class attributes
     this._name = name
     this._display = {

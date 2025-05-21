@@ -715,85 +715,6 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
 
   }
 
-  const content_zIndex_and_direction = (!menu_for_style) ? <WrapperBoxSubSectionMenu new_data={new_data} title={t('Flux.dzf')} >
-    <Box layerStyle='options_4cols' >
-      {/* Boutton pour monter le lien sélctionné */}
-      <OSTooltip label={t('Flux.tooltips.up')}>
-        <Button
-          className='btn_menu_config'
-          variant={'menuconfigpanel_option_button_left'}
-          isDisabled={selected_links.length === 0}
-          onClick={() => {
-            const func = () => {
-              selected_links.forEach(link => link.increaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
-            }
-            const inv_func = () => {
-              selected_links.forEach(link => link.decreaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
-            }
-
-            new_data.history.saveUndo(inv_func)
-            new_data.history.saveUndo(func)
-
-            func()
-          }}>
-          {icon_order_up}
-        </Button>
-      </OSTooltip>
-
-      <OSTooltip label={t('Flux.tooltips.upup')}>
-        <Button
-          variant={'menuconfigpanel_option_button_center'}
-          isDisabled={selected_links.length === 0}
-          className='btn_menu_config'
-          onClick={() => {
-            selected_links.forEach(link => link.setTopDisplayOrder())
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          {icon_order_top}
-        </Button>
-      </OSTooltip>
-
-      {/* Boutton pour baisser le lien sélctionné */}
-      <OSTooltip label={t('Flux.tooltips.dwn')}>
-        <Button
-          variant={'menuconfigpanel_option_button_center'}
-          isDisabled={selected_links.length === 0}
-          className='btn_menu_config'
-          onClick={() => {
-            const inv_func = () => {
-              selected_links.forEach(link => link.increaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
-            }
-            const func = () => {
-              selected_links.forEach(link => link.decreaseDisplayOrder())
-              refreshThisAndUpdateRelatedComponents()
-            }
-
-            new_data.history.saveUndo(inv_func)
-            new_data.history.saveUndo(func)
-
-            func()
-          }}>
-          {icon_order_down}
-        </Button>
-      </OSTooltip>
-
-      <OSTooltip label={t('Flux.tooltips.dwndwn')}>
-        <Button
-          variant={'menuconfigpanel_option_button_right'}
-          isDisabled={selected_links.length === 0}
-          className='btn_menu_config'
-          onClick={() => {
-            selected_links.forEach(link => link.setDownDisplayOrder())
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          {icon_order_bottom}
-        </Button>
-      </OSTooltip>
-    </Box>
-  </WrapperBoxSubSectionMenu> : <></>
 
   const selection_link = menu_for_style ? <></> : <SankeyLinkSelectionSimple new_data={new_data} />
 
@@ -801,7 +722,6 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
     {selection_link}
     {elements.length > 0 ? <>
       {content_style}
-      {content_zIndex_and_direction}
       {content_config}</> : <></>}
   </Box>
 

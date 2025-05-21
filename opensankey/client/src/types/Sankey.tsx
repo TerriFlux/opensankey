@@ -37,7 +37,6 @@ import {
 import {
   ClassTemplate_LinkElement,
   defaultLinkId,
-  sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from '../Elements/Link'
 import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
@@ -800,11 +799,6 @@ export abstract class ClassTemplate_Sankey
     let has_results = false
     links_list.forEach(l=>has_results = has_results || l.has_result)
 
-    links_list
-      .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
-      .forEach(link => {
-        json_object_links[link.id] = link.toJSON({ 'with_values': with_values, 'has_results': has_results})
-      })
     // Out
     return json_object
   }
