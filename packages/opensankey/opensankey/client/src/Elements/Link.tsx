@@ -386,6 +386,8 @@ export abstract class ClassTemplate_LinkElement
     this._source_visibility_fingerprint = source.visibility_fingerprint
     this._target = target
     this._target_visibility_fingerprint = target.visibility_fingerprint
+
+    drawing_area.list_g_element.push(this.id)
   }
 
   public createLinkValue(
