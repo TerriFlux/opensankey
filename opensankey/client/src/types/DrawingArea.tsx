@@ -585,6 +585,8 @@ export abstract class ClassTemplate_DrawingArea
 
     // Unset saving indicator
     this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+
+    this.orderElementOnDA()
   }
 
   /**

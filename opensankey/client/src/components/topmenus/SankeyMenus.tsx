@@ -74,7 +74,7 @@ import { modalResolutionPNG } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../types/Types'
 import { keyTypeConfig, keyTypeElements } from '../../types/MenuConfig'
-import { DrawingAreaStyle, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
+import { DrawingAreaStyle, GraphElementsOrdoner, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
@@ -439,7 +439,10 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
       </WrapperContentConfig>,
 
       'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
+        <>
         <LayoutConfigDAScaleAndLimit new_data={new_data} />
+        <GraphElementsOrdoner new_data={new_data}/>
+        </>
       </WrapperContentConfig>,
       'node': <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <SankeyMenuConfigurationNodesIO new_data={new_data} />
