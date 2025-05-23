@@ -672,7 +672,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
     InNodeStyle.shape_min_width = 1
     InNodeStyle.shape_min_height = 1
     InNodeStyle.shape_visible = false
-    InNodeStyle.name_label_box_width = 300
+    InNodeStyle.name_label_box_width = 1000
 
     const OutNodeStyle = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeOutputStyle', 'Output node')
     OutNodeStyle.name_label_horiz = 'right'
@@ -681,7 +681,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
     OutNodeStyle.shape_min_width = 1
     OutNodeStyle.shape_min_height = 1
     OutNodeStyle.shape_visible = false
-    OutNodeStyle.name_label_box_width = 300
+    OutNodeStyle.name_label_box_width = 1000
 
     const unitaryNode = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeStyle', 'Unitary node')
     unitaryNode.name_label_horiz = 'middle'
@@ -690,7 +690,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
     unitaryNode.shape_min_width = 200
     unitaryNode.name_label_bold = true
     unitaryNode.name_label_uppercase = true
-    unitaryNode.name_label_box_width = 300
+    unitaryNode.name_label_box_width = 1000
 
     const InLink = new_drawing_area.sankey.addNewLinkStyle('LinkInUnitaryStyle', 'Link In Unitary')
     InLink.name_label_font_size = 40
@@ -782,7 +782,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
     cont.content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
 
-
+    // Move zdt to background plan (since it's the last added element it is at the end of the list)
+    new_drawing_area.moveOrderElementInDA(new_drawing_area.list_g_element.length-1,0)
     // Add new sankey to views
     this._views[new_drawing_area.id] = new_drawing_area
     this.pushViewIdInViewOrder(new_drawing_area.id)

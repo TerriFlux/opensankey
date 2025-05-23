@@ -223,7 +223,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         }
       </Checkbox>
       {value_label_significant_digits ?
-      /* Choose number of custom digit */
+        /* Choose number of custom digit */
 
         /* <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.label.NbDigit')}
@@ -272,91 +272,65 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
   </>
 }
 
-export const ButtonLinkContextShowTooltipMenu: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {
-  const { t } = new_data
-  const { ref_setter_show_menu_link_tooltip } = new_data.menu_configuration.dict_setter_show_dialog
-
-  return <Button
-    onClick={() => {
-      ref_setter_show_menu_link_tooltip.current(true)
-      new_data.drawing_area.link_contextualised = undefined
-    }}
-    variant='contextmenu_button'
-    rightIcon={new_data.icon_library.icon_popup_menu}
-  >
-    {t('Flux.IS')}
-  </Button>
-}
-
-export const ButtonLinkContextShowTagMenu: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {
-  const { t } = new_data
-  const { ref_setter_show_menu_link_tags } = new_data.menu_configuration.dict_setter_show_dialog
-
-  return <Button
-    onClick={() => {
-      ref_setter_show_menu_link_tags.current(true)
-      new_data.drawing_area.link_contextualised = undefined
-    }}
-    variant='contextmenu_button'
-    rightIcon={new_data.icon_library.icon_popup_menu}
-  >
-    {t('Menu.Etiquettes')}
-  </Button>
-}
 
 export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {
   const { t } = new_data
+  const [, setUpdate] = useState(0)
   const contextualised_link = new_data.drawing_area.link_contextualised
   const has_flux_tags = Object.values(new_data.drawing_area.sankey.flux_taggs_dict).length > 0
   return (
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-      {sep}
-      <Menu placement='end'>
-        <MenuButton
-          variant='contextmenu_button'
-          as={Button}
-          rightIcon={<ChevronRightIcon />}
-          className="dropdown-basic"
-        >
-          {t('Menu.Transformation.tagFlux_assign')}
-        </MenuButton>
+    {sep}
+    <Menu placement='end'>
+      <MenuButton
+        variant='contextmenu_button'
+        as={Button}
+        rightIcon={<ChevronRightIcon />}
+        className="dropdown-basic"
+      >
+        {t('Menu.Transformation.tagFlux_assign')}
+      </MenuButton>
 
-        <MenuList>
-          {
-            new_data.drawing_area.sankey.flux_taggs_list
-              .filter(tagg => tagg.has_tags)
-              .map((tagg, i) => {
-                return <Menu key={i} placement='end'>
-                  <MenuButton
-                    variant='contextmenu_button'
-                    as={Button}
-                    rightIcon={<ChevronRightIcon />}
-                    className="dropdown-basic"
-                  >
-                    {tagg.name}
-                  </MenuButton>
-                  <MenuList>
-                    {
-                      tagg.tags_list
-                        .map(tag => {
-                          const has_tag = contextualised_link.hasGivenTag(tag)
-                          return <MenuItem
-                            onClick={() => {
-                              new_data.drawing_area.updateSelectedLinksTagAssignation(has_tag, tag)
-                            }}
-                          >
-                            {t.name}
-                            {checked(has_tag)}
-                          </MenuItem>
-                        })
-                    }
-                  </MenuList>
-                </Menu>
-              })
-          }
-        </MenuList>
-      </Menu></> :
+      <MenuList>
+        {
+          new_data.drawing_area.sankey.flux_taggs_list
+            .filter(tagg => tagg.has_tags)
+            .map((tagg, i) => {
+              return <Menu key={i} placement='end'>
+                <MenuButton
+                  variant='contextmenu_button'
+                  as={Button}
+                  rightIcon={<ChevronRightIcon />}
+                  className="dropdown-basic"
+                >
+                  {tagg.name}
+                </MenuButton>
+                <MenuList>
+                  {
+                    tagg.tags_list
+                      .map(tag => {
+                        const has_tag = contextualised_link.hasGivenTag(tag)
+                        return <MenuItem
+                          display='flex'
+                          onClick={() => {
+                            new_data.drawing_area.updateSelectedLinksTagAssignation(!has_tag, tag)
+                            new_data.drawing_area.link_contextualised=undefined
+                            new_data.menu_configuration.ref_to_menu_context_links_updater.current()
+                            setUpdate(a => a + 1)
+                          }}
+                        >
+                          {tag.name}
+                          {checked(has_tag)}
+                        </MenuItem>
+                      })
+                  }
+                </MenuList>
+              </Menu>
+            })
+        }
+      </MenuList>
+    </Menu></> :
     <></>
 }
