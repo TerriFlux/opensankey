@@ -83,7 +83,7 @@ export const resources_app_elements = {
         ajustH: 'Adjust. H',
         ajustV: 'Adjust. V',
 
-        multiValue:'Multiple values among seleced elements',
+        multiValue: 'Multiple values among seleced elements',
 
 
         undo: 'Undo',
@@ -456,6 +456,8 @@ export const resources_app_elements = {
         text_desagreg: 'Will disagregate in : ',
         desaggreg: 'Disagregation',
         aggreg: 'Agregation',
+        firstPlan: 'Move elements in the foreground',
+        lastPlan: 'Move elements in the last plane',
         tooltips: {
           Nom: 'Change the name of the selected node. If several nodes are selected, this field is disabled',
           AS: 'Allow to apply a predefined style in the preference menu to the selected node(s)',
@@ -526,7 +528,7 @@ export const resources_app_elements = {
             override_type_node_shape: 'Override the default forced shape of product and sector type nodes',
             arrow_angle: 'Change the angle of node arrow',
             angle_orientation: 'Change the orientation of the node',
-            opacity:'Opacity of the shape of the node',
+            opacity: 'Opacity of the shape of the node',
 
           }
         },
@@ -646,7 +648,7 @@ export const resources_app_elements = {
           data_type: 'Data type',
           value: 'Value',
           ratio_input: 'Ratio total input',
-          ratio_output:'Ratio total output',
+          ratio_output: 'Ratio total output',
           ratio_source_parent: 'Ratio parent flux(left)',
           ratio_target_parent: 'Ratio parent flux(right)',
           unit_conversion: 'Coeff. units conversion',
@@ -661,12 +663,12 @@ export const resources_app_elements = {
         },
         apparence: {
           apparence: 'Appearance',
-          flow:'Flow',
-          fond:'shape background',
-          source:'Source node',
-          target:'Target node',
+          flow: 'Flow',
+          fond: 'shape background',
+          source: 'Source node',
+          target: 'Target node',
           couleur: 'Color',
-          color_source:'Element defining flow color',
+          color_source: 'Element defining flow color',
           grad: 'Gradient',
           hach: 'Dashed',
           of: 'Orientation',
@@ -686,12 +688,12 @@ export const resources_app_elements = {
           data_off_scale: 'Scale',
           tooltips: {
 
-            color_source:{
-              def:'Choose what rule define flow color :',
-              flow:' Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
-              source:'Color is defined by node source color',
-              target:'Color is defined by node target color',
-              disabled:'Rule doesn\'t allow to choose flow color'
+            color_source: {
+              def: 'Choose what rule define flow color :',
+              flow: ' Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
+              source: 'Color is defined by node source color',
+              target: 'Color is defined by node target color',
+              disabled: 'Rule doesn\'t allow to choose flow color'
             },
             couleur: 'Choose the color for the selected link(s)',
             grad: 'Apply a gradient color effect on the selected link(s). The gradient is done between the color of the start node and the color of the end node',
@@ -890,7 +892,7 @@ export const resources_app_elements = {
   fr: {
     translation: {
       Menu: {
-        level_associated_tag:'Association des hiérarchie de noeuds avec les dimensions',
+        level_associated_tag: 'Association des hiérarchie de noeuds avec les dimensions',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         Aucun: 'Aucun',
@@ -931,7 +933,7 @@ export const resources_app_elements = {
         ajustH: 'Ajust. H',
         ajustV: 'Ajust. V',
 
-        multiValue:'Différentes valeurs dans la sélection',
+        multiValue: 'Différentes valeurs dans la sélection',
 
         undo: 'Annuler',
         redo: 'Refaire',
@@ -1365,6 +1367,8 @@ export const resources_app_elements = {
         text_desagreg: 'Sera désaggrégé en : ',
         desaggreg: 'Désagrégation',
         aggreg: 'Agrégation',
+        firstPlan: 'Mettre les éléments au premier plan',
+        lastPlan: 'Mettre les éléments au dernier plan',
         tooltips: {
           Nom: 'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
           AS: 'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
@@ -1398,7 +1402,7 @@ export const resources_app_elements = {
           Rectangle: 'Rectangle',
           TML: 'Largeur minimale',
           TMH: 'Hauteur minimale',
-          opacity:'Opacité',
+          opacity: 'Opacité',
           geometry: 'Mode',
           geometry_absolute: 'Position',
           geometry_relative: 'Décalage',
@@ -1435,7 +1439,7 @@ export const resources_app_elements = {
             override_type_node_shape: 'Permet de changer la forme forcée par défaut sur les noeuds de types produits et secteur',
             arrow_angle: 'Change l\'angle du noeud en forme  de flèche',
             angle_orientation: 'Change l\'orientation du noeud en forme  de flèche',
-            opacity:'Opacité de la forme du noeud',
+            opacity: 'Opacité de la forme du noeud',
 
           }
         },
@@ -1557,7 +1561,7 @@ export const resources_app_elements = {
           data_type: 'Type de données',
           value: 'Valeur',
           ratio_input: 'Ratio total entrées',
-          ratio_output:'Ratio total sorties',
+          ratio_output: 'Ratio total sorties',
           ratio_source_parent: 'Ratio flux parent(à gauche)',
           ratio_target_parent: 'Ratio flux parent(à droite)',
           unit_conversion: 'Coeff. conversion unités',
@@ -1574,10 +1578,10 @@ export const resources_app_elements = {
           fond: 'Fond',
           couleur: 'Couleur',
           grad: 'Gradient',
-          flow:'Flux',
-          color_source:'Élement définissant la couleur du flux',
-          source:'Noeud source',
-          target:'Noeud cible',
+          flow: 'Flux',
+          color_source: 'Élement définissant la couleur du flux',
+          source: 'Noeud source',
+          target: 'Noeud cible',
           hach: 'Hachuré',
           of: 'Orientation',
           type: 'Type',
@@ -1596,12 +1600,12 @@ export const resources_app_elements = {
           data_off_scale: 'Échelle',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
-            color_source:{
-              def:'Choisir la règle qui définie la couleur du flux',
-              flow:'La couleur est définie avec les paramètres liées au flux (couleur, couleur des étiquettes de flux ou données)',
-              source:'La couleur est définie par la couelur du noeud source',
-              target:'La couleur est définie par la couelur du noeud cible',
-              disabled:'La règle ne permet pas modifier la couleur du flux'
+            color_source: {
+              def: 'Choisir la règle qui définie la couleur du flux',
+              flow: 'La couleur est définie avec les paramètres liées au flux (couleur, couleur des étiquettes de flux ou données)',
+              source: 'La couleur est définie par la couelur du noeud source',
+              target: 'La couleur est définie par la couelur du noeud cible',
+              disabled: 'La règle ne permet pas modifier la couleur du flux'
 
             },
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',

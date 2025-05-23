@@ -41,6 +41,7 @@ import {
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
+  getStringListFromJSON,
   getStringOrUndefinedFromJSON,
   list_palette_color
 } from '../types/Utils'
@@ -54,7 +55,6 @@ import {
 import {
   ClassTemplate_GhostLinkElement,
   ClassTemplate_LinkElement,
-  sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from '../Elements/Link'
 import { ClassTemplate_Legend } from '../Elements/Legend'
@@ -64,7 +64,7 @@ import {
   ClassAbstract_DrawingArea,
   ClassAbstract_ApplicationData,
 } from '../types/Abstract'
-import { ClassTemplate_ProtoElement } from '../Elements/Element'
+import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
 import { Class_NodeAttribute } from '../Elements/NodeAttributes'
 import { Class_LinkAttribute } from '../Elements/LinkAttributes'
@@ -74,6 +74,12 @@ declare const window: Window &
     SankeyToolsStatic: boolean
   }
 
+function sortElementByIdOrder(
+  el_a: Type_AnyProtoElement,
+  el_b: Type_AnyProtoElement,
+  list: string[]) {
+  return list.indexOf(el_a.id) - list.indexOf(el_b.id)
+}
 // CONSTANTS ****************************************************************************
 
 const initial_show_structure = 'data'
@@ -155,20 +161,12 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
   /**
-   * d3 selection of svg group that contains drawing area nodes
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public d3_selection_nodes: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 selection of svg group that contains drawing area links
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public d3_selection_links: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  * d3 selection of svg group that contains sankey elements (nodes,flows)
+  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+  * @memberof ClassTemplate_DrawingArea
+  */
+  public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area legend elements
@@ -295,6 +293,10 @@ export abstract class ClassTemplate_DrawingArea
   private _number_of_elements: number = 0
 
   // Context attributes for drawing area ------------------------------------------------
+
+  private _list_g_element: string[] = []
+
+  protected _group_to_select: string = '.gg_nodes,.gg_links'
 
   /**
    * Interaction mode with drawing area
@@ -476,6 +478,7 @@ export abstract class ClassTemplate_DrawingArea
     json_object['show_structure'] = this._type_data
     json_object['number_of_elements'] = this._number_of_elements
     json_object['magnetic_nodes'] = this._magnetic_nodes
+    json_object['order_g_elements'] = this._list_g_element
     // Dump with json of contained elements
     const out = {
       ...json_object,
@@ -544,6 +547,9 @@ export abstract class ClassTemplate_DrawingArea
 
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
+
+    this._list_g_element = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element)
+
   }
 
   // ABSTRACT METHODS ==================================================================
@@ -579,6 +585,8 @@ export abstract class ClassTemplate_DrawingArea
 
     // Unset saving indicator
     this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+
+    this.orderElementOnDA()
   }
 
   /**
@@ -613,8 +621,7 @@ export abstract class ClassTemplate_DrawingArea
 
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
-    this.d3_selection_links = this.d3_selection_elements_group.append('g').attr('id', 'g_links')
-    this.d3_selection_nodes = this.d3_selection_elements_group.append('g').attr('id', 'g_nodes')
+    this.d3_selection_elements_sankey_group = this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
   }
@@ -721,24 +728,6 @@ export abstract class ClassTemplate_DrawingArea
     return this._number_of_elements
   }
 
-  public orderElements() {
-    // Sort links
-    let new_order = 0
-    this.sankey.links_list
-      .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
-      .forEach(link => {
-        if (link.is_visible) {
-          link.d3_selection?.raise()
-        }
-        // Re-update display order as consecutive
-        link.displaying_order = new_order
-        new_order = new_order + 2
-      })
-    // Sort nodes
-    // TODO if necessary
-    // Update number of elements
-    this._number_of_elements = new_order
-  }
 
   /**
    * Checks if it is possible to directly deal with events
@@ -2183,16 +2172,16 @@ export abstract class ClassTemplate_DrawingArea
     const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
     if (desagregated_nodes.length > 0) {
       let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
-    desagregated_nodes.forEach(nn => {
-      if (nn.sibling) {
-        return
-      }
-      nn.display.position.x = node.position_x
-      nn.display.position.u = node.position_u
-      nn.display.position.y = current_y
-      current_y += 20
-      new_current_v = this.apply_v_desagregate(nn, new_current_v,tagGroup)
-    })
+      desagregated_nodes.forEach(nn => {
+        if (nn.sibling) {
+          return
+        }
+        nn.display.position.x = node.position_x
+        nn.display.position.u = node.position_u
+        nn.display.position.y = current_y
+        current_y += 20
+        new_current_v = this.apply_v_desagregate(nn, new_current_v, tagGroup)
+      })
     }
     return new_current_v + 1
   }
@@ -2306,6 +2295,64 @@ export abstract class ClassTemplate_DrawingArea
     })
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
+
+  /**
+   * Return an element (node,flow) given an id
+   *
+   * @param {string} id
+   * @return {*} 
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public elementFromId(id: string) {
+    if (id in this._sankey.nodes_dict) {
+      return this._sankey.nodes_dict[id]
+    }
+    if (id in this._sankey.links_dict) {
+      return this._sankey.links_dict[id]
+    }
+
+    return { name: id, is_selected: false, is_visible: false }
+  }
+
+  /**
+   * Swaps overlaps position of element on DA
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
+    // Save old value that can be used in undo
+    const list_old_io: string[] = this.list_g_element ?? []
+    // Function undo
+    const inv_moveElement = () => {
+      this.list_g_element = list_old_io
+      this.orderElementOnDA()
+
+    }
+    // Function original
+    const _moveElement = () => {
+
+      // Remove element to move from the array of element order
+      const el_to_move = this.list_g_element.splice(idx_src, 1)
+      // Add the element  the element target in the order array
+      this.list_g_element.splice(idx_trgt, 0, el_to_move[0])
+      this.orderElementOnDA()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_moveElement)
+    this.application_data.history.saveRedo(_moveElement)
+    // Execute original function
+    _moveElement()
+  }
+
+  public orderElementOnDA() {
+    this.d3_selection_elements_sankey_group
+      ?.selectAll(this._group_to_select)
+      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, this._list_g_element) })
+      .order()
+  }
+
 
   // PRIVATE METHODS ==================================================================
 
@@ -2725,10 +2772,10 @@ export abstract class ClassTemplate_DrawingArea
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_node_style.position.type == 'parametric' ) {
+        if (this.sankey.default_node_style.position.type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
-          this.computeParametrization()
+              this.computeParametrization()
             })
         }
       }
@@ -2749,6 +2796,7 @@ export abstract class ClassTemplate_DrawingArea
         }
       }
       this._selection_zone.reset()
+      this.orderElementOnDA()
     }
   }
 
@@ -3099,4 +3147,7 @@ export abstract class ClassTemplate_DrawingArea
 
   public get magnetic_nodes(): boolean { return this._magnetic_nodes }
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
+
+  public get list_g_element() { return this._list_g_element }
+  public set list_g_element(list: string[]) { this._list_g_element = list }
 }

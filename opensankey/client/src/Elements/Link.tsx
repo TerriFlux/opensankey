@@ -103,6 +103,14 @@ export function defaultLinkId(
   return source.id + '---' + target.id
 }
 
+export function defaultLinkName(
+  source: Type_AnyAbstractNodeElement,
+  target: Type_AnyAbstractNodeElement
+) {
+  // coherent with code in python (Constructor of flux)
+  return source.name + '---' + target.name
+}
+
 /**
  * Allows to sort links alphabethically per id
  * @export
@@ -116,22 +124,6 @@ export function sortLinksElementsByIds(
 ) {
   if (a.id > b.id) return 1
   else if (a.id < b.id) return -1
-  else return 0
-}
-
-/**
- * Allow to sort links by their z-ordre on the drawing area
- * @export
- * @param {Type_AnyLinkElement} a
- * @param {Type_AnyLinkElement} b
- * @return {*}
- */
-export function sortLinksElementsByDisplayingOrders(
-  a: Type_AnyLinkElement,
-  b: Type_AnyLinkElement
-) {
-  if (a.displaying_order > b.displaying_order) return 1
-  else if (a.displaying_order < b.displaying_order) return -1
   else return 0
 }
 
@@ -261,7 +253,6 @@ export abstract class ClassTemplate_LinkElement
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
-    displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
     style: Class_LinkStyle,
@@ -383,7 +374,7 @@ export abstract class ClassTemplate_LinkElement
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super(id, menu_config, 'g_links')
+    super(id, menu_config, 'g_elements_sankey')
     // Add control points
     this._control_points = this.initControlPoints(drawing_area)
     // Values
@@ -397,6 +388,8 @@ export abstract class ClassTemplate_LinkElement
     this._source_visibility_fingerprint = source.visibility_fingerprint
     this._target = target
     this._target_visibility_fingerprint = target.visibility_fingerprint
+
+    drawing_area.list_g_element.push(this.id)
   }
 
   public createLinkValue(
@@ -502,7 +495,6 @@ export abstract class ClassTemplate_LinkElement
     // Local attributes
     this._display.attributes.copyFrom(_._display.attributes)
     // Display
-    this._display.displaying_order = _._display.displaying_order
     this._display.position_starting = structuredClone(_._display.position_starting)
     this._display.position_ending = structuredClone(_._display.position_ending)
     this._display.position_x_value = _._display.position_x_value
@@ -601,7 +593,6 @@ export abstract class ClassTemplate_LinkElement
     json_object['style'] = this.style.id
     json_object['local'] = this._display.attributes.toJSON()
     // Fill positions attributes
-    json_object['displaying_order'] = this._display.displaying_order
     json_object['position_starting_x'] = this._display.position_starting.x
     json_object['position_starting_y'] = this._display.position_starting.y
     json_object['position_ending_x'] = this._display.position_ending.x
@@ -651,7 +642,6 @@ export abstract class ClassTemplate_LinkElement
       if ('local_link_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.local_link_scale)
     }
     // Get positions infos
-    this._display.displaying_order = getNumberFromJSON(json_object, 'displaying_order', this._display.displaying_order)
     this._display.position_starting.x = getNumberFromJSON(json_object, 'position_starting_x', this._display.position_starting.x)
     this._display.position_starting.y = getNumberFromJSON(json_object, 'position_starting_y', this._display.position_starting.y)
     this._display.position_ending.x = getNumberFromJSON(json_object, 'position_ending_x', this._display.position_starting.x)
@@ -741,26 +731,6 @@ export abstract class ClassTemplate_LinkElement
     this._target.addInputLink(this)
     // Draw
     this.drawElements()
-  }
-
-  public increaseDisplayOrder() {
-    this._display.displaying_order = this._display.displaying_order + 3
-    this.draw()
-  }
-
-  public decreaseDisplayOrder() {
-    this._display.displaying_order = this._display.displaying_order - 3
-    this.draw()
-  }
-
-  public setTopDisplayOrder() {
-    this._display.displaying_order = this._display.drawing_area.addElement()
-    this.draw()
-  }
-
-  public setDownDisplayOrder() {
-    this._display.displaying_order = -1
-    this.draw()
   }
 
   public deleteDraggedValuePos() {
@@ -1053,8 +1023,6 @@ export abstract class ClassTemplate_LinkElement
     }
     // Draw only if we have starting & ending points
     if (starting_point && ending_point) {
-      // Setup order
-      this.drawing_area.orderElements()
       // Draw elements
       this._drawElements()
     }
@@ -3048,7 +3016,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public get name() {
-    return defaultLinkId(this._source, this._target)
+    return defaultLinkName(this._source, this._target)
   }
 
   public get has_result() {
@@ -3066,18 +3034,6 @@ export abstract class ClassTemplate_LinkElement
 
   public get display() {
     return this._display
-  }
-
-  /**
-   * displaying order on drawing area
-   * @memberof ClassTemplate_LinkElement
-   */
-  public get displaying_order() {
-    return this._display.displaying_order
-  }
-
-  public set displaying_order(_: number) {
-    this._display.displaying_order = _
   }
 
   /**
@@ -3331,7 +3287,7 @@ export abstract class ClassTemplate_LinkElement
   public get data_label() {
     if ( this.sankey.drawing_area.type_data == 'data' ) {
       if (this.value?.value_option == 'ratio_input' && this.value?.valueData) {
-        return this.value.valueData*100 + '%s'
+        return this.value.valueData + '%s'
       } else if (this.value?.value_option == 'ratio_output' && this.value?.valueData) {
         return this.value?.valueData + '%d'
       } /*else if (this.value?.value_option == 'unit_conversion' ) {
@@ -5318,26 +5274,37 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       if (this.data_value == null ) {
         return null
       }
+      const multiplier = this.data_value/100 
       if (this.parent == this.link) {
         let total_source = 0
         this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.value?.valueResult??0)
-        return total_source*this.data_value!
+        return total_source*multiplier
       } else {
         const data_tags_id = this.data_tags_id
         const data_tags : ClassAbstract_ProtoTag[]= []
         this.link?.sankey.data_taggs_list.forEach((tagg,i)=>data_tags.push(tagg.tags_dict[data_tags_id[i]]))
         let total_source = 0
         this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueForTags(data_tags)?.valueResult??0)
-        return total_source*this.data_value!      
+        return total_source*multiplier     
       }
 
     } else if (this.value_option == 'ratio_output') {
       if (this.data_value == null ) {
         return null
       }
-      let total_target = 0
-      this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
-      return total_target*this.data_value!
+      const multiplier = this.data_value/100 
+      if (this.parent == this.link) {
+        let total_target = 0
+        this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.value?.valueResult??0)
+        return total_target*multiplier
+      } else {
+        const data_tags_id = this.data_tags_id
+        const data_tags : ClassAbstract_ProtoTag[]= []
+        this.link?.sankey.data_taggs_list.forEach((tagg,i)=>data_tags.push(tagg.tags_dict[data_tags_id[i]]))
+        let total_target = 0
+        this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueForTags(data_tags)?.valueResult??0)
+        return total_target*multiplier     
+      }
     } else if (this.value_option == 'ratio_source_parent') {
       const parent = this.link!.target.dimensions_as_child[0].parent
       const parent_link = this.link?.sankey.links_dict[this.link.source.name + ' --> ' + parent.name]
@@ -5788,7 +5755,6 @@ export class ClassTemplate_GhostLinkElement
   protected _display: {
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
-    displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
     style: Class_LinkStyle,
@@ -5810,7 +5776,6 @@ export class ClassTemplate_GhostLinkElement
     this._display = {
       drawing_area: drawing_area,
       sankey: drawing_area.sankey as Type_GenericSankey,
-      displaying_order: drawing_area.addElement(),
       position_starting: {
         auto_x:false,
         x: 0,

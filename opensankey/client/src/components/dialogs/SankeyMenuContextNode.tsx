@@ -60,7 +60,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   // Datas ------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t, drawing_area } = new_data
   const {
     ref_setter_show_menu_node_apparence,
     ref_setter_show_menu_node_io,
@@ -68,7 +68,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   // Node on which this menu applies ----------------------------------------------------
 
-  const contextualised_node = new_data.drawing_area.node_contextualised
+  const contextualised_node = drawing_area.node_contextualised
 
   let style_c_n = '0px 0px auto auto'
   let is_top = true
@@ -380,6 +380,20 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     // Execute original function
     _reorgIONodeSelected()
   }
+
+
+  const moveToFirstPlan = () => {
+    drawing_area.selected_nodes_list.forEach(node => {
+      const idx_to_shift = drawing_area.list_g_element.indexOf(node.id)
+      drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
+    })
+  }
+  const moveToLastPlan = () => {
+    drawing_area.selected_nodes_list.forEach(node => {
+      const idx_to_shift = drawing_area.list_g_element.indexOf(node.id)
+      drawing_area.moveOrderElementInDA(idx_to_shift, 0)
+    })
+  }
   // JSX Components ---------------------------------------------------------------------
 
   const dropdown_c_n_apparence = <Button
@@ -685,8 +699,16 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     {t('Noeud.Reorg')}
   </Button>
 
-
-
+  const btn_move_to_first_plan = <Button
+    variant='contextmenu_button'
+    onClick={moveToFirstPlan}>
+    {t('Noeud.firstPlan')}
+  </Button>
+  const btn_move_to_last_plan = <Button
+    variant='contextmenu_button'
+    onClick={moveToLastPlan}>
+    {t('Noeud.lastPlan')}
+  </Button>
 
   const btn_edition_hierarchy = contextualised_node ? hierarchyEditionMenu(new_data, contextualised_node, selected_nodes,refreshThisAndToggleSaving) : <></>
   const btn_nav_hierarchy = contextualised_node ? hierarchyManipulationMenu(new_data, contextualised_node, selected_nodes,refreshThisAndToggleSaving) : <></>
@@ -753,6 +775,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     'sep_3': sep,
 
     'reorg': btn_reorganise_link_io,
+    'firstPlan': btn_move_to_first_plan,
+    'lastPlan': btn_move_to_last_plan,
     'select_link': drp_dwn_slct_link,
     'sep_4': sep,
 
