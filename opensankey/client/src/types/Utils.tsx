@@ -45,6 +45,7 @@ import { FType_InitializeAdditionalMenus } from './FunctionTypes'
  */
 export type Type_ElementPosition = {
   type?: Type_Position
+  auto_x: boolean
   x: number
   y: number
   u: number
@@ -143,6 +144,7 @@ export const default_main_sankey_id = 'sankey_maitre'
 export const const_default_position_x = 50
 export const const_default_position_y = 50
 export const default_element_position: Type_ElementPosition = {
+  auto_x: false,
   x: const_default_position_x,
   y: const_default_position_y,
   u: 0,
@@ -452,7 +454,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: ['hierarchy','sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    context_node_order: ['edition_hierarchy','nav_hierarchy','sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
     additional_context_node_element: {},
     // Links
     additional_menu_configuration_links: {},

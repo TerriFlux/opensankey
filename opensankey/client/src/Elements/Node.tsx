@@ -95,6 +95,7 @@ import {
   default_node_value_label_background, default_node_value_label_is_visible,
   default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity
 } from './NodeAttributes'
+import { Class_DrawingArea } from '../types/Types'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -444,6 +445,12 @@ export abstract class ClassTemplate_NodeElement
                 if (tag_to_copy) {
                   // Create new dim if everything is ok
                   const new_dim = new Class_NodeDimension(parent, [this], parent_tag, tag_to_copy, dim_to_copy.id)
+                  if (dim_to_copy.force_show_children) {
+                    new_dim.setForceToShowChildren(true)
+                  }
+                  if (dim_to_copy.force_show_parent) {
+                    new_dim.setForceToShowParent()
+                  }
                   all_existing_dim[dim_to_copy.id] = new_dim
                 }
               }
@@ -475,6 +482,12 @@ export abstract class ClassTemplate_NodeElement
               // Create new dim if everything is ok
               if ((children.length > 0) && tag != undefined) {
                 const new_dim = new Class_NodeDimension(this, children, parent_tag, tag, dim_to_copy.id)
+                if (dim_to_copy.force_show_children) {
+                  new_dim.setForceToShowChildren(true)
+                }
+                if (dim_to_copy.force_show_parent) {
+                  new_dim.setForceToShowParent()
+                }
                 all_existing_dim[dim_to_copy.id] = new_dim
               }
             }
@@ -836,7 +849,7 @@ export abstract class ClassTemplate_NodeElement
    * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
-  public drawParent(id?: string) {
+  public drawParent(id: string) {
     if (this.is_child) {
       //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
       // Force to show parent
@@ -845,14 +858,7 @@ export abstract class ClassTemplate_NodeElement
         const parent = this._dimensions_as_child[id].parent
         parent.input_links_list.forEach(l=>l.source.draw())
         parent.output_links_list.forEach(l=>l.target.draw())
-      } else {
-        //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
-        const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
-        dim.setForceToShowParent()
-        const parent = dim.parent
-        parent.input_links_list.forEach(l=>{l.source.draw()})
-        parent.output_links_list.forEach(l=>{l.target.draw()})
-      }
+      } 
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
@@ -1672,6 +1678,7 @@ export abstract class ClassTemplate_NodeElement
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
             }
+            this._display.position.x = this._display.position.u*(this.sankey.drawing_area as Class_DrawingArea).horizontal_spacing
           }
         }
       }
@@ -4877,7 +4884,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {

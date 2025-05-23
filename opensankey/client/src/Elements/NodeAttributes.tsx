@@ -601,6 +601,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     // Parameters for geometry
     this._position = {
       type: 'absolute',
+      auto_x: false,
       x: 10,
       y: 10,
       u: 0,

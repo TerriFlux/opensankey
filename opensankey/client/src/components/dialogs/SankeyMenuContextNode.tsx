@@ -42,7 +42,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
-import { hierarchyMenu } from './Hierarchies'
+import { hierarchyEditionMenu,hierarchyManipulationMenu } from './Hierarchies'
 
 
 /*************************************************************************************************/
@@ -688,7 +688,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
 
 
-  const btn_hierarchy = contextualised_node ? hierarchyMenu(new_data, contextualised_node, selected_nodes,refreshThisAndToggleSaving) : <></>
+  const btn_edition_hierarchy = contextualised_node ? hierarchyEditionMenu(new_data, contextualised_node, selected_nodes,refreshThisAndToggleSaving) : <></>
+  const btn_nav_hierarchy = contextualised_node ? hierarchyManipulationMenu(new_data, contextualised_node, selected_nodes,refreshThisAndToggleSaving) : <></>
 
   const btn_mask_shape = <Button
     variant='contextmenu_button'
@@ -736,7 +737,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   </Button>
 
   const context_content: { [_: string]: JSX.Element } = {
-    'hierarchy': btn_hierarchy,
+    'edition_hierarchy': btn_edition_hierarchy,
+    'nav_hierarchy': btn_nav_hierarchy,
     'sep_1': sep,
 
     'align': selected_nodes.length > 1 ? <>{dropdown_c_n_align}{sep}</> : <></>,
