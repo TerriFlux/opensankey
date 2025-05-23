@@ -85,6 +85,7 @@ dev_opensankey:
     - git fetch
     - git pull
     - git config --global --add safe.directory /home/ubuntu/dev_opensankey/sankeyapplication/submodules/MFAProblem
+    - git config --global --add safe.directory /home/ubuntu/dev_opensankey/sankeyapplication/submodules/MFAProblem/submodules/eigen
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
