@@ -91,10 +91,11 @@ export declare const window: Window &
       sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
       excel: string
-      structure: boolean,
-      advanced: boolean,
-      footer: boolean,
-      toolbar: true
+      structure: boolean
+      advanced: boolean
+      footer: boolean
+      toolbar: boolean
+      topbar: boolean
     }
   }
 
@@ -189,13 +190,13 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
-      <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />
+      {(window.sankey && window.sankey.topbar)? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />:<></>}
 
       {/* Bottom Navbar with some more info */}
       {
         (
           (!new_data.is_static) ||
-          (window.sankey.footer)
+          (window.sankey && window.sankey.footer)
         ) ?
           <Box
             className='BottomMenu'
@@ -304,9 +305,9 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       ) : (<></>)}
 
 
-      <ToolBarBottom
+      {window.sankey && window.sankey.toolbar ? <ToolBarBottom
         new_data={new_data}
-      />
+      />:<></>}
 
       {
         new_data.processFunction.ref_processing.current ? (
