@@ -452,7 +452,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: ['aggregate', 'contract', 'desaggregate', 'expand', 'sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'firstPlan', 'lastPlan', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    context_node_order: ['aggregate', 'contract', 'desaggregate', 'expand', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
     additional_context_node_element: {},
     // Links
     additional_menu_configuration_links: {},
@@ -460,7 +460,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
-    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'firstPlan','lastPlan', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
+    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'changePlan', 'mask_attr', 'edit_value', 'sep_3', 'assign_tag', 'sep_4'],
     additional_context_link_element: {},
 
     // Preferences
