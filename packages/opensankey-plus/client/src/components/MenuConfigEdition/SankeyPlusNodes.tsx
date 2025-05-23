@@ -7,7 +7,8 @@ import {
   Checkbox,
   Input,
   InputGroup,
-  InputRightElement
+  InputRightElement,
+  MenuItem
 } from '@chakra-ui/react'
 
 // Local imports
@@ -603,51 +604,6 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
 
 }
 
-export const ButtonNodeContextShowTagMenu: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
-  const { t } = new_data
-  const { ref_setter_show_menu_node_tags } = new_data.menu_configuration.dict_setter_show_dialog
-
-  const closeContextMenu = () => {
-    // Unset contextualized node
-    new_data.drawing_area.node_contextualised = undefined
-    // Refresh this menu
-    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-  }
-  return <Button
-    onClick={() => {
-      ref_setter_show_menu_node_tags.current(true)
-      closeContextMenu()
-    }}
-    variant='contextmenu_button'
-    rightIcon={new_data.icon_library.icon_popup_menu}
-  >
-    {t('Menu.Etiquettes')}
-  </Button>
-
-}
-
-export const ButtonNodeContextShowTooltipMenu: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
-  const { t } = new_data
-  const { ref_setter_show_menu_node_tooltip } = new_data.menu_configuration.dict_setter_show_dialog
-
-  const closeContextMenu = () => {
-    // Unset contextualized node
-    new_data.drawing_area.node_contextualised = undefined
-    // Refresh this menu
-    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-  }
-
-  return <Button
-    onClick={() => {
-      ref_setter_show_menu_node_tooltip.current(true)
-      closeContextMenu()
-    }}
-    variant='contextmenu_button'
-    rightIcon={new_data.icon_library.icon_popup_menu}
-  >
-    {t('Noeud.IS')}
-  </Button>
-}
 
 export const ButtonNodeContextCreateUnitaryView: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
   const { t } = new_data
@@ -660,6 +616,7 @@ export const ButtonNodeContextCreateUnitaryView: FunctionComponent<FCType_Button
   }
 
   return <Button
+    as={MenuItem}
     onClick={() => {
       new_data.sendWaitingToast(
         () => {
@@ -697,9 +654,10 @@ export const ButtonNodeContextCreateZDTAroundSelectedNode: FunctionComponent<FCT
   }
 
   return <Button
+    as={MenuItem}
     onClick={() => {
       const cont = new_data.drawing_area.sankey.addNewDefaultFreeLabel()
-      cont.tied_to_nodes=true
+      cont.tied_to_nodes = true
       new_data.drawing_area.selected_nodes_list.forEach(node => {
         new_data.drawing_area.sankey.attachNodeToCont(node, cont)
       })
@@ -721,16 +679,18 @@ export const ButtonNodeContextSelectDescendantOFSelectedNodes: FunctionComponent
     // Refresh this menu
     new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
   }
-  return <Button onClick={() => {
+  return <Button
+    as={MenuItem}
+    onClick={() => {
       new_data.drawing_area.selected_nodes_list
-      .forEach(n => {
-        // Select all descendant of n
-        n.getListDescendantOfNode().forEach(node=>{
-          new_data.drawing_area.addNodeToSelection(node)
+        .forEach(n => {
+          // Select all descendant of n
+          n.getListDescendantOfNode().forEach(node => {
+            new_data.drawing_area.addNodeToSelection(node)
+          })
         })
-      })
-    closeContextMenu()
-  }}
+      closeContextMenu()
+    }}
     variant='contextmenu_button'
   >{t('Noeud.SND')}
   </Button>
@@ -747,6 +707,7 @@ export const ButtonNodeContextStartAnimation: FunctionComponent<FCType_ButtonNod
   }
 
   return <Button
+    as={MenuItem}
     onClick={() => {
       new_data.drawing_area.purgeSelection()
       new_data.drawing_area.node_contextualised?.launchAnimation() //launch sankey animation form contextualised node
