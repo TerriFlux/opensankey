@@ -96,57 +96,7 @@ export const moduleDialogs: FType_ModuleDialogs = (
   menu_configuration_nodes_attributes,
   _processFunction // TODO unused
 ) => {
-  const { t } = new_data
   return [
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_node_apparence'}
-      content={menu_configuration_nodes_attributes}
-      title={t('Menu.Noeuds') + ' ' + t('Noeud.apparence.apparence')}
-      maxW='20%'
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_node_io'}
-      content={<SankeyMenuConfigurationNodesIO
-        new_data={new_data}
-      />}
-      title={t('Menu.Noeuds') + ' ' + t('Noeud.PF.PFM')}
-      maxW='20%'
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_link_data'}
-      content={<MenuConfigurationLinksData
-        new_data={new_data}
-        contextual={true}
-      />}
-      title={t('Menu.flux') + ' ' + t('Flux.data.données')}
-      maxW='20%'
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_link_appearence'}
-      content={<MenuConfigurationLinksStyle
-        new_data={new_data}
-        additionMenus={additional_menus}
-        menu_for_style={false}
-      />}
-      title={t('Menu.flux') + ' ' + t('Flux.apparence.apparence')}
-      maxW='20%'
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_layout'}
-      content={<OpenSankeyMenuConfigurationLayout
-        new_data={new_data}
-        extra_background_element={additional_menus.current.extra_background_element}
-        contextual={true}
-      />}
-      title={t('Menu.MEP')}
-      maxW='20%'
-    />,
-
 
   ]
 }

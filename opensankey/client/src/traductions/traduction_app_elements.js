@@ -456,6 +456,8 @@ export const resources_app_elements = {
         aggreg: 'Agregation',
         firstPlan: 'Move elements in the foreground',
         lastPlan: 'Move elements in the last plane',
+        changePlan: 'Change plan of nodes',
+        mask_attr: 'Change an attribute of node',
         tooltips: {
           Nom: 'Change the name of the selected node. If several nodes are selected, this field is disabled',
           AS: 'Allow to apply a predefined style in the preference menu to the selected node(s)',
@@ -627,6 +629,8 @@ export const resources_app_elements = {
         ajust_label: 'Adjust labels position',
         FS: 'Link',
         local_scale: 'Local link scale',
+        changePlan: 'Change plan of flows',
+        mask_attr:'Change flow\'s attributes',
         tooltips: {
           src: 'Choice of the departure node for the selected link(s)',
           trgt: 'Choice of the arrival node for the selected link(s)',
@@ -683,6 +687,9 @@ export const resources_app_elements = {
           arrow_size: 'Size of arrow',
           display_link_lab: 'Display value',
           hide_link_lab: 'Hide value',
+          display_link_name: 'Display name',
+          hide_link_name: 'Hide name',
+
           data_off_scale: 'Scale',
           tooltips: {
 
@@ -1357,6 +1364,8 @@ export const resources_app_elements = {
         aggreg: 'Agrégation',
         firstPlan: 'Mettre les éléments au premier plan',
         lastPlan: 'Mettre les éléments au dernier plan',
+        changePlan: 'Modifier le plan des noeud',
+        mask_attr: 'Changer un attribut du noeud',
         tooltips: {
           Nom: 'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
           AS: 'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
@@ -1529,6 +1538,8 @@ export const resources_app_elements = {
         ajust_label: 'Position vertical ajusté',
         local_scale: 'Échelle propre au flux',
         FS: 'Flux',
+        changePlan: 'Modifier le plan des flux',
+        mask_attr:'Changer des attributs',
         tooltips: {
           src: 'Choix du noeud de départ pour le/les flux sélectionné(s)',
           trgt: 'Choix du noeud d\'arrivée pour le/les flux sélectionné(s)',
@@ -1585,6 +1596,8 @@ export const resources_app_elements = {
           arrow_size: 'Taille',
           display_link_lab: 'Afficher la valeur',
           hide_link_lab: 'Masquer la valeur',
+          display_link_name: 'Afficher le texte',
+          hide_link_name: 'Masquer le texte',
           data_off_scale: 'Échelle',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',

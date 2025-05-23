@@ -43,7 +43,6 @@ import {
   ModalOverlay,
   Select,
   Text,
-  useBoolean
 } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
@@ -73,10 +72,6 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   // Datas ------------------------------------------------------------------------------
 
   const { t, drawing_area } = new_data
-  const {
-    ref_setter_show_menu_node_apparence,
-    ref_setter_show_menu_node_io,
-  } = new_data.menu_configuration.dict_setter_show_dialog
 
   // Node on which this menu applies ----------------------------------------------------
 
@@ -114,10 +109,10 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload
-  const [, refreshThis] = useBoolean()
+  const [, refreshThis] = useState(0)
 
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_context_nodes_updater.current = () => refreshThis.toggle()
+  new_data.menu_configuration.ref_to_menu_context_nodes_updater.current = () => refreshThis(a => a + 1)
 
   // Functions used to reset menu UI ----------------------------------------------------
 
@@ -126,14 +121,14 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     new_data.menu_configuration.ref_to_spreadsheet.current()
     // Refresh this menu
-    refreshThis.toggle()
+    refreshThis(a => a + 1)
   }
 
   const closeContextMenu = () => {
     // Unset contextualized node
     new_data.drawing_area.node_contextualised = undefined
     // Refresh this menu
-    refreshThis.toggle()
+    refreshThis(a => a + 1)
   }
 
   // Functions we can undo --------------------------------------------------------------
@@ -206,6 +201,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.history.saveRedo(_align_node)
     // Execute original function
     _align_node()
+    closeContextMenu()
   }
 
   /**
@@ -239,6 +235,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.history.saveRedo(_updateStyle)
     // Execute original attr mutation
     _updateStyle()
+    closeContextMenu()
   }
 
   /**
@@ -269,6 +266,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.history.saveRedo(_resetAttr)
     // Execute original attr mutation
     _resetAttr()
+    closeContextMenu()
+
   }
 
   /**
@@ -301,6 +300,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.history.saveRedo(_updateNameVisibility)
     // Execute original attr mutation
     _updateNameVisibility()
+    closeContextMenu()
   }
 
   /**
@@ -333,6 +333,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.history.saveRedo(_updateValueVisibility)
     // Execute original attr mutation
     _updateValueVisibility()
+    closeContextMenu()
   }
 
   /**
@@ -365,6 +366,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.history.saveRedo(_updateShapeVisibility)
     // Execute original attr mutation
     _updateShapeVisibility()
+    closeContextMenu()
   }
 
   /**
@@ -391,6 +393,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     new_data.history.saveRedo(_reorgIONodeSelected)
     // Execute original function
     _reorgIONodeSelected()
+    closeContextMenu()
+
   }
 
 
@@ -399,25 +403,16 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       const idx_to_shift = drawing_area.list_g_element.indexOf(node.id)
       drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
     })
+    closeContextMenu()
   }
   const moveToLastPlan = () => {
     drawing_area.selected_nodes_list.forEach(node => {
       const idx_to_shift = drawing_area.list_g_element.indexOf(node.id)
       drawing_area.moveOrderElementInDA(idx_to_shift, 0)
     })
+    closeContextMenu()
   }
   // JSX Components ---------------------------------------------------------------------
-
-  const dropdown_c_n_apparence = <Button
-    onClick={() => {
-      ref_setter_show_menu_node_apparence.current(true)
-      closeContextMenu()
-    }}
-    variant='contextmenu_button'
-    rightIcon={new_data.icon_library.icon_popup_menu}
-  >
-    {t('Noeud.apparence.apparence')}
-  </Button>
 
   // Menu to change some pararmeter concerning the style of the node
   const dropdown_c_n_style_select = <Menu placement='end'>
@@ -436,7 +431,6 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
             return <MenuItem key={'context_node_item_' + i} onClick={() => {
               if (contextualised_node) {
                 updateStyle(sn)
-
               }
             }}>
               {sn.name}
@@ -466,16 +460,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     </MenuList>
   </Menu>
 
-  const dropdown_c_n_io = <Button
-    onClick={() => {
-      ref_setter_show_menu_node_io.current(true)
-      closeContextMenu()
-    }}
-    variant='contextmenu_button'
-    rightIcon={new_data.icon_library.icon_popup_menu}
-  >
-    {t('Noeud.PF.PF')}
-  </Button>
+
 
   // ===============ALIGNEMENT HORIZONTAL DES NOEUDS====================================
 
@@ -711,16 +696,23 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     {t('Noeud.Reorg')}
   </Button>
 
-  const btn_move_to_first_plan = <Button
-    variant='contextmenu_button'
-    onClick={moveToFirstPlan}>
-    {t('Noeud.firstPlan')}
-  </Button>
-  const btn_move_to_last_plan = <Button
-    variant='contextmenu_button'
-    onClick={moveToLastPlan}>
-    {t('Noeud.lastPlan')}
-  </Button>
+  const menu_change_plan = <Menu placement='end'>
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+      {t('Noeud.changePlan')}
+    </MenuButton>
+    <MenuList>
+
+      <MenuItem
+        onClick={moveToFirstPlan}>
+        {t('Noeud.firstPlan')}
+      </MenuItem>
+      <MenuItem
+        onClick={moveToLastPlan}>
+        {t('Noeud.lastPlan')}
+      </MenuItem>
+    </MenuList>
+  </Menu>
+
 
   const btn_aggregate = (
     (selected_nodes.length === 1) &&
@@ -901,50 +893,35 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     </Button> :
     <></>
 
-  const btn_mask_shape = <Button
-    variant='contextmenu_button'
-    onClick={updateShapeVisibility}
-  >
-    {
-      contextualised_node_shape_visible ?
-        t('Noeud.apparence.hide_shape') :
-        t('Noeud.apparence.display_shape')
-    }
-  </Button>
 
-  const btn_mask_label = <Button
-    variant='contextmenu_button'
-    onClick={updateNameVisibility}
-  >
-    {
-      contextualised_node_label_visible ?
-        t('Noeud.apparence.hide_label') :
-        t('Noeud.apparence.display_label')
-    }
-  </Button>
+  const menu_mask_node_attr = <Menu placement='end'>
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+      {t('Noeud.mask_attr')}
+    </MenuButton>
+    <MenuList>
 
-  const btn_delete = <Button
-    variant='contextmenu_button'
-    onClick={() => {
-      new_data.drawing_area.deleteSelectedNodes()
-      new_data.drawing_area.node_contextualised = undefined
-      refreshThisAndToggleSaving()
-      closeContextMenu()
-    }}
-  >
-    {t('Menu.suppr')}
-  </Button>
-
-  const btn_mask_value = <Button
-    variant='contextmenu_button'
-    onClick={updateValueVisibility}
-  >
-    {
-      contextualised_node_value_visible ?
-        t('Noeud.apparence.hide_value') :
-        t('Noeud.apparence.display_value')
-    }
-  </Button>
+      <MenuItem
+        onClick={updateShapeVisibility}>
+        {
+          contextualised_node_shape_visible ?
+            t('Noeud.apparence.hide_shape') :
+            t('Noeud.apparence.display_shape')
+        }
+      </MenuItem>
+      <MenuItem
+        onClick={updateNameVisibility}>
+        {contextualised_node_label_visible ?
+          t('Noeud.apparence.hide_label') :
+          t('Noeud.apparence.display_label')}
+      </MenuItem>
+      <MenuItem
+        onClick={updateValueVisibility}>
+        {contextualised_node_value_visible ?
+          t('Noeud.apparence.hide_value') :
+          t('Noeud.apparence.display_value')}
+      </MenuItem>
+    </MenuList>
+  </Menu>
 
   const context_content: { [_: string]: JSX.Element } = {
     'aggregate': btn_aggregate,
@@ -955,23 +932,16 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
     'align': selected_nodes.length > 1 ? <>{dropdown_c_n_align}{sep}</> : <></>,
     'edit_name': button_edit_label_node,
-    'delete': btn_delete,
     'sep_2': sep,
 
     'style': dropdown_c_n_style,
-    'mask_shape': btn_mask_shape,
-    'mask_label': btn_mask_label,
-    'mask_value': btn_mask_value,
+    'mask_node_attr': menu_mask_node_attr,
     'sep_3': sep,
 
     'reorg': btn_reorganise_link_io,
-    'firstPlan': btn_move_to_first_plan,
-    'lastPlan': btn_move_to_last_plan,
+    'change_plan': menu_change_plan,
     'select_link': drp_dwn_slct_link,
-    'sep_4': sep,
 
-    'drag_apparence': dropdown_c_n_apparence,
-    'drag_io': selected_nodes.length == 1 ? dropdown_c_n_io : <></>,
     ...additionalMenu.current.additional_context_node_element
   }
 
