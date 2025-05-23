@@ -84,6 +84,7 @@ dev_opensankey:
     - git clean -fdx -e env -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git fetch
     - git pull
+    - git config --global --add safe.directory /home/ubuntu/dev_opensankey/sankeyapplication/submodules/MFAProblem
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
@@ -93,6 +94,7 @@ dev_opensankey:
     - git submodule update --recursive
     # Build client & server
     - source $ROOT_FOLDER/dev_opensankey/bin/activate
+    - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
     - bash deploy_SankeyApp.sh
     # Update db
     - cp server/db.sqlite server/db.sqlite.bk/db_`date --iso-8601='seconds'`.sqlite
