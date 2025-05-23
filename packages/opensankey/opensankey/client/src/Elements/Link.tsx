@@ -4881,6 +4881,22 @@ export class Class_LinkValueTree {
     return has_result
   }
 
+  public addFrom(element: Class_LinkValueTree) {
+    // Check types of children
+    const [allValues, allTrees] = element.kindOfChildren()
+    // Copy children recursively
+    Object.keys(element.children)
+      .forEach(tag_id => {
+        const child_to_copy = element.children[tag_id]
+        if ((child_to_copy instanceof Class_LinkValueTree) && (allTrees)) {
+          (this.children[tag_id] as Class_LinkValueTree).addFrom(child_to_copy)
+        }
+        else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
+          (this.children[tag_id] as Class_LinkValue).addFrom(child_to_copy)
+        }
+      })
+  }
+
   public toJSON(
     kwargs?: Type_JSON
   ) {
@@ -5442,6 +5458,11 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       })
   }
 
+
+  public addFrom(element: Class_LinkValue) {
+    this.data_value = this.data_value!+element.data_value!
+  }
+
   /**
    * Extract this link value as JSON
    *
@@ -5791,12 +5812,14 @@ export class ClassTemplate_GhostLinkElement
       sankey: drawing_area.sankey as Type_GenericSankey,
       displaying_order: drawing_area.addElement(),
       position_starting: {
+        auto_x:false,
         x: 0,
         y: 0,
         u: 0,
         v: 0
       },
       position_ending: {
+        auto_x:false,
         x: 0,
         y: 0,
         u: 0,
