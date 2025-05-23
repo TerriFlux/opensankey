@@ -43,9 +43,10 @@ import {
 } from '../Elements/Element'
 import { Type_ElementPosition } from '../types/Utils'
 import { default_element_position } from '../types/Utils'
+import { Type_GenericDrawingArea, Type_GenericSankey } from '../types/Types'
 
 // CLASS HANDLER ************************************************************************
-
+export type TypeGeneric_Handler = ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>
 /**
  * Class that define a handler used to manipulate a element
  * @export
@@ -157,15 +158,14 @@ export class ClassTemplate_Handler
   }
 
   protected _drawElement() {
-    this.d3_selection?.attr('class', 'gg_handler')
-    if (this._custom_class !== undefined) {
-      this.d3_selection?.attr('class', this._custom_class)
-    }
+    const elementClassName = 'gg_handler ' + (this._custom_class ? this._custom_class : '')
+    this.d3_selection?.attr('class', elementClassName).datum(this)
+    const size_to_use = this.sizeToUse()
     this.d3_selection?.append('rect')
-      .attr('x', -this._size / 2)
-      .attr('y', -this._size / 2)
-      .attr('width', this._size)
-      .attr('height', this._size)
+      .attr('x', -size_to_use / 2)
+      .attr('y', -size_to_use / 2)
+      .attr('width', size_to_use)
+      .attr('height', size_to_use)
       .attr('stroke', this._color)
       .attr('stroke-width', 1)
       .attr('fill', this._color)
@@ -203,6 +203,20 @@ export class ClassTemplate_Handler
       // Normal _initDraw
       super._initDraw()
     }
+  }
+
+  /**
+   * Correct size to use for handler, it take into account scale of DA to to counter visual size reduction
+   *
+   * @private
+   * @return {*} 
+   * @memberof ClassTemplate_Handler
+   */
+  private sizeToUse() {
+    if (this._custom_html_grp)
+      return this._size
+    else
+      return this._size / this.drawing_area.getZoomScale()
   }
 
   // GETTERS / SETTERS ==================================================================
