@@ -68,6 +68,7 @@ import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/El
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
 import { Class_NodeAttribute } from '../Elements/NodeAttributes'
 import { Class_LinkAttribute } from '../Elements/LinkAttributes'
+import { TypeGeneric_Handler } from '../Elements/Handler'
 
 declare const window: Window &
   typeof globalThis & {
@@ -1424,7 +1425,7 @@ export abstract class ClassTemplate_DrawingArea
     }
 
     const inv_updateSelectedLinksTagAssignation = () => {
-      this.selected_links_list.forEach(link => {
+      this.selected_links_list. forEach(link => {
         if (dict_old_val[link.id]) {
           link.addTag(flux_tag)
         }
@@ -2881,6 +2882,15 @@ export abstract class ClassTemplate_DrawingArea
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
+
+    // Launch waiting process to redraw handler with corresponding size (it take into account DA zoom scale)
+    // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
+    this.application_data._add_waiting_process('redraw_handler', () => {
+       this.d3_selection_handlers?.selectAll('.gg_handler').each((evt)=>{
+        const handle=evt as TypeGeneric_Handler
+        handle.draw()
+      })
+    },500)
     }
   }
 
