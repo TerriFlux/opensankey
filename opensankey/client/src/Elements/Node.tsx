@@ -250,7 +250,7 @@ export abstract class ClassTemplate_NodeElement
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super(id, menu_config, 'g_nodes')
+    super(id, menu_config, 'g_elements_sankey')
     // Init other class attributes
     this._name = name
     this._display = {
@@ -262,6 +262,8 @@ export abstract class ClassTemplate_NodeElement
     }
     // Link with default style
     this._display.style.addReference(this)
+
+    drawing_area.list_g_element.push(this.id)
   }
 
   // CLEANING METHODS ===================================================================
@@ -1576,7 +1578,7 @@ export abstract class ClassTemplate_NodeElement
   protected _initDraw() {
     super._initDraw()
     // Update class attributes
-    this.d3_selection?.attr('class', 'gg_nodes')
+    this.d3_selection?.attr('class', 'gg_nodes').datum(this)
     // Apply styles
     this.d3_selection?.style('display', 'inline')
     this.d3_selection?.attr('font-family', this.name_label_font_family)

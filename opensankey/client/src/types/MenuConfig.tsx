@@ -184,6 +184,8 @@ export class Class_MenuConfig {
     Updater of component in the configuration menu
     ========================================*/
 
+  protected _ref_to_GraphElementsOrdoner_updater: MutableRefObject<() => void>
+
   // Update component OpenSankeyConfigurationsMenus
   protected _ref_to_menu_config_updater: MutableRefObject<() => void>
 
@@ -384,6 +386,7 @@ export class Class_MenuConfig {
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_spreadsheet = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
+    this._ref_to_GraphElementsOrdoner_updater = useRef(() => null)
     this._ref_menu_opened = useRef([false, () => null])
 
     // Layout
@@ -392,8 +395,8 @@ export class Class_MenuConfig {
 
     // Dimensions
     this._ref_to_menu_config_nodes_dim_selection_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_dim_tags_updater= useRef(() => null)
-    
+    this._ref_to_menu_config_nodes_dim_tags_updater = useRef(() => null)
+
     // Nodes
     this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
 
@@ -870,6 +873,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToNodesTags()
     this.updateComponentRelatedToNodesIO()
     this.updateComponentRelatedToNodesTooltips()
+    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   /**
@@ -901,6 +905,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksStyles()
     this.updateComponentRelatedToLinksTags()
     this.updateComponentRelatedToLinksTooltips()
+    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   /**
@@ -1126,7 +1131,7 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_nodes_apparence_visual_updater
   }
 
-  
+
   public get ref_to_menu_config_nodes_apparence_context_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_nodes_apparence_context_updater
   }
@@ -1291,6 +1296,7 @@ export class Class_MenuConfig {
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_bottom_updater
   }
+  public get ref_to_GraphElementsOrdoner_updater(): MutableRefObject<() => void> { return this._ref_to_GraphElementsOrdoner_updater }
 
   /**
    * Order of buttons in top menu
