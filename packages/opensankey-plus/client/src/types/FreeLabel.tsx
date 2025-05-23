@@ -48,22 +48,6 @@ export const default_container_image_src = ''
 
 export type Type_AnyContainerElement = Class_ContainerElement<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP>
 
-/**
- * Allow to sort  by their z-ordre on the drawing area
- * @export
- * @param {Type_AnyContainerElement} a
- * @param {Type_AnyContainerElement} b
- * @return {*}
- */
-export function sortElementsContainersByDisplayingOrders(
-  a: Type_AnyContainerElement,
-  b: Type_AnyContainerElement
-) {
-  if (a.displaying_order > b.displaying_order) return 1
-  else if (a.displaying_order < b.displaying_order) return -1
-  else return 0
-}
-
 // CLASS FREE LABEL ELEMENT *************************************************************
 
 export class Class_ContainerElement
@@ -98,7 +82,6 @@ export class Class_ContainerElement
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
     position: Type_ElementPosition,
-    displaying_order: number,
 
   }
 
@@ -129,7 +112,7 @@ export class Class_ContainerElement
   private _attached_node: ClassTemplate_NodeElementOSP<Type_GenericDrawingAreaOSP, Type_GenericSankeyOSP, Type_GenericLinkElementOSP>[]
   private _margin_from_attached_nodes: number
   private _at_extremity_of_attached_nodes: boolean
-  private _extremity_position: 'top' | 'bottom'
+  private _extremity_position: 'top' | 'bottom' | 'left' | 'right'
 
 
   private _drag_handler: {
@@ -152,12 +135,11 @@ export class Class_ContainerElement
     menu_config: Class_MenuConfigOSP,
     drawing_area: Type_GenericDrawingArea,
   ) {
-    super(id, menu_config, 'g_labels')
+    super(id, menu_config, 'g_elements_sankey')
     this._display = {
       drawing_area: drawing_area,
       sankey: drawing_area.sankey,
       position: structuredClone(default_element_position as Type_ElementPosition),
-      displaying_order: drawing_area.addContainerElement()
     }
     // Free labels attributs
     this._title = 'Zone de texte ' + this.id
@@ -217,6 +199,13 @@ export class Class_ContainerElement
         this.dragHandleEnd(),
         { class: 'zdt_right_handle' }),
     }
+    drawing_area.list_g_element.push(id)
+
+    // Launch timer to reorder elemeent on DA
+    this.drawing_area.application_data._add_waiting_process('order_elements_on_da', () => {
+      this.drawing_area.orderElementOnDA()
+    })
+
   }
 
 
@@ -255,6 +244,10 @@ export class Class_ContainerElement
     this._image_src = container_to_copy._image_src
     this._label_width = container_to_copy._label_width
     this._label_height = container_to_copy._label_height
+    this._tied_to_nodes = container_to_copy._tied_to_nodes
+    this._margin_from_attached_nodes = container_to_copy._margin_from_attached_nodes
+    this._at_extremity_of_attached_nodes = container_to_copy._at_extremity_of_attached_nodes
+    this._extremity_position = container_to_copy._extremity_position
   }
 
   // SAVING METHODS =====================================================================
@@ -281,10 +274,11 @@ export class Class_ContainerElement
     json_object['image_src'] = this._image_src
     json_object['label_width'] = this._label_width
     json_object['label_height'] = this._label_height
-    json_object['displaying_order'] = this._display.displaying_order
     json_object['tiedToNode'] = this._tied_to_nodes
     json_object['margin'] = this._margin_from_attached_nodes
     json_object['attachedNodes'] = this._attached_node.map(n => n.id)
+    json_object['attachedNodesExtremity'] = this._at_extremity_of_attached_nodes
+    json_object['extremityPos'] = this._extremity_position
 
   }
 
@@ -310,16 +304,17 @@ export class Class_ContainerElement
     this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
     this._label_width = getNumberFromJSON(json_object, 'label_width', this.label_width)
     this._label_height = getNumberFromJSON(json_object, 'label_height', this.label_height)
-    this._display.displaying_order = getNumberFromJSON(json_object, 'displaying_order', this._display.displaying_order)
     this._tied_to_nodes = getBooleanFromJSON(json_object, 'tiedToNode', this._tied_to_nodes)
     this._margin_from_attached_nodes = getNumberFromJSON(json_object, 'margin', this._margin_from_attached_nodes)
     const list_id_nodes = getStringListFromJSON(json_object, 'attachedNodes', [])
     const present_node_id = this.drawing_area.sankey.nodes_dict
     list_id_nodes.forEach(id_n => {
       if (id_n in present_node_id) {
-        this._attached_node.push(this.drawing_area.sankey.nodes_dict[id_n])
+        this.drawing_area.sankey.attachContToNode(this, this.drawing_area.sankey.nodes_dict[id_n])
       }
     })
+    this._at_extremity_of_attached_nodes = getBooleanFromJSON(json_object, 'attachedNodesExtremity', this._at_extremity_of_attached_nodes)
+    this._extremity_position = getStringFromJSON(json_object, 'extremityPos', this._extremity_position) as 'top' | 'bottom' | 'left' | 'right'
   }
 
 
@@ -332,11 +327,10 @@ export class Class_ContainerElement
   protected _draw() {
     super._draw()
     // Update class attributes
-    this.d3_selection?.attr('class', 'gg_labels')
+    this.d3_selection?.attr('class', 'gg_labels').datum(this)
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
     this._drawShape()
     this._drawContent()
-    this.drawing_area.orderElementsConatianer()
   }
   /**
    * Draw ZDT shape (a rectangle with custom size,bg color, bg opacity,border color, ...)
@@ -413,17 +407,6 @@ export class Class_ContainerElement
     this._drag_handler.left.draw()
     this._drag_handler.right.draw()
   }
-
-  public increaseDisplayOrder() {
-    this._display.displaying_order = this._display.displaying_order + 3
-    this.draw()
-  }
-
-  public decreaseDisplayOrder() {
-    this._display.displaying_order = this._display.displaying_order - 3
-    this.draw()
-  }
-
 
   // PRIVATE METHODS ====================================================================
 
@@ -526,6 +509,10 @@ export class Class_ContainerElement
    */
   private dragTopHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      // Early return if tied to nodes
+      if (this._tied_to_nodes && this._at_extremity_of_attached_nodes && ['left', 'right'].includes(this._extremity_position))
+        return
+
       this._label_height -= event.dy
       this.position_y = this.position_y + event.dy
       this.draw()
@@ -544,6 +531,10 @@ export class Class_ContainerElement
    */
   private dragBottomHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      // Early return if tied to nodes
+      if (this._tied_to_nodes && this._at_extremity_of_attached_nodes && ['left', 'right'].includes(this._extremity_position))
+        return
+
       this._label_height += event.dy
       this.draw()
 
@@ -561,6 +552,10 @@ export class Class_ContainerElement
    */
   private dragLeftHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      // Early return if tied to nodes
+      if (this._tied_to_nodes && this._at_extremity_of_attached_nodes && ['top', 'bottom'].includes(this._extremity_position))
+        return
+
       this._label_width -= event.dx
       this.setPosXY(this.position_x + event.dx, this.position_y)
       this.draw()
@@ -579,6 +574,10 @@ export class Class_ContainerElement
    */
   private dragRightHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+      // Early return if tied to nodes
+      if (this._tied_to_nodes && this._at_extremity_of_attached_nodes && ['top', 'bottom'].includes(this._extremity_position))
+        return
+
       this._label_width += event.dx
       this.draw()
 
@@ -639,20 +638,24 @@ export class Class_ContainerElement
     })
 
     if (this._at_extremity_of_attached_nodes) {
-      const bbox = this.drawing_area.d3_selection_nodes?.node()?.getBBox() ?? undefined
-
-      // No bounding box -> return
-      if (bbox == undefined)
-        return
-
-      // compute position x of container so that it center is aligned with the center of the group of nodes attached 
-      const center_pox_x = ((min_x + max_x) / 2) - this._label_width / 2
+      // compute position of container so that it center is aligned with the center of the group of nodes attached 
       if (this._extremity_position == 'top') {
-        this.setPosXY(center_pox_x, bbox.y - this._label_height - this._margin_from_attached_nodes)
+        this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+        const center_pox_x = ((min_x + max_x) / 2) - this._label_width / 2
+        this.setPosXY(center_pox_x, min_y - this._label_height - this._margin_from_attached_nodes)
       } else if (this._extremity_position == 'bottom') {
-        this.setPosXY(center_pox_x, bbox.y + bbox.height + this._margin_from_attached_nodes)
+        this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+        const center_pox_x = ((min_x + max_x) / 2) - this._label_width / 2
+        this.setPosXY(center_pox_x, max_y + this._margin_from_attached_nodes)
+      } else if (this._extremity_position == 'left') {
+        this._label_height = (max_y - min_y) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+        const center_pox_y = ((min_y + max_y) / 2) - this._label_height / 2
+        this.setPosXY(min_x - this._label_width - this._margin_from_attached_nodes, center_pox_y)
+      } else if (this._extremity_position == 'right') {
+        this._label_height = (max_y - min_y) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+        const center_pox_y = ((min_y + max_y) / 2) - this._label_height / 2
+        this.setPosXY(max_x + this._margin_from_attached_nodes, center_pox_y)
       }
-
     } else {
       this.setPosXY(min_x - this._margin_from_attached_nodes, min_y - this._margin_from_attached_nodes)
       this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
@@ -691,22 +694,19 @@ export class Class_ContainerElement
       this.drawing_area.link_contextualised = undefined
       this.drawing_area.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
       this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-
+      this.drawing_area.contextualised_container = undefined
+      this.menu_config.ref_to_menu_context_container_updater.current()
       // SHIFT
       if (event.shiftKey) {
         // Add free label to selection
         drawing_area.addContainerToSelection(this)
         // Open related menu
         this.menu_config.openConfigMenuElementsContainers()
-        // Update components related to free label edition
-        this.menu_config.ref_to_menu_config_containers_updater.current()
       }
       // CTRL
       else if (event.ctrlKey) {
         // Add free label to selection
         drawing_area.addContainerToSelection(this)
-        // Update components related to free label edition
-        this.menu_config.ref_to_menu_config_containers_updater.current()
       }
       // OTHERS
       else {
@@ -716,6 +716,10 @@ export class Class_ContainerElement
         // Add free label to selection
         drawing_area.addContainerToSelection(this)
       }
+      // Update components related to free label edition
+      this.menu_config.updateComponentRelatedToContainers()
+
+      this.drawing_area.orderElementOnDA()
     }
   }
 
@@ -909,6 +913,7 @@ export class Class_ContainerElement
           this.setPosXY(old_x, old_y)
         }
         this.drawing_area.application_data.history.saveRedo(redo)
+        this.drawing_area.orderElementOnDA()
       }
     }
   }
@@ -967,15 +972,12 @@ export class Class_ContainerElement
   public get tied_to_nodes(): boolean { return this._tied_to_nodes }
   public set tied_to_nodes(b: boolean) { this._tied_to_nodes = b }
 
-  public get displaying_order() { return this._display.displaying_order }
-  public set displaying_order(_: number) { this._display.displaying_order = _ }
-
   public get margin_from_attached_nodes(): number { return this._margin_from_attached_nodes }
   public set margin_from_attached_nodes(value: number) { this._margin_from_attached_nodes = value }
 
   public get at_extremity_of_attached_nodes(): boolean { return this._at_extremity_of_attached_nodes }
   public set at_extremity_of_attached_nodes(value: boolean) { this._at_extremity_of_attached_nodes = value }
 
-  public get extremity_position(): 'top' | 'bottom' { return this._extremity_position }
-  public set extremity_position(value: 'top' | 'bottom') { this._extremity_position = value }
+  public get extremity_position(): 'top' | 'bottom' | 'left' | 'right' { return this._extremity_position }
+  public set extremity_position(value: 'top' | 'bottom' | 'left' | 'right') { this._extremity_position = value }
 }

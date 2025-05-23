@@ -43,7 +43,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   new_data_plus,
 }) => {
   const { t, icon_library, OSColorPicker } = new_data_plus
-  const { icon_add_element, icon_remove_element, icon_order_up, icon_order_down } = icon_library
+  const { icon_add_element, icon_remove_element, icon_order_up, icon_order_down, icon_to_the_left, icon_to_the_right, icon_text_vert_pos_top, icon_text_vert_pos_bottom } = icon_library
   const selected_zdt = new_data_plus.drawing_area.selected_containers_list
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
@@ -169,18 +169,16 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     })
     return (display_value) ? visible : false
   }
-  
-  const allLabelTiedToNodesAtExtremityTop = () => {
+  const allLabelTiedToNodesAtExtremityPos = (_: 'top' | 'bottom' | 'left' | 'right') => {
     let display_value = false
-    let position = 'top'
+    let position = _
     if (selected_zdt.length !== 0) {
       display_value = true
-      position = selected_zdt[0].extremity_position
     }
     selected_zdt.map((d) => {
       display_value = (d.extremity_position === position) ? display_value : false
     })
-    return (display_value) ? position : false
+    return display_value
   }
 
   const allNodesTiedToZDTRef = () => {
@@ -203,6 +201,8 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   }
 
   const list_node_tied = allNodesTiedToZDTRef()
+  const is_all_zdt_node_tied = allLabelTiedToNodes()
+  const is_all_node_tied_to_extremity = allLabelTiedToNodesAtExtremity()
   const options_selector_node_tied = new_data_plus.drawing_area.sankey.nodes_list_sorted.map((node) => { return { 'label': node.name, 'value': node.id, selected: list_node_tied.includes(node) } })
   const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
@@ -557,7 +557,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
     _updateLabelTiedToNodes()
   }
 
-  const updateLabelExtremityPos = (_: 'top' | 'bottom') => {
+  const updateLabelExtremityPos = (_: 'top' | 'bottom' | 'left' | 'right') => {
     const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.extremity_position]))
     const _updateLabelTiedToNodes = () => {
       selected_zdt.map(d => d.extremity_position = _)
@@ -613,7 +613,10 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   ref_set_number_inputs[2].current(String(allLabelTransparent()))
   ref_set_number_inputs[3].current(String(allLabelMargin()))
 
-  const is_zdt_at_extremity_top = allLabelTiedToNodesAtExtremityTop()
+  const is_zdt_at_extremity_top = allLabelTiedToNodesAtExtremityPos('top')
+  const is_zdt_at_extremity_bottom = allLabelTiedToNodesAtExtremityPos('bottom')
+  const is_zdt_at_extremity_left = allLabelTiedToNodesAtExtremityPos('left')
+  const is_zdt_at_extremity_right = allLabelTiedToNodesAtExtremityPos('right')
 
   const content_image = <>
     {/* Import image */}
@@ -662,7 +665,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
       </Box>
       <ConfigMenuNumberInput
         t={new_data_plus.t}
-        disabled={disable_options}
+        disabled={disable_options || (is_all_zdt_node_tied && (is_zdt_at_extremity_left || is_zdt_at_extremity_right))}
         ref_to_set_value={ref_set_number_inputs[0]}
         default_value={allLabelHeight()}
         function_on_blur={updateHeight}
@@ -680,7 +683,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
       </Box>
       <ConfigMenuNumberInput
         t={new_data_plus.t}
-        disabled={disable_options}
+        disabled={disable_options || (is_all_zdt_node_tied && (is_zdt_at_extremity_top || is_zdt_at_extremity_bottom))}
         ref_to_set_value={ref_set_number_inputs[1]}
         default_value={allLabelWidth()}
         function_on_blur={updateWidth}
@@ -749,8 +752,10 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           {t('LL.extremityPos')}
         </Box>
         <ButtonGroup isAttached>
-          <Button variant={is_zdt_at_extremity_top ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { updateLabelExtremityPos('top') }}>{t('LL.tiedToNodesExtremityTop')}</Button>
-          <Button variant={!is_zdt_at_extremity_top ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { updateLabelExtremityPos('bottom') }}>{t('LL.tiedToNodesExtremityBottom')}</Button>
+          <Button variant={is_zdt_at_extremity_top ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { updateLabelExtremityPos('top') }}>{icon_text_vert_pos_top}</Button>
+          <Button variant={is_zdt_at_extremity_bottom ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { updateLabelExtremityPos('bottom') }}>{icon_text_vert_pos_bottom}</Button>
+          <Button variant={is_zdt_at_extremity_left ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { updateLabelExtremityPos('left') }}>{icon_to_the_left}</Button>
+          <Button variant={is_zdt_at_extremity_right ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { updateLabelExtremityPos('right') }}>{icon_to_the_right}</Button>
         </ButtonGroup>
 
       </Box>
@@ -779,32 +784,6 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
           isDisabled={disable_options}
           onClick={deleteSelectedLabels}>
           {icon_remove_element}
-        </Button>
-
-        {//Boutton pour monter le label sélctionné
-        }
-        <Button
-          variant='menuconfigpanel_option_button'
-          isDisabled={disable_options}
-          onClick={() => {
-            selected_zdt.map(l => {
-              l.increaseDisplayOrder()
-            })
-            setForceUpdate(a => !a)
-          }}>
-          {icon_order_up}
-        </Button>
-
-        <Button
-          variant='menuconfigpanel_option_button'
-          isDisabled={disable_options}
-          onClick={() => {
-            selected_zdt.map(l => {
-              l.decreaseDisplayOrder()
-            })
-            setForceUpdate(a => !a)
-          }}>
-          {icon_order_down}
         </Button>
 
       </Box>
@@ -878,14 +857,15 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
         iconColor={valAllLabelTiedToNodeIndeterminate ? '#78C2AD' : 'white'}
         isDisabled={disable_options}
         isIndeterminate={valAllLabelTiedToNodeIndeterminate}
-        isChecked={allLabelTiedToNodes()}
+        isChecked={is_all_zdt_node_tied}
         onChange={(evt) => updateLabelTiedToNodes(evt.target.checked)}>
         <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>
           {t('LL.tiedToNodes')}
         </OSTooltip>
       </Checkbox>
 
-      {allLabelTiedToNodes() ? content_pos_tied_to_nodes : content_pos_not_tied_to_nodes}
+      {is_all_zdt_node_tied ? content_pos_tied_to_nodes : <></>}
+      {(!is_all_zdt_node_tied || (is_all_zdt_node_tied && is_all_node_tied_to_extremity)) ? content_pos_not_tied_to_nodes : <></>}
 
       <Box
         as='span'
@@ -969,7 +949,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
   { new_data_plus }
 ) => {
-  const { t, OSColorPicker } = new_data_plus
+  const { t, OSColorPicker, drawing_area } = new_data_plus
 
   const selected_zdt = new_data_plus.drawing_area.selected_containers_list
   const zdt_to_contextualise = new_data_plus.drawing_area.contextualised_container
@@ -977,8 +957,21 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
   const [, setCount] = useState(0)
   new_data_plus.menu_configuration.ref_to_menu_context_container_updater.current = () => setCount(a => a + 1)
   let style_c_zdd = '0px 0px auto auto'
+  let pos_x = new_data_plus.drawing_area.pointer_pos[0] + 10
+  let pos_y = new_data_plus.drawing_area.pointer_pos[1] - 20
+  let is_top = true
+  const size_context_menu = 6 * 40 // Get approx. height of context menu
+
   if (zdt_to_contextualise) {
-    style_c_zdd = (new_data_plus.drawing_area.pointer_pos[1] - 20) + 'px auto auto ' + (new_data_plus.drawing_area.pointer_pos[0] + 10) + 'px'
+    if (new_data_plus.drawing_area.pointer_pos[0] + 450 > window.innerWidth) {
+      pos_x = new_data_plus.drawing_area.pointer_pos[0] - 455
+    }
+
+    if (new_data_plus.drawing_area.pointer_pos[1] + size_context_menu > window.innerHeight) {
+      pos_y = new_data_plus.drawing_area.pointer_pos[1] - size_context_menu
+      is_top = false
+    }
+    style_c_zdd = pos_y + 'px auto auto ' + pos_x + 'px'
   }
   else {
     // Early return in case zdt zdt_to_contextualise isn't defined, it avoid testing if zdt is defined in each function
@@ -1022,6 +1015,20 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
       // Must be in zdt
       return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
     })
+
+  const moveToFirstPlan = () => {
+    drawing_area.selected_containers_list.forEach(cont => {
+      const idx_to_shift = drawing_area.list_g_element.indexOf(cont.id)
+      drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length-1)
+    })
+  }
+
+  const moveToLastPlan = () => {
+    drawing_area.selected_containers_list.forEach(cont => {
+      const idx_to_shift = drawing_area.list_g_element.indexOf(cont.id)
+      drawing_area.moveOrderElementInDA(idx_to_shift, 0)
+    })
+  }
 
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
   const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
@@ -1095,6 +1102,17 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
   >{t('Menu.SNI')}
   </Button>
 
+  const btn_move_to_first_plan = <Button
+    variant='contextmenu_button'
+    onClick={moveToFirstPlan}>
+    {t('Noeud.firstPlan')}
+  </Button>
+  const btn_move_to_last_plan = <Button
+    variant='contextmenu_button'
+    onClick={moveToLastPlan}>
+    {t('Noeud.lastPlan')}
+  </Button>
+
 
   return zdt_to_contextualise ? <Box
     layerStyle='context_menu'
@@ -1111,6 +1129,9 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
       {sep}
       {btn_mask_border}
       {btn_change_color}
+      {sep}
+      {btn_move_to_first_plan}
+      {btn_move_to_last_plan}
       {sep}
       {button_add_selected_nodes_to_tied_nodes}
       {button_detach_all_tied_nodes}

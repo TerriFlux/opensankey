@@ -14,12 +14,16 @@ import {
   Box,
   Button,
   Checkbox,
+  Collapse,
+  Divider,
   Input,
   Modal,
   ModalBody,
   ModalCloseButton,
   ModalContent,
-  ModalHeader
+  ModalHeader,
+  ModalOverlay,
+  useDisclosure
 } from '@chakra-ui/react'
 import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 
@@ -43,7 +47,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
   launch
 }) => {
   const { t } = application_data_mfa
-  const { menu_configuration} = application_data_mfa
+  const { menu_configuration } = application_data_mfa
   const [result, setResult] = useState('')
   const [processing, setProcessing] = useState(false)
   const [failure, setFailure] = useState(false)
@@ -56,6 +60,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
   const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
   const [input_file, set_input_file] = useState<Blob | undefined>(undefined)
   const _load_excel = useRef<HTMLInputElement>(null)
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true })
 
   const [show_reconciliation, set_show_reconciliation] = useState(false)
   application_data_mfa.menu_configuration.dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current = set_show_reconciliation
@@ -328,7 +333,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
           else {
             response
               .blob()
-              .then((value: Blob)=>{
+              .then((value: Blob) => {
                 DisplaySankey(value)
               })
           }
@@ -444,19 +449,61 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
       setResult('')
     }
   }
-  // if (show_reconciliation && menu_configuration.action_type === 'optim_sankey' && !not_started && !processing && !failure) {
-  //   set_show_reconciliation(false)
-  // }
+
+
+  const content_import_excel = <Box layerStyle='menu_sub_section'>
+    <Box layerStyle='menu_sub_section_head'>
+      <Button variant='menu_sub_section_collapse_button'
+        size='sizeCollapseButton'
+        onClick={onToggle}>
+        {isOpen ? application_data_mfa.icon_library.icon_collapse_up : application_data_mfa.icon_library.icon_collapse_down}
+      </Button>
+      <Box as='span' layerStyle='menu_sub_section_title'
+        textStyle='title_sub_section'
+      >{t('ModalAFM.input_parameter')}</Box>
+    </Box>
+    <Collapse in={isOpen} animateOpacity>
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_suboption_name'>
+            {t('ModalAFM.input_excel')}
+          </Box>
+          <Input
+            type="file"
+            fontSize='0.6rem'
+            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+            ref={_load_excel}
+            onChange={setInputFile}
+          />
+        </Box>
+
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_suboption_name'>
+            {t('ModalAFM.input_layout')}
+          </Box>
+
+          <Input
+            type="file"
+            fontSize='0.6rem'
+            onChange={setLayoutFile}
+          />
+        </Box>
+      </Box>
+    </Collapse>
+  </Box>
+
   return (
     <Modal
-      size="lg"
-      scrollBehavior='inside'
+      variant='modal_reconciliation'
       isOpen={show_reconciliation}
       onClose={() => {
         CleanServer()
         set_show_reconciliation(false)
         menu_configuration.action_type = ''
       }}>
+      <ModalOverlay />
       <ModalContent
         maxWidth='inherit'
       >
@@ -465,159 +512,127 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          {menu_configuration.action_type !== 'optim_sankey' ? (<>
-            <Box as='span' layerStyle='menuconfigpanel_part_title_1'>
-              {t('ModalAFM.input_parameter')}
-            </Box>
+          <Box layerStyle='menuconfigpanel_grid'>
 
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_suboption_name'>
-                {t('ModalAFM.input_excel')}
-              </Box>
-              <Input
-                size='xs'
-                type="file"
-                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                ref={_load_excel}
-                onChange={setInputFile}
-              />
-            </Box>
+            {menu_configuration.action_type !== 'optim_sankey' ? (content_import_excel) : (<></>)}
 
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_suboption_name'>
-                {t('ModalAFM.input_layout')}
-              </Box>
+            {menu_configuration.action_type === 'optim' ? (<>
+              <Box layerStyle='menu_sub_section'>
+                <Box layerStyle='menu_sub_section_title'>
+                  <Checkbox
+                    isChecked={uncertainty}
+                    variant='menuconfigpanel_part_title_1_checkbox'
+                    onChange={uncertaintyChange}>
+                    {t('ModalAFM.check_analyse_uncert')}
 
-              <Input
-                size='xs'
-                type="file"
-                onChange={setLayoutFile}
-              />
-            </Box></>
-          ) : (<></>)}
-          {menu_configuration.action_type === 'optim' ? (
-            <Checkbox
-              isChecked={regions}
-              variant='menuconfigpanel_option_checkbox'
-              onChange={regionChange}
-            >
-              {t('ModalAFM.check_scale_geo')}
-            </Checkbox>
-          ) : (<div></div>)}
-          {regions && menu_configuration.action_type === 'optim' ? (
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_suboption_name'>
-                {t('ModalAFM.input_scale_geo')}
-              </Box>
-              <Input
-                size='xs'
-                type="file" name=""
-                onChange={setRegionFile}
-              />
-            </Box>) : (<div></div>)}
-          {menu_configuration.action_type === 'optim' ? (
-            <Checkbox
-              isChecked={uncertainty}
-              variant='menuconfigpanel_option_checkbox'
-              onChange={uncertaintyChange}>
-              {t('ModalAFM.check_analyse_uncert')}
+                  </Checkbox>
+                </Box>
 
-            </Checkbox>
-          ) : (<div></div>)}
-          {uncertainty && menu_configuration.action_type === 'optim' ? (
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_suboption_name'>
-                {t('ModalAFM.input_analyse_uncert')}
-              </Box>
-              <Input
-                size='xs'
-                isDisabled={!uncertainty}
-                value={nb_realizations}
-                type="text"
-                onChange={setNbRealisations}
-              />
-            </Box>) : (<div></div>)}
-          <hr />
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_1'>
-            {title}
-          </Box>
-          <Box
-            layerStyle='menuconfigpanel_grid'
-          >
-            {input_file || menu_configuration.action_type === 'optim_sankey' ?
-              (not_started ? (<Button variant="menuconfigpanel_option_button" onClick={launchReconciliation}>
-                {t('ModalAFM.launch')}
-              </Button>) :
-                processing ? (
-                  <Button variant="menuconfigpanel_option_button_secondary">
-                    <span
-                      className="glyphicon glyphicon-refresh glyphicon-refresh-animate">
-                    </span>
-                    {t('ModalAFM.processing')}
-
-                  </Button>) : (
-                  failure ?
-                    <Button variant="menuconfigpanel_del_button" onClick={reset}>{failure_status}</Button> :
-                    <Box as='span' layerStyle='options_3cols'>
-                      <Button variant="menuconfigpanel_option_button" onClick={()=>{
-                        set_show_reconciliation(false)
-                        DisplayResults()
-                      }}>{t('ModalAFM.open_file')}</Button>
-                      <Button variant="menuconfigpanel_option_button_secondary" onClick={FinishReconciliation}>{success_status}</Button>
-                      <Button variant="menuconfigpanel_del_button" onClick={reset}>{t('ModalAFM.reset')}</Button>
+                {uncertainty ? (
+                  <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                    <Box layerStyle='menuconfigpanel_suboption_name'>
+                      {t('ModalAFM.input_analyse_uncert')}
                     </Box>
-                )) : (<Button variant="primary" disabled onClick={launchReconciliation}>{t('ModalAFM.launch')}</Button>)}
-          </Box>
-          {input_file === undefined && menu_configuration.action_type !== 'optim_sankey' ? <Alert status='warning'>
-            <AlertIcon />
-            {t('ModalAFM.waiting_file')}
-          </Alert> : <></>}
-          {!not_started && !processing && !failure ? (
-            <Alert status='success'>
-              <AlertIcon />
-              {t('ModalAFM.success')}
-            </Alert>
-          ) : (<div />)}
-          <hr />
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_1'>
-            Terminal
-          </Box>
-          <Box
-            as='span'
-            layerStyle='options_3cols'
-          >
-            <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} >{t('ModalAFM.infos')}</Button>
-            <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} >{t('ModalAFM.err')}</Button>
-            <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} >{t('ModalAFM.debug')}</Button>
-          </Box>
-          {processing ? (
-            <Counter
-              value={value}
-              result={result}
-              setResult={setResult}
-              setProcessing={setProcessing}
-              setFailure={setFailure}
-            />
-          ) : (
-            <>
-              {infos.map(
-                (info) => (
-                  value.includes(2) && info.includes('ERROR') ?
-                    (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
-                    : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-                      (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
-                      : value.includes(3) && (info.includes('DEBUG')) ?
-                        (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
-                ))}
+                    <Input
+                      size='xs'
+                      isDisabled={!uncertainty}
+                      value={nb_realizations}
+                      type="text"
+                      onChange={setNbRealisations}
+                    />
+                  </Box>) : (<></>)}
+              </Box>
             </>
-          )}
+            ) : (<></>)}
+
+            <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
+
+            <Box
+              as='span'
+              layerStyle='menuconfigpanel_part_title_1'>
+              {title}
+            </Box>
+            <Box
+              layerStyle='menuconfigpanel_grid'
+            >
+              {input_file || menu_configuration.action_type === 'optim_sankey' ?
+                (not_started ? (<Button variant="menuconfigpanel_option_button_primary_activated" onClick={launchReconciliation}>
+                  {t('ModalAFM.launch')}
+                </Button>) :
+                  processing ? (
+                    <Button variant="menuconfigpanel_option_button_secondary">
+                      <span
+                        className="glyphicon glyphicon-refresh glyphicon-refresh-animate">
+                      </span>
+                      {t('ModalAFM.processing')}
+
+                    </Button>) : (
+                    failure ?
+                      <Button variant="menuconfigpanel_del_button" onClick={reset}>{failure_status}</Button> :
+                      <Box as='span' layerStyle='options_3cols'>
+                        <Button variant="menuconfigpanel_option_button_primary_activated" onClick={() => {
+                          set_show_reconciliation(false)
+                          DisplayResults()
+                        }} size='sizeButtonDialog'>{t('ModalAFM.open_file')}</Button>
+                        <Button variant="menuconfigpanel_option_button_secondary_activated" onClick={FinishReconciliation} size='sizeButtonDialog'>{success_status}</Button>
+                        <Button variant="menuconfigpanel_del_button" onClick={reset} size='sizeButtonDialog'>{t('ModalAFM.reset')}</Button>
+                      </Box>
+                  )) : (<Button variant="primary" disabled onClick={launchReconciliation} size='sizeButtonDialog'>{t('ModalAFM.launch')}</Button>)}
+            </Box>
+
+            {input_file === undefined && menu_configuration.action_type !== 'optim_sankey' ? <Alert status='warning'>
+              <AlertIcon />
+              {t('ModalAFM.waiting_file')}
+            </Alert> : <></>}
+
+            {!not_started && !processing && !failure ? (
+              <Alert status='success'>
+                <AlertIcon />
+                {t('ModalAFM.success')}
+              </Alert>
+            ) : (<div />)}
+
+            <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
+
+            <Box
+              as='span'
+              layerStyle='menuconfigpanel_part_title_1'>
+              Terminal
+            </Box>
+            <Box
+              as='span'
+              layerStyle='options_3cols'
+            >
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={1} variant={value.includes(1) ? 'menuconfigpanel_option_button_primary_activated' : 'menuconfigpanel_option_button_primary'} size='sizeButtonDialog'>{t('ModalAFM.infos')}</Button>
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={2} variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'} size='sizeButtonDialog'>{t('ModalAFM.err')}</Button>
+              <Button onClick={evt => handleChange(evt as unknown as MouseEvent)} value={3} variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'} size='sizeButtonDialog'>{t('ModalAFM.debug')}</Button>
+            </Box>
+
+            {processing ? (
+              <Counter
+                value={value}
+                result={result}
+                setResult={setResult}
+                setProcessing={setProcessing}
+                setFailure={setFailure}
+              />
+            ) : (
+              <Box overflowY='auto' maxHeight='25vh'>
+                {infos.map(
+                  (info) => (
+                    value.includes(2) && info.includes('ERROR') ?
+                      (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
+                      : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
+                        (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
+                        : value.includes(3) && (info.includes('DEBUG')) ?
+                          (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
+                  ))}
+              </Box>
+            )}
+          </Box>
         </ModalBody>
       </ModalContent>
-    </Modal>
+    </Modal >
   )
 }
 
@@ -672,7 +687,7 @@ const Counter = (
       setFailure(true)
     }
   }
-  return (<>
+  return (<Box overflowY='auto' maxHeight='25vh'>
     {infos.map(
       info => (
         value.includes(2) && info.includes('ERROR') ?
@@ -681,5 +696,5 @@ const Counter = (
             (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
             : value.includes(3) && (info.includes('DEBUG')) ?
               (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)))}
-  </>)
+  </Box>)
 }

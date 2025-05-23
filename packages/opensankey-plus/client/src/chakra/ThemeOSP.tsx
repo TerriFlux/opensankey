@@ -57,6 +57,7 @@ import { title_filter_tagg } from './HeadingOSP'
 import { view_select } from './SelectOSP'
 import { table_view } from './TableOSP'
 import { tabs_data_source_for_unitary } from './TabsStyle'
+import {modal_reconciliation} from './ModalStyleOSP'
 
 export const opensankeyplus_theme = {
   components: {
@@ -84,6 +85,11 @@ export const opensankeyplus_theme = {
       variants: {
         drawer_sequence,
         drawer_menu_filter
+      }
+    },
+    Modal:{
+      variants:{
+        modal_reconciliation,
       }
     },
     Heading: {

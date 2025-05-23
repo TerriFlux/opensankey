@@ -50,6 +50,8 @@ export const resources_app_elements = {
         node_associated_tag: 'Nodes associated to tag',
         TieNodes: 'Tie all selected nodes',
         detachTiedNodes: 'Untie all tied nodes',
+        ElOrder:'Order overlaps of elements',
+
         Config: {
           presentation: 'Presentation',
           element_object: 'Object',
@@ -151,7 +153,8 @@ export const resources_app_elements = {
       Flux: {
         'asf': 'Apply style to links having this style',
         apparence: {
-          gradient: 'Gradient source -> target'
+          gradient: 'Gradient source -> target',
+          auto: 'Dependent on source/target color palette',
         },
         data: {
           'scientificNotation': 'Display the value in scientific notation',
@@ -499,6 +502,7 @@ export const resources_app_elements = {
         node_associated_tag: 'Noeuds associés',
         TieNodes: 'Attacher les noeuds sélectionnés',
         detachTiedNodes: 'Détacher tous les noeuds attachés',
+        ElOrder:'Ordonner la superposition des éléments',
         Config: {
           element_object: 'Objet',
           element_view: 'Vues',
@@ -575,7 +579,8 @@ export const resources_app_elements = {
       Flux: {
         'asf': 'Appliquer le Style aux flux',
         apparence: {
-          gradient: 'Dégradé source -> cible'
+          gradient: 'Dégradé source -> cible',
+          auto: 'En fonction des palettes source ou cible'
         },
         data: {
           'scientificNotation': 'En notation scientifique',

@@ -228,6 +228,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
       (_this: Class_MenuConfigOSP) => {
         _this._ref_to_menu_config_container_updater.current()
         _this._ref_to_menu_context_container_updater.current()
+        _this._ref_to_GraphElementsOrdoner_updater.current()
       }
     )
   }
