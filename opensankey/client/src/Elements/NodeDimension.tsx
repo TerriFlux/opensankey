@@ -413,6 +413,10 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
     return this.name.substring(0,50);
   }
 
+  public get children_name() {
+    return this.children.map(c=>c.name+' ').join().substring(0,30);
+  }
+
   /**
    * Level tag group reference is from parent level tag
    * @readonly
