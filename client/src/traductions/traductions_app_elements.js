@@ -143,8 +143,7 @@ export const resources_app_elements = {
           tool_afm: 'Use annex tools for reconciliation',
         },
         xl_check: 'Excel checks',
-        ter_gen: 'Gen. Supply-Use table',
-        afm_reconcil: 'Reconciliation'
+        ter_gen: 'Gen. Supply-Use table'
       },
       ModalAFM: {
         title: 'Reconciliation',
@@ -725,10 +724,7 @@ export const resources_app_elements = {
         },
         xl_check: 'Vérif. excel',
         featureBeta: 'Experimental',
-        ter_gen: 'Génération T.E.R',
-        afm_reconcil: 'Réconciliation',
-        afm_reconcil_json: 'Réconcilier le diagramme de Sankey actuel',
-        afm_reconcil_excel: 'Réconcilier un fichier Excel',
+        ter_gen: 'Génération T.E.R'
       },
       ModalAFM: {
         title: 'Réconciliation',
