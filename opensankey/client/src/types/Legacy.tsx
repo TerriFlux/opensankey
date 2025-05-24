@@ -1936,16 +1936,6 @@ const convert_nodes: convert_nodesFuncType = (
 
     })
 
-
-    // Add links_order to node by combining input/outputs id (for version>=0.9)
-    const n_tmp = (n as Type_JSON)
-    n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
-
-    // Add in links_order links not in links_order but that reference this node
-    list_links
-      .filter(l => (l.idTarget == n.idNode || l.idSource == n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
-      .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
-
     // Convert name of some local variables
     if (n.local) {
       if (n.local.label_vert_shift !== undefined) {
@@ -2067,9 +2057,40 @@ const convert_links: convert_linksFuncType = (
     data_to_convert.nodes = Object.assign({}, ...((data.nodes as unknown) as SankeyNode[]).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
   }
 
+  const mapper : {[_:string]:string} = {}
+  Object.values(data.links).forEach(l=>{
+    const previous_link_id = l.idLink
+    l.idLink = data.nodes[l.idSource].idNode + '---' + data.nodes[l.idTarget].idNode
+    mapper[previous_link_id] = l.idLink
+  })
+  data_to_convert.links = Object.assign({}, ...(Object.values(data.links)).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
+  Object.values(data.nodes).forEach(n=>{
+    const newInputLinksId : string[]= []
+    n.inputLinksId.forEach(id=>newInputLinksId.push(mapper[id]))
+    n.inputLinksId = newInputLinksId
+
+    const newOutputLinksId : string[]= []
+    n.outputLinksId.forEach(id=>newOutputLinksId.push(mapper[id]))
+    n.outputLinksId = newOutputLinksId
+
+    // Add links_order to node by combining input/outputs id (for version>=0.9)
+    const n_tmp = (n as Type_JSON)
+    n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
+
+    // Add in links_order links not in links_order but that reference this node
+    // list_links
+    //   .filter(l => (l.idTarget == n.idNode || l.idSource == n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
+    //   .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
+
+  })
+  const newLinkZindex : string[]= []
+  data.linkZIndex.forEach(lid=>newLinkZindex.push(mapper[lid]))
+  data.linkZIndex = newLinkZindex
+
   if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {
     Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
   }
+
 
   const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
   const convert_display = (
