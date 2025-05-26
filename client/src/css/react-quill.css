@@ -42,6 +42,12 @@
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+/* Custom max size for editor in config menu */
+.drawer_menu_config .ql-editor {
+  max-width: 15vw 
+}
+
 .ql-editor > * {
   cursor: text;
 }
@@ -822,7 +828,8 @@
 .ql-snow .ql-picker.ql-size {
   width: 98px;
 }
-.ql-snow .ql-picker.ql-size .ql-picker-label::before,
+/* Disable normal css rule */
+/* .ql-snow .ql-picker.ql-size .ql-picker-label::before,
 .ql-snow .ql-picker.ql-size .ql-picker-item::before {
   content: 'Normal';
 }
@@ -837,7 +844,16 @@
 .ql-snow .ql-picker.ql-size .ql-picker-label[data-value=huge]::before,
 .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=huge]::before {
   content: 'Huge';
+} */
+
+.ql-snow .ql-picker.ql-size .ql-picker-item::before {
+  content: attr(data-value) !important;
 }
+
+.ql-snow .ql-picker.ql-size .ql-picker-label::before {
+  content: attr(data-value) !important;
+}
+
 /*https://gitlab.com/su-model/sankeyanimation/-/issues/127*/
 /* .ql-snow{
   .ql-picker{
