@@ -26,6 +26,7 @@ import { ClassTemplate_SankeyOSP } from '../../types/SankeyOSP'
 import { Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP } from '../../types/TypesOSP'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 import { OSMultiSelect } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { listOptionSizeQuill } from '../UtilsOSP'
 
 type Type_GenericFreeLabelOSP = Class_ContainerElement<Type_GenericDrawingAreaOSP, ClassTemplate_SankeyOSP<Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>>
 
@@ -50,7 +51,6 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   const zdt_or_image = (selected_zdt.length > 0 ? (selected_zdt[0].is_image === true ? 'image' : 'text') : 'text')
   const [button_text_or_image, set_button_text_or_image] = useState<'text' | 'image'>(zdt_or_image)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
-
   const options_selector = new_data_plus.drawing_area.sankey.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id, selected: d.is_selected } })
 
 
@@ -214,13 +214,15 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 
   const valAllLabeTiedToNode = selected_zdt[0]?.tied_to_nodes ?? false
   const valAllLabelTiedToNodeIndeterminate = !selected_zdt.every(zdt => zdt.tied_to_nodes == valAllLabeTiedToNode)
-
+  const Size = ReactQuill.Quill.import('attributors/style/size');
+  Size.whitelist = listOptionSizeQuill;
+  ReactQuill.Quill.register(Size, true)
 
   const modules = {
     toolbar: [
       [{ 'font': [] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'size': ['small', false, 'large', 'huge'] }],
+      [{ 'size': listOptionSizeQuill }],
       [{ 'color': [] }, { 'background': [] }],
       [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       [{ 'align': [] }],
@@ -1019,7 +1021,7 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
   const moveToFirstPlan = () => {
     drawing_area.selected_containers_list.forEach(cont => {
       const idx_to_shift = drawing_area.list_g_element.indexOf(cont.id)
-      drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length-1)
+      drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
     })
   }
 
