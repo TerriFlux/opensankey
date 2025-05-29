@@ -36,6 +36,7 @@ set "ROOT_DIR=%cd%"
 
 REM === Parcours récursif de tous les sous-dossiers contenant un dossier .git
 for /r %%D in (.git) do (
+    echo toto
     rem Vérifie que ce n’est pas le dépôt principal
     if not "%%~dpD"=="%ROOT_DIR%\.git\" (
         set "SUBMODULE_DIR=%%~dpD"
