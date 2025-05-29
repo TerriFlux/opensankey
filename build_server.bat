@@ -2,9 +2,8 @@
 setlocal enabledelayedexpansion
 
 REM Étape 1 : Installation des requirements
-pip install -r requirements.txt
-
-pip install -r conda_requirements.txt
+powershell -Command "pip install -r requirements.txt | Select-String -NotMatch 'Requirement already satisfied'"
+powershell -Command "pip install -r conda_requirements.txt | Select-String -NotMatch 'Requirement already satisfied'"
 
 REM Étape 2 : Installation des dépendances
 pushd submodules\SankeyExcelParser
