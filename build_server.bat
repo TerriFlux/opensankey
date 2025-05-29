@@ -2,6 +2,7 @@
 setlocal enabledelayedexpansion
 
 rem === Install requirements ===
+echo Install SankeyApp requirements
 powershell -Command "pip install -r requirements.txt | Select-String -NotMatch 'Requirement already satisfied'"
 
 rem === Install deps ===
