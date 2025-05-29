@@ -5,7 +5,7 @@ chcp 65001 > nul
 REM === Demander le message de commit ===
 set /p commit_message=Message de commit (utilisé partout) :
 
-REM === Fonction pour commit + push si modifs dans un dépôt ===
+REM === Fonction pour commit + push si modifs dans un dépôt donné ===
 :commit_and_push
 cd /d "%~1"
 
@@ -26,10 +26,12 @@ if not errorlevel 1 (
 )
 goto :eof
 
-REM === Parcours récursif des sous-modules ===
-git submodule foreach --recursive "call \"%~f0\" \"%%~fpath\""
+REM === Parcours des sous-modules déclarés dans .gitmodules ===
+for /f "tokens=2 delims= " %%S in ('git config --file .gitmodules --get-regexp path') do (
+    call :commit_and_push "%%S"
+)
 
-REM === Puis dépôt principal ===
+REM === Puis commit du dépôt principal ===
 call :commit_and_push "%cd%"
 
 echo.
