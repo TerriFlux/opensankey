@@ -419,3 +419,16 @@ const StepperDataTagg: FunctionComponent<FCType_StepperDataTagg> = ({ new_data, 
     </Stepper>
   </Box>
 }
+
+/**
+ * Create an array of string, it return a list from start to stop (at a pace of step)
+ * with suffix 'px'
+ *
+ * @param {number} start
+ * @param {number} stop
+ * @param {number} step
+ */
+const arrayRangePx = (start: number, stop: number, step: number) => Array.from({ length: (stop - start) / step + 1 }, (value, index) => (start + index * step) + 'px');
+
+// Exported variable for Quill editor
+export const listOptionSizeQuill = arrayRangePx(9, 120, 1)

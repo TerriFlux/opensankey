@@ -15,6 +15,7 @@ import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/types/Uti
 // Local imports
 import type { FCType_NodeForeignObjectOSP } from './types/SankeyPlusForeignObjectTypes'
 import type { Type_GenericNodeElementOSP } from '../../types/TypesOSP'
+import { listOptionSizeQuill } from '../UtilsOSP'
 
 export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP> = ({
   new_data_plus,
@@ -40,7 +41,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     toolbar: [
       [{ 'font': [] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'size': [] }],
+      [{ 'size': listOptionSizeQuill }],
       [{ 'color': [] }, { 'background': [] }],
       [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       [{ 'align': [] }],
@@ -162,7 +163,9 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     _applyEditor()
   }
 
-
+  const Size = ReactQuill.Quill.import('attributors/style/size');
+  Size.whitelist = listOptionSizeQuill;
+  ReactQuill.Quill.register(Size, true)
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
   // - one with raw html in case the editor can't do exactly what we want

@@ -67,8 +67,6 @@ import {
   ButtonNodeContextCreateUnitaryView,
   ButtonNodeContextCreateZDTAroundSelectedNode,
   ButtonNodeContextSelectDescendantOFSelectedNodes,
-  ButtonNodeContextShowTagMenu,
-  ButtonNodeContextShowTooltipMenu,
   ButtonNodeContextStartAnimation,
   NodeHyperLinkOSP,
   NodeIconOSP
@@ -93,8 +91,6 @@ import {
 } from './components/MenuConfigEdition/SankeyPlusForeignObject'
 import {
   ButtonLinkContextAssignTag,
-  ButtonLinkContextShowTagMenu,
-  ButtonLinkContextShowTooltipMenu,
   MenuConfLinkApparenceDashedOSP,
   MenuConfLinkScientificPrecision
 } from './components/MenuConfigEdition/SankeyPlusLink'
@@ -122,6 +118,8 @@ import { ToolbarFilter } from './components/FilterComponent/TagsFilterComponent'
 import { SankeyMenuConfigurationLevelTags } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLevlTags'
 import { AFMEditionMenu } from './components/AFM/AFMSankeyMenu'
 import { SupplyUseModelisationProd } from './components/AFM/SankeyReconciliation'
+import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
+import { ChevronRightIcon } from '@chakra-ui/icons'
 
 declare const window: Window &
   typeof globalThis & {
@@ -198,25 +196,22 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   //Context node
   if (new_data_plus.has_sankey_plus) {
-
-    additionalMenus.current.context_node_order.push('drag_tag', 'drag_tooltip')
-
-    additionalMenus.current.additional_context_node_element['drag_tag'] = <ButtonNodeContextShowTagMenu new_data={new_data_plus} />
-    additionalMenus.current.additional_context_node_element['drag_tooltip'] = <ButtonNodeContextShowTooltipMenu new_data={new_data_plus} />
-    additionalMenus.current.additional_context_node_element['animate'] = <ButtonNodeContextStartAnimation new_data={new_data_plus} />
-    additionalMenus.current.additional_context_node_element['unitary'] = <ButtonNodeContextCreateUnitaryView new_data={new_data_plus} />
-    additionalMenus.current.additional_context_node_element['create_tied_zdt'] = <ButtonNodeContextCreateZDTAroundSelectedNode new_data={new_data_plus} />
-    additionalMenus.current.additional_context_node_element['select_descendant'] = <ButtonNodeContextSelectDescendantOFSelectedNodes new_data={new_data_plus} />
-
+    additionalMenus.current.additional_context_node_element['osp_context'] = <Menu placement='end'>
+      <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+        {t('Noeud.osp_context')}
+      </MenuButton>
+      <MenuList>
+        <ButtonNodeContextStartAnimation new_data={new_data_plus} />
+        <ButtonNodeContextCreateUnitaryView new_data={new_data_plus} />
+        <ButtonNodeContextCreateZDTAroundSelectedNode new_data={new_data_plus} />
+        <ButtonNodeContextSelectDescendantOFSelectedNodes new_data={new_data_plus} />
+      </MenuList>
+    </Menu>
   }
 
   // Get index of seprator in context node that come after masking node shape/label so we can then insert a button to mask value (OSP functionality)
   const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
-  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'animate')
-  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'unitary')
-  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'create_tied_zdt')
-  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'select_descendant')
-
+additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'osp_context')
 
   // Add dashed config
   additionalMenus.current.additional_link_appearence_items.push(
@@ -231,9 +226,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />)
 
 
-  additionalMenus.current.context_link_order.push('drag_tooltip')
-  additionalMenus.current.additional_context_link_element['drag_tooltip'] = <ButtonLinkContextShowTooltipMenu new_data={new_data_plus} />
-  additionalMenus.current.additional_context_link_element['drag_tag'] = <ButtonLinkContextShowTagMenu new_data={new_data_plus} />
+
   additionalMenus.current.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
 
   // Insert OSP Button at a specific place in the link context menu
@@ -282,46 +275,47 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus.current.additional_menu_button_element_configurable['node_tag'] = { icon: has_sankey_plus ? icon_library.icon_node_tag : icon_library.icon_node_tag_diabled, text: t('Menu.Config.element_node_tag'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['level_tag'] = { icon: has_sankey_plus ? icon_library.icon_level_tag : icon_library.icon_level_tag_diabled, text: t('Menu.Config.element_level_tag'), disabled: !has_sankey_plus }
 
-  // Add menu for new menu type 'Présentation'
-  additionalMenus.current.additional_new_menu_config_content['presentation'] = {
-    'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-      <MenuConfigurationFreeLabelsOSP new_data_plus={new_data_plus} />
-    </WrapperContentConfig>,
+    // Add menu for new menu type 'Présentation'
+    additionalMenus.current.additional_new_menu_config_content['presentation'] = {
+      'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
+        <MenuConfigurationFreeLabelsOSP new_data_plus={new_data_plus} />
+      </WrapperContentConfig>,
 
-    'node': <WrapperContentConfig title={t('Flux.IS')}><>
-      <SankeyMenuConfigurationNodesTooltip new_data={new_data_plus} />
-      <NodeHyperLinkOSP new_data_plus={new_data_plus} />
-    </>
-    </WrapperContentConfig>,
-
-    'flow': <WrapperContentConfig title={t('Noeud.IS')}>
-      <MenuConfigurationLinksTooltip new_data={new_data_plus} />
-    </WrapperContentConfig>,
-    'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
-      <>
-        <SankeySettingsEditionElementTags
-          new_data={new_data_plus}
-          elementTagNameProp='node_taggs'
-        />
-        <SankeyMenuConfigurationNodesTags
-          new_data={new_data_plus}
-        /></>
-    </WrapperContentConfig>,
-    'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
-      <><SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='flux_taggs'
-      />
-      <MenuConfigurationLinksTags
-        new_data={new_data_plus}
-      />
+      'node': <WrapperContentConfig title={t('Flux.IS')}><>
+        <SankeyMenuConfigurationNodesTooltip new_data={new_data_plus} />
+        <NodeHyperLinkOSP new_data_plus={new_data_plus} />
       </>
-    </WrapperContentConfig>,
-    'view': <WrapperContentConfig title={t('view.storytelling')}>
-      <ViewsConfig new_data_plus={new_data_plus}
-      />
-    </WrapperContentConfig>,
-  }
+      </WrapperContentConfig>,
+
+      'flow': <WrapperContentConfig title={t('Noeud.IS')}>
+        <MenuConfigurationLinksTooltip new_data={new_data_plus} />
+      </WrapperContentConfig>,
+      'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
+        <>
+          <SankeySettingsEditionElementTags
+            new_data={new_data_plus}
+            elementTagNameProp='node_taggs'
+          />
+          <SankeyMenuConfigurationNodesTags
+            new_data={new_data_plus}
+          /></>
+      </WrapperContentConfig>,
+      'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
+        <><SankeySettingsEditionElementTags
+          new_data={new_data_plus}
+          elementTagNameProp='flux_taggs'
+        />
+          <MenuConfigurationLinksTags
+            new_data={new_data_plus}
+          />
+        </>
+      </WrapperContentConfig>,
+
+      'view': <WrapperContentConfig title={t('view.storytelling')}>
+        <ViewsConfig new_data_plus={new_data_plus}
+        />
+      </WrapperContentConfig>,
+    }
 
   // Add menu for menu type 'data'
   additionalMenus.current.additional_menu_config_content['data'] = {
@@ -390,54 +384,6 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     />,
     <ModalCreateUnitaryViewOSP
       new_data_plus={new_data_plus}
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_node_tags'}
-      content={<>
-        <SankeySettingsEditionElementTags
-          new_data={new_data_plus}
-          elementTagNameProp='node_taggs'
-        />
-        <SankeyMenuConfigurationNodesTags
-          new_data={new_data_plus}
-        />
-      </>}
-      title={t('Menu.Noeuds') + ' ' + t('Menu.Etiquettes')}
-      maxW='20%'
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_link_tags'}
-      content={<>
-        <SankeySettingsEditionElementTags
-          new_data={new_data_plus}
-          elementTagNameProp='flux_taggs'
-        />
-        <MenuConfigurationLinksTags
-          new_data={new_data_plus}
-        />
-      </>}
-      title={t('Menu.flux') + ' ' + t('Menu.Etiquettes')}
-      maxW='20%'
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_node_tooltip'}
-      content={<SankeyMenuConfigurationNodesTooltip
-        new_data={new_data_plus}
-      />}
-      title={t('Menu.Noeuds') + ' ' + t('Noeud.IS')}
-      maxW='20%'
-    />,
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_link_tooltip'}
-      content={<MenuConfigurationLinksTooltip
-        new_data={new_data_plus}
-      />}
-      title={t('Menu.flux') + ' ' + t('Flux.IB')}
-      maxW='20%'
     />,
     <ToolbarFilter
       new_data={new_data_plus}
