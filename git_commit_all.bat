@@ -35,6 +35,7 @@ REM === Calcul du chemin absolu du projet racine ===
 set "ROOT_DIR=%cd%"
 
 REM === Parcours récursif de tous les sous-dossiers contenant un dossier .git
+echo tutu
 for /r %%D in (.git) do (
     echo toto
     rem Vérifie que ce n’est pas le dépôt principal
