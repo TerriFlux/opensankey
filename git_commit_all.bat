@@ -34,14 +34,15 @@ goto :eof
 REM === Calcul du chemin absolu du projet racine ===
 set "ROOT_DIR=%cd%"
 
-REM === Commit & push de tous les sous-modules ===
-for /f "tokens=2 delims= " %%S in ('git config --file .gitmodules --get-regexp path') do (
-    set "SUBMODULE_DIR=%ROOT_DIR%\%%S"
-    call :commit_and_push "!SUBMODULE_DIR!"
+REM === Parcours récursif de tous les sous-dossiers contenant un dossier .git
+for /r %%D in (.git) do (
+    rem Vérifie que ce n’est pas le dépôt principal
+    if not "%%~dpD"=="%ROOT_DIR%\.git\" (
+        set "SUBMODULE_DIR=%%~dpD"
+        set "SUBMODULE_DIR=!SUBMODULE_DIR:~0,-1!"
+        call :commit_and_push "!SUBMODULE_DIR!"
+    )
 )
-
-REM === Puis commit & push du dépôt principal ===
-call :commit_and_push "%ROOT_DIR%"
 
 echo.
 echo ✅ Commit & push terminés pour tous les dépôts.
