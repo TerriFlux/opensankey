@@ -2297,7 +2297,7 @@ export abstract class ClassTemplate_DrawingArea
   public orderElementOnDA() {
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
-      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, this._list_g_element) })
+      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, [...this._list_g_element].reverse()) })
       .order()
   }
 
