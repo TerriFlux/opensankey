@@ -2,22 +2,78 @@
 setlocal enabledelayedexpansion
 chcp 65001 > nul
 
-REM === Demander le message de commit ===
-set /p commit_message=Message de commit (utilisé partout) :
+echo.
+echo === Commit & Push pour tous les sous-modules ===
 
-for %%S in (submodules\OpenSankey+\submodules\OpenSankey submodules\OpenSankey+ submodules\LoginComponent ) do (
-    echo dossier %%S
-    pushd %%S
-    git submodule foreach "echo 'Adding all files.'; git add ."
-    git submodule foreach "echo 'Commit files.'; git commit -m '%commit_message%'"
-    git submodule foreach "echo 'Push files.'; git push"
-    popd
+REM === Demander le message de commit (partagé par tous les sous-modules) ===
+set /p commit_message=Message de commit (utilisé partout) : 
+
+REM === Définir les chemins des sous-modules ===
+set opensankeyplus=submodules\OpenSankey+
+set opensankey=%opensankeyplus%\submodules\OpenSankey
+set sankeyexcelparser=%opensankey%\submodules\SankeyExcelParser
+set logincomponent=submodules\LoginComponent
+set mfaproblem=submodules\MFAProblem
+
+REM === Liste ordonnée à traiter ===
+for %%S in (
+    %sankeyexcelparser%
+    %opensankey%
+    %opensankeyplus%
+    %logincomponent%
+    %mfaproblem%
+) do (
+    echo.
+    echo 📁 Traitement du dossier : %%S
+
+    if exist "%%S" (
+        pushd %%S
+
+        REM Vérifie qu’il y a des modifications
+        git status --porcelain | findstr . >nul
+        if not errorlevel 1 (
+            echo 🔄 Modifications détectées → commit + push...
+
+            git add .
+            git commit -m "%commit_message%" >nul 2>&1
+            if errorlevel 1 (
+                echo   ⚠️ Aucun commit créé ^(déjà commité ?^)
+            ) else (
+                REM Vérifie qu'on est bien sur une branche avant de pousser
+                for /f %%B in ('git symbolic-ref --short -q HEAD') do set "branch=%%B"
+                if defined branch (
+                    echo   🚀 Pushing vers branche !branch!...
+                    git push
+                ) else (
+                    echo   ⚠️ HEAD détaché : push ignoré
+                )
+            )
+        ) else (
+            echo ✅ Aucun changement à commiter
+        )
+
+        popd
+    ) else (
+        echo ❌ Dossier introuvable : %%S
+    )
 )
 
-git submodule foreach "echo 'Adding all files.'; git add ."
-git submodule foreach "echo 'Commit files.'; git commit -m '%commit_message%'"
-git submodule foreach "echo 'Push files.'; git push"
+REM === Traitement du dépôt principal ===
+echo.
+echo 🧩 Traitement du dépôt principal
+git status --porcelain | findstr . >nul
+if not errorlevel 1 (
+    git add .
+    git commit -m "%commit_message%" >nul 2>&1
+    if errorlevel 1 (
+        echo   ⚠️ Aucun commit dans le dépôt principal
+    ) else (
+        git push
+    )
+) else (
+    echo ✅ Aucun changement dans le dépôt principal
+)
 
-git add .
-git commit -m "%commit_message%"
-git push
+echo.
+echo 🟢 Script terminé pour tous les dépôts.
+pause
