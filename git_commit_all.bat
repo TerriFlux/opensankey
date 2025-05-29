@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 chcp 65001 > nul
 
 echo.
-echo === Commit & Push pour tous les sous-modules ===
+echo === Commit ^& Push pour tous les sous-modules ===
 
 REM === Demander le message de commit (partagé par tous les sous-modules) ===
 set /p commit_message=Message de commit (utilisé partout) : 
