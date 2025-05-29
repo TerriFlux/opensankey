@@ -1,49 +1,32 @@
+@echo off
+setlocal enabledelayedexpansion
 
-@REM Lancer dans un terminal windows avec les permissions administrateurs
-@setlocal enableextensions
-@cd /d "%~dp0"
+REM === Garder le dossier courant comme racine ===
+set "SANKEY_DIR=%~dp0"
+set "SANKEY_DIR=%SANKEY_DIR:~0,-1%"
+echo %SANKEY_DIR%
 
-@REM Install SankeyApplication client
-set SankeyDir=%cd%
-set EIGEN_INCLUDE=%SankeyDir%\eigen
-call conda env list
-set /p conda_env=Quel environnement conda?
-call conda activate %conda_env%
-echo %SankeyDir%
-cd %SankeyDir%\client
-call pnpm install
+REM === Build SankeyApp client ===
+echo SankeyApp Client --------------------------------------------------
+cd /d "%SANKEY_DIR%"
+call build_client.bat -I -B
 
-@REM Link LoginComponent with other node_modules
-cd %SankeyDir%\client\src\deps\
-echo %SankeyDir%\client\src\deps\
-rmdir LoginComponent
-echo "rmdir LoginComponent"
-mklink /d LoginComponent %SankeyDir%\submodules\LoginComponent\client\src
-echo "mklink"
+REM === Modifier les chemins statiques dans le client compilé ===
+echo Change static paths in built SankeyApp client ---------------------
+cd /d "%SANKEY_DIR%\client"
 
-@REM Link OpenSankey+ with LoginComponent
-cd %SankeyDir%\client\src\deps\LoginComponent\deps\
-echo %SankeyDir%\client\src\deps\LoginComponent\deps\
-rmdir OpenSankey+
-echo "rmdir OpenSankey+ in LoginComponent"
-mklink /d OpenSankey+ %SankeyDir%\submodules\OpenSankey+\client\src
-echo "mklink OpenSankey+ in LoginComponent"
+REM Utilisation de PowerShell pour faire les remplacements car sed n'est pas dispo en natif sur Windows
+powershell -Command "(Get-Content ./build/index.html) -replace '/static/', '/static/sankeyapp/' | Set-Content ./build/index.html"
 
-@REM Link OpenSankey+ with other node_modules
-cd %SankeyDir%\client\src\deps\
-echo %SankeyDir%\client\src\deps\
-rmdir OpenSankey+
-echo "rmdir OpenSankey+"
-mklink /d OpenSankey+ %SankeyDir%\submodules\OpenSankey+\client\src
-echo "mklink"
+powershell -Command "Get-ChildItem ./build/static/css/*.css | ForEach-Object { (Get-Content $_) -replace '..\/static\/', '../../static/sankeyapp/' | Set-Content $_ }"
 
-@REM Link OpenSankeyModule with other node_modules
-cd %SankeyDir%\client\src\deps\OpenSankey+\deps\
-echo %SankeyDir%\client\src\deps\OpenSankey+\deps\
-rmdir OpenSankey
-echo "rmdir OpenSankey"
-mklink /d OpenSankey %SankeyDir%\submodules\OpenSankey+\submodules\OpenSankey\opensankey\client\src
-echo "mklink"
+powershell -Command "Get-ChildItem ./build/static/*/* | ForEach-Object { (Get-Content $_) -replace 'static/sankeyanimation', '/static/sankeyapp/' | Set-Content $_ }"
 
-call pnpm run build
+powershell -Command "Get-ChildItem ./build/static/*/* | ForEach-Object { (Get-Content $_) -replace 'static/opensankey', '/static/sankeyapp/' | Set-Content $_ }"
+
+REM === Build SankeyApp server ===
+echo SankeyApp Server --------------------------------------------------
+cd /d "%SANKEY_DIR%"
+call build_server.bat
+
 pause

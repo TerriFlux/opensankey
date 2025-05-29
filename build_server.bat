@@ -2,8 +2,7 @@
 setlocal enabledelayedexpansion
 
 rem === Install requirements ===
-pip install -r requirements.txt
-call :exit_if_error %ERRORLEVEL%
+powershell -Command "pip install -r requirements.txt | Select-String -NotMatch 'Requirement already satisfied'"
 
 rem === Install deps ===
 for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
