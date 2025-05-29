@@ -1,49 +1,64 @@
+@echo off
+chcp 65001 > nul
+setlocal enabledelayedexpansion
 
-@REM Lancer dans un terminal windows avec les permissions administrateurs
-@setlocal enableextensions
-@cd /d "%~dp0"
+REM === Garder le dossier courant comme racine ===
+set "SANKEY_DIR=%~dp0"
+set "SANKEY_DIR=%SANKEY_DIR:~0,-1%"
+echo Répertoire du projet : %SANKEY_DIR%
 
-@REM Install SankeyApplication client
-set SankeyDir=%cd%
-set EIGEN_INCLUDE=%SankeyDir%\eigen
-call conda env list
-set /p conda_env=Quel environnement conda?
+REM === Demande de création d'un nouvel environnement conda ===
+set /p create_env=Souhaitez-vous créer un nouvel environnement conda ? (y/n) 
+
+if /I "%create_env%"=="y" (
+    set /p conda_env=Nom de l'environnement conda à créer
+    set python_version=3.8.18
+    echo Suppression ^(si existant^) de l'environnement conda : %conda_env%
+    call conda deactivate
+    call conda remove -y --name %conda_env% --all >nul 2>&1
+    echo Création de l'environnement conda : %conda_env% avec Python %python_version%
+    call conda create -y --name %conda_env% python=%python_version%
+) else (
+    call conda env list
+    set /p conda_env=Quel environnement conda souhaitez-vous utiliser ?
+)
+
+REM === Activation de l'environnement conda ===
 call conda activate %conda_env%
-echo %SankeyDir%
-cd %SankeyDir%\client
-call pnpm install
 
-@REM Link LoginComponent with other node_modules
-cd %SankeyDir%\client\src\deps\
-echo %SankeyDir%\client\src\deps\
-rmdir LoginComponent
-echo "rmdir LoginComponent"
-mklink /d LoginComponent %SankeyDir%\submodules\LoginComponent\client\src
-echo "mklink"
+REM === Demander si on souhaite installer les dépendances ===
+set /p install=Souhaitez-vous installer les dépendances (npm et pip) ? (y/n)
 
-@REM Link OpenSankey+ with LoginComponent
-cd %SankeyDir%\client\src\deps\LoginComponent\deps\
-echo %SankeyDir%\client\src\deps\LoginComponent\deps\
-rmdir OpenSankey+
-echo "rmdir OpenSankey+ in LoginComponent"
-mklink /d OpenSankey+ %SankeyDir%\submodules\OpenSankey+\client\src
-echo "mklink OpenSankey+ in LoginComponent"
+REM === Demander si on souhaite repartir d'une version propre ===
+set /p clean_repo=Souhaitez-vous repartir d'une version propre ? (y/n)
+if /I "%clean_repo%"=="y" (
+    call "%SANKEY_DIR%\git_clean.bat"
+)
 
-@REM Link OpenSankey+ with other node_modules
-cd %SankeyDir%\client\src\deps\
-echo %SankeyDir%\client\src\deps\
-rmdir OpenSankey+
-echo "rmdir OpenSankey+"
-mklink /d OpenSankey+ %SankeyDir%\submodules\OpenSankey+\client\src
-echo "mklink"
+REM === Choix de compilation client ===
+set /p build_client=Souhaitez-vous construire le client ? (y/n)
+if /I "%build_client%"=="y" (
+    echo SankeyApp Client --------------------------------------------------
+    cd /d "%SANKEY_DIR%"
+    if /I "%install%"=="y" (
+        call build_client.bat -I -B
+    ) else (
+        call build_client -B
+    )
+)
 
-@REM Link OpenSankeyModule with other node_modules
-cd %SankeyDir%\client\src\deps\OpenSankey+\deps\
-echo %SankeyDir%\client\src\deps\OpenSankey+\deps\
-rmdir OpenSankey
-echo "rmdir OpenSankey"
-mklink /d OpenSankey %SankeyDir%\submodules\OpenSankey+\submodules\OpenSankey\opensankey\client\src
-echo "mklink"
+REM === Choix de compilation serveur ===
+set /p build_server=Souhaitez-vous construire le serveur ? (y/n)
+if /I "%build_server%"=="y" (
+    echo SankeyApp Server --------------------------------------------------
+    cd /d "%SANKEY_DIR%"
+    if /I "%install%"=="y" (
+        call build_server.bat -I
+    ) else (
+        call build_server.bat
+    )
+)
 
-call pnpm run build
+echo.
+echo Script terminé.
 pause
