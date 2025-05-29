@@ -7,9 +7,13 @@ set /p commit_message=Message de commit (utilisé partout) :
 
 REM === Fonction pour commit + push si modifs dans un dépôt donné ===
 :commit_and_push
-cd /d "%~1"
+set "target_dir=%~1"
+pushd "%target_dir%" > nul 2>&1
+if errorlevel 1 (
+    echo ⚠️ Dossier introuvable : %target_dir%
+    goto :eof
+)
 
-REM Vérifie s’il y a des modifs ou fichiers non suivis
 git status --porcelain | findstr /R "." > nul
 if not errorlevel 1 (
     echo [Dans %cd%]
@@ -24,15 +28,20 @@ if not errorlevel 1 (
         git push
     )
 )
+popd > nul
 goto :eof
 
-REM === Parcours des sous-modules déclarés dans .gitmodules ===
+REM === Calcul du chemin absolu du projet racine ===
+set "ROOT_DIR=%cd%"
+
+REM === Commit & push de tous les sous-modules ===
 for /f "tokens=2 delims= " %%S in ('git config --file .gitmodules --get-regexp path') do (
-    call :commit_and_push "%%S"
+    set "SUBMODULE_DIR=%ROOT_DIR%\%%S"
+    call :commit_and_push "!SUBMODULE_DIR!"
 )
 
-REM === Puis commit du dépôt principal ===
-call :commit_and_push "%cd%"
+REM === Puis commit & push du dépôt principal ===
+call :commit_and_push "%ROOT_DIR%"
 
 echo.
 echo ✅ Commit & push terminés pour tous les dépôts.
