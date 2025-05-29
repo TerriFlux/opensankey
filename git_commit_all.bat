@@ -9,23 +9,15 @@ for %%S in (submodules\OpenSankey+\submodules\OpenSankey submodules\OpenSankey+ 
     echo dossier %%S
     pushd %%S
     git submodule foreach "echo 'Adding all files.'; git add ."
-    echo titi
-    git submodule foreach "echo 'Adding all files.'; git commit -m '%commit_message%'"
-    echo titi2
-    git submodule foreach "echo 'Adding all files.'; git push"
+    git submodule foreach "echo 'Commit files.'; git commit -m '%commit_message%'"
+    git submodule foreach "echo 'Push files.'; git push"
     popd
 )
 
-echo here
 git submodule foreach "echo 'Adding all files.'; git add ."
-echo here2
-git submodule foreach "echo 'Adding all files.'; git commit -m '%commit_message%'"
-echo here3
-git submodule foreach "echo 'Adding all files.'; git push"
+git submodule foreach "echo 'Commit files.'; git commit -m '%commit_message%'"
+git submodule foreach "echo 'Push files.'; git push"
 
-echo tutu
 git add .
-echo tutu2
 git commit -m "%commit_message%"
-echo tutu3
 git push
