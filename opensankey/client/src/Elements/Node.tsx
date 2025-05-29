@@ -262,7 +262,7 @@ export abstract class ClassTemplate_NodeElement
     // Link with default style
     this._display.style.addReference(this)
 
-    drawing_area.list_g_element.push(this.id)
+    drawing_area.list_g_element.unshift(this.id)
   }
 
   // CLEANING METHODS ===================================================================
