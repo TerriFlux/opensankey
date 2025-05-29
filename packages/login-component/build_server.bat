@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 REM Étape 1 : Installation des requirements
 echo === Installation des requirements ===
-pip install -r requirements.txt
+powershell -Command "pip install -r requirements.txt | Select-String -NotMatch 'Requirement already satisfied'"
 
 REM Étape 2 : Vérification PEP8 avec flake8
 echo === Vérification flake8 ===
