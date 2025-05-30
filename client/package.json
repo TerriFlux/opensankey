@@ -7,8 +7,8 @@
   "proxy": "http://127.0.0.1:5000/",
   "scripts": {
     "//": "Comment on craco : It overrides  react-script webpack config file ",
-    "start": "cross-env REACT_APP_AFM=true craco start",
-    "build": "cross-env REACT_APP_AFM=true craco build",
+    "start": "craco start",
+    "build": "craco build",
     "lint": "eslint --fix ./src",
     "dist": "tsc -p .",
     "test": "react-scripts test",
@@ -45,7 +45,6 @@
     "bootstrap": "^5.3.3",
     "colormap": "^2.3.2",
     "cross-conf-env": "^1.3.0",
-    "cross-env": "^7.0.3",
     "d3": "^7.9.0",
     "d3-textwrap": "^3.0.0",
     "deep-diff": "^1.0.2",
