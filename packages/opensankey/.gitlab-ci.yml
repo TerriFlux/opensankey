@@ -18,6 +18,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   TESTS_DIR: /home/ubuntu/Tests
+  PUBLIC_URL: "/"
 
 build:
   stage: build
@@ -50,9 +51,6 @@ test:
     - build
 
 image: node:18
-
-variables:
-  PUBLIC_URL: "/"
 
 # Étape de build
 build-react:
