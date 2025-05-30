@@ -71,12 +71,15 @@ REM === Choix de compilation serveur ===
 set /p build_server=Souhaitez-vous construire le serveur ? (y/n)
 
 if /I "%create_env%"=="y" (
+    set CONDA_ENVS_PATH=USERPROFILE%\.conda\envs
+    set MY_ENV_PATH=%USERPROFILE%\.conda\envs\!conda_env!
+    echo !MY_ENV_PATH!
     set python_version=3.8.18
     echo Suppression ^(si existant^) de l'environnement conda : !conda_env!
     call conda deactivate
     call conda remove -y --name !conda_env! --all >nul 2>&1
     echo Création de l'environnement conda : !conda_env! avec Python !python_version!
-    call conda create -y --name !conda_env! python=!python_version!
+    call conda create -y --prefix !MY_ENV_PATH! python=!python_version!
 )
 
 REM === Activation de l'environnement conda ===
