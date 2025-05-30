@@ -1,6 +1,7 @@
 stages:
     - build
     - test
+    - deploy
 
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
@@ -47,3 +48,24 @@ test:
     - bash test.sh
   dependencies:
     - build
+
+image: node:18
+
+variables:
+  PUBLIC_URL: "/"
+
+# Étape de build
+build-react:
+  stage: build
+  script:
+    - npm install
+    - npm run build
+    - mv build public
+    - echo '<meta http-equiv="refresh" content="0; url=/" />' > public/404.html  # fallback pour React Router
+  artifacts:
+    paths:
+      - public
+  only:
+    - tags
+  rules:
+    - if: '$CI_COMMIT_TAG == "prod"'
