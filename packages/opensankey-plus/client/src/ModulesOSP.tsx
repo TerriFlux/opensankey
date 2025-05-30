@@ -168,7 +168,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // Data -------------------------------------------------------------------------------
   const new_data_plus = new_data as Type_GenericApplicationDataOSP
-  const { t, has_sankey_plus, icon_library } = new_data_plus
+  const { t, has_sankey_plus, has_sankey_afm, icon_library } = new_data_plus
 
   // Add Buttons to open banner of views
   additionalMenus.current.external_top_buttons_item['views'] = <BannerViewsOSP new_data_plus={new_data_plus} />
@@ -179,9 +179,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus.menu_configuration.flow_color_origin_type.push('auto')
   }
 
-  additionalMenus.current.external_top_buttons_item['afm'] = <AFMEditionMenu
-    application_data_mfa={new_data_plus}
-  />
+  if (has_sankey_afm) {
+    additionalMenus.current.external_top_buttons_item['afm'] = <AFMEditionMenu
+      application_data_mfa={new_data_plus}
+    />
+  }
   // TODO OTHER JSX ELEMENTS -----------------------------------------------------------
 
   // TODO : manque implementation des exort svg
