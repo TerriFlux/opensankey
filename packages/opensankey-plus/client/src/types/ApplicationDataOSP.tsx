@@ -76,6 +76,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
   protected _menu_configuration: Class_MenuConfigOSP
 
   protected _has_sankey_plus: boolean = true // token for sankeyplus (if user is connected with an account)
+  //protected _has_sankey_afm: boolean = true // token for sankeyplus (if user is connected with an account)
 
   protected _views: { [id: string]: Type_GenericDrawingArea } = {}
   protected _views_order: string[] = []
@@ -1008,6 +1009,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
   public get has_sankey_plus() { return this._has_sankey_plus }
   public set has_sankey_plus(_) { this._has_sankey_plus = _ }
+
+  public get has_sankey_afm() { return process.env.REACT_APP_AFM == 'true' }
 
   // Override getter & setter so we can get new type
   public get menu_configuration(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
