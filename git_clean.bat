@@ -1,6 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM Se mettre dans le dossier courant
+pushd "%~dp0"
+
 REM Fichier à exclure
 set EXCLUDE_FILE=server\db.sqlite
 set EXCLUDE_FILE2=.vscode\launch.json
