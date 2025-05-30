@@ -38,18 +38,7 @@ import { ValueOptionType } from '../Elements/Link'
 export type keyTypeConfig = 'data' | 'context' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node'
 export interface IType_DictHookRefSetterShowDialogComponents {
-  // Config menu - Nodes
-  ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_io: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  // Config menu - Links
-  ref_setter_show_menu_link_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_data: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_appearence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Config menu - Layout
-  ref_setter_show_menu_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Modal - Welcome
   ref_setter_modal_welcome_active_page: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -460,18 +449,6 @@ export class Class_MenuConfig {
     // Init dict of setter show dialog -------------------------------------------------
 
     this._dict_setter_show_dialog = {
-      // Config menu - Nodes
-      ref_setter_show_menu_node_apparence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_io: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      // Config menu - Links
-      ref_setter_show_menu_link_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_data: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_appearence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      // Config menu - Layout
-      ref_setter_show_menu_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Modal - Welcome
       ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
