@@ -67,35 +67,44 @@ pages:
         echo "[ERREUR] APP_VERSION doit être fourni manuellement dans l’interface GitLab"
         exit 1
       fi
-    - echo "[INFO] Version reçue " $APP_VERSION
+    - echo "[INFO] Version reçue : $APP_VERSION"
+
+    # === Chemins ===
+    - JS_DIR="$CI_PROJECT_DIR/opensankey/client/build/static/js"
+    - CSS_DIR="$CI_PROJECT_DIR/opensankey/client/build/static/css"
+    - INDEX_FILE="$CI_PROJECT_DIR/opensankey/client/build/index.html"
+    - BUILD_DIR="$CI_PROJECT_DIR/opensankey/client/build"
+    - VERSION_DIR="$CI_PROJECT_DIR/public/$APP_VERSION"
+    - LATEST_DIR="$CI_PROJECT_DIR/public/latest"
 
     # === JS ===
-    - |
-      JS_DIR="$CI_PROJECT_DIR/opensankey/client/build/static/js"
-      INDEX_FILE="$CI_PROJECT_DIR/opensankey/client/build/index.html"
-      cd "$JS_DIR"
-      for f in main.*.js; do
+    - cd "$JS_DIR"
+    - for f in main.*.js; do
         cp "$f" "opensankey.$APP_VERSION.js"
         echo "[INFO] JS renommé : $f → opensankey.$APP_VERSION.js"
         sed -i "s|$f|opensankey.$APP_VERSION.js|g" "$INDEX_FILE"
       done
 
     # === CSS ===
-    - |
-      CSS_DIR="$CI_PROJECT_DIR/opensankey/client/build/static/css"
-      cd "$CSS_DIR"
-      for f in main.*.css; do
+    - cd "$CSS_DIR"
+    - for f in main.*.css; do
         cp "$f" "opensankey.$APP_VERSION.css"
         echo "[INFO] CSS renommé : $f → opensankey.$APP_VERSION.css"
         sed -i "s|$f|opensankey.$APP_VERSION.css|g" "$INDEX_FILE"
       done
 
-    # === Patch chemins relatifs
+    # === Chemins relatifs pour GitLab Pages
     - sed -i 's|="/static/|="./static/|g' "$INDEX_FILE"
 
-    # === Préparation dossier public
-    - mv "$CI_PROJECT_DIR/opensankey/client/build" "$CI_PROJECT_DIR/public"
-    - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$CI_PROJECT_DIR/public/404.html"
+    # === Préparation des dossiers versionnés
+    - mkdir -p "$VERSION_DIR"
+    - cp -r "$BUILD_DIR"/* "$VERSION_DIR"
+    - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$VERSION_DIR/404.html"
+
+    # === (optionnel) Copier aussi vers /latest
+    - rm -rf "$LATEST_DIR"
+    - cp -r "$VERSION_DIR" "$LATEST_DIR"
+    - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$LATEST_DIR/404.html"
 
   artifacts:
     paths:
