@@ -50,7 +50,6 @@ import { ModalDocumentation } from './components/welcome/SplashScreen'
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
     sankey: {
       filiere?: Type_JSON,
       header?: string,

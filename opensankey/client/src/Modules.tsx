@@ -49,7 +49,9 @@ import { OpenSankeyDiagramSelector } from './components/dialogs/SankeyMenuDialog
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
+    sankey: {
+      publish: boolean
+    }
   }
 
 /**
@@ -62,7 +64,7 @@ export const initializeApplicationData: FType_InitializeApplicationData = (
   initial_data
 ) => {
   // Set openSankey
-  const application_data = new Class_ApplicationData(window.SankeyToolsStatic)
+  const application_data = new Class_ApplicationData(!!window.sankey?.publish)
 
   if (initial_data !== undefined) {
     application_data.fromJSON(initial_data)
