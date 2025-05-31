@@ -24,18 +24,6 @@ import { createRoot } from 'react-dom/client'
 import './traductions/traduction'
 import { OpenSankeyPlusApp } from './AppOSP'
 
-// CONSTANTS =========================================================================================
-
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      filiere?: string
-      footer?: boolean
-      header?: string
-      logo?: string
-    }
-  }
-
 window.React = React
 
 const container = document.getElementById('react-container') as Element | DocumentFragment
