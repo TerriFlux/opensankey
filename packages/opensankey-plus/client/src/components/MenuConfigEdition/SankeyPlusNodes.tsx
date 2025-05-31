@@ -26,13 +26,6 @@ import {
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 
 
-
-
-declare const window: Window &
-  typeof globalThis & {
-    SankeyToolsStatic: boolean
-  }
-
 export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   new_data_plus,
 }) => {

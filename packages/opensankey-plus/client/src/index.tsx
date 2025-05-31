@@ -28,7 +28,6 @@ import { OpenSankeyPlusApp } from './AppOSP'
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
     sankey: {
       filiere?: string
       footer?: boolean
