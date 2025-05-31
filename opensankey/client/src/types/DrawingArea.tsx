@@ -72,7 +72,11 @@ import { TypeGeneric_Handler } from '../Elements/Handler'
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
+    sankey: {
+      publish: boolean
+      recenter:boolean
+      zoom:boolean
+    }
   }
 
 function sortElementByIdOrder(
@@ -195,7 +199,7 @@ export abstract class ClassTemplate_DrawingArea
    * @type {boolean}
    * @memberof ClassTemplate_DrawingArea
    */
-  public static: boolean = window.SankeyToolsStatic
+  public static: boolean = !!window.sankey?.publish
 
   public bypass_redraws: boolean = false
 
@@ -1120,7 +1124,7 @@ export abstract class ClassTemplate_DrawingArea
     y0 = new_y0
 
     // Recenter elements
-    if (recenter) {
+    if (recenter && window.sankey?.recenter !== false) {
       this._elements_d3_groups_shift_x = -(bbox.x + bbox.width / 2) + (x0 + width / 2)
       this._elements_d3_groups_shift_y = -(bbox.y + bbox.height / 2) + (y0 + height / 2)
       this.d3_selection_elements_group?.attr(
@@ -1151,6 +1155,10 @@ export abstract class ClassTemplate_DrawingArea
    */
   public areaFitHorizontally(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
+    if (window.sankey?.zoom !== false) {
+      return
+    }
+
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_width / this.width
@@ -1173,6 +1181,9 @@ export abstract class ClassTemplate_DrawingArea
    */
   public areaFitVertically(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
+    if (window.sankey?.zoom !== false) {
+      return
+    }
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_height / this.height
