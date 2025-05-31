@@ -58,7 +58,7 @@ build:
 #     - when: always
 
 # Étape de build
-deploy:
+pages:
   image: node:18
   stage: deploy
   script:
@@ -102,17 +102,6 @@ deploy:
       - public
   dependencies:
     - build
-  rules:
-    - when: manual
-      allow_failure: false
-
-pages:
-  stage: deploy
-  script:
-    - echo "[INFO] Publication GitLab Pages"
-  artifacts:
-    paths:
-      - public
   rules:
     - when: manual
       allow_failure: false
