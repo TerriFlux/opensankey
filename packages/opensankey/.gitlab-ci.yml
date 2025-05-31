@@ -63,34 +63,31 @@ deploy:
   stage: deploy
   script:
     - echo "[INFO] Version reçue $APP_VERSION"
-    # === Renommage JS ===
-    - cd opensankey/client/build/static/js
-    - for f in main.*.js; do
-        cp "$f" "opensankey.$APP_VERSION.js" &&
-        echo "[INFO] Fichier JS renommé : opensankey.$APP_VERSION.js" &&
-        export JS_ORIGINAL="$f";
+
+    # === JS ===
+    - |
+      cd opensankey/client/build/static/js
+      for f in main.*.js; do
+        cp "$f" "opensankey.$APP_VERSION.js"
+        echo "[INFO] JS renommé : $f → opensankey.$APP_VERSION.js"
+        sed -i "s|$f|opensankey.$APP_VERSION.js|g" ../../../../index.html
       done
-    - cd ../../..
+      cd ../../..
 
-    # === Renommage CSS ===
-    - cd opensankey/client/build/static/css
-    - for f in main.*.css; do
-        cp "$f" "opensankey.$APP_VERSION.css" &&
-        echo "[INFO] Fichier CSS renommé : opensankey.$APP_VERSION.css" &&
-        export CSS_ORIGINAL="$f";
+    # === CSS ===
+    - |
+      cd opensankey/client/build/static/css
+      for f in main.*.css; do
+        cp "$f" "opensankey.$APP_VERSION.css"
+        echo "[INFO] CSS renommé : $f → opensankey.$APP_VERSION.css"
+        sed -i "s|$f|opensankey.$APP_VERSION.css|g" ../../../../index.html
       done
-    - cd ../../..
+      cd ../../..
 
-    # === Patch index.html : chemins relatifs + noms de fichiers ===
-    - INDEX="opensankey/client/build/index.html"
-    - echo "[INFO] Patch chemins vers ./static/"
-    - sed -i 's|="/static/|="./static/|g' "$INDEX"
-    - echo "[INFO] Patch JS → opensankey.$APP_VERSION.js"
-    - sed -i "s|$JS_ORIGINAL|opensankey.$APP_VERSION.js|g" "$INDEX"
-    - echo "[INFO] Patch CSS → opensankey.$APP_VERSION.css"
-    - sed -i "s|$CSS_ORIGINAL|opensankey.$APP_VERSION.css|g" "$INDEX"
+    # === Patch chemins relatifs
+    - sed -i 's|="/static/|="./static/|g' opensankey/client/build/index.html
 
-    # === Préparation dossier public ===
+    # === Préparation dossier public
     - mv opensankey/client/build public
     - echo '<meta http-equiv="refresh" content="0; url=/" />' > public/404.html
 
