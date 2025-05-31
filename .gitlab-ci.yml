@@ -67,34 +67,35 @@ deploy:
         echo "[ERREUR] APP_VERSION doit être fourni manuellement dans l’interface GitLab"
         exit 1
       fi
-    - echo "[INFO] Version reçue " $APP_VERSION
+    - echo "[INFO] Version reçue : $APP_VERSION"
 
     # === JS ===
     - |
-      cd opensankey/client/build/static/js
+      JS_DIR="$CI_PROJECT_DIR/opensankey/client/build/static/js"
+      INDEX_FILE="$CI_PROJECT_DIR/opensankey/client/build/index.html"
+      cd "$JS_DIR"
       for f in main.*.js; do
         cp "$f" "opensankey.$APP_VERSION.js"
         echo "[INFO] JS renommé : $f → opensankey.$APP_VERSION.js"
-        sed -i "s|$f|opensankey.$APP_VERSION.js|g" ../../index.html
+        sed -i "s|$f|opensankey.$APP_VERSION.js|g" "$INDEX_FILE"
       done
-      cd ../../..
 
     # === CSS ===
     - |
-      cd opensankey/client/build/static/css
+      CSS_DIR="$CI_PROJECT_DIR/opensankey/client/build/static/css"
+      cd "$CSS_DIR"
       for f in main.*.css; do
         cp "$f" "opensankey.$APP_VERSION.css"
         echo "[INFO] CSS renommé : $f → opensankey.$APP_VERSION.css"
-        sed -i "s|$f|opensankey.$APP_VERSION.css|g" ../../index.html
+        sed -i "s|$f|opensankey.$APP_VERSION.css|g" "$INDEX_FILE"
       done
-      cd ../../../../..
 
     # === Patch chemins relatifs
-    - sed -i 's|="/static/|="./static/|g' opensankey/client/build/index.html
+    - sed -i 's|="/static/|="./static/|g' "$INDEX_FILE"
 
     # === Préparation dossier public
-    - mv opensankey/client/build public
-    - echo '<meta http-equiv="refresh" content="0; url=/" />' > public/404.html
+    - mv "$CI_PROJECT_DIR/opensankey/client/build" "$CI_PROJECT_DIR/public"
+    - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$CI_PROJECT_DIR/public/404.html"
 
   artifacts:
     paths:
@@ -104,3 +105,4 @@ deploy:
   rules:
     - when: manual
       allow_failure: false
+
