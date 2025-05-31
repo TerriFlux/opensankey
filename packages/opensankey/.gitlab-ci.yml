@@ -75,7 +75,7 @@ deploy:
       for f in main.*.js; do
         cp "$f" "opensankey.$APP_VERSION.js"
         echo "[INFO] JS renommé : $f → opensankey.$APP_VERSION.js"
-        sed -i "s|$f|opensankey.$APP_VERSION.js|g" ../../../../index.html
+        sed -i "s|$f|opensankey.$APP_VERSION.js|g" ../../index.html
       done
       cd ../../..
 
@@ -85,9 +85,9 @@ deploy:
       for f in main.*.css; do
         cp "$f" "opensankey.$APP_VERSION.css"
         echo "[INFO] CSS renommé : $f → opensankey.$APP_VERSION.css"
-        sed -i "s|$f|opensankey.$APP_VERSION.css|g" ../../../../index.html
+        sed -i "s|$f|opensankey.$APP_VERSION.css|g" ../../index.html
       done
-      cd ../../..
+      cd ../../../../..
 
     # === Patch chemins relatifs
     - sed -i 's|="/static/|="./static/|g' opensankey/client/build/index.html
