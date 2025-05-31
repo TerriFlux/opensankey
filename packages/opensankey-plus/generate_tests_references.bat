@@ -9,9 +9,9 @@ chcp 65001 >nul
 
 rem === Install deps ===
 for %%S in (OpenSankey) do (
-    echo %%S
+    echo %%S generate_tests_references.bat
     pushd submodules\%%S
-    generate_tests_references.bat
+    call generate_tests_references.bat
     popd
 )
 
