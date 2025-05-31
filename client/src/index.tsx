@@ -37,7 +37,6 @@ import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
     sankey: {
       filiere?: string,
       header?: string,
@@ -62,7 +61,7 @@ let dataApp: Class_ApplicationDataSA
 const App: FunctionComponent = () => {
   if (initialRender) {
     initialRender = false
-    dataApp = new Class_ApplicationDataSA(window.SankeyToolsStatic == true)
+    dataApp = new Class_ApplicationDataSA(window.sankey?.publish!)
     if (window.sankey && window.sankey.filiere) {
       dataApp.fromJSON(window.sankey.filiere as unknown as Type_JSON)
     }

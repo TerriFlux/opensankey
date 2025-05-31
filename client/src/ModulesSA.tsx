@@ -180,7 +180,7 @@ const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
   // Traduction
   const { t } = new_data_app
 
-  // If windowSankey.SankeyToolsStatic is at true : we don't use the function useNavigate because we can't it use this function outside BrowserRouter
+  // If window.sankey.publish is at true : we don't use the function useNavigate because we can't it use this function outside BrowserRouter
   // and if the app is in publication mode we aren't in one
   const navigate = useNavigate()
 
