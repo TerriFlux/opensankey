@@ -67,7 +67,7 @@ pages:
         echo "[ERREUR] APP_VERSION doit être fourni manuellement dans l’interface GitLab"
         exit 1
       fi
-    - echo "[INFO] Version reçue : $APP_VERSION"
+    - echo "[INFO] Version reçue " $APP_VERSION
 
     # === Chemins ===
     - JS_DIR="$CI_PROJECT_DIR/opensankey/client/build/static/js"
@@ -78,16 +78,18 @@ pages:
     - LATEST_DIR="$CI_PROJECT_DIR/public/latest"
 
     # === JS ===
-    - cd "$JS_DIR"
-    - for f in main.*.js; do
+    - |
+      cd "$JS_DIR"
+      for f in main.*.js; do
         cp "$f" "opensankey.$APP_VERSION.js"
         echo "[INFO] JS renommé : $f → opensankey.$APP_VERSION.js"
         sed -i "s|$f|opensankey.$APP_VERSION.js|g" "$INDEX_FILE"
       done
 
     # === CSS ===
-    - cd "$CSS_DIR"
-    - for f in main.*.css; do
+    - |
+      cd "$CSS_DIR"
+      for f in main.*.css; do
         cp "$f" "opensankey.$APP_VERSION.css"
         echo "[INFO] CSS renommé : $f → opensankey.$APP_VERSION.css"
         sed -i "s|$f|opensankey.$APP_VERSION.css|g" "$INDEX_FILE"
