@@ -82,7 +82,7 @@ pages:
       cd "$JS_DIR"
       for f in main.*.js; do
         cp "$f" "opensankey.$APP_VERSION.js"
-        echo "[INFO] JS renommé : $f → opensankey.$APP_VERSION.js"
+        echo "[INFO] JS renommé : $f → opensankey-v$APP_VERSION.js"
         sed -i "s|$f|opensankey.$APP_VERSION.js|g" "$INDEX_FILE"
       done
 
@@ -91,7 +91,7 @@ pages:
       cd "$CSS_DIR"
       for f in main.*.css; do
         cp "$f" "opensankey.$APP_VERSION.css"
-        echo "[INFO] CSS renommé : $f → opensankey.$APP_VERSION.css"
+        echo "[INFO] CSS renommé : $f → opensankey-v$APP_VERSION.css"
         sed -i "s|$f|opensankey.$APP_VERSION.css|g" "$INDEX_FILE"
       done
 
