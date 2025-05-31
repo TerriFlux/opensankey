@@ -61,7 +61,7 @@ let dataApp: Class_ApplicationDataSA
 const App: FunctionComponent = () => {
   if (initialRender) {
     initialRender = false
-    dataApp = new Class_ApplicationDataSA(window.sankey?.publish!)
+    dataApp = new Class_ApplicationDataSA(!!window.sankey?.publish)
     if (window.sankey && window.sankey.diagram) {
       dataApp.fromJSON(window.sankey.diagram as unknown as Type_JSON)
     }
