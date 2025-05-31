@@ -67,7 +67,7 @@ deploy:
         echo "[ERREUR] APP_VERSION doit être fourni manuellement dans l’interface GitLab"
         exit 1
       fi
-    - echo "[INFO] Version reçue : $APP_VERSION"
+    - echo "[INFO] Version reçue " $APP_VERSION
 
     # === JS ===
     - |
