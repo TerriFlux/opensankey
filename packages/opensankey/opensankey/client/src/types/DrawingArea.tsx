@@ -2331,8 +2331,10 @@ export abstract class ClassTemplate_DrawingArea
       .attr('fill', this.color)
       .attr('width', this.width)
       .attr('height', this.height)
-      .style('stroke-width', 5)
-      .style('stroke', default_black_color)
+    if (!this.static) {
+      this.d3_selection_bg?.select('rect').style('stroke-width', 5)
+      this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
+    }
     this.drawCursor()
   }
 
