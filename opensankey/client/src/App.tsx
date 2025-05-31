@@ -51,7 +51,7 @@ import { ModalDocumentation } from './components/welcome/SplashScreen'
 declare const window: Window &
   typeof globalThis & {
     sankey: {
-      filiere?: Type_JSON,
+      diagram?: Type_JSON,
       header?: string,
       has_header?: boolean,
       footer?: boolean,
@@ -83,8 +83,8 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     const new_data = JSON.parse(json_data)
     initial_data = new_data
   }
-  if (window.sankey && window.sankey.filiere) {
-    initial_data = window.sankey.filiere
+  if (window.sankey && window.sankey.diagram) {
+    initial_data = window.sankey.diagram
   }
 
   // Initialize data
