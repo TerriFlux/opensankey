@@ -106,3 +106,13 @@ deploy:
     - when: manual
       allow_failure: false
 
+pages:
+  stage: deploy
+  script:
+    - echo "[INFO] Publication GitLab Pages"
+  artifacts:
+    paths:
+      - public
+  rules:
+    - when: manual
+      allow_failure: false
