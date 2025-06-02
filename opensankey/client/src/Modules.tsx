@@ -24,8 +24,6 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React from 'react'
-
 /*************************************************************************************************/
 
 import {
@@ -35,13 +33,6 @@ import {
 } from './types/FunctionTypes'
 import {
   Class_ApplicationData} from './types/Types'
-
-import { MenuDraggable } from './components/topmenus/SankeyMenus'
-
-import { SankeyMenuConfigurationNodesIO } from './components/configmenus/SankeyMenuConfigurationNodesIO'
-import { MenuConfigurationLinksData } from './components/configmenus/SankeyMenuConfigurationLinksData'
-import { MenuConfigurationLinksStyle } from './components/configmenus/SankeyMenuConfigurationLinksAppearence'
-import { OpenSankeyMenuConfigurationLayout } from './components/configmenus/SankeyMenuConfigurationLayout'
 
 import { FType_InitializeDiagrammSelector } from './components/dialogs/types/SankeyMenuDialogsTypes'
 import { OpenSankeyDiagramSelector } from './components/dialogs/SankeyMenuDialogs'
@@ -92,17 +83,7 @@ export const initializeDiagrammSelector: FType_InitializeDiagrammSelector = (
 }
 
 // Modal Dialogs
-export const moduleDialogs: FType_ModuleDialogs = (
-  new_data,
-  additional_menus,
-  menu_configuration_nodes_attributes,
-  _processFunction // TODO unused
-) => {
-  return [
-
-  ]
-}
-
+export const moduleDialogs: FType_ModuleDialogs = () => {return []}
 
 /***************************************************************************************/
 
