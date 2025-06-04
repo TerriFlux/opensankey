@@ -74,7 +74,7 @@ if /I "%create_env%"=="y" (
     set CONDA_ENVS_PATH=USERPROFILE%\.conda\envs
     set MY_ENV_PATH=%USERPROFILE%\.conda\envs\!conda_env!
     echo !MY_ENV_PATH!
-    set python_version=3.8.18
+    set python_version=3.9.0
     echo Suppression ^(si existant^) de l'environnement conda : !conda_env!
     call conda deactivate
     call conda remove -y --name !conda_env! --all >nul 2>&1

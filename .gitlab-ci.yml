@@ -11,15 +11,49 @@ variables:
   GITLAB_RUNNER_ENV: /home/gitlab-runner/gitlab_test
   TAG_TEST: test
   TAG_PROD: prod # or v1.1
+  # Variables Docker
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE/sankeysuite-client:latest
+  DOCKER_DRIVER: overlay2
 
-# Pip's cache doesn't store the python packages
-# https://pip.pypa.io/en/stable/reference/pip_install/#caching
-#
-# If you want to also cache the installed packages, you have to install
-# them in a virtualenv and cache it as well.
+# Cache
 cache:
   paths:
     - .cache/pip
+    - node_modules/
+    - .npm/
+
+# ========================================
+# BUILD DOCKER IMAGE
+# ========================================
+
+build-sankeysuite-docker:
+  stage: build-docker
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "=== Building SankeySuite Client Docker Image ==="
+    - echo "Building image: $DOCKER_IMAGE"
+    
+    # Build l'image Docker avec le contexte complet
+    - docker build -t $DOCKER_IMAGE -f Dockerfile .
+    
+    # Push vers le registry GitLab
+    - docker push $DOCKER_IMAGE
+    
+    - echo "✅ Docker image built and pushed: $DOCKER_IMAGE"
+  rules:
+    # Rebuilder l'image quand certains fichiers changent
+    - changes:
+        - client/package.json
+    # Ou manuellement
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+      when: manual
+    # Ou si variable forcée
+    - if: '$BUILD_DOCKER_IMAGE == "true"'
+  allow_failure: false
 
 # Build : for all branches, units tests for submodules server side
 build:
