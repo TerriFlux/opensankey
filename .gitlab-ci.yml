@@ -35,7 +35,7 @@ build-sankeysuite-docker:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - echo "=== Building SankeySuite Client Docker Image ==="
-    - echo "Building image: $DOCKER_IMAGE"
+    - echo "Building image " $DOCKER_IMAGE
     
     # Build l'image Docker avec le contexte complet
     - docker build -t $DOCKER_IMAGE -f Dockerfile .
@@ -43,7 +43,7 @@ build-sankeysuite-docker:
     # Push vers le registry GitLab
     - docker push $DOCKER_IMAGE
     
-    - echo "✅ Docker image built and pushed: $DOCKER_IMAGE"
+    - echo "✅ Docker image built and pushed " $DOCKER_IMAGE
   rules:
     # Rebuilder l'image quand certains fichiers changent
     - changes:
