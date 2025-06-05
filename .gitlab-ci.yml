@@ -34,14 +34,15 @@ cache:
 
 build-sankeysuite-docker:
   stage: build-docker
+  tags:
+    - dev
   image: docker:latest
   services:
     - docker:dind
   variables:
     DOCKER_TLS_CERTDIR: ""
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-    - git config --global url."https://gitlab.com/".insteadOf "git@gitlab.com:"
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY""
   script:
     - echo "🔧 Build image from Dockerfile"
     - docker build -t "$DOCKER_IMAGE" -t "$DOCKER_IMAGE_LATEST" -f Dockerfile .
@@ -49,29 +50,32 @@ build-sankeysuite-docker:
     - docker push "$DOCKER_IMAGE"
     - docker push "$DOCKER_IMAGE_LATEST"
   rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - changes:
         - Dockerfile
-        - client/**
-        - submodules/**
+        - client/package.json
+        - build_client.sh
+        - submodules/**/*
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+      when: manual
+    - if: '$BUILD_DOCKER_IMAGE == "true"'
+  allow_failure: false
 
 # Build : for all branches, units tests for submodules server side
-# build:
-#   stage: build
-#   tags:
-#     - dev
-#   script:
-#     # Specify env
-#     - echo $CI_PROJECT_DIR
-#     - source /home/gitlab-runner/gitlab_dev/bin/activate
-#     - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
-#     # Build SankeySuite node module
-#     - bash build_client.sh -I -L -B -D -S
-#     # Check flask server
-#     - bash build_server.sh
-#   except:
-#     - schedules
+build:
+  stage: build
+  tags:
+    - dev
+  script:
+    # Specify env
+    - echo $CI_PROJECT_DIR
+    - source /home/gitlab-runner/gitlab_dev/bin/activate
+    - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
+    # Build SankeySuite node module
+    - bash build_client.sh -I -L -B -D -S
+    # Check flask server
+    - bash build_server.sh
+  except:
+    - schedules
 
 
 # # Test : for all branches, units tests for submodules server side
