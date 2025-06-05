@@ -27,16 +27,34 @@ cache:
 # BUILD DOCKER IMAGE
 # ========================================
 
-build-sankeysuite-docker:
+build-sankeysuite-docker-https:
   stage: build-docker
   image: docker:latest
   services:
     - docker:dind
   before_script:
+    # Installer Git dans l'environnement de build
+    - apk add --no-cache git
+    
+    # Login Docker
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - echo "=== Building SankeySuite Client Docker Image ==="
-    - echo "Building image " $DOCKER_IMAGE
+    - echo "Building image" $DOCKER_IMAGE
+    
+    # Configurer Git pour utiliser HTTPS au lieu de SSH
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "git@gitlab.com:"
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "ssh://git@gitlab.com/"
+    
+    # Mettre à jour les submodules avec HTTPS
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
+    
+    # Vérifier que les submodules sont bien chargés
+    - ls -la submodules/
+    - ls -la submodules/OpenSankey+/ || echo "OpenSankey+ not found"
+    - ls -la submodules/LoginComponent/ || echo "LoginComponent not found"
+    - ls -la submodules/MFAProblem/ || echo "MFAProblem not found"
     
     # Build l'image Docker avec le contexte complet
     - docker build -t $DOCKER_IMAGE -f Dockerfile .
@@ -44,15 +62,17 @@ build-sankeysuite-docker:
     # Push vers le registry GitLab
     - docker push $DOCKER_IMAGE
     
-    - echo "✅ Docker image built and pushed " $DOCKER_IMAGE
+    - echo "✅ Docker image built and pushed" $DOCKER_IMAGE
+  variables:
+    GIT_SUBMODULE_STRATEGY: none  # Gestion manuelle des submodules
   rules:
-    # Rebuilder l'image quand certains fichiers changent
     - changes:
+        - Dockerfile
         - client/package.json
-    # Ou manuellement
+        - build_client.sh
+        - submodules/**/*
     - if: '$CI_COMMIT_REF_NAME == "main"'
       when: manual
-    # Ou si variable forcée
     - if: '$BUILD_DOCKER_IMAGE == "true"'
   allow_failure: false
 
