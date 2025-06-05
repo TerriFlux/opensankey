@@ -75,7 +75,7 @@ declare const window: Window &
     sankey: {
       publish: boolean
       recenter:boolean
-      zoom:boolean
+      topbar:boolean
     }
   }
 
@@ -1155,9 +1155,6 @@ export abstract class ClassTemplate_DrawingArea
    */
   public areaFitHorizontally(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
-    if (window.sankey?.zoom !== false) {
-      return
-    }
 
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
@@ -1181,9 +1178,6 @@ export abstract class ClassTemplate_DrawingArea
    */
   public areaFitVertically(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
-    if (window.sankey?.zoom !== false) {
-      return
-    }
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_height / this.height
@@ -3018,6 +3012,9 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
+    if (this.static && !window.sankey.topbar) {
+      return 0
+    }
     return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5 * parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
