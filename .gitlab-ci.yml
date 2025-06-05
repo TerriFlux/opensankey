@@ -13,7 +13,8 @@ variables:
   TAG_TEST: test
   TAG_PROD: prod # or v1.1
   # Variables Docker
-  DOCKER_IMAGE: $CI_REGISTRY_IMAGE/sankeysuite-client:latest
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE/sankeyapp:$CI_COMMIT_SHA
+  DOCKER_IMAGE_LATEST: $CI_REGISTRY_IMAGE/sankeyapp:latest
   DOCKER_DRIVER: overlay2
 
 # Cache
@@ -27,54 +28,33 @@ cache:
 # BUILD DOCKER IMAGE
 # ========================================
 
-build-sankeysuite-docker-https:
+# ===========================
+# Étape 1 : Build & Push Docker
+# ===========================
+
+build-sankeysuite-docker:
   stage: build-docker
   image: docker:latest
   services:
     - docker:dind
-  before_script:
-    # Installer Git dans l'environnement de build
-    - apk add --no-cache git
-    
-    # Login Docker
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - echo "=== Building SankeySuite Client Docker Image ==="
-    - echo "Building image" $DOCKER_IMAGE
-    
-    # Configurer Git pour utiliser HTTPS au lieu de SSH
-    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "git@gitlab.com:"
-    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "ssh://git@gitlab.com/"
-    
-    # Mettre à jour les submodules avec HTTPS
-    - git submodule sync --recursive
-    - git submodule update --init --recursive
-    
-    # Vérifier que les submodules sont bien chargés
-    - ls -la submodules/
-    - ls -la submodules/OpenSankey+/ || echo "OpenSankey+ not found"
-    - ls -la submodules/LoginComponent/ || echo "LoginComponent not found"
-    - ls -la submodules/MFAProblem/ || echo "MFAProblem not found"
-    
-    # Build l'image Docker avec le contexte complet
-    - docker build -t $DOCKER_IMAGE -f Dockerfile .
-    
-    # Push vers le registry GitLab
-    - docker push $DOCKER_IMAGE
-    
-    - echo "✅ Docker image built and pushed" $DOCKER_IMAGE
   variables:
-    GIT_SUBMODULE_STRATEGY: none  # Gestion manuelle des submodules
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - git config --global url."https://gitlab.com/".insteadOf "git@gitlab.com:"
+  script:
+    - echo "🔧 Build image from Dockerfile"
+    - docker build -t "$DOCKER_IMAGE" -t "$DOCKER_IMAGE_LATEST" -f Dockerfile .
+    - echo "📤 Push image to GitLab registry"
+    - docker push "$DOCKER_IMAGE"
+    - docker push "$DOCKER_IMAGE_LATEST"
   rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - changes:
         - Dockerfile
-        - client/package.json
-        - build_client.sh
-        - submodules/**/*
-    - if: '$CI_COMMIT_REF_NAME == "main"'
-      when: manual
-    - if: '$BUILD_DOCKER_IMAGE == "true"'
-  allow_failure: false
+        - client/**
+        - submodules/**
 
 # Build : for all branches, units tests for submodules server side
 # build:
