@@ -1,10 +1,16 @@
-# Dockerfile pour SankeySuite Client
+# Dockerfile pour SankeySuite Client + Web Generator
 FROM node:18-bullseye
 
 # Installer les dépendances système nécessaires
 RUN apt-get update && apt-get install -y \
     git \
     bash \
+    python3 \
+    python3-pip \
+    openssh-client \
+    rsync \
+    curl \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Installer pnpm globalement
@@ -18,11 +24,15 @@ RUN useradd -m -s /bin/bash sankey && \
 USER sankey
 WORKDIR /app
 
+# Créer le répertoire SSH pour l'utilisateur
+RUN mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
 # Copier tout le contenu du projet SankeySuite
 COPY --chown=sankey:sankey . .
 
 # S'assurer que les scripts sont exécutables
 RUN chmod +x build_client.sh
+RUN chmod +x *.py 2>/dev/null || echo "No Python scripts to make executable"
 
 # Initialiser et mettre à jour les submodules git
 RUN git config --global --add safe.directory /app && \
@@ -33,11 +43,20 @@ RUN git config --global --add safe.directory /app && \
 # Exécuter le script de build avec l'option -I (install dependencies)
 RUN bash build_client.sh -I
 
-# Exposer le port si nécessaire (à adapter selon votre config)
+# Créer la structure pour le générateur web
+RUN mkdir -p /app/web-generator && \
+    mkdir -p /app/mfadata/dist
+
+# Variables d'environnement pour le générateur web
+ENV WEB_GENERATOR_BASE_PATH=/app/web-generator
+ENV SANKEY_COMPIL_DIR=/app/client
+ENV PYTHON_PATH=/app
+
+# Exposer le port si nécessaire
 EXPOSE 3000
 
-# Définir le répertoire de travail sur client
-WORKDIR /app/client
+# Définir le répertoire de travail
+WORKDIR /app
 
 # Point d'entrée par défaut
 CMD ["bash"]
