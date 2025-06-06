@@ -13,7 +13,7 @@
     "dist": "tsc -p .",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build_zip": "shx rm -rf $npm_config_datapath/artefacts/afmsankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artefacts"
+    "build_zip": "shx rm -rf $npm_config_artifacts_path/$npm_config_pack_name.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_artifacts_path"
   },
   "dependencies": {
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",

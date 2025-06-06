@@ -214,7 +214,7 @@ export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
   //       exemple_menu = json_data.exemples_menu
   //       if (Object.keys(json_data.exemples_menu['Formations']).length > 0) {
   //         // formations_menu = Object.fromEntries(
-  //         //   Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artefacts')
+  //         //   Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artifacts')
   //         // ) as { [_: string]: JSX.Element }
   //         delete json_data.exemples_menu['Formations']['Tutoriels']
   //       }
