@@ -87,14 +87,16 @@ for %%S in (OpenSankey+) do (
     popd
 )
 
+REM === Public directory ===
 pushd "!SCRIPT_DIR!\client"
-if exist public (
-    rmdir /s /q public
-    git restore public
+if exist "public" (
+    rmdir /s /q "public" 2>nul
+    git restore public 2>nul
 )
-mklink /D public "..\submodules\OpenSankey+\client\public"
+robocopy "..\submodules\OpenSankey+\client\public" "public" /E /XO
 popd
-echo OK ------------------------------------------------------------------
+
+
 
 REM === Front-end build ===
 echo Build ---------------------------------------------------------------

@@ -251,7 +251,9 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   menu_configuration_nodes_attributes,
   processFunctions
 ) => {
-
+  if (new_data.is_static) {
+    return []
+  }
   // OpenSankey Menu
   const dialogDialogsOSP = moduleDialogsOSP(
     new_data,
