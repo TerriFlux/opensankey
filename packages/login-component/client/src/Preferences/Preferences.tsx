@@ -84,7 +84,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
     })
   }
 
-  if (openingRender && show_preference) {
+  if (openingRender && show_preference && !new_data.drawing_area.static) {
     init_user_data()
   }
 
