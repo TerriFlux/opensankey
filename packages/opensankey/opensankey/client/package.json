@@ -20,7 +20,7 @@
     "jest-html": "jest-html -c **/main.css,**/bootstrap.css",
     "eject": "react-scripts eject",
     "lint": "eslint --fix ./src",
-    "build_zip": "cross-conf-env shx rm -rf $npm_config_datapath/artefacts/open-sankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artefacts"
+    "build_zip": "cross-conf-env shx rm -rf $npm_config_datapath/artifacts/open-sankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artifacts"
   },
   "jest": {
     "snapshotSerializers": [
