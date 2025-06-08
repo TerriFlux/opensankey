@@ -107,13 +107,14 @@ if exist "OpenSankey" (
 )
 mklink /D OpenSankey "..\..\..\submodules\OpenSankey\opensankey\client\src"
 popd
-
+*
+REM === Public directory ===
 pushd "!SCRIPT_DIR!\client"
-if exist public (
-    rmdir /s /q public
-    git restore public
+if exist "public" (
+    rmdir /s /q "public" 2>nul
+    git restore public 2>nul
 )
-mklink /D public "..\submodules\OpenSankey\opensankey\client\public"
+robocopy "..\submodules\OpenSankey\opensankey\client\public" "public" /E /XO
 popd
 echo OK -------------------------------------------------------------------
 

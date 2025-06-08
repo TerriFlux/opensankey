@@ -174,7 +174,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
     this._logo_sankey_plus = 'logos/logo_opensankeyplus.png'
     this._logo = this._logo_sankey_plus
 
-    if (this.has_sankey_plus) {
+    if (this.has_sankey_plus && !this._drawing_area.static) {
       // Update user palette when connected
       const path = window.location.origin
       const url = path + '/user/get_preference'
