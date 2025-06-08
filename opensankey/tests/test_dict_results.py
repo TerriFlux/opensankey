@@ -73,7 +73,7 @@ DIRS_TO_EXCLUDE = [
     'OpenSankey',
     'OptimSankey',
     'not_tested',
-    'artefacts',
+    'artifacts',
     'Formations',
     'Recherche',
     'Etudes',

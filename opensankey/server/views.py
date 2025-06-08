@@ -535,7 +535,7 @@ def parse_folder(current_dir, menus, key=None):
         'Archive',
         'new',
         'prev',
-        'artefacts',
+        'artifacts',
         'Old',
         'old',
         'Matériaux']
