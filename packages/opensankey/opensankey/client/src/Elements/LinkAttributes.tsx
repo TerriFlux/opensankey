@@ -39,7 +39,8 @@ import {
   getNumberOrUndefinedFromJSON,
   default_element_color,
   default_font,
-  default_element_color_source
+  default_element_color_source,
+  getJSONFromJSON
 } from '../types/Utils'
 
 
@@ -111,6 +112,8 @@ export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'dragged' | 'top' | 'middle' | 'bottom'
+
+export type Type_customisable_flow_style_attr='local_link_scale'|'shape_is_curved'|'shape_curvature'|'shape_is_recycling'|'shape_is_structure'|'shape_orientation'|'shape_starting_curve'|'shape_ending_curve'|'shape_starting_tangeant'|'shape_ending_tangeant'|'shape_middle_recycling'|'shape_is_arrow'|'shape_arrow_size'|'shape_is_dashed'|'shape_color'|'shape_color_rule'|'shape_opacity'|'value_label_is_visible'|'value_label_font_family'|'value_label_font_size'|'value_label_uppercase'|'value_label_bold'|'value_label_italic'|'value_label_color'|'value_label_horiz'|'value_label_vert'|'value_label_on_path'|'value_label_pos_auto'|'value_label_percent_input'|'value_label_percent_output'|'value_label_scientific_notation'|'value_label_significant_digits'|'value_label_nb_significant_digits'|'value_label_custom_digit'|'value_label_nb_digit'|'value_label_unit_visible'|'value_label_unit'|'value_label_unit_factor'|'name_label_is_visible'|'name_label_font_family'|'name_label_font_size'|'name_label_uppercase'|'name_label_bold'|'name_label_italic'|'name_label_color'|'name_label_horiz'|'name_label_vert'|'name_label_on_path'|'name_label_pos_auto'
 
 // CLASS LINK ATTRIBUTES ****************************************************************
 /**
@@ -372,8 +375,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     if (json_local_object['value_label_pos_auto'] !== undefined) this._value_label_pos_auto = getBooleanFromJSON(json_local_object, 'value_label_pos_auto', default_link_value_label_pos_auto)
 
     // Value label display - Specific params
-    if (json_local_object['value_label_percent_output'] !== undefined) this._value_label_percent_output = getBooleanFromJSON(json_local_object, 'value_label_percent_output', default_link_value_label_percent_output)    
-    if (json_local_object['value_label_percent_input'] !== undefined) this._value_label_percent_input = getBooleanFromJSON(json_local_object, 'value_label_percent_input', default_link_value_label_percent_input)    
+    if (json_local_object['value_label_percent_output'] !== undefined) this._value_label_percent_output = getBooleanFromJSON(json_local_object, 'value_label_percent_output', default_link_value_label_percent_output)
+    if (json_local_object['value_label_percent_input'] !== undefined) this._value_label_percent_input = getBooleanFromJSON(json_local_object, 'value_label_percent_input', default_link_value_label_percent_input)
     if (json_local_object['value_label_scientific_notation'] !== undefined) this._value_label_scientific_notation = getBooleanFromJSON(json_local_object, 'value_label_scientific_notation', default_link_value_label_scientific_notation)
     if (json_local_object['value_label_significant_digits'] !== undefined) this._value_label_significant_digits = getBooleanFromJSON(json_local_object, 'value_label_significant_digits', default_link_value_label_significant_digits)
     if (json_local_object['value_label_nb_significant_digits'] !== undefined) this._value_label_nb_significant_digits = getNumberFromJSON(json_local_object, 'value_label_nb_significant_digits', default_link_value_label_nb_significant_digits)
@@ -395,6 +398,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     if (json_local_object['name_label_vert'] !== undefined) this._name_label_vert = getStringFromJSON(json_local_object, 'name_label_vert', default_link_name_label_vert) as Type_TextVPos
     if (json_local_object['name_label_on_path'] !== undefined) this._name_label_on_path = getBooleanFromJSON(json_local_object, 'name_label_on_path', default_link_value_label_on_path)
     if (json_local_object['name_label_pos_auto'] !== undefined) this._name_label_pos_auto = getBooleanFromJSON(json_local_object, 'name_label_pos_auto', default_link_value_label_pos_auto)
+
+
   }
 
   public copyFrom(element: Class_LinkAttribute) {
@@ -518,8 +523,8 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   public get value_label_pos_auto() { return this._value_label_pos_auto }
 
   // Value label display - Specific params
-  public get value_label_percent_input() { return this._value_label_percent_input}
-  public get value_label_percent_output() { return this._value_label_percent_output}
+  public get value_label_percent_input() { return this._value_label_percent_input }
+  public get value_label_percent_output() { return this._value_label_percent_output }
   public get value_label_scientific_notation() { return this._value_label_scientific_notation }
   public get value_label_significant_digits() { return this._value_label_significant_digits }
   public get value_label_nb_significant_digits() { return this._value_label_nb_significant_digits }
@@ -798,6 +803,58 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   private _references: { [_: string]: Type_AnyLinkElement; } = {}
 
+  private _customisable_attribute: {
+    local_link_scale: boolean,
+    shape_is_curved: boolean,
+    shape_curvature: boolean,
+    shape_is_recycling: boolean,
+    shape_is_structure: boolean,
+    shape_orientation: boolean,
+    shape_starting_curve: boolean,
+    shape_ending_curve: boolean,
+    shape_starting_tangeant: boolean,
+    shape_ending_tangeant: boolean,
+    shape_middle_recycling: boolean,
+    shape_is_arrow: boolean,
+    shape_arrow_size: boolean,
+    shape_is_dashed: boolean,
+    shape_color: boolean,
+    shape_color_rule: boolean,
+    shape_opacity: boolean,
+    value_label_is_visible: boolean,
+    value_label_font_family: boolean,
+    value_label_font_size: boolean,
+    value_label_uppercase: boolean,
+    value_label_bold: boolean,
+    value_label_italic: boolean,
+    value_label_color: boolean,
+    value_label_horiz: boolean,
+    value_label_vert: boolean,
+    value_label_on_path: boolean,
+    value_label_pos_auto: boolean,
+    value_label_percent_input: boolean,
+    value_label_percent_output: boolean,
+    value_label_scientific_notation: boolean,
+    value_label_significant_digits: boolean,
+    value_label_nb_significant_digits: boolean,
+    value_label_custom_digit: boolean,
+    value_label_nb_digit: boolean,
+    value_label_unit_visible: boolean,
+    value_label_unit: boolean,
+    value_label_unit_factor: boolean,
+    name_label_is_visible: boolean,
+    name_label_font_family: boolean,
+    name_label_font_size: boolean,
+    name_label_uppercase: boolean,
+    name_label_bold: boolean,
+    name_label_italic: boolean,
+    name_label_color: boolean,
+    name_label_horiz: boolean,
+    name_label_vert: boolean,
+    name_label_on_path: boolean,
+    name_label_pos_auto: boolean,
+  }
+
   // CONSTRUCTOR ========================================================================
   constructor(
     id: string,
@@ -816,70 +873,128 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     // Set as deletable or not
     this._is_deletable = is_deletable
 
-    // Scale
-    this._local_link_scale = default_shape_local_scale
+    this._customisable_attribute = {
+      local_link_scale: !is_deletable,
+      shape_is_curved: !is_deletable,
+      shape_curvature: !is_deletable,
+      shape_is_recycling: !is_deletable,
+      shape_is_structure: !is_deletable,
+      shape_orientation: !is_deletable,
+      shape_starting_curve: !is_deletable,
+      shape_ending_curve: !is_deletable,
+      shape_starting_tangeant: !is_deletable,
+      shape_ending_tangeant: !is_deletable,
+      shape_middle_recycling: !is_deletable,
+      shape_is_arrow: !is_deletable,
+      shape_arrow_size: !is_deletable,
+      shape_is_dashed: !is_deletable,
+      shape_color: !is_deletable,
+      shape_color_rule: !is_deletable,
+      shape_opacity: !is_deletable,
+      value_label_is_visible: !is_deletable,
+      value_label_font_family: !is_deletable,
+      value_label_font_size: !is_deletable,
+      value_label_uppercase: !is_deletable,
+      value_label_bold: !is_deletable,
+      value_label_italic: !is_deletable,
+      value_label_color: !is_deletable,
+      value_label_horiz: !is_deletable,
+      value_label_vert: !is_deletable,
+      value_label_on_path: !is_deletable,
+      value_label_pos_auto: !is_deletable,
+      value_label_percent_input: !is_deletable,
+      value_label_percent_output: !is_deletable,
+      value_label_scientific_notation: !is_deletable,
+      value_label_significant_digits: !is_deletable,
+      value_label_nb_significant_digits: !is_deletable,
+      value_label_custom_digit: !is_deletable,
+      value_label_nb_digit: !is_deletable,
+      value_label_unit_visible: !is_deletable,
+      value_label_unit: !is_deletable,
+      value_label_unit_factor: !is_deletable,
+      name_label_is_visible: !is_deletable,
+      name_label_font_family: !is_deletable,
+      name_label_font_size: !is_deletable,
+      name_label_uppercase: !is_deletable,
+      name_label_bold: !is_deletable,
+      name_label_italic: !is_deletable,
+      name_label_color: !is_deletable,
+      name_label_horiz: !is_deletable,
+      name_label_vert: !is_deletable,
+      name_label_on_path: !is_deletable,
+      name_label_pos_auto: !is_deletable,
+    }
 
-    // Shape type
-    this._shape_is_curved = default_shape_is_curved
-    this._shape_curvature = default_shape_curvature
-    this._shape_is_recycling = default_shape_is_recycling
-    this._shape_is_structure = default_shape_is_structure
 
-    // Shape orientation
-    this._shape_orientation = default_shape_orientation
-    this._shape_starting_curve = default_shape_starting_curve
-    this._shape_ending_curve = default_shape_ending_curve
-    this._shape_starting_tangeant = default_shape_starting_tangeant
-    this._shape_ending_tangeant = default_shape_ending_tangeant
-    this._shape_middle_recycling = default_shape_middle_recyling
+    if (!is_deletable) {
 
-    // Shape's arrow attributes
-    this._shape_is_arrow = default_shape_is_arrow
-    this._shape_arrow_size = default_shape_arrow_size
+      // Scale
+      this._local_link_scale = default_shape_local_scale
 
-    // Shape's Filling attributes
-    this._shape_is_dashed = default_shape_is_dashed
-    this._shape_color = default_shape_color
-    this._shape_color_rule = default_shape_color_rule
-    this._shape_opacity = default_shape_opacity
+      // Shape type
+      this._shape_is_curved = default_shape_is_curved
+      this._shape_curvature = default_shape_curvature
+      this._shape_is_recycling = default_shape_is_recycling
+      this._shape_is_structure = default_shape_is_structure
 
-    // Value label display - Default params for all labels
-    this._value_label_is_visible = default_link_value_label_is_visible
-    this._value_label_font_family = default_link_value_label_font_family
-    this._value_label_font_size = default_link_value_label_font_size
-    this._value_label_uppercase = default_link_value_label_uppercase
-    this._value_label_bold = default_link_value_label_bold
-    this._value_label_italic = default_link_value_label_italic
-    this._value_label_color = default_link_value_label_color
-    this._value_label_horiz = default_link_value_label_horiz
-    this._value_label_vert = default_link_value_label_vert
-    this._value_label_on_path = default_link_value_label_on_path
-    this._value_label_pos_auto = default_link_value_label_pos_auto
+      // Shape orientation
+      this._shape_orientation = default_shape_orientation
+      this._shape_starting_curve = default_shape_starting_curve
+      this._shape_ending_curve = default_shape_ending_curve
+      this._shape_starting_tangeant = default_shape_starting_tangeant
+      this._shape_ending_tangeant = default_shape_ending_tangeant
+      this._shape_middle_recycling = default_shape_middle_recyling
 
-    // Value label display - Specific params
-    this._value_label_percent_input = default_link_value_label_percent_input
-    this._value_label_percent_output = default_link_value_label_percent_output
-    this._value_label_scientific_notation = default_link_value_label_scientific_notation
-    this._value_label_significant_digits = default_link_value_label_significant_digits
-    this._value_label_nb_significant_digits = default_link_value_label_nb_significant_digits
-    this._value_label_custom_digit = default_link_value_label_custom_digit
-    this._value_label_nb_digit = default_link_value_label_nb_digit
-    this._value_label_unit_visible = default_link_value_label_unit_visible
-    this._value_label_unit = default_link_value_label_unit
-    this._value_label_unit_factor = default_link_value_label_unit_factor
+      // Shape's arrow attributes
+      this._shape_is_arrow = default_shape_is_arrow
+      this._shape_arrow_size = default_shape_arrow_size
 
-    // Name label display - Default params for all labels
-    this._name_label_is_visible = default_link_value_label_is_visible
-    this._name_label_font_family = default_link_name_label_font_family
-    this._name_label_font_size = default_link_name_label_font_size
-    this._name_label_uppercase = default_link_name_label_uppercase
-    this._name_label_bold = default_link_name_label_bold
-    this._name_label_italic = default_link_name_label_italic
-    this._name_label_color = default_link_name_label_color
-    this._name_label_horiz = default_link_name_label_horiz
-    this._name_label_vert = default_link_name_label_vert
-    this._name_label_on_path = default_link_value_label_on_path
-    this._name_label_pos_auto = default_link_value_label_pos_auto
+      // Shape's Filling attributes
+      this._shape_is_dashed = default_shape_is_dashed
+      this._shape_color = default_shape_color
+      this._shape_color_rule = default_shape_color_rule
+      this._shape_opacity = default_shape_opacity
+
+      // Value label display - Default params for all labels
+      this._value_label_is_visible = default_link_value_label_is_visible
+      this._value_label_font_family = default_link_value_label_font_family
+      this._value_label_font_size = default_link_value_label_font_size
+      this._value_label_uppercase = default_link_value_label_uppercase
+      this._value_label_bold = default_link_value_label_bold
+      this._value_label_italic = default_link_value_label_italic
+      this._value_label_color = default_link_value_label_color
+      this._value_label_horiz = default_link_value_label_horiz
+      this._value_label_vert = default_link_value_label_vert
+      this._value_label_on_path = default_link_value_label_on_path
+      this._value_label_pos_auto = default_link_value_label_pos_auto
+
+      // Value label display - Specific params
+      this._value_label_percent_input = default_link_value_label_percent_input
+      this._value_label_percent_output = default_link_value_label_percent_output
+      this._value_label_scientific_notation = default_link_value_label_scientific_notation
+      this._value_label_significant_digits = default_link_value_label_significant_digits
+      this._value_label_nb_significant_digits = default_link_value_label_nb_significant_digits
+      this._value_label_custom_digit = default_link_value_label_custom_digit
+      this._value_label_nb_digit = default_link_value_label_nb_digit
+      this._value_label_unit_visible = default_link_value_label_unit_visible
+      this._value_label_unit = default_link_value_label_unit
+      this._value_label_unit_factor = default_link_value_label_unit_factor
+
+      // Name label display - Default params for all labels
+      this._name_label_is_visible = default_link_value_label_is_visible
+      this._name_label_font_family = default_link_name_label_font_family
+      this._name_label_font_size = default_link_name_label_font_size
+      this._name_label_uppercase = default_link_name_label_uppercase
+      this._name_label_bold = default_link_name_label_bold
+      this._name_label_italic = default_link_name_label_italic
+      this._name_label_color = default_link_name_label_color
+      this._name_label_horiz = default_link_name_label_horiz
+      this._name_label_vert = default_link_name_label_vert
+      this._name_label_on_path = default_link_value_label_on_path
+      this._name_label_pos_auto = default_link_value_label_pos_auto
+
+    }
+
   }
 
   public delete() {
@@ -903,6 +1018,16 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     if (this._references[_.id] !== undefined) {
       delete this._references[_.id]
     }
+  }
+
+  public fromJSON(json_local_object: Type_JSON): void {
+    super.fromJSON(json_local_object)
+    this._customisable_attribute = getJSONFromJSON(json_local_object, 'customisable_props', this._customisable_attribute) as typeof this._customisable_attribute
+  }
+  public toJSON(): Type_JSON {
+    const json_object = super.toJSON()
+    json_object['customisable_props'] = this._customisable_attribute
+    return json_object
   }
 
   // PROTECTED METHODS ==================================================================
@@ -949,4 +1074,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
    * @memberof Class_NodeStyle
    */
   public set name(_: string) { this._name = _ }
+
+  public get customisable_attribute() { return this._customisable_attribute }
+
 }
