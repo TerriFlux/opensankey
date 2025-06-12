@@ -335,7 +335,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                 as='span'
                 layerStyle='menuconfigpanel_option_name'
               >
-                {t('Noeud.apparence.Couleur')}
+                {t('Noeud.apparence.shape_color')}
               </Box>
               <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''}>
                 <Box>
@@ -441,6 +441,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const content_component = <Box layerStyle='menu_sub_section' >
     <Box as='span' layerStyle='menu_sub_section_title' >
       <Checkbox
+        isDisabled={!is_activated}
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={<CustomFaEyeCheckIcon />}
         isChecked={button_icon_or_image !== 'none'}
@@ -578,6 +579,7 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
             <InputRightElement >
               <Button
                 variant='menuconfigpanel_option_button'
+                isDisabled={hasHyperLink()===''}
                 onClick={() => {
                   window.open(node_hyperlink)
                 }}

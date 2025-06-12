@@ -127,6 +127,12 @@ export abstract class ClassTemplate_SankeyOSP
         this.addNewFreeLabel(idx)
           .copyFrom(container_to_copy)
       })
+
+    // Copy icon catalog fom sankey
+    Object.entries(sankey_to_copy.icon_catalog)
+      .forEach(([idx, icon_path]) => {
+        this._icon_catalog[idx] = icon_path
+      })
   }
 
   /**

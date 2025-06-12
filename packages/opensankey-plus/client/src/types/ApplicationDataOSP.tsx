@@ -719,9 +719,9 @@ export abstract class ClassTemplate_ApplicationDataOSP
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style = InLink
+            link.style.push(InLink)
           } else {
-            link.style = OutLink
+            link.style.push(OutLink)
           }
           // Search for max link value in unitary sankey to re-scale sankey
           const link_val = link.getMaxValue() ?? 1
@@ -742,13 +742,13 @@ export abstract class ClassTemplate_ApplicationDataOSP
           node.resetAttributes()
           // Affect style depending on IO
           if (node.input_links_list.length == 0) {
-            node.style = InNodeStyle
+            node.style.push(InNodeStyle)
           } else if (node.output_links_list.length == 0) {
-            node.style = OutNodeStyle
+            node.style.push(OutNodeStyle)
           }
         }
       })
-    new_drawing_area.sankey.nodes_dict[node_ref.id].style = unitaryNode
+    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [unitaryNode]
 
     // Remove tag group
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
