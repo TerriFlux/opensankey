@@ -197,6 +197,9 @@ export type SankeyLinkAttrLocal = {
   nb_digit?: number,
 
   gradient?:boolean
+
+  //Attribute from newer version but needed to be defined here for converter purposes
+  value_label_is_visible?:boolean
 }
 
 export type SankeyLinkStyle = {
