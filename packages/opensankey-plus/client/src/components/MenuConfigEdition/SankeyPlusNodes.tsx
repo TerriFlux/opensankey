@@ -585,6 +585,7 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
             <InputRightElement >
               <Button
                 variant='menuconfigpanel_option_button'
+                isDisabled={hasHyperLink()===''}
                 onClick={() => {
                   window.open(node_hyperlink)
                 }}
