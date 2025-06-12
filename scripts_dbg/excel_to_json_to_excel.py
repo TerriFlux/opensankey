@@ -8,7 +8,7 @@ from opensankey.server.converter import extract_json_from_sankey
 from opensankey.server.converter import extract_sankey_from_json
 
 excel_filename = 'put your file path here'
-new_excel_filename = excel_filename.split('.')[0]+'_json.xlsx'
+new_excel_filename = excel_filename.split('.')[0] + '_json.xlsx'
 sankey = Sankey()
 ok, msg = load_sankey_from_excel_file(excel_filename, sankey)
 if ok:
