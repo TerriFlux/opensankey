@@ -22,6 +22,7 @@ def get_long_description():
 
 class BuildPyCommand(setuptools.command.sdist.sdist):
     """Custom build command."""
+
     def run(self):
         build_py = self.get_finalized_command('build_py')
         sankeytools_dir = build_py.get_package_dir('opensankey')
@@ -35,6 +36,7 @@ class BuildPyCommand(setuptools.command.sdist.sdist):
 
 class InstallPyCommand(setuptools.command.install.install):
     """Custom build command."""
+
     def run(self):
         build_py = self.get_finalized_command('build_py')
         sankeytools_dir = build_py.get_package_dir('opensankey')
@@ -48,6 +50,7 @@ class InstallPyCommand(setuptools.command.install.install):
 
 class EggInfoPyCommand(setuptools.command.egg_info.egg_info):
     """Custom build command."""
+
     def run(self):
         build_py = self.get_finalized_command('build_py')
         sankeytools_dir = build_py.get_package_dir('opensankey')
@@ -61,6 +64,7 @@ class EggInfoPyCommand(setuptools.command.egg_info.egg_info):
 
 class BDistWheelInfoPyCommand(wheel.bdist_wheel.bdist_wheel):
     """Custom build command."""
+
     def run(self):
         build_py = self.get_finalized_command('build_py')
         sankeytools_dir = build_py.get_package_dir('opensankey')
