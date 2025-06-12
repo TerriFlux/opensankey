@@ -211,15 +211,15 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
    */
   const updateStyle = (sn: Class_NodeStyle) => {
 
-    const dict_old_value: { [x: string]: Class_NodeStyle } = {}
+    const dict_old_value: { [x: string]: Class_NodeStyle[] } = {}
 
     selected_nodes.forEach(n => {
       dict_old_value[n.id] = n.style
     })
     const _updateStyle = () => {
-      selected_nodes.forEach(n => {
-        n.style = sn
-      })
+      let node_ref_has_style=selected_nodes[0].style.includes(sn)??false
+      new_data.drawing_area.sankey.switchNodeStyle(sn,node_ref_has_style)
+
       refreshThisAndToggleSaving()
 
     }

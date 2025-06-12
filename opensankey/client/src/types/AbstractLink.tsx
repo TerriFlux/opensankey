@@ -68,9 +68,9 @@ export abstract class ClassAbstract_LinkElement
   public abstract get value() : ClassAbstract_LinkValue | null
   public abstract get valueData() : number | null
   public abstract get valueResult() : number | null
-  public abstract get style() : Class_LinkStyle
-  public abstract set style(s:Class_LinkStyle) 
-  public abstract get display():{style:Class_LinkStyle,attributes:Class_LinkAttribute} 
+  public abstract get style() : Class_LinkStyle[]
+  public abstract set style(s:Class_LinkStyle[]) 
+  public abstract get display():{style:Class_LinkStyle[],attributes:Class_LinkAttribute} 
 }
 
 export abstract class ClassAbstract_LinkValue {
