@@ -1073,7 +1073,7 @@ export abstract class ClassTemplate_NodeElement
         .filter(tag => (tag.group === tagg_for_colormap))
       const selected_tags_for_colormap = tags_for_colormap
         .filter(tag => tag.is_selected)
-      if (selected_tags_for_colormap.length > 0 && tags_for_colormap.length != tagg_for_colormap.tags_list.length) {
+      if (selected_tags_for_colormap.length > 0 ) {
         // if a node has several tags we take the first one. The logic is given
         // by the following example. Meuble en hêtre has two tags hêtre and feuillu
         // we put hêtre first as it is the most desagregated. This way we can display
