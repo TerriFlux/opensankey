@@ -197,7 +197,10 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const [value, setValue] = useState<number | undefined>(default_value)
+  const getFixedVal = (_: string | number | null | undefined) => {
+    return _?(String(_)):undefined
+  }
+  const [value, setValue] = useState<string | undefined | null>(getFixedVal(default_value))
   ref_to_set_value.current = setValue
 
   // Add stepper addon if specified
@@ -229,7 +232,7 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
           }, 3000)
         }
         // Update displayed value_as_number
-        setValue(isNaN(value_as_number) ? undefined : value_as_number)
+        setValue(isNaN(value_as_number) ? undefined : _)
       }}
       onKeyDown={e => {
         if (e.key === 'Enter') {
@@ -243,8 +246,9 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
           if (!menu_for_style) {
             clearTimeout(is_modifying.current)
           }
+          let new_value = value === undefined ? value : Number(value)
           // Update selected elements value
-          function_on_blur(value)
+          function_on_blur(new_value)
 
         }}
       />
@@ -271,9 +275,9 @@ export type FCType_ConfigMenuNumberInput = {
 }
 
 export type FCType_ConfigMenuNumberOrUndefinedInput = {
-  default_value: number | undefined,
-  ref_to_set_value: MutableRefObject<(_: number | undefined) => void>,
-  function_on_blur: (val: number | undefined) => void,
+  default_value: number | undefined | null,
+  ref_to_set_value: MutableRefObject<(_: string | undefined | null) => void>,
+  function_on_blur: (val: number | undefined | null) => void,
   menu_for_style?: boolean,
   minimum_value?: number,
   maximum_value?: number,
@@ -341,7 +345,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
       }}
     />
   </InputGroup>
-  <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
+    <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
   </FormControl>
 }
 
