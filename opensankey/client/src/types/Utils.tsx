@@ -54,6 +54,18 @@ export type Type_ElementPosition = {
   relative_dx?: number
   relative_dy?: number
 }
+
+export type Type_ElementPositionOptionnal = {
+  type?: Type_Position
+  x?: number
+  y?: number
+  u?: number
+  v?: number
+  dx?: number
+  dy?: number
+  relative_dx?: number
+  relative_dy?: number
+}
 export type Type_Position = 'absolute' | 'relative' | 'parametric'
 
 /**

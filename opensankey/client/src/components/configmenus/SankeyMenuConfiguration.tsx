@@ -190,6 +190,7 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
   menu_for_style = false,
   minimum_value = Number.MIN_SAFE_INTEGER,
   maximum_value = Number.MAX_SAFE_INTEGER,
+  disabled = false,
   stepper = false,
   step = 1,
   unit_text = undefined,
@@ -213,6 +214,7 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
   const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
   return <InputGroup>
     <NumberInput
+      isDisabled={disabled}
       allowMouseWheel
       variant={variant}
       min={minimum_value}
@@ -281,6 +283,7 @@ export type FCType_ConfigMenuNumberOrUndefinedInput = {
   menu_for_style?: boolean,
   minimum_value?: number,
   maximum_value?: number,
+  disabled?: boolean,
   stepper?: boolean,
   step?: number,
   unit_text?: string
