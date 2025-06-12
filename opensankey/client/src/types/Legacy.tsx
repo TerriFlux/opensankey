@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import * as d3 from 'd3'
-import { Type_JSON } from './Utils'
+import { makeId, Type_JSON } from './Utils'
 import {
   SankeyNode,
   SankeyNodeStyle,
@@ -2060,7 +2060,8 @@ const convert_links: convert_linksFuncType = (
   const mapper : {[_:string]:string} = {}
   Object.values(data.links).forEach(l=>{
     const previous_link_id = l.idLink
-    l.idLink = data.nodes[l.idSource].idNode + '---' + data.nodes[l.idTarget].idNode
+    const new_link_id=previous_link_id+makeId('_idLink')
+    l.idLink = new_link_id
     mapper[previous_link_id] = l.idLink
   })
   data_to_convert.links = Object.assign({}, ...(Object.values(data.links)).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
@@ -2083,9 +2084,6 @@ const convert_links: convert_linksFuncType = (
     //   .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
 
   })
-  const newLinkZindex : string[]= []
-  data.linkZIndex.forEach(lid=>newLinkZindex.push(mapper[lid]))
-  data.linkZIndex = newLinkZindex
 
   if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {
     Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
@@ -2096,7 +2094,8 @@ const convert_links: convert_linksFuncType = (
   const convert_display = (
     dataTags: TagsGroup[],
     v: SankeyLinkValue | SankeyLinkValueDict,
-    depth: number
+    depth: number,
+    returnObj:Type_JSON
   ) => {
     if (dataTags.length == 0 || depth === dataTags.length) {
       if (v.display_value === undefined) {
@@ -2163,6 +2162,10 @@ const convert_links: convert_linksFuncType = (
           (v as SankeyLinkValue)['tags']['flux_types'] = ['computed_data']
         }
       }
+
+      if (v.display_value !=='') {
+        returnObj['hide_value']=true
+      }
       return
     }
     const dataTag = Object.values(dataTags)[depth]
@@ -2173,7 +2176,7 @@ const convert_links: convert_linksFuncType = (
         if (v === undefined) {
           break
         }
-        convert_display(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1)
+        convert_display(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1,returnObj)
       }
     }
   }
@@ -2326,9 +2329,9 @@ const convert_links: convert_linksFuncType = (
       AssignLinkLocalAttribute(l, 'text_color', ReturnValueLink(data, l, 'color'))
     }
     delete l_convert.text_same_color
-
+    const objectReturn:Type_JSON={}
     // Values ?
-    convert_display(dataTagsArray, l.value as SankeyLinkValue, 0)
+    convert_display(dataTagsArray, l.value as SankeyLinkValue, 0,objectReturn)
 
     // Add opacity attribute
     if (!ReturnValueLink(data, l, 'opacity')) {
@@ -2477,6 +2480,11 @@ const convert_links: convert_linksFuncType = (
     if (l.drag_label_offset) {
       l.position_offset_label = l.drag_label_offset
     }
+
+    if(objectReturn['hide_value']===true){
+      l.local['value_label_is_visible']=false
+    }
+
   })
 
   if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {
