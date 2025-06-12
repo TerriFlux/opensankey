@@ -66,16 +66,16 @@ import {
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
-import { Class_NodeAttribute } from '../Elements/NodeAttributes'
-import { Class_LinkAttribute } from '../Elements/LinkAttributes'
+import { Class_NodeAttribute, Class_NodeStyle, default_dx } from '../Elements/NodeAttributes'
+import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
 import { TypeGeneric_Handler } from '../Elements/Handler'
 
 declare const window: Window &
   typeof globalThis & {
     sankey: {
       publish: boolean
-      recenter:boolean
-      topbar:boolean
+      recenter: boolean
+      topbar: boolean
     }
   }
 
@@ -1430,7 +1430,7 @@ export abstract class ClassTemplate_DrawingArea
     }
 
     const inv_updateSelectedLinksTagAssignation = () => {
-      this.selected_links_list. forEach(link => {
+      this.selected_links_list.forEach(link => {
         if (dict_old_val[link.id]) {
           link.addTag(flux_tag)
         }
@@ -1798,7 +1798,8 @@ export abstract class ClassTemplate_DrawingArea
 
           // Compute left horizontal margin
           if (h_index == 0) {
-            const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
+            const style_node = node.getStyleWithAttr('name_label_box_width')
+            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
             const needed_margin = this.grid_size + node_label_width
             if (needed_margin > h_left_margin) {
               h_left_margin = needed_margin
@@ -1808,7 +1809,8 @@ export abstract class ClassTemplate_DrawingArea
           // Compute right horizontal margin
           // if (h_index == (max_horizontal_index - cumul_shifting_value)) {
           if (h_index == max_horizontal_index) {
-            const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
+            const style_node = node.getStyleWithAttr('name_label_box_width')
+            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
             const needed_margin = this.grid_size + node_label_width
             if (needed_margin > h_right_margin) {
               h_right_margin = needed_margin
@@ -2021,7 +2023,7 @@ export abstract class ClassTemplate_DrawingArea
       if (n.position_type === 'relative') {
         return
       }
-      n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / this.sankey.default_node_style.position.dx!)
+      n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / (this.sankey.default_node_style.position?.dx ?? default_dx))
     })
 
     this.computeParametricV()
@@ -2306,6 +2308,99 @@ export abstract class ClassTemplate_DrawingArea
       .order()
   }
 
+  /**
+   * Swaps node style order for selected nodes
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public moveOrderStyleInSelectedNodes = (style_src: Class_NodeStyle, style_trgt: Class_NodeStyle) => {
+    // Save old value that can be used in undo
+    const list_old_style: { [x: string]: Class_NodeStyle[] } = {}
+    this.selected_nodes_list.forEach(n => list_old_style[n.id] = n.style)
+
+    // Function undo
+    const inv_changeStyleOrder = () => {
+      this.selected_nodes_list.forEach(n => {
+        n.style = list_old_style[n.id]
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+    }
+
+    // Function original
+    const _changeStyleOrder = () => {
+      this.selected_nodes_list.forEach(n => {
+        const idx_src = n.style.indexOf(style_src)
+        const idx_trgt = n.style.indexOf(style_trgt)
+
+        // if node doesn't have both style, don't continue this iterations
+        if (idx_src == -1 || idx_trgt == -1)
+          return
+
+        // Remove element to move from the array of element order
+        const el_to_move = n.style.splice(idx_src, 1)
+        // Add the element  the element target in the order array
+        n.style.splice(idx_trgt, 0, el_to_move[0])
+
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_changeStyleOrder)
+    this.application_data.history.saveRedo(_changeStyleOrder)
+    // Execute original function
+    _changeStyleOrder()
+  }
+
+  /**
+   * Swaps flow style order for selected flows
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public moveOrderStyleInSelectedFlows = (style_src: Class_LinkStyle, style_trgt: Class_LinkStyle) => {
+    // Save old value that can be used in undo
+    const list_old_style: { [x: string]: Class_LinkStyle[] } = {}
+    this.selected_links_list.forEach(n => list_old_style[n.id] = n.style)
+
+    // Function undo
+    const inv_changeStyleOrder = () => {
+      this.selected_links_list.forEach(n => {
+        n.style = list_old_style[n.id]
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    // Function original
+    const _changeStyleOrder = () => {
+      this.selected_links_list.forEach(n => {
+        const idx_src = n.style.indexOf(style_src)
+        const idx_trgt = n.style.indexOf(style_trgt)
+
+        // if node doesn't have both style, don't continue this iterations
+        if (idx_src == -1 || idx_trgt == -1)
+          return
+
+        // Remove element to move from the array of element order
+        const el_to_move = n.style.splice(idx_src, 1)
+        // Add the element  the element target in the order array
+        n.style.splice(idx_trgt, 0, el_to_move[0])
+
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_changeStyleOrder)
+    this.application_data.history.saveRedo(_changeStyleOrder)
+    // Execute original function
+    _changeStyleOrder()
+  }
 
   // PRIVATE METHODS ==================================================================
 
@@ -2727,7 +2822,7 @@ export abstract class ClassTemplate_DrawingArea
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_node_style.position.type == 'parametric') {
+        if (this.sankey.default_node_style.position && this.sankey.default_node_style.position.type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
               this.computeParametrization()
@@ -2890,14 +2985,14 @@ export abstract class ClassTemplate_DrawingArea
       this.d3_selection
         .attr('transform', event.transform.toString())
 
-    // Launch waiting process to redraw handler with corresponding size (it take into account DA zoom scale)
-    // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
-    this.application_data._add_waiting_process('redraw_handler', () => {
-       this.d3_selection_handlers?.selectAll('.gg_handler').each((evt)=>{
-        const handle=evt as TypeGeneric_Handler
-        handle.draw()
-      })
-    },500)
+      // Launch waiting process to redraw handler with corresponding size (it take into account DA zoom scale)
+      // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
+      this.application_data._add_waiting_process('redraw_handler', () => {
+        this.d3_selection_handlers?.selectAll('.gg_handler').each((evt) => {
+          const handle = evt as TypeGeneric_Handler
+          handle.draw()
+        })
+      }, 500)
     }
   }
 
