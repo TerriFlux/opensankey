@@ -115,13 +115,14 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
   // Functions that mutate attribute & save it's undoing ----------------------------------------------------
 
   const updateStyle = (sl: Class_LinkStyle) => {
-    const dict_old_value: { [x: string]: Class_LinkStyle } = {}
+    const dict_old_value: { [x: string]: Class_LinkStyle[] } = {}
     selected_links.forEach(l => {
       dict_old_value[l.id] = l.style
     })
     const _updateStyle = () => {
       selected_links.forEach(l => {
-        l.style = sl
+        const flow_ref_has_style = selected_links[0].style.includes(sl) ?? false
+        new_data.drawing_area.sankey.switchLinkStyle(sl, flow_ref_has_style)
       })
       refreshThisAndToggleSaving()
 
@@ -241,6 +242,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     closeContextMenu()
   }
 
+  const list_style_id_context_flow=contextualised_link?.style.map(s=>s.id)
   // JSX Components ---------------------------------------------------------------------
   // Menu to change some pararmeter concerning the style of the node
   const dropdown_c_l_style_select = (contextualised_link !== undefined) ?
@@ -263,7 +265,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
                 }}
               >
                 {sl.name}
-                {checked((contextualised_link?.style ?? '') == sl)}
+                {checked(list_style_id_context_flow?.includes(sl.id)??false)}
               </MenuItem>
             })
         }
@@ -370,7 +372,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     'style': dropdown_c_l_style,
     'sep_2': sep,
     'changePlan': menu_change_plan,
-    'mask_attr':mask_flow_attr,
+    'mask_attr': mask_flow_attr,
     'edit_value': btn_edit_value,
 
     ...additionalMenus.current.additional_context_link_element

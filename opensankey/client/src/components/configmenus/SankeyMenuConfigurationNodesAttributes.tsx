@@ -46,7 +46,7 @@ import {
 import type {
   FCType_MenuConfigurationNodeStyle
 } from './types/SankeyMenuConfigurationNodesAttributesTypes'
-import type { Type_GenericNodeElement } from '../../types/Types'
+import type { Type_GenericApplicationData, Type_GenericNodeElement } from '../../types/Types'
 import {
   isAttributeOverloaded,
 } from '../../Elements/Node'
@@ -78,7 +78,8 @@ import {
 } from '../../Elements/NodeAttributes'
 import { type Class_NodeStyle } from '../../Elements/NodeAttributes'
 import {
-  CustomFaEyeCheckIcon
+  CustomFaEyeCheckIcon,
+  default_style_id
 } from '../../types/Utils'
 
 // Local functions
@@ -89,6 +90,8 @@ import {
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { MenuResetAttrLocal, MenuUnit, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
+import { FaCheck } from 'react-icons/fa'
+import { Draggable, DraggingStyle, DragDropContext, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 
 export const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
 export const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -104,6 +107,14 @@ type keyNodeAttr = keyof Type_GenericNodeElement
 type typeValNodeAttr = Type_GenericNodeElement[keyNodeAttr]
 
 /*************************************************************************************************/
+
+const style_TableLineDragging = (isDisabled: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined) => ({
+  // change background colour if dragging
+  background: isDisabled ? 'lightgrey' : 'unset',
+  // styles we need to apply on draggables
+  ...draggableStyle
+})
+
 
 /**
  * Define the menu that allows to modifiy appararence for nodes / properties for a node style
@@ -124,20 +135,21 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t, icon_library, OSColorPicker } = new_data
+  const { t, icon_library, OSColorPicker, drawing_area } = new_data
+  const { sankey } = drawing_area
   const { ref_selected_style_node } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_nodes } = new_data.menu_configuration.dict_setter_show_dialog
-  const { icon_direction_down, icon_direction_left, icon_direction_rift, icon_direction_up, icon_locked, icon_unlocked, icon_open_selector } = icon_library
+  const { icon_direction_down, icon_direction_left, icon_direction_rift, icon_direction_up, icon_locked, icon_unlocked, icon_open_selector, icon_move_element_down, icon_move_element_up } = icon_library
   // Elements on which this menu applies ------------------------------------------------
 
   let selected_nodes: Type_GenericNodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
-    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+    selected_nodes = drawing_area.selected_nodes_list_sorted
   }
   else {
     // Only visible nodes
-    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+    selected_nodes = drawing_area.visible_and_selected_nodes_list_sorted
   }
 
   // Elements on which menu modification applies
@@ -168,15 +180,16 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
    * And generic function setValueWithDecoratorRetriever don't like it
    *  @type {*} */
   let updateElements: (((k: keyNodeStyle, value: typeValNodeStyle) => void) | ((k: keyNodeAttr, value: typeValNodeAttr) => void))
-
+  let disable_attr_props = sankey.node_styles_dict[default_style_id].customisable_attribute
   if (menu_for_style) {
-    elements = [new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]]
+    elements = [sankey.node_styles_dict[ref_selected_style_node.current]]
+    disable_attr_props = sankey.node_styles_dict[ref_selected_style_node.current].customisable_attribute
     updateElements = (k: keyNodeStyle, value: typeValNodeStyle) => {
       // Save old value
-      const old_val = new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current][k]
+      const old_val = sankey.node_styles_dict[ref_selected_style_node.current][k]
       // Define fucntion that will mutate value of 'k' attribute in Style
       const _updateElements = (_: typeValNodeStyle) => {
-        updateValueForListElements([new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]], k, _)
+        updateValueForListElements([sankey.node_styles_dict[ref_selected_style_node.current]], k, _)
         refreshThisAndUpdateRelatedComponents()
       }
       // Save undo/redo in data history
@@ -275,7 +288,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
       // Update menus for node's apparence in case we use this for style
       new_data.menu_configuration.updateComponentRelatedToNodesStyles()
       // Redraw all visible nodes if we modifie node style
-      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+      sankey.visible_nodes_list.forEach(n => n.draw())
     }
     // And update this menu also
     new_data.menu_configuration.updateComponentRelatedToNodesApparence()
@@ -296,12 +309,9 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   ref_set_number_inputs[5].current(String(position_relative_dy))
   ref_set_number_inputs[6].current(String(shape_opacity))
 
-
   const is_shape_min_height_indeterminated = !elements.every(el => el.shape_min_height == element_ref.shape_min_height)
   const is_shape_min_width_indeterminated = !elements.every(el => el.shape_min_width == element_ref.shape_min_width)
   const is_shape_opacity_indeterminated = !elements.every(el => el.shape_opacity == element_ref.shape_opacity)
-
-
 
   // JSX menu components ---------------------------------------------------------------
 
@@ -325,6 +335,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
     {/* Visibilite du noeud */}
     <Box as='span' layerStyle='menu_sub_section_title' >
       <Checkbox
+        isDisabled={!disable_attr_props['shape_visible']}
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={<CustomFaEyeCheckIcon />}
         isChecked={shape_visible}
@@ -335,8 +346,8 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
           updateElements('shape_visible', evt.target.checked)
         }}
       >
-        <OSTooltip label={t('Noeud.apparence.tooltips.Visibilité')}>
-          {t('Noeud.apparence.Visibilité')}
+        <OSTooltip label={t('Noeud.apparence.tooltips.shape_visible')}>
+          {t('Noeud.apparence.shape_visible')}
         </OSTooltip>
         <TooltipElementOverloaded k='shape_visible' />
       </Checkbox>
@@ -352,13 +363,14 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
       {/* Couleur du noeud */}
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Noeud.apparence.Couleur')}
+          {t('Noeud.apparence.shape_color')}
           <TooltipElementOverloaded k='shape_color' />
         </Box>
         <Box layerStyle='option_with_activation'>
-          <OSTooltip label={t('Noeud.apparence.tooltips.Couleur')}>
+          <OSTooltip label={t('Noeud.apparence.tooltips.shape_color')}>
             <Box>
               <OSColorPicker
+                isDisabled={!disable_attr_props['shape_color']}
                 initialColor={shape_color}
                 functionOnBlur={(new_color) => {
                   updateElements('shape_color', new_color)
@@ -366,8 +378,9 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
               />
             </Box>
           </OSTooltip>
-          <OSTooltip label={t('Noeud.apparence.tooltips.CouleurPérenne')}>
+          <OSTooltip label={t('Noeud.apparence.tooltips.shape_color_sustainable')}>
             <Button
+              isDisabled={!disable_attr_props['shape_color_sustainable']}
               //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
               variant={
                 shape_color_sustainable ?
@@ -385,14 +398,15 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
       </Box>
 
       {/* Forme du noeud */}
-      <OSTooltip label={t('Noeud.apparence.tooltips.Forme')}>
+      <OSTooltip label={t('Noeud.apparence.tooltips.shape_type')}>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.Forme')}
+            {t('Noeud.apparence.shape_type')}
             <TooltipElementOverloaded k='shape_type' />
           </Box>
           <Box layerStyle='options_3cols' >
             <Button
+              isDisabled={!disable_attr_props['shape_type']}
               value="ellipse"
               variant={
                 shape_type === 'ellipse' ?
@@ -415,6 +429,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             </Button>
 
             <Button
+              isDisabled={!disable_attr_props['shape_type']}
               variant={
                 shape_type === 'rect' ?
                   'menuconfigpanel_option_button_activated' :
@@ -437,6 +452,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             </Button>
 
             <Button
+              isDisabled={!disable_attr_props['shape_type']}
               variant={
                 shape_type === 'arrow' ?
                   'menuconfigpanel_option_button_activated' :
@@ -456,7 +472,6 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
               >
                 <path d="M 0.11499051,0.11500028 H 10.015883 L 16.844087,8.5149428 10.015883,16.818334 H 0.11499051 L 6.601784,8.5149428 Z" />
               </svg>
-              {/* {t('Noeud.apparence.arrow')} */}
             </Button>
           </Box>
         </Box>
@@ -466,13 +481,14 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         /* Change the angle of the arrow shaped node */
         shape_type === 'arrow' ?
           <Box layerStyle='menuconfigpanel_grid'>
-            <OSTooltip label={t('Noeud.apparence.tooltips.arrow_angle')}>
+            <OSTooltip label={t('Noeud.apparence.tooltips.shape_arrow_angle_factor')}>
               <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                 <Box layerStyle='menuconfigpanel_option_name' >
-                  {t('Noeud.apparence.arrow_angle')}
+                  {t('Noeud.apparence.shape_arrow_angle_factor')}
                   <TooltipElementOverloaded k='shape_arrow_angle_factor' />
                 </Box>
                 <Slider
+                  isDisabled={!disable_attr_props['shape_arrow_angle_factor']}
                   min={0}
                   max={45}
                   step={5}
@@ -496,11 +512,12 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
 
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
-                {t('Noeud.apparence.angle_orientation')}
+                {t('Noeud.apparence.shape_arrow_angle_direction')}
                 <TooltipElementOverloaded k='shape_arrow_angle_direction' />
               </Box>
               <Box layerStyle='options_4cols' >
                 <Button
+                  isDisabled={!disable_attr_props['shape_arrow_angle_direction']}
                   variant={
                     shape_arrow_angle_direction === 'left' ?
                       'menuconfigpanel_option_button_activated' :
@@ -514,6 +531,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
                   {icon_direction_left}
                 </Button>
                 <Button
+                  isDisabled={!disable_attr_props['shape_arrow_angle_direction']}
                   variant={
                     shape_arrow_angle_direction === 'right' ?
                       'menuconfigpanel_option_button_activated' :
@@ -527,6 +545,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
                   {icon_direction_rift}
                 </Button>
                 <Button
+                  isDisabled={!disable_attr_props['shape_arrow_angle_direction']}
                   variant={
                     shape_arrow_angle_direction === 'top' ?
                       'menuconfigpanel_option_button_activated' :
@@ -541,6 +560,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
                   {icon_direction_up}
                 </Button>
                 <Button
+                  isDisabled={!disable_attr_props['shape_arrow_angle_direction']}
                   variant={
                     shape_arrow_angle_direction === 'bottom' ?
                       'menuconfigpanel_option_button_activated' :
@@ -560,13 +580,14 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
       }
 
       {/* Shape Opacity */}
-      <OSTooltip label={t('Noeud.apparence.tooltips.opacity')}>
+      <OSTooltip label={t('Noeud.apparence.tooltips.shape_opacity')}>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.opacity')}
+            {t('Noeud.apparence.shape_opacity')}
             <TooltipElementOverloaded k='shape_opacity' />
           </Box>
           <ConfigMenuNumberInput
+            disabled={!disable_attr_props['shape_opacity']}
             t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[6]}
             default_value={shape_opacity}
@@ -589,13 +610,14 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
       </Box>
 
       {/* Largeur minimale du noeud */}
-      <OSTooltip label={t('Noeud.apparence.tooltips.TML')}>
+      <OSTooltip label={t('Noeud.apparence.tooltips.shape_min_width')}>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.TML')}
+            {t('Noeud.apparence.shape_min_width')}
             <TooltipElementOverloaded k='shape_min_width' />
           </Box>
           <ConfigMenuNumberInput
+            disabled={!disable_attr_props['shape_min_width']}
             t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[1]}
             default_value={shape_min_width}
@@ -613,13 +635,14 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
       </OSTooltip>
 
       {/* Hauteur minimale du noeud */}
-      <OSTooltip label={t('Noeud.apparence.tooltips.TMH')}>
+      <OSTooltip label={t('Noeud.apparence.tooltips.shape_min_height')}>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.TMH')}
+            {t('Noeud.apparence.shape_min_height')}
             <TooltipElementOverloaded k='shape_min_height' />
           </Box>
           <ConfigMenuNumberInput
+            disabled={!disable_attr_props['shape_min_height']}
             t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[0]}
             default_value={shape_min_height}
@@ -708,7 +731,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             ref_to_set_value={ref_set_number_inputs[2]}
             menu_for_style={menu_for_style}
             function_on_blur={() => {
-              new_data.drawing_area.computeParametricV()
+              drawing_area.computeParametricV()
               refreshThisAndUpdateRelatedComponents()
             }}
             stepper={true}
@@ -815,7 +838,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   </Box>
 
 
-  const additional_content = additional_menus.current.additional_node_config_style.map((el, i) =>
+  const additional_content = menu_for_style ? <></> : additional_menus.current.additional_node_config_style.map((el, i) =>
     <React.Fragment key={'add_node_config_style_' + i}>{el}</React.Fragment>
   )
   let style_node = <></>
@@ -823,19 +846,18 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   if (!menu_for_style) {
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      _shape_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_visible'), name: t('Noeud.apparence.Visibilité') },
-      _shape_min_width: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_min_width'), name: t('Noeud.apparence.TML') },
-      _shape_min_height: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_min_height'), name: t('Noeud.apparence.TMH') },
-      _shape_color: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color'), name: t('Noeud.apparence.Couleur') },
-      _shape_type: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_type'), name: t('Noeud.apparence.Forme') },
-      _shape_arrow_angle_factor: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_factor'), name: t('Noeud.apparence.arrow_angle') },
-      _shape_arrow_angle_direction: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_direction'), name: t('Noeud.apparence.angle_orientation') },
-      _shape_color_sustainable: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color_sustainable'), name: t('Noeud.apparence.CouleurPérenne') },
+      _shape_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_visible'), name: t('Noeud.apparence.shape_visible') },
+      _shape_min_width: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_min_width'), name: t('Noeud.apparence.shape_min_width') },
+      _shape_min_height: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_min_height'), name: t('Noeud.apparence.shape_min_height') },
+      _shape_color: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color'), name: t('Noeud.apparence.shape_color') },
+      _shape_type: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_type'), name: t('Noeud.apparence.shape_type') },
+      _shape_arrow_angle_factor: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_factor'), name: t('Noeud.apparence.shape_arrow_angle_factor') },
+      _shape_arrow_angle_direction: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_direction'), name: t('Noeud.apparence.shape_arrow_angle_direction') },
+      _shape_color_sustainable: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color_sustainable'), name: t('Noeud.apparence.shape_color_sustainable') },
+      _shape_opacity: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_opacity'), name: t('Noeud.apparence.shape_opacity') }
     }
 
-
-
-    style_node = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} >
+    style_node = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} ><>
       <Box layerStyle='menuconfigpanel_row_stylechoice' >
         <OSTooltip label={t('Noeud.tooltips.AS')}>
           <MenuResetAttrLocal new_data={new_data} nodesOrLinks='nodes' dict_overwritted_attr={dict_overwritted_attr} />
@@ -845,12 +867,13 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
           onClick={() => {
             if (selected_nodes.length !== 0) {
               const style = selected_nodes[0].style
+              const list_id_style = style.map(s => s.id)
               let inchangee = true
-              selected_nodes.map(node => {
-                inchangee = (node.style.id === style.id) ? inchangee : false
+              selected_nodes.forEach(node => {
+                inchangee = (node.style.every(style => list_id_style.includes(style.id))) ? inchangee : false
               })
               if (inchangee) {
-                ref_selected_style_node.current = style.id
+                ref_selected_style_node.current = [...style].reverse()[0].id
               }
             }
             new_data.menu_configuration.updateComponentRelatedToNodesStyles()
@@ -866,27 +889,34 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             variant='menuconfigpanel_option_button'
             rightIcon={icon_open_selector}
           >
-            {new_data.drawing_area.sankey.getStyleOfSelectedNodes()}
+            {sankey.getStyleOfSelectedNodes()}
           </MenuButton>
           <MenuList>
             {
-              new_data.drawing_area.sankey.node_styles_list_sorted
+              sankey.node_styles_list
                 .map(style => {
+                  const node_ref_has_style = (element_ref as Type_GenericNodeElement)?.style.includes(style) ?? false
+
                   return (<React.Fragment key={style.id}>
                     <MenuItem
+                      display='flex'
+                      isDisabled={style.id == default_style_id}
                       key={style.id}
                       onClick={() => {
-                        new_data.drawing_area.sankey.switchNodeStyle(style)
-                      }}
-                    >
+                        sankey.switchNodeStyle(style, !node_ref_has_style)
+                      }}>
                       {style.name}
+                      {node_ref_has_style ? <FaCheck /> : <></>}
                     </MenuItem></React.Fragment>
                   )
                 })
             }
           </MenuList>
         </Menu>
-      </Box></WrapperBoxSubSectionMenu>
+      </Box>
+      <MenuOrderStylesOfSelectedNodes new_data={new_data} />
+    </>
+    </WrapperBoxSubSectionMenu>
   }
 
 
@@ -911,19 +941,21 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t, menu_configuration, icon_library, OSColorPicker } = new_data
+  const { t, menu_configuration, icon_library, OSColorPicker, drawing_area } = new_data
+  const { sankey } = drawing_area
   const { icon_open_selector, icon_edit_style } = icon_library
   const { ref_selected_style_node, dict_setter_show_dialog } = menu_configuration
   const { ref_setter_show_modal_styles_nodes_context } = dict_setter_show_dialog
+  
   // Elements on which this menu applies ------------------------------------------------
   let selected_nodes: Type_GenericNodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
-    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+    selected_nodes = drawing_area.selected_nodes_list_sorted
   }
   else {
     // Only visible nodes
-    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+    selected_nodes = drawing_area.visible_and_selected_nodes_list_sorted
   }
 
   // Elements on which menu modification applies
@@ -947,15 +979,17 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
 
 
   let updateElements: (((k: keyNodeStyle, value: typeValNodeStyle) => void) | ((k: keyNodeAttr, value: typeValNodeAttr) => void))
+  let disable_attr_props = sankey.node_styles_dict[default_style_id].customisable_attribute
 
   if (menu_for_style) {
-    elements = [new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]]
+    elements = [sankey.node_styles_dict[ref_selected_style_node.current]]
+    disable_attr_props = sankey.node_styles_dict[ref_selected_style_node.current].customisable_attribute
     updateElements = (k: keyNodeStyle, value: typeValNodeStyle) => {
       // Save old value
-      const old_val = new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current][k]
+      const old_val = sankey.node_styles_dict[ref_selected_style_node.current][k]
       // Define fucntion that will mutate value of 'k' attribute in Style
       const _updateElements = (_: typeValNodeStyle) => {
-        updateValueForListElements([new_data.drawing_area.sankey.node_styles_dict[ref_selected_style_node.current]], k, _)
+        updateValueForListElements([sankey.node_styles_dict[ref_selected_style_node.current]], k, _)
         refreshThisAndUpdateRelatedComponents()
       }
       // Save undo/redo in data history
@@ -1051,7 +1085,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       // Update menus for node's apparence in case we use this for style
       new_data.menu_configuration.updateComponentRelatedToNodesStyles()
       // Redraw all visible nodes if we modifie node style
-      new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+      sankey.visible_nodes_list.forEach(n => n.draw())
     }
     // And update this menu also
     new_data.menu_configuration.updateComponentRelatedToNodesApparence()
@@ -1081,6 +1115,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
 
     <Box as='span' layerStyle='menu_sub_section_title' >
       <Checkbox
+        isDisabled={!disable_attr_props['name_label_is_visible']}
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={<CustomFaEyeCheckIcon />}
         isIndeterminate={is_indeterminated}
@@ -1089,8 +1124,8 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           updateElements('name_label_is_visible', evt.target.checked)
         }}
       >
-        <OSTooltip label={t('Noeud.labels.tooltips.vdb')}>
-          {t('Noeud.labels.vdb')}
+        <OSTooltip label={t('Noeud.labels.tooltips.name_label_is_visible')}>
+          {t('Noeud.labels.name_label_is_visible')}
         </OSTooltip>
         <TooltipElementOverloaded k='name_label_is_visible' />
       </Checkbox>
@@ -1111,100 +1146,105 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         label_font_family: 'name_label_font_family',
       }} />
 
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminated}
-        isChecked={name_label_background}
-        onChange={(evt) => {
-          updateElements('name_label_background', evt.target.checked)
-        }}
-      >
-        <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
-          {t('Noeud.labels.l_bg')}
-        </OSTooltip>
-        <TooltipElementOverloaded k='name_label_background' />
-      </Checkbox>
-      <OSColorPicker
-        initialColor={name_label_background_color}
-        functionOnBlur={(new_color) => {
-          updateElements('name_label_background_color', new_color)
-        }}
-      />
-    </Box>
-    {/* Largeur de la zone de texte du label */}
-    <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Menu.larg')}
+
+        <Checkbox
+          isDisabled={!disable_attr_props['name_label_background']}
+          variant='menuconfigpanel_option_checkbox'
+          isIndeterminate={is_indeterminated}
+          isChecked={name_label_background}
+          onChange={(evt) => {
+            updateElements('name_label_background', evt.target.checked)
+          }}
+        >
+          <OSTooltip label={t('Noeud.labels.tooltips.name_label_background')}>
+            {t('Noeud.labels.name_label_background')}
+          </OSTooltip>
           <TooltipElementOverloaded k='name_label_background' />
-        </Box>
-        <ConfigMenuNumberInput
-          t={new_data.t}
-          ref_to_set_value={ref_set_number_inputs[0]}
-          default_value={name_label_box_width}
-          function_on_blur={(value) => {
-            updateElements('name_label_box_width', (value ?? undefined))
+        </Checkbox>
+        <OSColorPicker
+          isDisabled={!disable_attr_props['name_label_background_color']}
+          initialColor={name_label_background_color}
+          functionOnBlur={(new_color) => {
+            updateElements('name_label_background_color', new_color)
           }}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          step={1}
-          stepper={true}
-          unit_text='pixels'
-          multiValue={is_name_label_box_width_indeterminated}
         />
       </Box>
-    </OSTooltip>
-
-    {/* Position horizontal du label par rapport à l'ancre*/}
-    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.labels.anchor_dx')}
-          <TooltipElementOverloaded k='name_label_horiz_shift' />
+      {/* Largeur de la zone de texte du label */}
+      <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.labels.name_label_box_width')}
+            <TooltipElementOverloaded k='name_label_background' />
+          </Box>
+          <ConfigMenuNumberInput
+            disabled={!disable_attr_props['name_label_box_width']}
+            t={new_data.t}
+            ref_to_set_value={ref_set_number_inputs[0]}
+            default_value={name_label_box_width}
+            function_on_blur={(value) => {
+              updateElements('name_label_box_width', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+            multiValue={is_name_label_box_width_indeterminated}
+          />
         </Box>
-        <ConfigMenuNumberInput
-          t={new_data.t}
-          ref_to_set_value={ref_set_number_inputs[1]}
-          default_value={name_label_horiz_shift}
-          function_on_blur={(value) => {
-            updateElements('name_label_horiz_shift', (value ?? undefined))
-          }}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          step={1}
-          stepper={true}
-          unit_text='pixels'
-          multiValue={is_name_label_horiz_shift_indeterminated}
-        />
-      </Box>
-    </OSTooltip>
+      </OSTooltip>
 
-    {/* Position vertical du label par rapport à l'ancre*/}
-    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.labels.anchor_dy')}
-          <TooltipElementOverloaded k='name_label_vert_shift' />
+      {/* Position horizontal du label par rapport à l'ancre*/}
+      <OSTooltip label={t('Noeud.labels.tooltips.name_label_horiz_shift')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.labels.name_label_horiz_shift')}
+            <TooltipElementOverloaded k='name_label_horiz_shift' />
+          </Box>
+          <ConfigMenuNumberInput
+            disabled={!disable_attr_props['name_label_horiz_shift']}
+            t={new_data.t}
+            ref_to_set_value={ref_set_number_inputs[1]}
+            default_value={name_label_horiz_shift}
+            function_on_blur={(value) => {
+              updateElements('name_label_horiz_shift', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+            multiValue={is_name_label_horiz_shift_indeterminated}
+          />
         </Box>
+      </OSTooltip>
 
-        <ConfigMenuNumberInput
-          t={new_data.t}
-          ref_to_set_value={ref_set_number_inputs[2]}
-          default_value={name_label_vert_shift}
-          function_on_blur={(value) => {
-            updateElements('name_label_vert_shift', (value ?? undefined))
-          }}
-          menu_for_style={menu_for_style}
-          minimum_value={0}
-          step={1}
-          stepper={true}
-          unit_text='pixels'
-          multiValue={is_name_label_vert_shift_indeterminated}
-        />
-      </Box>
-    </OSTooltip>
+      {/* Position vertical du label par rapport à l'ancre*/}
+      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('Noeud.labels.anchor_dy')}
+            <TooltipElementOverloaded k='name_label_vert_shift' />
+          </Box>
+
+          <ConfigMenuNumberInput
+            disabled={!disable_attr_props['name_label_vert_shift']}
+            t={new_data.t}
+            ref_to_set_value={ref_set_number_inputs[2]}
+            default_value={name_label_vert_shift}
+            function_on_blur={(value) => {
+              updateElements('name_label_vert_shift', (value ?? undefined))
+            }}
+            menu_for_style={menu_for_style}
+            minimum_value={0}
+            step={1}
+            stepper={true}
+            unit_text='pixels'
+            multiValue={is_name_label_vert_shift_indeterminated}
+          />
+        </Box>
+      </OSTooltip>
     </> : <></>}
 
   </Box>
@@ -1216,6 +1256,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       layerStyle='menu_sub_section_title'
     >
       <Checkbox
+        isDisabled={!disable_attr_props['value_label_is_visible']}
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={<CustomFaEyeCheckIcon />}
         isIndeterminate={is_indeterminated}
@@ -1223,8 +1264,8 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         onChange={(evt) => {
           updateElements('value_label_is_visible', evt.target.checked)
         }}>
-        <OSTooltip label={t('Flux.label.tooltips.label')}>
-          {t('Flux.label.vdb') + ' '}
+        <OSTooltip label={t('Flux.labels.tooltips.label')}>
+          {t('Flux.labels.vdb') + ' '}
         </OSTooltip>
         <TooltipElementOverloaded k='value_label_is_visible' />
       </Checkbox>
@@ -1250,6 +1291,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       />
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Checkbox
+          isDisabled={!disable_attr_props['value_label_background']}
           variant='menuconfigpanel_option_checkbox'
           isIndeterminate={is_indeterminated}
           isChecked={value_label_background}
@@ -1257,12 +1299,13 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             updateElements('value_label_background', evt.target.checked)
           }}
         >
-          <OSTooltip label={t('Noeud.labels.tooltips.l_bg')}>
-            {t('Noeud.labels.l_bg')}
+          <OSTooltip label={t('Noeud.labels.tooltips.name_label_background')}>
+            {t('Noeud.labels.name_label_background')}
           </OSTooltip>
           <TooltipElementOverloaded k='value_label_background' />
         </Checkbox>
         <OSColorPicker
+          isDisabled={!disable_attr_props['value_label_background_color']}
           initialColor={value_label_background_color}
           functionOnBlur={(new_color) => {
             updateElements('value_label_background_color', new_color)
@@ -1270,13 +1313,14 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         />
       </Box>
       {/* Position horizontal du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dx')}>
+      <OSTooltip label={t('Noeud.labels.tooltips.name_label_horiz_shift')}>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.anchor_dx')}
+            {t('Noeud.labels.name_label_horiz_shift')}
             <TooltipElementOverloaded k='value_label_horiz_shift' />
           </Box>
           <ConfigMenuNumberInput
+            disabled={!disable_attr_props['value_label_horiz_shift']}
             t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[3]}
             default_value={value_label_horiz_shift}
@@ -1302,6 +1346,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           </Box>
 
           <ConfigMenuNumberInput
+            disabled={!disable_attr_props['value_label_vert_shift']}
             t={new_data.t}
             ref_to_set_value={ref_set_number_inputs[4]}
             default_value={value_label_vert_shift}
@@ -1337,46 +1382,46 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
 
   let content_style = <></>
   if (!menu_for_style) {
+
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      _name_label_is_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_is_visible'), name: t('Noeud.labels.vdb') },
-      _value_label_is_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_is_visible'), name: t('Flux.label.vbd') },
-      _name_label_background: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_background'), name: t('Noeud.labels.vdb') + ' ' + t('Noeud.labels.l_bg') },
-      _name_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_background_color'), name: t('Noeud.labels.vdb') + ' ' + t('Noeud.labels.l_bg_color') },
-      _value_label_background: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background'), name: t('Flux.label.vbd') + ' ' + t('Noeud.labels.l_bg') },
-      _value_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background_color'), name: t('Flux.label.vbd') + ' ' + t('Noeud.labels.l_bg_color') },
-      _name_label_box_width: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_box_width'), name: t('Menu.larg') },
-      _value_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift'), name: t('Flux.label.vbd') + ' ' + t('Noeud.labels.anchor_dx') },
-      _value_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert_shift'), name: t('Flux.label.vbd') + ' ' + t('Noeud.labels.anchor_dy') },
-      _name_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift'), name: t('Noeud.labels.vdb') + ' ' + t('Noeud.labels.anchor_dx') },
-      _name_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert_shift'), name: t('Noeud.labels.vdb') + ' ' + t('Noeud.labels.anchor_dy') },
+      _name_label_is_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_is_visible'), name: t('Noeud.labels.name_label_is_visible') },
+      _value_label_is_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_is_visible'), name: t('Flux.labels.vbd') },
+      _name_label_background: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_background'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_background') },
+      _name_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_background_color'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_background_color') },
+      _value_label_background: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_background') },
+      _value_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background_color'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_background_color') },
+      _name_label_box_width: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_box_width'), name: t('Noeud.labels.name_label_box_width') },
+      _value_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_horiz_shift') },
+      _value_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.anchor_dy') },
+      _name_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_horiz_shift') },
+      _name_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.anchor_dy') },
 
-      _value_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz'), name: t('Label.value_title') + ' ' + t('Label.align_h') },
-      _value_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert'), name: t('Label.value_title') + ' ' + t('Label.align_v') },
-      _value_label_font_size: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_font_size'), name: t('Label.value_title') + ' ' + t('Label.size') },
-      _value_label_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_color'), name: t('Label.value_title') + ' ' + t('Label.color') },
-      _value_label_font_family: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_font_family'), name: t('Label.value_title') + ' ' + t('Label.police') },
-      _value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit_visible'), name: t('Label.value_title') + ' ' + t('Label.unit') },
-      _value_label_unit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit'), name: t('Label.value_title') + ' ' + t('Label.unit_name') },
-      _value_label_bold: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_bold'), name: t('Label.value_title') + ' ' + t('Label.bold') },
-      _value_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_uppercase'), name: t('Label.value_title') + ' ' + t('Label.uppercase') },
-      _value_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_italic'), name: t('Label.value_title') + ' ' + t('Label.italic') },
-      _value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit_factor'), name: t('Label.value_title') + ' ' + t('Label.unit_factor') },
-      _value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_custom_digit'), name: t('Label.value_title') + ' ' + t('Label.custom_digit') },
-      _value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_nb_digit'), name: t('Label.value_title') + ' ' + t('Label.NbDigit') },
+      _value_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_horiz') },
+      _value_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_vert') },
+      _value_label_font_size: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_font_size'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_font_size') },
+      _value_label_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_color'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_color') },
+      _value_label_font_family: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_font_family'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_font_family') },
+      _value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit_visible'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit_visible') },
+      _value_label_unit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit') },
+      _value_label_bold: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_bold'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_bold') },
+      _value_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_uppercase'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_uppercase') },
+      _value_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_italic'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_italic') },
+      _value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit_factor'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit_factor') },
+      _value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_custom_digit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_custom_digit') },
+      _value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_nb_digit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_nb_digit') },
 
-      _name_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Label.align_h') },
-      _name_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Label.align_v') },
-      _name_label_font_size: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Label.size') },
-      _name_label_color: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Label.color') },
-      _name_label_font_family: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Label.police') },
-      _name_label_bold: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Label.bold') },
-      _name_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Label.uppercase') },
-      _name_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Label.italic') },
+      _name_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_horiz') },
+      _name_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_vert') },
+      _name_label_font_size: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_font_size') },
+      _name_label_color: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_color') },
+      _name_label_font_family: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_font_family') },
+      _name_label_bold: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_bold') },
+      _name_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_uppercase') },
+      _name_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_italic') },
     }
 
-
-    content_style = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} >
+    content_style = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} ><>
       <Box layerStyle='menuconfigpanel_row_stylechoice' >
         <OSTooltip label={t('Noeud.tooltips.AS')}>
           <MenuResetAttrLocal new_data={new_data} nodesOrLinks='nodes' dict_overwritted_attr={dict_overwritted_attr} />
@@ -1386,12 +1431,13 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           onClick={() => {
             if (selected_nodes.length !== 0) {
               const style = selected_nodes[0].style
+              const list_id_style = style.map(s => s.id)
               let inchangee = true
-              selected_nodes.map(node => {
-                inchangee = (node.style.id === style.id) ? inchangee : false
+              selected_nodes.forEach(node => {
+                inchangee = (node.style.every(style => list_id_style.includes(style.id))) ? inchangee : false
               })
               if (inchangee) {
-                ref_selected_style_node.current = style.id
+                ref_selected_style_node.current = [...style].reverse()[0].id
               }
             }
             new_data.menu_configuration.updateComponentRelatedToNodesStyles()
@@ -1406,27 +1452,32 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
             variant='menuconfigpanel_option_button'
             rightIcon={icon_open_selector}
           >
-            {new_data.drawing_area.sankey.getStyleOfSelectedNodes()}
+            {sankey.getStyleOfSelectedNodes()}
           </MenuButton>
           <MenuList>
             {
-              new_data.drawing_area.sankey.node_styles_list_sorted
+              sankey.node_styles_list
                 .map(style => {
+                  const node_ref_has_style = (element_ref as Type_GenericNodeElement)?.style.includes(style) ?? false
                   return (<React.Fragment key={style.id}>
                     <MenuItem
                       key={style.id}
                       onClick={() => {
-                        new_data.drawing_area.sankey.switchNodeStyle(style)
+                        sankey.switchNodeStyle(style, !node_ref_has_style)
                       }}
                     >
                       {style.name}
+                      {node_ref_has_style ? <FaCheck /> : <></>}
                     </MenuItem></React.Fragment>
                   )
                 })
             }
           </MenuList>
         </Menu>
-      </Box></WrapperBoxSubSectionMenu>
+      </Box>
+      <MenuOrderStylesOfSelectedNodes new_data={new_data} />
+    </>
+    </WrapperBoxSubSectionMenu>
   }
 
 
@@ -1444,4 +1495,102 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           <React.Fragment key={'lab_val'}>{content_label_value}</React.Fragment></> : <></>
       }</>
   </Box>
+}
+
+/**
+ * Component to modify order of style in selected elements, 
+ * it take first selected node has reference to which style must go before/after which style
+ * (because order of style can be different between node)
+ *
+ * @param {*} { new_data }
+ * @return {*} 
+ */
+const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+  const { drawing_area, t, icon_library } = new_data
+  const { icon_move_element_down, icon_move_element_up } = icon_library
+  const elements = drawing_area.selected_nodes_list
+  const style_list_to_use = elements[0]?.style.slice().reverse() ?? []
+
+  return <WrapperBoxSubSectionMenu collapse={false} new_data={new_data} title={t('Noeud.OrderStyle')} >
+    <DragDropContext onDragEnd={(evt) => {
+      if (evt.destination?.index == undefined)
+        return //early return if problem
+
+      // We can't put a style before default style in node style order
+      let dest_to_use = evt.destination.index
+      if (dest_to_use == style_list_to_use.length - 1)
+        dest_to_use = style_list_to_use.length - 2
+
+      const style_src = style_list_to_use[evt.source.index]
+      const style_trgt = style_list_to_use[dest_to_use]
+      elements.forEach(n => {
+        drawing_area.moveOrderStyleInSelectedNodes(style_src, style_trgt)
+      })
+    }}>
+      <Droppable droppableId="droppable">
+        {(provided,) => (
+          <Box
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            style={{ display: 'grid', gridRowGap: '0.2rem' }}
+          >
+            {
+              style_list_to_use
+                .map((node_style, element_idx) => {
+
+                  const draggDisabled = node_style.id == default_style_id
+
+                  return (
+                    <Draggable isDragDisabled={draggDisabled} key={node_style.id} index={element_idx} draggableId={'line_drag_' + node_style.id}>
+                      {(provided, snapshot) => (
+                        <Box key={node_style.id} layerStyle='drag_line_element_order' ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={style_TableLineDragging(draggDisabled, provided.draggableProps.style)}
+                        >
+                          <Box className='name_element'>{node_style.name}</Box>
+                          <Box layerStyle="options_2cols">
+                            <Button
+                              isDisabled={draggDisabled || element_idx == 0}
+                              variant='menuconfigpanel_move_order_node_io'
+                              minWidth='0'
+                              onClick={() => {
+
+                                const style_src = style_list_to_use[element_idx]
+                                const style_trgt = style_list_to_use[element_idx - 1]
+                                elements.forEach(n => {
+                                  drawing_area.moveOrderStyleInSelectedNodes(style_src, style_trgt)
+                                })
+                                new_data.menu_configuration.updateComponentRelatedToNodesApparence()
+                              }}
+                            >
+                              {icon_move_element_up}
+                            </Button>
+                            <Button
+                              isDisabled={element_idx == style_list_to_use.length - 2 || draggDisabled}
+                              variant='menuconfigpanel_move_order_node_io'
+                              minWidth='0'
+                              onClick={() => {
+                                const style_src = style_list_to_use[element_idx]
+                                const style_trgt = style_list_to_use[element_idx + 1]
+                                elements.forEach(n => {
+                                  drawing_area.moveOrderStyleInSelectedNodes(style_src, style_trgt)
+                                })
+                                new_data.menu_configuration.updateComponentRelatedToNodesApparence()
+                              }}
+                            >
+                              {icon_move_element_down}
+                            </Button>
+                          </Box>
+                        </Box>)}
+                    </Draggable>
+                  )
+                })
+            }
+            {provided.placeholder}
+          </Box>
+        )}
+      </Droppable>
+    </DragDropContext>
+  </WrapperBoxSubSectionMenu>
 }
