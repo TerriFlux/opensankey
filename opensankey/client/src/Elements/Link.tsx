@@ -647,7 +647,22 @@ export abstract class ClassTemplate_LinkElement
 
   public unDraw() {
     super.unDraw()
+    this.unDrawControlPoints()
     this._arrow_shape = undefined // reset shape also
+  }
+
+  /**
+   * Function that unDraw CP, in case we go throught link unDraw without erasing visible CP
+   *
+   * @memberof ClassTemplate_LinkElement
+   */
+  public unDrawControlPoints() {
+    this._control_points.starting_curve_point.unDraw()
+    this._control_points.ending_curve_point.unDraw()
+    this._control_points.starting_bezier_point.unDraw()
+    this._control_points.ending_bezier_point.unDraw()
+    this._control_points.middle_recycling_point.unDraw()
+
   }
 
   public drawPath() {
@@ -3233,6 +3248,7 @@ export abstract class ClassTemplate_LinkElement
     // Cast as number
     if (value !== null) {
       value.valueData = _
+      this._is_not_null = undefined  // delete value of _is_not_null so later we test if value is not null 
       this.redrawNodesSourceTarget()
     }
   }
