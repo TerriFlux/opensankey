@@ -1310,6 +1310,20 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
+ * Remove and delete given link if it is at the same time source & target
+ * @param {Type_GenericLinkElement} link
+ * @memberof ClassTemplate_NodeElement
+ */
+  public deleteRecyclingLinkOnSameNode(link: Type_GenericLinkElement) {
+    if (this._output_links[link.id] !== undefined && this._input_links[link.id] !== undefined) {
+      this.removeOutputLink(link)
+      this.removeInputLink(link)
+      link.delete()
+      this.draw()
+    }
+  }
+
+  /**
    * Remove link reference from all related attributes it this node.
    * /!\ Keep as private method. This can create dangling ref for links
    *
@@ -1404,10 +1418,11 @@ export abstract class ClassTemplate_NodeElement
    * @memberof ClassTemplate_NodeElement
    */
   public getLinksOrdered(_: Type_Side) {
+    const doublon: Type_AnyLinkElement[] = []
     return this._links_order.filter(link => {
-      return (
-        (link.target === this && link.target_side === _) ||
-        (link.source === this && link.source_side === _))
+      const check = !doublon.includes(link) && ((link.target === this && link.target_side === _) || (link.source === this && link.source_side === _))
+      doublon.push(link)
+      return (check)
     })
   }
 
@@ -2773,6 +2788,9 @@ export abstract class ClassTemplate_NodeElement
     let dx_bottom = this.getLinksStartingPositionOffSet('bottom')
     // List of links to redraw
     const link_to_redraw: Type_GenericLinkElement[] = [] // avoid recomputation
+
+    const doublon:Type_AnyLinkElement[]=[]
+    
     // Loop on all links to compute starting / ending position
     this._links_order
       .forEach(link => {
@@ -2793,7 +2811,7 @@ export abstract class ClassTemplate_NodeElement
         const thickness = link.thickness
         const handle_position_shift = 5
         // Current node is link's source
-        if (link.source === this) {
+        if (link.source === this && !doublon.includes(link)) {
           let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.source_side === 'right') {
@@ -2844,9 +2862,10 @@ export abstract class ClassTemplate_NodeElement
                 .d3_selection?.attr('class', 'node_io ' + link.source_side)
             }
           }
+          doublon.push(link)
         }
         // Or current node is link's target
-        if (link.target === this) {
+        else if (link.target === this) {
           let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.target_side === 'right') {
