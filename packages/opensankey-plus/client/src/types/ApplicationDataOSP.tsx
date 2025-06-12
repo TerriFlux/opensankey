@@ -1007,7 +1007,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
   public get logo(): string { return this._logo_sankey_plus }
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
 
-  public get has_sankey_plus() { return this._has_sankey_plus }
+  public get has_sankey_plus() { return this._has_sankey_plus || this.is_static}
   public set has_sankey_plus(_) { this._has_sankey_plus = _ }
 
   public get has_sankey_afm() { return process.env.REACT_APP_AFM == 'true' }
