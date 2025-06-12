@@ -456,10 +456,15 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   protected cleanForDeletion() {
-    // Unref self from source node
-    this._source.deleteOutputLink(this)
-    // Unref self from target node
-    this._target.deleteInputLink(this)
+    if (this._source !== this._target) {
+      // Unref self from source node
+      this._source.deleteOutputLink(this)
+      // Unref self from target node
+      this._target.deleteInputLink(this)
+    } else {
+      // Special case when link have the same source & target
+      this._source.deleteRecyclingLinkOnSameNode(this)
+    }
     // Delete control points
     this._control_points.starting_curve_point.delete()
     this._control_points.ending_curve_point.delete()
