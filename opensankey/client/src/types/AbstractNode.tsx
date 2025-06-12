@@ -79,6 +79,7 @@ export abstract class ClassAbstract_NodeElement
   public abstract addOutputLink(_: TypeAbstract_LinkElement): void
   public abstract deleteInputLink(_: TypeAbstract_LinkElement): void
   public abstract deleteOutputLink(_: TypeAbstract_LinkElement): void
+  public abstract deleteRecyclingLinkOnSameNode(_: TypeAbstract_LinkElement): void
   public abstract removeInputLink(_: TypeAbstract_LinkElement): void
   public abstract removeOutputLink(_: TypeAbstract_LinkElement): void
   public abstract getOutputLinkStartingPoint(_: TypeAbstract_LinkElement): {x: number, y: number} | undefined
