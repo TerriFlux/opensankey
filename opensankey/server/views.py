@@ -30,6 +30,7 @@ Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlu
 
 # ---------------------------------------------------------------
 # External libs
+import gzip
 import openpyxl
 import tempfile
 import os
@@ -430,7 +431,6 @@ def upload_excel_thread(
         trace.logger.error('{:->{w}}'.format(' FAILED', w=max_line_length))
         return
 
-
 @opensankey.route('/example/upload', methods=['POST'])
 def upload_exemple():
     session['load_started'] = True
@@ -440,17 +440,14 @@ def upload_exemple():
     trace.logger_init(logname, "w")
     session['base_filename'] = trace.base_filename()
     data_folder = os.environ.get('MFAData')
-    # exemples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exemples')
+    
     exemple = request.get_data().decode("utf-8")
     exemple_file_path = os.path.join(data_folder, exemple)
-    # exemple_folder = os.path.dirname(exemple_file_path)
     base_file_name = os.path.basename(exemple_file_path)
-    # error=''
     extension = os.path.splitext(exemple_file_path)[1]
     output_directory = tempfile.mkdtemp()
-    # trace.logger.debug(exemple_file_path)
-    session['output_file_name'] = os.path.join(output_directory,  'tutu.json')
-    # trace.logger.debug(session['output_file_name'])
+    session['output_file_name'] = os.path.join(output_directory, 'tutu.json')
+    
     if extension == ".xlsx":
         file_stats = os.stat(exemple_file_path)
         if file_stats.st_size > 1000000:
@@ -493,18 +490,175 @@ def upload_exemple():
                     status=500,
                     mimetype='application/json'
                 )
-    elif extension == ".json":
-        json_file_name = os.path.join(data_folder, exemple)
-        json_file = open(json_file_name, encoding="utf-8", mode="r")
-        data = json.load(json_file)
-        data['file_name'] = exemple_file_path
-        json_data = json.dumps(data)
-        response = Response(
-            response=json_data,
-            status=200,
+    
+    elif extension == ".json" or extension == ".gz":
+        return handle_json_or_compressed(data_folder, exemple, exemple_file_path)
+    
+    else:
+        return Response(
+            response=json.dumps({'error': f'Extension {extension} non supportée'}),
+            status=400,
             mimetype='application/json'
         )
-        return response
+
+def handle_json_or_compressed(data_folder, exemple, exemple_file_path):
+    """
+    Gère les fichiers JSON et JSON.GZ avec compression à la volée si nécessaire
+    
+    Args:
+        data_folder (str): Dossier racine des données
+        exemple (str): Nom du fichier demandé
+        exemple_file_path (str): Chemin complet vers le fichier
+    
+    Returns:
+        Response: Fichier compressé en gzip
+    """
+    try:
+        # Déterminer les chemins des fichiers JSON et JSON.GZ
+        if exemple.endswith('.json.gz'):
+            # Cas 1: Fichier .json.gz demandé
+            json_gz_path = exemple_file_path
+            json_path = exemple_file_path.replace('.json.gz', '.json')
+            requested_is_compressed = True
+        elif exemple.endswith('.json'):
+            # Cas 2: Fichier .json demandé, mais on veut retourner du .json.gz
+            json_path = exemple_file_path
+            json_gz_path = exemple_file_path + '.gz'
+            requested_is_compressed = False
+        else:
+            return Response(
+                response=json.dumps({'error': 'Format de fichier non supporté'}),
+                status=400,
+                mimetype='application/json'
+            )
+        
+        trace.logger.debug(f'Demande: {exemple}')
+        trace.logger.debug(f'JSON path: {json_path}')
+        trace.logger.debug(f'JSON.GZ path: {json_gz_path}')
+        
+        # Vérifier si le fichier .json.gz existe déjà
+        if os.path.exists(json_gz_path):
+            trace.logger.debug(f'Fichier compressé trouvé: {json_gz_path}')
+            return serve_compressed_file(json_gz_path)
+        
+        # Si pas de .json.gz, vérifier si le .json existe
+        elif os.path.exists(json_path):
+            trace.logger.debug(f'Fichier JSON trouvé, compression à la volée: {json_path}')
+            return compress_and_serve_json(json_path, json_gz_path)
+        
+        else:
+            # Aucun fichier trouvé
+            error_msg = f'Fichier non trouvé: {exemple} (ni {json_path} ni {json_gz_path})'
+            trace.logger.error(error_msg)
+            return Response(
+                response=json.dumps({'error': error_msg}),
+                status=404,
+                mimetype='application/json'
+            )
+            
+    except Exception as e:
+        trace.logger.error(f'Erreur dans handle_json_or_compressed: {str(e)}')
+        return Response(
+            response=json.dumps({'error': f'Erreur serveur: {str(e)}'}),
+            status=500,
+            mimetype='application/json'
+        )
+
+def serve_compressed_file(json_gz_path):
+    """
+    Sert un fichier JSON.GZ avec headers corrects pour GZIP
+    """
+    try:
+        with open(json_gz_path, 'rb') as f:
+            compressed_data = f.read()
+       
+        file_size = len(compressed_data)
+        trace.logger.debug(f'Fichier compressé servi: {json_gz_path} ({file_size} bytes)')
+       
+        return Response(
+            response=compressed_data,
+            status=200,
+            # ✅ CORRECTIONS :
+            headers={
+                # ESSAI 1: Dire que c'est du binaire, pas du JSON compressé
+                'Content-Type': 'application/octet-stream',  # ← Changé !
+                # 'Content-Encoding': 'gzip',  # ← SUPPRIMÉ temporairement
+                'Content-Length': str(file_size),
+                'Cache-Control': 'public, max-age=3600',
+                'Content-Disposition': 'inline'        # ← Bonus: indique comment traiter
+            }
+        )
+        
+    except Exception as e:
+        trace.logger.error(f'Erreur lecture fichier compressé {json_gz_path}: {str(e)}')
+        return Response(
+            response=json.dumps({'error': f'Erreur lecture fichier: {str(e)}'}),
+            status=500,
+            mimetype='application/json'
+        )
+
+def compress_and_serve_json(json_path, json_gz_path):
+    """
+    Compresse un fichier JSON à la volée avec headers corrects
+    """
+    try:
+        # Lire et valider le JSON
+        with open(json_path, 'r', encoding='utf-8') as f:
+            json_data = json.load(f)
+        
+        # Ajouter le chemin du fichier dans les métadonnées
+        json_data['file_name'] = json_path
+        
+        # Sérialiser en JSON compact
+        json_string = json.dumps(json_data, separators=(',', ':'), ensure_ascii=False)
+        json_bytes = json_string.encode('utf-8')
+        
+        # Compresser
+        compressed_data = gzip.compress(json_bytes)
+        
+        # Statistiques
+        original_size = len(json_bytes)
+        compressed_size = len(compressed_data)
+        ratio = (1 - compressed_size / original_size) * 100
+        
+        trace.logger.debug(f'Compression: {original_size} → {compressed_size} bytes ({ratio:.1f}% économie)')
+        
+        # Sauvegarder
+        try:
+            with open(json_gz_path, 'wb') as f:
+                f.write(compressed_data)
+            trace.logger.debug(f'Fichier compressé sauvegardé: {json_gz_path}')
+        except Exception as save_error:
+            trace.logger.warning(f'Impossible de sauvegarder {json_gz_path}: {str(save_error)}')
+        
+        # ✅ HEADERS CORRIGÉS :
+        return Response(
+            response=compressed_data,
+            status=200,
+            headers={
+                'Content-Type': 'application/json',     # ← Type décompressé
+                'Content-Encoding': 'gzip',             # ← Compression
+                'Content-Length': str(compressed_size),
+                'X-Original-Size': str(original_size),
+                'X-Compression-Ratio': f'{ratio:.1f}%'
+            }
+            # PAS de mimetype='application/gzip' pour éviter la confusion
+        )
+        
+    except json.JSONDecodeError as json_error:
+        trace.logger.error(f'Erreur JSON dans {json_path}: {str(json_error)}')
+        return Response(
+            response=json.dumps({'error': f'Fichier JSON invalide: {str(json_error)}'}),
+            status=400,
+            mimetype='application/json'
+        )
+    except Exception as e:
+        trace.logger.error(f'Erreur compression {json_path}: {str(e)}')
+        return Response(
+            response=json.dumps({'error': f'Erreur compression: {str(e)}'}),
+            status=500,
+            mimetype='application/json'
+        )
 
 
 @opensankey.route('/example/download', methods=['POST'])
@@ -556,7 +710,7 @@ def parse_folder(current_dir, menus, key=None):
             menus[key]['Files'].sort()
             exemple_found = True
             continue
-        if 'layout.json' in file_or_folder:
+        if '.json' in file_or_folder or '.json.gz' in file_or_folder:
             if key not in menus:
                 menus[key] = {}
             if 'Files' not in menus[key]:

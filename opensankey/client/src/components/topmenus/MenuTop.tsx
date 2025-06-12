@@ -76,6 +76,9 @@ import { setDiagram } from './SankeyMenuBanner'
 import { clickSavePDF } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
+import { 
+  decompressUploadedFileUniversal, 
+} from '../dialogs/UniversalJSONCompression'
 
 /*************************************************************************************************/
 
@@ -268,22 +271,22 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
         {t('Menu.open_json')}
       </MenuItem>
       <Input
-        accept='.json'
+        accept='.json,.gz,.zip,.br,.brotli'
         type='file'
         ref={_load_json}
         style={{ display: 'none' }}
-        onChange={(evt: ChangeEvent) => {
+        onChange={async (evt: ChangeEvent) => {
           const files = (evt.target as HTMLFormElement).files
-          const reader = new FileReader()
-          reader.onload = (() => {
-            return (e: ProgressEvent<FileReader>) => {
-              // Get JSON Data
-              const file_content = String((e.target as FileReader).result)
-              const JSON_data = JSON.parse(file_content)
-              new_data.fromJSON(JSON_data as Type_JSON)
-            }
-          })()
-          reader.readAsText(files[0])
+          
+          if (!files || files.length === 0) return
+          
+          try {
+            const JSON_data = await decompressUploadedFileUniversal(files[0])
+            new_data.fromJSON(JSON_data as Type_JSON)
+            
+          } catch (error) {
+            console.error('Erreur lors du chargement:', error)
+          }
         }} />
       <MenuItem
         onClick={() => ref_setter_show_modal_excel_loader.current!(true)}
