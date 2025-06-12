@@ -6,6 +6,11 @@ import { useState, useEffect } from 'react'
 // Types de compression supportés
 export type CompressionType = 'none' | 'gzip' | 'zip' | 'brotli' | 'deflate'
 
+// Type pour les données JSON décompressées
+export interface DecompressedJSONData {
+  [key: string]: unknown
+}
+
 /**
  * Détecte le type de compression d'un fichier basé sur son extension
  */
@@ -26,15 +31,17 @@ export const detectCompressionType = (filename: string): CompressionType => {
 export const decompressData = async (data: ArrayBuffer, type: CompressionType, filename?: string): Promise<string> => {
   try {
     switch (type) {
-      case 'gzip':
+      case 'gzip': {
         console.log('🗜️ Décompression GZIP...')
         return pako.ungzip(new Uint8Array(data), { to: 'string' })
+      }
         
-      case 'deflate':
+      case 'deflate': {
         console.log('🗜️ Décompression DEFLATE...')
         return pako.inflate(new Uint8Array(data), { to: 'string' })
+      }
         
-      case 'zip':
+      case 'zip': {
         console.log('🗜️ Décompression ZIP...')
         const zip = await JSZip.loadAsync(data)
         
@@ -61,8 +68,9 @@ export const decompressData = async (data: ArrayBuffer, type: CompressionType, f
         }
         
         return await jsonFile.async('string')
+      }
         
-      case 'brotli':
+      case 'brotli': {
         console.log('🗜️ Décompression BROTLI...')
         // Utiliser l'API native du navigateur si disponible
         if ('DecompressionStream' in window) {
@@ -71,10 +79,12 @@ export const decompressData = async (data: ArrayBuffer, type: CompressionType, f
         } else {
           throw new Error('Décompression Brotli non supportée par ce navigateur')
         }
+      }
         
-      case 'none':
+      case 'none': {
         console.log('📄 Pas de compression détectée')
         return new TextDecoder('utf-8').decode(data)
+      }
         
       default:
         throw new Error(`Type de compression non supporté: ${type}`)
@@ -88,7 +98,7 @@ export const decompressData = async (data: ArrayBuffer, type: CompressionType, f
 /**
  * Charge et décompresse automatiquement un fichier JSON
  */
-export const loadUniversalJSON = async (url: string): Promise<any> => {
+export const loadUniversalJSON = async (url: string): Promise<DecompressedJSONData> => {
   try {
     console.log(`📥 Chargement: ${url}`)
     
@@ -117,7 +127,7 @@ export const loadUniversalJSON = async (url: string): Promise<any> => {
     }
     
     // Parser le JSON
-    const jsonData = JSON.parse(decompressed)
+    const jsonData = JSON.parse(decompressed) as DecompressedJSONData
     console.log(`✅ JSON chargé avec succès`)
     
     return jsonData
@@ -131,7 +141,7 @@ export const loadUniversalJSON = async (url: string): Promise<any> => {
 /**
  * Charge un JSON avec fallback automatique sur plusieurs formats
  */
-export const loadJSONWithFallback = async (baseName: string, extensions: string[] = ['json.gz', 'json.zip', 'json.br', 'json']): Promise<any> => {
+export const loadJSONWithFallback = async (baseName: string, extensions: string[] = ['json.gz', 'json.zip', 'json.br', 'json']): Promise<DecompressedJSONData> => {
   const errors: string[] = []
   
   for (const ext of extensions) {
@@ -154,7 +164,7 @@ export const loadJSONWithFallback = async (baseName: string, extensions: string[
 /**
  * Décompresse un fichier uploadé par l'utilisateur (tous formats)
  */
-export const decompressUploadedFileUniversal = (file: File): Promise<any> => {
+export const decompressUploadedFileUniversal = (file: File): Promise<DecompressedJSONData> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     
@@ -166,7 +176,7 @@ export const decompressUploadedFileUniversal = (file: File): Promise<any> => {
         const compressionType = detectCompressionType(file.name)
         
         const decompressed = await decompressData(data, compressionType, file.name)
-        const jsonData = JSON.parse(decompressed)
+        const jsonData = JSON.parse(decompressed) as DecompressedJSONData
         
         console.log(`✅ Fichier uploadé traité avec succès`)
         resolve(jsonData)
@@ -186,10 +196,20 @@ export const decompressUploadedFileUniversal = (file: File): Promise<any> => {
 }
 
 /**
+ * Interface pour le hook useUniversalJSON
+ */
+export interface UseUniversalJSONResult {
+  data: DecompressedJSONData | null
+  loading: boolean
+  error: string | null
+  compressionUsed: CompressionType
+}
+
+/**
  * Hook React pour charger un JSON avec fallback automatique
  */
-export const useUniversalJSON = (baseName: string | null, extensions?: string[]) => {
-  const [data, setData] = useState<any>(null)
+export const useUniversalJSON = (baseName: string | null, extensions?: string[]): UseUniversalJSONResult => {
+  const [data, setData] = useState<DecompressedJSONData | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [compressionUsed, setCompressionUsed] = useState<CompressionType>('none')
@@ -212,7 +232,8 @@ export const useUniversalJSON = (baseName: string | null, extensions?: string[])
         setCompressionUsed(detectCompressionType(baseName))
       })
       .catch(err => {
-        setError(err.message)
+        const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue'
+        setError(errorMessage)
       })
       .finally(() => {
         setLoading(false)
@@ -226,7 +247,7 @@ export const useUniversalJSON = (baseName: string | null, extensions?: string[])
 /**
  * Utilitaire pour compresser côté client (optionnel)
  */
-export const compressJSON = (data: any, type: CompressionType = 'gzip'): Uint8Array => {
+export const compressJSON = (data: DecompressedJSONData, type: CompressionType = 'gzip'): Uint8Array => {
   const jsonString = JSON.stringify(data, null, 0) // JSON compact
   
   switch (type) {
