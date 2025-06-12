@@ -249,8 +249,8 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   ref_set_number_inputs[4].current(String(shape_ending_tangeant * 100))
   ref_set_number_inputs[5].current(String(shape_opacity))
 
-  const ref_set_link_scale_inputs = useRef((_: number | null | undefined) => null)
-  ref_set_link_scale_inputs.current(shape_local_scale)
+  const ref_set_link_scale_inputs = useRef((_: string | null | undefined) => null)
+  ref_set_link_scale_inputs.current(shape_local_scale as string | null |undefined)
   /**
    * Function used to reset menu UI
    */
@@ -517,7 +517,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
               <ConfigMenuNumberOrUndefinedInput
                 ref_to_set_value={ref_set_link_scale_inputs}
                 default_value={selected_links[0]?.local_link_scale ?? undefined}
-                function_on_blur={(_) => { updateElements('local_link_scale', (_ !== undefined && _ <= 0) ? undefined : _) }}
+                function_on_blur={(_) => { updateElements('local_link_scale', (_ !== undefined ) ? undefined : _) }}
                 minimum_value={0}
                 stepper={true}
                 step={1}
