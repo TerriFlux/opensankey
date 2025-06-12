@@ -21,6 +21,7 @@ import {
 
 // OpenSankey imports
 import {
+  default_style_id,
   OSTooltip,
   TooltipValueSurcharge
 } from '../../deps/OpenSankey/types/Utils'
@@ -153,8 +154,10 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
   }
   // Elements on which menu modification applies
   let elements: Class_LinkStyle[] | Type_GenericLinkElementOSP[]
+  let disable_attr_props = new_data_plus.drawing_area.sankey.link_styles_dict[default_style_id].customisable_attribute
   if (menu_for_style) {
     elements = [new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
+    disable_attr_props = new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current].customisable_attribute
   }
   else {
     Class_LinkStyle
@@ -200,6 +203,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
     <Box as='span' layerStyle='menuconfigpanel_row_2cols_little_input' >
       {/* Choix d'affichage du nombre de chiffre significatifs  */}
       <Checkbox
+          isDisabled={!disable_attr_props['value_label_significant_digits']}
         variant='menuconfigpanel_option_checkbox'
         isChecked={value_label_significant_digits}
         onChange={(evt) => {
@@ -212,8 +216,8 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
           })
           refreshThisAndUpdateRelatedComponents()
         }}>
-        <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
-          {t('Flux.label.significantDigits') + ' '}
+        <OSTooltip label={t('Flux.labels.tooltips.significantDigits')}>
+          {t('Flux.labels.significantDigits') + ' '}
         </OSTooltip>
         {
           (!menu_for_style) &&
@@ -226,10 +230,11 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         /* Choose number of custom digit */
 
         /* <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Flux.label.NbDigit')}
+                {t('Flux.labels.NbDigit')}
               </Box> */
-        <OSTooltip label={t('Flux.label.tooltips.significantDigits')}>
+        <OSTooltip label={t('Flux.labels.tooltips.significantDigits')}>
           <ConfigMenuNumberInput
+          disabled={!disable_attr_props['value_label_nb_significant_digits']}
             t={new_data_plus.t}
             ref_to_set_value={ref_set_number_inputs}
             default_value={value_label_nb_significant_digits}
@@ -247,6 +252,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
       }
     </Box>
     <Checkbox
+    isDisabled={!disable_attr_props['value_label_scientific_notation']}
       variant='menuconfigpanel_option_checkbox'
       isChecked={value_label_scientific_notation}
       onChange={(evt) => {
@@ -258,8 +264,8 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         })
         refreshThisAndUpdateRelatedComponents()
       }}>
-      <OSTooltip label={t('Flux.label.tooltips.scientificNotation')}>
-        {t('Flux.label.scientificNotation') + ' '}
+      <OSTooltip label={t('Flux.labels.tooltips.scientificNotation')}>
+        {t('Flux.labels.scientificNotation') + ' '}
       </OSTooltip>
       {
         (!menu_for_style) &&
@@ -316,7 +322,7 @@ export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLin
                           display='flex'
                           onClick={() => {
                             new_data.drawing_area.updateSelectedLinksTagAssignation(!has_tag, tag)
-                            new_data.drawing_area.link_contextualised=undefined
+                            new_data.drawing_area.link_contextualised = undefined
                             new_data.menu_configuration.ref_to_menu_context_links_updater.current()
                             setUpdate(a => a + 1)
                           }}

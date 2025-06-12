@@ -131,7 +131,7 @@ export class Class_NodeElementOSP
     drawing_area: Class_DrawingAreaOSP,
     sankey: Class_SankeyOSP,
     position: Type_ElementPosition,
-    style: Class_NodeStyleOSP,
+    style: Class_NodeStyleOSP[],
     attributes: Class_NodeAttributeOSP
     position_x_label?: number// Relative x position of label when dragged (optionnal)
     position_y_label?: number// Relative y position of label when dragged (optionnal)
@@ -146,7 +146,7 @@ export class Class_NodeElementOSP
       drawing_area: drawing_area,
       sankey: this.sankey,
       position: this.display.position,
-      style: drawing_area.sankey.default_node_style,
+      style: [drawing_area.sankey.default_node_style],
       attributes: new Class_NodeAttributeOSP()
     }
   }
@@ -165,7 +165,7 @@ export class Class_LinkElementOSP
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
-    style: Class_LinkStyleOSP,
+    style: Class_LinkStyleOSP[],
     attributes: Class_LinkAttributeOSP,
     position_x_label?: number
     position_y_label?: number
@@ -197,11 +197,11 @@ export class Class_LinkElementOSP
         u: 0,
         v: 0
       },
-      style: drawing_area.sankey.default_link_style,
+      style: [drawing_area.sankey.default_link_style],
       attributes: new Class_LinkAttributeOSP()
     }
     // Link with style
-    this._display.style.addReference(this)
+    this._display.style[0].addReference(this)
     this.source.addOutputLink(this)
     this.target.addInputLink(this)// Target
     // Instanciate display on svg
