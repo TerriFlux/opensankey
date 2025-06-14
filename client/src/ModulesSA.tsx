@@ -105,6 +105,7 @@ export const initializeApplicationDataSA = (
   initial_data: Type_JSON | undefined,
 
 ) => {
+  console.log('initializeApplicationDataSA')
   // Read user_data from cache if it exist
   if (initial_data !== undefined) {
     new_data_app.fromJSON(initial_data)
@@ -127,11 +128,8 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   // No initialisation if static --------------------------------------------------------
 
-  if (new_data_app.is_static) {
     //Add user_data sequence in footer
-    additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
-    return
-  }
+  additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
 
   // OpenSankey+ initialisation ----------------------------------------------------------
 
@@ -139,7 +137,9 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     additionalMenus,
     new_data_app
   )
-
+  if (new_data_app.is_static) {
+    return
+  }
 
   // Check if user is connected ----------------------------------------------------------
 
