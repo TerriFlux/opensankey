@@ -641,7 +641,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_data }) => {
+export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
   const { t } = new_data
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
@@ -720,21 +720,46 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
     </Box>
   }
 
-  const excel_element = window.sankey && window.sankey.excel ? (
-    <Box
-      margin='0.25rem'
-      alignSelf='center'
-      justifySelf='center'
+  const dict_components_menu_top: { [x: string]: React.JSX.Element; } = {
+    'diagrams':diagrams_element,
+    ...additionalMenus.current.external_top_buttons_item
+  }
+
+  return <Box
+      display='grid'
+      gridAutoFlow='column'
+      gridTemplateColumns={'repeat(' + String(new_data.menu_configuration.menu_top_order.length) + ', max-content 3px)'}
     >
-      <Button
-      >{t('Banner.tl')}</Button>
-    </Box>) : (<React.Fragment key={'3'}></React.Fragment>)
-
-
-  return <ButtonGroup>
-    {diagrams_element}
-    {excel_element}
-  </ButtonGroup>
+      {
+        new_data.menu_configuration.menu_top_order
+          .map((arr, i) => {
+            return <Fragment key={'top_grp_'+i}>
+              <ButtonGroup
+                marginRight='1rem'
+                marginLeft='1rem'
+              >
+                {
+                  arr.map((k, i) => {
+                    return <React.Fragment
+                      key={'menutop_button_' + i}>
+                      {dict_components_menu_top[k]}
+                    </React.Fragment>
+                  })
+                }
+              </ButtonGroup>
+              {
+                (i < (new_data.menu_configuration.menu_top_order.length)) ?
+                  <Divider
+                    orientation='vertical'
+                    margin='0'
+                  />
+                  :
+                  <></>
+              }
+            </Fragment>
+          })
+      }
+    </Box>
 }
 
 /**
@@ -834,7 +859,7 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
         gridColumnGap='0.25rem'
         width='unset'
       >
-        <Menu variant='selector_lang'>
+        {!new_data.is_static ? <Menu variant='selector_lang'>
           <MenuButton>
             <ReactCountryFlag countryCode={flag} svg style={{ height: '0.75rem', width: '1rem', margin: 'auto' }} title={flag} />
             <ChevronDownIcon />
@@ -845,7 +870,7 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
               <MenuItem onClick={() => { setFlag('gb'); changeLang('en') }}><ReactCountryFlag countryCode={'gb'} svg />English</MenuItem>
             </MenuList>
           </Portal>
-        </Menu>
+        </Menu>:<></>}
 
         {constent_additional_nav_item}
       </Box>
