@@ -512,14 +512,18 @@ export abstract class ClassTemplate_DrawingArea
       (version === undefined) ||
       (Number(version) < 0.9)
     ) {
+      console.log('convert_data_legacy')
       convert_data_legacy(json_object) // FIXME
+      console.log(json_object.version)
     }
 
     if (
       (version !== undefined) &&
       (Number(version) < 0.91)
     ) {
+      console.log('convert_pre_v_0_91')
       convert_pre_v_0_91(json_object)
+      console.log(json_object.version)
     }
 
 
@@ -3107,7 +3111,7 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
-    if (this.static && !window.sankey.topbar) {
+    if (this.static && window.sankey?.topbar == false) {
       return 0
     }
     return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5 * parseFloat(getComputedStyle(document.documentElement).fontSize)

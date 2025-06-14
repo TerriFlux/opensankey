@@ -54,6 +54,7 @@ declare const window: Window &
 export const initializeApplicationData: FType_InitializeApplicationData = (
   initial_data
 ) => {
+  console.log('initializeApplicationData')
   // Set openSankey
   const application_data = new Class_ApplicationData(!!window.sankey?.publish)
 

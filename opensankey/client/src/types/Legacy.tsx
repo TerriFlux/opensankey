@@ -335,7 +335,8 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     dashed: false,
 
     starting_tangeant: 0.25,
-    ending_tangeant: 0.25
+    ending_tangeant: 0.25,
+    color_rule:'auto'
   }
 }
 
@@ -2181,6 +2182,7 @@ const convert_links: convert_linksFuncType = (
     }
   }
   const defaultLinkStyle = DefaultLinkStyle()
+  defaultLinkStyle.color_rule = 'auto'
 
   Object.values(data.links).forEach(l => {
     if (((l as unknown) as { source_name: string }).source_name) {
