@@ -190,7 +190,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
-      {((!new_data.is_static) ||(window.sankey && window.sankey.topbar))? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />:<></>}
+      {((!new_data.is_static) ||(window.sankey && window.sankey.topbar != false ))? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />:<></>}
 
       {/* Bottom Navbar with some more info */}
       {
