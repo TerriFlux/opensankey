@@ -325,45 +325,25 @@ export abstract class ClassTemplate_ApplicationDataOSP
    */
   public extractViewsFromJSON(json_object: Type_JSON) {
     let views = getJSONOrUndefinedFromJSON(json_object, 'views')
-
     if (!views) {
-      const old_views = getOldViewsFromJSON(json_object, 'view') as ViewType[]
-      if (old_views && old_views.length > 0) {
-        views = {} as Type_JSON
-        // Convert old views
-        old_views.forEach((v) => {
-          if (v.heredited_attr_from_master === undefined) {
-            v.heredited_attr_from_master = []
-          }
-          // Convert old views that are diff to json
-          const d_view = GetOldDataFromView(json_object as unknown as OSPData, v.id)
-          if (d_view) {
-            (views as Type_JSON)[v.id] = d_view as unknown as Type_JSON
-          }
+      return
+    }
 
-          // Set Name of view
-          ((views as Type_JSON)[v.id] as Type_JSON).name = v.nom;
-          // Set heredited from master attr
-          ((views as Type_JSON)[v.id] as Type_JSON).heredited_attr = v.heredited_attr_from_master
-        })
-      }
-    }
-    if (views) {
-      // Create other views
-      Object.entries(views)
-        .forEach(([view_id, view_json]) => {
-          if (view_id !== default_main_sankey_id) {
-            // Create and populate drawing area
-            const drawing_area_view = this.createNewDrawingArea(view_id)
-            drawing_area_view.bypass_redraws = this.drawing_area.bypass_redraws
-            drawing_area_view.fromJSON(view_json as Type_JSON)
-            drawing_area_view.arrangeTrade(false)
-            // Add new drawing area to views
-            this._views[view_id] = drawing_area_view
-            this.pushViewIdInViewOrder(view_id)
-          }
-        })
-    }
+    // Create other views
+    Object.entries(views)
+      .forEach(([view_id, view_json]) => {
+        if (view_id !== default_main_sankey_id) {
+          // Create and populate drawing area
+          console.log('Charging '+(view_json as Type_JSON).name)
+          const drawing_area_view = this.createNewDrawingArea(view_id)
+          drawing_area_view.bypass_redraws = this.drawing_area.bypass_redraws
+          drawing_area_view.fromJSON(view_json as Type_JSON)
+          drawing_area_view.arrangeTrade(false)
+          // Add new drawing area to views
+          this._views[view_id] = drawing_area_view
+          this.pushViewIdInViewOrder(view_id)
+        }
+      })
   }
 
   /**

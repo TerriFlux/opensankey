@@ -130,6 +130,7 @@ declare const window: Window &
 export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = (
   initial_data
 ) => {
+  console.log('initializeApplicationDataOSP')
   // Init application data
   const new_data_plus = new Class_ApplicationDataOSP(!!window.sankey?.publish)
   // Read data from cache if it exist
@@ -155,12 +156,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus,
   new_data
 ) => {
-  // No initialisation if static --------------------------------------------------------
-
-  if (new_data.is_static) {
-    return
-  }
-
   // OpenSankey initialisation ----------------------------------------------------------
 
   initializeAdditionalMenus(
