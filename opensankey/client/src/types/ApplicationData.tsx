@@ -382,9 +382,10 @@ export abstract class ClassTemplate_ApplicationData
         this._processFunction.ref_result.current('')
       }
     }
-
-    // Link keyboard listener with app key down detection
-    document.onkeydown = this._keyboardEventListener(this)
+    if (this.options.no_key_event === true) {
+      // Link keyboard listener with app key down detection
+      document.onkeydown = this._keyboardEventListener(this)
+    }
   }
 
   // ABSTRACT METHODS ===================================================================
@@ -884,7 +885,7 @@ export abstract class ClassTemplate_ApplicationData
   public _add_waiting_process(
     process_id: string,
     process_func: () => void,
-    timer=this._waiting_time_for_processes
+    timer = this._waiting_time_for_processes
   ) {
     this._cancel_waiting_process(process_id)
     this._waiting_processes[process_id] = setTimeout(
