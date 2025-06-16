@@ -244,29 +244,29 @@ pages:
     - echo "[INFO] Version reçue " $APP_VERSION
 
     # === Chemins ===
-    - JS_DIR="$CI_PROJECT_DIR/sankeyaplication/client/build/static/js"
-    - CSS_DIR="$CI_PROJECT_DIR/sankeyaplication/client/build/static/css"
-    - INDEX_FILE="$CI_PROJECT_DIR/sankeyaplication/client/build/index.html"
-    - BUILD_DIR="$CI_PROJECT_DIR/sankeyaplication/client/build"
-    - VERSION_DIR="$CI_PROJECT_DIR/sankeyaplication/$APP_VERSION"
-    - LATEST_DIR="$CI_PROJECT_DIR/sankeyaplication/latest"
+    - JS_DIR="$CI_PROJECT_DIR/sankeyapplication/client/build/static/js"
+    - CSS_DIR="$CI_PROJECT_DIR/sankeyapplication/client/build/static/css"
+    - INDEX_FILE="$CI_PROJECT_DIR/sankeyapplication/client/build/index.html"
+    - BUILD_DIR="$CI_PROJECT_DIR/sankeyapplication/client/build"
+    - VERSION_DIR="$CI_PROJECT_DIR/sankeyapplication/$APP_VERSION"
+    - LATEST_DIR="$CI_PROJECT_DIR/sankeyapplication/latest"
 
     # === JS ===
     - |
       cd "$JS_DIR"
       for f in main.*.js; do
-        cp "$f" "sankeyaplication-v$APP_VERSION.js"
-        echo "[INFO] JS renommé : $f → sankeyaplication-v$APP_VERSION.js"
-        sed -i "s|$f|sankeyaplication-v$APP_VERSION.js|g" "$INDEX_FILE"
+        cp "$f" "sankeyapplication-v$APP_VERSION.js"
+        echo "[INFO] JS renommé : $f → sankeyapplication-v$APP_VERSION.js"
+        sed -i "s|$f|sankeyapplication-v$APP_VERSION.js|g" "$INDEX_FILE"
       done
 
     # === CSS ===
     - |
       cd "$CSS_DIR"
       for f in main.*.css; do
-        cp "$f" "sankeyaplication-v$APP_VERSION.css"
-        echo "[INFO] CSS renommé : $f → sankeyaplication-v$APP_VERSION.css"
-        sed -i "s|$f|sankeyaplication-v$APP_VERSION.css|g" "$INDEX_FILE"
+        cp "$f" "sankeyapplication-v$APP_VERSION.css"
+        echo "[INFO] CSS renommé : $f → sankeyapplication-v$APP_VERSION.css"
+        sed -i "s|$f|sankeyapplication-v$APP_VERSION.css|g" "$INDEX_FILE"
       done
 
     # === Chemins relatifs pour GitLab Pages
