@@ -74,6 +74,9 @@ build:
     - bash build_client.sh -I -L -B -D -S
     # Check flask server
     - bash build_server.sh
+  artifacts:
+    paths:
+      - sankeyapplication/client/build  # c'est le dossier généré par `npm run build`
   except:
     - schedules
 
@@ -227,6 +230,66 @@ prod_opensankey:
     - alembic upgrade head
     # Start app
     - bash restart_site.sh $ENV
+
+# Étape de build
+pages:
+  image: node:18
+  stage: deploy
+  script:
+    - |
+      if [ -z "$APP_VERSION" ]; then
+        echo "[ERREUR] APP_VERSION doit être fourni manuellement dans l’interface GitLab"
+        exit 1
+      fi
+    - echo "[INFO] Version reçue " $APP_VERSION
+
+    # === Chemins ===
+    - JS_DIR="$CI_PROJECT_DIR/sankeyaplication/client/build/static/js"
+    - CSS_DIR="$CI_PROJECT_DIR/sankeyaplication/client/build/static/css"
+    - INDEX_FILE="$CI_PROJECT_DIR/sankeyaplication/client/build/index.html"
+    - BUILD_DIR="$CI_PROJECT_DIR/sankeyaplication/client/build"
+    - VERSION_DIR="$CI_PROJECT_DIR/sankeyaplication/$APP_VERSION"
+    - LATEST_DIR="$CI_PROJECT_DIR/sankeyaplication/latest"
+
+    # === JS ===
+    - |
+      cd "$JS_DIR"
+      for f in main.*.js; do
+        cp "$f" "sankeyaplication-v$APP_VERSION.js"
+        echo "[INFO] JS renommé : $f → sankeyaplication-v$APP_VERSION.js"
+        sed -i "s|$f|sankeyaplication-v$APP_VERSION.js|g" "$INDEX_FILE"
+      done
+
+    # === CSS ===
+    - |
+      cd "$CSS_DIR"
+      for f in main.*.css; do
+        cp "$f" "sankeyaplication-v$APP_VERSION.css"
+        echo "[INFO] CSS renommé : $f → sankeyaplication-v$APP_VERSION.css"
+        sed -i "s|$f|sankeyaplication-v$APP_VERSION.css|g" "$INDEX_FILE"
+      done
+
+    # === Chemins relatifs pour GitLab Pages
+    - sed -i 's|="/static/|="./static/|g' "$INDEX_FILE"
+
+    # === Préparation des dossiers versionnés
+    - mkdir -p "$VERSION_DIR"
+    - cp -r "$BUILD_DIR"/* "$VERSION_DIR"
+    - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$VERSION_DIR/404.html"
+
+    # === (optionnel) Copier aussi vers /latest
+    - rm -rf "$LATEST_DIR"
+    - cp -r "$VERSION_DIR" "$LATEST_DIR"
+    - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$LATEST_DIR/404.html"
+
+  artifacts:
+    paths:
+      - public
+  dependencies:
+    - build
+  rules:
+    - when: manual
+      allow_failure: false
 
 # Tag Release:
 #   stage: tag-release
