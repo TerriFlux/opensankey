@@ -29,6 +29,12 @@ import { Box } from '@chakra-ui/react'
 import React, { CSSProperties, FunctionComponent, useState } from 'react'
 import { ColorResult, SketchPicker, SwatchesPicker } from 'react-color'
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      logo: string
+    }
+  }
 export interface Type_SaveDiagramOptionsOSP extends Type_SaveDiagramOptions {
   only_current_view?: boolean
 }
@@ -172,7 +178,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
     // Get OpenSankey+ logo
     this._logo_sankey_plus = 'logos/logo_opensankeyplus.png'
-    this._logo = this._logo_sankey_plus
+    this._logo = this.is_static ? window.sankey.logo : this._logo_sankey_plus
 
     if (this.has_sankey_plus && !this._drawing_area.static) {
       // Update user palette when connected
@@ -983,8 +989,6 @@ export abstract class ClassTemplate_ApplicationDataOSP
   }
 
   // GETTERS / SETTERS ==================================================================
-
-  public get logo(): string { return this._logo_sankey_plus }
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
 
   public get has_sankey_plus() { return this._has_sankey_plus || this.is_static}
