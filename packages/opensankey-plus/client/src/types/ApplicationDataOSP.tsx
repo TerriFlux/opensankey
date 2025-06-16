@@ -178,7 +178,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
     // Get OpenSankey+ logo
     this._logo_sankey_plus = 'logos/logo_opensankeyplus.png'
-    this._logo = this.is_static ? window.sankey.logo : this._logo_sankey_plus
+    this._logo = this.is_static && window.sankey && window.sankey.logo ? window.sankey.logo : this._logo_sankey_plus
 
     if (this.has_sankey_plus && !this._drawing_area.static) {
       // Update user palette when connected
