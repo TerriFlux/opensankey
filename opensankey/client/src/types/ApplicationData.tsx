@@ -87,6 +87,13 @@ const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
 const toast_bypass: boolean = false
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      logo: string
+    }
+  }
+
 // CLASS APPLICATION DATA **************************************************************/
 
 /**
@@ -355,7 +362,7 @@ export abstract class ClassTemplate_ApplicationData
     // Get TerriFlux logo
     this._logo_terriflux = 'logos/logo_terriflux.png'
     // Default logo for app
-    this._logo = this._logo_opensankey
+    this._logo = this.is_static ? window.sankey.logo : this._logo_opensankey
 
     // Excel processing function
     this._processFunction = {
@@ -1189,7 +1196,7 @@ export abstract class ClassTemplate_ApplicationData
 
   public get url_prefix(): string { return this._url_prefix }
 
-  public get logo(): string { return this._logo_opensankey }
+  public get logo(): string { return this._logo }
   public get logo_opensankey(): string { return this._logo_opensankey }
   public get logo_terriflux(): string { return this._logo_terriflux }
 
