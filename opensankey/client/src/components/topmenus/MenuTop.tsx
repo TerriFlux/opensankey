@@ -823,7 +823,7 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
               height='80%'
               justifySelf='center'
               alignSelf='center'
-              src={logo} /> :
+              src={logo} />
             {/* <Image
               height='5rem'
               margin='5% 0'
