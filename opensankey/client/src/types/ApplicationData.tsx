@@ -362,7 +362,7 @@ export abstract class ClassTemplate_ApplicationData
     // Get TerriFlux logo
     this._logo_terriflux = 'logos/logo_terriflux.png'
     // Default logo for app
-    this._logo = this.is_static ? window.sankey.logo : this._logo_opensankey
+    this._logo = this.is_static && window.sankey && window.sankey.logo ? window.sankey.logo : this._logo_opensankey
 
     // Excel processing function
     this._processFunction = {
