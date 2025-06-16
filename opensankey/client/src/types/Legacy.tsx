@@ -1776,6 +1776,11 @@ const convert_nodes: convert_nodesFuncType = (
       // All input exchange nodes must also be desaggregated
       node.outputLinksId
         .forEach(lid => {
+          if (!data.links[lid]) {
+            console.log(lid)
+            console.log(Object.values(data.links).filter(l=>l.idLink.includes('Ethanol')))            
+            return
+          }
           const output_node = data.nodes[data.links[lid].idTarget]
           if (output_node.tags['type de noeud'][0] == 'echange') {
             if (set_children) {
