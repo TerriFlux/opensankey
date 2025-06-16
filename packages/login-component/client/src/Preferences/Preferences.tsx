@@ -37,7 +37,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
     setUpdate(a => a + 1)
   }
 
-  const ghost_data = useRef<Class_ApplicationDataOSP>(new Class_ApplicationDataOSP(true))
+  const ghost_data = useRef<Class_ApplicationDataOSP>(new Class_ApplicationDataOSP(true,{no_key_event:true}))
   const list_palette: MutableRefObject<{ name: string, colors: string[] }[]> = useRef([])
 
   // user_data -------------------------------------------------------------------------------
