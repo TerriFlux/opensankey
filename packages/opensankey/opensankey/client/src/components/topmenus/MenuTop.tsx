@@ -818,17 +818,17 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
           display='inline-grid'
           height='100%'
         >
-          {!new_data.is_static ?
+          {/* {!new_data.is_static ? */}
             <Image
               height='80%'
               justifySelf='center'
               alignSelf='center'
               src={logo} /> :
-            <Image
+            {/* <Image
               height='5rem'
               margin='5% 0'
               src={logo_terriflux}
-              onClick={() => { window.open('https://terriflux.com/', '_blank') }} />}
+              onClick={() => { window.open('https://terriflux.com/', '_blank') }} />} */}
         </Box>}
       {
         // When application is static, search for a header (title of the project)
