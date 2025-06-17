@@ -235,6 +235,13 @@ prod_opensankey:
 pages:
   image: node:18
   stage: deploy
+  before_script:
+    # Configuration Git pour utiliser HTTPS avec token
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "git@gitlab.com:"
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/".insteadOf "https://gitlab.com/"
+    # Mise à jour des sous-modules avec la nouvelle configuration
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
   script:
     - |
       if [ -z "$APP_VERSION" ]; then
