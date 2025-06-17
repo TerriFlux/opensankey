@@ -116,6 +116,14 @@ dev_opensankey:
     - dev
   environment:
     name: dev
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+      when: manual
+      allow_failure: false
+  needs:
+    - build  # Ignore l'ordre des stages - peut s'exécuter dès que build est fini
+  dependencies:
+    - build  # Dépend seulement du build, pas du test
   script:
     # DBG
     - echo $REPO_FOLDER
@@ -237,7 +245,17 @@ pages:
   stage: deploy
   variables:
     GIT_SUBMODULE_STRATEGY: none  # Pas de sous-modules du tout
+  needs:
+    - build  # Ignore l'ordre des stages - peut s'exécuter dès que build est fini
+  dependencies:
+    - build  # Dépend seulement du build, pas du test
+  rules:
+    - when: manual
+      allow_failure: false
   script:
+    # === Configuration des variables d'environnement pour React ===
+    - echo "[INFO] Configuration des variables d'environnement pour le mode GitLab Pages"
+    
     # === Récupération de la version depuis package.json ===
     - PACKAGE_JSON_PATH="$CI_PROJECT_DIR/client/package.json"
     - |
@@ -262,6 +280,14 @@ pages:
     - mkdir -p "$PUBLIC_DIR"
     - VERSION_DIR="$PUBLIC_DIR/$APP_VERSION"
     - LATEST_DIR="$PUBLIC_DIR/latest"
+
+    # === Configuration des variables d'environnement React ===
+    - echo "REACT_APP_DEPLOYMENT_TYPE=gitlab-pages" > "$BUILD_DIR/.env.production"
+    - echo "REACT_APP_IS_DEMO_MODE=true" >> "$BUILD_DIR/.env.production"
+    - echo "REACT_APP_HAS_SERVER_ACCESS=false" >> "$BUILD_DIR/.env.production"
+    - echo "REACT_APP_VERSION=$APP_VERSION" >> "$BUILD_DIR/.env.production"
+    - echo "[INFO] Variables d'environnement configurées pour React"
+
     # === JS ===
     - |
       cd "$JS_DIR"
@@ -288,19 +314,19 @@ pages:
     - cp -r "$BUILD_DIR"/* "$VERSION_DIR"
     - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$VERSION_DIR/404.html"
     - echo "[INFO] Version $APP_VERSION copiée vers  $VERSION_DIR"
+    
     # === Création du fichier static.zip ===
     - |
       if [ -d "$VERSION_DIR/static" ]; then
         cd "$VERSION_DIR"
         zip -r "static.zip" static/
         echo "[INFO] Fichier static.zip créé pour la version $APP_VERSION"
-        echo "[INFO] Le fichier static.zip sera accessible à : https://su-model.gitlab.io/sankeyapplication/$APP_VERSION/static.zip"
+        echo "[INFO] Le fichier static.zip sera accessible à : https://sankeyapplication-9fbf37.gitlab.io/$APP_VERSION/static.zip"
       else
         echo "[ATTENTION] Le dossier static n'existe pas dans $VERSION_DIR"
       fi
+    
     # === Copier aussi vers /latest ===
-
-    # === (optionnel) Copier aussi vers /latest
     - rm -rf "$LATEST_DIR"
     - cp -r "$VERSION_DIR" "$LATEST_DIR"
     - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$LATEST_DIR/404.html"
@@ -318,6 +344,8 @@ pages:
               h1 { color: #333; }
               a { display: block; margin: 10px 0; padding: 10px; background: #f5f5f5; text-decoration: none; color: #333; border-radius: 4px; }
               a:hover { background: #e0e0e0; }
+              .download { background: #e8f4fd; }
+              .download:hover { background: #d1e7ff; }
           </style>
       </head>
       <body>
@@ -334,11 +362,6 @@ pages:
   artifacts:
     paths:
       - public
-  dependencies:
-    - build
-  rules:
-    - when: manual
-      allow_failure: false
 
 # Tag Release:
 #   stage: tag-release
