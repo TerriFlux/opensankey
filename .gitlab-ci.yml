@@ -294,6 +294,18 @@ pages:
         cp "$f" "sankeyapplication-v$APP_VERSION.js"
         echo "[INFO] JS renommé : $f → sankeyapplication-v$APP_VERSION.js"
         sed -i "s|$f|sankeyapplication-v$APP_VERSION.js|g" "$INDEX_FILE"
+        rm "$f"
+        echo "[INFO] Fichier original supprimé : $f"
+      done
+      # Traitement des fichiers .js.map
+      for f in main.*.js.map; do
+        if [ -f "$f" ]; then
+          cp "$f" "sankeyapplication-v$APP_VERSION.js.map"
+          echo "[INFO] JS.MAP renommé : $f → sankeyapplication-v$APP_VERSION.js.map"
+          sed -i "s|$f|sankeyapplication-v$APP_VERSION.js.map|g" "$INDEX_FILE" || true
+          rm "$f"
+          echo "[INFO] Fichier original supprimé : $f"
+        fi
       done
 
     # === CSS ===
@@ -303,7 +315,20 @@ pages:
         cp "$f" "sankeyapplication-v$APP_VERSION.css"
         echo "[INFO] CSS renommé : $f → sankeyapplication-v$APP_VERSION.css"
         sed -i "s|$f|sankeyapplication-v$APP_VERSION.css|g" "$INDEX_FILE"
+        rm "$f"
+        echo "[INFO] Fichier original supprimé : $f"
       done
+      # Traitement des fichiers .css.map
+      for f in main.*.css.map; do
+        if [ -f "$f" ]; then
+          cp "$f" "sankeyapplication-v$APP_VERSION.css.map"
+          echo "[INFO] CSS.MAP renommé : $f → sankeyapplication-v$APP_VERSION.css.map"
+          sed -i "s|$f|sankeyapplication-v$APP_VERSION.css.map|g" "$INDEX_FILE" || true
+          rm "$f"
+          echo "[INFO] Fichier original supprimé : $f"
+        fi
+      done
+
 
     # === Chemins relatifs pour GitLab Pages
     - sed -i 's|="/static/|="./static/|g' "$INDEX_FILE"
