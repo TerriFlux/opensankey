@@ -77,7 +77,7 @@ pages:
         echo "[ERREUR] Impossible de lire la version depuis package.json"
         exit 1
       fi
-    - echo "[INFO] Version détectée depuis package.json : $APP_VERSION"
+    - echo "[INFO] Version détectée depuis package.json  $APP_VERSION"
 
     # === Vérification que le build existe ===
     - BUILD_DIR="$CI_PROJECT_DIR/opensankey/client/build"
@@ -150,7 +150,7 @@ pages:
     - mkdir -p "$VERSION_DIR"
     - cp -r "$BUILD_DIR"/* "$VERSION_DIR"
     - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$VERSION_DIR/404.html"
-    - echo "[INFO] Version $APP_VERSION copiée vers : $VERSION_DIR"
+    - echo "[INFO] Version $APP_VERSION copiée vers  $VERSION_DIR"
 
     # === Copier aussi vers /latest ===
     - rm -rf "$LATEST_DIR"
