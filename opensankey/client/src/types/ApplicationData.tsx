@@ -76,6 +76,13 @@ export type OSColorPickerProps = {
   textDisabled?: string
 }
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      publish: boolean
+      logo: string
+    }
+  }
 // SPECIFIC CONSTANTS ******************************************************************/
 
 export const default_save_only_visible_elements = false
@@ -85,14 +92,7 @@ export const default_file_name = 'Diagramme de Sankey'
 
 const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
-const toast_bypass: boolean = false
-
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      logo: string
-    }
-  }
+const toast_bypass: boolean = window.sankey.publish??false
 
 // CLASS APPLICATION DATA **************************************************************/
 
@@ -1103,9 +1103,6 @@ export abstract class ClassTemplate_ApplicationData
     funct_id: string,
     intake?: Type_TextForToastPromise
   ) {
-    if (this.is_static) {
-      return
-    }
     // Check if process has to wait
     if (this._toast_processes[0] !== funct_id) {
       // Create a recursive timeout as delaying method to ensure that
