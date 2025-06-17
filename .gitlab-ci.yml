@@ -71,7 +71,7 @@ build:
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
     # Build SankeySuite node module
-    - bash build_client.sh -I -L -B -D -S
+    - bash build_client.sh -I -L -B -D # -S
     # Check flask server
     - bash build_server.sh
   artifacts:
