@@ -238,12 +238,20 @@ pages:
   variables:
     GIT_SUBMODULE_STRATEGY: none  # Pas de sous-modules du tout
   script:
+    # === Récupération de la version depuis package.json ===
+    - PACKAGE_JSON_PATH="$CI_PROJECT_DIR/sankeyapplication/client/package.json"
     - |
-      if [ -z "$APP_VERSION" ]; then
-        echo "[ERREUR] APP_VERSION doit être fourni manuellement dans l’interface GitLab"
+      if [ ! -f "$PACKAGE_JSON_PATH" ]; then
+        echo "[ERREUR] Le fichier package.json est introuvable à : $PACKAGE_JSON_PATH"
         exit 1
       fi
-    - echo "[INFO] Version reçue " $APP_VERSION
+    - APP_VERSION=$(node -p "require('$PACKAGE_JSON_PATH').version")
+    - |
+      if [ -z "$APP_VERSION" ] || [ "$APP_VERSION" = "undefined" ]; then
+        echo "[ERREUR] Impossible de lire la version depuis package.json"
+        exit 1
+      fi
+    - echo "[INFO] Version détectée depuis package.json  $APP_VERSION"
 
     # === Chemins ===
     - JS_DIR="$CI_PROJECT_DIR/sankeyapplication/client/build/static/js"
