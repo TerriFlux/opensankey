@@ -110,8 +110,6 @@ dev_opensankey:
     REPO_FOLDER: $ROOT_FOLDER/sankeyapplication
     ENV: dev
     APP_NAME: dev_sankeyapp
-  only:
-    - main
   tags:
     - dev
   environment:
