@@ -287,11 +287,24 @@ pages:
     - mkdir -p "$VERSION_DIR"
     - cp -r "$BUILD_DIR"/* "$VERSION_DIR"
     - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$VERSION_DIR/404.html"
+    - echo "[INFO] Version $APP_VERSION copiée vers  $VERSION_DIR"
+    # === Création du fichier static.zip ===
+    - |
+      if [ -d "$VERSION_DIR/static" ]; then
+        cd "$VERSION_DIR"
+        zip -r "static.zip" static/
+        echo "[INFO] Fichier static.zip créé pour la version $APP_VERSION"
+        echo "[INFO] Le fichier static.zip sera accessible à : https://su-model.gitlab.io/sankeyapplication/$APP_VERSION/static.zip"
+      else
+        echo "[ATTENTION] Le dossier static n'existe pas dans $VERSION_DIR"
+      fi
+    # === Copier aussi vers /latest ===
 
     # === (optionnel) Copier aussi vers /latest
     - rm -rf "$LATEST_DIR"
     - cp -r "$VERSION_DIR" "$LATEST_DIR"
     - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$LATEST_DIR/404.html"
+    - echo "[INFO] Version latest mise à jour"
 
     # === Création de la page d'index pour GitLab Pages ===
     - |
@@ -311,6 +324,7 @@ pages:
           <h1>SankeyApplication - Versions disponibles</h1>
           <a href="./latest/">🚀 Dernière version (latest)</a>
           <a href="./$APP_VERSION/">📦 Version $APP_VERSION</a>
+          <a href="./$APP_VERSION/static.zip" class="download">📥 Télécharger static.zip (v$APP_VERSION)</a>
       </body>
       </html>
       EOF
