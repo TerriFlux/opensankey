@@ -293,6 +293,30 @@ pages:
     - cp -r "$VERSION_DIR" "$LATEST_DIR"
     - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$LATEST_DIR/404.html"
 
+    # === Création de la page d'index pour GitLab Pages ===
+    - |
+      cat > "$CI_PROJECT_DIR/public/index.html" << EOF
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <title>SankeyApplication - Versions</title>
+          <style>
+              body { font-family: Arial, sans-serif; margin: 40px; }
+              h1 { color: #333; }
+              a { display: block; margin: 10px 0; padding: 10px; background: #f5f5f5; text-decoration: none; color: #333; border-radius: 4px; }
+              a:hover { background: #e0e0e0; }
+          </style>
+      </head>
+      <body>
+          <h1>SankeyApplication - Versions disponibles</h1>
+          <a href="./latest/">🚀 Dernière version (latest)</a>
+          <a href="./$APP_VERSION/">📦 Version $APP_VERSION</a>
+      </body>
+      </html>
+      EOF
+
+    - echo "[INFO] Page d'index créée avec les liens vers les versions"
+    - echo "[INFO] Déploiement terminé pour la version $APP_VERSION"
   artifacts:
     paths:
       - public
