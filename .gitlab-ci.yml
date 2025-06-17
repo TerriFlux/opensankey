@@ -76,7 +76,7 @@ build:
     - bash build_server.sh
   artifacts:
     paths:
-      - sankeyapplication/client/build  # c'est le dossier généré par `npm run build`
+      - client/build  # c'est le dossier généré par `npm run build`
   except:
     - schedules
 
@@ -254,12 +254,12 @@ pages:
     - echo "[INFO] Version détectée depuis package.json  $APP_VERSION"
 
     # === Chemins ===
-    - JS_DIR="$CI_PROJECT_DIR/sankeyapplication/client/build/static/js"
-    - CSS_DIR="$CI_PROJECT_DIR/sankeyapplication/client/build/static/css"
-    - INDEX_FILE="$CI_PROJECT_DIR/sankeyapplication/client/build/index.html"
-    - BUILD_DIR="$CI_PROJECT_DIR/sankeyapplication/client/build"
-    - VERSION_DIR="$CI_PROJECT_DIR/sankeyapplication/$APP_VERSION"
-    - LATEST_DIR="$CI_PROJECT_DIR/sankeyapplication/latest"
+    - JS_DIR="$CI_PROJECT_DIR/client/build/static/js"
+    - CSS_DIR="$CI_PROJECT_DIR/client/build/static/css"
+    - INDEX_FILE="$CI_PROJECT_DIR/client/build/index.html"
+    - BUILD_DIR="$CI_PROJECT_DIR/client/build"
+    - VERSION_DIR="$CI_PROJECT_DIR/$APP_VERSION"
+    - LATEST_DIR="$CI_PROJECT_DIR/latest"
 
     # === JS ===
     - |
