@@ -1103,6 +1103,9 @@ export abstract class ClassTemplate_ApplicationData
     funct_id: string,
     intake?: Type_TextForToastPromise
   ) {
+    if (this.is_static) {
+      return
+    }
     // Check if process has to wait
     if (this._toast_processes[0] !== funct_id) {
       // Create a recursive timeout as delaying method to ensure that
