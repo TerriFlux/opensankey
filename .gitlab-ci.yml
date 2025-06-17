@@ -2,7 +2,7 @@ stages:
     - build
     - test
     - deploy
-    - build-docker
+    # - build-docker
 
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -32,33 +32,33 @@ cache:
 # Étape 1 : Build & Push Docker
 # ===========================
 
-build-sankeysuite-docker:
-  stage: build-docker
-  tags:
-    - dev
-  image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-  script:
-    - echo "🔧 Build image from Dockerfile"
-    - docker build -t "$DOCKER_IMAGE" -t "$DOCKER_IMAGE_LATEST" -f Dockerfile .
-    - echo "📤 Push image to GitLab registry"
-    - docker push "$DOCKER_IMAGE"
-    - docker push "$DOCKER_IMAGE_LATEST"
-  rules:
-    - changes:
-        - Dockerfile
-        - client/package.json
-        - build_client.sh
-        - submodules/**/*
-    - if: '$CI_COMMIT_REF_NAME == "main"'
-      when: manual
-    - if: '$BUILD_DOCKER_IMAGE == "true"'
-  allow_failure: false
+# build-sankeysuite-docker:
+#   stage: build-docker
+#   tags:
+#     - dev
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   variables:
+#     DOCKER_TLS_CERTDIR: ""
+#   before_script:
+#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+#   script:
+#     - echo "🔧 Build image from Dockerfile"
+#     - docker build -t "$DOCKER_IMAGE" -t "$DOCKER_IMAGE_LATEST" -f Dockerfile .
+#     - echo "📤 Push image to GitLab registry"
+#     - docker push "$DOCKER_IMAGE"
+#     - docker push "$DOCKER_IMAGE_LATEST"
+#   rules:
+#     - changes:
+#         - Dockerfile
+#         - client/package.json
+#         - build_client.sh
+#         - submodules/**/*
+#     - if: '$CI_COMMIT_REF_NAME == "main"'
+#       when: manual
+#     - if: '$BUILD_DOCKER_IMAGE == "true"'
+#   allow_failure: false
 
 # Build : for all branches, units tests for submodules server side
 build:
@@ -241,7 +241,8 @@ prod_opensankey:
 
 # Étape de build
 pages:
-  image: node:18
+  tags:
+    - dev, prod, test
   stage: deploy
   variables:
     GIT_SUBMODULE_STRATEGY: none  # Pas de sous-modules du tout
