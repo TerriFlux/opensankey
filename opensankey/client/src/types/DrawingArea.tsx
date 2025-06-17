@@ -608,7 +608,7 @@ export abstract class ClassTemplate_DrawingArea
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
       .attr('id', 'draw_zoom')
-      .attr('width', window.innerWidth)
+      .attr('width', "100%")
       .attr('height', window.innerHeight)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
