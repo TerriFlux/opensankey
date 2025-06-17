@@ -92,7 +92,7 @@ export const default_file_name = 'Diagramme de Sankey'
 
 const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
-const toast_bypass: boolean = window.sankey.publish??false
+const toast_bypass: boolean = window.sankey?.publish??false
 
 // CLASS APPLICATION DATA **************************************************************/
 
