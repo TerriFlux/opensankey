@@ -258,9 +258,10 @@ pages:
     - CSS_DIR="$CI_PROJECT_DIR/client/build/static/css"
     - INDEX_FILE="$CI_PROJECT_DIR/client/build/index.html"
     - BUILD_DIR="$CI_PROJECT_DIR/client/build"
-    - VERSION_DIR="$CI_PROJECT_DIR/$APP_VERSION"
-    - LATEST_DIR="$CI_PROJECT_DIR/latest"
-
+    - PUBLIC_DIR="$CI_PROJECT_DIR/public"
+    - mkdir -p "$PUBLIC_DIR"
+    - VERSION_DIR="$PUBLIC_DIR/$APP_VERSION"
+    - LATEST_DIR="$PUBLIC_DIR/latest"
     # === JS ===
     - |
       cd "$JS_DIR"
