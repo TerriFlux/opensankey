@@ -46,7 +46,7 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import { default_link_value_label_unit } from '../../Elements/LinkAttributes'
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 import { ValueOptionType } from '../../Elements/Link'
 
@@ -298,16 +298,13 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         >
           {t('Flux.data.'+value_option)}
         </Box>
-        <ConfigMenuNumberInput
-          t={new_data.t}
+        <ConfigMenuNumberOrUndefinedInput
           ref_to_set_value={ref_set_data_value_input}
           default_value={default_value}
-          fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
           function_on_blur={updateValueAndHistory}
           minimum_value={0}
           stepper={true}
           step={1}
-          multiValue={is_value_indeterminated}
           unit_text={unit_text}
         />
       </Box>

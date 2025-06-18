@@ -47,7 +47,8 @@ export abstract class ClassAbstract_ApplicationData {
   ): void
   public abstract _add_waiting_process(
     process_id: string,
-    process_func: () => void
+    process_func: () => void,
+    timer?:number
   ):void
   // Mandatory attributes
   public abstract version: string
@@ -95,6 +96,7 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract orderElementOnDA(): void
   public abstract computeParametricV(): void
   public abstract getNavBarHeight(): number
+  public abstract getZoomScale():number
   // Mandatory getters
   public abstract get sankey(): ClassAbstract_Sankey
   public abstract get legend(): ClassTemplate_Legend<Type_GenericDrawingArea, Type_GenericSankey>

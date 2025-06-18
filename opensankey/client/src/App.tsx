@@ -52,9 +52,8 @@ import { ModalDocumentation } from './components/welcome/SplashScreen'
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
     sankey: {
-      filiere?: Type_JSON,
+      diagram?: Type_JSON,
       header?: string,
       has_header?: boolean,
       footer?: boolean,
@@ -86,14 +85,12 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     const new_data = JSON.parse(json_data)
     initial_data = new_data
   }
-  if (window.sankey && window.sankey.filiere) {
-    initial_data = window.sankey.filiere
+  if (window.sankey && window.sankey.diagram) {
+    initial_data = window.sankey.diagram
   }
 
   // Initialize data
   const new_data = initializeApplicationData(initial_data)
-  const { menu_configuration } = new_data
-  const { additionalMenus } = menu_configuration
   /*************************************************************************************************/
 
   const mode_pref = sessionStorage.getItem('modepref')
@@ -110,7 +107,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
   const menu_configuration_nodes_attributes = <MenuConfigurationNodeStyle
     new_data={new_data}
     menu_for_style={false}
-    additional_menus={additionalMenus}
+    additional_menus={new_data.menu_configuration.additionalMenus}
   />
 
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
@@ -139,7 +136,7 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
         {
           moduleDialogs(
             new_data,
-            additionalMenus,
+            new_data.menu_configuration.additionalMenus,
             menu_configuration_nodes_attributes,
             new_data.processFunction
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
@@ -161,25 +158,24 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
               <></>
             ]}
             additionalMenus={
-              additionalMenus
+              new_data.menu_configuration.additionalMenus
             }
-            apply_transformation_additional_elements={additionalMenus.current.apply_transformation_additional_elements}
+            apply_transformation_additional_elements={new_data.menu_configuration.additionalMenus.current.apply_transformation_additional_elements}
             diagramSelector={initializeDiagrammSelector(new_data)}
           />
         </>
         <ApplySaveJSONDialog
           new_data={new_data}
-          additional_file_save_json_option={additionalMenus.current.additional_file_save_json_option}
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
       <ContextMenuNode
         new_data={new_data}
-        additionalMenu={additionalMenus}
+        additionalMenu={new_data.menu_configuration.additionalMenus}
       />
       <ContextMenuLink
         new_data={new_data}
-        additionalMenus={additionalMenus}
+        additionalMenus={new_data.menu_configuration.additionalMenus}
       />
       <ContextMenuZdd
         new_data={new_data}
@@ -193,13 +189,13 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
       <React.Fragment key={'modale_style_link'}>
         <SankeyModalStyleLink
           new_data={new_data}
-          additionalMenus={additionalMenus}
+          additionalMenus={new_data.menu_configuration.additionalMenus}
         />
       </React.Fragment>
       <React.Fragment key={'modale_style_node'}>
         <SankeyModalStyleNode
           new_data={new_data}
-          additionalMenus={additionalMenus}
+          additionalMenus={new_data.menu_configuration.additionalMenus}
         />
       </React.Fragment>
     </div>

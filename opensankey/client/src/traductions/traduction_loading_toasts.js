@@ -114,7 +114,7 @@ export const resources_loading_toasts = {
         default: {
           success: {
             title: 'Terminé',
-            desc: 'Merci de votre patience'
+            desc: 'Chargement terminé'
           },
           loading: {
             title: 'Traitement en cours',

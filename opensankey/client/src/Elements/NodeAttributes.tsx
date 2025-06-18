@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_JSON, getBooleanFromJSON, getStringFromJSON, getNumberFromJSON, Type_ElementPosition, getStringOrUndefinedFromJSON, Type_Position, default_element_color, default_font } from '../types/Utils'
+import { Type_JSON, getBooleanFromJSON, getStringFromJSON, getNumberFromJSON, Type_ElementPosition, getStringOrUndefinedFromJSON, Type_Position, default_element_color, default_font, Type_ElementPositionOptionnal, getJSONFromJSON } from '../types/Utils'
 import { Type_Side } from './LinkAttributes'
 import { Type_AnyNodeElement } from './Node'
 
@@ -93,6 +93,8 @@ export const default_node_value_label_unit_factor = 1
 export type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 export type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
+
+export type Type_customisable_node_style_attr= 'shape_visible'| 'shape_type'| 'shape_min_width'| 'shape_min_height'| 'shape_color'| 'shape_opacity'| 'shape_color_sustainable'| 'shape_arrow_angle_factor'| 'shape_arrow_angle_direction'| 'name_label_is_visible'| 'name_label_font_family'| 'name_label_font_size'| 'name_label_uppercase'| 'name_label_bold'| 'name_label_italic'| 'name_label_color'| 'name_label_horiz'| 'name_label_vert'| 'name_label_background'| 'name_label_background_color'| 'name_label_horiz_shift'| 'name_label_vert_shift'| 'name_label_box_width'| 'value_label_is_visible'| 'value_label_font_family'| 'value_label_font_size'| 'value_label_uppercase'| 'value_label_bold'| 'value_label_italic'| 'value_label_color'| 'value_label_horiz'| 'value_label_vert'| 'value_label_background'| 'value_label_background_color'| 'value_label_horiz_shift'| 'value_label_vert_shift'| 'value_label_box_width'| 'value_label_scientific_notation'| 'value_label_significant_digits'| 'value_label_nb_significant_digits'| 'value_label_custom_digit'| 'value_label_nb_digit'| 'value_label_unit_visible'| 'value_label_unit'| 'value_label_unit_factor'
 
 // CLASS NODE ATTRIBUTES ****************************************************************
 /**
@@ -577,14 +579,62 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   private _is_deletable: boolean
 
   private _references: { [_: string]: Type_AnyNodeElement } = {}
+  // Dict of attr that is activated to customise
+  private _customisable_attribute: {
+    shape_visible: boolean,
+    shape_type: boolean,
+    shape_min_width: boolean,
+    shape_min_height: boolean,
+    shape_color: boolean,
+    shape_opacity: boolean,
+    shape_color_sustainable: boolean,
+    shape_arrow_angle_factor: boolean,
+    shape_arrow_angle_direction: boolean,
+    name_label_is_visible: boolean,
+    name_label_font_family: boolean,
+    name_label_font_size: boolean,
+    name_label_uppercase: boolean,
+    name_label_bold: boolean,
+    name_label_italic: boolean,
+    name_label_color: boolean,
+    name_label_horiz: boolean,
+    name_label_vert: boolean,
+    name_label_background: boolean,
+    name_label_background_color: boolean,
+    name_label_horiz_shift: boolean,
+    name_label_vert_shift: boolean,
+    name_label_box_width: boolean,
+    value_label_is_visible: boolean,
+    value_label_font_family: boolean,
+    value_label_font_size: boolean,
+    value_label_uppercase: boolean,
+    value_label_bold: boolean,
+    value_label_italic: boolean,
+    value_label_color: boolean,
+    value_label_horiz: boolean,
+    value_label_vert: boolean,
+    value_label_background: boolean,
+    value_label_background_color: boolean,
+    value_label_horiz_shift: boolean,
+    value_label_vert_shift: boolean,
+    value_label_box_width: boolean,
+    value_label_scientific_notation: boolean,
+    value_label_significant_digits: boolean,
+    value_label_nb_significant_digits: boolean,
+    value_label_custom_digit: boolean,
+    value_label_nb_digit: boolean,
+    value_label_unit_visible: boolean,
+    value_label_unit: boolean,
+    value_label_unit_factor: boolean,
+  }
 
-  private _position: Type_ElementPosition
+  private _position: Type_ElementPositionOptionnal
 
   // CONSTRUCTOR ========================================================================
   constructor(
     id: string,
     name: string,
-    is_deletable: boolean = true
+    is_deletable: boolean = true,
   ) {
     // Instantiate super class
     super()
@@ -599,73 +649,129 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     this._is_deletable = is_deletable
 
     // Parameters for geometry
-    this._position = {
-      type: 'absolute',
-      auto_x: false,
-      x: 10,
-      y: 10,
-      u: 0,
-      v: 0,
-      dx: default_dx,
-      dy: default_dy,
-      relative_dx: default_relative_dx,
-      relative_dy: default_relative_dy
+    this._position = {}
+
+    this._customisable_attribute = {
+      shape_visible: !this._is_deletable,
+      shape_type: !this._is_deletable,
+      shape_min_width: !this._is_deletable,
+      shape_min_height: !this._is_deletable,
+      shape_color: !this._is_deletable,
+      shape_opacity: !this._is_deletable,
+      shape_color_sustainable: !this._is_deletable,
+      shape_arrow_angle_factor: !this._is_deletable,
+      shape_arrow_angle_direction: !this._is_deletable,
+      name_label_is_visible: !this._is_deletable,
+      name_label_font_family: !this._is_deletable,
+      name_label_font_size: !this._is_deletable,
+      name_label_uppercase: !this._is_deletable,
+      name_label_bold: !this._is_deletable,
+      name_label_italic: !this._is_deletable,
+      name_label_color: !this._is_deletable,
+      name_label_horiz: !this._is_deletable,
+      name_label_vert: !this._is_deletable,
+      name_label_background: !this._is_deletable,
+      name_label_background_color: !this._is_deletable,
+      name_label_horiz_shift: !this._is_deletable,
+      name_label_vert_shift: !this._is_deletable,
+      name_label_box_width: !this._is_deletable,
+      value_label_is_visible: !this._is_deletable,
+      value_label_font_family: !this._is_deletable,
+      value_label_font_size: !this._is_deletable,
+      value_label_uppercase: !this._is_deletable,
+      value_label_bold: !this._is_deletable,
+      value_label_italic: !this._is_deletable,
+      value_label_color: !this._is_deletable,
+      value_label_horiz: !this._is_deletable,
+      value_label_vert: !this._is_deletable,
+      value_label_background: !this._is_deletable,
+      value_label_background_color: !this._is_deletable,
+      value_label_horiz_shift: !this._is_deletable,
+      value_label_vert_shift: !this._is_deletable,
+      value_label_box_width: !this._is_deletable,
+      value_label_scientific_notation: !this._is_deletable,
+      value_label_significant_digits: !this._is_deletable,
+      value_label_nb_significant_digits: !this._is_deletable,
+      value_label_custom_digit: !this._is_deletable,
+      value_label_nb_digit: !this._is_deletable,
+      value_label_unit_visible: !this._is_deletable,
+      value_label_unit: !this._is_deletable,
+      value_label_unit_factor: !this._is_deletable,
     }
 
-    // Parameters for shape
-    this._shape_visible = default_shape_visible
-    this._shape_type = default_shape_type
-    this._shape_min_width = default_shape_min_width
-    this._shape_min_height = default_shape_min_height
-    this._shape_color = default_shape_color
-    this._shape_opacity = default_shape_opacity
-    this._shape_color_sustainable = default_shape_color_sustainable
-    this._shape_arrow_angle_factor = default_shape_arrow_angle_factor
-    this._shape_arrow_angle_direction = default_shape_arrow_angle_direction
+    // If it is not deletable then it's default style so we init value
+    if (!is_deletable) {
+      // Parameters for geometry
+      this._position = {
+        type: 'absolute',
+        x: 10,
+        y: 10,
+        u: 0,
+        v: 0,
+        dx: default_dx,
+        dy: default_dy,
+        relative_dx: default_relative_dx,
+        relative_dy: default_relative_dy
+      }
 
-    // Parameter of node label
-    this._name_label_is_visible = default_node_name_label_is_visible
-    this._name_label_font_family = default_node_name_label_font_family
-    this._name_label_font_size = default_node_name_label_font_size
-    this._name_label_uppercase = default_node_name_label_uppercase
-    this._name_label_bold = default_node_name_label_bold
-    this._name_label_italic = default_node_name_label_italic
-    this._name_label_color = default_node_name_label_color
-    this._name_label_horiz = default_node_name_label_horiz
-    this._name_label_vert = default_node_name_label_vert
+      // Parameters for shape
+      this._shape_visible = default_shape_visible
+      this._shape_type = default_shape_type
+      this._shape_min_width = default_shape_min_width
+      this._shape_min_height = default_shape_min_height
+      this._shape_color = default_shape_color
+      this._shape_opacity = default_shape_opacity
+      this._shape_color_sustainable = default_shape_color_sustainable
+      this._shape_arrow_angle_factor = default_shape_arrow_angle_factor
+      this._shape_arrow_angle_direction = default_shape_arrow_angle_direction
 
-    this._name_label_background = default_node_name_label_background
-    this._name_label_background_color = default_node_name_label_background_color
-    this._name_label_horiz_shift = default_node_name_label_horiz_shift
-    this._name_label_vert_shift = default_node_name_label_vert_shift
-    this._name_label_box_width = default_node_name_label_box_width
+      // Parameter of node label
+      this._name_label_is_visible = default_node_name_label_is_visible
+      this._name_label_font_family = default_node_name_label_font_family
+      this._name_label_font_size = default_node_name_label_font_size
+      this._name_label_uppercase = default_node_name_label_uppercase
+      this._name_label_bold = default_node_name_label_bold
+      this._name_label_italic = default_node_name_label_italic
+      this._name_label_color = default_node_name_label_color
+      this._name_label_horiz = default_node_name_label_horiz
+      this._name_label_vert = default_node_name_label_vert
 
-    // Parameter of node value label
-    this._value_label_is_visible = default_node_value_label_is_visible
-    this._value_label_font_family = default_node_name_label_font_family
-    this._value_label_font_size = default_node_name_label_font_size
-    this._value_label_uppercase = default_node_name_label_uppercase
-    this._value_label_bold = default_node_name_label_bold
-    this._value_label_italic = default_node_name_label_italic
-    this._value_label_color = default_node_name_label_color
-    this._value_label_horiz = default_node_value_label_horiz
-    this._value_label_vert = default_node_value_label_vert
+      this._name_label_background = default_node_name_label_background
+      this._name_label_background_color = default_node_name_label_background_color
+      this._name_label_horiz_shift = default_node_name_label_horiz_shift
+      this._name_label_vert_shift = default_node_name_label_vert_shift
+      this._name_label_box_width = default_node_name_label_box_width
 
-    this._value_label_background = default_node_value_label_background
-    this._value_label_background_color = default_node_value_label_background_color
-    this._value_label_horiz_shift = default_node_value_label_horiz_shift
-    this._value_label_vert_shift = default_node_value_label_vert_shift
-    this._value_label_box_width = default_node_name_label_box_width
+      // Parameter of node value label
+      this._value_label_is_visible = default_node_value_label_is_visible
+      this._value_label_font_family = default_node_name_label_font_family
+      this._value_label_font_size = default_node_name_label_font_size
+      this._value_label_uppercase = default_node_name_label_uppercase
+      this._value_label_bold = default_node_name_label_bold
+      this._value_label_italic = default_node_name_label_italic
+      this._value_label_color = default_node_name_label_color
+      this._value_label_horiz = default_node_value_label_horiz
+      this._value_label_vert = default_node_value_label_vert
 
-    // Parameter of node value label - Specific params for value display
-    this._value_label_scientific_notation = default_node_value_label_scientific_notation
-    this._value_label_significant_digits = default_node_value_label_significant_digits
-    this._value_label_nb_significant_digits = default_node_value_label_nb_significant_digits
-    this._value_label_custom_digit = default_node_value_label_custom_digit
-    this._value_label_nb_digit = default_node_value_label_nb_digit
-    this._value_label_unit_visible = default_node_value_label_unit_visible
-    this._value_label_unit = default_node_value_label_unit
-    this._value_label_unit_factor = default_node_value_label_unit_factor
+      this._value_label_background = default_node_value_label_background
+      this._value_label_background_color = default_node_value_label_background_color
+      this._value_label_horiz_shift = default_node_value_label_horiz_shift
+      this._value_label_vert_shift = default_node_value_label_vert_shift
+      this._value_label_box_width = default_node_name_label_box_width
+
+      // Parameter of node value label - Specific params for value display
+      this._value_label_scientific_notation = default_node_value_label_scientific_notation
+      this._value_label_scientific_notation = default_node_value_label_scientific_notation
+      this._value_label_significant_digits = default_node_value_label_significant_digits
+      this._value_label_nb_significant_digits = default_node_value_label_nb_significant_digits
+      this._value_label_custom_digit = default_node_value_label_custom_digit
+      this._value_label_nb_digit = default_node_value_label_nb_digit
+      this._value_label_unit_visible = default_node_value_label_unit_visible
+      this._value_label_unit = default_node_value_label_unit
+      this._value_label_unit_factor = default_node_value_label_unit_factor
+    }
+
+
   }
 
   /**
@@ -679,17 +785,21 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     json_node_object: Type_JSON
   ) {
     super.fromJSON(json_node_object)
+      this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
+      this._position.relative_dx = getNumberFromJSON(json_node_object, 'relative_dx', default_relative_dx)
+      this._position.relative_dy = getNumberFromJSON(json_node_object, 'relative_dy', default_relative_dy)
+      this._position.dx = getNumberFromJSON(json_node_object, 'dx', default_dx)
+      this._position.dy = getNumberFromJSON(json_node_object, 'dy', default_dy)
 
-    this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-    this._position.relative_dx = getNumberFromJSON(json_node_object, 'relative_dx', default_relative_dx)
-    this._position.relative_dy = getNumberFromJSON(json_node_object, 'relative_dy', default_relative_dy)
-    this._position.dx = getNumberFromJSON(json_node_object, 'dx', default_dx)
-    this._position.dy = getNumberFromJSON(json_node_object, 'dy', default_dy)
+      this._customisable_attribute = getJSONFromJSON(json_node_object, 'customisable_props', this._customisable_attribute) as typeof this._customisable_attribute
+
+
   }
 
   public toJSON() {
     const json_object = super.toJSON()
     if (this.position.type) json_object['position'] = this.position.type
+    json_object['customisable_props']=this._customisable_attribute
     return json_object
   }
 
@@ -753,4 +863,6 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   public get position() { return this._position }
   public set position(_) { this._position = _ }
+
+  public get customisable_attribute(){return this._customisable_attribute}
 }
