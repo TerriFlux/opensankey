@@ -29,6 +29,12 @@ import { Box } from '@chakra-ui/react'
 import React, { CSSProperties, FunctionComponent, useState } from 'react'
 import { ColorResult, SketchPicker, SwatchesPicker } from 'react-color'
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      logo: string
+    }
+  }
 export interface Type_SaveDiagramOptionsOSP extends Type_SaveDiagramOptions {
   only_current_view?: boolean
 }
@@ -172,9 +178,9 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
     // Get OpenSankey+ logo
     this._logo_sankey_plus = 'logos/logo_opensankeyplus.png'
-    this._logo = this._logo_sankey_plus
+    this._logo = this.is_static && window.sankey && window.sankey.logo ? window.sankey.logo : this._logo_sankey_plus
 
-    if (this.has_sankey_plus) {
+    if (this.has_sankey_plus && !this._drawing_area.static) {
       // Update user palette when connected
       const path = window.location.origin
       const url = path + '/user/get_preference'
@@ -325,45 +331,25 @@ export abstract class ClassTemplate_ApplicationDataOSP
    */
   public extractViewsFromJSON(json_object: Type_JSON) {
     let views = getJSONOrUndefinedFromJSON(json_object, 'views')
-
     if (!views) {
-      const old_views = getOldViewsFromJSON(json_object, 'view') as ViewType[]
-      if (old_views && old_views.length > 0) {
-        views = {} as Type_JSON
-        // Convert old views
-        old_views.forEach((v) => {
-          if (v.heredited_attr_from_master === undefined) {
-            v.heredited_attr_from_master = []
-          }
-          // Convert old views that are diff to json
-          const d_view = GetOldDataFromView(json_object as unknown as OSPData, v.id)
-          if (d_view) {
-            (views as Type_JSON)[v.id] = d_view as unknown as Type_JSON
-          }
+      return
+    }
 
-          // Set Name of view
-          ((views as Type_JSON)[v.id] as Type_JSON).name = v.nom;
-          // Set heredited from master attr
-          ((views as Type_JSON)[v.id] as Type_JSON).heredited_attr = v.heredited_attr_from_master
-        })
-      }
-    }
-    if (views) {
-      // Create other views
-      Object.entries(views)
-        .forEach(([view_id, view_json]) => {
-          if (view_id !== default_main_sankey_id) {
-            // Create and populate drawing area
-            const drawing_area_view = this.createNewDrawingArea(view_id)
-            drawing_area_view.bypass_redraws = this.drawing_area.bypass_redraws
-            drawing_area_view.fromJSON(view_json as Type_JSON)
-            drawing_area_view.arrangeTrade(false)
-            // Add new drawing area to views
-            this._views[view_id] = drawing_area_view
-            this.pushViewIdInViewOrder(view_id)
-          }
-        })
-    }
+    // Create other views
+    Object.entries(views)
+      .forEach(([view_id, view_json]) => {
+        if (view_id !== default_main_sankey_id) {
+          // Create and populate drawing area
+          console.log('Charging '+(view_json as Type_JSON).name)
+          const drawing_area_view = this.createNewDrawingArea(view_id)
+          drawing_area_view.bypass_redraws = this.drawing_area.bypass_redraws
+          drawing_area_view.fromJSON(view_json as Type_JSON)
+          drawing_area_view.arrangeTrade(false)
+          // Add new drawing area to views
+          this._views[view_id] = drawing_area_view
+          this.pushViewIdInViewOrder(view_id)
+        }
+      })
   }
 
   /**
@@ -719,9 +705,9 @@ export abstract class ClassTemplate_ApplicationDataOSP
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style = InLink
+            link.style.push(InLink)
           } else {
-            link.style = OutLink
+            link.style.push(OutLink)
           }
           // Search for max link value in unitary sankey to re-scale sankey
           const link_val = link.getMaxValue() ?? 1
@@ -742,13 +728,13 @@ export abstract class ClassTemplate_ApplicationDataOSP
           node.resetAttributes()
           // Affect style depending on IO
           if (node.input_links_list.length == 0) {
-            node.style = InNodeStyle
+            node.style.push(InNodeStyle)
           } else if (node.output_links_list.length == 0) {
-            node.style = OutNodeStyle
+            node.style.push(OutNodeStyle)
           }
         }
       })
-    new_drawing_area.sankey.nodes_dict[node_ref.id].style = unitaryNode
+    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [unitaryNode]
 
     // Remove tag group
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
@@ -1003,11 +989,9 @@ export abstract class ClassTemplate_ApplicationDataOSP
   }
 
   // GETTERS / SETTERS ==================================================================
-
-  public get logo(): string { return this._logo_sankey_plus }
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
 
-  public get has_sankey_plus() { return this._has_sankey_plus }
+  public get has_sankey_plus() { return this._has_sankey_plus || this.is_static}
   public set has_sankey_plus(_) { this._has_sankey_plus = _ }
 
   public get has_sankey_afm() { return process.env.REACT_APP_AFM == 'true' }

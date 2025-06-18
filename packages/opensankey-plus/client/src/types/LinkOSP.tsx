@@ -60,7 +60,7 @@ export abstract class ClassTemplate_LinkElementOSP
    *       displaying_order: number,
    *       position_starting: Type_ElementPosition,
    *       position_ending: Type_ElementPosition,
-   *       style: Class_LinkStyleOSP,
+   *       style: Class_LinkStyleOSP[],
    *       attributes: Class_LinkAttributeOSP,
    *       position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
    *       position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
@@ -74,7 +74,7 @@ export abstract class ClassTemplate_LinkElementOSP
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
-    style: Class_LinkStyleOSP,
+    style: Class_LinkStyleOSP[],
     attributes: Class_LinkAttributeOSP,
     position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
     position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
@@ -378,7 +378,6 @@ export class Class_LinkAttributeOSP extends Class_LinkAttribute {
 export class Class_LinkStyleOSP extends Class_LinkStyle {
 
   // PRIVATE ATTRIBUTES =================================================================
-  private _shape_is_gradient: boolean
 
   // CONSTRUCTOR ========================================================================
   constructor(
@@ -389,7 +388,6 @@ export class Class_LinkStyleOSP extends Class_LinkStyle {
     // Instantiate super class
     super(id, name, is_deletable)
     // Update new attributes
-    this._shape_is_gradient = default_shape_shape_is_gradient
   }
 
   // PROTECTED METHODS ==================================================================
@@ -397,6 +395,4 @@ export class Class_LinkStyleOSP extends Class_LinkStyle {
   // PRIVATE METHODS ====================================================================
 
   // GETTERS ============================================================================
-  public get shape_is_gradient(): boolean { return this._shape_is_gradient }
-  public set shape_is_gradient(value: boolean) { this._shape_is_gradient = value; this.update() }
 }

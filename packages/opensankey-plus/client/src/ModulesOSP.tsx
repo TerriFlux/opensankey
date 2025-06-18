@@ -123,14 +123,17 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
+    sankey: {
+      publish: boolean
+    }
   }
 
 export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = (
   initial_data
 ) => {
+  console.log('initializeApplicationDataOSP')
   // Init application data
-  const new_data_plus = new Class_ApplicationDataOSP(window.SankeyToolsStatic)
+  const new_data_plus = new Class_ApplicationDataOSP(!!window.sankey?.publish)
   // Read data from cache if it exist
   if (initial_data !== undefined) {
     new_data_plus.fromJSON(initial_data)
@@ -154,12 +157,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   additionalMenus,
   new_data
 ) => {
-  // No initialisation if static --------------------------------------------------------
-
-  if (new_data.is_static) {
-    return
-  }
-
   // OpenSankey initialisation ----------------------------------------------------------
 
   initializeAdditionalMenus(

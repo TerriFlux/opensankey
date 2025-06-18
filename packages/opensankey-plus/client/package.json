@@ -12,7 +12,7 @@
     "dist": "tsc -p .",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "build_zip": "shx rm -rf $npm_config_datapath/artefacts/afmsankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artefacts"
+    "build_zip": "shx rm -rf $npm_config_datapath/artifacts/afmsankey_$npm_package_version.$npm_config_publish_name.zip && cross-conf-env npm-build-zip --name=$npm_config_publish_name --destination  $npm_config_datapath/artifacts"
   },
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
@@ -45,8 +45,10 @@
     "html-react-parser": "^5.2.2",
     "i18next": "^23.16.8",
     "i18next-browser-languagedetector": "^7.2.2",
+    "jszip": "^3.10.1",
     "lz-string": "^1.5.0",
     "npm-build-zip": "^1.0.4",
+     "pako": "^2.1.0",
     "postcss": "^8.5.2",
     "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",
@@ -85,6 +87,8 @@
     "@types/react-color": "^3.0.13",
     "@types/react-dom": "^18.3.5",
     "@types/react-google-recaptcha": "^2.1.9",
+    "@types/jszip": "^3.4.1",
+    "@types/pako": "^2.0.3",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-test-renderer": "^18.3.1",
     "babel-loader": "^9.2.1",

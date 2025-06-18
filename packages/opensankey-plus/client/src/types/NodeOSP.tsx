@@ -79,7 +79,7 @@ export abstract class ClassTemplate_NodeElementOSP
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
     position: Type_ElementPosition,
-    style: Class_NodeStyleOSP,
+    style: Class_NodeStyleOSP[],
     attributes: Class_NodeAttributeOSP
     position_x_label?: number// Relative x position of label when dragged (optionnal)
     position_y_label?: number// Relative y position of label when dragged (optionnal)
