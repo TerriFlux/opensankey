@@ -397,7 +397,7 @@ def normalizeStringToValidId(text: str):
     -------
       text normalised (withnon alphanumeric caracter replaced by '_')
     """
-    return 'id_'+re.sub('[^0-9a-zA-Z]+', '_', text)
+    return 'id_' + re.sub('[^0-9a-zA-Z]+', '_', text)
 
 
 def create_json_node(id: str, name: str):
@@ -441,7 +441,7 @@ def randomId(length: int = 5):
     charactersLength = len(characters)
     counter = 0
     while (counter < length):
-        result += characters[random.randint(0, charactersLength-1)]
+        result += characters[random.randint(0, charactersLength - 1)]
         counter += 1
 
     return result
@@ -463,7 +463,7 @@ def create_json_flow(org_id: str, dest_id: str, value: str, color: str):
       json object formatted to be a node in a the front application
     """
     flow = {
-        "id": org_id+"-->"+dest_id+'_'+randomId(),
+        "id": org_id + "-->" + dest_id + '_' + randomId(),
         "is_visible": True,
         "svg_parent_group": "g_links",
         "idSource": org_id,
@@ -473,7 +473,7 @@ def create_json_flow(org_id: str, dest_id: str, value: str, color: str):
         "displaying_order": 0,
         "tooltip_text": "",
         "value": {
-            "id": org_id+dest_id+'_'+randomId(),
+            "id": org_id + dest_id + '_' + randomId(),
             "data_value": float(value),
             "tags": {}
         }

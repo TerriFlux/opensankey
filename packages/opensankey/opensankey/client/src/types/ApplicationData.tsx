@@ -76,6 +76,13 @@ export type OSColorPickerProps = {
   textDisabled?: string
 }
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      publish: boolean
+      logo: string
+    }
+  }
 // SPECIFIC CONSTANTS ******************************************************************/
 
 export const default_save_only_visible_elements = false
@@ -85,7 +92,7 @@ export const default_file_name = 'Diagramme de Sankey'
 
 const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
-const toast_bypass: boolean = false
+const toast_bypass: boolean = window.sankey?.publish??false
 
 // CLASS APPLICATION DATA **************************************************************/
 
@@ -355,7 +362,7 @@ export abstract class ClassTemplate_ApplicationData
     // Get TerriFlux logo
     this._logo_terriflux = 'logos/logo_terriflux.png'
     // Default logo for app
-    this._logo = this._logo_opensankey
+    this._logo = this.is_static && window.sankey && window.sankey.logo ? window.sankey.logo : this._logo_opensankey
 
     // Excel processing function
     this._processFunction = {
@@ -375,7 +382,7 @@ export abstract class ClassTemplate_ApplicationData
         this._processFunction.ref_result.current('')
       }
     }
-    if (!published_mode) {
+    if (this.options.no_key_event === true) {
       // Link keyboard listener with app key down detection
       document.onkeydown = this._keyboardEventListener(this)
     }
@@ -877,12 +884,13 @@ export abstract class ClassTemplate_ApplicationData
    */
   public _add_waiting_process(
     process_id: string,
-    process_func: () => void
+    process_func: () => void,
+    timer = this._waiting_time_for_processes
   ) {
     this._cancel_waiting_process(process_id)
     this._waiting_processes[process_id] = setTimeout(
       (_this) => { process_func() },
-      this._waiting_time_for_processes,
+      timer,
       this
     )
   }
@@ -1189,7 +1197,7 @@ export abstract class ClassTemplate_ApplicationData
 
   public get url_prefix(): string { return this._url_prefix }
 
-  public get logo(): string { return this._logo_opensankey }
+  public get logo(): string { return this._logo }
   public get logo_opensankey(): string { return this._logo_opensankey }
   public get logo_terriflux(): string { return this._logo_terriflux }
 
