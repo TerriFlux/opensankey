@@ -66,12 +66,17 @@ import {
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
-import { Class_NodeAttribute } from '../Elements/NodeAttributes'
-import { Class_LinkAttribute } from '../Elements/LinkAttributes'
+import { Class_NodeAttribute, Class_NodeStyle, default_dx } from '../Elements/NodeAttributes'
+import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
+import { TypeGeneric_Handler } from '../Elements/Handler'
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
+    sankey: {
+      publish: boolean
+      recenter: boolean
+      topbar: boolean
+    }
   }
 
 function sortElementByIdOrder(
@@ -194,7 +199,7 @@ export abstract class ClassTemplate_DrawingArea
    * @type {boolean}
    * @memberof ClassTemplate_DrawingArea
    */
-  public static: boolean = window.SankeyToolsStatic
+  public static: boolean = !!window.sankey?.publish
 
   public bypass_redraws: boolean = false
 
@@ -507,14 +512,18 @@ export abstract class ClassTemplate_DrawingArea
       (version === undefined) ||
       (Number(version) < 0.9)
     ) {
+      console.log('convert_data_legacy')
       convert_data_legacy(json_object) // FIXME
+      console.log(json_object.version)
     }
 
     if (
       (version !== undefined) &&
       (Number(version) < 0.91)
     ) {
+      console.log('convert_pre_v_0_91')
       convert_pre_v_0_91(json_object)
+      console.log(json_object.version)
     }
 
 
@@ -599,7 +608,7 @@ export abstract class ClassTemplate_DrawingArea
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
       .attr('id', 'draw_zoom')
-      .attr('width', window.innerWidth)
+      .attr('width', "100%")
       .attr('height', window.innerHeight)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
@@ -1119,7 +1128,7 @@ export abstract class ClassTemplate_DrawingArea
     y0 = new_y0
 
     // Recenter elements
-    if (recenter) {
+    if (recenter && window.sankey?.recenter !== false) {
       this._elements_d3_groups_shift_x = -(bbox.x + bbox.width / 2) + (x0 + width / 2)
       this._elements_d3_groups_shift_y = -(bbox.y + bbox.height / 2) + (y0 + height / 2)
       this.d3_selection_elements_group?.attr(
@@ -1150,6 +1159,7 @@ export abstract class ClassTemplate_DrawingArea
    */
   public areaFitHorizontally(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
+
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_width / this.width
@@ -1794,7 +1804,8 @@ export abstract class ClassTemplate_DrawingArea
 
           // Compute left horizontal margin
           if (h_index == 0) {
-            const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
+            const style_node = node.getStyleWithAttr('name_label_box_width')
+            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
             const needed_margin = this.grid_size + node_label_width
             if (needed_margin > h_left_margin) {
               h_left_margin = needed_margin
@@ -1804,7 +1815,8 @@ export abstract class ClassTemplate_DrawingArea
           // Compute right horizontal margin
           // if (h_index == (max_horizontal_index - cumul_shifting_value)) {
           if (h_index == max_horizontal_index) {
-            const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
+            const style_node = node.getStyleWithAttr('name_label_box_width')
+            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
             const needed_margin = this.grid_size + node_label_width
             if (needed_margin > h_right_margin) {
               h_right_margin = needed_margin
@@ -2064,7 +2076,7 @@ export abstract class ClassTemplate_DrawingArea
     this.sankey.visible_nodes_list.forEach(node => {
       // Previously computed index for given node
       const node_index = horizontal_indexes_per_nodes_ids[node.id]
-      node.position_u = node_index+1
+      node.display.position.u = node_index+1
     })
 
     this.computeParametricV()
@@ -2349,10 +2361,103 @@ export abstract class ClassTemplate_DrawingArea
   public orderElementOnDA() {
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
-      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, this._list_g_element) })
+      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, [...this._list_g_element].reverse()) })
       .order()
   }
 
+  /**
+   * Swaps node style order for selected nodes
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public moveOrderStyleInSelectedNodes = (style_src: Class_NodeStyle, style_trgt: Class_NodeStyle) => {
+    // Save old value that can be used in undo
+    const list_old_style: { [x: string]: Class_NodeStyle[] } = {}
+    this.selected_nodes_list.forEach(n => list_old_style[n.id] = n.style)
+
+    // Function undo
+    const inv_changeStyleOrder = () => {
+      this.selected_nodes_list.forEach(n => {
+        n.style = list_old_style[n.id]
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+    }
+
+    // Function original
+    const _changeStyleOrder = () => {
+      this.selected_nodes_list.forEach(n => {
+        const idx_src = n.style.indexOf(style_src)
+        const idx_trgt = n.style.indexOf(style_trgt)
+
+        // if node doesn't have both style, don't continue this iterations
+        if (idx_src == -1 || idx_trgt == -1)
+          return
+
+        // Remove element to move from the array of element order
+        const el_to_move = n.style.splice(idx_src, 1)
+        // Add the element  the element target in the order array
+        n.style.splice(idx_trgt, 0, el_to_move[0])
+
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_changeStyleOrder)
+    this.application_data.history.saveRedo(_changeStyleOrder)
+    // Execute original function
+    _changeStyleOrder()
+  }
+
+  /**
+   * Swaps flow style order for selected flows
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public moveOrderStyleInSelectedFlows = (style_src: Class_LinkStyle, style_trgt: Class_LinkStyle) => {
+    // Save old value that can be used in undo
+    const list_old_style: { [x: string]: Class_LinkStyle[] } = {}
+    this.selected_links_list.forEach(n => list_old_style[n.id] = n.style)
+
+    // Function undo
+    const inv_changeStyleOrder = () => {
+      this.selected_links_list.forEach(n => {
+        n.style = list_old_style[n.id]
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    // Function original
+    const _changeStyleOrder = () => {
+      this.selected_links_list.forEach(n => {
+        const idx_src = n.style.indexOf(style_src)
+        const idx_trgt = n.style.indexOf(style_trgt)
+
+        // if node doesn't have both style, don't continue this iterations
+        if (idx_src == -1 || idx_trgt == -1)
+          return
+
+        // Remove element to move from the array of element order
+        const el_to_move = n.style.splice(idx_src, 1)
+        // Add the element  the element target in the order array
+        n.style.splice(idx_trgt, 0, el_to_move[0])
+
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_changeStyleOrder)
+    this.application_data.history.saveRedo(_changeStyleOrder)
+    // Execute original function
+    _changeStyleOrder()
+  }
 
   // PRIVATE METHODS ==================================================================
 
@@ -2383,8 +2488,10 @@ export abstract class ClassTemplate_DrawingArea
       .attr('fill', this.color)
       .attr('width', this.width)
       .attr('height', this.height)
-      .style('stroke-width', 5)
-      .style('stroke', default_black_color)
+    if (!this.static) {
+      this.d3_selection_bg?.select('rect').style('stroke-width', 5)
+      this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
+    }
     this.drawCursor()
   }
 
@@ -2772,7 +2879,7 @@ export abstract class ClassTemplate_DrawingArea
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_node_style.position.type == 'parametric') {
+        if (this.sankey.default_node_style.position && this.sankey.default_node_style.position.type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
               this.computeParametrization()
@@ -2934,6 +3041,15 @@ export abstract class ClassTemplate_DrawingArea
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
+
+      // Launch waiting process to redraw handler with corresponding size (it take into account DA zoom scale)
+      // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
+      this.application_data._add_waiting_process('redraw_handler', () => {
+        this.d3_selection_handlers?.selectAll('.gg_handler').each((evt) => {
+          const handle = evt as TypeGeneric_Handler
+          handle.draw()
+        })
+      }, 500)
     }
   }
 
@@ -3048,6 +3164,9 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
+    if (this.static && window.sankey?.topbar == false) {
+      return 0
+    }
     return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5 * parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 

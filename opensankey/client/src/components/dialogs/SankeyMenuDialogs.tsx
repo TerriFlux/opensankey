@@ -704,7 +704,6 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> = (
   {
     new_data,
-    additional_file_save_json_option,
     ClickSaveDiagram
   }: FCType_ApplySaveJSONDialog
 ) => {
@@ -742,7 +741,7 @@ export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> 
             onChange={(evt) => { new_data.options_save_json.mode_visible_element = evt.target.checked; setCount(a => a + 1) }}>
             {t('Menu.VisibleElement')}
           </Checkbox>
-          {additional_file_save_json_option.map(el => <React.Fragment key={'add_save_'}>{el}</React.Fragment>)}
+          {new_data.menu_configuration.additionalMenus.current.additional_file_save_json_option.map(el => <React.Fragment key={'add_save_'}>{el}</React.Fragment>)}
         </Box>
       </ModalBody>
       <ModalFooter>

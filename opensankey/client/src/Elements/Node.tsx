@@ -59,7 +59,8 @@ import {
 } from './Link'
 
 import {
-  ClassAbstract_NodeElement
+  ClassAbstract_NodeElement,
+  ClassAbstract_NodeStyle
 } from '../types/AbstractNode'
 import {
   Type_ElementPosition,
@@ -102,6 +103,9 @@ export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_Drawin
 
 export const default_selected_stroke_width = 3
 export const label_margin = 5  //Create a margin so the label don't stick to shape when the label is on the right or left of the shape
+export type keysStyle = keyof Class_NodeStyle
+// export  type valueTypeStyle=typeof Class_NodeAttribute[keysStyle]
+
 // SPECIFIC FUNCTIONS *******************************************************************
 
 export function sortNodesElements(
@@ -169,7 +173,7 @@ export abstract class ClassTemplate_NodeElement
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
     position: Type_ElementPosition,
-    style: Class_NodeStyle,
+    style: Class_NodeStyle[],
     attributes: Class_NodeAttribute
     position_x_label?: number // Relative x position of label when dragged (optionnal)
     position_y_label?: number // Relative y position of label when dragged (optionnal)
@@ -257,13 +261,13 @@ export abstract class ClassTemplate_NodeElement
       drawing_area: drawing_area,
       sankey: drawing_area.sankey as Type_GenericSankey,
       position: structuredClone(default_element_position),
-      style: drawing_area.sankey.default_node_style as Class_NodeStyle,
+      style: [drawing_area.sankey.default_node_style] as Class_NodeStyle[],
       attributes: new Class_NodeAttribute()
     }
     // Link with default style
-    this._display.style.addReference(this)
+    this._display.style[0].addReference(this)
 
-    drawing_area.list_g_element.push(this.id)
+    drawing_area.list_g_element.unshift(this.id)
   }
 
   // CLEANING METHODS ===================================================================
@@ -298,7 +302,7 @@ export abstract class ClassTemplate_NodeElement
     this._leveltaggs_as_antitagged = []
     this._taggs_dict = {}
     // Remove reference of self in style
-    this.style.removeReference(this)
+    this.style.forEach(s => s.removeReference(this))
   }
 
   // COPY METHODS =======================================================================
@@ -331,14 +335,9 @@ export abstract class ClassTemplate_NodeElement
     // Name
     this._name = _.name
     // Update style
-    if (this._display.style.id !== _._display.style.id) {
-      let style = this._display.sankey.node_styles_dict[_._display.style.id] as Class_NodeStyle
-      if (style === undefined) {
-        style = this.sankey.addNewNodeStyle(_._display.style.id, _._display.style.name) as Class_NodeStyle
-        style.copyFrom(_._display.style)
-      }
-      this.style = style
-    }
+
+    this._display.style = _._display.style
+
     // Local attributes
     this._display.attributes.copyFrom(_._display.attributes)
     // Display
@@ -529,7 +528,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
     if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
     // Fill style & local attributes
-    json_object['style'] = this.style.id
+    json_object['style'] = this.style.map(s => s.id)
     json_object['local'] = this._display.attributes.toJSON()
     // Tooltip
     if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
@@ -615,8 +614,8 @@ export abstract class ClassTemplate_NodeElement
     this._display.position_x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
     // Update style & local attributes
-    const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
-    this.style = this.sankey.node_styles_dict[style_id] as Class_NodeStyle
+    const style_id = getStringListFromJSON(json_node_object, 'style', [default_style_id])
+    this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_NodeStyle[]
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
@@ -794,14 +793,7 @@ export abstract class ClassTemplate_NodeElement
   }
 
   public drawAsSelected() {
-    if (!this.shape_visible && this.is_selected) {
-      // if selected border is highlighted even if shape is not visible
-      this._display.attributes.shape_visible = true
-      this._drawShape()
-      this._display.attributes.shape_visible = false
-      this.d3_selection_g_shape?.selectAll('.node_shape')
-        .attr('fill-opacity', 0)
-    }
+    this._drawShape()
     // Change stroke
     this.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
@@ -861,6 +853,16 @@ export abstract class ClassTemplate_NodeElement
         parent.input_links_list.forEach(l=>l.source.draw())
         parent.output_links_list.forEach(l=>l.target.draw())
       } 
+      //   parent.input_links_list.forEach(l => l.source.draw())
+      //   parent.output_links_list.forEach(l => l.target.draw())
+      // } else {
+      //   //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
+      //   const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
+      //   dim.setForceToShowParent()
+      //   const parent = dim.parent
+      //   parent.input_links_list.forEach(l => { l.source.draw() })
+      //   parent.output_links_list.forEach(l => { l.target.draw() })
+      // }
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
@@ -951,7 +953,7 @@ export abstract class ClassTemplate_NodeElement
   // Styles / attributes related methods ------------------------------------------------
 
   public useDefaultStyle() {
-    this.style = this.sankey.default_node_style as Class_NodeStyle
+    this.style = [this.sankey.default_node_style as Class_NodeStyle]
   }
 
   public resetAttributes() {
@@ -1079,7 +1081,7 @@ export abstract class ClassTemplate_NodeElement
         .filter(tag => (tag.group === tagg_for_colormap))
       const selected_tags_for_colormap = tags_for_colormap
         .filter(tag => tag.is_selected)
-      if (selected_tags_for_colormap.length > 0 && tags_for_colormap.length != tagg_for_colormap.tags_list.length) {
+      if (selected_tags_for_colormap.length > 0 ) {
         // if a node has several tags we take the first one. The logic is given
         // by the following example. Meuble en hêtre has two tags hêtre and feuillu
         // we put hêtre first as it is the most desagregated. This way we can display
@@ -1316,6 +1318,20 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
+ * Remove and delete given link if it is at the same time source & target
+ * @param {Type_GenericLinkElement} link
+ * @memberof ClassTemplate_NodeElement
+ */
+  public deleteRecyclingLinkOnSameNode(link: Type_GenericLinkElement) {
+    if (this._output_links[link.id] !== undefined && this._input_links[link.id] !== undefined) {
+      this.removeOutputLink(link)
+      this.removeInputLink(link)
+      link.delete()
+      this.draw()
+    }
+  }
+
+  /**
    * Remove link reference from all related attributes it this node.
    * /!\ Keep as private method. This can create dangling ref for links
    *
@@ -1410,10 +1426,11 @@ export abstract class ClassTemplate_NodeElement
    * @memberof ClassTemplate_NodeElement
    */
   public getLinksOrdered(_: Type_Side) {
+    const doublon: Type_AnyLinkElement[] = []
     return this._links_order.filter(link => {
-      return (
-        (link.target === this && link.target_side === _) ||
-        (link.source === this && link.source_side === _))
+      const check = !doublon.includes(link) && ((link.target === this && link.target_side === _) || (link.source === this && link.source_side === _))
+      doublon.push(link)
+      return (check)
     })
   }
 
@@ -1703,41 +1720,41 @@ export abstract class ClassTemplate_NodeElement
     // Clean previous shape
     this.d3_selection_g_shape?.selectAll('.node_shape').remove()
     // Do the rest only if shape is visible
-      // Compute shape attributes
-      const width = this.getShapeWidthToUse()
-      const height = this.getShapeHeightToUse()
-      const color = this.getShapeColorToUse()
-      // Apply shape value
-      if (this.shape_type === 'rect') {
-        this.d3_selection_g_shape?.append('rect')
-          .classed('node', true)
-          .classed('node_shape', true)
-          .attr('width', width)
-          .attr('height', height)
-      }
-      else if (this.shape_type === 'ellipse') {
-        this.d3_selection_g_shape?.append('ellipse')
-          .classed('node', true)
-          .classed('node_shape', true)
-          .attr('cx', width / 2)
-          .attr('cy', height / 2)
-          .attr('rx', width / 2)
-          .attr('ry', height / 2)
-      }
-      else if (this.shape_type === 'arrow') {
-        this.d3_selection_g_shape?.append('path')
-          .classed('node', true)
-          .classed('node_shape', true)
-          .attr('d', this.getArrowPath())
-      }
-      // Apply common properties
-      this.d3_selection_g_shape?.selectAll('.node_shape')
-        .attr('id', this.id)
-        .attr('fill-opacity', this.shape_visible ? this.shape_opacity : '0')
-        .attr('fill', color)
-        .attr('stroke', 'black')
-        .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
-        .attr('stroke-opacity', this.is_selected ? 1 : 0)
+    // Compute shape attributes
+    const width = this.getShapeWidthToUse()
+    const height = this.getShapeHeightToUse()
+    const color = this.getShapeColorToUse()
+    // Apply shape value
+    if (this.shape_type === 'rect') {
+      this.d3_selection_g_shape?.append('rect')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('width', width)
+        .attr('height', height)
+    }
+    else if (this.shape_type === 'ellipse') {
+      this.d3_selection_g_shape?.append('ellipse')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('cx', width / 2)
+        .attr('cy', height / 2)
+        .attr('rx', width / 2)
+        .attr('ry', height / 2)
+    }
+    else if (this.shape_type === 'arrow') {
+      this.d3_selection_g_shape?.append('path')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('d', this.getArrowPath())
+    }
+    // Apply common properties
+    this.d3_selection_g_shape?.selectAll('.node_shape')
+      .attr('id', this.id)
+      .attr('fill-opacity', this.shape_visible ? this.shape_opacity : '0')
+      .attr('fill', color)
+      .attr('stroke', 'black')
+      .attr('stroke-width', this.is_selected ? default_selected_stroke_width : 0)
+      .attr('stroke-opacity', this.is_selected ? 1 : 0)
   }
 
   /**
@@ -2028,29 +2045,29 @@ export abstract class ClassTemplate_NodeElement
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2780,6 +2797,9 @@ export abstract class ClassTemplate_NodeElement
     let dx_bottom = this.getLinksStartingPositionOffSet('bottom')
     // List of links to redraw
     const link_to_redraw: Type_GenericLinkElement[] = [] // avoid recomputation
+
+    const doublon:Type_AnyLinkElement[]=[]
+    
     // Loop on all links to compute starting / ending position
     this._links_order
       .forEach(link => {
@@ -2800,7 +2820,7 @@ export abstract class ClassTemplate_NodeElement
         const thickness = link.thickness
         const handle_position_shift = 5
         // Current node is link's source
-        if (link.source === this) {
+        if (link.source === this && !doublon.includes(link)) {
           let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.source_side === 'right') {
@@ -2851,9 +2871,10 @@ export abstract class ClassTemplate_NodeElement
                 .d3_selection?.attr('class', 'node_io ' + link.source_side)
             }
           }
+          doublon.push(link)
         }
         // Or current node is link's target
-        if (link.target === this) {
+        else if (link.target === this) {
           let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.target_side === 'right') {
@@ -3174,6 +3195,21 @@ export abstract class ClassTemplate_NodeElement
       }
     }
   }
+
+  /**
+   * Function that return the frist style that has the k attribute,
+   * if not take default node style that is guaranted to have the attribute.
+   * 
+   * Go from last style added to oldest (default style) 
+   *
+   * @param {keyof Class_NodeStyle} k
+   * @return {*} 
+   * @memberof ClassTemplate_NodeElement
+   */
+  public getStyleWithAttr(k: keyof Class_NodeStyle) {
+    return this._display.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_node_style as Class_NodeStyle
+  }
+
 
   // GETTERS / SETTERS ==================================================================
   public get display() { return this._display }
@@ -3534,18 +3570,19 @@ export abstract class ClassTemplate_NodeElement
    * @memberof Class_Node
    */
   public get style() {
-    return this._display.style
+    return this._display.style as Class_NodeStyle[]
   }
+
 
   /**
   * Set style key of node
   * @memberof Class_Node
   */
-  public set style(_: Class_NodeStyle) {
+  public set style(_: Class_NodeStyle[]) {
     if (!_) return
-    this._display.style.removeReference(this)
+    this._display.style.forEach(style => style.removeReference(this))
     this._display.style = _
-    _.addReference(this)
+    _.forEach(style => style.addReference(this))
     this.draw()
   }
 
@@ -3557,8 +3594,9 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.type !== undefined) {
       return this._display.position.type
     }
-    else if (this._display.style.position.type !== undefined) {
-      return this._display.style.position.type
+    const valueOfStyle = this.getStyleWithAttr('position')
+    if (valueOfStyle.position.type !== undefined) {
+      return valueOfStyle.position.type
     }
     return default_position_type
   }
@@ -3579,8 +3617,9 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.dx !== undefined) {
       return this._display.position.dx
     }
-    else if (this._display.style.position.dx !== undefined) {
-      return this._display.style.position.dx
+    const valueOfStyle = this.getStyleWithAttr('position')
+    if (valueOfStyle.position.dx !== undefined) {
+      return valueOfStyle.position.dx
     }
     return default_dx
   }
@@ -3600,8 +3639,10 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.dy !== undefined) {
       return this._display.position.dy
     }
-    else if (this._display.style.position.dy !== undefined) {
-      return this._display.style.position.dy
+    const valueOfStyle = this.getStyleWithAttr('position')
+
+    if (valueOfStyle.position.dy !== undefined) {
+      return valueOfStyle.position.dy
     }
     return default_dy
   }
@@ -3621,8 +3662,10 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.relative_dx !== undefined) {
       return this._display.position.relative_dx
     }
-    else if (this._display.style.position.relative_dx !== undefined) {
-      return this._display.style.position.relative_dx
+    const valueOfStyle = this.getStyleWithAttr('position')
+
+    if (valueOfStyle.position.relative_dx !== undefined) {
+      return valueOfStyle.position.relative_dx
     }
     return default_relative_dx
   }
@@ -3643,8 +3686,10 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.relative_dy !== undefined) {
       return this._display.position.relative_dy
     }
-    else if (this._display.style.position.relative_dy !== undefined) {
-      return this._display.style.position.relative_dy
+    const valueOfStyle = this.getStyleWithAttr('position')
+
+    if (valueOfStyle.position.relative_dy !== undefined) {
+      return valueOfStyle.position.relative_dy
     }
     return default_relative_dy
   }
@@ -3668,8 +3713,9 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.attributes.shape_visible !== undefined) {
       return this._display.attributes.shape_visible
     }
-    else if (this._display.style.shape_visible !== undefined) {
-      return this._display.style.shape_visible
+    const valueOfStyle = this.getStyleWithAttr('shape_visible')
+    if (valueOfStyle.shape_visible !== undefined) {
+      return valueOfStyle.shape_visible
     }
     return default_shape_visible
   }
@@ -3690,8 +3736,11 @@ export abstract class ClassTemplate_NodeElement
   public get shape_min_width() {
     if (this._display.attributes.shape_min_width !== undefined) {
       return this._display.attributes.shape_min_width
-    } else if (this._display.style.shape_min_width !== undefined) {
-      return this._display.style.shape_min_width
+    }
+    const valueOfStyle = this.getStyleWithAttr('shape_min_width')
+
+    if (valueOfStyle.shape_min_width !== undefined) {
+      return valueOfStyle.shape_min_width
     }
     return default_shape_min_width
   }
@@ -3712,8 +3761,11 @@ export abstract class ClassTemplate_NodeElement
   public get shape_min_height() {
     if (this._display.attributes.shape_min_height !== undefined) {
       return this._display.attributes.shape_min_height
-    } else if (this._display.style.shape_min_height !== undefined) {
-      return this._display.style.shape_min_height
+    }
+    const valueOfStyle = this.getStyleWithAttr('shape_min_height')
+
+    if (valueOfStyle.shape_min_height !== undefined) {
+      return valueOfStyle.shape_min_height
     }
     return default_shape_min_height
   }
@@ -3734,9 +3786,13 @@ export abstract class ClassTemplate_NodeElement
   public get shape_color() {
     if (this._display.attributes.shape_color !== undefined) {
       return this._display.attributes.shape_color
-    } else if (this._display.style.shape_color !== undefined) {
-      return this._display.style.shape_color
     }
+    const valueOfStyle = this.getStyleWithAttr('shape_color')
+
+    if (valueOfStyle.shape_color !== undefined) {
+      return valueOfStyle.shape_color
+    }
+
     return default_shape_color
   }
 
@@ -3747,8 +3803,11 @@ export abstract class ClassTemplate_NodeElement
   public get shape_opacity() {
     if (this._display.attributes.shape_opacity !== undefined) {
       return this._display.attributes.shape_opacity
-    } else if (this._display.style.shape_opacity !== undefined) {
-      return this._display.style.shape_opacity
+    }
+    const valueOfStyle = this.getStyleWithAttr('shape_opacity')
+
+    if (valueOfStyle.shape_opacity !== undefined) {
+      return valueOfStyle.shape_opacity
     }
     return default_shape_opacity
   }
@@ -3782,8 +3841,11 @@ export abstract class ClassTemplate_NodeElement
   public get shape_type() {
     if (this._display.attributes.shape_type !== undefined) {
       return this._display.attributes.shape_type
-    } else if (this._display.style.shape_type !== undefined) {
-      return this._display.style.shape_type
+    }
+    const valueOfStyle = this.getStyleWithAttr('shape_type')
+
+    if (valueOfStyle.shape_type !== undefined) {
+      return valueOfStyle.shape_type
     }
     return default_shape_type
   }
@@ -3804,8 +3866,11 @@ export abstract class ClassTemplate_NodeElement
   public get shape_arrow_angle_factor() {
     if (this._display.attributes.shape_arrow_angle_factor !== undefined) {
       return this._display.attributes.shape_arrow_angle_factor
-    } else if (this._display.style.shape_arrow_angle_factor !== undefined) {
-      return this._display.style.shape_arrow_angle_factor
+    }
+    const valueOfStyle = this.getStyleWithAttr('shape_arrow_angle_factor')
+
+    if (valueOfStyle.shape_arrow_angle_factor !== undefined) {
+      return valueOfStyle.shape_arrow_angle_factor
     }
     return default_shape_arrow_angle_factor
   }
@@ -3826,8 +3891,11 @@ export abstract class ClassTemplate_NodeElement
   public get shape_arrow_angle_direction() {
     if (this._display.attributes.shape_arrow_angle_direction !== undefined) {
       return this._display.attributes.shape_arrow_angle_direction
-    } else if (this._display.style.shape_arrow_angle_direction !== undefined) {
-      return this._display.style.shape_arrow_angle_direction
+    }
+    const valueOfStyle = this.getStyleWithAttr('shape_arrow_angle_direction')
+
+    if (valueOfStyle.shape_arrow_angle_direction !== undefined) {
+      return valueOfStyle.shape_arrow_angle_direction
     }
     return default_shape_arrow_angle_direction
   }
@@ -3848,8 +3916,11 @@ export abstract class ClassTemplate_NodeElement
   public get shape_color_sustainable() {
     if (this._display.attributes.shape_color_sustainable !== undefined) {
       return this._display.attributes.shape_color_sustainable
-    } else if (this._display.style.shape_color_sustainable !== undefined) {
-      return this._display.style.shape_color_sustainable
+    }
+    const valueOfStyle = this.getStyleWithAttr('shape_color_sustainable')
+
+    if (valueOfStyle.shape_color_sustainable !== undefined) {
+      return valueOfStyle.shape_color_sustainable
     }
     return default_shape_color_sustainable
   }
@@ -3873,8 +3944,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_is_visible() {
     if (this._display.attributes.name_label_is_visible !== undefined) {
       return this._display.attributes.name_label_is_visible
-    } else if (this._display.style.name_label_is_visible !== undefined) {
-      return this._display.style.name_label_is_visible
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_is_visible')
+    if (valueOfStyle.name_label_is_visible !== undefined) {
+      return valueOfStyle.name_label_is_visible
     }
     return default_node_name_label_is_visible
   }
@@ -3895,8 +3968,11 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_font_family() {
     if (this._display.attributes.name_label_font_family !== undefined) {
       return this._display.attributes.name_label_font_family
-    } else if (this._display.style.name_label_font_family !== undefined) {
-      return this._display.style.name_label_font_family
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_is_visible')
+
+    if (valueOfStyle.name_label_font_family !== undefined) {
+      return valueOfStyle.name_label_font_family
     }
     return default_node_name_label_font_family
   }
@@ -3917,8 +3993,11 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_font_size() {
     if (this._display.attributes.name_label_font_size !== undefined) {
       return this._display.attributes.name_label_font_size
-    } else if (this._display.style.name_label_font_size !== undefined) {
-      return this._display.style.name_label_font_size
+    }
+
+    const valueOfStyle = this.getStyleWithAttr('name_label_font_size')
+    if (valueOfStyle.name_label_font_size !== undefined) {
+      return valueOfStyle.name_label_font_size
     }
     return default_node_name_label_font_size
   }
@@ -3939,8 +4018,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_uppercase() {
     if (this._display.attributes.name_label_uppercase !== undefined) {
       return this._display.attributes.name_label_uppercase
-    } else if (this._display.style.name_label_uppercase !== undefined) {
-      return this._display.style.name_label_uppercase
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_uppercase')
+    if (valueOfStyle.name_label_uppercase !== undefined) {
+      return valueOfStyle.name_label_uppercase
     }
     return default_node_name_label_uppercase
   }
@@ -3961,8 +4042,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_bold() {
     if (this._display.attributes.name_label_bold !== undefined) {
       return this._display.attributes.name_label_bold
-    } else if (this._display.style.name_label_bold !== undefined) {
-      return this._display.style.name_label_bold
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_bold')
+    if (valueOfStyle.name_label_bold !== undefined) {
+      return valueOfStyle.name_label_bold
     }
     return default_node_name_label_bold
   }
@@ -3983,8 +4066,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_italic() {
     if (this._display.attributes.name_label_italic !== undefined) {
       return this._display.attributes.name_label_italic
-    } else if (this._display.style.name_label_italic !== undefined) {
-      return this._display.style.name_label_italic
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_italic')
+    if (valueOfStyle.name_label_italic !== undefined) {
+      return valueOfStyle.name_label_italic
     }
     return default_node_name_label_italic
   }
@@ -4005,8 +4090,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_box_width() {
     if (this._display.attributes.name_label_box_width !== undefined) {
       return this._display.attributes.name_label_box_width
-    } else if (this._display.style.name_label_box_width !== undefined) {
-      return this._display.style.name_label_box_width
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_box_width')
+    if (valueOfStyle.name_label_box_width !== undefined) {
+      return valueOfStyle.name_label_box_width
     }
     return default_node_name_label_box_width
   }
@@ -4027,8 +4114,11 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_color() {
     if (this._display.attributes.name_label_color !== undefined) {
       return this._display.attributes.name_label_color
-    } else if (this._display.style.name_label_color !== undefined) {
-      return this._display.style.name_label_color
+    }
+
+    const valueOfStyle = this.getStyleWithAttr('name_label_color')
+    if (valueOfStyle.name_label_color !== undefined) {
+      return valueOfStyle.name_label_color
     }
     return default_node_name_label_color
   }
@@ -4049,8 +4139,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_vert() {
     if (this._display.attributes.name_label_vert !== undefined) {
       return this._display.attributes.name_label_vert
-    } else if (this._display.style.name_label_vert !== undefined) {
-      return this._display.style.name_label_vert
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_vert')
+    if (valueOfStyle.name_label_vert !== undefined) {
+      return valueOfStyle.name_label_vert
     }
     return default_node_name_label_vert
   }
@@ -4072,8 +4164,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_vert_shift() {
     if (this._display.attributes.name_label_vert_shift !== undefined) {
       return this._display.attributes.name_label_vert_shift
-    } else if (this._display.style.name_label_vert_shift !== undefined) {
-      return this._display.style.name_label_vert_shift
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_vert_shift')
+    if (valueOfStyle.name_label_vert_shift !== undefined) {
+      return valueOfStyle.name_label_vert_shift
     }
     return default_node_name_label_vert_shift
   }
@@ -4094,8 +4188,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_horiz() {
     if (this._display.attributes.name_label_horiz !== undefined) {
       return this._display.attributes.name_label_horiz
-    } else if (this._display.style.name_label_horiz !== undefined) {
-      return this._display.style.name_label_horiz
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_horiz')
+    if (valueOfStyle.name_label_horiz !== undefined) {
+      return valueOfStyle.name_label_horiz
     }
     return default_node_name_label_horiz
   }
@@ -4117,8 +4213,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_horiz_shift() {
     if (this._display.attributes.name_label_horiz_shift !== undefined) {
       return this._display.attributes.name_label_horiz_shift
-    } else if (this._display.style.name_label_horiz_shift !== undefined) {
-      return this._display.style.name_label_horiz_shift
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_horiz_shift')
+    if (valueOfStyle.name_label_horiz_shift !== undefined) {
+      return valueOfStyle.name_label_horiz_shift
     }
     return default_node_name_label_horiz_shift
   }
@@ -4140,8 +4238,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_background() {
     if (this._display.attributes.name_label_background !== undefined) {
       return this._display.attributes.name_label_background
-    } else if (this._display.style.name_label_background !== undefined) {
-      return this._display.style.name_label_background
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_background')
+    if (valueOfStyle.name_label_background !== undefined) {
+      return valueOfStyle.name_label_background
     }
     return default_node_name_label_background
   }
@@ -4162,8 +4262,10 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_background_color() {
     if (this._display.attributes.name_label_background_color !== undefined) {
       return this._display.attributes.name_label_background_color
-    } else if (this._display.style.name_label_background_color !== undefined) {
-      return this._display.style.name_label_background_color
+    }
+    const valueOfStyle = this.getStyleWithAttr('name_label_background_color')
+    if (valueOfStyle.name_label_background_color !== undefined) {
+      return valueOfStyle.name_label_background_color
     }
     return default_node_name_label_background_color
   }
@@ -4187,8 +4289,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_is_visible() {
     if (this._display.attributes.value_label_is_visible !== undefined) {
       return this._display.attributes.value_label_is_visible
-    } else if (this._display.style.value_label_is_visible !== undefined) {
-      return this._display.style.value_label_is_visible
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_is_visible')
+    if (valueOfStyle.value_label_is_visible !== undefined) {
+      return valueOfStyle.value_label_is_visible
     }
     return default_node_value_label_is_visible
   }
@@ -4209,8 +4313,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_vert() {
     if (this._display.attributes.value_label_vert !== undefined) {
       return this._display.attributes.value_label_vert
-    } else if (this._display.style.value_label_vert !== undefined) {
-      return this._display.style.value_label_vert
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_vert')
+    if (valueOfStyle.value_label_vert !== undefined) {
+      return valueOfStyle.value_label_vert
     }
     return default_node_value_label_vert
   }
@@ -4231,8 +4337,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_vert_shift() {
     if (this._display.attributes.value_label_vert_shift !== undefined) {
       return this._display.attributes.value_label_vert_shift
-    } else if (this._display.style.value_label_vert_shift !== undefined) {
-      return this._display.style.value_label_vert_shift
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_vert_shift')
+    if (valueOfStyle.value_label_vert_shift !== undefined) {
+      return valueOfStyle.value_label_vert_shift
     }
     return default_node_value_label_vert_shift
   }
@@ -4253,8 +4361,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_horiz() {
     if (this._display.attributes.value_label_horiz !== undefined) {
       return this._display.attributes.value_label_horiz
-    } else if (this._display.style.value_label_horiz !== undefined) {
-      return this._display.style.value_label_horiz
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_horiz')
+    if (valueOfStyle.value_label_horiz !== undefined) {
+      return valueOfStyle.value_label_horiz
     }
     return default_node_value_label_horiz
   }
@@ -4275,8 +4385,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_horiz_shift() {
     if (this._display.attributes.value_label_horiz_shift !== undefined) {
       return this._display.attributes.value_label_horiz_shift
-    } else if (this._display.style.value_label_horiz_shift !== undefined) {
-      return this._display.style.value_label_horiz_shift
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_horiz_shift')
+    if (valueOfStyle.value_label_horiz_shift !== undefined) {
+      return valueOfStyle.value_label_horiz_shift
     }
     return default_node_value_label_horiz_shift
   }
@@ -4297,8 +4409,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_font_size() {
     if (this._display.attributes.value_label_font_size !== undefined) {
       return this._display.attributes.value_label_font_size
-    } else if (this._display.style.value_label_font_size !== undefined) {
-      return this._display.style.value_label_font_size
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_font_size')
+    if (valueOfStyle.value_label_font_size !== undefined) {
+      return valueOfStyle.value_label_font_size
     }
     return default_node_name_label_font_size
   }
@@ -4319,8 +4433,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_background() {
     if (this._display.attributes.value_label_background !== undefined) {
       return this._display.attributes.value_label_background
-    } else if (this._display.style.value_label_background !== undefined) {
-      return this._display.style.value_label_background
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_background')
+    if (valueOfStyle.value_label_background !== undefined) {
+      return valueOfStyle.value_label_background
     }
     return default_node_value_label_background
   }
@@ -4341,8 +4457,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_background_color() {
     if (this._display.attributes.value_label_background_color !== undefined) {
       return this._display.attributes.value_label_background_color
-    } else if (this._display.style.value_label_background_color !== undefined) {
-      return this._display.style.value_label_background_color
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_background_color')
+    if (valueOfStyle.value_label_background_color !== undefined) {
+      return valueOfStyle.value_label_background_color
     }
     return default_node_value_label_background_color
   }
@@ -4363,8 +4481,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_color() {
     if (this._display.attributes.value_label_color !== undefined) {
       return this._display.attributes.value_label_color
-    } else if (this._display.style.value_label_color !== undefined) {
-      return this._display.style.value_label_color
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_color')
+    if (valueOfStyle.value_label_color !== undefined) {
+      return valueOfStyle.value_label_color
     }
     return default_node_name_label_color
   }
@@ -4385,8 +4505,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_uppercase() {
     if (this._display.attributes.value_label_uppercase !== undefined) {
       return this._display.attributes.value_label_uppercase
-    } else if (this._display.style.value_label_uppercase !== undefined) {
-      return this._display.style.value_label_uppercase
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_uppercase')
+    if (valueOfStyle.value_label_uppercase !== undefined) {
+      return valueOfStyle.value_label_uppercase
     }
     return default_node_name_label_uppercase
   }
@@ -4407,8 +4529,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_bold() {
     if (this._display.attributes.value_label_bold !== undefined) {
       return this._display.attributes.value_label_bold
-    } else if (this._display.style.value_label_bold !== undefined) {
-      return this._display.style.value_label_bold
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_bold')
+    if (valueOfStyle.value_label_bold !== undefined) {
+      return valueOfStyle.value_label_bold
     }
     return default_node_name_label_bold
   }
@@ -4429,8 +4553,9 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_italic() {
     if (this._display.attributes.value_label_italic !== undefined) {
       return this._display.attributes.value_label_italic
-    } else if (this._display.style.value_label_italic !== undefined) {
-      return this._display.style.value_label_italic
+    } const valueOfStyle = this.getStyleWithAttr('value_label_italic')
+    if (valueOfStyle.value_label_italic !== undefined) {
+      return valueOfStyle.value_label_italic
     }
     return default_node_name_label_italic
   }
@@ -4451,8 +4576,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_font_family() {
     if (this._display.attributes.value_label_font_family !== undefined) {
       return this._display.attributes.value_label_font_family
-    } else if (this._display.style.value_label_font_family !== undefined) {
-      return this._display.style.value_label_font_family
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_font_family')
+    if (valueOfStyle.value_label_font_family !== undefined) {
+      return valueOfStyle.value_label_font_family
     }
     return default_node_name_label_font_family
   }
@@ -4474,8 +4601,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_scientific_notation() {
     if (this._display.attributes.value_label_scientific_notation !== undefined) {
       return this._display.attributes.value_label_scientific_notation
-    } else if (this._display.style.value_label_scientific_notation !== undefined) {
-      return this._display.style.value_label_scientific_notation
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_scientific_notation')
+    if (valueOfStyle.value_label_scientific_notation !== undefined) {
+      return valueOfStyle.value_label_scientific_notation
     }
     return default_node_value_label_scientific_notation
   }
@@ -4493,8 +4622,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_significant_digits() {
     if (this._display.attributes.value_label_significant_digits !== undefined) {
       return this._display.attributes.value_label_significant_digits
-    } else if (this._display.style.value_label_significant_digits !== undefined) {
-      return this._display.style.value_label_significant_digits
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_significant_digits')
+    if (valueOfStyle.value_label_significant_digits !== undefined) {
+      return valueOfStyle.value_label_significant_digits
     }
     return default_node_value_label_significant_digits
   }
@@ -4506,8 +4637,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_nb_significant_digits() {
     if (this._display.attributes.value_label_nb_significant_digits !== undefined) {
       return this._display.attributes.value_label_nb_significant_digits
-    } else if (this._display.style.value_label_nb_significant_digits !== undefined) {
-      return this._display.style.value_label_nb_significant_digits
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_nb_significant_digits')
+    if (valueOfStyle.value_label_nb_significant_digits !== undefined) {
+      return valueOfStyle.value_label_nb_significant_digits
     }
     return default_node_value_label_nb_significant_digits
   }
@@ -4530,8 +4663,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_unit_visible() {
     if (this._display.attributes.value_label_unit_visible !== undefined) {
       return this._display.attributes.value_label_unit_visible
-    } else if (this._display.style.value_label_unit_visible !== undefined) {
-      return this._display.style.value_label_unit_visible
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_unit_visible')
+    if (valueOfStyle.value_label_unit_visible !== undefined) {
+      return valueOfStyle.value_label_unit_visible
     }
     return default_node_value_label_unit_visible
   }
@@ -4549,8 +4684,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_unit() {
     if (this._display.attributes.value_label_unit !== undefined) {
       return this._display.attributes.value_label_unit
-    } else if (this._display.style.value_label_unit !== undefined) {
-      return this._display.style.value_label_unit
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_unit')
+    if (valueOfStyle.value_label_unit !== undefined) {
+      return valueOfStyle.value_label_unit
     }
     return default_node_value_label_unit
   }
@@ -4568,8 +4705,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_unit_factor() {
     if (this._display.attributes.value_label_unit_factor !== undefined) {
       return this._display.attributes.value_label_unit_factor
-    } else if (this._display.style.value_label_unit_factor !== undefined) {
-      return this._display.style.value_label_unit_factor
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_unit_factor')
+    if (valueOfStyle.value_label_unit_factor !== undefined) {
+      return valueOfStyle.value_label_unit_factor
     }
     return default_node_value_label_unit_factor
   }
@@ -4587,8 +4726,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_custom_digit() {
     if (this._display.attributes.value_label_custom_digit !== undefined) {
       return this._display.attributes.value_label_custom_digit
-    } else if (this._display.style.value_label_custom_digit !== undefined) {
-      return this._display.style.value_label_custom_digit
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_custom_digit')
+    if (valueOfStyle.value_label_custom_digit !== undefined) {
+      return valueOfStyle.value_label_custom_digit
     }
     return default_node_value_label_custom_digit
   }
@@ -4606,8 +4747,10 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_nb_digit() {
     if (this._display.attributes.value_label_nb_digit !== undefined) {
       return this._display.attributes.value_label_nb_digit
-    } else if (this._display.style.value_label_nb_digit !== undefined) {
-      return this._display.style.value_label_nb_digit
+    }
+    const valueOfStyle = this.getStyleWithAttr('value_label_nb_digit')
+    if (valueOfStyle.value_label_nb_digit !== undefined) {
+      return valueOfStyle.value_label_nb_digit
     }
     return default_node_value_label_nb_digit
   }
@@ -5029,8 +5172,8 @@ export abstract class ClassTemplate_NodeElement
         new_node.addTag(tag)
       });
 
-      (new_node as Type_AnyNodeElement).style = importation ? new_node.sankey.node_styles_dict['NodeImportStyle'] as Class_NodeStyle : new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle
-      input_or_output_link.style = importation ? new_node.sankey.link_styles_dict['LinkImportStyle'] as Class_LinkStyle : new_node.sankey.link_styles_dict['LinkExportStyle'] as Class_LinkStyle
+      (new_node as Type_AnyNodeElement).style = [importation ? new_node.sankey.node_styles_dict['NodeImportStyle'] as Class_NodeStyle : new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle]
+      input_or_output_link.style = [importation ? new_node.sankey.link_styles_dict['LinkImportStyle'] as Class_LinkStyle : new_node.sankey.link_styles_dict['LinkExportStyle'] as Class_LinkStyle]
       // (new_node as Type_AnyNodeElement).show = extremity_node.show // TODO replace with an other method
 
       input_or_output_link.shape_is_recycling = false

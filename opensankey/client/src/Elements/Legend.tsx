@@ -59,6 +59,7 @@ import {
 import {
   ClassTemplate_Handler
 } from './Handler'
+import { Class_DataTag } from '../types/Tag'
 
 
 // CLASS LEGEND *************************************************************************
@@ -617,7 +618,7 @@ export class ClassTemplate_Legend
     const node_list = this.drawing_area.sankey.visible_nodes_list
 
     // Get all grp tag insind one variable
-    const all_tags = [...node_taggs, ...flux_taggs]
+    const all_tags = [...node_taggs, ...flux_taggs, ...data_taggs]
     all_tags
       .filter(tag_group => tag_group.show_legend)
       .forEach(tag_group => {
@@ -643,8 +644,8 @@ export class ClassTemplate_Legend
         const legendElements2 = this.d3_selection?.append('g').attr('transform', 'translate(0,' + this._legend_police + ')')
 
         tag_group.selected_tags_list.filter(tag => {
-          // Filter tag that doens't have element visible on the drawing_area
-          return node_list.filter(n => n.hasGivenTag(tag)).length !== 0 || flux_list.filter(f => f.hasGivenTag(tag)).length !== 0
+          // Filter tag that doens't have element visible on the drawing_area (or display them if it's a data_tag since if it's selected it is visible)
+          return node_list.filter(n => n.hasGivenTag(tag)).length !== 0 || flux_list.filter(f => f.hasGivenTag(tag)).length !== 0 || tag instanceof Class_DataTag
         })
           .forEach((tag) => {
             const tagElement = legendElements2?.append('g')
@@ -710,8 +711,8 @@ export class ClassTemplate_Legend
             this._dy += ((tagElement?.select('.name_tag').selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
           })
       })
-    const show_data = Object.values(data_taggs).filter(d => d.show_legend).length > 0
-    if (this._legend_show_dataTags && show_data) {
+    // Show wich data_tag are selected by group
+    if (this._legend_show_dataTags) {
       this._dy += this._legend_police
       Object.entries(data_taggs).forEach(tag_group => {
         // Ajout du tagGroup.name

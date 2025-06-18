@@ -44,17 +44,17 @@ import { GetRandomInt, list_palette_color } from '../../types/Utils'
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
+export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto' }}>{b ? '✓' : ''}</span>
 
 export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   new_data,
 }) => {
 
-  const { t,OSColorPicker } = new_data
-  const [forceUpdate, setForceUpdate] = useState(false)
+  const { t, OSColorPicker } = new_data
+  const [, setForceUpdate] = useState(0)
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
   ref_set_number_inputs.current(String(new_data.drawing_area.scale))
-  new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current = () => setForceUpdate(!forceUpdate)
+  new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current = () => setForceUpdate(a => a + 1)
 
   const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -75,6 +75,13 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       is_top = false
     }
     style_c_zdd = pos_y + 'px auto auto ' + pos_x + 'px'
+  }
+
+  const closeContextMenu = () => {
+    // Unset contextualized flow
+    new_data.drawing_area.is_drawing_area_contextualised = false
+    // Refresh this menu
+    setForceUpdate(a => a + 1)
   }
 
   // Functions & undo ==========================================
@@ -101,6 +108,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     new_data.history.saveRedo(_arrangeNodesToGrid)
     // Execute original attr mutation
     _arrangeNodesToGrid()
+    closeContextMenu()
   }
 
   /**
@@ -111,7 +119,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
     const _bgGrid = () => {
       new_data.drawing_area.grid_visible = !new_data.drawing_area.grid_visible
-      setForceUpdate(!forceUpdate)
+      setForceUpdate(a => a + 1)
       indicateSankeyToSaveInCache()
     }
     // Save undo/redo in data history
@@ -119,6 +127,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     new_data.history.saveRedo(_bgGrid)
     // Execute original attr mutation
     _bgGrid()
+    closeContextMenu()
   }
 
   /**
@@ -129,7 +138,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
     const _maskLegend = () => {
       new_data.drawing_area.legend.masked = !new_data.drawing_area.legend.masked
-      setForceUpdate(!forceUpdate)
+      setForceUpdate(a => a + 1)
       indicateSankeyToSaveInCache()
     }
     // Save undo/redo in data history
@@ -137,6 +146,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     new_data.history.saveRedo(_maskLegend)
     // Execute original attr mutation
     _maskLegend()
+    closeContextMenu()
   }
 
   /**
@@ -162,6 +172,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     new_data.history.saveRedo(_randColor)
     // Execute original attr mutation
     _randColor()
+    closeContextMenu()
   }
 
 
@@ -175,7 +186,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       const f = (_: number) => {
         new_data.drawing_area.scale = _
         indicateSankeyToSaveInCache()
-        setForceUpdate(!forceUpdate)
+        setForceUpdate(a => a + 1)
       }
       // Undo/redo done in setValueAndSaveHistory
       new_data.setValueAndSaveHistory(new_data.drawing_area, 'scale', evt, f)
@@ -186,14 +197,17 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   // Buttons components ==============================================================
 
   const button_bg_color = <Button variant='contextmenu_button'>
-    <Box style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
-      <label htmlFor='color_bg_zdd' style={{ margin: 0 }}>{t('Menu.BgC')}</label>
+    <Box style={{ display: 'flex', flex: '1 2' }}>
+      <label htmlFor='color_bg_zdd' style={{ margin: 'auto auto auto 0' }}>{t('Menu.BgC')}</label>
+      <Box w='100%'>
       <OSColorPicker
         initialColor={new_data.drawing_area.color}
         functionOnBlur={(new_color) => {
           new_data.drawing_area.color = new_color
+          closeContextMenu()
         }}
       />
+      </Box>
     </Box>
   </Button>
 
@@ -207,6 +221,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       <Box as={Button} variant='contextmenu_button' layerStyle='menuconfigpanel_option_name'>
         {t('MEP.Echelle')}
       </Box>
+      <Box margin={'auto'}>
       <ConfigMenuNumberInput
         t={new_data.t}
         ref_to_set_value={ref_set_number_inputs}
@@ -215,6 +230,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         minimum_value={1}
         stepper={false}
       />
+      </Box>
     </Box>
   </Box>
 
@@ -237,7 +253,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
           onChange={evt => {
             new_data.drawing_area.horizontal_spacing = +evt
             indicateSankeyToSaveInCache()
-            setForceUpdate(!forceUpdate)
+            setForceUpdate(a => a + 1)
           }}>
           <NumberInputField />
         </NumberInput>
@@ -256,7 +272,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
           onChange={evt => {
             new_data.drawing_area.vertical_spacing = +evt
             indicateSankeyToSaveInCache()
-            setForceUpdate(!forceUpdate)
+            setForceUpdate(a => a + 1)
           }}>
           <NumberInputField />
         </NumberInput>
@@ -302,16 +318,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     {full}
   </Button>
 
-  // Item to open a draggable modal with the configuration menu of the draw area
-  const button_open_layout = <Button onClick={() => {
-    new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_layout.current(true)
-    new_data.drawing_area.is_drawing_area_contextualised = false
-  }}
-  variant='contextmenu_button'
-  rightIcon={new_data.icon_library.icon_popup_menu}
-  >
-    {t('Menu.MEP')}
-  </Button>
+
 
   return new_data.drawing_area.is_drawing_area_contextualised ? <Box
     id="context_zdd_pop_over"
@@ -330,8 +337,6 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       {button_bg_grid}
       {dropdown_c_zdd_scale}
       {button_mask_leg}
-      {sep}
-      {button_open_layout}
       {sep}
       {button_fullscreen}
 

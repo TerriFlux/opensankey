@@ -55,6 +55,18 @@ export type Type_ElementPosition = {
   relative_dx?: number
   relative_dy?: number
 }
+
+export type Type_ElementPositionOptionnal = {
+  type?: Type_Position
+  x?: number
+  y?: number
+  u?: number
+  v?: number
+  dx?: number
+  dy?: number
+  relative_dx?: number
+  relative_dy?: number
+}
 export type Type_Position = 'absolute' | 'relative' | 'parametric'
 
 /**
@@ -78,7 +90,7 @@ export const default_black_color = 'black'
 export const default_background_color = '#f2f2f2'
 export const default_grid_color = '#d3d3d3'
 export const default_element_color = '#a9a9a9'
-export const default_element_color_source = 'source'
+export const default_element_color_source = 'flow'
 
 export const default_font = 'Arial,sans-serif'
 export const font_families = [
@@ -454,7 +466,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: ['edition_hierarchy','nav_hierarchy','sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'firstPlan', 'lastPlan','select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    context_node_order: ['edition_hierarchy','nav_hierarchy', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
     additional_context_node_element: {},
     // Links
     additional_menu_configuration_links: {},
@@ -462,7 +474,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
-    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'firstPlan','lastPlan', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
+    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'changePlan', 'mask_attr', 'edit_value', 'sep_3', 'assign_tag', 'sep_4'],
     additional_context_link_element: {},
 
     // Preferences

@@ -190,7 +190,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
-      {((!new_data.is_static) ||(window.sankey && window.sankey.topbar))? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />:<></>}
+      {((!new_data.is_static) ||(window.sankey && window.sankey.topbar != false ))? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />:<></>}
 
       {/* Bottom Navbar with some more info */}
       {
@@ -237,7 +237,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
                 justifySelf='end'
                 paddingRight='1.5rem'
               >
-                9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)4 56 47 00 71
+                12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
               </Box>
             </Box>
           </Box> :
