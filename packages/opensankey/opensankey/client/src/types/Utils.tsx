@@ -500,3 +500,16 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
   )
   return <></>
 }
+
+/**
+ * Function that check if url has an url variable & return it (null if there isn't one)
+ *
+ * @export
+ * @return {*} 
+ */
+export function checkForUrlToJSON() {
+  const urlParams = new URLSearchParams(window.location.search)
+  const url_var = urlParams.get('url')
+  return url_var
+
+}
