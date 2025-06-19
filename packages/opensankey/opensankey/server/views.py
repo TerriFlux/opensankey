@@ -694,7 +694,9 @@ def parse_folder(current_dir, menus, key=None):
         'artifacts',
         'Old',
         'old',
-        'Matériaux']
+        'Matériaux', 
+        'Documents'
+        ]
 
     for file_or_folder in folder_content:
         if (any([_ in file_or_folder for _ in extension_to_avoid])):

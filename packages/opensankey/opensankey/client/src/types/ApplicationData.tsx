@@ -169,16 +169,6 @@ export abstract class ClassTemplate_ApplicationData
  */
   protected _icon_library: Class_IconLibrary
 
-
-
-  /**
-   * Application logo
-   * @private
-   * @type {string}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  protected _logo: string // path to logo
-
   /**
    * All possible attr to update in copyFrom
    * @protected
@@ -361,8 +351,6 @@ export abstract class ClassTemplate_ApplicationData
     this._logo_opensankey = 'logos/logo_opensankey.png'
     // Get TerriFlux logo
     this._logo_terriflux = 'logos/logo_terriflux.png'
-    // Default logo for app
-    this._logo = this.is_static && window.sankey && window.sankey.logo ? window.sankey.logo : this._logo_opensankey
 
     // Excel processing function
     this._processFunction = {
@@ -1197,7 +1185,13 @@ export abstract class ClassTemplate_ApplicationData
 
   public get url_prefix(): string { return this._url_prefix }
 
-  public get logo(): string { return this._logo }
+  public get logo(): string { 
+      if ( this.is_static && window.sankey && window.sankey.logo) {
+      return window.sankey.logo
+    }
+    return this._logo_opensankey 
+  }
+
   public get logo_opensankey(): string { return this._logo_opensankey }
   public get logo_terriflux(): string { return this._logo_terriflux }
 
