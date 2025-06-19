@@ -51,7 +51,7 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted.filter(n=>n.dimensions_as_parent.length> 0)
   }
   let nodes_dimensions: Class_NodeDimension[] =[]
-  nodes.forEach(n=>n.dimensions_as_parent.forEach(dim=>nodes_dimensions.push(dim)))
+  nodes.forEach(n=>n.dimensions_as_parent_pure.forEach(dim=>nodes_dimensions.push(dim)))
 
   const [selectedNodesDimensions,setSelectedNodesDimensions] = useState<Class_NodeDimension[]>([])
   //selected_nodes.forEach(n=>n.dimensions_as_parent.forEach(dim=>selected_nodes_dimensions.push(dim)))
