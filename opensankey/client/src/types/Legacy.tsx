@@ -1782,6 +1782,9 @@ const convert_nodes: convert_nodesFuncType = (
             return
           }
           const output_node = data.nodes[data.links[lid].idTarget]
+          if (output_node.tags['type de noeud'] == undefined) {
+            output_node.tags['type de noeud'] = []
+          }
           if (output_node.tags['type de noeud'][0] == 'echange') {
             if (set_children) {
               output_node.dimensions[dim].force_show_children = true
