@@ -175,6 +175,7 @@ export abstract class ClassAbstract_Sankey {
   public abstract nodeTagsUpdated(): void
   public abstract fluxTagsUpdated(): void
   public abstract dataTagsUpdated(): void
+  public abstract addLevelTagGroup(id: string,name: string): ClassAbstract_ProtoLevelTagGroup
 }
 
 export abstract class ClassAbstract_ProtoTagGroup {
