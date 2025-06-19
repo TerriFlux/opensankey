@@ -165,13 +165,13 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
               >{t('useTutoJSON')}</Button>
 
               {/* Button to open the Excel file */}
-              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json.gz', '.xlsx')) ?
+              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx')) ?
                 <Button
                   variant='toolbar_button_6'
                   onClick={() => {
-                    processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx'))
+                    processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx'), new_data
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx'), new_data
                     )
                     set_show_tuto(false)
                   }}
@@ -181,13 +181,13 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
                 : <></>}
 
               {/* Button to open the Excel file reconcilied */}
-              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json.gz', '_reconciled.xlsx')) ?
+              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx')) ?
                 <Button
                   variant='toolbar_button_6'
                   onClick={() => {
-                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx'))
+                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx'), new_data
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx'), new_data
                     )
                     set_show_tuto(false)
                   }}
