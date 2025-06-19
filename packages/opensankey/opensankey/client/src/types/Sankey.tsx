@@ -37,7 +37,6 @@ import {
 import {
   ClassTemplate_LinkElement,
   defaultLinkId,
-  sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from '../Elements/Link'
 import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
@@ -798,12 +797,10 @@ export abstract class ClassTemplate_Sankey
     const links_list = (only_visible_elements ? this.visible_links_list : this.links_list)
 
     let has_results = false
-    links_list.forEach(l=>has_results = has_results || l.has_result)
-
+    links_list.forEach(l => has_results = has_results || l.has_result)
     links_list
-      .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
       .forEach(link => {
-        json_object_links[link.id] = link.toJSON({ 'with_values': with_values, 'has_results': has_results})
+        json_object_links[link.id] = link.toJSON({ 'with_values': with_values, 'has_results': has_results })
       })
     // Out
     return json_object
@@ -882,8 +879,8 @@ export abstract class ClassTemplate_Sankey
         })
     }
 
-    if (Object.keys(this._level_taggs).length>1) {
-      this.removeTagGroupWithId('level_taggs','Primaire')
+    if (Object.keys(this._level_taggs).length > 1) {
+      this.removeTagGroupWithId('level_taggs', 'Primaire')
     }
     json_entry = 'nodeTags'
     if (json_object[json_entry] !== undefined) {
@@ -992,7 +989,6 @@ export abstract class ClassTemplate_Sankey
           )
         }
       })
-
     // Then read nodes
     const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
     Object.entries(json_node_object)
@@ -1030,10 +1026,10 @@ export abstract class ClassTemplate_Sankey
       }
       const product_tag = tagg.tags_dict['produit']
       const sector_tag = tagg.tags_dict['secteur']
-      if (n.hasGivenTag(product_tag) && n.style.id === 'default') {
-        n.style = this.node_styles_dict['NodeProductStyle']
-      } else if (n.hasGivenTag(sector_tag) && n.style.id === 'default') {
-        n.style = this.node_styles_dict['NodeSectorStyle']
+      if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
+        n.style = [this.node_styles_dict['NodeProductStyle']]
+      } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
+        n.style = [this.node_styles_dict['NodeSectorStyle']]
       }
     })
     //}
@@ -1458,12 +1454,14 @@ export abstract class ClassTemplate_Sankey
     const selected_nodes = this.drawing_area.selected_nodes_list
     if (selected_nodes.length !== 0) {
       const style = selected_nodes[0].style
+      const list_id_style = style.map(s => s.id)
       let inchangee = true
-      selected_nodes.map(node => {
-        inchangee = (node.style.id === style.id) ? inchangee : false
+      selected_nodes.forEach(node => {
+        inchangee = (node.style.every(style => list_id_style.includes(style.id))) ? inchangee : false
       })
+
       return (inchangee) ?
-        CutName(style.name, 25) :
+        CutName([...style].reverse()[0].name, 25) :
         this.drawing_area.application_data.t('Noeud.multi_style')
     }
     else {
@@ -1476,10 +1474,10 @@ export abstract class ClassTemplate_Sankey
   *
   * @param {Class_NodeStyle} n_style
   */
-  public switchNodeStyle(n_style: Class_NodeStyle) {
+  public switchNodeStyle(n_style: Class_NodeStyle, add: boolean) {
     const selected_nodes = this.drawing_area.selected_nodes_list
     const { ref_selected_style_node } = this.drawing_area.application_data.menu_configuration
-    const curr_style: { [x: string]: Class_NodeStyle } = {}
+    const curr_style: { [x: string]: Class_NodeStyle[] } = {}
     selected_nodes.map(node => {
       curr_style[node.id] = node.style
     })
@@ -1495,7 +1493,14 @@ export abstract class ClassTemplate_Sankey
     const _switchToStyle = () => {
       ref_selected_style_node.current = n_style.id
       selected_nodes.map(node => {
-        node.style = n_style
+        const list_id_style_node = node.style.map(s => s.id)
+        if (list_id_style_node.includes(n_style.id) && !add) {
+          const idx = node.style.findIndex(style => style.id == n_style.id)
+          node.style.splice(idx, 1)
+        }
+        if (!list_id_style_node.includes(n_style.id) && add) {
+          node.style.push(n_style)
+        }
       })
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     }
@@ -1544,12 +1549,14 @@ export abstract class ClassTemplate_Sankey
     const selected_links = this.drawing_area.selected_links_list
     if (selected_links.length !== 0) {
       const style = selected_links[0].style
+      const list_id_style = style.map(s => s.id)
+
       let inchangee = true
       selected_links.map(link => {
-        inchangee = (link.style.id === style.id) ? inchangee : false
+        inchangee = (link.style.every(style => list_id_style.includes(style.id))) ? inchangee : false
       })
       return (inchangee) ?
-        CutName(style.name, 25) :
+        CutName([...style].reverse()[0].name, 25) :
         this.drawing_area.application_data.t('Noeud.multi_style')
     }
     else {
@@ -1562,10 +1569,10 @@ export abstract class ClassTemplate_Sankey
    *
    * @param {Class_LinkStyle} n_style
    */
-  public switchLinkStyle(n_style: Class_LinkStyle) {
+  public switchLinkStyle(n_style: Class_LinkStyle, add: boolean) {
     const selected_links = this.drawing_area.selected_links_list
     const { ref_selected_style_link } = this.drawing_area.application_data.menu_configuration
-    const curr_style: { [x: string]: Class_LinkStyle } = {}
+    const curr_style: { [x: string]: Class_LinkStyle[] } = {}
     selected_links.map(link => {
       curr_style[link.id] = link.style
     })
@@ -1582,7 +1589,14 @@ export abstract class ClassTemplate_Sankey
     const _switchToStyle = () => {
       ref_selected_style_link.current = n_style.id
       selected_links.map(link => {
-        link.style = n_style
+        const list_id_style_node = link.style.map(s => s.id)
+        if (list_id_style_node.includes(n_style.id) && !add) {
+          const idx = link.style.findIndex(style => style.id == n_style.id)
+          link.style.splice(idx, 1)
+        }
+        if (!list_id_style_node.includes(n_style.id) && add) {
+          link.style.push(n_style)
+        }
         link.drawWithNodes()
       })
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()

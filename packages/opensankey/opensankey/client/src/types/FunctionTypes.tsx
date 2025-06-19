@@ -88,7 +88,6 @@ export type FCType_MenuTop = {
  */
 export type FCType_ApplySaveJSONDialog = {
   new_data: Type_GenericApplicationData,
-  additional_file_save_json_option: JSX.Element[],
   ClickSaveDiagram: FType_ClickSaveDiagram
 }
 

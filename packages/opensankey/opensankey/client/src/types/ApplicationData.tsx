@@ -76,6 +76,13 @@ export type OSColorPickerProps = {
   textDisabled?: string
 }
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      publish: boolean
+      logo: string
+    }
+  }
 // SPECIFIC CONSTANTS ******************************************************************/
 
 export const default_save_only_visible_elements = false
@@ -85,7 +92,7 @@ export const default_file_name = 'Diagramme de Sankey'
 
 const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
-const toast_bypass: boolean = false
+const toast_bypass: boolean = window.sankey?.publish??false
 
 // CLASS APPLICATION DATA **************************************************************/
 
@@ -116,6 +123,10 @@ export abstract class ClassTemplate_ApplicationData
 
   // Attributes to transfer between sankeys
   public data_var_to_update: MutableRefObject<string[]> = React.useRef([])
+
+  protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
+  protected _waiting_time_for_processes: number = 50 // ms
+
 
   // PROTECTED ATTRIBUTES ==============================================================
 
@@ -157,16 +168,6 @@ export abstract class ClassTemplate_ApplicationData
  * @memberof ClassTemplate_ApplicationData
  */
   protected _icon_library: Class_IconLibrary
-
-
-
-  /**
-   * Application logo
-   * @private
-   * @type {string}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  protected _logo: string // path to logo
 
   /**
    * All possible attr to update in copyFrom
@@ -350,8 +351,6 @@ export abstract class ClassTemplate_ApplicationData
     this._logo_opensankey = 'logos/logo_opensankey.png'
     // Get TerriFlux logo
     this._logo_terriflux = 'logos/logo_terriflux.png'
-    // Default logo for app
-    this._logo = this._logo_opensankey
 
     // Excel processing function
     this._processFunction = {
@@ -371,7 +370,7 @@ export abstract class ClassTemplate_ApplicationData
         this._processFunction.ref_result.current('')
       }
     }
-    if (!published_mode) {
+    if (this.options.no_key_event === true) {
       // Link keyboard listener with app key down detection
       document.onkeydown = this._keyboardEventListener(this)
     }
@@ -655,6 +654,40 @@ export abstract class ClassTemplate_ApplicationData
 
   }
 
+
+/**
+ * Function to that fetch json data from an url (the file has to be compressed with gzip)
+ *
+ * @param {string} url_data
+ * @memberof ClassTemplate_ApplicationData
+ */
+public readUrlJSON(url_data: string) {
+    if (url_data.includes('.gz')) {
+      // Create url request
+      const root = window.location.origin
+      const url = root + this.url_prefix + 'url/load_json'
+      // Add a form data that contains url to json file
+      const form_data = new FormData()
+      form_data.append('url', url_data)
+
+      fetch(url, {
+        method: 'POST',
+        body: form_data
+      }).then(response => {
+        response
+          .text()
+          .then(text => {
+            const json_data = JSON.parse(text)
+            this.fromJSON(json_data)
+          })
+          .catch((error) => {
+            console.error('Error in fetchExamples - ' + error.toString())
+
+          })
+      })
+    }
+  }
+
   /**
    * Postprocessing drawing area after JSON affectation
    * @protected
@@ -815,7 +848,7 @@ export abstract class ClassTemplate_ApplicationData
       {
         selector: '.TopMenu',
         content: this.t('guide.nav_menu'),
-      },      
+      },
       {
         selector: '.tutorials_button',
         content: this.t('guide.tutorials_button'),
@@ -856,6 +889,42 @@ export abstract class ClassTemplate_ApplicationData
       functionOnBlur={functionOnBlur}
       textDisabled={textDisabled}
     />
+  }
+
+  /**
+   * Create a timed out process - Used to avoid multiple reloading of components
+   *
+   * The process_func is meant to be use by setTimeout(),
+   * and inside setTimeOut 'this' keyword has another meaning,
+   * so the current object must be passed directly as an argument.
+   * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
+   *
+   * @protected
+   * @param {string} process_id
+   * @param {() => void} process_func
+   * @memberof Class_MenuConfig
+   */
+  public _add_waiting_process(
+    process_id: string,
+    process_func: () => void,
+    timer = this._waiting_time_for_processes
+  ) {
+    this._cancel_waiting_process(process_id)
+    this._waiting_processes[process_id] = setTimeout(
+      (_this) => { process_func() },
+      timer,
+      this
+    )
+  }
+  /**
+  * Cancel a timed out process - It wont happen
+  * @protected
+  * @param {string} process_id
+  * @memberof Class_MenuConfig
+  */
+  protected _cancel_waiting_process(process_id: string) {
+    if (this._waiting_processes[process_id] !== undefined)
+      clearTimeout(this._waiting_processes[process_id])
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1071,7 +1140,7 @@ export abstract class ClassTemplate_ApplicationData
             this._toast_processes.splice(0, 1) // pop process from processes list
             resolve(200) // end
           },
-          500) // Leave 500ms of delay in order to give enough time to load spinner component
+            500) // Leave 500ms of delay in order to give enough time to load spinner component
         }),
         {
           success: {
@@ -1150,7 +1219,13 @@ export abstract class ClassTemplate_ApplicationData
 
   public get url_prefix(): string { return this._url_prefix }
 
-  public get logo(): string { return this._logo_opensankey }
+  public get logo(): string { 
+      if ( this.is_static && window.sankey && window.sankey.logo) {
+      return window.sankey.logo
+    }
+    return this._logo_opensankey 
+  }
+
   public get logo_opensankey(): string { return this._logo_opensankey }
   public get logo_terriflux(): string { return this._logo_terriflux }
 

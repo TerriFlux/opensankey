@@ -61,10 +61,12 @@ def _get_value_if_in_dict(dict, key):
     except Exception:
         return None
 
+
 # Private Functions -----------------------------------------------------------
 def _update_dict_if_value(dict, key, value):
     if value is not None:
         dict[key] = value
+
 
 # Public Functions ------------------------------------------------------------
 def extract_json_from_sankey(sankey: Sankey):
@@ -987,6 +989,7 @@ class SankeyToJson(object):
         # Update extensions
         _update_dict_if_value(data_strct, "result_min", result.min_val)
         _update_dict_if_value(data_strct, "result_max", result.max_val)
+        _update_dict_if_value(data_strct, "result_value", result.value)
         if raw_data is not None:
             _update_dict_if_value(data_strct, "data_min", raw_data.min_val)
             _update_dict_if_value(data_strct, "data_max", raw_data.max_val)
@@ -1615,7 +1618,7 @@ class JsonToSankey(object):
                 # # Apply tags
                 # for tag in datatags_list + fluxtags_list:
                 #     result.add_tag(tag)
-            ## else:
+            # else:
                 # Update value
 
             return
