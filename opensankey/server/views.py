@@ -694,7 +694,7 @@ def parse_folder(current_dir, menus, key=None):
         'artifacts',
         'Old',
         'old',
-        'Matériaux', 
+        'Matériaux',
         'Documents'
         ]
 
