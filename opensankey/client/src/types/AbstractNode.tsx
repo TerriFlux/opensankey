@@ -65,7 +65,11 @@ export abstract class ClassAbstract_NodeElement
   public abstract get taggs_list(): Class_TagGroup[]
   public abstract get grouped_taggs_dict(): { [x: string]: Class_Tag[] }
   public abstract get dimensions_as_parent(): ClassAbstract_NodeDimension[]
+  public abstract get dimensions_as_parent_pure(): ClassAbstract_NodeDimension[]
   public abstract get dimensions_as_child(): ClassAbstract_NodeDimension[]
+  public abstract get dimensions_as_child_pure(): ClassAbstract_NodeDimension[]
+  public abstract get sibling(): ClassAbstract_NodeElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>|undefined
+  public abstract set sibling(_)
   public abstract get style(): Class_NodeStyle[]
   public abstract set style(n:Class_NodeStyle[]) 
   // Mandatory methods
