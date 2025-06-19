@@ -36,6 +36,7 @@ import {
 
 import { FType_InitializeDiagrammSelector } from './components/dialogs/types/SankeyMenuDialogsTypes'
 import { OpenSankeyDiagramSelector } from './components/dialogs/SankeyMenuDialogs'
+import { checkForUrlToJSON } from './types/Utils'
 
 
 declare const window: Window &
@@ -58,7 +59,10 @@ export const initializeApplicationData: FType_InitializeApplicationData = (
   // Set openSankey
   const application_data = new Class_ApplicationData(!!window.sankey?.publish)
 
-  if (initial_data !== undefined) {
+  const url_info = checkForUrlToJSON()
+  if (url_info) {
+    application_data.readUrlJSON(url_info)
+  } else if (initial_data !== undefined) {
     application_data.fromJSON(initial_data)
   }
   return application_data
@@ -74,7 +78,7 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenus = (
   _additional_menus,
   _new_data
 ) => {
-//  No menu is added in OS via this function
+  //  No menu is added in OS via this function
 }
 
 export const initializeDiagrammSelector: FType_InitializeDiagrammSelector = (
@@ -84,7 +88,7 @@ export const initializeDiagrammSelector: FType_InitializeDiagrammSelector = (
 }
 
 // Modal Dialogs
-export const moduleDialogs: FType_ModuleDialogs = () => {return []}
+export const moduleDialogs: FType_ModuleDialogs = () => { return [] }
 
 /***************************************************************************************/
 
