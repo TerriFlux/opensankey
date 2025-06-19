@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useRef, useState } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 
 import {
   Box,
@@ -34,6 +34,7 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  useBoolean,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -49,11 +50,8 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 /*************************************************************************************************/
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
-import {
-  Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement
-} from '../../types/Types'
-import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
+import { hierarchyEditionMenu,hierarchyManipulationMenu } from './Hierarchies'
 
 
 /*************************************************************************************************/
@@ -714,184 +712,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   </Menu>
 
 
-  const btn_aggregate = (
-    (selected_nodes.length === 1) &&
-    (contextualised_node !== undefined) &&
-    (selected_nodes.includes(contextualised_node)) &&
-    (contextualised_node.is_child)
-  ) ?
-    <Button
-      variant='contextmenu_button'
-      onClick={() => {
-        if (contextualised_node.is_multi_children) {
-          new_data.menu_configuration.ref_to_updater_node_agregate.current(true)
-        }
-        else {
-          contextualised_node.drawParent()
-          new_data.drawing_area.draw()
-          new_data.drawing_area.purgeSelection()
-          new_data.drawing_area.node_contextualised = undefined
-          new_data.drawing_area.areaAutoFit(false)
-          refreshThisAndToggleSaving()
-        }
-
-      }}
-    >
-      {t('Noeud.context_agregate')}
-    </Button> :
-    <></>
-
-  const btn_desagregate = (
-    (selected_nodes.length === 1) &&
-    (contextualised_node !== undefined) &&
-    (selected_nodes.includes(contextualised_node)) &&
-    (contextualised_node.is_parent)
-  ) ?
-    <Button
-      variant='contextmenu_button'
-      onClick={() => {
-        if (contextualised_node.is_multi_parent) {
-          new_data.menu_configuration.ref_to_updater_node_disagregate.current(true)
-        } else {
-          contextualised_node.drawChildren(
-            contextualised_node.dimensions_as_parent[contextualised_node.dimensions_as_parent.length - 1].id
-          )
-          new_data.drawing_area.draw()//Redraw all node visible because some link position where not computed before disaggregation
-          new_data.drawing_area.purgeSelection()
-          new_data.drawing_area.node_contextualised = undefined
-          new_data.drawing_area.areaAutoFit(false)
-          refreshThisAndToggleSaving()
-        }
-
-      }}
-    >
-      {t('Noeud.context_desagregate')}
-    </Button> :
-    <></>
-
-  const btn_expand = (
-    (selected_nodes.length === 1) &&
-    (contextualised_node !== undefined) &&
-    (selected_nodes.includes(contextualised_node)) &&
-    (contextualised_node.is_parent) &&
-    /* For now expansion is possible only at extremities */
-    (contextualised_node.input_links_list.length == 0 || contextualised_node.output_links_list.length == 0) &&
-    /* For now expansion is possible when there is only one dimension */
-    contextualised_node.dimensions_as_parent.length == 1
-  ) ?
-    <Button
-      variant='contextmenu_button'
-      onClick={() => {
-        const expand_left = contextualised_node.input_links_list.length == 0
-        new_data.drawing_area.bypass_redraws = true
-        //do not draw until all nodes and links have been created
-        const list_child_dim = contextualised_node.dimensions_as_parent
-        if (list_child_dim.length === 1) {
-          const children = list_child_dim[0].children as Type_GenericNodeElement[]
-          const new_nodes: Type_GenericNodeElement[] = []
-          const original_node = contextualised_node.sibling ?? contextualised_node
-          // the new node is intimely linked to the original child node
-          let root_node: Type_GenericNodeElement
-          if (expand_left) {
-            root_node = original_node.output_links_list[0].target as Type_GenericNodeElement
-          } else {
-            // expand right
-            root_node = original_node.input_links_list[0].source as Type_GenericNodeElement
-          }
-          const shift_y = (children.length - 1) / 2 * new_data.drawing_area.vertical_spacing
-          children.forEach((c, i) => {
-            const n = new_data.drawing_area.sankey.addNewNode(c.id + 'expand', c.name)
-            new_nodes.push(n)
-            n.sibling = c
-            n.copyFrom(c)
-            n.shape_color = contextualised_node.shape_color
-            n.shape_opacity = (contextualised_node.shape_opacity > 0.3) ? contextualised_node.shape_opacity - 0.2 : contextualised_node.shape_opacity
-            n.position_type = 'parametric'
-            // n is no more a child (contrary to its sibling)
-
-            if (contextualised_node.dimensions_as_child.length == 0) {
-              n.removeDimensionAsChild(n.dimensions_as_child[0])
-            } else {
-              n.dimensions_as_child[0].force_child_level_tag(contextualised_node.dimensions_as_child[0].child_level_tag)
-              n.dimensions_as_child[0].force_parent_level_tag(contextualised_node.dimensions_as_child[0].parent_level_tag)
-              n.dimensions_as_child[0].setForceToShowChildren(true)
-            }
-            if (n.dimensions_as_parent.length !== 0) {
-              // the dimension as parent go up one level
-              n.dimensions_as_parent[0].force_parent_level_tag(contextualised_node.dimensions_as_parent[0].parent_level_tag)
-              n.dimensions_as_parent[0].force_child_level_tag(contextualised_node.dimensions_as_parent[0].child_level_tag)
-            }
-            let l: Type_GenericLinkElement
-            if (expand_left) {
-              l = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
-            } else {
-              l = new_data.drawing_area.sankey.addNewLink(contextualised_node, n)
-            }
-            l.shape_color_rule = 'source'
-            l.shape_opacity = n.shape_opacity
-            if (expand_left) {
-              if (root_node.input_links_dict[n.sibling!.id + '---' + root_node.id]) {
-                l.copyValues(root_node.input_links_dict[n.sibling!.id + '---' + root_node.id])
-              }
-              n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
-            } else {
-              if (root_node.output_links_dict[root_node.id + '---' + n.sibling!.id]) {
-                l.copyValues(root_node.output_links_dict[root_node.id + '---' + n.sibling!.id])
-              }
-              n.position_x = contextualised_node.position_x + new_data.drawing_area.horizontal_spacing
-            }
-
-            if (i == 0) {
-              n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y - n.getShapeHeightToUse()
-            }
-            n.position_v = -1
-          })
-          new_data.drawing_area.bypass_redraws = false
-          // ready to draw in parametric mode
-          new_data.drawing_area.computeParametrization()
-          new_nodes.forEach(n => {
-            n.resetPositionAttribute('dy')
-            n.applyPosition()
-            n.draw()
-          })
-        }
-      }
-      }
-    >
-      {t('Noeud.context_expand')}
-    </Button> :
-    <></>
-
-  const btn_contract = (
-    (selected_nodes.length === 1) &&
-    (contextualised_node !== undefined) &&
-    (selected_nodes.includes(contextualised_node)) &&
-    (contextualised_node.sibling) &&
-    /* For now expansion is possible only at extremities */
-    (contextualised_node.input_links_list.length == 0 || contextualised_node.output_links_list.length == 0)
-  ) ?
-    <Button
-      variant='contextmenu_button'
-      onClick={() => {
-        const expand_left = contextualised_node.input_links_list.length == 0
-        new_data.drawing_area.bypass_redraws = true
-        let extremity_node: Type_GenericNodeElement
-        if (expand_left) {
-          extremity_node = contextualised_node.output_links_list[0].target as Type_GenericNodeElement
-        } else {
-          extremity_node = contextualised_node.input_links_list[0].source as Type_GenericNodeElement
-        }
-        const children = expand_left ? extremity_node.input_links_list : extremity_node.output_links_list
-        children.forEach((c, _) => {
-          new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
-        })
-        new_data.drawing_area.draw()
-      }
-      }
-    >
-      {t('Noeud.context_contract')}
-    </Button> :
-    <></>
+  const btn_edition_hierarchy = contextualised_node ? hierarchyEditionMenu(new_data, contextualised_node, selected_nodes,refreshThisAndToggleSaving) : <></>
+  const btn_nav_hierarchy = contextualised_node ? hierarchyManipulationMenu(new_data, contextualised_node, selected_nodes,refreshThisAndToggleSaving) : <></>
 
 
   const menu_mask_node_attr = <Menu placement='end'>
@@ -924,10 +746,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
   </Menu>
 
   const context_content: { [_: string]: JSX.Element } = {
-    'aggregate': btn_aggregate,
-    'contract': btn_contract,
-    'desaggregate': btn_desagregate,
-    'expand': btn_expand,
+    'edition_hierarchy': btn_edition_hierarchy,
+    'nav_hierarchy': btn_nav_hierarchy,
     'sep_1': sep,
 
     'align': selected_nodes.length > 1 ? <>{dropdown_c_n_align}{sep}</> : <></>,
@@ -970,188 +790,4 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     <></>
 }
 
-export type AgregationModalTypes = {
-  new_data: Type_GenericApplicationData,
-}
 
-export const DisaggregationModal: FunctionComponent<AgregationModalTypes> = (
-  { new_data }
-) => {
-  const [, setForce] = useState(0)
-  const [show_agregation, set_show_agregation] = useState(false)
-  const selected_grp = useRef<Class_NodeDimension | undefined>()
-  const closeModal = () => {
-    new_data.drawing_area.node_contextualised = undefined
-    new_data.drawing_area.purgeSelection()
-    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-    set_show_agregation(false)
-  }
-  new_data.menu_configuration.ref_to_updater_node_disagregate.current = (b: boolean) => set_show_agregation(b)
-  if (new_data.drawing_area.node_contextualised) {
-    const list_child_dim = new_data.drawing_area.node_contextualised.dimensions_as_parent
-    if (selected_grp.current == null || selected_grp.current == undefined) {
-      selected_grp.current = list_child_dim[0]
-      setForce(a => a + 1)
-    }
-    return (
-      <Modal
-        isOpen={show_agregation}
-        onClose={closeModal}
-        variant='modal_dialog'
-      >
-        <ModalOverlay />
-        <ModalContent
-          maxWidth='inherit'
-        >
-          <ModalHeader>
-            {new_data.t('Noeud.title_desaggreg')}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody
-            width='100%'
-          >
-            <Box
-              display='grid'
-              gridAutoFlow='row'
-              gridRowGap='0.25rem'
-              width='calc(100% - 2rem)'
-            >
-              <Select
-                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  const idx_new_selected_grp = list_child_dim.map(dim => dim.id).indexOf(evt.target.value)
-                  selected_grp.current = (list_child_dim[idx_new_selected_grp])
-                  setForce(a => a + 1)
-                }}
-                value={selected_grp.current?.id}
-                width='100%'
-              >
-                {list_child_dim.map(
-                  (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.child_level_tagg.name}</option>
-                )}
-              </Select>
-              <Text>{new_data.t('Noeud.text_desagreg')}</Text>
-              {selected_grp.current?.children.map(child_name => <Text>{child_name.name}</Text>)}
-            </Box>
-          </ModalBody>
-          <ModalFooter>
-            <ButtonGroup>
-              <Button
-                variant="menuconfigpanel_option_button_secondary"
-                isActive
-                size='sizeButtonDialog'
-                onClick={() => {
-                  new_data.drawing_area.node_contextualised?.drawChildren((selected_grp.current?.id ?? ''))
-                  // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
-                  closeModal()
-                }}
-              >
-                {new_data.t('Noeud.desaggreg')}
-              </Button>
-              <Button
-                variant="menuconfigpanel_del_button"
-                size='sizeButtonDialog'
-                onClick={() => {
-                  closeModal()
-                }}
-              >
-                {new_data.t('Menu.annuler')}
-              </Button>
-            </ButtonGroup>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    )
-  }
-
-}
-
-
-export const AggregationModal: FunctionComponent<AgregationModalTypes> = (
-  { new_data }
-) => {
-  const [, setForce] = useState(0)
-  const [show_agregation, set_show_agregation] = useState(false)
-  const selected_grp = useRef<Class_NodeDimension | undefined>()
-  const closeModal = () => {
-    new_data.drawing_area.node_contextualised = undefined
-    new_data.drawing_area.purgeSelection()
-    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-    set_show_agregation(false)
-  }
-  new_data.menu_configuration.ref_to_updater_node_agregate.current = (b: boolean) => set_show_agregation(b)
-  if (new_data.drawing_area.node_contextualised) {
-    const list_parent_dim = new_data.drawing_area.node_contextualised.dimensions_as_child
-    if (selected_grp.current == null || selected_grp.current == undefined) {
-      selected_grp.current = list_parent_dim[0]
-      setForce(a => a + 1)
-    }
-    return (
-      <Modal
-        isOpen={show_agregation}
-        onClose={closeModal}
-        variant='modal_dialog'
-      >
-        <ModalOverlay />
-        <ModalContent
-          maxWidth='inherit'
-        >
-          <ModalHeader>
-            {new_data.t('Noeud.title_aggreg')}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody
-            width='100%'
-          >
-            <Box
-              display='grid'
-              gridAutoFlow='row'
-              gridRowGap='0.25rem'
-              width='calc(100% - 2rem)'
-            >
-              <Select
-                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  const idx_new_selected_grp = list_parent_dim.map(dim => dim.id).indexOf(evt.target.value)
-                  selected_grp.current = (list_parent_dim[idx_new_selected_grp])
-                  setForce(a => a + 1)
-                }}
-                value={selected_grp.current?.id}
-                width='100%'
-              >
-                {list_parent_dim.map(
-                  (cur_dim_name, i) => <option key={i} value={cur_dim_name.id} >{cur_dim_name.child_level_tagg.name}</option>
-                )}
-              </Select>
-              <Text>{new_data.t('Noeud.text_agreg')}</Text>
-              {<Text>{selected_grp.current?.parent.name}</Text>}
-            </Box>
-          </ModalBody>
-          <ModalFooter>
-            <ButtonGroup>
-              <Button
-                variant="menuconfigpanel_option_button_secondary"
-                isActive
-                size='sizeButtonDialog'
-                onClick={() => {
-                  new_data.drawing_area.node_contextualised?.drawParent((selected_grp.current?.id ?? ''))
-                  // new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())//Redraw all node visible because some link position where not computed before disaggregation
-                  closeModal()
-                }}
-              >
-                {new_data.t('Noeud.aggreg')}
-              </Button>
-              <Button
-                variant="menuconfigpanel_del_button"
-                size='sizeButtonDialog'
-                onClick={() => {
-                  closeModal()
-                }}
-              >
-                {new_data.t('Menu.annuler')}
-              </Button>
-            </ButtonGroup>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    )
-  }
-}
