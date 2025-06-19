@@ -685,6 +685,7 @@ def parse_folder(current_dir, menus, key=None):
 
     extension_to_avoid = [
         '.gitkeep',
+        '.vscode',
         'mfadata',
         'not_tested',
         'sankeylayout',
