@@ -142,7 +142,7 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
           <CardBody>
             <Image
               className='img-card'
-              src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('_layout.json', '')) + '.png'}
+              src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('.json', '')) + '.png'}
               style={{ 'objectFit': 'contain', 'maxHeight': '150px' }} />
           </CardBody>
           <CardFooter
