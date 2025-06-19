@@ -2,6 +2,12 @@ import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/TypesOSP'
 import { Class_IconLibrarySA } from './IconLibrarySA'
 import { Class_MenuConfigSA } from './MenuConfigSA'
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      logo: string
+    }
+  }
 export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
 
   // PROTECTED ATTRIBUTES ===============================================================
@@ -26,10 +32,12 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
     super(published_mode, options)
     // OVERRIDE
     this._menu_configuration = this.menu_configuration
-    // Default confi
-    // _plus = false
+    // Get MFA logo
+    this._logo_mfa = 'logos/logo_OSS.png'
 
   }
+
+  private _logo_mfa: string = ''
 
   // PUBLIC METHODS =====================================================================
 
@@ -41,7 +49,19 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
     return new Class_IconLibrarySA()
   }
 
-
+ // Overrride logo
+  public get logo() {
+    if ( this.is_static && window.sankey && window.sankey.logo) {
+      return window.sankey.logo
+    }
+    if (this.has_sankey_afm) {
+      return this._logo_mfa
+    }
+    if (this.has_sankey_plus) {
+      return this.logo_sankey_plus
+    }
+    return this.logo_opensankey
+  }
 
   // GETTERS / SETTERS ==================================================================
 
