@@ -5946,14 +5946,12 @@ export class ClassTemplate_GhostLinkElement
       drawing_area: drawing_area,
       sankey: drawing_area.sankey as Type_GenericSankey,
       position_starting: {
-        auto_x:false,
         x: 0,
         y: 0,
         u: 0,
         v: 0
       },
       position_ending: {
-        auto_x:false,
         x: 0,
         y: 0,
         u: 0,
