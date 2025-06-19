@@ -360,7 +360,7 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
       })
       if (ok) return
       let parent_dimension = c.nodeDimensionAsParent(group)
-      if (!parent_dimension) {
+      if (!parent_dimension || parent_dimension.children.includes(parent_dimension.parent)) {
         //const child_dimensions = c.dimensions_as_child.filter(c=>c.parent_level_tag.group.id == group.id)
         const last_child_dimension = child_dimensions[child_dimensions.length-1]
         const last_child_dimension_tag = last_child_dimension.child_level_tag as Class_LevelTag
@@ -375,6 +375,18 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   // GETTERS / SETTERS ==================================================================
 
   public get id() { return this._id }
+
+  public get name() {
+    return this.parent.name + '->(' + this.children.map(c=>c.name+' ')+')'    
+  }
+
+  public get short_name() {
+    return this.name.substring(0,50);
+  }
+
+  public get children_name() {
+    return this.children.map(c=>c.name+' ').join().substring(0,30);
+  }
 
   /**
    * Level tag group reference is from parent level tag
