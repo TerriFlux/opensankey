@@ -74,3 +74,20 @@ export const name_file_editable = definePartsStyle({
     secondaire: 'primaire.3',
   }
 })
+
+export const edit_name_palette=definePartsStyle({
+  preview:{
+    fontSize:'0.8rem',
+    width:'100%',
+    padding:'0',
+    height:'1.5rem',
+    border:'1px solid',
+    borderColor:'primaire.5',
+  },
+  input:{
+    fontSize:'0.8rem',
+    height:'1.5rem',
+    border:'1px solid',
+    borderColor:'primaire.5'
+  }
+})

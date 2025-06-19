@@ -37,7 +37,6 @@ import {
 import {
   ClassTemplate_LinkElement,
   defaultLinkId,
-  sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from '../Elements/Link'
 import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
@@ -62,7 +61,8 @@ import {
   default_style_id,
   Type_MacroTagGroup,
   randomId,
-  CutName
+  CutName,
+  makeId
 } from '../types/Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
 import { DefaultLinkExportStyle, DefaultLinkImportStyle, DefaultNodeExportStyle, DefaultNodeImportStyle, DefaultNodeProductStyle, DefaultNodeSectorStyle } from './Legacy'
@@ -795,10 +795,12 @@ export abstract class ClassTemplate_Sankey
     // Add links
     json_object['links'] = json_object_links
     const links_list = (only_visible_elements ? this.visible_links_list : this.links_list)
+
+    let has_results = false
+    links_list.forEach(l => has_results = has_results || l.has_result)
     links_list
-      .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
       .forEach(link => {
-        json_object_links[link.id] = link.toJSON({ 'with_values': with_values })
+        json_object_links[link.id] = link.toJSON({ 'with_values': with_values, 'has_results': has_results })
       })
     // Out
     return json_object
@@ -875,6 +877,10 @@ export abstract class ClassTemplate_Sankey
             tagg_json as Type_JSON,
             matching_tags_id[json_entry][_] ?? {})
         })
+    }
+
+    if (Object.keys(this._level_taggs).length > 1) {
+      this.removeTagGroupWithId('level_taggs', 'Primaire')
     }
     json_entry = 'nodeTags'
     if (json_object[json_entry] !== undefined) {
@@ -983,7 +989,6 @@ export abstract class ClassTemplate_Sankey
           )
         }
       })
-
     // Then read nodes
     const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
     Object.entries(json_node_object)
@@ -1014,16 +1019,17 @@ export abstract class ClassTemplate_Sankey
     //if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
     // Change style if node has default style & 'Type de noeud' tags
     this.nodes_list.forEach(n => {
+      n.dimensions_as_parent.forEach(pdim=>pdim.normalize())
       const tagg = this.node_taggs_dict['type de noeud']
       if (!tagg) {
         return
       }
       const product_tag = tagg.tags_dict['produit']
       const sector_tag = tagg.tags_dict['secteur']
-      if (n.hasGivenTag(product_tag) && n.style.id === 'default') {
-        n.style = this.node_styles_dict['NodeProductStyle']
-      } else if (n.hasGivenTag(sector_tag) && n.style.id === 'default') {
-        n.style = this.node_styles_dict['NodeSectorStyle']
+      if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
+        n.style = [this.node_styles_dict['NodeProductStyle']]
+      } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
+        n.style = [this.node_styles_dict['NodeSectorStyle']]
       }
     })
     //}
@@ -1352,8 +1358,9 @@ export abstract class ClassTemplate_Sankey
    */
   public addNewDefaultNodeStyle() {
     const _ = String(this.node_styles_list.length)
+    const id = makeId('id')
     return this.addNewNodeStyle(
-      'style_node_' + _,
+      'style_node_' + id,
       'Style ' + _)
   }
 
@@ -1397,8 +1404,9 @@ export abstract class ClassTemplate_Sankey
    */
   public addNewDefaultLinkStyle() {
     const _ = String(this.link_styles_list.length)
+    const id = makeId('id')
     return this.addNewLinkStyle(
-      'style_link_' + _,
+      'style_link_' + id,
       'Style ' + _)
   }
 
@@ -1446,12 +1454,14 @@ export abstract class ClassTemplate_Sankey
     const selected_nodes = this.drawing_area.selected_nodes_list
     if (selected_nodes.length !== 0) {
       const style = selected_nodes[0].style
+      const list_id_style = style.map(s => s.id)
       let inchangee = true
-      selected_nodes.map(node => {
-        inchangee = (node.style.id === style.id) ? inchangee : false
+      selected_nodes.forEach(node => {
+        inchangee = (node.style.every(style => list_id_style.includes(style.id))) ? inchangee : false
       })
+
       return (inchangee) ?
-        CutName(style.name, 25) :
+        CutName([...style].reverse()[0].name, 25) :
         this.drawing_area.application_data.t('Noeud.multi_style')
     }
     else {
@@ -1464,10 +1474,10 @@ export abstract class ClassTemplate_Sankey
   *
   * @param {Class_NodeStyle} n_style
   */
-  public switchNodeStyle(n_style: Class_NodeStyle) {
+  public switchNodeStyle(n_style: Class_NodeStyle, add: boolean) {
     const selected_nodes = this.drawing_area.selected_nodes_list
     const { ref_selected_style_node } = this.drawing_area.application_data.menu_configuration
-    const curr_style: { [x: string]: Class_NodeStyle } = {}
+    const curr_style: { [x: string]: Class_NodeStyle[] } = {}
     selected_nodes.map(node => {
       curr_style[node.id] = node.style
     })
@@ -1483,7 +1493,14 @@ export abstract class ClassTemplate_Sankey
     const _switchToStyle = () => {
       ref_selected_style_node.current = n_style.id
       selected_nodes.map(node => {
-        node.style = n_style
+        const list_id_style_node = node.style.map(s => s.id)
+        if (list_id_style_node.includes(n_style.id) && !add) {
+          const idx = node.style.findIndex(style => style.id == n_style.id)
+          node.style.splice(idx, 1)
+        }
+        if (!list_id_style_node.includes(n_style.id) && add) {
+          node.style.push(n_style)
+        }
       })
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     }
@@ -1532,12 +1549,14 @@ export abstract class ClassTemplate_Sankey
     const selected_links = this.drawing_area.selected_links_list
     if (selected_links.length !== 0) {
       const style = selected_links[0].style
+      const list_id_style = style.map(s => s.id)
+
       let inchangee = true
       selected_links.map(link => {
-        inchangee = (link.style.id === style.id) ? inchangee : false
+        inchangee = (link.style.every(style => list_id_style.includes(style.id))) ? inchangee : false
       })
       return (inchangee) ?
-        CutName(style.name, 25) :
+        CutName([...style].reverse()[0].name, 25) :
         this.drawing_area.application_data.t('Noeud.multi_style')
     }
     else {
@@ -1550,10 +1569,10 @@ export abstract class ClassTemplate_Sankey
    *
    * @param {Class_LinkStyle} n_style
    */
-  public switchLinkStyle(n_style: Class_LinkStyle) {
+  public switchLinkStyle(n_style: Class_LinkStyle, add: boolean) {
     const selected_links = this.drawing_area.selected_links_list
     const { ref_selected_style_link } = this.drawing_area.application_data.menu_configuration
-    const curr_style: { [x: string]: Class_LinkStyle } = {}
+    const curr_style: { [x: string]: Class_LinkStyle[] } = {}
     selected_links.map(link => {
       curr_style[link.id] = link.style
     })
@@ -1570,7 +1589,14 @@ export abstract class ClassTemplate_Sankey
     const _switchToStyle = () => {
       ref_selected_style_link.current = n_style.id
       selected_links.map(link => {
-        link.style = n_style
+        const list_id_style_node = link.style.map(s => s.id)
+        if (list_id_style_node.includes(n_style.id) && !add) {
+          const idx = link.style.findIndex(style => style.id == n_style.id)
+          link.style.splice(idx, 1)
+        }
+        if (!list_id_style_node.includes(n_style.id) && add) {
+          link.style.push(n_style)
+        }
         link.drawWithNodes()
       })
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
@@ -1610,20 +1636,6 @@ export abstract class ClassTemplate_Sankey
     _resetAttrToStyleVal()
   }
 
-  // Tags related ------------------------------------------------------------------------
-
-  public triggerPrimaryLevelTagging(): void {
-    // TODO deal with siblings tags
-    if ('Primaire' in this._level_taggs) {
-      if (this.level_taggs_list.length > 1) {
-        this._level_taggs['Primaire'].activated = false
-      }
-      else {
-        this._level_taggs['Primaire'].activated = true
-      }
-    }
-  }
-
   public addLevelTagGroup(
     id: string,
     name: string
@@ -1631,6 +1643,7 @@ export abstract class ClassTemplate_Sankey
     if (!this._level_taggs[id]) {
       // Create
       const tag_group = new Class_LevelTagGroup(id, name, this)
+      tag_group.activated = true
       // Update
       this._level_taggs[id] = tag_group
       // Return
@@ -2096,36 +2109,6 @@ export abstract class ClassTemplate_Sankey
 
   public get data_tags_fingerprint() {
     return this._data_tags_fingerprint
-  }
-
-  public get unit_first_datatag() {
-    const unit_taggs = this.data_taggs_list.filter(data_tagg =>data_tagg.banner == 'unit')
-    if (unit_taggs.length == 0) {
-      return null
-    }
-    const unit_tags = unit_taggs[0].tags_list
-    if (unit_tags.length == 0) {
-      return null
-    }
-    return unit_tags[0].unit_name
-  }
-
-  /**
-   * Return an array  of id of tag selected of that data_taggs
-   *
-   * @readonly
-   * @memberof ClassTemplate_Sankey
-   */
-  public get unit_data_tag() {
-    const unit_taggs = this.data_taggs_list.filter(data_tagg =>data_tagg.banner == 'unit')
-    if (unit_taggs.length == 0) {
-      return null
-    }
-    const selected_tags = unit_taggs[0].selected_tags_list
-    if (selected_tags.length == 0) {
-      return null
-    }
-    return selected_tags[0].unit_name
   }
 
   /**

@@ -206,8 +206,9 @@ export const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_dat
                 </Button>
                 <ButtonGroup>
                   {difficulties
-                    .map(difficulty => {
+                    .map((difficulty,idx) => {
                       return <Button
+                        key={'difficulty_'+idx}
                         variant='menuconfigpanel_option_button_secondary'
                         size='sizeButtonDialog'
                         isActive={difficulty == selectedDifficulty}

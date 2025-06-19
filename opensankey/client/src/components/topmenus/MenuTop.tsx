@@ -31,8 +31,11 @@ import React,
   FunctionComponent,
   useState,
   useRef,
-  ChangeEvent
+  ChangeEvent,
+  Fragment
 } from 'react'
+
+import ReactCountryFlag from 'react-country-flag'
 
 // External imports
 
@@ -50,7 +53,9 @@ import {
   Select,
   Image,
   Text,
-  Divider
+  Divider,
+  Menu,
+  Portal
 } from '@chakra-ui/react'
 import {
   faCheck,
@@ -71,6 +76,9 @@ import { setDiagram } from './SankeyMenuBanner'
 import { clickSavePDF } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
+import { 
+  decompressUploadedFileUniversal, 
+} from '../dialogs/UniversalJSONCompression'
 
 /*************************************************************************************************/
 
@@ -179,7 +187,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
 }) => {
   const { t } = new_data
   const {
-    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_preference, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
+    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
   const [show_tuto, set_show_tuto] = useState(false)
@@ -263,22 +271,22 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
         {t('Menu.open_json')}
       </MenuItem>
       <Input
-        accept='.json'
+        accept='.json,.gz,.zip,.br,.brotli'
         type='file'
         ref={_load_json}
         style={{ display: 'none' }}
-        onChange={(evt: ChangeEvent) => {
+        onChange={async (evt: ChangeEvent) => {
           const files = (evt.target as HTMLFormElement).files
-          const reader = new FileReader()
-          reader.onload = (() => {
-            return (e: ProgressEvent<FileReader>) => {
-              // Get JSON Data
-              const file_content = String((e.target as FileReader).result)
-              const JSON_data = JSON.parse(file_content)
-              new_data.fromJSON(JSON_data as Type_JSON)
-            }
-          })()
-          reader.readAsText(files[0])
+          
+          if (!files || files.length === 0) return
+          
+          try {
+            const JSON_data = await decompressUploadedFileUniversal(files[0])
+            new_data.fromJSON(JSON_data as Type_JSON)
+            
+          } catch (error) {
+            console.error('Erreur lors du chargement:', error)
+          }
         }} />
       <MenuItem
         onClick={() => ref_setter_show_modal_excel_loader.current!(true)}
@@ -442,35 +450,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
     </MenuList>
   </ChakraMenu>
 
-  // Button to open setting of application
-  const button_setting = <OSTooltip
-    placement='bottom'
-    label={t('Menu.tooltips.preference')}
-  >
-    <Button
-      variant='menutop_button'
-      size='sizeMenuTopButton'
-      onClick={() => {
-        ref_setter_show_modal_preference.current!(true)
-      }}
-      className='settings_button'
-    >
-      <Box
-        layerStyle='menutop_button_style'
-      >
-        <Box
-          gridRow='1'
-        >
-          {new_data.icon_library.icon_setting}
-        </Box>
-        <Box
-          gridRow='2'
-        >
-          {t('Menu.preference')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
+
 
   // Button to open sankey formating
   const button_mep = <OSTooltip
@@ -603,7 +583,6 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
     'tutoriel': button_tutoriel,
     'documentation': button_documentation,
     // Other
-    'setting': button_setting,
     'contact': button_contact,
     ...additionalMenus.current.external_top_buttons_item
   }
@@ -616,7 +595,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
       {
         new_data.menu_configuration.menu_top_order
           .map((arr, i) => {
-            return <>
+            return <Fragment key={'top_grp_'+i}>
               <ButtonGroup
                 marginRight='1rem'
                 marginLeft='1rem'
@@ -639,7 +618,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
                   :
                   <></>
               }
-            </>
+            </Fragment>
           })
       }
     </Box>
@@ -662,7 +641,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_data }) => {
+export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
   const { t } = new_data
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
@@ -741,21 +720,46 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
     </Box>
   }
 
-  const excel_element = window.sankey && window.sankey.excel ? (
-    <Box
-      margin='0.25rem'
-      alignSelf='center'
-      justifySelf='center'
+  const dict_components_menu_top: { [x: string]: React.JSX.Element; } = {
+    'diagrams':diagrams_element,
+    ...additionalMenus.current.external_top_buttons_item
+  }
+
+  return <Box
+      display='grid'
+      gridAutoFlow='column'
+      gridTemplateColumns={'repeat(' + String(new_data.menu_configuration.menu_top_order.length) + ', max-content 3px)'}
     >
-      <Button
-      >{t('Banner.tl')}</Button>
-    </Box>) : (<React.Fragment key={'3'}></React.Fragment>)
-
-
-  return <ButtonGroup>
-    {diagrams_element}
-    {excel_element}
-  </ButtonGroup>
+      {
+        new_data.menu_configuration.menu_top_order
+          .map((arr, i) => {
+            return <Fragment key={'top_grp_'+i}>
+              <ButtonGroup
+                marginRight='1rem'
+                marginLeft='1rem'
+              >
+                {
+                  arr.map((k, i) => {
+                    return <React.Fragment
+                      key={'menutop_button_' + i}>
+                      {dict_components_menu_top[k]}
+                    </React.Fragment>
+                  })
+                }
+              </ButtonGroup>
+              {
+                (i < (new_data.menu_configuration.menu_top_order.length)) ?
+                  <Divider
+                    orientation='vertical'
+                    margin='0'
+                  />
+                  :
+                  <></>
+              }
+            </Fragment>
+          })
+      }
+    </Box>
 }
 
 /**
@@ -766,7 +770,7 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
  */
 export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
   const { logo, logo_terriflux } = new_data
-
+  const [flag, setFlag] = useState('fr')
   const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
@@ -775,6 +779,14 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
       return <React.Fragment key={'add_menu' + i}>{el}</React.Fragment>
     })}
   </>
+
+  const changeLang = (lang: string) => {
+    new_data.language = lang
+    new_data.saveInCache() // Save data in cache because change language re-render the app from index
+    new_data.i18n.changeLanguage(lang)
+    new_data.menu_configuration.updateAllMenuComponents()
+    new_data.draw()
+  }
 
   return <Box
     zIndex='1'
@@ -806,17 +818,17 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
           display='inline-grid'
           height='100%'
         >
-          {!new_data.is_static ?
+          {/* {!new_data.is_static ? */}
             <Image
               height='80%'
               justifySelf='center'
               alignSelf='center'
-              src={logo} /> :
-            <Image
+              src={logo} />
+            {/* <Image
               height='5rem'
               margin='5% 0'
               src={logo_terriflux}
-              onClick={() => { window.open('https://terriflux.com/', '_blank') }} />}
+              onClick={() => { window.open('https://terriflux.com/', '_blank') }} />} */}
         </Box>}
       {
         // When application is static, search for a header (title of the project)
@@ -843,10 +855,22 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
         alignSelf='center'
         justifySelf='end'
         display='grid'
-        gridTemplateColumns='1fr'
+        gridTemplateColumns='1fr 2fr'
         gridColumnGap='0.25rem'
-        width='min-content'
+        width='unset'
       >
+        {!new_data.is_static ? <Menu variant='selector_lang'>
+          <MenuButton>
+            <ReactCountryFlag countryCode={flag} svg style={{ height: '0.75rem', width: '1rem', margin: 'auto' }} title={flag} />
+            <ChevronDownIcon />
+          </MenuButton>
+          <Portal>
+            <MenuList>
+              <MenuItem onClick={() => { setFlag('fr'); changeLang('fr') }}><ReactCountryFlag countryCode={'fr'} svg />Français</MenuItem>
+              <MenuItem onClick={() => { setFlag('gb'); changeLang('en') }}><ReactCountryFlag countryCode={'gb'} svg />English</MenuItem>
+            </MenuList>
+          </Portal>
+        </Menu>:<></>}
 
         {constent_additional_nav_item}
       </Box>

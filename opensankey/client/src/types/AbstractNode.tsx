@@ -65,9 +65,13 @@ export abstract class ClassAbstract_NodeElement
   public abstract get taggs_list(): Class_TagGroup[]
   public abstract get grouped_taggs_dict(): { [x: string]: Class_Tag[] }
   public abstract get dimensions_as_parent(): ClassAbstract_NodeDimension[]
+  public abstract get dimensions_as_parent_pure(): ClassAbstract_NodeDimension[]
   public abstract get dimensions_as_child(): ClassAbstract_NodeDimension[]
-  public abstract get style(): Class_NodeStyle
-  public abstract set style(n:Class_NodeStyle) 
+  public abstract get dimensions_as_child_pure(): ClassAbstract_NodeDimension[]
+  public abstract get sibling(): ClassAbstract_NodeElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>|undefined
+  public abstract set sibling(_)
+  public abstract get style(): Class_NodeStyle[]
+  public abstract set style(n:Class_NodeStyle[]) 
   // Mandatory methods
   public abstract addTag(_: ClassAbstract_ProtoTag): void
   public abstract hasGivenTag(_: ClassAbstract_ProtoTag): boolean
@@ -79,6 +83,7 @@ export abstract class ClassAbstract_NodeElement
   public abstract addOutputLink(_: TypeAbstract_LinkElement): void
   public abstract deleteInputLink(_: TypeAbstract_LinkElement): void
   public abstract deleteOutputLink(_: TypeAbstract_LinkElement): void
+  public abstract deleteRecyclingLinkOnSameNode(_: TypeAbstract_LinkElement): void
   public abstract removeInputLink(_: TypeAbstract_LinkElement): void
   public abstract removeOutputLink(_: TypeAbstract_LinkElement): void
   public abstract getOutputLinkStartingPoint(_: TypeAbstract_LinkElement): {x: number, y: number} | undefined

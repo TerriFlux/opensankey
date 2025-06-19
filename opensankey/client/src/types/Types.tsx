@@ -225,7 +225,7 @@ export class Class_LinkElement
     displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
-    style: Class_LinkStyle,
+    style: Class_LinkStyle[],
     attributes: Class_LinkAttribute
     position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
     position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
@@ -257,11 +257,11 @@ export class Class_LinkElement
         u: 0,
         v: 0
       },
-      style: drawing_area.sankey.default_link_style as Class_LinkStyle,
+      style: [drawing_area.sankey.default_link_style as Class_LinkStyle],
       attributes: new Class_LinkAttribute()
     }
     // Link with style
-    this._display.style.addReference(this)
+    this._display.style[0].addReference(this)
     this.source.addOutputLink(this)
     this.target.addInputLink(this)// Target
     // Instanciate display on svg

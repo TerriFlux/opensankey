@@ -37,18 +37,7 @@ import { Type_AdditionalMenus } from './Types'
 export type keyTypeConfig = 'data' | 'context' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node'
 export interface IType_DictHookRefSetterShowDialogComponents {
-  // Config menu - Nodes
-  ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_io: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  // Config menu - Links
-  ref_setter_show_menu_link_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_data: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_appearence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Config menu - Layout
-  ref_setter_show_menu_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Modal - Welcome
   ref_setter_modal_welcome_active_page: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -112,11 +101,11 @@ export class Class_MenuConfig {
     ],
     [
       'contact',
-      'setting',
     ]
   ]
 
   protected _flow_color_origin_type: string[] = ['flow', 'source', 'target']
+  protected _data_type: ValueOptionType[] = ['value', 'ratio_input', 'ratio_output'/*, 'ratio_source_parent' , 'ratio_target_parent', 'unit_conversion'*/]
 
   /**
    * Variable that determine what kind of element we are configuring in the config menu
@@ -183,6 +172,8 @@ export class Class_MenuConfig {
     Updater of component in the configuration menu
     ========================================*/
 
+  protected _ref_to_GraphElementsOrdoner_updater: MutableRefObject<() => void>
+
   // Update component OpenSankeyConfigurationsMenus
   protected _ref_to_menu_config_updater: MutableRefObject<() => void>
 
@@ -193,8 +184,12 @@ export class Class_MenuConfig {
   // Update component SankeyNodeEdition
   private _ref_to_menu_config_nodes_selection_updater: MutableRefObject<() => void>
 
+  // Update component SankeyNodeDimEdition
+  private _ref_to_menu_config_nodes_dim_selection_updater: MutableRefObject<() => void>
+
   // Update component OpenSankeyConfigurationNodesAttributes
-  private _ref_to_menu_config_nodes_apparence_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_nodes_apparence_visual_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_nodes_apparence_context_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationNodesAttributes
   private _ref_to_menu_config_nodes_styles_updater: MutableRefObject<() => void>
@@ -202,6 +197,9 @@ export class Class_MenuConfig {
 
   // update SankeyMenuConfigurationNodesTags
   private _ref_to_menu_config_nodes_tags_updater: MutableRefObject<() => void>
+
+  // update SankeyMenuConfigurationNodesDimTags
+  private _ref_to_menu_config_nodes_dim_tags_updater: MutableRefObject<() => void>
 
   // Update component SankeyMenuConfigurationNodesIO
   private _ref_to_menu_config_nodes_io_updater: MutableRefObject<(() => void)>
@@ -217,7 +215,8 @@ export class Class_MenuConfig {
   private _ref_to_menu_contextual_config_links_data_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationLinksAttributes
-  private _ref_to_menu_config_links_apparence_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_apparence_visual_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_links_apparence_context_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationLinksAttributes
   private _ref_to_menu_config_links_styles_updater: MutableRefObject<() => void>
@@ -375,15 +374,22 @@ export class Class_MenuConfig {
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_spreadsheet = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
+    this._ref_to_GraphElementsOrdoner_updater = useRef(() => null)
     this._ref_menu_opened = useRef([false, () => null])
 
     // Layout
     this._ref_to_menu_config_layout_updater = useRef(() => null)
     this._ref_to_menu_contextual_config_layout_updater = useRef(() => null) //contextual ref updater
 
+    // Dimensions
+    this._ref_to_menu_config_nodes_dim_selection_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_dim_tags_updater = useRef(() => null)
+
     // Nodes
     this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_apparence_updater = useRef(() => null)
+
+    this._ref_to_menu_config_nodes_apparence_visual_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_apparence_context_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_styles_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_styles_editor_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_tags_updater = useRef(() => null)
@@ -394,7 +400,8 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_links_selection_updater = useRef(() => null)
     this._ref_to_menu_config_links_data_updater = useRef(() => null)
     this._ref_to_menu_contextual_config_links_data_updater = useRef(() => null)
-    this._ref_to_menu_config_links_apparence_updater = useRef(() => null)
+    this._ref_to_menu_config_links_apparence_visual_updater = useRef(() => null)
+    this._ref_to_menu_config_links_apparence_context_updater = useRef(() => null)
     this._ref_to_menu_config_links_styles_updater = useRef(() => null)
     this._ref_to_menu_config_links_styles_editor_updater = useRef(() => null)
     this._ref_to_menu_config_links_tags_updater = useRef(() => null)
@@ -441,18 +448,6 @@ export class Class_MenuConfig {
     // Init dict of setter show dialog -------------------------------------------------
 
     this._dict_setter_show_dialog = {
-      // Config menu - Nodes
-      ref_setter_show_menu_node_apparence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_io: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      // Config menu - Links
-      ref_setter_show_menu_link_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_data: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_appearence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      // Config menu - Layout
-      ref_setter_show_menu_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Modal - Welcome
       ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -625,6 +620,19 @@ export class Class_MenuConfig {
    * Update component with timeOut to avoid multiple refreshs
    * @memberof Class_MenuConfig
    */
+  public updateComponentRelatedToNodesDimSelection() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesSelection',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_dim_selection_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
   public updateComponentRelatedToNodesApparence() {
     this._add_waiting_process(
       'updateMenuConfigNodeApparence',
@@ -657,6 +665,19 @@ export class Class_MenuConfig {
       'updateComponentRelatedToNodesTags',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_nodes_tags_updater.current()
+      }
+    )
+  }
+
+  /**
+   * Update component with timeOut to avoid multiple refreshs
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentRelatedToNodesDimTags() {
+    this._add_waiting_process(
+      'updateComponentRelatedToNodesTags',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_nodes_dim_tags_updater.current()
       }
     )
   }
@@ -723,7 +744,8 @@ export class Class_MenuConfig {
     this._add_waiting_process(
       'updateComponentRelatedToLinksApparence',
       (_this: Class_MenuConfig) => {
-        _this._ref_to_menu_config_links_apparence_updater.current()
+        _this._ref_to_menu_config_links_apparence_visual_updater.current()
+        _this._ref_to_menu_config_links_apparence_context_updater.current()
       }
     )
   }
@@ -827,6 +849,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToNodesTags()
     this.updateComponentRelatedToNodesIO()
     this.updateComponentRelatedToNodesTooltips()
+    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   /**
@@ -858,6 +881,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksStyles()
     this.updateComponentRelatedToLinksTags()
     this.updateComponentRelatedToLinksTooltips()
+    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   /**
@@ -883,6 +907,8 @@ export class Class_MenuConfig {
   }
 
   public updateAllComponentsRelatedToLevelTags() {
+    this._ref_to_leveltag_filter_updater.current()
+    this.updateComponentRelatedToNodesDimTags()
     this._ref_to_menu_config_tags_updater['level_taggs'].current()
   }
 
@@ -991,7 +1017,8 @@ export class Class_MenuConfig {
   }
 
   protected _updateComponentRelatedToNodesApparence() {
-    this._ref_to_menu_config_nodes_apparence_updater.current()
+    this._ref_to_menu_config_nodes_apparence_visual_updater.current()
+    this._ref_to_menu_config_nodes_apparence_context_updater.current()
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -1072,9 +1099,19 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_nodes_selection_updater
   }
 
-  public get ref_to_menu_config_nodes_apparence_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_nodes_apparence_updater
+  public get ref_to_menu_config_nodes_dim_selection_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_dim_selection_updater
   }
+
+  public get ref_to_menu_config_nodes_apparence_visual_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_apparence_visual_updater
+  }
+
+
+  public get ref_to_menu_config_nodes_apparence_context_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_apparence_context_updater
+  }
+
 
   public get ref_to_menu_config_nodes_styles_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_nodes_styles_updater
@@ -1085,6 +1122,10 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_nodes_tags_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_nodes_tags_updater
+  }
+
+  public get ref_to_menu_config_nodes_dim_tags_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_dim_tags_updater
   }
 
   public get ref_to_menu_config_nodes_io_updater(): MutableRefObject<(() => void)> {
@@ -1123,8 +1164,12 @@ export class Class_MenuConfig {
     return this._ref_to_menu_contextual_config_links_data_updater
   }
 
-  public get ref_to_menu_config_links_apparence_updater(): MutableRefObject<() => void> {
-    return this._ref_to_menu_config_links_apparence_updater
+  public get ref_to_menu_config_links_apparence_visual_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_apparence_visual_updater
+  }
+
+  public get ref_to_menu_config_links_apparence_context_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_apparence_context_updater
   }
 
   public get ref_to_menu_config_links_styles_updater(): MutableRefObject<() => void> {
@@ -1227,6 +1272,7 @@ export class Class_MenuConfig {
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_bottom_updater
   }
+  public get ref_to_GraphElementsOrdoner_updater(): MutableRefObject<() => void> { return this._ref_to_GraphElementsOrdoner_updater }
 
   /**
    * Order of buttons in top menu

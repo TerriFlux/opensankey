@@ -41,8 +41,6 @@ export const ViewerOpenSankeyApp: FunctionComponent<{initial_data:Type_JSON}> = 
 ) => {
   // Initialize data
   const new_data = initializeApplicationData(initial_data)
-  // If leveltags are present Primaire is desactivated
-  new_data.drawing_area.sankey.triggerPrimaryLevelTagging()
 
   /*************************************************************************************************/
 

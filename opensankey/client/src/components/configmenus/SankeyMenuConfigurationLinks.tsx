@@ -416,7 +416,3 @@ export const SankeyLinkSelectionSimple: FunctionComponent<FCType_SankeyMenuConfi
     </Box>
   </Box>)
 }
-
-
-
-

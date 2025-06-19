@@ -15,6 +15,10 @@ export const OSColorPicker: FunctionComponent<OSColorPickerProps> = ({ initialCo
   const [displayColorPicker, setDisplayColorPicker] = useState(false)
   const [color, setColor] = useState(initialColor)
 
+  // Update swatch color when we change color from outside picker
+  if(!displayColorPicker && color !==initialColor){
+    setColor(initialColor)
+  }
 
   /**
    *Event when we click on the 'button

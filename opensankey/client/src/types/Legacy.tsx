@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import * as d3 from 'd3'
-import { Type_JSON } from './Utils'
+import { makeId, Type_JSON } from './Utils'
 import {
   SankeyNode,
   SankeyNodeStyle,
@@ -335,7 +335,8 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     dashed: false,
 
     starting_tangeant: 0.25,
-    ending_tangeant: 0.25
+    ending_tangeant: 0.25,
+    color_rule:'auto'
   }
 }
 
@@ -1306,22 +1307,25 @@ const convert_tags: convert_tagsFuncType = (
   if (!data.levelTags) {
     data.levelTags = {}
   }
-  if (!('Primaire' in data.levelTags)) {
-    data.levelTags['Primaire'] = {
-      group_name: 'Primaire',
-      show_legend: false,
-      color_map: 'custom',
-      tags: {
-        '1': { name: '1', selected: true, color: '#696969' }
-      },
-      banner: 'level',
-      activated: true,
-      siblings: []
-    }
-  }
-  if (Object.values(data.levelTags).length > 1) {
-    data.levelTags['Primaire'].activated = false
-  }
+  // if (!('Primaire' in data.levelTags)) {
+  //   data.levelTags['Primaire'] = {
+  //     group_name: 'Primaire',
+  //     show_legend: false,
+  //     color_map: 'custom',
+  //     tags: {
+  //       '1': { name: '1', selected: true, color: '#696969' }
+  //     },
+  //     banner: 'level',
+  //     activated: true,
+  //     siblings: []
+  //   }
+  // }
+  // if (Object.values(data.levelTags).length > 1) {
+  //   data.levelTags['Primaire'].activated = false
+  // }
+  if (('Primaire' in data.levelTags) && Object.values(data.levelTags).length > 1) {
+    delete data.levelTags['Primaire']
+  } 
   // Convertie les anciens groupTag des données issu d'un excel qui ont pour valeur 1 ou 0 pour signifier un boolean
   Object.values(data.nodeTags).forEach(t => {
     t.show_legend = typeof (t.show_legend) == 'boolean' ? t.show_legend : ((t.show_legend === 1))
@@ -1615,9 +1619,9 @@ const convert_nodes: convert_nodesFuncType = (
       n.x = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_hspace as number) : data_to_convert.trade_close_hspace as number
       n.y = n.tags['Exchanges'][0].includes('import') ? -(data_to_convert.trade_close_vspace as number) : data_to_convert.trade_close_vspace as number
     }
-    if (!('Primaire' in n.dimensions)) {
-      n.dimensions['Primaire'] = { level: 1, parent_name: undefined }
-    }
+    // if (!('Primaire' in n.dimensions)) {
+    //   n.dimensions['Primaire'] = { level: 1, parent_name: undefined }
+    // }
     if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior') {
       n.tags['type de noeud'] = ['echange']
       if ( n.outputLinksId.length > 0 ) {
@@ -1656,7 +1660,7 @@ const convert_nodes: convert_nodesFuncType = (
     // Nodes with type Echanges did not have the correct dimensions
     if (n.tags['Echanges']) {
       const new_dimensions = {
-        'Primaire': n.dimensions['Primaire'],
+        //'Primaire': n.dimensions['Primaire'],
         'Echanges': n.dimensions['Echanges']
       }
       n.dimensions = new_dimensions
@@ -1772,7 +1776,15 @@ const convert_nodes: convert_nodesFuncType = (
       // All input exchange nodes must also be desaggregated
       node.outputLinksId
         .forEach(lid => {
+          if (!data.links[lid]) {
+            console.log(lid)
+            console.log(Object.values(data.links).filter(l=>l.idLink.includes('Ethanol')))            
+            return
+          }
           const output_node = data.nodes[data.links[lid].idTarget]
+          if (output_node.tags['type de noeud'] == undefined) {
+            output_node.tags['type de noeud'] = []
+          }
           if (output_node.tags['type de noeud'][0] == 'echange') {
             if (set_children) {
               output_node.dimensions[dim].force_show_children = true
@@ -1787,6 +1799,9 @@ const convert_nodes: convert_nodesFuncType = (
     const local_aggregation = n.local?.local_aggregation
     if (local_aggregation != undefined && !is_exchange) {
       Object.entries(n.dimensions).forEach(dim => {
+        if (!data.levelTags[dim[0]]) {
+          return
+        }
         if (!data.levelTags[dim[0]].activated) {
           return
         }
@@ -1854,7 +1869,7 @@ const convert_nodes: convert_nodesFuncType = (
           Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && 
             Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1 
         ) {
-          if (n.dimensions['Primaire'].parent_name) {
+          if (n.dimensions['Primaire'] && n.dimensions['Primaire'].parent_name) {
             let parent_tag: number | undefined
             const parent_dimensions = data.nodes[n.dimensions['Primaire'].parent_name!].dimensions
             if (leveltagg_id in parent_dimensions && parent_dimensions[leveltagg_id].level) {
@@ -1901,6 +1916,9 @@ const convert_nodes: convert_nodesFuncType = (
         return
       }
       Object.entries(data.nodes[pid].dimensions).forEach(([pk,pdim])=>{
+        if (!data.levelTags[pk]) {
+          return
+        }
         if (!data.levelTags[pk].activated) {
           return
         }
@@ -1926,16 +1944,6 @@ const convert_nodes: convert_nodesFuncType = (
       })
 
     })
-
-
-    // Add links_order to node by combining input/outputs id (for version>=0.9)
-    const n_tmp = (n as Type_JSON)
-    n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
-
-    // Add in links_order links not in links_order but that reference this node
-    list_links
-      .filter(l => (l.idTarget == n.idNode || l.idSource == n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
-      .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
 
     // Convert name of some local variables
     if (n.local) {
@@ -2058,15 +2066,45 @@ const convert_links: convert_linksFuncType = (
     data_to_convert.nodes = Object.assign({}, ...((data.nodes as unknown) as SankeyNode[]).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
   }
 
+  const mapper : {[_:string]:string} = {}
+  Object.values(data.links).forEach(l=>{
+    const previous_link_id = l.idLink
+    const new_link_id=previous_link_id+makeId('_idLink')
+    l.idLink = new_link_id
+    mapper[previous_link_id] = l.idLink
+  })
+  data_to_convert.links = Object.assign({}, ...(Object.values(data.links)).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
+  Object.values(data.nodes).forEach(n=>{
+    const newInputLinksId : string[]= []
+    n.inputLinksId.forEach(id=>newInputLinksId.push(mapper[id]))
+    n.inputLinksId = newInputLinksId
+
+    const newOutputLinksId : string[]= []
+    n.outputLinksId.forEach(id=>newOutputLinksId.push(mapper[id]))
+    n.outputLinksId = newOutputLinksId
+
+    // Add links_order to node by combining input/outputs id (for version>=0.9)
+    const n_tmp = (n as Type_JSON)
+    n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
+
+    // Add in links_order links not in links_order but that reference this node
+    // list_links
+    //   .filter(l => (l.idTarget == n.idNode || l.idSource == n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
+    //   .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
+
+  })
+
   if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {
     Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
   }
+
 
   const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
   const convert_display = (
     dataTags: TagsGroup[],
     v: SankeyLinkValue | SankeyLinkValueDict,
-    depth: number
+    depth: number,
+    returnObj:Type_JSON
   ) => {
     if (dataTags.length == 0 || depth === dataTags.length) {
       if (v.display_value === undefined) {
@@ -2133,6 +2171,10 @@ const convert_links: convert_linksFuncType = (
           (v as SankeyLinkValue)['tags']['flux_types'] = ['computed_data']
         }
       }
+
+      if (v.display_value !=='') {
+        returnObj['hide_value']=true
+      }
       return
     }
     const dataTag = Object.values(dataTags)[depth]
@@ -2143,11 +2185,12 @@ const convert_links: convert_linksFuncType = (
         if (v === undefined) {
           break
         }
-        convert_display(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1)
+        convert_display(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1,returnObj)
       }
     }
   }
   const defaultLinkStyle = DefaultLinkStyle()
+  defaultLinkStyle.color_rule = 'auto'
 
   Object.values(data.links).forEach(l => {
     if (((l as unknown) as { source_name: string }).source_name) {
@@ -2296,9 +2339,9 @@ const convert_links: convert_linksFuncType = (
       AssignLinkLocalAttribute(l, 'text_color', ReturnValueLink(data, l, 'color'))
     }
     delete l_convert.text_same_color
-
+    const objectReturn:Type_JSON={}
     // Values ?
-    convert_display(dataTagsArray, l.value as SankeyLinkValue, 0)
+    convert_display(dataTagsArray, l.value as SankeyLinkValue, 0,objectReturn)
 
     // Add opacity attribute
     if (!ReturnValueLink(data, l, 'opacity')) {
@@ -2447,6 +2490,11 @@ const convert_links: convert_linksFuncType = (
     if (l.drag_label_offset) {
       l.position_offset_label = l.drag_label_offset
     }
+
+    if(objectReturn['hide_value']===true){
+      l.local['value_label_is_visible']=false
+    }
+
   })
 
   if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {

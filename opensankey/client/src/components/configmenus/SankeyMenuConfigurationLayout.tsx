@@ -27,13 +27,16 @@
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import {
   Box,
+  Button,
   Checkbox,
 } from '@chakra-ui/react'
 import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
-import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
-import { OSColorPicker } from './OSColorPicker'
+import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
+import { Type_GenericApplicationData } from '../../types/Types'
+import { t } from 'i18next'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -68,7 +71,7 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
 
   // Data -------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t, OSColorPicker } = new_data
 
   // Components updaters ---------------------------------------------------------------
 
@@ -127,6 +130,14 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
     }
   }
 
+  const eventMagneticNodes = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.magnetic_nodes = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area, 'magnetic_nodes', evt.target.checked, f)
+  }
+
 
   return <WrapperBoxSubSectionMenu title={t('Menu.background')} new_data={new_data} >
     <>
@@ -178,11 +189,20 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
           />
         </OSTooltip>
       </Box>
+      {/* Nodes move by steps */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={new_data.drawing_area.magnetic_nodes}
+        icon={<CustomFaEyeCheckIcon />}
+        onChange={eventMagneticNodes}
+      >
+        <OSTooltip label={t('MEP.tooltips.MN')}>
+          {t('MEP.MN')}
+        </OSTooltip>
+      </Checkbox>
     </>
   </WrapperBoxSubSectionMenu>
 }
-
-
 
 /**
  * Component to config scale of DA and limit to flow thickness
@@ -372,7 +392,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
  */
 export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
 
-  const { t } = new_data
+  const { t, OSColorPicker } = new_data
   const [, setCount] = useState(0)
 
 
@@ -656,6 +676,11 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
   const [, setCount] = useState(0)
 
 
+  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+
+  // Update input data value
+  ref_set_text_value_input.current(new_data.node_label_separator)
+
   /**
    * Function used to reset menu UI
    */
@@ -706,8 +731,51 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
     new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'masked', !evt.target.checked, f)
   }
 
-
   return <>
+    {/* Masquer une partie des noms des noeuds */}
+    <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
+      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
+        <ConfigMenuTextInput
+          ref_to_set_value={ref_set_text_value_input}
+          function_get_value={() => { return new_data.node_label_separator }}
+          function_on_blur={(_) => {
+            const tmp = _ ? _ : ''
+            new_data.node_label_separator = tmp
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+          }}
+        />
+      </Box>
+    </OSTooltip>
+
+    <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
+      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
+        <Box layerStyle='options_2cols'>
+          <Button variant={new_data.node_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            onClick={() => {
+              new_data.node_label_separator_part = 'before'
+              new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+              setCount(a => a + 1)
+            }
+            }
+          >
+            {t('Menu.before')}
+          </Button>
+          <Button variant={new_data.node_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+            onClick={() => {
+              new_data.node_label_separator_part = 'after'
+              new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+              setCount(a => a + 1)
+            }
+            }
+          >
+            {t('Menu.after')}
+          </Button>
+        </Box>
+      </Box>
+    </OSTooltip>
+
     <Box
       as='span'
       layerStyle='menu_sub_section_title'
@@ -751,5 +819,87 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
     >
       {t('MEP.leg_show_info_link_void')}
     </Checkbox>
+
+
+
+
   </>
+}
+
+export const GraphElementsOrdoner: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+  const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
+  const [, setUpdate] = useState(0)
+
+  new_data.menu_configuration.ref_to_GraphElementsOrdoner_updater.current = () => setUpdate(a => a + 1)
+
+  // Function that return style of element draggable depending on it's state (isDragging)
+  const style_TableLineDragging = (isDragging: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined, is_selected: boolean) => ({
+    // change background colour if dragging
+    // border:isDragging ? '1px solid #78A7C2' : 'unset',
+    borderColor: is_selected ? 'red' : 'black',
+    // styles we need to apply on draggables
+    ...draggableStyle
+  })
+  return <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={new_data} collapse={false}>
+    <DragDropContext onDragEnd={(evt) => {
+      // Reorganise links order at drop event
+      if (evt.destination && evt.destination.index !== undefined) {
+        new_data.drawing_area.moveOrderElementInDA(evt.source.index, evt.destination.index)
+      }
+    }}>
+      <Droppable droppableId="droppable">
+        {(provided,) => (
+          <Box
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            style={{ display: 'grid', gridRowGap: '0.2rem' }}
+          >
+            {
+              new_data.drawing_area.list_g_element
+                .map((id_element, element_idx) => {
+                  const element = new_data.drawing_area.elementFromId(id_element)
+                  if (!element.is_visible)
+                    return <></>
+                  return (
+                    <Draggable key={id_element} index={element_idx} draggableId={'line_drag_' + id_element}>
+                      {(provided, snapshot) => (
+                        <Box key={id_element} layerStyle='drag_line_element_order' ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
+                        >
+                          <Box className='name_element'>{element.name}</Box>
+                          <Box layerStyle="options_2cols">
+                            <Button
+                              variant='menuconfigpanel_move_order_node_io'
+                              minWidth='0'
+                              onClick={() => {
+                                new_data.drawing_area.moveOrderElementInDA(element_idx, element_idx - 1)
+                                setUpdate(a => a + 1)
+                              }}
+                            >
+                              {icon_move_element_up}
+                            </Button>
+                            <Button
+                              variant='menuconfigpanel_move_order_node_io'
+                              minWidth='0'
+                              onClick={() => {
+                                new_data.drawing_area.moveOrderElementInDA(element_idx, element_idx + 1)
+                                setUpdate(a => a + 1)
+                              }}
+                            >
+                              {icon_move_element_down}
+                            </Button>
+                          </Box>
+                        </Box>)}
+                    </Draggable>
+                  )
+                })
+            }
+            {provided.placeholder}
+          </Box>
+        )}
+      </Droppable>
+    </DragDropContext>
+  </WrapperBoxSubSectionMenu>
 }

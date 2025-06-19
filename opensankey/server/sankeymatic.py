@@ -115,7 +115,7 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
     label_linespaceing = float(setting['labels_linespacing'])
     baseLabelSize = float(setting['label_name_size'])
     relativeLAbelSize = float(setting['labels_relativesize'])
-    fontSize = baseLabelSize*(100/relativeLAbelSize)
+    fontSize = baseLabelSize * (100 / relativeLAbelSize)
     flowInheritance = setting['flow_inheritfrom']
     DA_height = float(setting['size_height'])
     DA_margin_top = float(setting['margin_top'])
@@ -223,36 +223,36 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
         max_val_col = col_val if col_val > max_val_col else max_val_col
 
     # To compute DA scale use processed var from open source sankeymatic code
-    node_spacing = float(setting['node_spacing'])/100
+    node_spacing = float(setting['node_spacing']) / 100
     greatestNodeCount = max([len(v)
                             for k, v in nodes_per_horizontal_indexes.items()])
-    vert_space = DA_height-DA_margin_top-DA_margin_bottom
+    vert_space = DA_height - DA_margin_top - DA_margin_bottom
     allAvailablePadding = max(2, vert_space - greatestNodeCount)
-    maximumNodeSpacing = ((1 - node_height/100) *
+    maximumNodeSpacing = ((1 - node_height / 100) *
                           allAvailablePadding) / (greatestNodeCount - 1)
     actualNodeSpacing = maximumNodeSpacing * node_spacing
 
-    ky = min([(vert_space-(len(v)-1)*maximumNodeSpacing) /
+    ky = min([(vert_space - (len(v) - 1) * maximumNodeSpacing) /
              sankeymatic_utils.sum_node_value_from_list_node_dict(v)
               for k, v in nodes_per_horizontal_indexes.items()])
-    DA_scale = node_max_value/(node_max_value*ky)
+    DA_scale = node_max_value / (node_max_value * ky)
     length_of_horiz_index = len(nodes_per_horizontal_indexes.items())
-    stagesMidpoint = (length_of_horiz_index-1)/2
+    stagesMidpoint = (length_of_horiz_index - 1) / 2
     horizontal_col_shift = float(
-        setting['size_width'])/length_of_horiz_index
+        setting['size_width']) / length_of_horiz_index
 
     # var for node label pos if label_pos_scheme is per_stage
     first_stage = 'left' if label_pos_first == 'before' else 'right'
     opposite_stage = 'left' if first_stage == 'right' else 'left'
 
     # Column height (sum of node height of the col)
-    height_cumul_per_indexes = [(len(v)-1)*actualNodeSpacing
+    height_cumul_per_indexes = [(len(v) - 1) * actualNodeSpacing
                                 for k, v in nodes_per_horizontal_indexes.items()]
     # Tallest colmun height
     max_height_cumul = max(height_cumul_per_indexes)
     # Place node according the horizontal index
     for k, ndes_list in nodes_per_horizontal_indexes.items():
-        x_shift = (k+1) * horizontal_col_shift
+        x_shift = (k + 1) * horizontal_col_shift
 
         # Compute starting y_shift
         uniqueSrc = [node['inputLinksId'] for node in ndes_list]
@@ -262,7 +262,7 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
                                 for idLink in uniqueSrc]
         if (len(uniqueNodesInPrevCol) > 0):
             y_shift = min([node['y'] for node in uniqueNodesInPrevCol]
-                          )-(height_cumul_per_indexes[k]/2)
+                          ) - (height_cumul_per_indexes[k] / 2)
         else:
             y_shift = actualNodeSpacing + \
                 (max_height_cumul - height_cumul_per_indexes[k]) / 2
@@ -272,7 +272,7 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
             node['y'] = y_shift
             # Update y_shift for next node in col
             y_shift += (max(node["input_value"],
-                        node["output_value"]) / DA_scale)+actualNodeSpacing
+                        node["output_value"]) / DA_scale) + actualNodeSpacing
             # Set label position
             node['local']['label_vert'] = 'middle'
             node['local']['label_vert_valeur'] = 'middle'
@@ -295,18 +295,18 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
                         node['local']['label_horiz'] = 'right'
                         node['local']['label_horiz_valeur'] = 'right'
             elif (label_pos_scheme == 'per_stage'):
-                if (((k+1) < label_pos_breakpoint) or
+                if (((k + 1) < label_pos_breakpoint) or
                         (label_pos_breakpoint == 5)):
                     node['local']['label_horiz'] = first_stage
                     node['local']['label_vert_valeur'] = first_stage
-                elif ((k+1) >= label_pos_breakpoint):
+                elif ((k + 1) >= label_pos_breakpoint):
                     node['local']['label_horiz'] = opposite_stage
                     node['local']['label_vert_valeur'] = opposite_stage
 
     # Go throught all node & set some var
     for k, node in nodes.items():
         node['local']['value_label_vert_shift'] = fontSize + \
-            (fontSize*label_linespaceing)
+            (fontSize * label_linespaceing)
         # Set random color to node if they haven't one define in sankeymatic file
         if ('color' not in node['local']):
             node['local']['color'] = sankeymatic_utils.generate_hexa_color()
@@ -316,7 +316,7 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
                 reverse=False, key=lambda k: nodes[links[k]['idSource']]['y'])
             node['outputLinksId'].sort(
                 key=lambda k: nodes[links[k]['idTarget']]['y'])
-            node['links_order'] = node['inputLinksId']+node['outputLinksId']
+            node['links_order'] = node['inputLinksId'] + node['outputLinksId']
 
     # If link doesn't have a color defined in source file
     # then color of link depend of node source/target
@@ -329,12 +329,12 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
             elif (flowInheritance == 'outside-in'):
                 flowMidpoint = (
                     horizontal_indexes_per_nodes_ids[link['idSource']] +
-                    horizontal_indexes_per_nodes_ids[link['idTarget']])/2
+                    horizontal_indexes_per_nodes_ids[link['idTarget']]) / 2
                 sourceColor = nodes[link['idSource']]['local']['color']
                 lMidInftoStageMid = flowMidpoint <= stagesMidpoint
                 link['local']['color'] = sourceColor if lMidInftoStageMid else nodes[link['idTarget']]['local']['color']
 
-    return DA_scale*100
+    return DA_scale * 100
 
 
 def parse_sankeymatic_file(filename: str):
@@ -502,7 +502,7 @@ def parse_sankeymatic_text(lines: str):
         "node_arrow_angle_direction": "right",
         "label_visible": setting['label_name_appears'] == 'Y',
         "font_family": "Arial,sans-serif",
-        "font_size": baseLabelSize*(100/relativeLAbelSize),
+        "font_size": baseLabelSize * (100 / relativeLAbelSize),
         "uppercase": False,
         # in snakeymatic file the weight correspond to font-weight (100 & 400 are normal font and 700 is bold)
         "bold": labelNameWeight == 700,
@@ -515,7 +515,7 @@ def parse_sankeymatic_text(lines: str):
         "name_label_horiz_shift": 0,
         "show_value": setting['label_value_appears'] == 'Y',
         "value_label_font_family": "Arial,sans-serif",
-        "value_font_size": baseLabelSize/(100/relativeLAbelSize),
+        "value_font_size": baseLabelSize / (100 / relativeLAbelSize),
         "value_label_uppercase": False,
         # in snakeymatic file the weight correspond to font-weight (100 & 400 are normal font and 700 is bold)
         "value_label_bold": labelValueWeight == 700,
@@ -537,8 +537,8 @@ def parse_sankeymatic_text(lines: str):
     default_link_style = {
         "orientation": "hh",
         "left_horiz_shift": 0.05,
-        "starting_tangeant": flowCurvature/2,
-        "ending_tangeant": flowCurvature/2,
+        "starting_tangeant": flowCurvature / 2,
+        "ending_tangeant": flowCurvature / 2,
         "right_horiz_shift": 0.05,
         "curvature": 0.5,
         "curved": flowCurvature != 0,

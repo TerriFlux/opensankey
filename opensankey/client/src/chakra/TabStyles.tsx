@@ -55,9 +55,6 @@ export const tabs_base_style = definePartsStyle({
     }
   },
   tablist: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    gridColumnGap: '0.25rem',
     border: '0 !important',
     margin: '0.5rem !important'
   },
@@ -165,10 +162,10 @@ export const tabs_variant_template = definePartsStyle({
     border: 'inherit',
     borderRadius: '6px',
     borderColor: 'inherit',
-    '-webkit-user-select': 'none', /* Chrome all / Safari all */
-    '-moz-user-select': 'none', /* Firefox all */
-    '-ms-user-select': 'none', /* IE 10+ */
-    'user-select': 'none',
+    WebkitUserSelect: 'none', /* Chrome all / Safari all */
+    MozUserSelect: 'none', /* Firefox all */
+    msUserSelect: 'none', /* IE 10+ */
+    userSelect: 'none',
   },
   tab: {
     borderRight: '0px !important',

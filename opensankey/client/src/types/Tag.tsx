@@ -49,14 +49,13 @@ import {
   getBooleanFromJSON,
   getStringFromJSON,
   getStringListFromJSON,
-  getStringOrUndefinedFromJSON,
   makeId
 } from '../types/Utils'
 import colormap from 'colormap'
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type tag_banner_type = 'none' | 'one' | 'multi' | 'level' | 'unit'
+export type tag_banner_type = 'none' | 'one' | 'multi' | 'level'
 
 type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 export type TypeAbstract_TagReference = TypeAbstract_NodeElement | ClassAbstract_LinkValue | TypeAbstract_DataTagReference
@@ -477,7 +476,6 @@ export class Class_DataTag extends Class_ProtoTag {
 
   // Group where it belong
   protected _group: Class_DataTagGroup
-  private _unit_name: string | undefined
 
   // CONSTRUCTOR ========================================================================
 
@@ -557,43 +555,11 @@ export class Class_DataTag extends Class_ProtoTag {
     this._ref_sankey.dataTagsUpdated()
   }
 
-  /**
-   * Overridable method for JSON conversion
-   * @protected
-   * @param {Type_JSON} json_object
-   * @param {Type_JSON} [_kwargs]
-   * @memberof Class_ProtoTag
-   */
-  protected _toJSON(
-    json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-    super._toJSON(json_object,_kwargs)
-    if (this._unit_name) json_object['unit_name'] = this._unit_name
-  }
-
-  /**
-   * Set Tag value from JSON
-   * @protected
-   * @param {Type_JSON} json_object
-   * @param {Type_JSON} [_kwargs]
-   * @memberof Class_ProtoTag
-   */
-  protected _fromJSON(
-    json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ): void {
-    super._fromJSON(json_object,_kwargs)
-    this._unit_name = getStringOrUndefinedFromJSON(json_object, 'unit_name')
-  }
-
   // GETTERS ============================================================================
 
   public get group() { return this._group }
 
   public get references() { return Object.values(this._references) }
-  public get unit_name() { return this._unit_name }
-  public set unit_name(_) { this._unit_name = _ }
 }
 
 // CLASS PROTO LEVEL TAG ****************************************************************
@@ -2264,7 +2230,11 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     id: string | undefined = undefined
   ): Class_LevelTag {
     const tag = new Class_LevelTag(name, this, this._ref_sankey, id)
-    tag.setUnSelected()
+    if (Object.keys(this._tags).length == 0) {
+      tag.setSelected()
+    } else {
+      tag.setUnSelected()
+    }
     return tag
   }
 

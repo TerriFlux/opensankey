@@ -66,6 +66,16 @@ interface IType_SpreadSheetFlux {
   source: string // Source node of the flow
   target: string // Target node of the flow
   value?: number // Value of the flow (optional)
+  type?: string
+}
+
+const type_map={
+  'value':'v',
+  'ratio_input':'%s',
+  'ratio_output':'%d',
+  'ratio_source_parent':'%sp',
+  'ratio_target_parent':'%dp'
+  // 'unit_conversion':'uc'
 }
 
 // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
