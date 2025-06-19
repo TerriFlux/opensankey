@@ -29,7 +29,7 @@ import {
 
 // OpenSankey imports
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
-import { OSTooltip, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { checkForUrlToJSON, OSTooltip, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
 import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyPersistence'
 
@@ -107,7 +107,10 @@ export const initializeApplicationDataSA = (
 ) => {
   console.log('initializeApplicationDataSA')
   // Read user_data from cache if it exist
-  if (initial_data !== undefined) {
+  const url_info = checkForUrlToJSON()
+  if (url_info) {
+    new_data_app.readUrlJSON(url_info)
+  } else if (initial_data !== undefined) {
     new_data_app.fromJSON(initial_data)
   }
   return new_data_app
@@ -128,7 +131,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   // No initialisation if static --------------------------------------------------------
 
-    //Add user_data sequence in footer
+  //Add user_data sequence in footer
   additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
 
   // OpenSankey+ initialisation ----------------------------------------------------------
