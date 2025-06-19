@@ -98,6 +98,7 @@ import {
   default_node_value_label_background, default_node_value_label_is_visible,
   default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity
 } from './NodeAttributes'
+import { Class_DrawingArea } from '../types/Types'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -844,23 +845,26 @@ export abstract class ClassTemplate_NodeElement
    * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
-  public drawParent(id?: string) {
+  public drawParent(id: string) {
     if (this.is_child) {
       //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
       // Force to show parent
       if ((id !== undefined) && (this._dimensions_as_child[id])) {
         this._dimensions_as_child[id].setForceToShowParent()
         const parent = this._dimensions_as_child[id].parent
-        parent.input_links_list.forEach(l => l.source.draw())
-        parent.output_links_list.forEach(l => l.target.draw())
-      } else {
-        //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
-        const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
-        dim.setForceToShowParent()
-        const parent = dim.parent
-        parent.input_links_list.forEach(l => { l.source.draw() })
-        parent.output_links_list.forEach(l => { l.target.draw() })
-      }
+        parent.input_links_list.forEach(l=>l.source.draw())
+        parent.output_links_list.forEach(l=>l.target.draw())
+      } 
+      //   parent.input_links_list.forEach(l => l.source.draw())
+      //   parent.output_links_list.forEach(l => l.target.draw())
+      // } else {
+      //   //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
+      //   const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
+      //   dim.setForceToShowParent()
+      //   const parent = dim.parent
+      //   parent.input_links_list.forEach(l => { l.source.draw() })
+      //   parent.output_links_list.forEach(l => { l.target.draw() })
+      // }
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
@@ -1695,6 +1699,7 @@ export abstract class ClassTemplate_NodeElement
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
             }
+            this._display.position.x = this._display.position.u*(this.sankey.drawing_area as Class_DrawingArea).horizontal_spacing
           }
         }
       }

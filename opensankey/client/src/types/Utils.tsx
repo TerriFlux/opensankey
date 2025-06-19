@@ -45,6 +45,7 @@ import { FType_InitializeAdditionalMenus } from './FunctionTypes'
  */
 export type Type_ElementPosition = {
   type?: Type_Position
+  auto_x: boolean
   x: number
   y: number
   u: number
@@ -65,6 +66,7 @@ export type Type_ElementPositionOptionnal = {
   dy?: number
   relative_dx?: number
   relative_dy?: number
+  auto_x?: boolean
 }
 export type Type_Position = 'absolute' | 'relative' | 'parametric'
 
@@ -155,6 +157,7 @@ export const default_main_sankey_id = 'sankey_maitre'
 export const const_default_position_x = 50
 export const const_default_position_y = 50
 export const default_element_position: Type_ElementPosition = {
+  auto_x: false,
   x: const_default_position_x,
   y: const_default_position_y,
   u: 0,
