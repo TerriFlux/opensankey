@@ -39,20 +39,27 @@ import {
 } from '@chakra-ui/react'
 
 import {
-  CutName
+  CutName,
+  OSTooltip
 } from '../../types/Utils'
 import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { FCType_SankeyModalStyleLink, FCType_SankeyModalStyleNode, FCType_WrapperLinkStyleSelector } from './types/SankeyStyleTypes'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { default_style_id } from '../../types/Utils'
 import { MenuConfigurationNodeContext, MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
+import { ChevronDownIcon } from '@chakra-ui/icons'
+import { checked } from './SankeyMenuContextZDD'
+import { Type_customisable_node_style_attr } from '../../Elements/NodeAttributes'
+import { Type_customisable_flow_style_attr } from '../../Elements/LinkAttributes'
 
 
 export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode> = ({
   new_data,
   additionalMenus
 }) => {
-  const { t } = new_data
+  const { t, icon_library, } = new_data
+  const { icon_undo } = icon_library
+  const { ref_selected_style_node } = new_data.menu_configuration
 
   // Component's state
   const [, setForceUpdate] = useBoolean()
@@ -61,30 +68,106 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
 
   // Dict of nodes styles
   const node_styles_dict = new_data.drawing_area.sankey.node_styles_dict
-
   let content_node_style_shape = <></>
   let content_node_style_context = <></>
+
 
   // Failsafe for when selected_node_style_id is not in node_styles_dict
   // It can happen when we change view and selected_node_style_id is not anymore in current sankey data
   if (!(selected_node_style_id in node_styles_dict)) {
     setSelectedNodeStyleId(default_style_id)
   } else {
-    content_node_style_shape = <WrapperNodeStyleSelector new_data={new_data}>
+    const style_select = node_styles_dict[ref_selected_style_node.current]
+    const content_node_customisable_attribute_style = <Menu direction='rtl' placement='left' closeOnSelect={false}>
+      <OSTooltip label={t('Menu.tooltips.style_attr_applicated')}>
+        <MenuButton as={Button} variant='menuconfigpanel_option_button'>
+          {t('Menu.style_attr_applicated')}
+          <ChevronDownIcon />
+        </MenuButton>
+      </OSTooltip>
+
+      <MenuList maxH='40vh' overflow='auto'>
+        {
+          Object.entries(style_select.customisable_attribute).map(ent => {
+            // Early return to not show props for labels
+            if (!ent[0].includes('shape_'))
+              return <></>
+
+            return <MenuItem
+              style={{ display: 'flex' }}
+              isDisabled={ref_selected_style_node.current == default_style_id}
+              onClick={() => {
+                //if style attribute is not customisable delete value
+                if (ent[1])
+                  style_select[ent[0] as Type_customisable_node_style_attr] = undefined
+
+                //Update style attribute customisability
+                style_select.customisable_attribute[ent[0] as Type_customisable_node_style_attr] = !ent[1]
+
+                // Update related components
+                new_data.menu_configuration.updateComponentRelatedToNodesStyles()
+              }}>{t('Noeud.apparence.'+ent[0])}{checked(ent[1])}</MenuItem>
+          })
+        }
+      </MenuList>
+    </Menu>
+
+    content_node_style_shape = <WrapperNodeStyleSelector new_data={new_data}><>
+      {content_node_customisable_attribute_style}
       {
+
         <MenuConfigurationNodeStyle
           new_data={new_data}
           menu_for_style={true}
           additional_menus={additionalMenus}
         />}
+    </>
     </WrapperNodeStyleSelector>
 
+    const content_node_customisable_attribute_labels = <Menu direction='rtl' placement='left' closeOnSelect={false}>
+      <OSTooltip label={t('Menu.tooltips.style_attr_applicated')}>
+        <MenuButton as={Button} variant='menuconfigpanel_option_button'>
+          {t('Menu.style_attr_applicated')}
+          <ChevronDownIcon />
+        </MenuButton>
+      </OSTooltip>
+
+      <MenuList maxH='40vh' overflow='auto'>
+        {
+          Object.entries(style_select.customisable_attribute).map(ent => {
+            // Early return to not show props for shape
+            if (ent[0].includes('shape_'))
+              return <></>
+
+            const labelOrValue=ent[0].includes('name_')?'name_label_is_visible':'value_label_is_visible'
+
+            return <MenuItem
+              style={{ display: 'flex' }}
+              isDisabled={ref_selected_style_node.current == default_style_id}
+              onClick={() => {
+                //if style attribute is not customisable delete value
+                if (ent[1])
+                  style_select[ent[0] as Type_customisable_node_style_attr] = undefined
+
+                //Update style attribute customisability
+                style_select.customisable_attribute[ent[0] as Type_customisable_node_style_attr] = !ent[1]
+                // Update related components
+                new_data.menu_configuration.updateComponentRelatedToLinksStyles()
+              }}>{t('Noeud.labels.'+labelOrValue)} {t('Noeud.labels.'+ent[0])}{checked(ent[1])}</MenuItem>
+          })
+        }
+      </MenuList>
+    </Menu>
+
     content_node_style_context = <WrapperNodeStyleSelector new_data={new_data}>
-      <MenuConfigurationNodeContext
-        new_data={new_data}
-        menu_for_style={true}
-        additional_menus={additionalMenus}
-      />
+      <>
+        {content_node_customisable_attribute_labels}
+        <MenuConfigurationNodeContext
+          new_data={new_data}
+          menu_for_style={true}
+          additional_menus={additionalMenus}
+        />
+      </>
     </WrapperNodeStyleSelector>
   }
 
@@ -96,26 +179,27 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
     maxW='20%'
     customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
   />
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_modal_styles_nodes_context'}
-    content={content_node_style_context}
-    title={t('Menu.esn')}
-    maxW='20%'
-    customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
-  />
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_modal_styles_nodes_context'}
+      content={content_node_style_context}
+      title={t('Menu.esn')}
+      maxW='20%'
+      customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
+    />
   </>
 }
 
-const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
+export const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
   const { t, icon_library } = new_data
-  const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
+  const { icon_add_element, icon_remove_element, icon_open_selector, icon_undo } = icon_library
 
   // Shared refs for external components
   const { ref_selected_style_node } = new_data.menu_configuration
   // Dict of links styles
   const node_styles_dict = new_data.drawing_area.sankey.node_styles_dict
 
+  const style_select = node_styles_dict[ref_selected_style_node.current]
 
 
   return <Box layerStyle='menuconfigpanel_grid'>
@@ -198,7 +282,8 @@ const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
     <Box
       as='span'
       layerStyle='menuconfigpanel_row_2cols'
-      gridTemplateColumns='1fr 7fr'
+      display='flex'
+      gap='0.4rem'
     >
       <Box
         layerStyle='menuconfigpanel_option_name'
@@ -206,7 +291,7 @@ const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
       >
         {t('Menu.ns')}
       </Box>
-      <Box>
+      <Box flex='auto'>
         <InputGroup
           variant='menuconfigpanel_option_input'
         >
@@ -226,6 +311,7 @@ const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
         </InputGroup>
       </Box>
     </Box>
+
 
     {
       children
@@ -249,6 +335,7 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
   // Shared refs for external components
   // Dict of links styles
   const link_styles_dict = new_data.drawing_area.sankey.link_styles_dict
+  const { ref_selected_style_link } = new_data.menu_configuration
 
   let content_apparence_shape = <></>
   let content_apparence_contenxt = <></>
@@ -258,20 +345,96 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
   if (!(selected_link_style_id in link_styles_dict)) {
     setSelectedLinkStyleId(default_style_id)
   } else {
-    content_apparence_shape = <WrapperLinkStyleSelector new_data={new_data}>
+    const style_select = link_styles_dict[ref_selected_style_link.current]
+    
+    const content_node_customisable_attribute_style = <Menu direction='rtl' placement='left' closeOnSelect={false}>
+      <OSTooltip label={t('Menu.tooltips.style_attr_applicated')}>
+        <MenuButton as={Button} variant='menuconfigpanel_option_button'>
+          {t('Menu.style_attr_applicated')}
+          <ChevronDownIcon />
+        </MenuButton>
+      </OSTooltip>
+
+      <MenuList maxH='40vh' overflow='auto'>
+        {
+          Object.entries(style_select.customisable_attribute).map(ent => {
+            // Early return to not show props for labels
+            if (!ent[0].includes('shape_'))
+              return <></>
+
+            return <MenuItem
+              style={{ display: 'flex' }}
+              isDisabled={ref_selected_style_link.current == default_style_id}
+              onClick={() => {
+                //if style attribute is not customisable delete value
+                if (ent[1])
+                  style_select[ent[0] as Type_customisable_flow_style_attr] = undefined
+
+                //Update style attribute customisability
+                style_select.customisable_attribute[ent[0] as Type_customisable_flow_style_attr] = !ent[1]
+
+                // Update related components
+                new_data.menu_configuration.updateComponentRelatedToLinksStyles()
+              }}>{t('Flux.apparence.'+ent[0])}{checked(ent[1])}</MenuItem>
+          })
+        }
+      </MenuList>
+    </Menu>
+
+    content_apparence_shape = <WrapperLinkStyleSelector new_data={new_data}><>
+      {content_node_customisable_attribute_style}
       <MenuConfigurationLinksStyle
         new_data={new_data}
         additionMenus={additionalMenus}
         menu_for_style={true}
       />
+    </>
     </WrapperLinkStyleSelector>
 
-    content_apparence_contenxt = <WrapperLinkStyleSelector new_data={new_data}>
+    const content_flow_customisable_attribute_context = <Menu direction='rtl' placement='left' closeOnSelect={false}>
+      <OSTooltip label={t('Menu.tooltips.style_attr_applicated')}>
+        <MenuButton as={Button} variant='menuconfigpanel_option_button'>
+          {t('Menu.style_attr_applicated')}
+          <ChevronDownIcon />
+        </MenuButton>
+      </OSTooltip>
+
+      <MenuList maxH='40vh' overflow='auto'>
+        {
+          Object.entries(style_select.customisable_attribute).map(ent => {
+            // Early return to not show props for labels
+            if (ent[0].includes('shape_'))
+              return <></>
+
+            const labelOrValue=ent[0].includes('name_')?'name_label_is_visible':'value_label_is_visible'
+
+            return <MenuItem
+              style={{ display: 'flex' }}
+              isDisabled={ref_selected_style_link.current == default_style_id}
+              onClick={() => {
+                //if style attribute is not customisable delete value
+                if (ent[1])
+                  style_select[ent[0] as Type_customisable_flow_style_attr] = undefined
+
+                //Update style attribute customisability
+                style_select.customisable_attribute[ent[0] as Type_customisable_flow_style_attr] = !ent[1]
+
+                // Update related components
+                new_data.menu_configuration.updateComponentRelatedToLinksStyles()
+              }}>{t('Noeud.labels.'+labelOrValue)} {t('Flux.labels.'+ent[0])}{checked(ent[1])}</MenuItem>
+          })
+        }
+      </MenuList>
+    </Menu>
+
+    content_apparence_contenxt = <WrapperLinkStyleSelector new_data={new_data}><>
+      {content_flow_customisable_attribute_context}
       <MenuConfigurationLinkContext
         new_data={new_data}
         additionMenus={additionalMenus}
         menu_for_style={true}
       />
+    </>
     </WrapperLinkStyleSelector>
   }
 
@@ -284,19 +447,19 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
     customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
 
   />
-  <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_modal_styles_links_context'}
-    content={content_apparence_contenxt}
-    title={t('Menu.esf')}
-    maxW='20%'
-    customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
+    <MenuDraggable
+      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+      dialog_name={'ref_setter_show_modal_styles_links_context'}
+      content={content_apparence_contenxt}
+      title={t('Menu.esf')}
+      maxW='20%'
+      customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
 
-  />
+    />
   </>
 }
 
-const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
+export const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 
@@ -384,7 +547,8 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
     <Box
       as='span'
       layerStyle='menuconfigpanel_row_2cols'
-      gridTemplateColumns='1fr 7fr'
+      display='flex'
+      gap='0.4rem'
     >
       <Box
         layerStyle='menuconfigpanel_option_name'
@@ -392,7 +556,7 @@ const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelecto
       >
         {t('Menu.ns')}
       </Box>
-      <Box>
+      <Box flex='auto'>
         <InputGroup variant='menuconfigpanel_option_input' >
           <Input
             variant='menuconfigpanel_option_input'

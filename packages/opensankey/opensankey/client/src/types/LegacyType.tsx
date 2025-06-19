@@ -197,6 +197,9 @@ export type SankeyLinkAttrLocal = {
   nb_digit?: number,
 
   gradient?:boolean
+
+  //Attribute from newer version but needed to be defined here for converter purposes
+  value_label_is_visible?:boolean
 }
 
 export type SankeyLinkStyle = {
@@ -229,10 +232,12 @@ export type SankeyLinkStyle = {
   label_unit_visible: boolean,
   label_unit: string,
   custom_digit: boolean,
-  nb_digit: number,
+  nb_digit: number
 
   starting_tangeant: number,
   ending_tangeant: number
+
+  color_rule: string
 }
 
 export type SankeyLink = {

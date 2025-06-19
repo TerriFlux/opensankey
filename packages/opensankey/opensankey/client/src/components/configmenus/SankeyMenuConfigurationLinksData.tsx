@@ -46,7 +46,7 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import { default_link_value_label_unit } from '../../Elements/LinkAttributes'
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 
 /*************************************************************************************************/
@@ -80,6 +80,14 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   // Refs used to trigger refreshing of number & text inputs
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
+  const ref_set_number_input = useRef((_: string | null | undefined) => null)
+
+  let unit_text : string | undefined
+  let default_value = value?.valueData
+  if (value_option == 'ratio_input' || value_option == 'ratio_output') {
+    unit_text = '%'
+    default_value = default_value?default_value:null
+  }
 
   const updateInputsValues = () => {
     // Recreate a updated_selected_links list in the function because it can be called before re-rendering <MenuConfigurationLinksData/>
@@ -88,9 +96,8 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       new_data.drawing_area.selected_links_list_sorted : new_data.drawing_area.visible_and_selected_links_list_sorted
 
     const value_update = updated_selected_links[0]?.value
-
     // Update input data value
-    ref_set_data_value_input.current(String(value_update?.data_value ?? ''))
+    ref_set_data_value_input.current(String(value_update?.valueData ?? ''))
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
   }
@@ -126,7 +133,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   const updateValueAndHistory = (_: number | null | undefined) => {
     // Save old values in dict so the undo reset value for previous value of each link
     const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.data_value)
+    selected_links.forEach(l => dict_old_val[l.id] = l.valueData)
     // Undo link value
     const inv_updateDataLinks = () => {
       // Update data for links
@@ -252,8 +259,31 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       })
     }
 
+      {/* Choix du type de donnée */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('Flux.data.data_type')}
+        </Box>
+        {/* <OSTooltip label={t('Flux.data.tooltips.data_type')}> */}
+          <Select
+            value={value_option}
+            onChange={(evt) => {
+              selected_links.forEach(l=>l.value!.value_option = evt.target.value as ValueOptionType)
+              new_data.drawing_area.updateScaleAtLinkValueSetting()
+              // Update this menu
+              refreshThisAndUpdateRelatedComponents()
+            }}
+          >
+            {new_data.menu_configuration.data_type.map(el => {
+              // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
+              //   return <></>
+              // }
+              return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.data.'+el)}</OSTooltip></></option>
+            })}
+          </Select>
+        {/* </OSTooltip> */}
+      </Box>
     {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
-
     <OSTooltip label={t('Flux.data.tooltips.vpp')}>
       <Box
         as='span'
@@ -264,11 +294,9 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         >
           {t('Flux.data.vpp')}
         </Box>
-        <ConfigMenuNumberInput
-          t={new_data.t}
+        <ConfigMenuNumberOrUndefinedInput
           ref_to_set_value={ref_set_data_value_input}
-          default_value={value?.data_value as number | undefined}
-          fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
+          default_value={default_value}
           function_on_blur={updateValueAndHistory}
           minimum_value={0}
           stepper={true}
