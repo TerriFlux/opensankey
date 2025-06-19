@@ -116,7 +116,10 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
     else if (!has_output_links && (direction_selected === output_direction))
       setSelectedDirection(undefined)
   }
-
+  // Index of link in list of visible link IO for a node side
+  let idx_link_io_visible = -1
+  // Number of link visble for a selected side
+  let filtered_links_to_reorganize_length = 0
   // Set selected side ------------------------------------------------------------------
 
   const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
@@ -152,6 +155,8 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
     if (!sideWithLinks.includes(side_selected)) {
       setSelectedSide(sideWithLinks[0])
     }
+
+    filtered_links_to_reorganize_length = links_to_reorganize[side_selected].filter(link => link.is_visible).length
   }
 
   // Boolean to color or not link table ------------------------------------------------
@@ -261,9 +266,9 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   }
 
   // Function that return style of element draggable depending on it's state (isDragging)
-  const style_TableLineDragging= (isDragging:boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined) => ({
+  const style_TableLineDragging = (isDragging: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined) => ({
     // change background colour if dragging
-    border:isDragging ? '1px solid #78A7C2' : 'unset',
+    border: isDragging ? '1px solid #78A7C2' : 'unset',
     // styles we need to apply on draggables
     ...draggableStyle
   })
@@ -395,7 +400,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
       {
         <>
           <Table
-            variant='striped'
+            variant='table_edit_node_io'
           >
             <Thead>
               <Tr>
@@ -421,18 +426,26 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                     {
                       links_to_reorganize[side_selected]
                         .map((link, link_idx) => {
+
+                          // Early return to not show link invisible, 
+                          // but we still need correct index of link in node IO that why we don't filter links_to_reorganize
+                          if (!link.is_visible)
+                            return <></>
+
+                          idx_link_io_visible += 1
                           const color = link.getPathColorToUse()
                           const bc = { 'backgroundColor': (color && tab_colored) ? color : 'inherit' }
-                          const first_link = (link_idx === 0)
-                          const last_link = link_idx === (links_to_reorganize[side_selected].length - 1)
+                          const first_link = (idx_link_io_visible === 0)
+                          const last_link = idx_link_io_visible === (filtered_links_to_reorganize_length - 1)
 
+                          const curr_idx = idx_link_io_visible // save id of this link (used in onClick and if we use true_idx_link_io it will take last index since it refer to an object)
                           return (
                             <Draggable key={link.id} index={link_idx} draggableId={'line_drag_' + link.id}>
                               {(provided, snapshot) => (
                                 <Tr key={link.id} ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  style={style_TableLineDragging(snapshot.isDragging,provided.draggableProps.style)}
+                                  style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style)}
                                 >
                                   <td style={bc}>{link.name}</td>
                                   <td style={{ 'width': '10%' }}>
@@ -443,7 +456,9 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                                         minWidth='0'
                                         onClick={() => {
                                           if (!first_link) {
-                                            moveLinkBefore(link, links_to_reorganize[side_selected][link_idx - 1])
+                                            const prev_visible_link = links_to_reorganize[side_selected].filter(l => l.is_visible)[curr_idx - 1]
+                                            const idx_prev_visible_l = links_to_reorganize[side_selected].findIndex(link => link.id == prev_visible_link.id)
+                                            moveLinkBefore(link, links_to_reorganize[side_selected][idx_prev_visible_l])
                                           }
                                         }}
                                       >
@@ -455,7 +470,9 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
                                         minWidth='0'
                                         onClick={() => {
                                           if (!last_link) {
-                                            moveLinkAfter(link, links_to_reorganize[side_selected][link_idx + 1])
+                                            const next_visible_link = links_to_reorganize[side_selected].filter(l => l.is_visible)[curr_idx + 1]
+                                            const idx_next_visible_l = links_to_reorganize[side_selected].findIndex(link => link.id == next_visible_link.id)
+                                            moveLinkAfter(link, links_to_reorganize[side_selected][idx_next_visible_l])
                                           }
                                         }}
                                       >

@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { Fragment, FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 
 import Draggable from 'react-draggable'
 
@@ -74,7 +74,7 @@ import { modalResolutionPNG } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../types/Types'
 import { keyTypeConfig, keyTypeElements } from '../../types/MenuConfig'
-import { DrawingAreaStyle, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
+import { DrawingAreaStyle, GraphElementsOrdoner, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
@@ -91,16 +91,15 @@ export declare const window: Window &
       sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
       excel: string
-      structure: boolean,
-      advanced: boolean,
-      footer: boolean,
-      toolbar: true
+      structure: boolean
+      advanced: boolean
+      footer: boolean
+      toolbar: boolean
+      topbar: boolean
     }
   }
 
 /*************************************************************************************************/
-
-// export type Type_MenuSelectionEntry = { 'label': string; 'value': string }
 
 export const menu_config_width = 20
 
@@ -191,13 +190,13 @@ export const Menu: FunctionComponent<FCType_Menu> = (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
-      <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />
+      {((!new_data.is_static) ||(window.sankey && window.sankey.topbar != false ))? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />:<></>}
 
       {/* Bottom Navbar with some more info */}
       {
         (
           (!new_data.is_static) ||
-          (window.sankey.footer)
+          (window.sankey && window.sankey.footer)
         ) ?
           <Box
             className='BottomMenu'
@@ -206,7 +205,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             bottom='0'
             layerStyle='menubottom_layout_style'
           >
-            {additionalMenus.current.footer}
+            {additionalMenus.current.footer.map((add_footer,idx)=><Fragment key={'additional_footer_'+idx}>{add_footer}</Fragment>)}
             <Box
               display='grid'
               gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
@@ -238,7 +237,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
                 justifySelf='end'
                 paddingRight='1.5rem'
               >
-                9 rue du Rocher de Lorzier, 38430 Moirans  +33 (0)4 56 47 00 71
+                12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
               </Box>
             </Box>
           </Box> :
@@ -306,9 +305,9 @@ export const Menu: FunctionComponent<FCType_Menu> = (
       ) : (<></>)}
 
 
-      <ToolBarBottom
+      {((!new_data.is_static) || (window.sankey && window.sankey.toolbar)) ? <ToolBarBottom
         new_data={new_data}
-      />
+      />:<></>}
 
       {
         new_data.processFunction.ref_processing.current ? (
@@ -441,7 +440,10 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
       </WrapperContentConfig>,
 
       'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
+        <>
         <LayoutConfigDAScaleAndLimit new_data={new_data} />
+        <GraphElementsOrdoner new_data={new_data}/>
+        </>
       </WrapperContentConfig>,
       'node': <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <SankeyMenuConfigurationNodesIO new_data={new_data} />

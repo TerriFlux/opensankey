@@ -128,7 +128,8 @@ import {
   menu_button_subnav_style,
   menu_select_elements,
   menu_select_style,
-  menu_subnav_item_demo
+  menu_subnav_item_demo,
+  selector_lang
 } from './MenuStyles'
 import {
   numberinput_base_style,
@@ -159,10 +160,12 @@ import {
   table_edit_tag_link,
   table_edit_tag_data,
   table_edit_grp_tag_node_link,
-  table_edit_grp_tag_data
+  table_edit_grp_tag_data,
+  table_edit_node_io
 } from './TableStyle'
 import {
   heading_base_style,
+  heading_tab_pref,
   heading_template_dashboard,
   heading_template_sankey,
   heading_welcome_style,
@@ -190,7 +193,7 @@ import {
 import {
   spinner_base_style
 } from './Spinner'
-import { editable_base_style, name_file_editable } from './EditableStyle'
+import { edit_name_palette, editable_base_style, name_file_editable } from './EditableStyle'
 
 export const opensankey_theme = extendTheme({
   components: {
@@ -300,6 +303,7 @@ export const opensankey_theme = extendTheme({
       baseStyle: editable_base_style,
       variants: {
         name_file_editable,
+        edit_name_palette,
       }
     },
     Input: {
@@ -328,6 +332,7 @@ export const opensankey_theme = extendTheme({
         menu_subnav_item_demo,
         menu_select_elements,
         menu_select_style,
+        selector_lang,
       }
     },
     NumberInput: {
@@ -359,7 +364,7 @@ export const opensankey_theme = extendTheme({
       variants: {
         tabs_variant_lib_cion,
         tabs_navbar,
-        tabs_variant_template
+        tabs_variant_template,
       }
     },
     Table: {
@@ -369,7 +374,8 @@ export const opensankey_theme = extendTheme({
         table_edit_tag_link,
         table_edit_tag_data,
         table_edit_grp_tag_node_link,
-        table_edit_grp_tag_data
+        table_edit_grp_tag_data,
+        table_edit_node_io,
       }
     },
     Tag: {
@@ -391,6 +397,7 @@ export const opensankey_theme = extendTheme({
         heading_welcome_style,
         heading_template_dashboard,
         heading_template_sankey,
+        heading_tab_pref,
       }
     },
     Spinner: {
@@ -483,6 +490,7 @@ export const opensankey_theme = extendTheme({
       display: 'grid',
       gridRowGap: '0.25rem',
     },
+    
     menuconfigpanel_row_droplist: {
       display: 'grid',
       gridTemplateColumns: '1fr 10fr 1fr 1fr',
@@ -616,9 +624,8 @@ export const opensankey_theme = extendTheme({
       whiteSpace: 'pre-line'
     },
     menustylepanel_row_droplist: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 6fr 1fr',
-      gridColumnGap: '0.25rem',
+      display: 'flex',
+      gap:'0.6rem',
     },
     popover_sidebar_row_tag_filter: {
       display: 'grid',
@@ -752,10 +759,10 @@ export const opensankey_theme = extendTheme({
       '.rmsc': {
         '--rmsc-radius': '6px !important',
         '--rmsc-h': '1.5rem !important',
-        '-webkit-user-select': 'none',  /* Chrome all / Safari all */
-        '-moz-user-select': 'none',    /* Firefox all */
-        '-ms-user-select': 'none',     /* IE 10+ */
-        'user-select': 'none',
+        WebkitUserSelect: 'none',  /* Chrome all / Safari all */
+        MozUserSelect: 'none',    /* Firefox all */
+        msUserSelect: 'none',     /* IE 10+ */
+        userSelect: 'none',
       }
     },
     selector_elements_simple: {
@@ -775,10 +782,10 @@ export const opensankey_theme = extendTheme({
       '.rmsc': {
         '--rmsc-radius': '6px !important',
         '--rmsc-h': '1.5rem !important',
-        '-webkit-user-select': 'none',  /* Chrome all / Safari all */
-        '-moz-user-select': 'none',    /* Firefox all */
-        '-ms-user-select': 'none',     /* IE 10+ */
-        'user-select': 'none',
+        WebkitUserSelect: 'none',  /* Chrome all / Safari all */
+        MozUserSelect: 'none',    /* Firefox all */
+        msUserSelect: 'none',     /* IE 10+ */
+        userSelect: 'none',
       }
     },
     empty_config_text: {
@@ -800,6 +807,20 @@ export const opensankey_theme = extendTheme({
       display: 'grid',
       gridColumnGap: '0.25rem',
       gridTemplateColumns: 'auto auto',
+    },
+    drag_line_element_order: {
+      display: 'grid',
+      gridTemplateColumns: '6fr 3fr',
+      border: '1px solid',
+      borderRadius: '3px',
+
+      '.name_element': {
+        margin: 'auto',
+        maxW: '7rem',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }
     }
 
   },

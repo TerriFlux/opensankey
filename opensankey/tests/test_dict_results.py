@@ -73,7 +73,7 @@ DIRS_TO_EXCLUDE = [
     'OpenSankey',
     'OptimSankey',
     'not_tested',
-    'artefacts',
+    'artifacts',
     'Formations',
     'Recherche',
     'Etudes',
@@ -104,6 +104,7 @@ def keep_exploring_file_or_folder(file_or_folder):
         if _ in file_or_folder:
             return False
     return True
+
 
 def parse_folder(current_dir):
     folder_content = listdir(current_dir)
@@ -212,7 +213,7 @@ class DictResultTest(unittest.TestCase):
         # For Debug
         print('\n{}'.format(self._testMethodName), end=' -> ', flush=True)
         # TODO : redondant ?
-        if len( [test_to_skip for test_to_skip in TESTS_TO_SKIP if test_to_skip in self._testMethodName]) > 0:
+        if len([test_to_skip for test_to_skip in TESTS_TO_SKIP if test_to_skip in self._testMethodName]) > 0:
             return
         # Read sankey struct
         io_excel = IOExcel()
