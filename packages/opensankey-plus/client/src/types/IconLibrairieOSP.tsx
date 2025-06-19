@@ -696,6 +696,8 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
   protected _icon_node_tag_diabled = logo_node_tag_disabled
   protected _icon_node_tag = logo_node_tag_unselected
 
+  protected _icon_level_tag_diabled = logo_node_tag_disabled
+  protected _icon_level_tag = logo_node_tag_unselected
   protected _icon_filter_level = <FontAwesomeIcon icon={faFolderTree} />
 
   protected _icon_unit_view = <FontAwesomeIcon icon={faObjectUngroup} />
@@ -727,6 +729,8 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
   public get icon_flow_tag() { return this._icon_flow_tag }
   public get icon_node_tag_diabled() { return this._icon_node_tag_diabled }
   public get icon_node_tag() { return this._icon_node_tag }
+  public get icon_level_tag_diabled() { return this._icon_level_tag_diabled }
+  public get icon_level_tag() { return this._icon_level_tag }
   public get icon_filter_level() { return this._icon_filter_level }
   public get icon_unit_view() { return this._icon_unit_view }
 
