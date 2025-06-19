@@ -23,6 +23,7 @@ export const resources_app_elements = {
         'setResolutionPNG': 'Select the desired export resolution',
         'sankeyOSPDisabled': 'Parameter disabled because you don\'t have OpenSankey+',
         'featureLocked': 'Locked',
+        'Hierarchy': 'Hierarchy',
 
         'home': 'Master',
         'addView': 'Add',
@@ -475,6 +476,7 @@ export const resources_app_elements = {
         'setResolutionPNG': 'Choisissez la résolution désirée pour l\'exportation',
         'sankeyOSPDisabled': 'Paramètre désactivé car vous n\'avez pas OpenSankey+',
         'featureLocked': 'Licence',
+        'Hierarchy': 'Hiérarchies',
 
         'home': 'Maître',
         'addView': 'Ajout',
