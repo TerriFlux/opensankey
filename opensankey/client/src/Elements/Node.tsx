@@ -445,6 +445,12 @@ export abstract class ClassTemplate_NodeElement
                 if (tag_to_copy) {
                   // Create new dim if everything is ok
                   const new_dim = new Class_NodeDimension(parent, [this], parent_tag, tag_to_copy, dim_to_copy.id)
+                  if (dim_to_copy.force_show_children) {
+                    new_dim.setForceToShowChildren(true)
+                  }
+                  if (dim_to_copy.force_show_parent) {
+                    new_dim.setForceToShowParent()
+                  }
                   all_existing_dim[dim_to_copy.id] = new_dim
                 }
               }
@@ -476,6 +482,12 @@ export abstract class ClassTemplate_NodeElement
               // Create new dim if everything is ok
               if ((children.length > 0) && tag != undefined) {
                 const new_dim = new Class_NodeDimension(this, children, parent_tag, tag, dim_to_copy.id)
+                if (dim_to_copy.force_show_children) {
+                  new_dim.setForceToShowChildren(true)
+                }
+                if (dim_to_copy.force_show_parent) {
+                  new_dim.setForceToShowParent()
+                }
                 all_existing_dim[dim_to_copy.id] = new_dim
               }
             }
@@ -3401,6 +3413,16 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /**
+   * Retun list of dimensions where this node is the parent
+   *
+   * @readonly
+   * @memberof ClassTemplate_NodeElement
+   */
+  public get dimensions_as_parent_pure() {
+    return Object.values(this._dimensions_as_parent).filter(dim=>!dim.children.includes(dim.parent))
+  }
+
+  /**
    *Return ture if node is in multiple nodeDimension has a parent.
    *
    * @readonly
@@ -3418,6 +3440,16 @@ export abstract class ClassTemplate_NodeElement
    */
   public get dimensions_as_child() {
     return Object.values(this._dimensions_as_child)
+  }
+
+  /**
+   * Retun list of dimensions where this node is a child
+   *
+   * @readonly
+   * @memberof ClassTemplate_NodeElement
+   */
+  public get dimensions_as_child_pure() {
+    return Object.values(this._dimensions_as_child).filter(dim=>!dim.children.includes(dim.parent))
   }
 
   // Links related ----------------------------------------------------------------------
@@ -4863,7 +4895,7 @@ export abstract class ClassTemplate_NodeElement
       ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
     })
     // Check dimensions where node is tagged as a parent
-    Object.values(this._dimensions_as_parent)
+    this.dimensions_as_parent_pure
       .forEach(dim => {
         if (dim.force_show_parent || dim.force_show_children) {
           has_forced_dimensions = true

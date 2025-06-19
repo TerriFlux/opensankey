@@ -464,7 +464,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: ['aggregate', 'contract', 'desaggregate', 'expand', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
+    context_node_order: ['edition_hierarchy','nav_hierarchy', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
     additional_context_node_element: {},
     // Links
     additional_menu_configuration_links: {},
@@ -499,4 +499,17 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     new_data
   )
   return <></>
+}
+
+/**
+ * Function that check if url has an url variable & return it (null if there isn't one)
+ *
+ * @export
+ * @return {*} 
+ */
+export function checkForUrlToJSON() {
+  const urlParams = new URLSearchParams(window.location.search)
+  const url_var = urlParams.get('url')
+  return url_var
+
 }
