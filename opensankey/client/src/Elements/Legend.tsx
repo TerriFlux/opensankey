@@ -173,6 +173,7 @@ export class ClassTemplate_Legend
       drawing_area: drawing_area,
       sankey: drawing_area.sankey as Type_GenericSankey,
       position: {
+        auto_x:false,
         x: const_default_position_x,
         y: drawing_area.getNavBarHeight() + 50,
         u: 0,
