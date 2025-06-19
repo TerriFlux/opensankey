@@ -312,11 +312,11 @@ export const agregate_side = (
   children!.forEach((c, i) => {
     const links_aggregate = c.input_links_list.filter(l => l.is_visible) as Type_GenericLinkElement[]
     links_aggregate.forEach(laggregate => {
-      let lchild: Type_GenericLinkElement
+      // const lchild: Type_GenericLinkElement
       // if (expand_left) {
       //   lchild = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
       // } else {
-      lchild = new_data.drawing_area.sankey.addNewLink(c as Type_GenericNodeElement, new_node)
+      const lchild = new_data.drawing_area.sankey.addNewLink(c as Type_GenericNodeElement, new_node)
       //}
       lchild.shape_color_rule = 'source'
       //lchild.shape_opacity = n.shape_opacity
@@ -571,7 +571,6 @@ export const hierarchyEditionMenu = (
               let this_parent_dim: Class_NodeDimension | null = null
               let this_child_dim: Class_NodeDimension | null = null
 
-              let root_node: Type_GenericNodeElement
               selected_nodes.forEach(n => {
                 // If node being set as child is set as parent we must create a new level
                 this_parent_dim = n.nodeDimensionAsParent(tagg as Class_LevelTagGroup)
@@ -579,7 +578,7 @@ export const hierarchyEditionMenu = (
                   this_parent_dim.shift_level_tags()
                 }
               })
-              root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
+              const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
 
               let root_has_parent = root_node.dimensions_as_parent.filter(dim => dim.parent_level_tag.group.id == tagg.id).length !== 0
               let parent_level_tag: Class_LevelTag
