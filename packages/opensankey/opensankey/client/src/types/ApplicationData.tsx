@@ -654,6 +654,40 @@ export abstract class ClassTemplate_ApplicationData
 
   }
 
+
+/**
+ * Function to that fetch json data from an url (the file has to be compressed with gzip)
+ *
+ * @param {string} url_data
+ * @memberof ClassTemplate_ApplicationData
+ */
+public readUrlJSON(url_data: string) {
+    if (url_data.includes('.gz')) {
+      // Create url request
+      const root = window.location.origin
+      const url = root + this.url_prefix + 'url/load_json'
+      // Add a form data that contains url to json file
+      const form_data = new FormData()
+      form_data.append('url', url_data)
+
+      fetch(url, {
+        method: 'POST',
+        body: form_data
+      }).then(response => {
+        response
+          .text()
+          .then(text => {
+            const json_data = JSON.parse(text)
+            this.fromJSON(json_data)
+          })
+          .catch((error) => {
+            console.error('Error in fetchExamples - ' + error.toString())
+
+          })
+      })
+    }
+  }
+
   /**
    * Postprocessing drawing area after JSON affectation
    * @protected
