@@ -608,7 +608,7 @@ export abstract class ClassTemplate_DrawingArea
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
       .attr('id', 'draw_zoom')
-      .attr('width', window.innerWidth)
+      .attr('width', "100%")
       .attr('height', window.innerHeight)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
@@ -2119,12 +2119,9 @@ export abstract class ClassTemplate_DrawingArea
     }
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
-    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-    if (!nodeDimParent) {
-      return new_current_v
-    }
-    if (nodeDimParent.children.includes(nodeDimParent.parent)) {
-      return new_current_v
+      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+      if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
+      return new_current_v+1
     }
     desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
     desagregated_nodes = [...new Set(desagregated_nodes)]

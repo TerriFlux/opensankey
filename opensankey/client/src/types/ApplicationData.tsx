@@ -76,6 +76,13 @@ export type OSColorPickerProps = {
   textDisabled?: string
 }
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      publish: boolean
+      logo: string
+    }
+  }
 // SPECIFIC CONSTANTS ******************************************************************/
 
 export const default_save_only_visible_elements = false
@@ -85,14 +92,7 @@ export const default_file_name = 'Diagramme de Sankey'
 
 const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
-const toast_bypass: boolean = false
-
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      logo: string
-    }
-  }
+const toast_bypass: boolean = window.sankey?.publish??false
 
 // CLASS APPLICATION DATA **************************************************************/
 
@@ -168,16 +168,6 @@ export abstract class ClassTemplate_ApplicationData
  * @memberof ClassTemplate_ApplicationData
  */
   protected _icon_library: Class_IconLibrary
-
-
-
-  /**
-   * Application logo
-   * @private
-   * @type {string}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  protected _logo: string // path to logo
 
   /**
    * All possible attr to update in copyFrom
@@ -361,8 +351,6 @@ export abstract class ClassTemplate_ApplicationData
     this._logo_opensankey = 'logos/logo_opensankey.png'
     // Get TerriFlux logo
     this._logo_terriflux = 'logos/logo_terriflux.png'
-    // Default logo for app
-    this._logo = this.is_static && window.sankey && window.sankey.logo ? window.sankey.logo : this._logo_opensankey
 
     // Excel processing function
     this._processFunction = {
@@ -664,6 +652,40 @@ export abstract class ClassTemplate_ApplicationData
     this._drawing_area.fromJSON(json_object)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
 
+  }
+
+
+/**
+ * Function to that fetch json data from an url (the file has to be compressed with gzip)
+ *
+ * @param {string} url_data
+ * @memberof ClassTemplate_ApplicationData
+ */
+public readUrlJSON(url_data: string) {
+    if (url_data.includes('.gz')) {
+      // Create url request
+      const root = window.location.origin
+      const url = root + this.url_prefix + 'url/load_json'
+      // Add a form data that contains url to json file
+      const form_data = new FormData()
+      form_data.append('url', url_data)
+
+      fetch(url, {
+        method: 'POST',
+        body: form_data
+      }).then(response => {
+        response
+          .text()
+          .then(text => {
+            const json_data = JSON.parse(text)
+            this.fromJSON(json_data)
+          })
+          .catch((error) => {
+            console.error('Error in fetchExamples - ' + error.toString())
+
+          })
+      })
+    }
   }
 
   /**
@@ -1197,7 +1219,13 @@ export abstract class ClassTemplate_ApplicationData
 
   public get url_prefix(): string { return this._url_prefix }
 
-  public get logo(): string { return this._logo }
+  public get logo(): string { 
+      if ( this.is_static && window.sankey && window.sankey.logo) {
+      return window.sankey.logo
+    }
+    return this._logo_opensankey 
+  }
+
   public get logo_opensankey(): string { return this._logo_opensankey }
   public get logo_terriflux(): string { return this._logo_terriflux }
 
