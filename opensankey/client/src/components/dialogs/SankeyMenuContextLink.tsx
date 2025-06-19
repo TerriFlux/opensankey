@@ -42,11 +42,12 @@ import {
 import { FCType_ContextMenuLink } from './types/SankeyMenuContextLinkTypes'
 import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
+import { ChevronRightIcon } from '@chakra-ui/icons'
 
 /*************************************************************************************************/
 
 export const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-export const checked = (b: boolean) => <span style={{ float: 'right' }}>{b ? '✓' : ''}</span>
+export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto' }}>{b ? '✓' : ''}</span>
 
 // MENU COMPONENT ***********************************************************************
 
@@ -57,11 +58,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
 
   // Datas ------------------------------------------------------------------------------
 
-  const { t } = new_data
-  const {
-    ref_setter_show_menu_link_appearence,
-    ref_setter_show_menu_link_data,
-  } = new_data.menu_configuration.dict_setter_show_dialog
+  const { t, drawing_area } = new_data
 
   // Link on which this menu applies ----------------------------------------------------
 
@@ -72,7 +69,8 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
   let pos_x = new_data.drawing_area.pointer_pos[0]
   let pos_y = new_data.drawing_area.pointer_pos[1]
 
-  const context_link_label_visible = (contextualised_link !== undefined) ? contextualised_link.value_label_is_visible : false
+  const context_link_value_visible = (contextualised_link !== undefined) ? contextualised_link.value_label_is_visible : false
+  const context_link_name_visible = (contextualised_link !== undefined) ? contextualised_link.name_label_is_visible : false
 
   // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
@@ -107,16 +105,24 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     setCount(a => a + 1)
   }
 
+  const closeContextMenu = () => {
+    // Unset contextualized flow
+    new_data.drawing_area.link_contextualised = undefined
+    // Refresh this menu
+    setCount(a => a + 1)
+  }
+
   // Functions that mutate attribute & save it's undoing ----------------------------------------------------
 
   const updateStyle = (sl: Class_LinkStyle) => {
-    const dict_old_value: { [x: string]: Class_LinkStyle } = {}
+    const dict_old_value: { [x: string]: Class_LinkStyle[] } = {}
     selected_links.forEach(l => {
       dict_old_value[l.id] = l.style
     })
     const _updateStyle = () => {
       selected_links.forEach(l => {
-        l.style = sl
+        const flow_ref_has_style = selected_links[0].style.includes(sl) ?? false
+        new_data.drawing_area.sankey.switchLinkStyle(sl, flow_ref_has_style)
       })
       refreshThisAndToggleSaving()
 
@@ -133,6 +139,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     new_data.history.saveRedo(_updateStyle)
     // Execute original attr mutation
     _updateStyle()
+    closeContextMenu()
   }
 
   const resetAttr = () => {
@@ -159,6 +166,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     new_data.history.saveRedo(_resetAttr)
     // Execute original attr mutation
     _resetAttr()
+    closeContextMenu()
   }
 
   const updateValueVisibility = () => {
@@ -170,7 +178,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     const _updateValueVisibility = () => {
       selected_links
         .forEach(link => {
-          link.value_label_is_visible = !context_link_label_visible
+          link.value_label_is_visible = !context_link_value_visible
         })
       refreshThisAndToggleSaving()
     }
@@ -187,30 +195,62 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     new_data.history.saveRedo(_updateValueVisibility)
     // Execute original attr mutation
     _updateValueVisibility()
+    closeContextMenu()
   }
 
+  const updateNameVisibility = () => {
+    const dict_old_name: { [x: string]: Class_LinkAttribute } = {}
+    // Clone Class_attribute of links so in the undo it's doens't affect a name if the original name came from style
+    selected_links.forEach(l => {
+      dict_old_name[l.id] = Object.assign(Object.create(Object.getPrototypeOf(l.display.attributes)), l.display.attributes)
+    })
+    const _updateNameVisibility = () => {
+      selected_links
+        .forEach(link => {
+          link.name_label_is_visible = !context_link_name_visible
+        })
+      refreshThisAndToggleSaving()
+    }
+
+    const inv_updateNameVisibility = () => {
+      selected_links.forEach(l => {
+        l.display.attributes = dict_old_name[l.id]
+        l.draw()
+      })
+      refreshThisAndToggleSaving()
+    }
+    // Save undo/redo in data history
+    new_data.history.saveUndo(inv_updateNameVisibility)
+    new_data.history.saveRedo(_updateNameVisibility)
+    // Execute original attr mutation
+    _updateNameVisibility()
+    closeContextMenu()
+  }
+
+  const moveToFirstPlan = () => {
+    drawing_area.selected_links_list.forEach(link => {
+      const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
+      drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
+    })
+    closeContextMenu()
+  }
+  const moveToLastPlan = () => {
+    drawing_area.selected_links_list.forEach(link => {
+      const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
+      drawing_area.moveOrderElementInDA(idx_to_shift, 0)
+    })
+    closeContextMenu()
+  }
+
+  const list_style_id_context_flow=contextualised_link?.style.map(s=>s.id)
   // JSX Components ---------------------------------------------------------------------
-
-  const button_open_link_appearence = (contextualised_link !== undefined) ?
-    <Button
-      onClick={() => {
-        ref_setter_show_menu_link_appearence.current(true)
-        new_data.drawing_area.link_contextualised = undefined
-      }}
-      variant='contextmenu_button'
-      rightIcon={new_data.icon_library.icon_popup_menu}
-    >
-      {t('Flux.apparence.apparence')}
-    </Button> :
-    <></>
-
   // Menu to change some pararmeter concerning the style of the node
   const dropdown_c_l_style_select = (contextualised_link !== undefined) ?
     <Menu placement='end'>
       <MenuButton
         variant='contextmenu_button'
         as={Button}
-        rightIcon={new_data.icon_library.icon_open_selector}
+        rightIcon={<ChevronRightIcon />}
         className="dropdown-basic"
       >
         {t('Noeud.SelectStyle')}
@@ -225,7 +265,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
                 }}
               >
                 {sl.name}
-                {checked((contextualised_link?.style ?? '') == sl)}
+                {checked(list_style_id_context_flow?.includes(sl.id)??false)}
               </MenuItem>
             })
         }
@@ -239,7 +279,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       <MenuButton
         variant='contextmenu_button'
         as={Button}
-        rightIcon={new_data.icon_library.icon_open_selector}
+        rightIcon={<ChevronRightIcon />}
         className="dropdown-basic"
       >
         {t('Noeud.editStyle')}
@@ -257,69 +297,45 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     </Menu> :
     <></>
 
-  // Set stacking order of links
-  const dropdown_c_l_layout = (contextualised_link !== undefined) ?
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={new_data.icon_library.icon_open_selector}
-        className="dropdown-basic"
-      >
-        {t('Flux.layout')}
-      </MenuButton>
-      <MenuList >
-        <MenuItem
-          onClick={() => selected_links.forEach(l => l.setTopDisplayOrder())}
-        >
-          {t('Flux.layoutTop')}
-        </MenuItem>
+  const mask_flow_attr = <Menu placement='end'>
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+      {t('Flux.mask_attr')}
+    </MenuButton>
+    <MenuList>
 
-        <MenuItem
-          onClick={() => selected_links.forEach(l => l.increaseDisplayOrder())}
-        >
-          {t('Flux.layoutUp')}
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => selected_links.forEach(l => l.decreaseDisplayOrder())}
-        >
-          {t('Flux.layoutDown')}
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => selected_links.forEach(l => l.setDownDisplayOrder())}
-        >
-          {t('Flux.layoutBottom')}
-        </MenuItem>
-
-      </MenuList>
-    </Menu> : <></>
-
-  const button_open_link_data = (contextualised_link !== undefined) ?
-    <Button
-      onClick={() => {
-        ref_setter_show_menu_link_data.current(true)
-        new_data.drawing_area.link_contextualised = undefined
-      }}
-      variant='contextmenu_button'
-      rightIcon={new_data.icon_library.icon_popup_menu}
-    >
-      {t('Flux.data.données')}
-    </Button> :
-    <></>
-
-  const button_mask_link_label = (contextualised_link !== undefined) ?
-    <Button onClick={updateValueVisibility}
-      variant='contextmenu_button'
-    >
-      {
-        context_link_label_visible ?
+      <MenuItem
+        onClick={updateNameVisibility}>
+        {context_link_name_visible ?
+          t('Flux.apparence.hide_link_name') :
+          t('Flux.apparence.display_link_name')}
+      </MenuItem>
+      <MenuItem
+        onClick={updateValueVisibility}>
+        {context_link_value_visible ?
           t('Flux.apparence.hide_link_lab') :
-          t('Flux.apparence.display_link_lab')
-      }
-    </Button> :
-    <></>
+          t('Flux.apparence.display_link_lab')}
+      </MenuItem>
+    </MenuList>
+  </Menu>
+
+
+  const menu_change_plan = <Menu placement='end'>
+    <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+      {t('Flux.changePlan')}
+    </MenuButton>
+    <MenuList>
+
+      <MenuItem
+        onClick={moveToFirstPlan}>
+        {t('Noeud.firstPlan')}
+      </MenuItem>
+      <MenuItem
+        onClick={moveToLastPlan}>
+        {t('Noeud.lastPlan')}
+      </MenuItem>
+    </MenuList>
+  </Menu>
+
 
 
   // Inverse source & target of the link
@@ -328,7 +344,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       <MenuButton
         variant='contextmenu_button'
         as={Button}
-        rightIcon={new_data.icon_library.icon_open_selector}
+        rightIcon={<ChevronRightIcon />}
         className="dropdown-basic"
       >
         {t('Flux.data.edit_value')}
@@ -342,7 +358,10 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
 
   const btn_inverse_io = <Button
     variant='contextmenu_button'
-    onClick={new_data.drawing_area.inverseSelectedLinks}
+    onClick={() => {
+      new_data.drawing_area.inverseSelectedLinks()
+      closeContextMenu()
+    }}
   >
     {t('Flux.if')}
   </Button>
@@ -352,12 +371,9 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
     'sep_1': sep,
     'style': dropdown_c_l_style,
     'sep_2': sep,
-    'zIndex': dropdown_c_l_layout,
-    'mask_label': button_mask_link_label,
+    'changePlan': menu_change_plan,
+    'mask_attr': mask_flow_attr,
     'edit_value': btn_edit_value,
-    'sep_4': sep,
-    'drag_link_data': button_open_link_data,
-    'drag_apparence': button_open_link_appearence,
 
     ...additionalMenus.current.additional_context_link_element
   }

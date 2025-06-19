@@ -41,6 +41,7 @@ import {
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
+  getStringListFromJSON,
   getStringOrUndefinedFromJSON,
   list_palette_color
 } from '../types/Utils'
@@ -54,7 +55,6 @@ import {
 import {
   ClassTemplate_GhostLinkElement,
   ClassTemplate_LinkElement,
-  sortLinksElementsByDisplayingOrders,
   sortLinksElementsByIds
 } from '../Elements/Link'
 import { ClassTemplate_Legend } from '../Elements/Legend'
@@ -64,16 +64,27 @@ import {
   ClassAbstract_DrawingArea,
   ClassAbstract_ApplicationData,
 } from '../types/Abstract'
-import { ClassTemplate_ProtoElement } from '../Elements/Element'
+import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
-import { Class_NodeAttribute } from '../Elements/NodeAttributes'
-import { Class_LinkAttribute } from '../Elements/LinkAttributes'
+import { Class_NodeAttribute, Class_NodeStyle, default_dx } from '../Elements/NodeAttributes'
+import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
+import { TypeGeneric_Handler } from '../Elements/Handler'
 
 declare const window: Window &
   typeof globalThis & {
-    SankeyToolsStatic: boolean
+    sankey: {
+      publish: boolean
+      recenter: boolean
+      topbar: boolean
+    }
   }
 
+function sortElementByIdOrder(
+  el_a: Type_AnyProtoElement,
+  el_b: Type_AnyProtoElement,
+  list: string[]) {
+  return list.indexOf(el_a.id) - list.indexOf(el_b.id)
+}
 // CONSTANTS ****************************************************************************
 
 const initial_show_structure = 'data'
@@ -155,20 +166,12 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
   /**
-   * d3 selection of svg group that contains drawing area nodes
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public d3_selection_nodes: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 selection of svg group that contains drawing area links
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public d3_selection_links: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  * d3 selection of svg group that contains sankey elements (nodes,flows)
+  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+  * @memberof ClassTemplate_DrawingArea
+  */
+  public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area legend elements
@@ -196,7 +199,7 @@ export abstract class ClassTemplate_DrawingArea
    * @type {boolean}
    * @memberof ClassTemplate_DrawingArea
    */
-  public static: boolean = window.SankeyToolsStatic
+  public static: boolean = !!window.sankey?.publish
 
   public bypass_redraws: boolean = false
 
@@ -295,6 +298,10 @@ export abstract class ClassTemplate_DrawingArea
   private _number_of_elements: number = 0
 
   // Context attributes for drawing area ------------------------------------------------
+
+  private _list_g_element: string[] = []
+
+  protected _group_to_select: string = '.gg_nodes,.gg_links'
 
   /**
    * Interaction mode with drawing area
@@ -476,6 +483,7 @@ export abstract class ClassTemplate_DrawingArea
     json_object['show_structure'] = this._type_data
     json_object['number_of_elements'] = this._number_of_elements
     json_object['magnetic_nodes'] = this._magnetic_nodes
+    json_object['order_g_elements'] = this._list_g_element
     // Dump with json of contained elements
     const out = {
       ...json_object,
@@ -504,14 +512,18 @@ export abstract class ClassTemplate_DrawingArea
       (version === undefined) ||
       (Number(version) < 0.9)
     ) {
+      console.log('convert_data_legacy')
       convert_data_legacy(json_object) // FIXME
+      console.log(json_object.version)
     }
 
     if (
       (version !== undefined) &&
       (Number(version) < 0.91)
     ) {
+      console.log('convert_pre_v_0_91')
       convert_pre_v_0_91(json_object)
+      console.log(json_object.version)
     }
 
 
@@ -544,6 +556,9 @@ export abstract class ClassTemplate_DrawingArea
 
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
+
+    this._list_g_element = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element)
+
   }
 
   // ABSTRACT METHODS ==================================================================
@@ -579,6 +594,8 @@ export abstract class ClassTemplate_DrawingArea
 
     // Unset saving indicator
     this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+
+    this.orderElementOnDA()
   }
 
   /**
@@ -591,7 +608,7 @@ export abstract class ClassTemplate_DrawingArea
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
       .attr('id', 'draw_zoom')
-      .attr('width', window.innerWidth)
+      .attr('width', "100%")
       .attr('height', window.innerHeight)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
@@ -613,8 +630,7 @@ export abstract class ClassTemplate_DrawingArea
 
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
-    this.d3_selection_links = this.d3_selection_elements_group.append('g').attr('id', 'g_links')
-    this.d3_selection_nodes = this.d3_selection_elements_group.append('g').attr('id', 'g_nodes')
+    this.d3_selection_elements_sankey_group = this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
   }
@@ -721,24 +737,6 @@ export abstract class ClassTemplate_DrawingArea
     return this._number_of_elements
   }
 
-  public orderElements() {
-    // Sort links
-    let new_order = 0
-    this.sankey.links_list
-      .sort((a, b) => sortLinksElementsByDisplayingOrders(a, b))
-      .forEach(link => {
-        if (link.is_visible) {
-          link.d3_selection?.raise()
-        }
-        // Re-update display order as consecutive
-        link.displaying_order = new_order
-        new_order = new_order + 2
-      })
-    // Sort nodes
-    // TODO if necessary
-    // Update number of elements
-    this._number_of_elements = new_order
-  }
 
   /**
    * Checks if it is possible to directly deal with events
@@ -1130,7 +1128,7 @@ export abstract class ClassTemplate_DrawingArea
     y0 = new_y0
 
     // Recenter elements
-    if (recenter) {
+    if (recenter && window.sankey?.recenter !== false) {
       this._elements_d3_groups_shift_x = -(bbox.x + bbox.width / 2) + (x0 + width / 2)
       this._elements_d3_groups_shift_y = -(bbox.y + bbox.height / 2) + (y0 + height / 2)
       this.d3_selection_elements_group?.attr(
@@ -1161,6 +1159,7 @@ export abstract class ClassTemplate_DrawingArea
    */
   public areaFitHorizontally(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
+
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_width / this.width
@@ -1803,7 +1802,8 @@ export abstract class ClassTemplate_DrawingArea
 
           // Compute left horizontal margin
           if (h_index == 0) {
-            const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
+            const style_node = node.getStyleWithAttr('name_label_box_width')
+            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
             const needed_margin = this.grid_size + node_label_width
             if (needed_margin > h_left_margin) {
               h_left_margin = needed_margin
@@ -1813,7 +1813,8 @@ export abstract class ClassTemplate_DrawingArea
           // Compute right horizontal margin
           // if (h_index == (max_horizontal_index - cumul_shifting_value)) {
           if (h_index == max_horizontal_index) {
-            const node_label_width = this.sankey.node_styles_dict[node.style.id].name_label_box_width!
+            const style_node = node.getStyleWithAttr('name_label_box_width')
+            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
             const needed_margin = this.grid_size + node_label_width
             if (needed_margin > h_right_margin) {
               h_right_margin = needed_margin
@@ -2026,7 +2027,7 @@ export abstract class ClassTemplate_DrawingArea
       if (n.position_type === 'relative') {
         return
       }
-      n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / this.sankey.default_node_style.position.dx!)
+      n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / (this.sankey.default_node_style.position?.dx ?? default_dx))
     })
 
     this.computeParametricV()
@@ -2118,28 +2119,25 @@ export abstract class ClassTemplate_DrawingArea
     }
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
-    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-    if (!nodeDimParent) {
-      return new_current_v
-    }
-    if (nodeDimParent.children.includes(nodeDimParent.parent)) {
-      return new_current_v
+      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+      if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
+      return new_current_v+1
     }
     desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
     desagregated_nodes = [...new Set(desagregated_nodes)]
     const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
     if (desagregated_nodes.length > 0) {
       let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
-    desagregated_nodes.forEach(nn => {
-      if (nn.sibling) {
-        return
-      }
-      nn.display.position.x = node.position_x
-      nn.display.position.u = node.position_u
-      nn.display.position.y = current_y
-      current_y += 20
-      new_current_v = this.apply_v_desagregate(nn, new_current_v,tagGroup)
-    })
+      desagregated_nodes.forEach(nn => {
+        if (nn.sibling) {
+          return
+        }
+        nn.display.position.x = node.position_x
+        nn.display.position.u = node.position_u
+        nn.display.position.y = current_y
+        current_y += 20
+        new_current_v = this.apply_v_desagregate(nn, new_current_v, tagGroup)
+      })
     }
     return new_current_v + 1
   }
@@ -2254,6 +2252,157 @@ export abstract class ClassTemplate_DrawingArea
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
 
+  /**
+   * Return an element (node,flow) given an id
+   *
+   * @param {string} id
+   * @return {*} 
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public elementFromId(id: string) {
+    if (id in this._sankey.nodes_dict) {
+      return this._sankey.nodes_dict[id]
+    }
+    if (id in this._sankey.links_dict) {
+      return this._sankey.links_dict[id]
+    }
+
+    return { name: id, is_selected: false, is_visible: false }
+  }
+
+  /**
+   * Swaps overlaps position of element on DA
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
+    // Save old value that can be used in undo
+    const list_old_io: string[] = this.list_g_element ?? []
+    // Function undo
+    const inv_moveElement = () => {
+      this.list_g_element = list_old_io
+      this.orderElementOnDA()
+
+    }
+    // Function original
+    const _moveElement = () => {
+
+      // Remove element to move from the array of element order
+      const el_to_move = this.list_g_element.splice(idx_src, 1)
+      // Add the element  the element target in the order array
+      this.list_g_element.splice(idx_trgt, 0, el_to_move[0])
+      this.orderElementOnDA()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_moveElement)
+    this.application_data.history.saveRedo(_moveElement)
+    // Execute original function
+    _moveElement()
+  }
+
+  public orderElementOnDA() {
+    this.d3_selection_elements_sankey_group
+      ?.selectAll(this._group_to_select)
+      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, [...this._list_g_element].reverse()) })
+      .order()
+  }
+
+  /**
+   * Swaps node style order for selected nodes
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public moveOrderStyleInSelectedNodes = (style_src: Class_NodeStyle, style_trgt: Class_NodeStyle) => {
+    // Save old value that can be used in undo
+    const list_old_style: { [x: string]: Class_NodeStyle[] } = {}
+    this.selected_nodes_list.forEach(n => list_old_style[n.id] = n.style)
+
+    // Function undo
+    const inv_changeStyleOrder = () => {
+      this.selected_nodes_list.forEach(n => {
+        n.style = list_old_style[n.id]
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+    }
+
+    // Function original
+    const _changeStyleOrder = () => {
+      this.selected_nodes_list.forEach(n => {
+        const idx_src = n.style.indexOf(style_src)
+        const idx_trgt = n.style.indexOf(style_trgt)
+
+        // if node doesn't have both style, don't continue this iterations
+        if (idx_src == -1 || idx_trgt == -1)
+          return
+
+        // Remove element to move from the array of element order
+        const el_to_move = n.style.splice(idx_src, 1)
+        // Add the element  the element target in the order array
+        n.style.splice(idx_trgt, 0, el_to_move[0])
+
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_changeStyleOrder)
+    this.application_data.history.saveRedo(_changeStyleOrder)
+    // Execute original function
+    _changeStyleOrder()
+  }
+
+  /**
+   * Swaps flow style order for selected flows
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof ClassTemplate_DrawingArea
+   */
+  public moveOrderStyleInSelectedFlows = (style_src: Class_LinkStyle, style_trgt: Class_LinkStyle) => {
+    // Save old value that can be used in undo
+    const list_old_style: { [x: string]: Class_LinkStyle[] } = {}
+    this.selected_links_list.forEach(n => list_old_style[n.id] = n.style)
+
+    // Function undo
+    const inv_changeStyleOrder = () => {
+      this.selected_links_list.forEach(n => {
+        n.style = list_old_style[n.id]
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+
+    // Function original
+    const _changeStyleOrder = () => {
+      this.selected_links_list.forEach(n => {
+        const idx_src = n.style.indexOf(style_src)
+        const idx_trgt = n.style.indexOf(style_trgt)
+
+        // if node doesn't have both style, don't continue this iterations
+        if (idx_src == -1 || idx_trgt == -1)
+          return
+
+        // Remove element to move from the array of element order
+        const el_to_move = n.style.splice(idx_src, 1)
+        // Add the element  the element target in the order array
+        n.style.splice(idx_trgt, 0, el_to_move[0])
+
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_changeStyleOrder)
+    this.application_data.history.saveRedo(_changeStyleOrder)
+    // Execute original function
+    _changeStyleOrder()
+  }
+
   // PRIVATE METHODS ==================================================================
 
   /**
@@ -2283,8 +2432,10 @@ export abstract class ClassTemplate_DrawingArea
       .attr('fill', this.color)
       .attr('width', this.width)
       .attr('height', this.height)
-      .style('stroke-width', 5)
-      .style('stroke', default_black_color)
+    if (!this.static) {
+      this.d3_selection_bg?.select('rect').style('stroke-width', 5)
+      this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
+    }
     this.drawCursor()
   }
 
@@ -2672,10 +2823,10 @@ export abstract class ClassTemplate_DrawingArea
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_node_style.position.type == 'parametric' ) {
+        if (this.sankey.default_node_style.position && this.sankey.default_node_style.position.type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
-          this.computeParametrization()
+              this.computeParametrization()
             })
         }
       }
@@ -2696,6 +2847,7 @@ export abstract class ClassTemplate_DrawingArea
         }
       }
       this._selection_zone.reset()
+      this.orderElementOnDA()
     }
   }
 
@@ -2833,6 +2985,15 @@ export abstract class ClassTemplate_DrawingArea
       // Apply translation
       this.d3_selection
         .attr('transform', event.transform.toString())
+
+      // Launch waiting process to redraw handler with corresponding size (it take into account DA zoom scale)
+      // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
+      this.application_data._add_waiting_process('redraw_handler', () => {
+        this.d3_selection_handlers?.selectAll('.gg_handler').each((evt) => {
+          const handle = evt as TypeGeneric_Handler
+          handle.draw()
+        })
+      }, 500)
     }
   }
 
@@ -2947,6 +3108,9 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public getNavBarHeight() {
+    if (this.static && window.sankey?.topbar == false) {
+      return 0
+    }
     return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5 * parseFloat(getComputedStyle(document.documentElement).fontSize)
   }
 
@@ -3046,4 +3210,7 @@ export abstract class ClassTemplate_DrawingArea
 
   public get magnetic_nodes(): boolean { return this._magnetic_nodes }
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
+
+  public get list_g_element() { return this._list_g_element }
+  public set list_g_element(list: string[]) { this._list_g_element = list }
 }

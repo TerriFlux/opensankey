@@ -5,3 +5,6 @@ sphinx_rtd_theme
 sphinx-multibuild
 webcolors
 wheel
+pdfkit
+imgkit
+webcolors

@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import * as d3 from 'd3'
-import { Type_JSON } from './Utils'
+import { makeId, Type_JSON } from './Utils'
 import {
   SankeyNode,
   SankeyNodeStyle,
@@ -335,7 +335,8 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
     dashed: false,
 
     starting_tangeant: 0.25,
-    ending_tangeant: 0.25
+    ending_tangeant: 0.25,
+    color_rule:'auto'
   }
 }
 
@@ -1775,7 +1776,15 @@ const convert_nodes: convert_nodesFuncType = (
       // All input exchange nodes must also be desaggregated
       node.outputLinksId
         .forEach(lid => {
+          if (!data.links[lid]) {
+            console.log(lid)
+            console.log(Object.values(data.links).filter(l=>l.idLink.includes('Ethanol')))            
+            return
+          }
           const output_node = data.nodes[data.links[lid].idTarget]
+          if (output_node.tags['type de noeud'] == undefined) {
+            output_node.tags['type de noeud'] = []
+          }
           if (output_node.tags['type de noeud'][0] == 'echange') {
             if (set_children) {
               output_node.dimensions[dim].force_show_children = true
@@ -1936,16 +1945,6 @@ const convert_nodes: convert_nodesFuncType = (
 
     })
 
-
-    // Add links_order to node by combining input/outputs id (for version>=0.9)
-    const n_tmp = (n as Type_JSON)
-    n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
-
-    // Add in links_order links not in links_order but that reference this node
-    list_links
-      .filter(l => (l.idTarget == n.idNode || l.idSource == n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
-      .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
-
     // Convert name of some local variables
     if (n.local) {
       if (n.local.label_vert_shift !== undefined) {
@@ -2067,15 +2066,45 @@ const convert_links: convert_linksFuncType = (
     data_to_convert.nodes = Object.assign({}, ...((data.nodes as unknown) as SankeyNode[]).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
   }
 
+  const mapper : {[_:string]:string} = {}
+  Object.values(data.links).forEach(l=>{
+    const previous_link_id = l.idLink
+    const new_link_id=previous_link_id+makeId('_idLink')
+    l.idLink = new_link_id
+    mapper[previous_link_id] = l.idLink
+  })
+  data_to_convert.links = Object.assign({}, ...(Object.values(data.links)).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
+  Object.values(data.nodes).forEach(n=>{
+    const newInputLinksId : string[]= []
+    n.inputLinksId.forEach(id=>newInputLinksId.push(mapper[id]))
+    n.inputLinksId = newInputLinksId
+
+    const newOutputLinksId : string[]= []
+    n.outputLinksId.forEach(id=>newOutputLinksId.push(mapper[id]))
+    n.outputLinksId = newOutputLinksId
+
+    // Add links_order to node by combining input/outputs id (for version>=0.9)
+    const n_tmp = (n as Type_JSON)
+    n_tmp.links_order = n.inputLinksId.concat(n.outputLinksId)
+
+    // Add in links_order links not in links_order but that reference this node
+    // list_links
+    //   .filter(l => (l.idTarget == n.idNode || l.idSource == n.idNode) && !(n_tmp.links_order as string[]).includes(l.idLink))
+    //   .forEach(l => (n_tmp.links_order as string[]).push(l.idLink))
+
+  })
+
   if (Object.keys(data.links).length > 0 && !Object.values(data.links)[0].idLink) {
     Object.values(data.links).forEach((l, i) => l.idLink = 'link' + i)
   }
+
 
   const dataTagsArray = Object.values(data.dataTags).filter(dataTag => { return (Object.keys(dataTag.tags).length != 0) ? true : false })
   const convert_display = (
     dataTags: TagsGroup[],
     v: SankeyLinkValue | SankeyLinkValueDict,
-    depth: number
+    depth: number,
+    returnObj:Type_JSON
   ) => {
     if (dataTags.length == 0 || depth === dataTags.length) {
       if (v.display_value === undefined) {
@@ -2142,6 +2171,10 @@ const convert_links: convert_linksFuncType = (
           (v as SankeyLinkValue)['tags']['flux_types'] = ['computed_data']
         }
       }
+
+      if (v.display_value !=='') {
+        returnObj['hide_value']=true
+      }
       return
     }
     const dataTag = Object.values(dataTags)[depth]
@@ -2152,11 +2185,12 @@ const convert_links: convert_linksFuncType = (
         if (v === undefined) {
           break
         }
-        convert_display(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1)
+        convert_display(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1,returnObj)
       }
     }
   }
   const defaultLinkStyle = DefaultLinkStyle()
+  defaultLinkStyle.color_rule = 'auto'
 
   Object.values(data.links).forEach(l => {
     if (((l as unknown) as { source_name: string }).source_name) {
@@ -2305,9 +2339,9 @@ const convert_links: convert_linksFuncType = (
       AssignLinkLocalAttribute(l, 'text_color', ReturnValueLink(data, l, 'color'))
     }
     delete l_convert.text_same_color
-
+    const objectReturn:Type_JSON={}
     // Values ?
-    convert_display(dataTagsArray, l.value as SankeyLinkValue, 0)
+    convert_display(dataTagsArray, l.value as SankeyLinkValue, 0,objectReturn)
 
     // Add opacity attribute
     if (!ReturnValueLink(data, l, 'opacity')) {
@@ -2456,6 +2490,11 @@ const convert_links: convert_linksFuncType = (
     if (l.drag_label_offset) {
       l.position_offset_label = l.drag_label_offset
     }
+
+    if(objectReturn['hide_value']===true){
+      l.local['value_label_is_visible']=false
+    }
+
   })
 
   if (data.version !== '0.6' && data.version !== '0.7' && data.version !== '0.8') {

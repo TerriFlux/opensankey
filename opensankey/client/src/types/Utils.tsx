@@ -54,6 +54,18 @@ export type Type_ElementPosition = {
   relative_dx?: number
   relative_dy?: number
 }
+
+export type Type_ElementPositionOptionnal = {
+  type?: Type_Position
+  x?: number
+  y?: number
+  u?: number
+  v?: number
+  dx?: number
+  dy?: number
+  relative_dx?: number
+  relative_dy?: number
+}
 export type Type_Position = 'absolute' | 'relative' | 'parametric'
 
 /**
@@ -77,7 +89,7 @@ export const default_black_color = 'black'
 export const default_background_color = '#f2f2f2'
 export const default_grid_color = '#d3d3d3'
 export const default_element_color = '#a9a9a9'
-export const default_element_color_source = 'source'
+export const default_element_color_source = 'flow'
 
 export const default_font = 'Arial,sans-serif'
 export const font_families = [
@@ -385,9 +397,9 @@ export const GetRandomInt = (max: number) => {
 
 
 export const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
-  d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
-  d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
-  d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
+d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
+d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
+d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
 
 // COMPONENTS ===========================================================================
 // ! Won't work with locales using characters different than Arabic numerals (e.g. *Eastern* Arabic numerals: ١٢٣٬٤٥٦٫٧٨٩)
@@ -452,7 +464,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: ['create_flux','set_as_child','aggregate','desaggregate', 'expand_right','expand_left','contract','sep_1', 'align', 'edit_name', 'delete', 'sep_2', 'style', 'mask_shape', 'mask_label', 'mask_value', 'sep_3', 'reorg', 'select_link', 'sep_4', 'drag_apparence', 'drag_io'],
+    context_node_order: ['edition_hierarchy','nav_hierarchy', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
     additional_context_node_element: {},
     // Links
     additional_menu_configuration_links: {},
@@ -460,7 +472,7 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
-    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
+    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'changePlan', 'mask_attr', 'edit_value', 'sep_3', 'assign_tag', 'sep_4'],
     additional_context_link_element: {},
 
     // Preferences
@@ -487,4 +499,17 @@ export const WrapperInitializeAdditionalMenus: FunctionComponent<{
     new_data
   )
   return <></>
+}
+
+/**
+ * Function that check if url has an url variable & return it (null if there isn't one)
+ *
+ * @export
+ * @return {*} 
+ */
+export function checkForUrlToJSON() {
+  const urlParams = new URLSearchParams(window.location.search)
+  const url_var = urlParams.get('url')
+  return url_var
+
 }

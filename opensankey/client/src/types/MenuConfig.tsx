@@ -38,18 +38,7 @@ import { ValueOptionType } from '../Elements/Link'
 export type keyTypeConfig = 'data' | 'context' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node'
 export interface IType_DictHookRefSetterShowDialogComponents {
-  // Config menu - Nodes
-  ref_setter_show_menu_node_apparence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_io: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_node_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  // Config menu - Links
-  ref_setter_show_menu_link_tags: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_data: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_appearence: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_menu_link_tooltip: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Config menu - Layout
-  ref_setter_show_menu_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Modal - Welcome
   ref_setter_modal_welcome_active_page: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -183,6 +172,8 @@ export class Class_MenuConfig {
   /* ========================================
     Updater of component in the configuration menu
     ========================================*/
+
+  protected _ref_to_GraphElementsOrdoner_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationsMenus
   protected _ref_to_menu_config_updater: MutableRefObject<() => void>
@@ -384,6 +375,7 @@ export class Class_MenuConfig {
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_spreadsheet = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
+    this._ref_to_GraphElementsOrdoner_updater = useRef(() => null)
     this._ref_menu_opened = useRef([false, () => null])
 
     // Layout
@@ -392,8 +384,8 @@ export class Class_MenuConfig {
 
     // Dimensions
     this._ref_to_menu_config_nodes_dim_selection_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_dim_tags_updater= useRef(() => null)
-    
+    this._ref_to_menu_config_nodes_dim_tags_updater = useRef(() => null)
+
     // Nodes
     this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
 
@@ -457,18 +449,6 @@ export class Class_MenuConfig {
     // Init dict of setter show dialog -------------------------------------------------
 
     this._dict_setter_show_dialog = {
-      // Config menu - Nodes
-      ref_setter_show_menu_node_apparence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_io: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_node_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      // Config menu - Links
-      ref_setter_show_menu_link_tags: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_data: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_appearence: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_menu_link_tooltip: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      // Config menu - Layout
-      ref_setter_show_menu_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Modal - Welcome
       ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -870,6 +850,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToNodesTags()
     this.updateComponentRelatedToNodesIO()
     this.updateComponentRelatedToNodesTooltips()
+    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   /**
@@ -901,6 +882,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksStyles()
     this.updateComponentRelatedToLinksTags()
     this.updateComponentRelatedToLinksTooltips()
+    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   /**
@@ -1126,7 +1108,7 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_nodes_apparence_visual_updater
   }
 
-  
+
   public get ref_to_menu_config_nodes_apparence_context_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_nodes_apparence_context_updater
   }
@@ -1291,6 +1273,7 @@ export class Class_MenuConfig {
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_bottom_updater
   }
+  public get ref_to_GraphElementsOrdoner_updater(): MutableRefObject<() => void> { return this._ref_to_GraphElementsOrdoner_updater }
 
   /**
    * Order of buttons in top menu

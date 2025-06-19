@@ -279,6 +279,36 @@ const logo_tableau = <svg
   </g>
 </svg>
 
+const logo_to_the_left =
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    width="12"
+    height="12"
+
+    id="svg4"
+  >
+    <path
+      d="m 0,4.5 v 15 C 0,20.329 0.671,21 1.5,21 2.329,21 3,20.329 3,19.5 v -7.247 c 0.042,0.143 0.12,0.278 0.234,0.391 l 5.191,5.087 C 9.006,18.305 10,17.898 10,17.087 V 13.5 h 12.5 c 0.829,0 1.5,-0.671 1.5,-1.5 0,-0.829 -0.671,-1.5 -1.5,-1.5 H 10 V 6.913 C 10,6.102 9.006,5.695 8.425,6.269 L 3.234,11.356 C 3.12,11.469 3.042,11.604 3,11.747 V 4.5 C 3,3.672 2.329,3 1.5,3 0.671,3 0,3.672 0,4.5 Z"
+      id="path2" />
+  </svg>
+
+const logo_to_the_right = <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width="12"
+  height="12"
+  version="1.1"
+  id="svg4"
+>
+
+  <path
+    d="M 24,19.5 V 4.5 C 24,3.671 23.329,3 22.5,3 21.671,3 21,3.671 21,4.5 v 7.247 C 20.958,11.604 20.88,11.469 20.766,11.356 L 15.575,6.269 C 14.994,5.695 14,6.102 14,6.913 V 10.5 H 1.5 C 0.671,10.5 0,11.171 0,12 c 0,0.829 0.671,1.5 1.5,1.5 H 14 v 3.587 c 0,0.811 0.994,1.218 1.575,0.644 l 5.191,-5.087 C 20.88,12.531 20.958,12.396 21,12.253 V 19.5 c 0,0.828 0.671,1.5 1.5,1.5 0.829,0 1.5,-0.672 1.5,-1.5 z"
+    id="path2" />
+</svg>
+
+
+
 
 
 // Class ===========================================================================
@@ -392,6 +422,8 @@ export class Class_IconLibrary {
   protected _icon_node = logo_node
   protected _icon_tableau = logo_tableau
 
+  protected _icon_to_the_left=logo_to_the_left
+  protected _icon_to_the_right=logo_to_the_right
 
   // Constructor ===================================
   constructor() {
@@ -474,4 +506,6 @@ export class Class_IconLibrary {
   public get icon_node() { return this._icon_node }
   public get icon_tableau() { return this._icon_tableau }
 
+  public get icon_to_the_left() { return this._icon_to_the_left }
+  public get icon_to_the_right() { return this._icon_to_the_right }
 }

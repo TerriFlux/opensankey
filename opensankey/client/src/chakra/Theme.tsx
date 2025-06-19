@@ -807,6 +807,20 @@ export const opensankey_theme = extendTheme({
       display: 'grid',
       gridColumnGap: '0.25rem',
       gridTemplateColumns: 'auto auto',
+    },
+    drag_line_element_order: {
+      display: 'grid',
+      gridTemplateColumns: '6fr 3fr',
+      border: '1px solid',
+      borderRadius: '3px',
+
+      '.name_element': {
+        margin: 'auto',
+        maxW: '7rem',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }
     }
 
   },
