@@ -246,12 +246,14 @@ export class Class_LinkElement
       sankey: drawing_area.sankey,
       displaying_order: drawing_area.addElement(),
       position_starting: {
+        auto_x:false,
         x: 0,
         y: 0,
         u: 0,
         v: 0
       },
       position_ending: {
+        auto_x:false,
         x: 0,
         y: 0,
         u: 0,
