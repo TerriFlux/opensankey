@@ -1108,7 +1108,7 @@ def url_load_json():
 
     Input : None
 
-    Output : data (json) from url as string 
+    Output : data (json) from url as string
 
     '''
     try:
