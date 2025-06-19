@@ -102,7 +102,6 @@ export const menuconfigpanel_option_button_center = defineStyle({
 
 export const menuconfigpanel_option_button_activated = defineStyle({
   height: '1.5rem',
-  width: '1.rem',
   padding: '0.5rem',
   color: 'tertiaire.3',
   fill: 'tertiaire.3',
@@ -263,8 +262,8 @@ export const menuconfigpanel_option_button_secondary = defineStyle({
   bgColor: 'none',
   borderColor: 'none',
   border: 'solid 2px',
-  fill:'white',
-  stroke:'white',
+  fill: 'white',
+  stroke: 'white',
   _hover: {
     bg: 'secondaire.2',
     bgColor: 'secondaire.2',
@@ -613,8 +612,7 @@ export const submenu_nav_btn_dropdown_item_demo = defineStyle({
 })
 
 export const contextmenu_button = defineStyle({
-  display: 'grid',
-  gridTemplateColumns: '10fr 1fr',
+  display: 'flex',
   width: '100%',
   border: 'none',
   borderRadius: 'none',
@@ -623,7 +621,8 @@ export const contextmenu_button = defineStyle({
   color: 'grey.600',
   bg: 'none',
   bgColor: 'none',
-  layerStyle: 'menuconfigpanel_option_name',
+  padding: '0 0.4rem',
+  fontSize: '0.6rem',
   _hover: {
     color: 'white',
     bg: 'secondaire.2',

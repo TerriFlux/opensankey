@@ -46,7 +46,7 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import { default_link_value_label_unit } from '../../Elements/LinkAttributes'
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 import { ValueOptionType } from '../../Elements/Link'
 
@@ -90,7 +90,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   let default_value = value?.valueData
   if (value_option == 'ratio_input' || value_option == 'ratio_output') {
     unit_text = '%'
-    default_value = default_value?default_value*100:null
+    default_value = default_value?default_value:null
   }
 
   const updateInputsValues = () => {
@@ -100,13 +100,8 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       new_data.drawing_area.selected_links_list_sorted : new_data.drawing_area.visible_and_selected_links_list_sorted
 
     const value_update = updated_selected_links[0]?.value
-    let v = value_update?.valueData
-    if (value_option == 'ratio_input' || value_option == 'ratio_output') {
-      v = v?v*100:null
-    }
-
     // Update input data value
-    ref_set_data_value_input.current(String(default_value ?? ''))
+    ref_set_data_value_input.current(String(value_update?.valueData ?? ''))
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
     ref_set_number_input.current(String(value_update?.unit_factor))
@@ -144,10 +139,6 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     // Save old values in dict so the undo reset value for previous value of each link
     const dict_old_val: { [x: string]: number | null } = {}
     selected_links.forEach(l => dict_old_val[l.id] = l.valueData)
-
-    if (value_option=='ratio_input' || value_option=='ratio_output') {
-      _ = _?_/100:null
-    }
     // Undo link value
     const inv_updateDataLinks = () => {
       // Update data for links
@@ -273,12 +264,12 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       })
     }
 
-      {/* Choix de la source de la couleur */}
+      {/* Choix du type de donnée */}
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.data.data_type')}
         </Box>
-        <OSTooltip label={t('Flux.data.tooltips.data_type')}>
+        {/* <OSTooltip label={t('Flux.data.tooltips.data_type')}> */}
           <Select
             value={value_option}
             onChange={(evt) => {
@@ -295,7 +286,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
               return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.data.'+el)}</OSTooltip></></option>
             })}
           </Select>
-        </OSTooltip>
+        {/* </OSTooltip> */}
       </Box>
     {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
     {value_option!=='unit_conversion'?
@@ -309,16 +300,13 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         >
           {t('Flux.data.'+value_option)}
         </Box>
-        <ConfigMenuNumberInput
-          t={new_data.t}
+        <ConfigMenuNumberOrUndefinedInput
           ref_to_set_value={ref_set_data_value_input}
           default_value={default_value}
-          fixed_dec={0} // 0 fixed_dec to not have fixed decimal for link value
           function_on_blur={updateValueAndHistory}
           minimum_value={0}
           stepper={true}
           step={1}
-          multiValue={is_value_indeterminated}
           unit_text={unit_text}
         />
       </Box>
