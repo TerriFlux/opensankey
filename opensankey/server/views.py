@@ -39,6 +39,8 @@ import imgkit
 import pdfkit
 import re
 import pandas as pd
+from io import BytesIO
+import requests
 try:
     import pythoncom
     pythoncom.CoInitialize()
@@ -1096,3 +1098,37 @@ def clean_file(filename, fctname):
         abort(500)
     # Everything is fine
     return Response(status=200)
+
+
+@opensankey.route('/url/load_json', methods=['POST'])
+def url_load_json():
+    '''
+    HTTP POST request to get json from url path
+
+    Input : None
+
+    Output : data (json) from url as string 
+
+    '''
+    try:
+        url_front = request.form['url']
+        # Requête HTTP pour récupérer le fichier compressé
+        response = requests.get(url_front)
+        response.raise_for_status()  # Lève une exception en cas d'erreur HTTP
+
+        # Décompression avec gzip via un flux mémoire
+        with gzip.GzipFile(fileobj=BytesIO(response.content)) as fichier_gzip:
+            contenu_json = fichier_gzip.read().decode('utf-8')  # Décodage en texte
+            donnees = json.loads(contenu_json)  # Conversion en objet Python
+            return donnees
+
+    except requests.exceptions.RequestException as e:
+        print(f"Erreur de requête : {e}")
+    except gzip.BadGzipFile as e:
+        print(f"Fichier Gzip invalide : {e}")
+    except json.JSONDecodeError as e:
+        print(f"Erreur de décodage JSON : {e}")
+    except Exception as e:
+        print(f"Erreur inattendue : {e}")
+
+    return None
