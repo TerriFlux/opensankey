@@ -120,6 +120,7 @@ import { AFMEditionMenu } from './components/AFM/AFMSankeyMenu'
 import { SupplyUseModelisationProd } from './components/AFM/SankeyReconciliation'
 import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
+import { checkForUrlToJSON } from './deps/OpenSankey/types/Utils'
 
 declare const window: Window &
   typeof globalThis & {
@@ -135,7 +136,10 @@ export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = 
   // Init application data
   const new_data_plus = new Class_ApplicationDataOSP(!!window.sankey?.publish)
   // Read data from cache if it exist
-  if (initial_data !== undefined) {
+    const url_info=checkForUrlToJSON()
+    if(url_info){
+      new_data_plus.readUrlJSON(url_info)
+    }else if (initial_data !== undefined) {
     new_data_plus.fromJSON(initial_data)
   }
   return new_data_plus
