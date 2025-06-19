@@ -39,7 +39,7 @@ import { Menu } from './components/topmenus/SankeyMenus'
 import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesAttributes'
 
 import { ContextMenuLink } from './components/dialogs/SankeyMenuContextLink'
-import { DisaggregationModal, ContextMenuNode, AggregationModal } from './components/dialogs/SankeyMenuContextNode'
+import { ContextMenuNode } from './components/dialogs/SankeyMenuContextNode'
 import { ContextMenuZdd } from './components/dialogs/SankeyMenuContextZDD'
 import { ApplySaveJSONDialog } from './components/dialogs/SankeyMenuDialogs'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
@@ -47,6 +47,7 @@ import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs
 import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
+import { AggregationModal, DisaggregationModal } from './components/dialogs/AggregationModal'
 
 declare const window: Window &
   typeof globalThis & {
