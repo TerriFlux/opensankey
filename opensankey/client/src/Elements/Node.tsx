@@ -445,6 +445,12 @@ export abstract class ClassTemplate_NodeElement
                 if (tag_to_copy) {
                   // Create new dim if everything is ok
                   const new_dim = new Class_NodeDimension(parent, [this], parent_tag, tag_to_copy, dim_to_copy.id)
+                  if (dim_to_copy.force_show_children) {
+                    new_dim.setForceToShowChildren(true)
+                  }
+                  if (dim_to_copy.force_show_parent) {
+                    new_dim.setForceToShowParent()
+                  }
                   all_existing_dim[dim_to_copy.id] = new_dim
                 }
               }
@@ -476,6 +482,12 @@ export abstract class ClassTemplate_NodeElement
               // Create new dim if everything is ok
               if ((children.length > 0) && tag != undefined) {
                 const new_dim = new Class_NodeDimension(this, children, parent_tag, tag, dim_to_copy.id)
+                if (dim_to_copy.force_show_children) {
+                  new_dim.setForceToShowChildren(true)
+                }
+                if (dim_to_copy.force_show_parent) {
+                  new_dim.setForceToShowParent()
+                }
                 all_existing_dim[dim_to_copy.id] = new_dim
               }
             }
