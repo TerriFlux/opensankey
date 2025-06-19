@@ -135,14 +135,14 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
         >
           <CardHeader>
             <Heading variant='heading_template_sankey'>
-              {dd.replace('_layout.json', '').replaceAll('_', ' ')}
+              {dd.replace('.json.gz', '').replace('.json', '').replaceAll('_', ' ')}
             </Heading>
             <Divider />
           </CardHeader>
           <CardBody>
             <Image
               className='img-card'
-              src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('.json', '')) + '.png'}
+              src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('.json.gz', '').replace('.json', '')) + '.png'}
               style={{ 'objectFit': 'contain', 'maxHeight': '150px' }} />
           </CardBody>
           <CardFooter
@@ -165,13 +165,13 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
               >{t('useTutoJSON')}</Button>
 
               {/* Button to open the Excel file */}
-              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '.xlsx')) ?
+              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json.gz', '.xlsx')) ?
                 <Button
                   variant='toolbar_button_6'
                   onClick={() => {
-                    processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'))
+                    processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), new_data
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx'), new_data
                     )
                     set_show_tuto(false)
                   }}
@@ -181,13 +181,13 @@ export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
                 : <></>}
 
               {/* Button to open the Excel file reconcilied */}
-              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '_reconciled.xlsx')) ?
+              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json.gz', '_reconciled.xlsx')) ?
                 <Button
                   variant='toolbar_button_6'
                   onClick={() => {
-                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
+                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), new_data
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx'), new_data
                     )
                     set_show_tuto(false)
                   }}

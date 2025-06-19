@@ -698,7 +698,8 @@ def parse_folder(current_dir, menus, key=None):
         'Old',
         'old',
         'Matériaux',
-        'Documents'
+        'Documents',
+        'Clients'
         ]
 
     for file_or_folder in folder_content:
