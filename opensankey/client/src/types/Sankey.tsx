@@ -1019,7 +1019,7 @@ export abstract class ClassTemplate_Sankey
     //if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
     // Change style if node has default style & 'Type de noeud' tags
     this.nodes_list.forEach(n => {
-      n.dimensions_as_parent.forEach(pdim=>pdim.normalize())
+      //n.dimensions_as_parent.forEach(pdim=>pdim.normalize())
       const tagg = this.node_taggs_dict['type de noeud']
       if (!tagg) {
         return
