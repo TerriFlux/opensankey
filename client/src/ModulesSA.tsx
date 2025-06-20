@@ -454,6 +454,7 @@ const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccor
 
 
 const table_replace: [string, string][] = [
+  ['.json.gz', ''],
   ['_layout.json', ''],
   ['.json', ''],
   ['_reconciled.xlsx', ''],
