@@ -371,9 +371,10 @@ export abstract class ClassTemplate_ApplicationData
       }
     }
     if (this.options.no_key_event === true) {
-      // Link keyboard listener with app key down detection
-      document.onkeydown = this._keyboardEventListener(this)
+      return
     }
+    // Link keyboard listener with app key down detection
+    document.onkeydown = this._keyboardEventListener(this)
   }
 
   // ABSTRACT METHODS ===================================================================
