@@ -2111,6 +2111,36 @@ export abstract class ClassTemplate_Sankey
     return this._data_tags_fingerprint
   }
 
+  public get unit_first_datatag() {
+    const unit_taggs = this.data_taggs_list.filter(data_tagg =>data_tagg.banner == 'unit')
+    if (unit_taggs.length == 0) {
+      return null
+    }
+    const unit_tags = unit_taggs[0].tags_list
+    if (unit_tags.length == 0) {
+      return null
+    }
+    return unit_tags[0].unit_name
+  }
+
+  /**
+   * Return an array  of id of tag selected of that data_taggs
+   *
+   * @readonly
+   * @memberof ClassTemplate_Sankey
+   */
+  public get unit_data_tag() {
+    const unit_taggs = this.data_taggs_list.filter(data_tagg =>data_tagg.banner == 'unit')
+    if (unit_taggs.length == 0) {
+      return null
+    }
+    const selected_tags = unit_taggs[0].selected_tags_list
+    if (selected_tags.length == 0) {
+      return null
+    }
+    return selected_tags[0].unit_name
+  }
+
   /**
    * Return an array  of id of tag selected of that data_taggs
    *

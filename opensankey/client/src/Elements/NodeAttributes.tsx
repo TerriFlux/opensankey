@@ -32,6 +32,7 @@ import { Type_AnyNodeElement } from './Node'
 // SPECIFIC CONSTANTS *******************************************************************
 
 export const default_position_type = 'absolute'
+export const default_auto_x = false
 export const default_dx = 100
 export const default_dy = 50
 export const default_relative_dx = 100

@@ -809,5 +809,7 @@ export abstract class ClassTemplate_Element
   public set position_dy(_) { this._display.position.dy = _ /*this.applyPosition()*/ }
   public get position_relative_dy() { return this._display.position.relative_dy }
   public set position_relative_dy(_) { this._display.position.relative_dy = _ /*this.applyPosition()*/ }
+  public get position_auto_x() { return this._display.position.auto_x }
+  public set position_auto_x(_) { this._display.position.auto_x = _ /*this.applyPosition()*/ }
   public get display() { return this._display }
 }

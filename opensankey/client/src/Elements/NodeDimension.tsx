@@ -265,7 +265,7 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
    * Force to set this dimension's children as visibles
    * @memberof Class_NodeDimension
    */
-  public setForceToShowChildren(fromJSON:boolean=false) {
+  public setForceToShowChildren(fromJSON: boolean = false) {
     // Speed-up computation
     if (this._force_show_children && !this._force_show_parent)
       return
