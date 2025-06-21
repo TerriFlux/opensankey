@@ -40,6 +40,7 @@ import SankeyExcelParser.io_excel_constants as CONST_IO_XL
 # Local modules ---------------------------------------------------------------
 from SankeyExcelParser.classes.sankey import Sankey
 from SankeyExcelParser.classes.sankey_utils.data import Data as SankeyData
+from SankeyExcelParser.classes.sankey_utils.data import DataConstraintType
 from SankeyExcelParser.classes.sankey_utils.tag_group import ANTI_TAGS_NAME
 
 # Constants -------------------------------------------------------------------
@@ -875,6 +876,16 @@ class SankeyToJson(object):
         """
         data_json = copy.deepcopy(default_data_strct)
         data_json["data_value"] = data.value if (data.value is not None) else ""
+        if data.flux.constraints:
+            for constraints in data.flux.constraints.values():
+                for constraint in constraints:
+                    if constraint.type == DataConstraintType.ratio_node_source:
+                        data_json["value_option"] = 'ratio_input'
+                        data_json["data_value"] = 1+constraint.eq
+                    elif constraint.type == DataConstraintType.ratio_node_destination:
+                        data_json["value_option"] = 'ratio_output'
+                        data_json["data_value"] = 1+constraint.eq
+
         data_json["text_value"] = ""
         # Update flux tags to data structure
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
@@ -1460,9 +1471,10 @@ class JsonToSankey(object):
         # Apply all dimensions
         for dim_parent_child in all_dim_parent_child:
             dim_id, parent_id, child_id = dim_parent_child
-            self._dimensions_id_corresp[dim_id].add_nodes_relationship(
-                self._nodes_id_corresp[parent_id], self._nodes_id_corresp[child_id]
-            )
+            self._dimensions_id_corresp[dim_id]\
+                .add_nodes_relationship(
+                    self._nodes_id_corresp[parent_id],
+                    self._nodes_id_corresp[child_id])
 
     def parse_links_and_datas(self):
         """

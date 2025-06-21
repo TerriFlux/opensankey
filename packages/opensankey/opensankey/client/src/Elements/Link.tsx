@@ -3314,9 +3314,9 @@ export abstract class ClassTemplate_LinkElement
         return this.value.valueData + '%s'
       } else if (this.value?.value_option == 'ratio_output' && this.value?.valueData) {
         return this.value?.valueData + '%d'
-      } /*else if (this.value?.value_option == 'unit_conversion' ) {
+      } else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
-      }*/
+      }
     }
     // Init
     let data_value = this.valueResult
@@ -4314,7 +4314,9 @@ export abstract class ClassTemplate_LinkElement
   public get value_label_unit_visible() {
     if (this._display.attributes.value_label_unit_visible !== undefined) {
       return this._display.attributes.value_label_unit_visible
-    }
+    } else if (this.sankey.unit_data_tag) {
+      return true
+    } else {
     const valueOfStyle = this.getStyleWithAttr('value_label_unit_visible')
 
     if (valueOfStyle.value_label_unit_visible !== undefined) {
@@ -4322,6 +4324,7 @@ export abstract class ClassTemplate_LinkElement
     }
     return default_link_value_label_unit_visible
   }
+}
 
   /**
    * TODO Description
@@ -4336,9 +4339,10 @@ export abstract class ClassTemplate_LinkElement
   public get value_label_unit() {
     if (this._display.attributes.value_label_unit !== undefined) {
       return this._display.attributes.value_label_unit
+    } else if (this.sankey.unit_data_tag) {
+        return this.sankey.unit_data_tag
     }
     const valueOfStyle = this.getStyleWithAttr('value_label_unit')
-
     if (valueOfStyle.value_label_unit !== undefined) {
       return valueOfStyle.value_label_unit
     }
@@ -4356,6 +4360,9 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   public get value_label_unit_factor() {
+    // if (this.value!.value_label_unit_factor) {
+    //   return this.value!.value_label_unit_factor
+    // }    
     if (this._display.attributes.value_label_unit_factor !== undefined) {
       return this._display.attributes.value_label_unit_factor
     }
@@ -5400,7 +5407,7 @@ export class Class_LinkValueTree {
   }
 }
 
-export type ValueOptionType = 'value' | 'ratio_input' | 'ratio_output' | 'ratio_source_parent' | 'ratio_target_parent' /*| 'unit_conversion'*/
+export type ValueOptionType = 'value' | 'ratio_input' | 'ratio_output' | 'ratio_source_parent' | 'ratio_target_parent' | 'unit_conversion'
 
 // CLASS LINK VALUE *********************************************************************
 /**
@@ -5423,7 +5430,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     if (this.result_value) {
       return this.result_value
     }
-    /*if (this.value_option == 'unit_conversion') {
+    if (this.value_option == 'unit_conversion') {
       if (this.unit_factor) {
         const children_with_data = Object.values((this.parent as Class_LinkValueTree).children).filter(c=>c.id!=this.id && c.valueResult !== null)
         if (children_with_data.length == 0) {
@@ -5437,7 +5444,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
         const multiplier = this_conv_factor/conv_factor
         return child_with_data.valueResult!*multiplier
       }
-    } else*/ if (this.value_option == 'value') {
+    } else if (this.value_option == 'value') {
       return this.data_value
     } else if (this.value_option == 'ratio_input') {
       if (this.data_value == null) {
@@ -5520,6 +5527,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   public text_value: string | null = null
 
+  protected _unit_factor: number = 1
 
   // PRIVATE ATTRIBUTES ==================================================================
 
@@ -5582,6 +5590,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     this.result_max = element.result_max
 
     this.text_value = element.text_value
+    this.unit_factor = element.unit_factor
     this.value_option = element.value_option
     // Tags - Cleaning
     this.flux_tags_list.forEach(tag => tag.removeReference(this))
@@ -5592,8 +5601,8 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       .forEach(flux_tag => {
         flux_tag.addReference(this)
       })
-  }
 
+  }
 
   public addFrom(element: Class_LinkValue) {
     this.data_value = this.data_value!+element.data_value!
@@ -5625,6 +5634,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     if (this.result_max) json_object['result_max'] = this.result_max
 
     if (this.text_value) json_object['text_value'] = this.text_value
+    if (this._unit_factor !== undefined) json_object['unit_factor'] = this._unit_factor
     json_object['value_option'] = this.value_option
     json_object['tags'] = Object.fromEntries(
       this.flux_taggs_list
@@ -5669,7 +5679,8 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
       this.result_min = getNumberOrNullFromJSON(json_object, 'result_min')
 
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
-      this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType
+      this.unit_factor = getNumberFromJSON(json_object, 'unit_factor',1)
+      this.value_option = getStringFromJSON(json_object, 'value_option','value') as ValueOptionType
     }
     // Get Flux tags
     // In JSON here are how supposed tags var is :
@@ -5904,6 +5915,9 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     else
       return null
   }
+
+  public get unit_factor() { return this._unit_factor }
+  public set unit_factor(_) { this._unit_factor = _ }
 }
 
 // CLASS GHOST LINK *********************************************************************

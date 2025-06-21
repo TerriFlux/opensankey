@@ -28,7 +28,8 @@ import React, { FunctionComponent, useRef, useState } from 'react'
 
 import {
   Box,
-  Button
+  Button,
+  Checkbox
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
@@ -81,7 +82,6 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
   const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_nodes.includes(d) } })
-
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload

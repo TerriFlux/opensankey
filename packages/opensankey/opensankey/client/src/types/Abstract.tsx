@@ -119,6 +119,7 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract set filter_label(_: number)
   public abstract get type_data(): string
   public abstract get grid_size(): number
+  public abstract get vertical_spacing() : number
   // MAndatory setters
   public abstract set scale(_: number)
   public abstract get magnetic_nodes(): boolean
@@ -164,6 +165,8 @@ export abstract class ClassAbstract_Sankey {
   public abstract get list_combinatorial_data_taggs_path(): string[][]
   public abstract get level_taggs_dict(): { [id: string]: ClassAbstract_ProtoLevelTagGroup }
   public abstract get level_taggs_list(): ClassAbstract_ProtoLevelTagGroup[]
+  public abstract get unit_data_tag(): string | null | undefined
+  public abstract get unit_first_datatag(): string | null | undefined
   // Mandatory methods
   public abstract draw(): void
   public abstract addNewDefaultNode(): TypeAbstract_NodeElement

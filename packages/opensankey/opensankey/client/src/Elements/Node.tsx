@@ -31,6 +31,7 @@ import { textwrap } from 'd3-textwrap'
 // Local types imports
 import type {
   ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoLevelTag,
   ClassAbstract_Sankey
 } from '../types/Abstract'
 import type { Type_Side } from './LinkAttributes'
@@ -42,7 +43,8 @@ import type {
   Class_Tag,
   Class_TagGroup,
   Class_LevelTagGroup,
-  Class_LevelTag
+  Class_LevelTag,
+  Class_ProtoLevelTag
 } from '../types/Tag'
 import type {
   Class_MenuConfig
@@ -94,8 +96,10 @@ import {
   default_node_value_label_significant_digits, default_node_value_label_unit,
   default_node_value_label_unit_factor, default_node_value_label_unit_visible,
   default_node_value_label_background, default_node_value_label_is_visible,
-  default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity
+  default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity,
+  default_auto_x
 } from './NodeAttributes'
+import { Class_DrawingArea } from '../types/Types'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -842,23 +846,26 @@ export abstract class ClassTemplate_NodeElement
    * @param {string | undefined} [id] id of dimension to agregate.
    * @memberof ClassTemplate_NodeElement
    */
-  public drawParent(id?: string) {
+  public drawParent(id: string) {
     if (this.is_child) {
       //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
       // Force to show parent
       if ((id !== undefined) && (this._dimensions_as_child[id])) {
         this._dimensions_as_child[id].setForceToShowParent()
         const parent = this._dimensions_as_child[id].parent
-        parent.input_links_list.forEach(l => l.source.draw())
-        parent.output_links_list.forEach(l => l.target.draw())
-      } else {
-        //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
-        const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
-        dim.setForceToShowParent()
-        const parent = dim.parent
-        parent.input_links_list.forEach(l => { l.source.draw() })
-        parent.output_links_list.forEach(l => { l.target.draw() })
-      }
+        parent.input_links_list.forEach(l=>l.source.draw())
+        parent.output_links_list.forEach(l=>l.target.draw())
+      } 
+      //   parent.input_links_list.forEach(l => l.source.draw())
+      //   parent.output_links_list.forEach(l => l.target.draw())
+      // } else {
+      //   //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
+      //   const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
+      //   dim.setForceToShowParent()
+      //   const parent = dim.parent
+      //   parent.input_links_list.forEach(l => { l.source.draw() })
+      //   parent.output_links_list.forEach(l => { l.target.draw() })
+      // }
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
@@ -893,9 +900,19 @@ export abstract class ClassTemplate_NodeElement
   public drawChildren(id: string) {
     if (this.is_parent) {
       // Force to show children
-      if ((id !== undefined) && (this._dimensions_as_parent[id]))
-        //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
+      if ((id !== undefined) && (this._dimensions_as_parent[id])) {
+        const current_height = this.getShapeHeightToUse()
         this._dimensions_as_parent[id].setForceToShowChildren()
+        const new_nodes = this._dimensions_as_parent[id].children
+        let total_height = (new_nodes.length - 1) * this.sankey.drawing_area.vertical_spacing
+        new_nodes.forEach(c => total_height += c.getShapeHeightToUse())
+        const shift_y = total_height / 2
+        new_nodes.forEach((n, i) => {
+          if ((this.sankey.drawing_area.sankey.node_styles_dict[default_style_id] as Class_NodeStyle).position.type == 'parametric' && i == 0) {
+            n.position_y = this.position_y + current_height / 2 - shift_y
+          }
+        })
+      }
       // Check if there are possible Exchange nodes
       if (!this.sankey.node_taggs_dict['type de noeud']) {
         return
@@ -1188,7 +1205,7 @@ export abstract class ClassTemplate_NodeElement
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
-      (!_.children.includes(this)) &&
+      /*(!_.children.includes(this)) &&*/
       (!this._dimensions_as_parent[_.id])
     ) {
       this.dimensionsUpdated() // Reset visibility indicator
@@ -1692,6 +1709,9 @@ export abstract class ClassTemplate_NodeElement
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
+            }
+            if (this.position_auto_x) {
+              this._display.position.x = this._display.position.u*(this.sankey.drawing_area as Class_DrawingArea).horizontal_spacing
             }
           }
         }
@@ -3698,6 +3718,31 @@ export abstract class ClassTemplate_NodeElement
     this.applyPosition()
   }
 
+  /**
+ * TODO Description
+ * @memberof ClassTemplate_NodeElement
+ */
+  public get position_auto_x() {
+    if (this._display.position.auto_x !== undefined) {
+      return this._display.position.auto_x
+    }
+    const valueOfStyle = this.getStyleWithAttr('position')
+
+    if (valueOfStyle.position.auto_x !== undefined) {
+      return valueOfStyle.position.auto_x
+    }
+    return default_auto_x
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_NodeElement
+   */
+  public set position_auto_x(_) {
+    this._display.position.auto_x = _
+    this.applyPosition()
+  }  
+
   // Shape related --------------------------------------------------------------------
 
   /**
@@ -5024,7 +5069,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._tooltip_text)
       tooltip_html += '<p class="subtitle" style="	margin-bottom: 5px;">' + this._tooltip_text.split('\n').join('<br>') + '</p>'
     tooltip_html += '<div style="padding-left :5px;padding-right :5px">'
-    //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
+    tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + 'u: '+this.position_u + ' v: ' +this.position_v + ' y: ' + this.position_y + '</p>'
     //tooltip_html += '<p class="title" style="margin-bottom: 5px;">'  + ' relative_x: ' + this.position_relative_dx +  ' relative_y: ' + this.position_relative_dy + '</p>'
     // Input links
     if (this.hasInputLinks()) {
