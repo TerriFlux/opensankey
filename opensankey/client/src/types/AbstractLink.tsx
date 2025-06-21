@@ -59,7 +59,7 @@ export abstract class ClassAbstract_LinkElement
   public abstract getAllValues(): { [_: string]: [ClassAbstract_LinkValue, ClassAbstract_ProtoTag[] | undefined]; };
   public abstract hasGivenTag(tag: ClassAbstract_ProtoTag):boolean
   public abstract resetAttributes():void
-  public abstract valueForTags(_:ClassAbstract_ProtoTag[]): Class_LinkValue | null
+  public abstract valueForTags(_:ClassAbstract_ProtoTag[]):ClassAbstract_LinkValue|null
 
   // Mandatory getters / setters
   public abstract get source():TypeAbstract_NodeElement;

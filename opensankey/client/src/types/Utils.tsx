@@ -53,6 +53,7 @@ export type Type_ElementPosition = {
   dy?: number
   relative_dx?: number
   relative_dy?: number
+  auto_x?: boolean
 }
 
 export type Type_ElementPositionOptionnal = {
@@ -65,6 +66,7 @@ export type Type_ElementPositionOptionnal = {
   dy?: number
   relative_dx?: number
   relative_dy?: number
+  auto_x?: boolean
 }
 export type Type_Position = 'absolute' | 'relative' | 'parametric'
 
