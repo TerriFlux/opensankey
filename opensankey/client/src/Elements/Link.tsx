@@ -633,7 +633,7 @@ export abstract class ClassTemplate_LinkElement
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
       // If local attribute have key local_scale then update local scale domain
-      if ('local_link_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.local_link_scale)
+      if ('shape_local_link_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.shape_local_link_scale)
     }
     // Get positions infos
     this._display.position_starting.x = getNumberFromJSON(json_object, 'position_starting_x', this._display.position_starting.x)
@@ -1494,7 +1494,7 @@ export abstract class ClassTemplate_LinkElement
   }
 
   protected scaleValueToPx(_: number) {
-    if (this.local_link_scale !== undefined) {
+    if (this.shape_local_link_scale !== undefined) {
       return this._scaleValueToPx(_)
     } else {
       return this.drawing_area.scaleValueToPx(_)
@@ -3496,18 +3496,18 @@ export abstract class ClassTemplate_LinkElement
     return this._display.position_ending.y - shifting_end_point_y
   }
 
-  public get local_link_scale(): number | undefined {
-    if ('_local_link_scale' in this._display.attributes) {
-      return this._display.attributes.local_link_scale
+  public get shape_local_link_scale(): number | undefined {
+    if ('_shape_local_link_scale' in this._display.attributes) {
+      return this._display.attributes.shape_local_link_scale
     } else {
-      const valueOfStyle = this.getStyleWithAttr('local_link_scale')
+      const valueOfStyle = this.getStyleWithAttr('shape_local_link_scale')
 
-      return valueOfStyle.local_link_scale
+      return valueOfStyle.shape_local_link_scale
     }
   }
 
-  public set local_link_scale(value: number | undefined) {
-    this._display.attributes.local_link_scale = value
+  public set shape_local_link_scale(value: number | undefined) {
+    this._display.attributes.shape_local_link_scale = value
     this.setDomainLocalScale(value)
     this.redrawNodesSourceTarget()
   }
