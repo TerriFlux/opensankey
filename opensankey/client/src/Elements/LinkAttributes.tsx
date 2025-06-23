@@ -113,7 +113,7 @@ export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'dragged' | 'top' | 'middle' | 'bottom'
 
-export type Type_customisable_flow_style_attr='local_link_scale'|'shape_is_curved'|'shape_curvature'|'shape_is_recycling'|'shape_is_structure'|'shape_orientation'|'shape_starting_curve'|'shape_ending_curve'|'shape_starting_tangeant'|'shape_ending_tangeant'|'shape_middle_recycling'|'shape_is_arrow'|'shape_arrow_size'|'shape_is_dashed'|'shape_color'|'shape_color_rule'|'shape_opacity'|'value_label_is_visible'|'value_label_font_family'|'value_label_font_size'|'value_label_uppercase'|'value_label_bold'|'value_label_italic'|'value_label_color'|'value_label_horiz'|'value_label_vert'|'value_label_on_path'|'value_label_pos_auto'|'value_label_percent_input'|'value_label_percent_output'|'value_label_scientific_notation'|'value_label_significant_digits'|'value_label_nb_significant_digits'|'value_label_custom_digit'|'value_label_nb_digit'|'value_label_unit_visible'|'value_label_unit'|'value_label_unit_factor'|'name_label_is_visible'|'name_label_font_family'|'name_label_font_size'|'name_label_uppercase'|'name_label_bold'|'name_label_italic'|'name_label_color'|'name_label_horiz'|'name_label_vert'|'name_label_on_path'|'name_label_pos_auto'
+export type Type_customisable_flow_style_attr='shape_local_link_scale'|'shape_is_curved'|'shape_curvature'|'shape_is_recycling'|'shape_is_structure'|'shape_orientation'|'shape_starting_curve'|'shape_ending_curve'|'shape_starting_tangeant'|'shape_ending_tangeant'|'shape_middle_recycling'|'shape_is_arrow'|'shape_arrow_size'|'shape_is_dashed'|'shape_color'|'shape_color_rule'|'shape_opacity'|'value_label_is_visible'|'value_label_font_family'|'value_label_font_size'|'value_label_uppercase'|'value_label_bold'|'value_label_italic'|'value_label_color'|'value_label_horiz'|'value_label_vert'|'value_label_on_path'|'value_label_pos_auto'|'value_label_percent_input'|'value_label_percent_output'|'value_label_scientific_notation'|'value_label_significant_digits'|'value_label_nb_significant_digits'|'value_label_custom_digit'|'value_label_nb_digit'|'value_label_unit_visible'|'value_label_unit'|'value_label_unit_factor'|'name_label_is_visible'|'name_label_font_family'|'name_label_font_size'|'name_label_uppercase'|'name_label_bold'|'name_label_italic'|'name_label_color'|'name_label_horiz'|'name_label_vert'|'name_label_on_path'|'name_label_pos_auto'
 
 // CLASS LINK ATTRIBUTES ****************************************************************
 /**
@@ -129,7 +129,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   // PROTECTED ATTRIBUTES ===============================================================
 
   // Scale
-  protected _local_link_scale?: number
+  protected _shape_local_link_scale?: number
 
   // Shape type
   protected _shape_is_curved?: boolean
@@ -211,7 +211,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     json_object['version'] = 1  // Always integer, increase only if keys are changed
 
     // Scale
-    if ('_local_link_scale' in this) (json_object['user_scale'] as number | undefined) = this._local_link_scale
+    if ('_shape_local_link_scale' in this) (json_object['user_scale'] as number | undefined) = this._shape_local_link_scale
 
     // Shape type
     if (this._shape_is_curved !== undefined) json_object['curved'] = this._shape_is_curved
@@ -334,7 +334,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     // Since local_scale can be undefined we don't test the value but if the object have the key
     const user_scale = getNumberOrUndefinedFromJSON(json_local_object, 'user_scale')
     if (user_scale) {
-      this._local_link_scale = user_scale
+      this._shape_local_link_scale = user_scale
     }
 
     // Shape type
@@ -404,7 +404,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
   public copyFrom(element: Class_LinkAttribute) {
 
-    this._local_link_scale = element._local_link_scale
+    this._shape_local_link_scale = element._shape_local_link_scale
 
     // Shape type
     this._shape_is_curved = element._shape_is_curved
@@ -483,7 +483,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   public get id() { return 'undefined' }
   public get name(): string { return 'none' }
 
-  public get local_link_scale() { return this._local_link_scale }
+  public get shape_local_link_scale() { return this._shape_local_link_scale }
 
   // Shape type
   public get shape_is_curved() { return this._shape_is_curved }
@@ -548,7 +548,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   public get name_label_pos_auto() { return this._name_label_pos_auto }
 
   // SETTERS ============================================================================
-  public set local_link_scale(_: number | undefined) { this._local_link_scale = _; this.updateLinkAndSourceTarget() }
+  public set shape_local_link_scale(_: number | undefined) { this._shape_local_link_scale = _; this.updateLinkAndSourceTarget() }
 
   // Shape type
   public set shape_is_curved(_: boolean | undefined) { this._shape_is_curved = _; this.update() }
@@ -804,7 +804,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   private _references: { [_: string]: Type_AnyLinkElement; } = {}
 
   private _customisable_attribute: {
-    local_link_scale: boolean,
+    shape_local_link_scale: boolean,
     shape_is_curved: boolean,
     shape_curvature: boolean,
     shape_is_recycling: boolean,
@@ -874,7 +874,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     this._is_deletable = is_deletable
 
     this._customisable_attribute = {
-      local_link_scale: !is_deletable,
+      shape_local_link_scale: !is_deletable,
       shape_is_curved: !is_deletable,
       shape_curvature: !is_deletable,
       shape_is_recycling: !is_deletable,
@@ -929,7 +929,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     if (!is_deletable) {
 
       // Scale
-      this._local_link_scale = default_shape_local_scale
+      this._shape_local_link_scale = default_shape_local_scale
 
       // Shape type
       this._shape_is_curved = default_shape_is_curved
@@ -1047,7 +1047,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   private updateNodeReferencesDraw() {
     Object.values(this._references)
       .forEach(ref => {
-        ref.setDomainLocalScale(ref.local_link_scale)
+        ref.setDomainLocalScale(ref.shape_local_link_scale)
         ref.source.draw()
         ref.target.draw()
       })

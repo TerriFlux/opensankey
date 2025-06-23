@@ -83,9 +83,8 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
-import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit } from './SankeyMenuComponents'
+import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit, OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
-import { FaCheck } from 'react-icons/fa'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 
 /*************************************************************************************************/
@@ -233,7 +232,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const shape_color_rule = (element_ref?.shape_color_rule ?? default_shape_color_rule)
   const shape_opacity = (element_ref?.shape_opacity ?? default_shape_opacity)
   const shape_is_structure = (element_ref?.shape_is_structure ?? default_shape_is_structure)
-  const shape_local_scale = (element_ref?.local_link_scale ?? default_shape_local_scale)
+  const shape_local_scale = (element_ref?.shape_local_link_scale ?? default_shape_local_scale)
 
 
 
@@ -244,7 +243,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const [, setCountStyle] = useState(0)
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_nodes_apparence_visual_updater.current = () => setCount(a => a + 1)
+    new_data.menu_configuration.ref_to_menu_config_links_apparence_visual_updater.current = () => setCount(a => a + 1)
   } else {
     new_data.menu_configuration.ref_to_menu_config_links_styles_updater.current = () => setCountStyle(a => a + 1)
   }
@@ -264,7 +263,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   ref_set_number_inputs[5].current(String(shape_opacity))
 
   const ref_set_link_scale_inputs = useRef((_: string | null | undefined) => null)
-  ref_set_link_scale_inputs.current(shape_local_scale as string | null |undefined)
+  ref_set_link_scale_inputs.current(shape_local_scale as string | null | undefined)
   /**
    * Function used to reset menu UI
    */
@@ -377,7 +376,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
     </>
   </WrapperBoxSubSectionMenu>
 
-  const content_shape_detail = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.apparence.Forme')}>
+  const content_shape_detail = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.apparence.shape_visible')}>
     <>
 
       {/* Orientation du flux */}
@@ -537,13 +536,13 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
                 {t('Flux.apparence.local_link_scale')}
-                <TooltipElementOverloaded k={'local_link_scale'} />
+                <TooltipElementOverloaded k={'shape_local_link_scale'} />
               </Box>
               <ConfigMenuNumberOrUndefinedInput
-                disabled={!disable_attr_props['local_link_scale']}
+                disabled={!disable_attr_props['shape_local_link_scale']}
                 ref_to_set_value={ref_set_link_scale_inputs}
-                default_value={selected_links[0]?.local_link_scale ?? undefined}
-                function_on_blur={(_) => { updateElements('local_link_scale', (_ !== undefined ) ? undefined : _) }}
+                default_value={selected_links[0]?.shape_local_link_scale ?? undefined}
+                function_on_blur={(_) => { updateElements('shape_local_link_scale', (_ !== undefined) ? undefined : _) }}
                 minimum_value={0}
                 stepper={true}
                 step={1}
@@ -686,8 +685,18 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       _shape_color_rule: { overloaded: isAttributeOverloaded(selected_links, 'shape_color_rule'), name: t('Flux.apparence.shape_color_rule') },
       _shape_opacity: { overloaded: isAttributeOverloaded(selected_links, 'shape_opacity'), name: t('Flux.apparence.shape_opacity') },
       _shape_is_structure: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_structure'), name: t('Flux.apparence.shape_is_structure') },
-      _local_link_scale: { overloaded: isAttributeOverloaded(selected_links, 'local_link_scale'), name: t('Flux.apparence.local_link_scale') },
+      _shape_local_link_scale: { overloaded: isAttributeOverloaded(selected_links, 'shape_local_link_scale'), name: t('Flux.apparence.shape_local_link_scale') },
     }
+
+    const options_selector: typeElementSelectable = sankey.link_styles_list.map(style => {
+      return {
+        value: style.id,
+        label: style.name,
+        selected: (element_ref as Type_GenericLinkElement)?.style.includes(style) ?? false,
+        disabled: style.id == default_style_id,
+
+      }
+    })
 
     content_style = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} ><>
       <Box layerStyle='menuconfigpanel_row_stylechoice' >
@@ -716,38 +725,18 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         >
           {icon_library.icon_edit_style}
         </Button>
-        <Menu>
-          <MenuButton
-            as={Button}
-            variant='menuconfigpanel_option_button'
-            rightIcon={icon_open_selector}
-          >
-            {sankey.getStyleOfSelectedLinks()}
-          </MenuButton>
-          <MenuList>
-            {
+        <OSMultiSelect
+          t={t}
+          elements={options_selector}
+          onClick={(entries) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            sankey.link_styles_list.forEach(style => {
+              sankey.switchLinkStyle(style, entries_values.includes(style.id))
+            })
 
-              sankey.link_styles_list
-                .map(style => {
-                  const flow_ref_has_style = (element_ref as Type_GenericLinkElement)?.style.includes(style) ?? false
-
-                  return (<React.Fragment key={style.id}>
-                    <MenuItem
-                      display='flex'
-
-                      key={style.id}
-                      onClick={() => {
-                        sankey.switchLinkStyle(style, !flow_ref_has_style)
-                      }}
-                    >
-                      {style.name}
-                      {flow_ref_has_style ? <FaCheck /> : <></>}
-                    </MenuItem></React.Fragment>
-                  )
-                })
-            }
-          </MenuList>
-        </Menu>
+          }}
+        />
       </Box>
       <MenuOrderStylesOfSelectedFlows new_data={new_data} />
     </>
@@ -1167,6 +1156,15 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
       _name_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_italic') },
     }
 
+    const options_selector: typeElementSelectable = sankey.link_styles_list.map(style => {
+      return {
+        value: style.id,
+        label: style.name,
+        selected: (element_ref as Type_GenericLinkElement)?.style.includes(style) ?? false,
+        disabled: style.id == default_style_id,
+
+      }
+    })
     content_style = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} ><>
       <Box layerStyle='menuconfigpanel_row_stylechoice' >
         <OSTooltip label={t('Noeud.tooltips.AS')}>
@@ -1193,35 +1191,18 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
         >
           {icon_library.icon_edit_style}
         </Button>
-        <Menu>
-          <MenuButton
-            as={Button}
-            variant='menuconfigpanel_option_button'
-            rightIcon={icon_open_selector}
-          >
-            {sankey.getStyleOfSelectedLinks()}
-          </MenuButton>
-          <MenuList>
-            {
-              sankey.link_styles_list
-                .map(style => {
-                  const flow_ref_has_style = (element_ref as Type_GenericLinkElement)?.style.includes(style) ?? false
+        <OSMultiSelect
+          t={t}
+          elements={options_selector}
+          onClick={(entries) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            sankey.link_styles_list.forEach(style => {
+              sankey.switchLinkStyle(style, entries_values.includes(style.id))
+            })
 
-                  return (<React.Fragment key={style.id}>
-                    <MenuItem
-                      key={style.id}
-                      onClick={() => {
-                        sankey.switchLinkStyle(style, !flow_ref_has_style)
-                      }}
-                    >
-                      {style.name}
-                      {flow_ref_has_style ? <FaCheck /> : <></>}
-                    </MenuItem></React.Fragment>
-                  )
-                })
-            }
-          </MenuList>
-        </Menu>
+          }}
+        />
       </Box>
       <MenuOrderStylesOfSelectedFlows new_data={new_data} />
     </>

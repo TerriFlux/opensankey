@@ -88,7 +88,7 @@ import {
   TooltipValueSurcharge,
 } from '../../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
-import { MenuResetAttrLocal, MenuUnit, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
+import { MenuResetAttrLocal, MenuUnit, OSMultiSelect, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, typeElementSelectable, WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { FaCheck } from 'react-icons/fa'
 import { Draggable, DraggingStyle, DragDropContext, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
@@ -856,7 +856,14 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
       _shape_color_sustainable: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color_sustainable'), name: t('Noeud.apparence.shape_color_sustainable') },
       _shape_opacity: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_opacity'), name: t('Noeud.apparence.shape_opacity') }
     }
-
+    const options_selector: typeElementSelectable = sankey.node_styles_list.map(style => {
+      return {
+        value: style.id,
+        label: style.name,
+        selected: (element_ref as Type_GenericNodeElement)?.style.includes(style) ?? false,
+        disabled:style.id==default_style_id,
+      }
+    })
     style_node = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} ><>
       <Box layerStyle='menuconfigpanel_row_stylechoice' >
         <OSTooltip label={t('Noeud.tooltips.AS')}>
@@ -883,36 +890,18 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         >
           {icon_library.icon_edit_style}
         </Button>
-        <Menu>
-          <MenuButton
-            as={Button}
-            variant='menuconfigpanel_option_button'
-            rightIcon={icon_open_selector}
-          >
-            {sankey.getStyleOfSelectedNodes()}
-          </MenuButton>
-          <MenuList>
-            {
-              sankey.node_styles_list
-                .map(style => {
-                  const node_ref_has_style = (element_ref as Type_GenericNodeElement)?.style.includes(style) ?? false
+        <OSMultiSelect
+          t={t}
+          elements={options_selector}
+          onClick={(entries) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            sankey.node_styles_list.forEach(style => {
+              sankey.switchNodeStyle(style, entries_values.includes(style.id))
+            })
 
-                  return (<React.Fragment key={style.id}>
-                    <MenuItem
-                      display='flex'
-                      isDisabled={style.id == default_style_id}
-                      key={style.id}
-                      onClick={() => {
-                        sankey.switchNodeStyle(style, !node_ref_has_style)
-                      }}>
-                      {style.name}
-                      {node_ref_has_style ? <FaCheck /> : <></>}
-                    </MenuItem></React.Fragment>
-                  )
-                })
-            }
-          </MenuList>
-        </Menu>
+          }}
+        />
       </Box>
       <MenuOrderStylesOfSelectedNodes new_data={new_data} />
     </>
@@ -946,7 +935,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   const { icon_open_selector, icon_edit_style } = icon_library
   const { ref_selected_style_node, dict_setter_show_dialog } = menu_configuration
   const { ref_setter_show_modal_styles_nodes_context } = dict_setter_show_dialog
-  
+
   // Elements on which this menu applies ------------------------------------------------
   let selected_nodes: Type_GenericNodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
@@ -1420,7 +1409,14 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       _name_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_uppercase') },
       _name_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_italic') },
     }
-
+    const options_selector: typeElementSelectable = sankey.node_styles_list.map(style => {
+      return {
+        value: style.id,
+        label: style.name,
+        selected: (element_ref as Type_GenericNodeElement)?.style.includes(style) ?? false,
+        disabled:style.id==default_style_id
+      }
+    })
     content_style = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} ><>
       <Box layerStyle='menuconfigpanel_row_stylechoice' >
         <OSTooltip label={t('Noeud.tooltips.AS')}>
@@ -1446,34 +1442,17 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         >
           {icon_edit_style}
         </Button>
-        <Menu>
-          <MenuButton
-            as={Button}
-            variant='menuconfigpanel_option_button'
-            rightIcon={icon_open_selector}
-          >
-            {sankey.getStyleOfSelectedNodes()}
-          </MenuButton>
-          <MenuList>
-            {
-              sankey.node_styles_list
-                .map(style => {
-                  const node_ref_has_style = (element_ref as Type_GenericNodeElement)?.style.includes(style) ?? false
-                  return (<React.Fragment key={style.id}>
-                    <MenuItem
-                      key={style.id}
-                      onClick={() => {
-                        sankey.switchNodeStyle(style, !node_ref_has_style)
-                      }}
-                    >
-                      {style.name}
-                      {node_ref_has_style ? <FaCheck /> : <></>}
-                    </MenuItem></React.Fragment>
-                  )
-                })
-            }
-          </MenuList>
-        </Menu>
+        <OSMultiSelect
+          t={t}
+          elements={options_selector}
+          onClick={(entries) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            sankey.node_styles_list.forEach(style => {
+              sankey.switchNodeStyle(style, entries_values.includes(style.id))
+            })
+          }}
+        />
       </Box>
       <MenuOrderStylesOfSelectedNodes new_data={new_data} />
     </>
