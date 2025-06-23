@@ -23,789 +23,975 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-import React from 'react'
-import { ChevronRightIcon } from '@chakra-ui/icons'
-import {
-  Button, Menu,
-  MenuButton, MenuList,MenuGroup
-} from '@chakra-ui/react'
+
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
-import { Class_LevelTag, Class_LevelTagGroup } from '../../types/Tag'
+import { Class_LevelTagGroup, Class_Tag } from '../../types/Tag'
 import { Type_GenericNodeElement, Type_GenericApplicationData, Type_GenericLinkElement } from '../../types/Types'
 import { default_style_id } from '../../types/Utils'
-import { sep } from './SankeyMenuContextLink'
+import { Class_NodeStyle } from '../../Elements/NodeAttributes'
 
-export const contract = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement
-) => {
-  const expand_left = contextualised_node.id.includes('expandleft')
-  const l = expand_left ? contextualised_node.output_links_list[0]: contextualised_node.input_links_list[0]
+// ============================================================================
+// TYPES ET CONSTANTES
+// ============================================================================
 
-  let parent_node = expand_left ? l.target : l.source
-  new_data.drawing_area.bypass_redraws = true
-  const children = expand_left ? parent_node.input_links_list.filter(l => l.is_visible) : parent_node.output_links_list.filter(l => l.is_visible)
-  children.forEach((c, i) => {
-    new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
-  })
-  if (expand_left) {
-    parent_node.input_links_list.forEach(l => l.setVisible())
-  } else {
-    parent_node.output_links_list.forEach(l => l.setVisible())
-  }
-  new_data.drawing_area.draw()
+export const EXPANSION_SUFFIXES = {
+  LEFT: 'expandleft',
+  RIGHT: 'expandright'
+} as const
+
+enum ContractContext {
+  AFTER_EXPAND = 'after_expand',
+  AFTER_AGGREGATE = 'after_aggregate'
 }
 
-export const expand = (
-  new_data: Type_GenericApplicationData,
+interface BaseOperationConfig {
+  expand_left: boolean
+  tagg: Class_LevelTagGroup
+  original_node: Type_GenericNodeElement
+  suffix: string
+}
+
+interface DisaggregationExpansionConfig extends BaseOperationConfig {
+  parent_dim: Class_NodeDimension
+  children: Type_GenericNodeElement[]
+  contextualised_node: Type_GenericNodeElement
+}
+
+interface AggregationExpansionConfig extends BaseOperationConfig {
+  parent: Type_GenericNodeElement
+  nodes_to_agregate: Type_GenericNodeElement[]
+  child_dim: Class_NodeDimension
+  contextualised_node: Type_GenericNodeElement
+}
+
+interface LinkProcessingResult {
+  original_links: Type_GenericLinkElement[]
+  border_nodes: Type_GenericNodeElement[]
+  is_extremity: boolean
+}
+
+// ============================================================================
+// UTILITAIRES COMMUNS
+// ============================================================================
+
+const createLogger = (enabled: boolean = false) => ({
+  log: enabled ? console.log : () => {},
+  group: enabled ? console.group : () => {},
+  groupEnd: enabled ? console.groupEnd : () => {}
+})
+
+const calculateOpacity = (currentOpacity: number): number => {
+  return currentOpacity > 0.3 ? currentOpacity - 0.2 : currentOpacity
+}
+
+const createOperationConfig = (
   contextualised_node: Type_GenericNodeElement,
   expand_left: boolean,
-  tagg: Class_LevelTagGroup) => {
-  new_data.drawing_area.bypass_redraws = true
-  //do not draw until all nodes and links have been created
-  const parent_dim = contextualised_node.nodeDimensionAsParent(tagg)
-  if (!parent_dim) {
-    return
-  }
-  const children = parent_dim.children as Type_GenericNodeElement[]
-  const new_nodes: Type_GenericNodeElement[] = []
-  //const original_node = contextualised_node.sibling ?? contextualised_node
-  //const original_node = contextualised_node
-  const original_node = contextualised_node.sibling ?? contextualised_node
-  // the new node is intimely linked to the original child node
-  let links_aggregate: Type_GenericLinkElement[] = []
-  // Si on étend à droite ce sont les flux qui vont à droite du noeud que l'on expand et qui additionnent les flux à droite des neouds enfants expandus 
-  // Si on étend à gauche ce sont les flux qui viennent de gauche du noeud que l'on expand
-  //let links_copy: Type_GenericLinkElement[] = []
-  // Si on étend à gauche ce sont les flux qui viennent de gauche
-  // Si on étend à droite ce sont les flux qui vont à droite des neouds enfants expandus copié depuis le sibling
-  let is_extremity = true
-  if (expand_left) {
-    if ( original_node.input_links_list.length > 0) {
-      links_aggregate = original_node.input_links_list.filter(l => l.source.is_visible) as Type_GenericLinkElement[]
-      contextualised_node.input_links_list.filter(l => l.setInvisible()) as Type_GenericLinkElement[]
-      is_extremity = false
-    } else {
-      links_aggregate = original_node.output_links_list.filter(l => l.target.is_visible) as Type_GenericLinkElement[]
-    }
-    contextualised_node.input_links_list.filter(l => l.setInvisible()) as Type_GenericLinkElement[]
-  } else {
-    if ( original_node.output_links_list.length > 0) {
-      links_aggregate = original_node.output_links_list.filter(l => l.target.is_visible) as Type_GenericLinkElement[]
-      is_extremity = false
-    } else {
-      links_aggregate = original_node.input_links_list.filter(l => l.source.is_visible) as Type_GenericLinkElement[]
-    }
-    contextualised_node.output_links_list.filter(l => l.setInvisible()) as Type_GenericLinkElement[]
-  }
-  const suffix = expand_left ? 'expandleft' : 'expandright'
-  children.forEach((c, i) => {
-    const n = new_data.drawing_area.sankey.addNewNode(c.id + suffix, c.name)
-    new_nodes.push(n)
-    n.sibling = c
-    n.copyFrom(c)
-    n.shape_color = contextualised_node.shape_color
-    n.shape_opacity = (contextualised_node.shape_opacity > 0.3) ? contextualised_node.shape_opacity - 0.2 : contextualised_node.shape_opacity
-    if (contextualised_node.dimensions_as_child.length == 0) {
-      // n is no more a child (contrary to its sibling)
-      n.dimensions_as_child.forEach(cdim => n.removeDimensionAsChild(cdim))
-    } else {
-      const dim_as_child = contextualised_node.nodeDimensionAsChild(tagg)
-      const n_dim_as_child = n.nodeDimensionAsChild(tagg)
-      if (dim_as_child) {
-        n_dim_as_child!.force_child_level_tag(dim_as_child!.child_level_tag)
-        n_dim_as_child!.force_parent_level_tag(dim_as_child!.parent_level_tag)
-        n_dim_as_child!.setForceToShowChildren(true)
-      } else {
-        n.removeDimensionAsChild(n_dim_as_child!)
-      }
-      contextualised_node.dimensions_as_child.forEach(dim=>{
-        if (dim.force_show_children) {
-          const ndim = n.nodeDimensionAsChild(dim.related_level_tagg as Class_LevelTagGroup)
-          if (ndim) {
-            ndim.setForceToShowChildren(true)
-          }
-        }
-      })
-    }
-    if (n.dimensions_as_parent.length !== 0) {
-      // the dimension as parent go up one level
-      const dim_as_parent = contextualised_node.nodeDimensionAsParent(tagg)
-      const n_dim_as_parent = n.nodeDimensionAsParent(tagg)
-      if (n_dim_as_parent) {
-        n_dim_as_parent!.force_parent_level_tag(dim_as_parent!.parent_level_tag)
-        n_dim_as_parent!.force_child_level_tag(dim_as_parent!.child_level_tag)
-      }
-    }
-    let lchild: Type_GenericLinkElement
-    if (expand_left) {
-      lchild = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
-    } else {
-      lchild = new_data.drawing_area.sankey.addNewLink(contextualised_node, n)
-    }
-    lchild.shape_color_rule = 'source'
-    lchild.shape_opacity = n.shape_opacity
+  tagg: Class_LevelTagGroup
+): BaseOperationConfig => ({
+  expand_left,
+  tagg,
+  original_node: contextualised_node.sibling as Type_GenericNodeElement ?? contextualised_node,
+  suffix: expand_left ? EXPANSION_SUFFIXES.LEFT : EXPANSION_SUFFIXES.RIGHT
+})
 
-    links_aggregate.forEach(laggregate => {
-      if (expand_left) {
-        if (!is_extremity) {
-          let laggregate_child = laggregate.source.output_links_list.filter(l => l.target == n.sibling)[0]
-          if (!laggregate_child) {
-            laggregate_child = laggregate.source.output_links_list.filter(l => l.target == n)[0]          
-          }
-          if (laggregate_child) {
-            lchild.addValues(laggregate_child)
-          }
-          const copy_link = new_data.drawing_area.sankey.addNewLink(laggregate.source, n)
-          //const lcopy_child = laggregate.source.output_links_list.filter(l => l.target == n.sibling)[0]
-          if (laggregate_child) {
-            copy_link.copyValues(laggregate_child)
-          }
-          laggregate.setInvisible()
-        } else {
-          let laggregate_child = laggregate.target.input_links_list.filter(l => l.source == n.sibling)[0]
-          if (!laggregate_child) {
-            laggregate_child = laggregate.target.input_links_list.filter(l => l.source == n)[0]       
-          }
-          if (laggregate_child) {
-            lchild.addValues(laggregate_child)
-          }          
-        }
-      } else {
-        if (!is_extremity) {
-          let laggregate_child = laggregate.target.input_links_list.filter(l => l.source == n.sibling)[0]
-          if (!laggregate_child) {
-            laggregate_child = laggregate.target.input_links_list.filter(l => l.source == n)[0]       
-          }
-          if (laggregate_child) {
-            lchild.addValues(laggregate_child)
-          }
-          if (!is_extremity) {
-            const copy_link = new_data.drawing_area.sankey.addNewLink(n,laggregate.target)
-            //const lcopy_child = laggregate.target.input_links_list.filter(l => l.source == n.sibling)[0]
-            if (laggregate_child) {
-              copy_link.copyValues(laggregate_child)
-            }
-            laggregate.setInvisible()
-          }
-        } else {
-          let laggregate_child = laggregate.source.output_links_list.filter(l => l.target == n.sibling)[0]
-          if (!laggregate_child) {
-            laggregate_child = laggregate.source.output_links_list.filter(l => l.target == n)[0]          
-          }
-          if (laggregate_child) {
-            lchild.addValues(laggregate_child)
-          }          
-        }
-      }
-    })
-    n.position_x = contextualised_node.position_x
-    // if (expand_left) {
-    //   n.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing
-    // } else {
-    //   n.position_x = contextualised_node.position_x + new_data.drawing_area.horizontal_spacing
-    // }
-    //n.position_u = contextualised_node.position_u+1
-    n.position_v = -1
-  })
-  new_data.drawing_area.sankey.nodes_list.filter(n2=>n2.position_u>=contextualised_node.position_u+1).forEach(n2=>{
-    if (expand_left) n2.position_u-=1
-    else n2.position_u+=1
-  })
+const updateNodeAppearance = (
+  newNode: Type_GenericNodeElement,
+  referenceNode: Type_GenericNodeElement
+) => {
+  newNode.shape_color = referenceNode.shape_color
+  newNode.shape_opacity = calculateOpacity(referenceNode.shape_opacity)
+}
 
-  let total_height = (new_nodes.length - 1) * new_data.drawing_area.vertical_spacing
-  new_nodes.forEach(c => total_height += c.getShapeHeightToUse())
-  const shift_y = total_height / 2
-  new_nodes.forEach((n, i) => {
-    if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type == 'parametric' && i == 0) {
-      n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y
-    }
-  })
+const calculateTotalHeight = (nodes: Type_GenericNodeElement[], vertical_spacing: number): number => {
+  return (nodes.length - 1) * vertical_spacing + 
+         nodes.reduce((total, node) => total + node.getShapeHeightToUse(), 0)
+}
 
-
-  // ready to draw in parametric mode
-  // new_data.drawing_area.computeParametrization()
-  new_nodes.forEach(n => {
-    n.resetPositionAttribute('dy')
-    if (expand_left) n.position_u = contextualised_node.position_u-1
-    else n.position_u = contextualised_node.position_u+1
-  })
+const finalizeOperation = (
+  new_data: Type_GenericApplicationData,
+  nodes: Type_GenericNodeElement[]
+) => {
+  new_data.drawing_area.computeParametrization()
+  nodes.forEach(n => n.resetPositionAttribute('dy'))
   new_data.drawing_area.draw()
-  new_nodes.forEach(n => {
+  
+  // Réorganisation des liens
+  nodes.forEach(n => {
     n.input_links_list.forEach(l => l.source.reorganizeIOLinks())
     n.output_links_list.forEach(l => l.target.reorganizeIOLinks())
     n.reorganizeIOLinks()
   })
 }
 
-export const agregate_side = (
+// ============================================================================
+// GESTION DES DIMENSIONS
+// ============================================================================
+
+const updateNodeDimensions = (
+  newNode: Type_GenericNodeElement,
+  contextualised_node: Type_GenericNodeElement,
+  tagg: Class_LevelTagGroup,
+  isDisaggregationExpansion: boolean = true
+) => {
+  if (isDisaggregationExpansion) {
+    updateDisaggregationExpansionDimensions(newNode, contextualised_node, tagg)
+  } else {
+    updateAggregationExpansionDimensions(newNode, contextualised_node, tagg)
+  }
+}
+
+const updateDisaggregationExpansionDimensions = (
+  newNode: Type_GenericNodeElement,
+  contextualised_node: Type_GenericNodeElement,
+  tagg: Class_LevelTagGroup
+) => {
+  // Dimensions as child
+  if (contextualised_node.dimensions_as_child.length === 0) {
+    newNode.dimensions_as_child.forEach(cdim => newNode.removeDimensionAsChild(cdim))
+  } else {
+    const dim_as_child = contextualised_node.nodeDimensionAsChild(tagg)
+    const n_dim_as_child = newNode.nodeDimensionAsChild(tagg)
+    
+    if (dim_as_child && n_dim_as_child) {
+      n_dim_as_child.force_child_level_tag(dim_as_child.child_level_tag)
+      n_dim_as_child.force_parent_level_tag(dim_as_child.parent_level_tag)
+      n_dim_as_child.setForceToShowChildren(true)
+    } else if (n_dim_as_child) {
+      newNode.removeDimensionAsChild(n_dim_as_child)
+    }
+    
+    updateForcedDimensions(newNode, contextualised_node, 'child')
+  }
+
+  // Dimensions as parent
+  if (newNode.dimensions_as_parent.length !== 0) {
+    const dim_as_parent = contextualised_node.nodeDimensionAsParent(tagg)
+    const n_dim_as_parent = newNode.nodeDimensionAsParent(tagg)
+    
+    if (n_dim_as_parent && dim_as_parent) {
+      n_dim_as_parent.force_parent_level_tag(dim_as_parent.parent_level_tag)
+      n_dim_as_parent.force_child_level_tag(dim_as_parent.child_level_tag)
+    }
+  }
+}
+
+const updateAggregationExpansionDimensions = (
+  newNode: Type_GenericNodeElement,
+  contextualised_node: Type_GenericNodeElement,
+  tagg: Class_LevelTagGroup
+) => {
+  // Dimensions as parent (devient child pour le nouveau nœud)
+  if (contextualised_node.dimensions_as_parent.length === 0) {
+    newNode.dimensions_as_parent.forEach(cdim => newNode.removeDimensionAsParent(cdim))
+  } else {
+    const dim_as_parent = contextualised_node.nodeDimensionAsParent(tagg)
+    const n_dim_as_parent = newNode.nodeDimensionAsChild(tagg)
+    
+    if (dim_as_parent && n_dim_as_parent) {
+      n_dim_as_parent.force_child_level_tag(dim_as_parent.parent_level_tag)
+      n_dim_as_parent.force_parent_level_tag(dim_as_parent.child_level_tag)
+      n_dim_as_parent.setForceToShowChildren(true)
+    } else if (n_dim_as_parent) {
+      newNode.removeDimensionAsParent(n_dim_as_parent)
+    }
+    
+    updateForcedDimensions(newNode, contextualised_node, 'parent')
+  }
+
+  // Dimensions as child
+  if (newNode.dimensions_as_child.length !== 0) {
+    const dim_as_parent = contextualised_node.nodeDimensionAsChild(tagg)
+    const n_dim_as_parent = newNode.nodeDimensionAsChild(tagg)
+    
+    if (n_dim_as_parent && dim_as_parent) {
+      n_dim_as_parent.force_parent_level_tag(dim_as_parent.child_level_tag)
+      n_dim_as_parent.force_child_level_tag(dim_as_parent.parent_level_tag)
+    }
+  }
+}
+
+const updateForcedDimensions = (
+  newNode: Type_GenericNodeElement,
+  contextualised_node: Type_GenericNodeElement,
+  dimensionType: 'child' | 'parent'
+) => {
+  const dimensions = dimensionType === 'child' 
+    ? contextualised_node.dimensions_as_child 
+    : contextualised_node.dimensions_as_parent
+
+  dimensions.forEach(dim => {
+    if (dim.force_show_children) {
+      const method = dimensionType === 'child' ? 'nodeDimensionAsChild' : 'nodeDimensionAsParent'
+      const ndim = newNode[method](dim.related_level_tagg as Class_LevelTagGroup)
+      
+      if (ndim) {
+        if (dimensionType === 'child') {
+          ndim.setForceToShowChildren(true)
+        } else {
+          ndim.setForceToShowParent()
+        }
+      }
+    }
+  })
+}
+
+// ============================================================================
+// GESTION DES POSITIONNEMENTS
+// ============================================================================
+
+const updateNodePositioning = (
+  new_data: Type_GenericApplicationData,
+  nodes: Type_GenericNodeElement[],
+  contextualised_node: Type_GenericNodeElement,
+  expand_left: boolean
+) => {
+  // Mise à jour des positions U des autres nœuds
+  new_data.drawing_area.sankey.nodes_list
+    .filter(n2 => n2.position_u >= contextualised_node.position_u + 1)
+    .forEach(n2 => {
+      n2.position_u += expand_left ? -1 : 1
+    })
+
+  // Calcul de la position Y
+  const total_height = calculateTotalHeight(nodes, new_data.drawing_area.vertical_spacing)
+  const shift_y = total_height / 2
+
+  nodes.forEach((n, i) => {
+    if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type === 'parametric' && i === 0) {
+      n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y
+    }
+  })
+}
+
+const updateAggregationExpansionPositioning = (
+  new_data: Type_GenericApplicationData,
+  aggregateNode: Type_GenericNodeElement,
+  config: AggregationExpansionConfig
+) => {
+  // Mise à jour des positions U
+  const filterCondition = config.expand_left 
+    ? (n2: Type_GenericNodeElement) => n2.position_u <= config.contextualised_node.position_u - 1
+    : (n2: Type_GenericNodeElement) => n2.position_u >= config.contextualised_node.position_u + 1
+  
+  new_data.drawing_area.sankey.nodes_list
+    .filter(filterCondition)
+    .forEach(n2 => n2.position_u += config.expand_left ? -1 : 1)
+  
+  aggregateNode.position_u = config.contextualised_node.position_u + (config.expand_left ? -1 : 1)
+  
+  // Calcul de la position Y
+  const total_height = calculateTotalHeight(config.nodes_to_agregate as Type_GenericNodeElement[], new_data.drawing_area.vertical_spacing)
+  const center = total_height / 2
+  
+  if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type === 'parametric') {
+    aggregateNode.position_y = config.contextualised_node.position_y + center - aggregateNode.getShapeHeightToUse() / 2
+  }
+}
+
+// ============================================================================
+// GESTION DES LIENS
+// ============================================================================
+
+/**
+ * Détecte si un nœud est à une extrémité du diagramme
+ */
+const isAtExtremity = (node: Type_GenericNodeElement, direction: 'left' | 'right'): boolean => {
+  if (direction === 'left') {
+    return node.input_links_list.length === 0 || node.input_links_list.every(l => !l.is_visible)
+  } else {
+    return node.output_links_list.length === 0 || node.output_links_list.every(l => !l.is_visible)
+  }
+}
+
+/**
+ * Gestion des liens pour les cas d'extrémité
+ */
+const processLinksForDisaggregationExpansion = (
+  config: DisaggregationExpansionConfig
+): LinkProcessingResult => {
+  let links_aggregate: Type_GenericLinkElement[] = []
+  let is_extremity = true
+
+  // Vérifier si on est à une extrémité
+  const isLeftExtremity = isAtExtremity(config.original_node, 'left')
+  const isRightExtremity = isAtExtremity(config.original_node, 'right')
+
+  if (config.expand_left) {
+    if (!isLeftExtremity && config.original_node.input_links_list.length > 0) {
+      // Cas normal : il y a des liens d'entrée
+      links_aggregate = config.original_node.input_links_list.filter(l => l.source.is_visible)
+      config.contextualised_node.input_links_list.forEach(l => l.setInvisible())
+      is_extremity = false
+    } else {
+      // Cas extrémité : utiliser les liens de sortie si disponibles
+      if (config.original_node.output_links_list.length > 0) {
+        links_aggregate = config.original_node.output_links_list.filter(l => l.target.is_visible)
+      } else {
+        // Vraie extrémité : pas de liens du tout
+        links_aggregate = []
+      }
+      is_extremity = true
+    }
+  } else {
+    if (!isRightExtremity && config.original_node.output_links_list.length > 0) {
+      // Cas normal : il y a des liens de sortie
+      links_aggregate = config.original_node.output_links_list.filter(l => l.target.is_visible)
+      is_extremity = false
+    } else {
+      // Cas extrémité : utiliser les liens d'entrée si disponibles
+      if (config.original_node.input_links_list.length > 0) {
+        links_aggregate = config.original_node.input_links_list.filter(l => l.source.is_visible)
+      } else {
+        // Vraie extrémité : pas de liens du tout
+        links_aggregate = []
+      }
+      is_extremity = true
+    }
+    config.contextualised_node.output_links_list.forEach(l => l.setInvisible())
+  }
+
+  return {
+    original_links: links_aggregate,
+    border_nodes: [], // Pas utilisé dans expansion
+    is_extremity
+  }
+}
+
+const processLinksForAggregationExpansion = (
+  config: AggregationExpansionConfig
+): LinkProcessingResult => {
+  let original_links: Type_GenericLinkElement[] = []
+  let border_nodes: Type_GenericNodeElement[] = []
+  let is_extremity = true
+
+  // Vérifier si les nœuds à agréger sont à une extrémité
+  const nodesAtLeftExtremity = config.nodes_to_agregate.every(n => 
+    isAtExtremity(n as Type_GenericNodeElement, 'left')
+  )
+  const nodesAtRightExtremity = config.nodes_to_agregate.every(n => 
+    isAtExtremity(n as Type_GenericNodeElement, 'right')
+  )
+
+  if (config.expand_left) {
+    if (!nodesAtLeftExtremity) {
+      // Cas normal : les nœuds ont des liens d'entrée
+      config.nodes_to_agregate.forEach(c => {
+        const visibleLinks = (c as Type_GenericNodeElement).input_links_list.filter(l => l.source.is_visible)
+        original_links = [...original_links, ...visibleLinks];
+        (c as Type_GenericNodeElement).input_links_list.forEach(l => l.setInvisible())
+      })
+      is_extremity = false
+    } else {
+      // Cas extrémité : utiliser les liens de sortie
+      config.nodes_to_agregate.forEach(c => {
+        const visibleLinks = (c as Type_GenericNodeElement).output_links_list.filter(l => l.target.is_visible)
+        original_links = [...original_links, ...visibleLinks];
+        //(c as Type_GenericNodeElement).output_links_list.forEach(l => l.setInvisible())
+      })
+      is_extremity = true
+    }
+  } else {
+    if (!nodesAtRightExtremity) {
+      // Cas normal : les nœuds ont des liens de sortie
+      config.nodes_to_agregate.forEach(c => {
+        const visibleLinks = (c as Type_GenericNodeElement).output_links_list.filter(l => l.target.is_visible)
+        original_links = [...original_links, ...visibleLinks];
+        (c as Type_GenericNodeElement).output_links_list.forEach(l => l.setInvisible())
+      })
+      is_extremity = false
+    } else {
+      // Cas extrémité : utiliser les liens d'entrée
+      config.nodes_to_agregate.forEach(c => {
+        const visibleLinks = (c as Type_GenericNodeElement).input_links_list.filter(l => l.source.is_visible)
+        original_links = [...original_links, ...visibleLinks];
+        //(c as Type_GenericNodeElement).input_links_list.forEach(l => l.setInvisible())
+      })
+      is_extremity = true
+    }
+  }
+
+  // Extraction des extremités
+  original_links.forEach(l => {
+    const border_node = config.expand_left ? l.source : l.target
+    if (!border_nodes.includes(border_node)) {
+      border_nodes.push(border_node)
+    }
+  })
+
+  return { original_links, border_nodes, is_extremity }
+}
+
+const createChildLinks = (
+  new_data: Type_GenericApplicationData,
+  newNodes: Type_GenericNodeElement[],
+  contextualised_node: Type_GenericNodeElement,
+  expand_left: boolean
+): Type_GenericLinkElement[] => {
+  return newNodes.map(newNode => {
+    const link = expand_left 
+      ? new_data.drawing_area.sankey.addNewLink(newNode, contextualised_node)
+      : new_data.drawing_area.sankey.addNewLink(contextualised_node, newNode)
+    
+    link.shape_color_rule = 'source'
+    link.shape_opacity = newNode.shape_opacity
+    return link
+  })
+}
+
+const createAggregationExpansionLinks = (
+  new_data: Type_GenericApplicationData,
+  aggregateNode: Type_GenericNodeElement,
+  config: AggregationExpansionConfig
+): Type_GenericLinkElement[] => {
+  return config.nodes_to_agregate.map(nodeToAggregate => {
+    const link = config.expand_left
+      ? new_data.drawing_area.sankey.addNewLink(aggregateNode, nodeToAggregate as Type_GenericNodeElement)
+      : new_data.drawing_area.sankey.addNewLink(nodeToAggregate as Type_GenericNodeElement, aggregateNode)
+    
+    link.shape_color_rule = 'source'
+    link.shape_opacity = aggregateNode.shape_opacity
+    return link
+  })
+}
+
+/**
+ * Gestion améliorée des valeurs de liens pour les cas d'extrémité
+ */
+const updateLinkValuesForDisaggregationExpansion = (
+  childLinks: Type_GenericLinkElement[],
+  newNodes: Type_GenericNodeElement[],
+  linkResult: LinkProcessingResult,
+  new_data: Type_GenericApplicationData,
+  expand_left: boolean
+) => {
+  const logger = createLogger(false)
+  
+  // Cas normal avec liens externes
+  linkResult.original_links.forEach(laggregate => {
+    newNodes.forEach((newNode, i) => {
+      const lchild = childLinks[i]
+      
+      if (expand_left) {
+        if (!linkResult.is_extremity) {
+          let laggregate_child = laggregate.source.output_links_list.find(l => 
+            l.target === newNode.sibling || l.target === newNode
+          )
+          
+          if (laggregate_child) {
+            lchild.addValues(laggregate_child)
+            const copy_link = new_data.drawing_area.sankey.addNewLink(laggregate.source, newNode)
+            copy_link.copyValues(laggregate_child)
+          }
+          laggregate.setInvisible()
+        } else {
+          // Cas extrémité : les liens viennent de la direction opposée
+          let laggregate_child = laggregate.target.input_links_list.find(l => 
+            l.source === newNode.sibling || l.source === newNode
+          )
+          
+          if (laggregate_child) {
+            lchild.addValues(laggregate_child)
+          } /*else {
+            // Créer une valeur par défaut
+            lchild.setValueFromNumber(getDefaultValueForNode(newNode))
+          }*/
+        }
+      } else {
+        if (!linkResult.is_extremity) {
+          let laggregate_child = laggregate.target.input_links_list.find(l => 
+            l.source === newNode.sibling || l.source === newNode
+          )
+          
+          if (laggregate_child) {
+            lchild.addValues(laggregate_child)
+            const copy_link = new_data.drawing_area.sankey.addNewLink(newNode, laggregate.target)
+            copy_link.copyValues(laggregate_child)
+          }
+          laggregate.setInvisible()
+        } else {
+          // Cas extrémité : les liens viennent de la direction opposée
+          let laggregate_child = laggregate.source.output_links_list.find(l => 
+            l.target === newNode.sibling || l.target === newNode
+          )
+          
+          if (laggregate_child) {
+            lchild.addValues(laggregate_child)
+          } /*else {
+            // Créer une valeur par défaut
+            lchild.setValueFromNumber(getDefaultValueForNode(newNode))
+          }*/
+        }
+      }
+    })
+  })
+}
+
+const updateLinkValuesForAggregationExpansion = (
+  expandedLinks: Type_GenericLinkElement[],
+  linkResult: LinkProcessingResult,
+  expand_left: boolean
+) => {
+  const logger = createLogger(false)
+  
+  logger.group('Updating aggregation link values')
+  
+  linkResult.original_links.forEach(original_link => {
+    logger.log(`Treating: ${original_link.source.name} -> ${original_link.target.name}`)
+    
+    const targetLink = expand_left 
+      ? expandedLinks.find(l => l.target === original_link.target)
+      : expandedLinks.find(l => l.source === original_link.source)
+    
+    if (targetLink) {
+      logger.log(`Adding value to: ${targetLink.source.name} -> ${targetLink.target.name}`)
+      targetLink.addValues(original_link)
+      original_link.setInvisible()
+    }
+  })
+  
+  logger.groupEnd()
+}
+
+const createBorderLinks = (
+  new_data: Type_GenericApplicationData,
+  aggregateNode: Type_GenericNodeElement,
+  linkResult: LinkProcessingResult,
+  expand_left: boolean
+): Type_GenericLinkElement[] => {
+  const logger = createLogger(false)
+  logger.group('Creating extremity links (improved)')
+  
+  if (linkResult.border_nodes.length === 0) {
+    // Cas d'extrémité pure : pas de liens externes à créer
+    logger.log('No external extremities found - pure extremity case')
+    logger.groupEnd()
+    return []
+  }
+
+  const borderLinks = linkResult.border_nodes.map(border_node => {
+    const link = expand_left 
+      ? new_data.drawing_area.sankey.addNewLink(border_node, aggregateNode)
+      : new_data.drawing_area.sankey.addNewLink(aggregateNode, border_node)
+    
+    logger.log(`Created: ${link.source.name} -> ${link.target.name}`)
+    return link
+  })
+  
+  // Mise à jour des valeurs des liens au bord
+  borderLinks.forEach(borderLink => {
+    logger.log(`Updating values for: ${borderLink.source.name} -> ${borderLink.target.name}`)
+    
+    const relevantLinks = expand_left
+      ? linkResult.original_links.filter(l => l.source === borderLink.source)
+      : linkResult.original_links.filter(l => l.target === borderLink.target)
+    
+    relevantLinks.forEach(l => {
+      logger.log(`Adding value from: ${l.source.name} -> ${l.target.name}`)
+      borderLink.addValues(l)
+    })
+  })
+  
+  logger.groupEnd()
+  return borderLinks
+}
+
+// ============================================================================
+// FONCTIONS AUXILIAIRES SPÉCIFIQUES
+// ============================================================================
+
+const createDisaggregationExpansionNodes = (
+  new_data: Type_GenericApplicationData,
+  config: DisaggregationExpansionConfig
+): Type_GenericNodeElement[] => {
+  return config.children.map(child => {
+    const newNode = new_data.drawing_area.sankey.addNewNode(
+      child.id + config.suffix, 
+      child.name
+    )
+    
+    newNode.sibling = child
+    newNode.copyFrom(child)
+    updateNodeAppearance(newNode, config.contextualised_node)
+    updateNodeDimensions(newNode, config.contextualised_node, config.tagg, true)
+    newNode.position_x = config.contextualised_node.position_x
+    newNode.position_v = -1
+    
+    return newNode
+  })
+}
+
+const createAggregationExpansionNode = (
+  new_data: Type_GenericApplicationData,
+  config: AggregationExpansionConfig
+): Type_GenericNodeElement => {
+  const newNode = new_data.drawing_area.sankey.addNewNode(
+    config.parent.id + config.suffix, 
+    config.parent.name
+  )
+  
+  newNode.sibling = config.parent
+  newNode.copyFrom(config.parent)
+  updateNodeAppearance(newNode, config.contextualised_node)
+  updateNodeDimensions(newNode, config.contextualised_node, config.tagg, false)
+  newNode.position_v = -1
+  
+  return newNode
+}
+
+// ============================================================================
+// OPÉRATIONS HIÉRARCHIQUES PRINCIPALES
+// ============================================================================
+
+/**
+ * Agrégation simple - remonte d'un niveau hiérarchique
+ */
+export const aggregate = (
   new_data: Type_GenericApplicationData,
   contextualised_node: Type_GenericNodeElement,
-  expand_left: boolean,
-  tagg: Class_LevelTagGroup) => {
-  new_data.drawing_area.bypass_redraws = true
-  //do not draw until all nodes and links have been created
-
+  tagg: Class_LevelTagGroup
+) => {
+  if (!contextualised_node.is_child) {
+    return
+  }
   const child_dim = contextualised_node.nodeDimensionAsChild(tagg)
   if (!child_dim) {
     return
   }
 
-  const parent = child_dim.parent as Type_GenericNodeElement
-  const children = parent.nodeDimensionAsParent(tagg)?.children
-  const suffix = expand_left ? 'expandleft' : 'expandright'
-  const new_node = new_data.drawing_area.sankey.addNewNode(parent.id + suffix, parent.name)
-  new_node.sibling = parent
-  new_node.copyFrom(parent)
-  new_node.shape_color = contextualised_node.shape_color
-  new_node.shape_opacity = (contextualised_node.shape_opacity > 0.3) ? contextualised_node.shape_opacity - 0.2 : contextualised_node.shape_opacity
-  //n.position_type = 'parametric'
-  // n is no more a child (contrary to its sibling)
-  //if (i==0) {
-  // if (contextualised_node.dimensions_as_child.length == 0) {
-  //   new_node.dimensions_as_child.forEach(cdim => n.removeDimensionAsChild(cdim))
-  // } else {
-  //   const dim_as_child = contextualised_node.nodeDimensionAsChild(tagg)
-  //   const n_dim_as_child = new_node.nodeDimensionAsChild(tagg)
-  //   n_dim_as_child!.force_child_level_tag(dim_as_child!.child_level_tag)
-  //   n_dim_as_child!.force_parent_level_tag(dim_as_child!.parent_level_tag)
-  //   n_dim_as_child!.setForceToShowChildren(true)
-  // }
-  // if (n.dimensions_as_parent.length !== 0) {
-    // the dimension as parent go up one level
-  // const dim_as_child = contextualised_node.nodeDimensionAsChild(tagg)
-  // const n_dim_as_parent = new_node.nodeDimensionAsParent(tagg)
-  // if (n_dim_as_parent) {
-  //   n_dim_as_parent!.force_parent_level_tag(dim_as_child!.parent_level_tag)
-  //   n_dim_as_parent!.force_child_level_tag(dim_as_child!.child_level_tag)
-  // }
-  //}
-  new_node.removeDimensionAsParent(parent.nodeDimensionAsParent(tagg)!)
+  child_dim.setForceToShowParent()
+  const aggregateNode = child_dim.parent
+  aggregateNode.input_links_list.forEach(l => l.source.draw())
+  aggregateNode.output_links_list.forEach(l => l.target.draw())
 
+  aggregateNode.position_u = contextualised_node.position_u
 
-  //const new_node: Type_GenericNodeElement
-  //const original_node = contextualised_node.sibling ?? contextualised_node
-  const original_node = contextualised_node
-  const original_node_sibling = contextualised_node.sibling ?? contextualised_node
-  // the new node is intimely linked to the original child node
-  // let links_aggregate: Type_GenericLinkElement[] = []
-  // // Si on étend à droite ce sont les flux qui vont à droite du noeud que l'on expand et qui additionnent les flux à droite des neouds enfants expandus 
-  // // Si on étend à gauche ce sont les flux qui viennent de gauche du noeud que l'on expand
-  // let links_copy: Type_GenericLinkElement[] = []
-  // // Si on étend à gauche ce sont les flux qui viennent de gauche
-  // // Si on étend à droite ce sont les flux qui vont à droite des neouds enfants expandus copié depuis le sibling
-  // let copy_left = expand_left
-  // if (expand_left) {
-  //   links_aggregate = original_node_sibling.output_links_list /*.filter(l => l.is_visible)*/ as Type_GenericLinkElement[]
-  //   links_copy = original_node.input_links_list /*.filter(l => l.is_visible)*/ as Type_GenericLinkElement[]
-  // } else {
-  //   // expand right
-  //   if (original_node_sibling.output_links_list.length == 0) {
-  //     links_aggregate = original_node_sibling.input_links_list /*.filter(l => l.is_visible)*/ as Type_GenericLinkElement[]
-  //   } else {
-  //     copy_left = true
-  //     links_aggregate = original_node_sibling.output_links_list.filter(l => l.target.is_visible) as Type_GenericLinkElement[]
-  //   }
-  //   links_copy = original_node.output_links_list /*.filter(l => l.is_visible)*/ as Type_GenericLinkElement[]
-  // }
+  // Gestion des nœuds d'échange
+  handleExchangeNodes(new_data, contextualised_node, tagg, 'aggregate')
+}
 
-  children!.forEach((c, i) => {
-    const links_aggregate = c.input_links_list.filter(l => l.is_visible) as Type_GenericLinkElement[]
-    links_aggregate.forEach(laggregate => {
-      // const lchild: Type_GenericLinkElement
-      // if (expand_left) {
-      //   lchild = new_data.drawing_area.sankey.addNewLink(n, contextualised_node)
-      // } else {
-      const lchild = new_data.drawing_area.sankey.addNewLink(c as Type_GenericNodeElement, new_node)
-      //}
-      lchild.shape_color_rule = 'source'
-      //lchild.shape_opacity = n.shape_opacity
-      lchild.sibling = laggregate
-      // if (copy_left) {
-      //   //const l2copy = lparent.target.input_links_list.filter(l => l.source == n.sibling)[0]
-      //   let laggregate_child = laggregate.target.input_links_list.filter(l => l.source == n.sibling)[0]
-      //   if (!laggregate_child) {
-      //     laggregate_child = laggregate.target.input_links_list.filter(l => l.source == n)[0]
-      //   }
-      //   if (laggregate_child) {
-      lchild.copyValues(laggregate)
-      //   }
-      // } else {
-      //   const laggregate_child = laggregate.source.output_links_list.filter(l => l.target == n.sibling)[0]
-      //   if (laggregate_child) {
-      //     lchild.copyValues(laggregate_child)
-      //   }
-      // }
-    })
+/**
+ * Désagrégation simple - descend d'un niveau hiérarchique
+ */
+export const disaggregate = (
+  new_data: Type_GenericApplicationData,
+  aggregateNode: Type_GenericNodeElement,
+  tagg: Class_LevelTagGroup
+) => {
+  if (!aggregateNode.is_parent) {
+    return
+  }
+  const parent_dim = aggregateNode.nodeDimensionAsParent(tagg)
+  if (!parent_dim) {
+    return
+  }
+
+  const current_height = aggregateNode.getShapeHeightToUse()
+  parent_dim.setForceToShowChildren()
+  const new_nodes = parent_dim.children
+  let total_height = calculateTotalHeight(new_nodes as Type_GenericNodeElement[], new_data.drawing_area.vertical_spacing)
+  const shift_y = total_height / 2
+  
+  new_nodes.forEach((n, i) => {
+    n.position_u = aggregateNode.position_u
+    if ((new_data.drawing_area.sankey.node_styles_dict[default_style_id] as Class_NodeStyle).position.type == 'parametric' && i == 0) {
+      n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
+    }
   })
 
-    // links_copy.forEach(lcopy => {
-    //   let lchild: Type_GenericLinkElement
-    //   if (expand_left) {
-    //     lchild = new_data.drawing_area.sankey.addNewLink(lcopy.source, n)
-    //     const lcopy_child = lcopy.source.output_links_list.filter(l => l.target == n.sibling)[0]
-    //     if (lcopy_child) {
-    //       lchild.copyValues(lcopy_child)
-    //     }
-    //     lcopy.setInvisible()
-    //   } else {
-    //     lchild = new_data.drawing_area.sankey.addNewLink(n, lcopy.target)
-    //     const lcopy_child = lcopy.target.input_links_list.filter(l => l.source == n.sibling)[0]
-    //     if (lcopy_child) {
-    //       lchild.copyValues(lcopy_child)
-    //     }
-    //     lcopy.setInvisible()
-    //   }
-    // })
+  // Gestion des nœuds d'échange
+  handleExchangeNodes(new_data, aggregateNode, tagg, 'disaggregate')
+}
 
-    if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type == 'parametric') {
-    if (expand_left) {
-      new_node.position_x = contextualised_node.position_x - new_data.drawing_area.horizontal_spacing / 2
-    } else {
-      new_node.position_x = contextualised_node.position_x + new_data.drawing_area.horizontal_spacing / 2
-    }
-    }
-    new_node.position_v = -1
-  //})
-  // let total_height = (new_nodes.length - 1) * new_data.drawing_area.vertical_spacing
-  // new_nodes.forEach(c => total_height += c.getShapeHeightToUse())
-  // const shift_y = total_height / 2
-  // new_nodes.forEach((n, i) => {
-  //   if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type == 'parametric' && i == 0) {
-  //     n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y
-  //   }
-  // })
+/**
+ * DisaggregationExpansion latérale - développe un nœud sur le côté
+ */
+export const disaggregationExpansion = (
+  new_data: Type_GenericApplicationData,
+  contextualised_node: Type_GenericNodeElement,
+  expand_left: boolean,
+  tagg: Class_LevelTagGroup
+) => {
+  new_data.drawing_area.bypass_redraws = true
+  
+  const parent_dim = contextualised_node.nodeDimensionAsParent(tagg)
+  if (!parent_dim) {
+    return
+  }
+  
+  const config: DisaggregationExpansionConfig = {
+    ...createOperationConfig(contextualised_node, expand_left, tagg),
+    parent_dim,
+    children: parent_dim.children as Type_GenericNodeElement[],
+    contextualised_node
+  }
+  
+  // Création des nouveaux nœuds
+  const newNodes = createDisaggregationExpansionNodes(new_data, config)
+  
+  // Traitement des liens
+  const linkResult = processLinksForDisaggregationExpansion(config)
+  const childLinks = createChildLinks(new_data, newNodes, contextualised_node, expand_left)
+  
+  updateLinkValuesForDisaggregationExpansion(childLinks, newNodes, linkResult, new_data, expand_left)
+  
+  // Positionnement et finalisation
+  updateNodePositioning(new_data, newNodes, contextualised_node, expand_left)
+  finalizeOperation(new_data, newNodes)
+}
 
-  // new_data.drawing_area.bypass_redraws = false
-  // // ready to draw in parametric mode
-  // new_data.drawing_area.computeParametrization()
-  // new_nodes.forEach(n => {
-  //   n.resetPositionAttribute('dy')
-  //   n.applyPosition()
-  new_node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
-  new_node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
-  new_node.reorganizeIOLinks()
-  //   n.draw()
-  // })
-  new_data.drawing_area.bypass_redraws = false
-  // ready to draw in parametric mode
+/**
+ * Collection latérale - agrège des nœuds enfants vers leur parent sur le côté
+ */
+export const aggregationExpansion = (
+  new_data: Type_GenericApplicationData,
+  contextualised_node: Type_GenericNodeElement,
+  expand_left: boolean,
+  tagg: Class_LevelTagGroup
+) => {
+  new_data.drawing_area.bypass_redraws = true
+  
+  const child_dim = contextualised_node.nodeDimensionAsChild(tagg)
+  if (!child_dim) {
+    return
+  }
+  
+  const config: AggregationExpansionConfig = {
+    ...createOperationConfig(contextualised_node, expand_left, tagg),
+    parent: child_dim.parent as Type_GenericNodeElement,
+    nodes_to_agregate: child_dim.children as Type_GenericNodeElement[],
+    child_dim,
+    contextualised_node
+  }
+  
+  // Création du nœud agrégé
+  const aggregateNode = createAggregationExpansionNode(new_data, config)
+  
+  // Traitement des liens
+  const linkResult = processLinksForAggregationExpansion(config)
+  const expandedLinks = createAggregationExpansionLinks(new_data, aggregateNode, config)
+  updateLinkValuesForAggregationExpansion(expandedLinks, linkResult, expand_left)
+  
+  createBorderLinks(new_data, aggregateNode, linkResult, expand_left)
+  
+  // Positionnement et finalisation
+  updateAggregationExpansionPositioning(new_data, aggregateNode, config)
+  finalizeOperation(new_data, [aggregateNode])
+}
+
+/**
+ * Contraction - annule une expansion ou collection précédente
+ */
+export const contract = (
+  new_data: Type_GenericApplicationData,
+  contextualised_node: Type_GenericNodeElement
+) => {
+  const expand_left = contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT)
+  
+  // Détection automatique du contexte
+  const context = detectContractContext(contextualised_node)
+  
+  new_data.drawing_area.bypass_redraws = true
+  
+  if (context === ContractContext.AFTER_EXPAND) {
+    contractAfterExpand(new_data, contextualised_node, expand_left)
+  } else if (context === ContractContext.AFTER_AGGREGATE) {
+    contractAfterAggregate(new_data, contextualised_node, expand_left)
+  } /*else {
+    console.warn('Unable to determine contract context for node:', contextualised_node.id)
+    contractLegacy(new_data, contextualised_node)
+  }*/
+  
   new_data.drawing_area.computeParametrization()
   new_data.drawing_area.draw()
 }
 
-export const hierarchyEditionMenu = (
+// ============================================================================
+// UTILITAIRES POUR LES NŒUDS D'ÉCHANGE
+// ============================================================================
+
+const handleExchangeNodes = (
   new_data: Type_GenericApplicationData,
   contextualised_node: Type_GenericNodeElement,
-  selected_nodes: Type_GenericNodeElement[],
-  refreshThisAndToggleSaving: () => void
+  tagg: Class_LevelTagGroup,
+  operation: 'aggregate' | 'disaggregate'
 ) => {
-  const { t } = new_data
-
-  const btn_create_flux_on_children = (
-    (selected_nodes.length === 1) &&
-    (contextualised_node !== undefined) &&
-    (selected_nodes.includes(contextualised_node)) &&
-    (contextualised_node.is_parent)
-  ) ?
-    <Button
-      variant='contextmenu_button'
-      onClick={() => {
-        function addNewLinks(n: Type_GenericNodeElement) {
-          n.dimensions_as_parent.forEach(dim => {
-            dim.children.forEach(c => {
-
-              if (c.input_links_list.length === 0) {
-                //already treated
-                n.input_links_list.forEach(l => sankey.addNewLink(l.source, c as Type_GenericNodeElement))
-              }
-              if (c.output_links_list.length === 0) {
-                //already treated
-                n.output_links_list.forEach(l => sankey.addNewLink(c as Type_GenericNodeElement, l.target))
-              }
-            })
-            dim.children.forEach(c => {
-              addNewLinks(c as Type_GenericNodeElement)
-            })
-          })
-        }
-        addNewLinks(contextualised_node)
-        new_data.drawing_area.purgeSelection()
-        new_data.drawing_area.node_contextualised = undefined
-        new_data.drawing_area.areaAutoFit(false)
-        refreshThisAndToggleSaving()
-      }}
-    >
-      {t('Noeud.context_create_flux')}
-    </Button> :
-    <></>
-
-  const sankey = new_data.drawing_area.sankey
-  const expand_left = selected_nodes.length > 0 ? selected_nodes[0].output_links_list.length == 0 : true
-  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-  const source_or_target_attr = expand_left ? 'source' : 'target'
-  let possible_root_nodes: Set<string> = new Set
-  selected_nodes.forEach(n => {
-    if (possible_root_nodes.size !== 0) {
-      possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id)).intersection(possible_root_nodes)
-    } else {
-      possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
-    }
-  })
-
-  const btn_set_child_ok = [...possible_root_nodes].length > 0 && contextualised_node
-
-  function addNewLinks(n: Type_GenericNodeElement, extremity_node: Type_GenericNodeElement, tagg: Class_LevelTagGroup) {
-    const pdim = n.nodeDimensionAsParent(tagg)
-    if (!pdim) {
-      return
-    }
-    if (pdim.children.includes(pdim.parent)) {
-      return
-    }
-    (pdim.children as Type_GenericNodeElement[]).forEach(c => {
-      const link2copy = (c as Type_GenericNodeElement)[input_or_output_attr][0]
-      const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
-      (child_link as Type_GenericLinkElement).copyValues(link2copy)
-      //n.sankey.drawing_area.deleteLink(link2copy)
-      addNewLinks(c, extremity_node, tagg)
-    })
+  // Vérifier s'il y a des nœuds d'échange possibles
+  if (!contextualised_node.sankey.node_taggs_dict['type de noeud']) {
+    return
   }
+  const echangeTag = contextualised_node.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
 
-  function removeLinks(n: Type_GenericNodeElement, tagg: Class_LevelTagGroup) {
-    const pdim = n.nodeDimensionAsParent(tagg)
-    if (!pdim) {
-      return
-    }
-    if (pdim.children.includes(pdim.parent)) {
-      return
-    }
-    (pdim.children as Type_GenericNodeElement[]).forEach(c => {
-      n.sankey.drawing_area.deleteLink((c as Type_GenericNodeElement)[input_or_output_attr][0])
-      removeLinks(c, tagg)
-    })
-  }
-  function applyDimension(
-    parent_level_tag: Class_LevelTag,
-    root_node: Type_GenericNodeElement,
-    child_level_tag: Class_LevelTag,
-    tagg: Class_LevelTagGroup) {
-    selected_nodes.forEach(n => {
-      (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)
-      n.dimensionsUpdated()
-      const desagregation_links = n[input_or_output_attr].filter(l => l[source_or_target_attr].id == root_node.id)
-      if (desagregation_links.length > 1) {
-        return
+  if (operation === 'aggregate') {
+    // Tous les nœuds d'échange en entrée doivent aussi être agrégés
+    contextualised_node.input_links_list.forEach(input_link => {
+      const input_node = input_link.source
+      if (input_node.hasGivenTag(echangeTag)) {
+        aggregate(new_data, input_node, tagg)
       }
-      const desagregation_link = desagregation_links[0]
-      if (n.input_links_list.length == 0 || n.output_links_list.length == 0) {
-        root_node[input_or_output_attr].forEach(supply_link => {
-          if (!supply_link.value?.valueData) {
-            return
-          }
-          const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
-          (new_link as Type_GenericLinkElement).copyValues(desagregation_link)
-          addNewLinks(n, expand_left ? supply_link.source : supply_link.target, tagg)
-          supply_link[source_or_target_attr].reorganizeIOLinks()
-        })
-        removeLinks(n, tagg)
-      }
-      root_node.dimensionsUpdated()
-      root_node.nodeDimensionAsParent(tagg)!.normalize()
-      sankey.drawing_area.deleteLink(desagregation_link)
     })
-    sankey.nodes_list.forEach(n => {
-      n.dimensionsUpdated()
-      n.updateVisibilityFingerprint()
-      n.input_links_list.forEach(l => l.updateVisibilityFingerprint())
-      n.output_links_list.forEach(l => l.updateVisibilityFingerprint())
+
+    // Tous les nœuds d'échange en sortie doivent aussi être agrégés
+    contextualised_node.output_links_list.forEach(output_link => {
+      const output_node = output_link.target
+      if (output_node.hasGivenTag(echangeTag)) {
+        aggregate(new_data, output_node, tagg)
+      }
+    })
+  } else {
+    const parent_dim = contextualised_node.nodeDimensionAsParent(tagg)
+    if (!parent_dim) return
+    
+    const level_tagg_id = parent_dim.parent_level_tag.group.id
+    const parent_level_tag_id = parent_dim.parent_level_tag.id
+    const child_level_tag_id = parent_dim.child_level_tag.id
+
+    // Tous les nœuds d'échange en entrée doivent aussi être désagrégés
+    contextualised_node.input_links_list.forEach(input_link => {
+      const input_node = input_link.source
+      if (input_node.hasGivenTag(echangeTag)) {
+        disaggregate(new_data, input_node, tagg)
+      }
+    })
+
+    // Tous les nœuds d'échange en sortie doivent aussi être désagrégés
+    contextualised_node.output_links_list.forEach(output_link => {
+      const output_node = output_link.target
+      if (output_node.hasGivenTag(echangeTag)) {
+        disaggregate(new_data, output_node, tagg)
+      }
     })
   }
-
-  const btn_create_dim = <Button
-    variant='contextmenu_button'
-    onClick={() => {
-      new_data.drawing_area.bypass_redraws = true
-
-      const tagg_idx = sankey.level_taggs_list.length + 1
-      const tagg = sankey.addLevelTagGroup('dimension_' + tagg_idx, 'Dimension ' + tagg_idx) as Class_LevelTagGroup
-      tagg.activated = true
-      tagg.addTag('1', '1')
-      tagg.addTag('2', '2')
-      let parent_level_tag = tagg.tags_list[0]
-      let child_level_tag = tagg.tags_list[1]
-      const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
-
-      applyDimension(parent_level_tag, root_node, child_level_tag, tagg)
-      tagg.tags_list[0].setSelected()
-      new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-      new_data.drawing_area.draw()
-    }}
-  >{'Nouvelle dimension'}</Button>
-
-  return <Menu placement='end'>
-    <MenuButton
-      variant='contextmenu_button'
-      as={Button}
-      rightIcon={<ChevronRightIcon />}
-      className="dropdown-basic"
-    >
-      {t('Menu.EditionHierarchy')}
-    </MenuButton>
-    <MenuList>
-      {btn_create_flux_on_children}
-      {btn_set_child_ok ? <Menu placement='end'>
-        <MenuButton
-          variant='contextmenu_button'
-          as={Button}
-          rightIcon={<ChevronRightIcon />}
-          className="dropdown-basic"
-        >
-          {t('Noeud.context_set_child')}
-        </MenuButton>
-
-        <MenuList>
-          {sankey.level_taggs_list.map(tagg => <Button
-            variant='contextmenu_button'
-            onClick={() => {
-              new_data.drawing_area.bypass_redraws = true
-              let this_parent_dim: Class_NodeDimension | null = null
-              let this_child_dim: Class_NodeDimension | null = null
-
-              selected_nodes.forEach(n => {
-                // If node being set as child is set as parent we must create a new level
-                this_parent_dim = n.nodeDimensionAsParent(tagg as Class_LevelTagGroup)
-                if (this_parent_dim) {
-                  this_parent_dim.shift_level_tags()
-                }
-              })
-              const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
-
-              let root_has_parent = root_node.dimensions_as_parent.filter(dim => dim.parent_level_tag.group.id == tagg.id).length !== 0
-              let parent_level_tag: Class_LevelTag
-              let child_level_tag: Class_LevelTag
-              if (!root_has_parent && !this_child_dim) {
-                parent_level_tag = tagg.tags_list[0]
-                if (tagg.tags_list.length == 1) {
-                  tagg.addTag(
-                    String(+parent_level_tag.id + 1),
-                    String(+parent_level_tag.id + 1)
-                  )
-                }
-                child_level_tag = tagg.tags_list[1]
-              } else {
-                return
-              }
-
-              applyDimension(parent_level_tag, root_node, child_level_tag, tagg)
-
-              tagg.tags_list[0].setSelected()
-              new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-              new_data.drawing_area.draw()
-            }}
-          >{tagg.name}</Button>)}
-          {btn_create_dim}
-        </MenuList></Menu> : <></>}
-      <Menu placement='end'>
-        <MenuButton
-          variant='contextmenu_button'
-          as={Button}
-          rightIcon={<ChevronRightIcon />}
-          className="dropdown-basic"
-        >
-          {t('Noeud.context_create_parent')}
-        </MenuButton><MenuList>
-          {sankey.level_taggs_list.map(tagg => <Button
-            variant='contextmenu_button'
-            onClick={() => {
-              new_data.drawing_area.bypass_redraws = true
-              const parent_dim = selected_nodes[0].nodeDimensionAsParent(tagg)
-              let child_level_tag = parent_dim ? parent_dim.parent_level_tag : tagg.tags_list[1]
-              let parent_level_tag = tagg.tags_list[tagg.tags_list.indexOf(child_level_tag as Class_LevelTag) - 1]
-              const parent = sankey.addNewNode(selected_nodes.map(n => n.id).join('-'), selected_nodes.map(n => n.name).join('+'))
-              parent.position_x = selected_nodes[0].position_x
-              parent.position_u = selected_nodes[0].position_u
-              parent.position_v = selected_nodes[0].position_v
-              let y = 0
-              selected_nodes.forEach(n=>y+=n.position_y)
-              parent.position_y = y/selected_nodes.length
-
-              selected_nodes.forEach(c => parent_level_tag.getOrCreateLowerDimension(parent, c, child_level_tag as Class_LevelTag))
-              tagg.tags_list[0].setSelected()
-              new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-              const source_nodes = new Set<Type_GenericNodeElement>()
-              selected_nodes.forEach(c => c.input_links_list.forEach(l => source_nodes.add(l.source)))
-              const target_nodes = new Set<Type_GenericNodeElement>()
-              selected_nodes.forEach(c => c.output_links_list.forEach(l => target_nodes.add(l.target)));
-              [...source_nodes].forEach(source => {
-                const parent_link = sankey.addNewLink(source, parent)
-                selected_nodes.forEach(c => c.input_links_list.filter(l => l.source == source).forEach(l => parent_link.addValues(l)))
-              })
-              new_data.drawing_area.draw()
-            }}
-          >{tagg.name}</Button>)}
-          {btn_create_dim}
-        </MenuList></Menu>
-    </MenuList>
-  </Menu>
 }
-export const hierarchyManipulationMenu = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
-  selected_nodes: Type_GenericNodeElement[],
-  refreshThisAndToggleSaving: () => void
-) => {
-  const { t } = new_data
-  const btn_aggregate = (dim: Class_NodeDimension) => {
-    const b = (selected_nodes.length === 1) &&
-    (contextualised_node !== undefined) &&
-    (selected_nodes.includes(contextualised_node)) &&
-    (contextualised_node.is_child) &&
-    (contextualised_node.sibling == undefined)
-  ?
-    <Button
-      variant='contextmenu_button'
-      onClick={() => {
-          contextualised_node.drawParent(dim.id)
-          new_data.drawing_area.draw()
-          new_data.drawing_area.purgeSelection()
-          new_data.drawing_area.node_contextualised = undefined
-          new_data.drawing_area.areaAutoFit(false)
-          refreshThisAndToggleSaving()
-        }
-      }
-    >
-      {t('Noeud.context_agregate')}</Button> :<></>
-    return b
-  }
 
-  const btn_desagregate = (dim: Class_NodeDimension) => {
-    const b = contextualised_node.nodeDimensionAsParent(dim.related_level_tagg as Class_LevelTagGroup) ?
-      <Button
-        variant='contextmenu_button'
-        onClick={() => {
-          contextualised_node.drawChildren(
-            dim.id
-          )
-          new_data.drawing_area.draw()//Redraw all node visible because some link position where not computed before disaggregation
-          new_data.drawing_area.purgeSelection()
-          new_data.drawing_area.node_contextualised = undefined
-          new_data.drawing_area.areaAutoFit(false)
-          refreshThisAndToggleSaving()
-        }
-        }
-      >{t('Noeud.context_desagregate')}</Button> : <></>
-    return b
-  }
+// ============================================================================
+// DÉTECTION DU CONTEXTE DE CONTRACTION
+// ============================================================================
 
-  const expand_left = selected_nodes.length > 0 ? selected_nodes[0].output_links_list.length == 0 : true
-  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-  const source_or_target_attr = expand_left ? 'source' : 'target'
-  let possible_root_nodes: Set<string> = new Set
-  selected_nodes.forEach(n => {
-    if (possible_root_nodes.size !== 0) {
-      possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id)).intersection(possible_root_nodes)
-    } else {
-      possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
-    }
-  })
-
-  const parent_dims = contextualised_node.dimensions_as_parent_pure
-  let child_dims = contextualised_node.dimensions_as_child_pure
-  let forced_dim = child_dims.filter(dim=>dim.force_show_children)
-  if (forced_dim.length>0) {
-    child_dims = forced_dim
-  }
-  let hierarchy_button = <></>
+const detectContractContext = (contextualised_node: Type_GenericNodeElement): ContractContext => {
+  // Méthode 1: Analyser la structure des liens
+  const hasExpandStructure = checkExpandStructure(contextualised_node)
+  const hasAggregateStructure = checkAggregateStructure(contextualised_node)
   
-  const menu_agregation = (dim: Class_NodeDimension) => <>
-    {btn_aggregate(dim)}
-    {contextualised_node.sibling == undefined ?
-    <Button
-      variant='contextmenu_button'
-      onClick={() => agregate_side(new_data, contextualised_node, false, dim.related_level_tagg as Class_LevelTagGroup)}
-    >
-      {t('Noeud.context_agregate_right')}
-    </Button>:<></>}
-    {contextualised_node.sibling == undefined ?
-    <Button
-      variant='contextmenu_button'
-      onClick={() => agregate_side(new_data, contextualised_node, false, dim.related_level_tagg as Class_LevelTagGroup)}
-    >
-      {t('Noeud.context_agregate_left')}
-    </Button>:<></>}
-  </>
-
-  const menu_desagregation = (dim: Class_NodeDimension) => <>
-    {btn_desagregate(dim)}
-    <Button
-      variant='contextmenu_button'
-      onClick={() => expand(new_data, contextualised_node, false, dim.related_level_tagg as Class_LevelTagGroup)}
-    >
-      {t('Noeud.context_expand_right')}
-    </Button>
-    <Button
-      variant='contextmenu_button'
-      onClick={() => expand(new_data, contextualised_node, true, dim.related_level_tagg as Class_LevelTagGroup)}
-    >
-      {t('Noeud.context_expand_left')}
-    </Button>
-  </>
-
-  hierarchy_button = <Menu placement='end'>
-    <MenuButton
-      variant='contextmenu_button'
-      as={Button}
-      rightIcon={<ChevronRightIcon />}
-      className="dropdown-basic"
-    >
-      {t('Menu.NavHierarchy')}
-    </MenuButton>
-    <MenuList>
-      <MenuGroup title="Agrégation">
-        {child_dims.length == 1 ? menu_agregation(child_dims[0]) : <>{child_dims.map(dim => {
-          return <Menu placement='end'>
-            <MenuButton
-              variant='contextmenu_button'
-              as={Button}
-              rightIcon={<ChevronRightIcon />}
-              className="dropdown-basic"
-            >
-              {'-> ' + dim.parent.name}
-            </MenuButton><MenuList>{menu_agregation(dim)}</MenuList></Menu>
-        })}</>}
-      {contextualised_node.sibling && contextualised_node.id.includes('expandleft') ?
-      <Button
-        variant='contextmenu_button'
-        onClick={() => contract(new_data,contextualised_node)}
-      >
-        {t('Noeud.context_contract_right')}
-      </Button>:<></>}
-      {contextualised_node.sibling && contextualised_node.id.includes('expandright') ?
-      <Button
-        variant='contextmenu_button'
-        onClick={() => contract(new_data,contextualised_node)}
-      >
-        {t('Noeud.context_contract_left')}
-      </Button>:<></>}
-      </MenuGroup>
-      {sep}
-      <MenuGroup title="Désagrégation">
-        {parent_dims.length == 1 ? menu_desagregation(parent_dims[0]) : <>{parent_dims.map(dim => {
-          return <Menu placement='end'>
-            <MenuButton
-              variant='contextmenu_button'
-              as={Button}
-              rightIcon={<ChevronRightIcon />}
-              className="dropdown-basic"
-            >
-              {'-> ' + dim.children_name}
-            </MenuButton><MenuList>{menu_desagregation(dim)}</MenuList></Menu>
-        })}</>}
-      </MenuGroup>
-    </MenuList>
-  </Menu>
-
-  return hierarchy_button
+  if (hasExpandStructure) {
+    return ContractContext.AFTER_EXPAND
+  } else if (hasAggregateStructure) {
+    return ContractContext.AFTER_AGGREGATE
+  }
+  
+  // Méthode 2: Analyser les siblings et les dimensions
+  if (contextualised_node.sibling && contextualised_node.dimensions_as_parent.length > 0) {
+    return ContractContext.AFTER_EXPAND
+  } else if (contextualised_node.sibling && contextualised_node.dimensions_as_child.length > 0) {
+    return ContractContext.AFTER_AGGREGATE
+  }
+  
+  // Par défaut, supposer EXPAND (comportement original)
+  return ContractContext.AFTER_EXPAND
 }
 
+const checkExpandStructure = (node: Type_GenericNodeElement): boolean => {
+  // Dans une expansion, le nœud contextualisé est un enfant temporaire
+  // qui pointe vers un parent qui a d'autres enfants temporaires
+  const expand_left = node.id.includes(EXPANSION_SUFFIXES.LEFT)
+  const linkToParent = expand_left ? node.output_links_list[0] : node.input_links_list[0]
+  
+  if (!linkToParent) return false
+  
+  const parent = expand_left ? linkToParent.target : linkToParent.source
+  const suffixToCheck = node.id.includes(EXPANSION_SUFFIXES.LEFT) ? EXPANSION_SUFFIXES.LEFT : EXPANSION_SUFFIXES.RIGHT
+  const siblings = expand_left 
+    ? parent.input_links_list.filter(l => l.is_visible && l.source.id.includes(suffixToCheck))
+    : parent.output_links_list.filter(l => l.is_visible && l.target.id.includes(suffixToCheck))
+  
+  return siblings.length > 1 // Il y a plusieurs enfants de la même expansion
+}
 
+const checkAggregateStructure = (node: Type_GenericNodeElement): boolean => {
+  // Dans une agrégation, le nœud contextualisé est un parent temporaire
+  // qui a des liens vers plusieurs enfants originaux
+  const expand_left = node.id.includes(EXPANSION_SUFFIXES.LEFT)
+  const childLinks = expand_left ? node.input_links_list : node.output_links_list
+  
+  // Vérifier si les enfants sont des nœuds originaux (sans suffix d'expansion)
+  return childLinks.some(link => {
+    const child = expand_left ? link.source : link.target
+    return !child.id.includes(EXPANSION_SUFFIXES.LEFT) && !child.id.includes(EXPANSION_SUFFIXES.RIGHT)
+  })
+}
+
+// ============================================================================
+// FONCTIONS DE CONTRACTION SPÉCIALISÉES
+// ============================================================================
+
+const contractAfterExpand = (
+  new_data: Type_GenericApplicationData,
+  contextualised_node: Type_GenericNodeElement,
+  expand_left: boolean
+) => {
+  const logger = createLogger(false)
+  logger.log('Contracting after EXPAND')
+  
+  const l = expand_left ? contextualised_node.output_links_list[0] : contextualised_node.input_links_list[0]
+  if (!l) return
+  
+  let parent_node = expand_left ? l.target : l.source
+  
+  // Collecter tous les enfants temporaires à supprimer
+  const children = expand_left 
+    ? parent_node.input_links_list.filter(l => l.is_visible) 
+    : parent_node.output_links_list.filter(l => l.is_visible)
+  
+  // Supprimer les nœuds enfants temporaires
+  children.forEach((c) => {
+    new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
+  })
+  
+  // Restaurer les liens du parent
+  if (expand_left) {
+    parent_node.input_links_list.forEach(l => l.setVisible())
+  } else {
+    parent_node.output_links_list.forEach(l => l.setVisible())
+  }
+  
+  logger.log('Restored parent links:', parent_node.name)
+}
+
+const contractAfterAggregate = (
+  new_data: Type_GenericApplicationData,
+  contextualised_node: Type_GenericNodeElement,
+  expand_left: boolean
+) => {
+  const logger = createLogger(false)
+  logger.log('Contracting after AGGREGATE/COLLECT')
+  
+  // Dans ce cas, contextualised_node est le parent temporaire créé par collect
+  const childLinks = expand_left ? contextualised_node.input_links_list : contextualised_node.output_links_list
+  const childNodes = childLinks.map(link => expand_left ? link.source : link.target)
+  
+  logger.log('Child nodes to restore:', childNodes.map(n => n.name))
+  
+  // Supprimer le nœud parent temporaire
+  new_data.drawing_area.sankey.deleteNode(contextualised_node)
+  
+  // Restaurer les liens originaux de chaque enfant
+  childNodes.forEach(childNode => {
+    logger.log(`Restoring links for child: ${childNode.name}`)
+    
+    // Restaurer les liens d'entrée
+    childNode.input_links_list.forEach(link => {
+      if (!link.is_visible) {
+        link.setVisible()
+        logger.log(`  Restored input: ${link.source.name} → ${link.target.name}`)
+      }
+    })
+    
+    // Restaurer les liens de sortie
+    childNode.output_links_list.forEach(link => {
+      if (!link.is_visible) {
+        link.setVisible()
+        logger.log(`  Restored output: ${link.source.name} → ${link.target.name}`)
+      }
+    })
+  })
+}

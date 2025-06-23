@@ -80,6 +80,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   const [forceUpdate, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
   const [parametric, set_parametric] = useState(node_styles_dict[default_style_id].position.type == 'parametric')
+  const [auto_x, set_auto_x] = useState(node_styles_dict[default_style_id].position.auto_x)
   let trade_close = true
   if ('NodeImportStyle' in node_styles_dict) {
     trade_close = node_styles_dict['NodeImportStyle'].position.type == 'relative'
@@ -90,6 +91,9 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 
   if (parametric !== (node_styles_dict[default_style_id].position.type == 'parametric')) {
     set_parametric(node_styles_dict[default_style_id].position.type == 'parametric')
+  }
+  if (auto_x !== (node_styles_dict[default_style_id].position.auto_x)) {
+    set_auto_x(node_styles_dict[default_style_id].position.auto_x)
   }
 
   const simple_element_to_transform = [
@@ -529,6 +533,30 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
         <Box layerStyle='menuconfigpanel_grid' >
           <h5><center>{t('MEP.positioningMode')}</center></h5>
           <Box as='span' layerStyle='menuconfigpanel_row_4cols'>
+            <Checkbox
+              variant='menuconfigpanel_option_checkbox'
+              isChecked={auto_x}
+              onChange={(evt: { target: { checked: boolean } }) => {
+                node_styles_dict['default'].position.auto_x = evt.target.checked
+                set_auto_x(evt.target.checked)
+                node_styles_dict[default_style_id].position.auto_x = evt.target.checked
+                if (evt.target.checked) {
+                  // Object.values(node_styles_dict)
+                  //   .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                  //   .forEach(style => style.position.type = 'parametric')
+                  // applicationData.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+                  applicationData.drawing_area.computeParametrization()
+                } /*else {
+                  Object.values(node_styles_dict)
+                    .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                    .forEach(style => style.position.type = 'absolute')
+                }*/
+              }}
+            >
+              <OSTooltip label={t('MEP.tooltips.parametricMode')}>
+                {t('MEP.autoX')}
+              </OSTooltip>
+            </Checkbox>
             <Checkbox
               variant='menuconfigpanel_option_checkbox'
               isChecked={parametric}
