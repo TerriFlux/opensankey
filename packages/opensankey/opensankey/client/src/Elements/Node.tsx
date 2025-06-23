@@ -346,6 +346,10 @@ export abstract class ClassTemplate_NodeElement
     // Display
     this._display.position_x_label = _._display.position_x_label
     this._display.position_y_label = _._display.position_y_label
+    this._display.position.u =  _._display.position.u
+    this._display.position.v =  _._display.position.v
+    this._display.position.x =  _._display.position.x
+    this._display.position.y =  _._display.position.y
   }
 
   public keepLinkOrderingFrom(
@@ -841,109 +845,7 @@ export abstract class ClassTemplate_NodeElement
     this._process_or_bypass(() => { this._drawLinksArrow(); this._orderD3Elements() })
   }
 
-  /**
-   * Agregate node
-   * @param {string | undefined} [id] id of dimension to agregate.
-   * @memberof ClassTemplate_NodeElement
-   */
-  public drawParent(id: string) {
-    if (this.is_child) {
-      //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
-      // Force to show parent
-      if ((id !== undefined) && (this._dimensions_as_child[id])) {
-        this._dimensions_as_child[id].setForceToShowParent()
-        const parent = this._dimensions_as_child[id].parent
-        parent.input_links_list.forEach(l=>l.source.draw())
-        parent.output_links_list.forEach(l=>l.target.draw())
-      } 
-      //   parent.input_links_list.forEach(l => l.source.draw())
-      //   parent.output_links_list.forEach(l => l.target.draw())
-      // } else {
-      //   //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
-      //   const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
-      //   dim.setForceToShowParent()
-      //   const parent = dim.parent
-      //   parent.input_links_list.forEach(l => { l.source.draw() })
-      //   parent.output_links_list.forEach(l => { l.target.draw() })
-      // }
-      // Check if there are possible Exchange nodes
-      if (!this.sankey.node_taggs_dict['type de noeud']) {
-        return
-      }
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-
-      // All input exchange must also be aggregated
-      this.input_links_list
-        .forEach(input_link => {
-          const input_node = input_link.source
-          if (input_node.hasGivenTag(echangeTag)) {
-            input_node.drawParent(id)
-          }
-        })
-
-      // All output exchange must also be aggregated
-      this.output_links_list
-        .forEach(output_link => {
-          const output_node = output_link.target
-          if (output_node.hasGivenTag(echangeTag)) {
-            output_node.drawParent(id)
-          }
-        })
-    }
-  }
-
-  /**
-   * Disagregate node
-   * @param {string | undefined} [id] id of dimension to agregate.
-   * @memberof ClassTemplate_NodeElement
-   */
-  public drawChildren(id: string) {
-    if (this.is_parent) {
-      // Force to show children
-      if ((id !== undefined) && (this._dimensions_as_parent[id])) {
-        const current_height = this.getShapeHeightToUse()
-        this._dimensions_as_parent[id].setForceToShowChildren()
-        const new_nodes = this._dimensions_as_parent[id].children
-        let total_height = (new_nodes.length - 1) * this.sankey.drawing_area.vertical_spacing
-        new_nodes.forEach(c => total_height += c.getShapeHeightToUse())
-        const shift_y = total_height / 2
-        new_nodes.forEach((n, i) => {
-          if ((this.sankey.drawing_area.sankey.node_styles_dict[default_style_id] as Class_NodeStyle).position.type == 'parametric' && i == 0) {
-            n.position_y = this.position_y + current_height / 2 - shift_y
-          }
-        })
-      }
-      // Check if there are possible Exchange nodes
-      if (!this.sankey.node_taggs_dict['type de noeud']) {
-        return
-      }
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-
-      const level_tagg_id = this._dimensions_as_parent[id].parent_level_tag.group.id
-      const parent_level_tag_id = this._dimensions_as_parent[id].parent_level_tag.id
-      const child_level_tag_id = this._dimensions_as_parent[id].child_level_tag.id
-
-      // All input exchange nodes must also be desaggregated
-      this.input_links_list
-        .forEach(input_link => {
-          const input_node = input_link.source
-          if (input_node.hasGivenTag(echangeTag)) {
-            const new_id = level_tagg_id + '_' + input_node.id + '_' + parent_level_tag_id + '_' + child_level_tag_id
-            input_node.drawChildren(new_id)
-          }
-        })
-
-      // All output exchange nodes must also be desaggregated
-      this.output_links_list
-        .forEach(output_link => {
-          const output_node = output_link.target
-          if (output_node.hasGivenTag(echangeTag)) {
-            const new_id = level_tagg_id + '_' + output_node.id + '_' + parent_level_tag_id + '_' + child_level_tag_id
-            output_node.drawChildren(new_id)
-          }
-        })
-    }
-  }
+  
 
   /**
    * Display the tooltip on drawing area
@@ -1236,7 +1138,9 @@ export abstract class ClassTemplate_NodeElement
     if (this._dimensions_as_parent[_.id]) {
       this.dimensionsUpdated() // Reset visibility indicator
       delete this._dimensions_as_parent[_.id]
-      _.removeNodeAsParent(this)
+      if (!this.sibling) {
+        _.removeNodeAsParent(this)
+      }
     }
   }
 
@@ -1244,6 +1148,9 @@ export abstract class ClassTemplate_NodeElement
     if (this._dimensions_as_child[_.id]) {
       this.dimensionsUpdated() // Reset visibility indicator
       delete this._dimensions_as_child[_.id]
+      if (!this.sibling) {
+        _.removeNodeFromChildren(this)
+      }
     }
   }
 
