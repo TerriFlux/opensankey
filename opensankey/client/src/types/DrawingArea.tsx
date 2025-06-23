@@ -1542,6 +1542,7 @@ export abstract class ClassTemplate_DrawingArea
         // Defaut color + auto reorg of links
         const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
         this.sankey.visible_nodes_list.forEach((n, i, a) => {
+          n.resetPositionAttribute('dy')
           n.reorganizeIOLinks()
           if (launched_from_process) {
             this.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
@@ -1556,6 +1557,7 @@ export abstract class ClassTemplate_DrawingArea
             }
           })
         }
+        this.draw()
         // Update area
         this.areaAutoFit(true)
         // Toggle saving indicator
@@ -2013,21 +2015,68 @@ export abstract class ClassTemplate_DrawingArea
    */
   public computeParametrization() {
 
-    let smaller_x: number
-    this.sankey.visible_nodes_list.forEach(n => {
-      if (smaller_x === undefined) {
-        smaller_x = n.position_x
-      }
-      if (n.position_x < smaller_x) {
-        smaller_x = n.position_x
-      }
-    })
+    // let smaller_x: number
+    // this.sankey.visible_nodes_list.forEach(n => {
+    //   if (smaller_x === undefined) {
+    //     smaller_x = n.position_x
+    //   }
+    //   if (n.position_x < smaller_x) {
+    //     smaller_x = n.position_x
+    //   }
+    // })
 
-    this.sankey.visible_nodes_list.forEach(n => {
-      if (n.position_type === 'relative') {
-        return
-      }
-      n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / (this.sankey.default_node_style.position?.dx ?? default_dx))
+    // this.sankey.visible_nodes_list.forEach(n => {
+    //   if (n.position_type === 'relative') {
+    //     return
+    //   }
+    //   n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / this.sankey.default_node_style.position.dx!)*4
+    // })
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const nodes_to_process = this.sankey.visible_nodes_list.filter(n => !echangeTag || !n.hasGivenTag(echangeTag))
+
+    // Compute positionning indexes
+    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
+    const possible_recycling_links_ids: string[] = []
+    nodes_to_process
+      .forEach(node => {
+        //     const node = data.nodes[node_id]
+        if (!node.hasInputLinks() && node.hasOutputLinks()) {
+          // get current node horizontal index (eg longest branch length)
+          const starting_index = 0
+          this.computeHorizontalIndex(
+            node,
+            nodes_to_process,
+            starting_index,
+            [],
+            possible_recycling_links_ids,
+            horizontal_indexes_per_nodes_ids
+          )
+        }
+        else {
+          // Lone node case
+          if (!node.hasInputLinks() && !node.hasOutputLinks()) {
+            horizontal_indexes_per_nodes_ids[node.id] = 0
+          }
+        }
+      })
+
+    // Double check recycling links
+    const checked_recycling_links_ids: string[] = []
+    Object.values(possible_recycling_links_ids)
+      .forEach(link_id =>
+        this.computeRecyclingHorizontalIndex(
+          nodes_to_process,
+          this.sankey.links_dict[link_id],
+          checked_recycling_links_ids,
+          horizontal_indexes_per_nodes_ids
+        ))
+
+    //let max_horizontal_index = 0
+    //const nodes_per_horizontal_indexes: { [index: number]: Type_GenericNodeElement[] } = {}
+    this.sankey.visible_nodes_list.forEach(node => {
+      // Previously computed index for given node
+      const node_index = horizontal_indexes_per_nodes_ids[node.id]
+      node.display.position.u = node_index+1
     })
 
     this.computeParametricV()
@@ -2064,14 +2113,21 @@ export abstract class ClassTemplate_DrawingArea
         }
       })
     })
+    if (this.sankey.level_taggs_list.length == 0 ) {
+      Object.values(columns).forEach(column => {
+        column.sort((n1, n2) => n1.position_y - n2.position_y)
+        let current_v = 0
+        column.forEach(n => n.position_v = current_v++ )
+      })   
+    }
     this.sankey.level_taggs_list.forEach(tagGroup => {
       Object.values(columns).forEach(column => {
         column.sort((n1, n2) => n1.position_y - n2.position_y)
         let current_v = 0
-        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v, tagGroup))
+        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v,tagGroup))
       })
       Object.values(columns).forEach(column => {
-        column.forEach(n => this.apply_v_agregate(n, tagGroup))
+        column.forEach(n => this.apply_v_agregate(n,tagGroup))
       })
     })
     this.sankey.sortNodes()
