@@ -921,7 +921,8 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
 export type typeElementSelectable = {
   label: string,
   value: string,
-  selected: boolean
+  selected: boolean,
+  disabled?:boolean
 }[]
 
 
@@ -948,7 +949,6 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
     <MenuItem
       icon={(selected_elements.length == elements.length) ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
       onClick={() => {
-
         const new_sel = selected_elements.length == elements.length ? [] : elements //select or deselect all
         onClick(new_sel)
       }}>{t('Noeud.TS')}</MenuItem>
@@ -960,6 +960,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
 
     return <MenuItem
       key={'elements_' + i}
+      isDisabled={el.disabled}
       icon={el.selected ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
       onClick={() => {
         // Update list of selected element before letting parent decide what to do with it (via onClick)
