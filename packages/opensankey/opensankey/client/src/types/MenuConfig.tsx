@@ -653,6 +653,8 @@ export class Class_MenuConfig {
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_nodes_styles_updater.current()
         _this._ref_to_menu_config_nodes_styles_editor_updater.current()
+        _this._ref_to_menu_config_nodes_apparence_visual_updater.current()
+        _this._ref_to_menu_config_nodes_apparence_context_updater.current()
       }
     )
   }
@@ -761,6 +763,9 @@ export class Class_MenuConfig {
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_links_styles_updater.current()
         _this._ref_to_menu_config_links_styles_editor_updater.current()
+        _this._ref_to_menu_config_links_apparence_visual_updater.current()
+        _this._ref_to_menu_config_links_apparence_context_updater.current()
+
       }
     )
   }
