@@ -484,7 +484,7 @@ export const resources_app_elements = {
         'precView': 'Préc.',
         'nextView': 'Suiv.',
 
-        SNI: 'Sélectionne les noeuds à l\'intérieur du conteneur',
+        SNI: 'Utiliser comme cadre géométrique',
 
         'toBeautify': 'Embellir le fichier JSON',
 
@@ -545,8 +545,8 @@ export const resources_app_elements = {
         'illustration_type': 'Type d\'illustration',
         'fo_txt': 'Texte',
         animate: 'Lancer animation',
-        create_tied_zdt: 'Créer un conteneur liées aux noeuds sélectionnés',
-        SND: 'Selectionne les neouds descendants des noeuds sélectionnés',
+        create_tied_zdt: 'Créer un cadre géométrique',
+        SND: 'Selectionne tous les descendants',
         osp_context:'Fonctionnalité d\'OpenSankey+',
         tabs: {
           'icon': 'Icône',

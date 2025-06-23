@@ -1095,6 +1095,9 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     new_data_plus.drawing_area.purgeSelection()
     getNodeInsideContextZDT()
       .forEach(n => {
+          n.getListDescendantOfNode().forEach(node => {
+            new_data_plus.drawing_area.addNodeToSelection(node)
+          })
         new_data_plus.drawing_area.addNodeToSelection(n)
       })
     zdt_to_contextualise.draw()
