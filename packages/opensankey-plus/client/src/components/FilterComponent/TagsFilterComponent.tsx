@@ -108,7 +108,7 @@ const FlowValueFilter: FunctionComponent<FCType_FlowValueFilter> = ({ new_data }
   const { t } = new_data
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  const max_link_value = Math.max(0, ...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.local_link_scale ?? 1))) + 1
+  const max_link_value = Math.max(0, ...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.shape_local_link_scale ?? 1))) + 1
   const [, setCount] = useState(0)
 
   new_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
