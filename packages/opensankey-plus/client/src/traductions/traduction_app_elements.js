@@ -675,7 +675,7 @@ export const resources_app_elements = {
         dis_createFromSelected: 'Aucun noeud sélectionnés',
         unit_tab_local: 'Depuis sankey local',
         unit_tab_excel: 'Depuis fichier excel',
-        context_node_unit: 'Génère un sankey untaire depuis ce noeud',
+        context_node_unit: 'Génère un sankey unitaire depuis ce noeud',
         tooltips: {
           keep_master_var: 'Permet de choisir des variables qui ont pour valeur ceux du sankey maître',
           catalog_data: 'Générer un catalogue de vues : rassembler des vues issues de fichiers différents',
