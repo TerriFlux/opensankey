@@ -745,8 +745,10 @@ export const resources_app_elements = {
           shape_starting_tangeant:'Starting tangeant position',
           shape_ending_tangeant:'Ending tangeant position',
           shape_middle_recycling:'Recycling position point',
+          shape_is_dashed: 'Dashed',
 
           shape_is_curved:'Curved',
+          shape_curvature:'Curvature',
           shape_is_recycling:'Recycling',
           shape_arrow_size:'Arrow size',
           shape_is_arrow:'Arrow',
@@ -754,7 +756,7 @@ export const resources_app_elements = {
           shape_color_rule:'Color rule',
           shape_opacity:'Opacity',
           shape_is_structure:'Structur',
-          local_link_scale:'Scale',
+          shape_local_link_scale:'Scale',
 
           data_off_scale: 'Scale',
           tooltips: {
@@ -1764,7 +1766,10 @@ export const resources_app_elements = {
           shape_starting_tangeant:'Courbure de départ',
           shape_ending_tangeant:'Courbure de fin',
           shape_middle_recycling:'Position point de recyclage',
+          shape_is_dashed: 'Haché',
+
           shape_is_curved:'Courbe',
+          shape_curvature:'Courbure',
           shape_is_recycling:'Recyclage',
           shape_arrow_size:'Taille flêche',
           shape_is_arrow:'Flèche',
@@ -1772,7 +1777,7 @@ export const resources_app_elements = {
           shape_color_rule:'Règle couleur',
           shape_opacity:'Opacité',
           shape_is_structure:'Structure',
-          local_link_scale:'Échelle',
+          shape_local_link_scale:'Échelle',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
             color_source: {
