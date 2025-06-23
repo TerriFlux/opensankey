@@ -47,7 +47,6 @@ import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs
 import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { FCType_OpenSankeyApp } from './types/FunctionTypes'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
-import { AggregationModal, DisaggregationModal } from './components/dialogs/AggregationModal'
 
 declare const window: Window &
   typeof globalThis & {
@@ -177,12 +176,6 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
         additionalMenus={new_data.menu_configuration.additionalMenus}
       />
       <ContextMenuZdd
-        new_data={new_data}
-      />
-      <DisaggregationModal
-        new_data={new_data}
-      />
-      <AggregationModal
         new_data={new_data}
       />
       <React.Fragment key={'modale_style_link'}>

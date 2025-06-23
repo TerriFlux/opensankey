@@ -119,6 +119,7 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract set filter_label(_: number)
   public abstract get type_data(): string
   public abstract get grid_size(): number
+  public abstract get vertical_spacing() : number
   // MAndatory setters
   public abstract set scale(_: number)
   public abstract get magnetic_nodes(): boolean

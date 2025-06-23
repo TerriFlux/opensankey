@@ -31,6 +31,7 @@ import { textwrap } from 'd3-textwrap'
 // Local types imports
 import type {
   ClassAbstract_DrawingArea,
+  ClassAbstract_ProtoLevelTag,
   ClassAbstract_Sankey
 } from '../types/Abstract'
 import type { Type_Side } from './LinkAttributes'
@@ -42,7 +43,8 @@ import type {
   Class_Tag,
   Class_TagGroup,
   Class_LevelTagGroup,
-  Class_LevelTag
+  Class_LevelTag,
+  Class_ProtoLevelTag
 } from '../types/Tag'
 import type {
   Class_MenuConfig
@@ -94,8 +96,10 @@ import {
   default_node_value_label_significant_digits, default_node_value_label_unit,
   default_node_value_label_unit_factor, default_node_value_label_unit_visible,
   default_node_value_label_background, default_node_value_label_is_visible,
-  default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity
+  default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity,
+  default_auto_x
 } from './NodeAttributes'
+import { Class_DrawingArea } from '../types/Types'
 
 type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
 export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
@@ -342,6 +346,10 @@ export abstract class ClassTemplate_NodeElement
     // Display
     this._display.position_x_label = _._display.position_x_label
     this._display.position_y_label = _._display.position_y_label
+    this._display.position.u =  _._display.position.u
+    this._display.position.v =  _._display.position.v
+    this._display.position.x =  _._display.position.x
+    this._display.position.y =  _._display.position.y
   }
 
   public keepLinkOrderingFrom(
@@ -837,96 +845,7 @@ export abstract class ClassTemplate_NodeElement
     this._process_or_bypass(() => { this._drawLinksArrow(); this._orderD3Elements() })
   }
 
-  /**
-   * Agregate node
-   * @param {string | undefined} [id] id of dimension to agregate.
-   * @memberof ClassTemplate_NodeElement
-   */
-  public drawParent(id?: string) {
-    if (this.is_child) {
-      //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
-      // Force to show parent
-      if ((id !== undefined) && (this._dimensions_as_child[id])) {
-        this._dimensions_as_child[id].setForceToShowParent()
-        const parent = this._dimensions_as_child[id].parent
-        parent.input_links_list.forEach(l => l.source.draw())
-        parent.output_links_list.forEach(l => l.target.draw())
-      } else {
-        //Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1].force_show_parent = false
-        const dim = Object.values(this._dimensions_as_child)[Object.values(this._dimensions_as_child).length - 1]
-        dim.setForceToShowParent()
-        const parent = dim.parent
-        parent.input_links_list.forEach(l => { l.source.draw() })
-        parent.output_links_list.forEach(l => { l.target.draw() })
-      }
-      // Check if there are possible Exchange nodes
-      if (!this.sankey.node_taggs_dict['type de noeud']) {
-        return
-      }
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-
-      // All input exchange must also be aggregated
-      this.input_links_list
-        .forEach(input_link => {
-          const input_node = input_link.source
-          if (input_node.hasGivenTag(echangeTag)) {
-            input_node.drawParent(id)
-          }
-        })
-
-      // All output exchange must also be aggregated
-      this.output_links_list
-        .forEach(output_link => {
-          const output_node = output_link.target
-          if (output_node.hasGivenTag(echangeTag)) {
-            output_node.drawParent(id)
-          }
-        })
-    }
-  }
-
-  /**
-   * Disagregate node
-   * @param {string | undefined} [id] id of dimension to agregate.
-   * @memberof ClassTemplate_NodeElement
-   */
-  public drawChildren(id: string) {
-    if (this.is_parent) {
-      // Force to show children
-      if ((id !== undefined) && (this._dimensions_as_parent[id]))
-        //this.drawing_area.sankey.nodes_list.forEach(n => n.set_dirty())
-        this._dimensions_as_parent[id].setForceToShowChildren()
-      // Check if there are possible Exchange nodes
-      if (!this.sankey.node_taggs_dict['type de noeud']) {
-        return
-      }
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-
-      const level_tagg_id = this._dimensions_as_parent[id].parent_level_tag.group.id
-      const parent_level_tag_id = this._dimensions_as_parent[id].parent_level_tag.id
-      const child_level_tag_id = this._dimensions_as_parent[id].child_level_tag.id
-
-      // All input exchange nodes must also be desaggregated
-      this.input_links_list
-        .forEach(input_link => {
-          const input_node = input_link.source
-          if (input_node.hasGivenTag(echangeTag)) {
-            const new_id = level_tagg_id + '_' + input_node.id + '_' + parent_level_tag_id + '_' + child_level_tag_id
-            input_node.drawChildren(new_id)
-          }
-        })
-
-      // All output exchange nodes must also be desaggregated
-      this.output_links_list
-        .forEach(output_link => {
-          const output_node = output_link.target
-          if (output_node.hasGivenTag(echangeTag)) {
-            const new_id = level_tagg_id + '_' + output_node.id + '_' + parent_level_tag_id + '_' + child_level_tag_id
-            output_node.drawChildren(new_id)
-          }
-        })
-    }
-  }
+  
 
   /**
    * Display the tooltip on drawing area
@@ -1188,7 +1107,7 @@ export abstract class ClassTemplate_NodeElement
 
   public addNewDimensionAsParent(_: Class_NodeDimension) {
     if (
-      (!_.children.includes(this)) &&
+      /*(!_.children.includes(this)) &&*/
       (!this._dimensions_as_parent[_.id])
     ) {
       this.dimensionsUpdated() // Reset visibility indicator
@@ -1219,7 +1138,9 @@ export abstract class ClassTemplate_NodeElement
     if (this._dimensions_as_parent[_.id]) {
       this.dimensionsUpdated() // Reset visibility indicator
       delete this._dimensions_as_parent[_.id]
-      _.removeNodeAsParent(this)
+      if (!this.sibling) {
+        _.removeNodeAsParent(this)
+      }
     }
   }
 
@@ -1227,6 +1148,9 @@ export abstract class ClassTemplate_NodeElement
     if (this._dimensions_as_child[_.id]) {
       this.dimensionsUpdated() // Reset visibility indicator
       delete this._dimensions_as_child[_.id]
+      if (!this.sibling) {
+        _.removeNodeFromChildren(this)
+      }
     }
   }
 
@@ -1692,6 +1616,9 @@ export abstract class ClassTemplate_NodeElement
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
+            }
+            if (this.position_auto_x) {
+              this._display.position.x = this._display.position.u*(this.sankey.drawing_area as Class_DrawingArea).horizontal_spacing
             }
           }
         }
@@ -3697,6 +3624,31 @@ export abstract class ClassTemplate_NodeElement
     this._display.position.relative_dy = _
     this.applyPosition()
   }
+
+  /**
+ * TODO Description
+ * @memberof ClassTemplate_NodeElement
+ */
+  public get position_auto_x() {
+    if (this._display.position.auto_x !== undefined) {
+      return this._display.position.auto_x
+    }
+    const valueOfStyle = this.getStyleWithAttr('position')
+
+    if (valueOfStyle.position.auto_x !== undefined) {
+      return valueOfStyle.position.auto_x
+    }
+    return default_auto_x
+  }
+
+  /**
+   * TODO Description
+   * @memberof ClassTemplate_NodeElement
+   */
+  public set position_auto_x(_) {
+    this._display.position.auto_x = _
+    this.applyPosition()
+  }  
 
   // Shape related --------------------------------------------------------------------
 
