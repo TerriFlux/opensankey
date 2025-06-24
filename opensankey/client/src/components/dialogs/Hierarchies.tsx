@@ -258,6 +258,7 @@ const updateNodePositioning = (
   const shift_y = total_height / 2
 
   nodes.forEach((n, i) => {
+    n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
     if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type === 'parametric' && i === 0) {
       n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y
     }

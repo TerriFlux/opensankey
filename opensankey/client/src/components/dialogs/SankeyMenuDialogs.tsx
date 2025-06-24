@@ -539,7 +539,9 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
               onChange={(evt: { target: { checked: boolean } }) => {
                 node_styles_dict['default'].position.auto_x = evt.target.checked
                 set_auto_x(evt.target.checked)
-                node_styles_dict[default_style_id].position.auto_x = evt.target.checked
+                Object.values(node_styles_dict)
+                    .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                    .forEach(style => style.position.auto_x = evt.target.checked)
                 if (evt.target.checked) {
                   // Object.values(node_styles_dict)
                   //   .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
