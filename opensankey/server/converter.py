@@ -1235,8 +1235,8 @@ class SankeyToJson(object):
                 else:
                     # Node does not exist in given dim
                     node_json["dimensions"][id] = {}
-                    if node._dimensions_as_child or node._dimensions_as_parent:
-                        node_json["dimensions"][id]["antitag"] = True
+                    # if node._dimensions_as_child or node._dimensions_as_parent:
+                    #     node_json["dimensions"][id]["antitag"] = True
         return node_json
 
 
