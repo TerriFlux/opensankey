@@ -33,7 +33,8 @@ export const resources_app_elements = {
 
         'toBeautify': 'Beautify JSON file',
         'updateFOZdd': 'Update Foreign object on drawing area',
-        SNI: 'Select nodes inside container',
+        SNI: 'Use as geometric frame',
+        detachTiedNodes: 'Use as simple frame',
 
 
         'import_icon': 'Select icon',
@@ -49,8 +50,6 @@ export const resources_app_elements = {
         trade_close: 'Close to node',
         flow_associated_tag: 'Flow associated to tag',
         node_associated_tag: 'Nodes associated to tag',
-        TieNodes: 'Tie all selected nodes',
-        detachTiedNodes: 'Untie all tied nodes',
         ElOrder:'Order overlaps of elements',
 
         Config: {
@@ -485,6 +484,7 @@ export const resources_app_elements = {
         'nextView': 'Suiv.',
 
         SNI: 'Utiliser comme cadre géométrique',
+        detachTiedNodes: 'Utiliser comme cadre simple',
 
         'toBeautify': 'Embellir le fichier JSON',
 
@@ -503,8 +503,7 @@ export const resources_app_elements = {
         trade_close: 'Près du noeud',
         flow_associated_tag: 'Flux associés',
         node_associated_tag: 'Noeuds associés',
-        TieNodes: 'Attacher les noeuds sélectionnés',
-        detachTiedNodes: 'Détacher tous les noeuds attachés',
+
         ElOrder:'Ordonner la superposition des éléments',
         Config: {
           element_object: 'Objet',

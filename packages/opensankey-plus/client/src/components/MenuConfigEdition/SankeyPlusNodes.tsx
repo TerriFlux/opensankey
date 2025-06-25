@@ -665,32 +665,6 @@ export const ButtonNodeContextCreateZDTAroundSelectedNode: FunctionComponent<FCT
   </Button>
 }
 
-export const ButtonNodeContextSelectDescendantOFSelectedNodes: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
-  const { t } = new_data
-
-  const closeContextMenu = () => {
-    // Unset contextualized node
-    new_data.drawing_area.node_contextualised = undefined
-    // Refresh this menu
-    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-  }
-  return <Button
-    as={MenuItem}
-    onClick={() => {
-      new_data.drawing_area.selected_nodes_list
-        .forEach(n => {
-          // Select all descendant of n
-          n.getListDescendantOfNode().forEach(node => {
-            new_data.drawing_area.addNodeToSelection(node)
-          })
-        })
-      closeContextMenu()
-    }}
-    variant='contextmenu_button'
-  >{t('Noeud.SND')}
-  </Button>
-}
-
 export const ButtonNodeContextStartAnimation: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
   const { t } = new_data
 

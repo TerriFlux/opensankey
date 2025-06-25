@@ -1065,17 +1065,6 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     rightIcon={new_data_plus.icon_library.icon_popup_menu}
   >{t('Menu.LL')} </Button>
 
-  // Add selected nodes to tied nodes to ZDT
-  const button_add_selected_nodes_to_tied_nodes = <Button onClick={() => {
-    zdt_to_contextualise.tied_to_nodes = true
-    new_data_plus.drawing_area.selected_nodes_list.forEach(node => {
-      new_data_plus.drawing_area.selected_containers_list.forEach(zdt => { new_data_plus.drawing_area.sankey.attachNodeToCont(node, zdt) })
-    })
-    zdt_to_contextualise.draw()
-    closeContextMenu()
-  }}
-    variant='contextmenu_button'
-  >{t('Menu.TieNodes')} </Button>
 
   // Detach all nodes from ZDT 
   const button_detach_all_tied_nodes = <Button onClick={() => {
@@ -1092,13 +1081,16 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
 
   // Select nodes 'inside' zdt
   const btn_select_node_inside = <Button onClick={() => {
+    const sankey = new_data_plus.drawing_area.sankey
+    zdt_to_contextualise.tied_to_nodes = true
     new_data_plus.drawing_area.purgeSelection()
     getNodeInsideContextZDT()
       .forEach(n => {
           n.getListDescendantOfNode().forEach(node => {
-            new_data_plus.drawing_area.addNodeToSelection(node)
+            sankey.attachNodeToCont(node, zdt_to_contextualise)
+            //new_data_plus.drawing_area.addNodeToSelection(node)
           })
-        new_data_plus.drawing_area.addNodeToSelection(n)
+        sankey.attachNodeToCont(n,zdt_to_contextualise)
       })
     zdt_to_contextualise.draw()
     closeContextMenu()
@@ -1130,7 +1122,7 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
 
     }}>
     <ButtonGroup orientation='vertical' isAttached>
-      {btn_select_node_inside}
+      {zdt_to_contextualise.tied_to_nodes ?  button_detach_all_tied_nodes : btn_select_node_inside }
       {sep}
       {btn_mask_border}
       {btn_change_color}
@@ -1138,8 +1130,6 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
       {btn_move_to_first_plan}
       {btn_move_to_last_plan}
       {sep}
-      {button_add_selected_nodes_to_tied_nodes}
-      {button_detach_all_tied_nodes}
       {sep}
       {button_open_layout}
     </ButtonGroup>

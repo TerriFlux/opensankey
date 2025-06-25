@@ -331,6 +331,7 @@ export class Class_ContainerElement
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
     this._drawShape()
     this._drawContent()
+    this.d3_selection?.lower()
   }
   /**
    * Draw ZDT shape (a rectangle with custom size,bg color, bg opacity,border color, ...)
@@ -833,7 +834,7 @@ export class Class_ContainerElement
     if (containers_selected.includes(this)) {
       drawing_area.saveUndoLabelSelectedPos()
       drawing_area.checkAndUpdateAreaSize()
-    } else if (!this._tied_to_nodes) {
+    } else {
       // Memorize for undo
       const old_x = this._display.position.x
       const old_y = this._display.position.y
@@ -862,8 +863,13 @@ export class Class_ContainerElement
     const zdt_selected = drawing_area.selected_containers_list
 
     if (zdt_selected.length == 0) {
-      if (drawing_area.isInSelectionMode() && !this.tied_to_nodes) {
+      if (drawing_area.isInSelectionMode()) {
         this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+        this._attached_node.forEach(n => {
+          n.position_x = n.position_x + event.dx
+          n.position_y = n.position_y + event.dy
+          n.applyPosition()
+        })
         this.drawing_area.checkAndUpdateAreaSize()
       }
     }
@@ -878,9 +884,12 @@ export class Class_ContainerElement
         // Update free label position
         zdt_selected
           .forEach(zdt => {
-            if (!zdt._tied_to_nodes) {
-              zdt.setPosXY(zdt.position_x + event.dx, zdt.position_y + event.dy)
-            }
+            zdt.setPosXY(zdt.position_x + event.dx, zdt.position_y + event.dy)
+            zdt._attached_node.forEach(n => {
+              n.position_x = n.position_x + event.dx
+              n.position_y = n.position_y + event.dy
+              n.applyPosition()
+            })
           })
         this.drawing_area.moveSelectedNodesFromDragEvent(event)
       }
@@ -904,7 +913,7 @@ export class Class_ContainerElement
       const containers_selected = drawing_area.selected_containers_list
       if (containers_selected.includes(this)) {
         drawing_area.saveRedoLabelSelectedPos()
-      } else if (!this._tied_to_nodes) {
+      } else {
         // Memorize for redo
         const old_x = this._display.position.x
         const old_y = this._display.position.y

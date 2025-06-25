@@ -66,7 +66,6 @@ import {
 import {
   ButtonNodeContextCreateUnitaryView,
   ButtonNodeContextCreateZDTAroundSelectedNode,
-  ButtonNodeContextSelectDescendantOFSelectedNodes,
   ButtonNodeContextStartAnimation,
   NodeHyperLinkOSP,
   NodeIconOSP
@@ -207,7 +206,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         <ButtonNodeContextStartAnimation new_data={new_data_plus} />
         <ButtonNodeContextCreateUnitaryView new_data={new_data_plus} />
         <ButtonNodeContextCreateZDTAroundSelectedNode new_data={new_data_plus} />
-        <ButtonNodeContextSelectDescendantOFSelectedNodes new_data={new_data_plus} />
       </MenuList>
     </Menu>
   }
