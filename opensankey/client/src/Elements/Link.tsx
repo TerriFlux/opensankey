@@ -3317,6 +3317,7 @@ export abstract class ClassTemplate_LinkElement
       } /*else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }*/
+     return this.valueData
     }
     // Init
     let data_value = this.valueResult
@@ -5596,7 +5597,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
 
   public addFrom(element: Class_LinkValue) {
-    this.data_value = this.data_value!+element.data_value!
+    this.data_value = element.data_value === null ? null : this.data_value!+element.data_value!
   }
 
   /**
