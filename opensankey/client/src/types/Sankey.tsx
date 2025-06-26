@@ -1341,12 +1341,7 @@ export abstract class ClassTemplate_Sankey
    * @memberof ClassTemplate_Sankey
    */
   public linkValueHasReconciliedData = () => {
-    this.links_list.forEach(l => {
-      if ('extensions' in (l?.value ?? {})) {
-        return true
-      }
-    })
-    return false
+    return this.links_list.some(link => link.has_result)
   }
 
   // Style related -----------------------------------------------------------------------
