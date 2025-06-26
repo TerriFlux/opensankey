@@ -192,18 +192,6 @@ export abstract class ClassTemplate_ApplicationData
     'attrDrawingArea'
   ]
 
-  /**
-   * Attr to design data has reconcilied,
-   * it enable some functionality.
-   * 
-   * For now only imported file can be considered has reconcilied so value is updated in _afterFromJSON
-   *
-   * @protected
-   * @type {boolean}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  protected _is_reconcilied: boolean = false
-
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -423,7 +411,6 @@ export abstract class ClassTemplate_ApplicationData
     this._drawing_area.bypass_redraws = by_pass_redraw
     this._node_label_separator = '-'
     this._node_label_separator_part = 'before'
-    this._is_reconcilied = false
 
     // Reset Class_DataHistory
     this._history = new Class_ApplicationHistory(this._menu_configuration)
@@ -699,8 +686,6 @@ public readUrlJSON(url_data: string) {
     this._drawing_area.arrangeTrade(false)
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
-
-    this._is_reconcilied = this.drawing_area.sankey.linkValueHasReconciliedData()
 
     this.menu_configuration.updateAllMenuComponents()
   }
@@ -1251,7 +1236,7 @@ public readUrlJSON(url_data: string) {
 
   public get i18n() { return this._i18n }
 
-  public get is_reconcilied(): boolean { return this._is_reconcilied }
+  public get is_reconcilied(): boolean { return this.drawing_area.sankey.linkValueHasReconciliedData() }
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }
