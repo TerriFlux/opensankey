@@ -3319,6 +3319,12 @@ export abstract class ClassTemplate_LinkElement
       }*/
      return this.valueData
     }
+    if (this.drawing_area.type_data === 'free_interval' ) {
+      if ( this.value?.result_min !== null ) {
+        return '['+this.value!.result_min+','+this.value!.result_max+']'           
+      }
+    }
+
     // Init
     let data_value = this.valueResult
     let text_value = '-'
@@ -3800,6 +3806,11 @@ export abstract class ClassTemplate_LinkElement
   public get shape_is_structure() {
     if (this.sankey.drawing_area.type_data == 'data') {
       if (this.value?.value_option != 'value' || this.value?.valueData == null) {
+        return true
+      }
+    }
+    if (this.sankey.drawing_area.type_data == 'reconciled') {
+      if (this.value?.result_min !== null) {
         return true
       }
     }
@@ -5516,8 +5527,8 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   protected data_max: number | null = null
 
   protected result_value: number | null = null
-  protected result_min: number | null = null
-  protected result_max: number | null = null
+  public result_min: number | null = null
+  public result_max: number | null = null
 
   public text_value: string | null = null
 
