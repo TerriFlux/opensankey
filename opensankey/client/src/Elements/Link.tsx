@@ -3799,7 +3799,7 @@ export abstract class ClassTemplate_LinkElement
 
   public get shape_is_structure() {
     if (this.sankey.drawing_area.type_data == 'data') {
-      if (this.value?.value_option != 'value') {
+      if (this.value?.value_option != 'value' || this.value?.valueData == null) {
         return true
       }
     }

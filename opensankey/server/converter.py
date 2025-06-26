@@ -835,6 +835,7 @@ class SankeyToJson(object):
 
         # Create data structure
         data_json = self._init_data_struct(sankey, data, default_data_strct)
+        _update_dict_if_value(data_json, "data_value", data.value)
         # Reference data struct from data tags
         tags = [
             tag for tag in data.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)
@@ -874,8 +875,6 @@ class SankeyToJson(object):
         :rtype: dict
         """
         data_json = copy.deepcopy(default_data_strct)
-        data_json["data_value"] = data.value if (data.value is not None) else ""
-        data_json["text_value"] = ""
         # Update flux tags to data structure
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
             # TODO : Checker si len(tags) > 1 -> normalement ça ne devrait pas arriver
