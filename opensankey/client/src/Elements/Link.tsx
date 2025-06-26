@@ -5417,7 +5417,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
   public parent: Class_LinkValueTree | Type_AnyLinkElement
 
   public get has_result() {
-    return this.value_option != 'value'
+    return this.result_value !== null || this.value_option != 'value'
   }
 
   public get valueResult(): number | null {
