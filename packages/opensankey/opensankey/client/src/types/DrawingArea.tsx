@@ -76,6 +76,7 @@ declare const window: Window &
       publish: boolean
       recenter: boolean
       topbar: boolean
+      embedded: boolean
     }
   }
 
@@ -604,12 +605,13 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   protected _initDraw() {
+    const height = window.sankey?.embedded ? '100%' : window.innerHeight
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
       .attr('id', 'draw_zoom')
       .attr('width', "100%")
-      .attr('height', window.innerHeight)
+      .attr('height', height)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
     // Init drawing area
@@ -2479,6 +2481,7 @@ export abstract class ClassTemplate_DrawingArea
    * @param {*} drawing_area
    */
   protected drawBackground() {
+    const height = window.sankey?.embedded ? '100%' : this.height
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
     // Draw background
@@ -2487,7 +2490,7 @@ export abstract class ClassTemplate_DrawingArea
       .attr('id', 'bg_drawing_area')
       .attr('fill', this.color)
       .attr('width', this.width)
-      .attr('height', this.height)
+      .attr('height', height)
     if (!this.static) {
       this.d3_selection_bg?.select('rect').style('stroke-width', 5)
       this.d3_selection_bg?.select('rect').style('stroke', default_black_color)

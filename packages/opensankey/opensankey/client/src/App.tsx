@@ -123,9 +123,11 @@ export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
     new_data.menu_configuration.ref_to_toolbar_bottom_updater.current()//update bottom toolbar to place it above footer
   }, [new_data.language])
 
+  const background_color = window.sankey?.publish ? 'white' : 'WhiteSmoke'
+
   /*************************************************************************************************/
   return <TourProvider steps={new_data.steps}>
-    <div id='sankey_app' style={{ 'backgroundColor': 'WhiteSmoke' }}>
+    <div id='sankey_app' style={{ 'backgroundColor': background_color, 'height' : '100%'}}>
       <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
         <WrapperInitializeAdditionalMenus
           new_data={new_data}
