@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -2459,6 +2459,186 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
+  /**
+   * Return a svg path for link path drawing
+   * @private
+   * @return {*}
+   * @memberof ClassTemplate_LinkElement
+   */
+  private getBezierShape2() {
+    // Update control points
+    this.computeControlPoints()
+
+    // Normal mode
+    if (!this.shape_is_recycling) {
+      // Get starting and ending position per type of shape
+      const x0 = this.position_x_start
+      const y0 = this.position_y_start
+      const x6 = this.position_x_end
+      const y6 = this.position_y_end
+      // Get control points coordinates
+      const x1 = this._control_points.starting_curve_point.position_x
+      const y1 = this._control_points.starting_curve_point.position_y
+      const x2 = this._control_points.starting_bezier_point.position_x
+      const y2 = this._control_points.starting_bezier_point.position_y
+      const x4 = this._control_points.ending_bezier_point.position_x
+      const y4 = this._control_points.ending_bezier_point.position_y
+      const x5 = this._control_points.ending_curve_point.position_x
+      const y5 = this._control_points.ending_curve_point.position_y
+      const two_circle_that_touch = false
+      // Drawing mode - 1 line + 2 arc + 1 line
+      if (two_circle_that_touch) {
+        // Middle point
+        const x3 = (x2 + x4)/2
+        const y3 = (y2 + y4)/2
+        // First arc infos
+        const yc_start = ((x2 - x3)*(x2 - x3) + y3*y3 - y2*y2)/(2*(y3 - y2))
+        const rc_start = Math.abs(yc_start - y2)
+        // Second arc infos
+        const yc_end = ((x4 - x3)*(x4 - x3) + y3*y3 - y4*y4)/(2*(y3 - y4))
+        const rc_end = Math.abs(yc_end - y4)
+        // Create new group
+        const d3_selection_shape = this.d3_selection?.append('g')
+          .attr('id', 'g_link_shape')
+        // First part
+        d3_selection_shape?.append('path')
+          .classed('link', true)
+          .classed('link_shape', true)
+          .attr('d',
+            'M ' + x0 + ',' + y0
+            + ' L ' + x2 + ',' + y2
+            + 'A' + rc_start + ',' + rc_start + ',0,0,0,' + x3 + ',' + y3
+            + 'A' + rc_end + ',' + rc_end + ',0,0,1,' + x4 + ',' + y4
+            + ' L ' + x6 + ',' + y6
+          )
+      }
+      // Drawing mode - 1 line + 1 arc + 1 line + 1 arc + 1 line
+      else {
+        // Dist between starting points
+        const dltx = (x4 - x2)
+        const dlty = (y4 - y2)
+        const dx2 = dltx*dltx
+        const dy2 = dlty*dlty
+        const dx = Math.sqrt(dx2)
+        const dy = Math.sqrt(dy2)
+        const dxy = Math.sqrt(dx2 + dy2)
+        const sdltx = dltx/dx
+        const sdlty = dlty/dy
+        console.log(sdltx, sdlty)
+        // First arc infos
+        const rc_start = Math.max(100, this.thickness/2) // TODO parametre config + limite par thickness & distance noeuds
+        const xc_start = x2
+        const yc_start = y2 + sdlty*rc_start
+        // Second arc infos
+        const rc_end = Math.max(100, this.thickness/2)
+        const xc_end = x4
+        const yc_end = y4 - sdlty*rc_end // TODO signe variable
+        // Sqared distance between centre of circles
+        const d2 = (xc_start - xc_end)*(xc_start - xc_end) + (yc_start - yc_end)*(yc_start - yc_end)
+        const d = Math.sqrt(d2)
+        // Distance between tangeants points
+        const l2 = d2 - (rc_end + rc_start)*(rc_end + rc_start)
+        // Signs and sweepflag for arcs
+        let ssig1_x, ssig1_y // signs for sig1 part
+        let ssig2_x, ssig2_y // signs for sig2 part
+        let sweep1, sweep2
+        if (sdltx > 0) {
+          if (sdlty > 0) {
+            ssig1_x = -1
+            ssig1_y = 1
+            ssig2_x = -1
+            ssig2_y = 1
+            sweep1 = 1
+            sweep2 = 0
+          }
+          else {
+            ssig1_x = 1
+            ssig1_y = -1
+            ssig2_x = 1
+            ssig2_y = -1
+            sweep1 = 0
+            sweep2 = 1
+          }
+        }
+        else {
+          if (sdlty > 0) {
+            ssig1_x = 1
+            ssig1_y = -1
+            ssig2_x = 1
+            ssig2_y = -1
+            sweep1 = 0
+            sweep2 = 1
+          }
+          else {
+            ssig1_x = -1
+            ssig1_y = 1
+            ssig2_x = -1
+            ssig2_y = 1
+            sweep1 = 1
+            sweep2 = 0
+          }
+        }
+        // First tangeant resolving
+        // see : https://lucidar.me/fr/mathematics/tangent-line-segments-to-circle/
+        const r1 = Math.sqrt(l2 + rc_end*rc_end)
+        const sig1 = 0.25*Math.sqrt((d + rc_start + r1)*(d + rc_start - r1)*(d - rc_start + r1)*(-d + rc_start + r1))
+        const x3_1 = (xc_start + xc_end)/2 + (xc_end - xc_start)*(rc_start*rc_start - r1*r1)/(2*d2) + ssig1_x*(2*sig1*(yc_start - yc_end)/d2)
+        const y3_1 = (yc_start + yc_end)/2 + (yc_end - yc_start)*(rc_start*rc_start - r1*r1)/(2*d2) + ssig1_y*(2*sig1*(xc_start - xc_end)/d2)
+        // Second tangeant resolving
+        // see : https://lucidar.me/fr/mathematics/tangent-line-segments-to-circle/
+        const r2 = Math.sqrt(l2 + rc_start*rc_start)
+        const sig2 = 0.25*Math.sqrt((d + rc_end + r2)*(d + rc_end - r2)*(d - rc_end + r2)*(-d + rc_end + r2))
+        if (sdltx > 0) {
+          if (sdlty > 0) {
+          }
+          else {
+          }
+        }
+        else {
+          if (sdlty > 0) {
+          }
+          else {
+          }
+        }
+        const x3_2 = (xc_start + xc_end)/2 + (xc_start - xc_end)*(rc_end*rc_end - r2*r2)/(2*d2) + ssig2_x*(2*sig2*(yc_end - yc_start)/d2)
+        const y3_2 = (yc_start + yc_end)/2 + (yc_start - yc_end)*(rc_end*rc_end - r2*r2)/(2*d2) + ssig2_y*(2*sig2*(xc_end - xc_start)/d2)
+        // Create new group
+        const d3_selection_shape = this.d3_selection?.append('g')
+          .attr('id', 'g_link_shape')
+        // First part
+        d3_selection_shape?.append('path')
+          .classed('link', true)
+          .classed('link_shape', true)
+          .attr('d',
+            'M ' + x0 + ',' + y0
+            + ' L ' + x2 + ',' + y2
+            + ' A' + rc_start + ',' + rc_start + ',0,0,' + sweep1 + ',' + x3_1 + ',' + y3_1
+            + ' L' + x3_2 + ',' + y3_2
+            + ' A' + rc_end + ',' + rc_end + ',0,0,' + sweep2 + ',' + x4 + ',' + y4
+            + ' L ' + x6 + ',' + y6
+          )
+      }
+      // // Middle part
+      // d3_selection_shape?.append('path')
+      //   .classed('link', true)
+      //   .classed('link_shape', true)
+      //   .attr('d',
+      //     'M ' + x2 + ',' + y2
+      //     + ' L ' + x4 + ',' + y4)
+      // // Last part
+      // d3_selection_shape?.append('path')
+      //   .classed('link', true)
+      //   .classed('link_shape', true)
+      //   .attr('d',
+      //     'M ' + x4 + ',' + y4
+      //     + ' L ' + x6 + ',' + y6)
+    }
+    else {
+      // do nothing
+
+    }
+  }
+
 
   // =========== Method about control points ==============
 
@@ -2992,11 +3172,11 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Function that return the frist style that has the k attribute,
    * if not take default node style that is guaranted to have the attribute.
-   * 
-   * Go from last style added to oldest (default style) 
+   *
+   * Go from last style added to oldest (default style)
    *
    * @param {keyof Class_NodeStyle} k
-   * @return {*} 
+   * @return {*}
    * @memberof ClassTemplate_NodeElement
    */
   public getStyleWithAttr(k: keyof Class_LinkStyle) {
@@ -3276,7 +3456,7 @@ export abstract class ClassTemplate_LinkElement
     // Cast as number
     if (value !== null) {
       value.valueData = _
-      this._is_not_null = undefined  // delete value of _is_not_null so later we test if value is not null 
+      this._is_not_null = undefined  // delete value of _is_not_null so later we test if value is not null
       this.redrawNodesSourceTarget()
     }
   }
@@ -3321,7 +3501,7 @@ export abstract class ClassTemplate_LinkElement
     }
     if (this.drawing_area.type_data === 'free_interval' ) {
       if ( this.value?.result_min !== null ) {
-        return '['+this.value!.result_min+','+this.value!.result_max+']'           
+        return '['+this.value!.result_min+','+this.value!.result_max+']'
       }
     }
 
@@ -5501,7 +5681,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     this.result_value = _
     // if (this.value_option == 'value') {
     //   this.data_value = _
-    // } else if (this.value_option == 'ratio_input') {    
+    // } else if (this.value_option == 'ratio_input') {
     //   let total_source = 0
     //   this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueResult??0)
     //   this.data_value = _!/total_source
