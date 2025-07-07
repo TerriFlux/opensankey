@@ -140,9 +140,12 @@ def save_excel():
     '''
     # Extract Sankey structure from JSON
     try:
-        sankey_as_data = request.get_data().decode("utf-8")
+        data = request.form['data']
+        sankey_as_data = data
         sankey_as_json = json.loads(sankey_as_data)
         sankey = converter_funct['extract_sankey_from_json'](sankey_as_json)
+        options = request.form['options']
+        options_save_excel = json.loads(options)
     except Exception as excpt:
         return Response(
             response='save_excel: ' + str(excpt),
@@ -152,7 +155,7 @@ def save_excel():
         cwd = os.getcwd()
         excel_filename = os.path.join(cwd, "tutu.xlsx")
         io_excel = IOExcel()
-        io_excel.write_excel_from_sankey(excel_filename, sankey, mode='w')
+        io_excel.write_excel_from_sankey(excel_filename, sankey, mode='w', **options_save_excel)
         # Ajoute le fichier json dans un onglet layout
         wb = openpyxl.load_workbook(excel_filename)
         layout_sheet = wb.create_sheet()
