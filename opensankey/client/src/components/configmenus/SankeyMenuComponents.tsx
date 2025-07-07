@@ -44,7 +44,7 @@ import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttribu
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, default_style_id, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
-import { FCType_WrapperBoxSubSectionMenu, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName, FCType_MenuUnit, UnitAttributeType } from './types/SankeyMenuComponentsType'
+import { FCType_WrapperBoxSubSectionMenu, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName, FCType_MenuUnit, UnitAttributeType, FCType_WrapperCheckBoxSubSectionMenu } from './types/SankeyMenuComponentsType'
 import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
 import { ClassTemplate_NodeElement } from '../../Elements/Node'
 import {
@@ -712,6 +712,50 @@ export const WrapperBoxSubSectionMenu: FunctionComponent<FCType_WrapperBoxSubSec
       </Box>
     </Collapse>
   </Box>
+}
+
+/**
+ * Wrapper to create a box collapsable to reduce size of sub-section in configuration sub-menus 
+ *
+ * @param {*} {
+ *   new_data,
+ *   title,
+ *   children
+ * }
+ * @return {*} 
+ */
+export const WrapperCheckBoxSubSectionMenu: FunctionComponent<FCType_WrapperCheckBoxSubSectionMenu> = ({
+  title,
+  open = true,
+  onClick,
+  children
+}) => {
+  // Hooks controlling collapse opening, initiallised at true
+  const { isOpen, onToggle } = useDisclosure({ isOpen: open })
+  return<> <Box layerStyle='menu_sub_section_title'>
+      <Checkbox
+        variant='menuconfigpanel_part_title_1_checkbox'
+        isChecked={isOpen}
+        onChange={()=>{
+          onClick(!isOpen)
+          onToggle()
+        
+        }}
+      >
+        {title}
+      </Checkbox>
+    </Box>
+    <Collapse in={isOpen} animateOpacity>
+      <Box
+        layerStyle='menuconfigpanel_grid'
+        marginLeft='1rem'
+        borderLeft='lightgray 1px solid'
+        paddingLeft='0.2rem'
+      >
+        {children}
+      </Box>
+    </Collapse>
+    </>
 }
 
 /**

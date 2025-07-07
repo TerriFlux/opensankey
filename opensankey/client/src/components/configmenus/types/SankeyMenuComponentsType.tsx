@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import { ReactNode } from 'react'
 import { Class_LinkStyle } from '../../../Elements/LinkAttributes'
 import { Class_NodeStyle } from '../../../Elements/NodeAttributes'
 import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../../types/Types'
@@ -105,4 +106,10 @@ export type FCType_WrapperBoxSubSectionMenu = {
     title: string,
     collapse?: boolean,
     children: JSX.Element
+}
+export type FCType_WrapperCheckBoxSubSectionMenu = {
+    title: string,
+    open?: boolean,
+    onClick:(evt:boolean)=>void,
+    children: ReactNode
 }
