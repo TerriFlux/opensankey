@@ -46,6 +46,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Modal - Saving & Loading
   ref_setter_show_modal_excel_loader: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_excel_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_excel_reading_process: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_json_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -456,6 +457,7 @@ export class Class_MenuConfig {
       ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Modal - Saving & Loading
       ref_setter_show_modal_excel_loader: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_excel_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_excel_reading_process: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_json_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -486,6 +488,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
     // -- Saving & Loading
     this._dict_setter_show_dialog.ref_setter_show_modal_excel_loader.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_excel_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_json_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)

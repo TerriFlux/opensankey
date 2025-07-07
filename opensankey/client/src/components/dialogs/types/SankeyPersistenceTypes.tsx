@@ -80,5 +80,6 @@ export type FType_UploadExemple = (
 export type FType_JSONtoExcel = (
   data_as_json: Type_JSON,
   url_prefix: string,
-  file_name: string
+  file_name: string,
+  save_options:JSON
 ) => void
