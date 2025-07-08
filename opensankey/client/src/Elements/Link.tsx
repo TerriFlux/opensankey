@@ -2580,6 +2580,7 @@ export abstract class ClassTemplate_LinkElement
 
   /**
    * Return a svg path for link path drawing
+   * variant with arcs: https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorials/SVG_from_scratch/Paths
    * @private
    * @return {*}
    * @memberof ClassTemplate_LinkElement
@@ -2624,86 +2625,191 @@ export abstract class ClassTemplate_LinkElement
       const sdlty = dlty / dy
 
       // First arc infos
-      const rc_start = Math.max(Math.abs(x1 - x2), this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
-      const xc_start = x1
-      const yc_start = y1 + sdlty * rc_start
+      let rc_start, xc_start, yc_start
+      if (this.is_horizontal || this.is_horizontal_vertical) {
+        rc_start = Math.max(Math.abs(x1 - x2), this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
+        xc_start = x1
+        yc_start = y1 + sdlty * rc_start
+      }
+      else {
+        rc_start = Math.max(Math.abs(y1 - y2), this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
+        xc_start = x1 + sdltx * rc_start
+        yc_start = y1
+      }
 
       // Second arc infos
-      const rc_end = Math.max(Math.abs(x4 - x5), this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
-      const xc_end = x5
-      const yc_end = y5 - sdlty * rc_end
+      let rc_end, xc_end, yc_end
+      if (this.is_horizontal || this.is_vertical_horizontal) {
+        rc_end = Math.max(Math.abs(x4 - x5), this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
+        xc_end = x5
+        yc_end = y5 - sdlty * rc_end
+      }
+      else {
+        rc_end = Math.max(Math.abs(y4 - y5), this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
+        xc_end = x5 - sdltx * rc_end
+        yc_end = y5
+      }
 
       // Squared distance between centre of circles
       const d2 = (xc_start - xc_end) * (xc_start - xc_end) + (yc_start - yc_end) * (yc_start - yc_end)
       const d = Math.sqrt(d2)
 
       // Check which mode of drawing we keep
-      const two_circle_that_touch = (rc_start + rc_end > d)
+      const no_line_between_arcs = (rc_start + rc_end > d)
 
       // Signs and sweepflag for arcs
       let ssig1_x, ssig1_y // signs for sig1 part
       let ssig2_x, ssig2_y // signs for sig2 part
       let sweep1, sweep2
+      console.log(sdltx, sdlty)
       if (sdltx > 0) {
         if (sdlty > 0) {
-          ssig1_x = -1
-          ssig1_y = 1
-          ssig2_x = -1
-          ssig2_y = 1
-          sweep1 = 1
-          sweep2 = 0
+          if (this.is_horizontal || this.is_horizontal_vertical) {
+            ssig1_x = -1
+            ssig1_y = 1
+            sweep1 = 1
+          }
+          else {
+            ssig1_x = 1
+            ssig1_y = -1
+            sweep1 = 0
+          }
+          if (this.is_horizontal || this.is_vertical_horizontal) {
+            ssig2_x = -1
+            ssig2_y = 1
+            sweep2 = 0
+          }
+          else {
+            ssig2_x = 1
+            ssig2_y = -1
+            sweep2 = 1
+          }
         }
         else {
-          ssig1_x = 1
-          ssig1_y = -1
-          ssig2_x = 1
-          ssig2_y = -1
-          sweep1 = 0
-          sweep2 = 1
+          if (this.is_horizontal || this.is_horizontal_vertical) {
+            ssig1_x = 1
+            ssig1_y = -1
+            sweep1 = 0
+          }
+          else {
+            ssig1_x = -1
+            ssig1_y = 1
+            sweep1 = 1
+          }
+          if (this.is_horizontal || this.is_vertical_horizontal) {
+            ssig2_x = 1
+            ssig2_y = -1
+            sweep2 = 1
+          }
+          else {
+            ssig2_x = -1
+            ssig2_y = 1
+            sweep2 = 0
+          }
         }
       }
       else {
         if (sdlty > 0) {
-          ssig1_x = 1
-          ssig1_y = -1
-          ssig2_x = 1
-          ssig2_y = -1
-          sweep1 = 0
-          sweep2 = 1
+          if (this.is_horizontal || this.is_horizontal_vertical) {
+            ssig1_x = 1
+            ssig1_y = -1
+            sweep1 = 0
+          }
+          else {
+            ssig1_x = -1
+            ssig1_y = 1
+            sweep1 = 1
+          }
+          if (this.is_horizontal || this.is_vertical_horizontal) {
+            ssig2_x = 1
+            ssig2_y = -1
+            sweep2 = 1
+          }
+          else {
+            ssig2_x = -1
+            ssig2_y = 1
+            sweep2 = 0
+          }
         }
         else {
-          ssig1_x = -1
-          ssig1_y = 1
-          ssig2_x = -1
-          ssig2_y = 1
-          sweep1 = 1
-          sweep2 = 0
+          if (this.is_horizontal || this.is_horizontal_vertical) {
+            ssig1_x = -1
+            ssig1_y = 1
+            sweep1 = 1
+          }
+          else {
+            ssig1_x = 1
+            ssig1_y = -1
+            sweep1 = 0
+          }
+          if (this.is_horizontal || this.is_vertical_horizontal) {
+            ssig2_x = -1
+            ssig2_y = 1
+            sweep2 = 0
+          }
+          else {
+            ssig2_x = 1
+            ssig2_y = -1
+            sweep2 = 1
+          }
         }
       }
 
-      // Drawing mode - 1 line + 2 arc + 1 line
-      if (two_circle_that_touch) {
-        // Middle point
-        const x3 = (x1 + x5) / 2
-        const y3 = (y1 + y5) / 2
-        // First arc infos
-        const yc_start = ((x1 - x3) * (x1 - x3) + y3 * y3 - y1 * y1) / (2 * (y3 - y1))
-        const rc_start = Math.abs(yc_start - y1)
-        // Second arc infos
-        const yc_end = ((x5 - x3) * (x5 - x3) + y3 * y3 - y5 * y5) / (2 * (y3 - y5))
-        const rc_end = Math.abs(yc_end - y5)
-        // Path for drawing
-        return 'M ' + x0 + ' , ' + y0
-          + ' L ' + x1 + ' , ' + y1
-          + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3 + ' , ' + y3
-          + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x5 + ' , ' + y5
-          + ' L ' + x6 + ' , ' + y6
+
+      // Drawing mode - Can not have straight line between arcs
+      if (no_line_between_arcs) {
+        // Drawing mode - 1 line + 2 arc + 1 line
+        if (this.is_horizontal || this.is_vertical) {
+          // Middle point
+          const k = rc_start/rc_end
+          const x3 = (x1 + k*x5)/(1 + k)
+          const y3 = (y1 + k*y5)/(1 + k)
+          // Update first arc infos
+          if (this.is_horizontal) {
+            const yc_start = ((x1 - x3) * (x1 - x3) + y3 * y3 - y1 * y1) / (2 * (y3 - y1))
+            rc_start = Math.abs(yc_start - y1)
+          }
+          else {
+            const xc_start = ((y1 - y3) * (y1 - y3) + x3 * x3 - x1 * x1) / (2 * (x3 - x1))
+            rc_start = Math.abs(xc_start - x1)
+          }
+          // Second arc infos
+          if (this.is_horizontal) {
+            const yc_end = ((x5 - x3) * (x5 - x3) + y3 * y3 - y5 * y5) / (2 * (y3 - y5))
+            rc_end = Math.abs(yc_end - y5)
+          }
+          else {
+            const xc_end = ((y5 - y3) * (y5 - y3) + x3 * x3 - x5 * x5) / (2 * (x3 - x5))
+            rc_end = Math.abs(xc_end - x5)
+          }
+          // Path for drawing
+          return 'M ' + x0 + ' , ' + y0
+            + ' L ' + x1 + ' , ' + y1
+            + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3 + ' , ' + y3
+            + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x5 + ' , ' + y5
+            + ' L ' + x6 + ' , ' + y6
+        }
+        // Drawing mode - 1 line + 1 arc + 1 line
+        else {
+          // Middle point
+          const rc1 = Math.abs(x1 - x5)
+          const rc2 = Math.abs(y1 - y5)
+          // Path for drawing
+          return 'M ' + x0 + ' , ' + y0
+            + ' L ' + x1 + ' , ' + y1
+            + ' A ' + rc1 + ' , ' + rc2 + ' , 0 , 0 , ' + sweep1 + ' , ' + x5 + ' , ' + y5
+            + ' L ' + x6 + ' , ' + y6
+        }
       }
 
       // Drawing mode - 1 line + 1 arc + 1 line + 1 arc + 1 line
       else {
         // Distance between tangeants points
-        const l2 = d2 - (rc_end + rc_start) * (rc_end + rc_start)
+        let l2
+        if (this.is_horizontal || this.is_vertical)
+          l2 = d2 - (rc_end + rc_start) * (rc_end + rc_start)
+        else
+          l2 = d2 - (rc_end - rc_start) * (rc_end - rc_start)
         // First tangeant resolving
         // see : https://lucidar.me/fr/mathematics/tangent-line-segments-to-circle/
         const r1 = Math.sqrt(l2 + rc_end * rc_end)
