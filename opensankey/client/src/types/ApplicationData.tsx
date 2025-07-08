@@ -533,11 +533,13 @@ export abstract class ClassTemplate_ApplicationData
    */
   public saveToExcel(
     url_prefix: string,
+    option:JSON
   ) {
     this.sendWaitingToast(
       () => {
         this._saveToExcel(
-          url_prefix
+          url_prefix,
+          option
         )
       },
       {
@@ -562,11 +564,13 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _saveToExcel(
     url_prefix: string,
+    save_options:JSON
   ) {
     JSONtoExcel(
       this._toJSON(),
       url_prefix,
-      this._file_name
+      this._file_name,
+      save_options
     )
   }
 
@@ -1054,7 +1058,7 @@ public readUrlJSON(url_data: string) {
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via Excel saving button
-      this.saveToExcel('/opensankey/')
+      this.saveToExcel('/opensankey/',{} as JSON)
     }
     // Fullscreen --------------------------------------------------------------------
     else if (evtCtrlF) {

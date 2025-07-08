@@ -358,7 +358,8 @@ export const Counter: FunctionComponent<FCType_Counter> = ({
 export const JSONtoExcel: FType_JSONtoExcel = (
   data_as_json,
   url_prefix,
-  file_name
+  file_name,
+  save_options
 ) => {
 
   let root = window.location.origin
@@ -366,10 +367,16 @@ export const JSONtoExcel: FType_JSONtoExcel = (
     root = root.replace('dashboard', '')
   }
   let url = root + url_prefix + 'excel/save'
+  const options_save_excel:string=JSON.stringify(save_options)
 
+  const form_data = new FormData()
+  form_data.append(
+    'data', JSON.stringify(data_as_json))
+
+  form_data.append('options', options_save_excel)
   const fetchData = {
     method: 'POST',
-    body: JSON.stringify(data_as_json)
+    body: form_data
   }
 
   const showFile = (blob: BlobPart) => {
