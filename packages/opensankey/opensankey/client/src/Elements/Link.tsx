@@ -267,7 +267,7 @@ export abstract class ClassTemplate_LinkElement
     position_offset_name?: number // optional var used when name label is dragged (if label follow link path)
   }
 
-  public sibling: ClassTemplate_LinkElement<Type_GenericDrawingArea,Type_GenericSankey,Type_GenericNodeElement> | undefined
+  public sibling: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement> | undefined
 
   // Visibility memorized - source & target
   protected _source_visibility_fingerprint: string
@@ -927,7 +927,7 @@ export abstract class ClassTemplate_LinkElement
     return true
   }
 
-  public getPathColorToUse() : string {
+  public getPathColorToUse(): string {
     if (this.sibling) {
       return this.sibling.getPathColorToUse()
     }
@@ -2497,22 +2497,22 @@ export abstract class ClassTemplate_LinkElement
       // Dist between starting points
       const dltx = (x4 - x2)
       const dlty = (y4 - y2)
-      const dx2 = dltx*dltx
-      const dy2 = dlty*dlty
+      const dx2 = dltx * dltx
+      const dy2 = dlty * dlty
       const dx = Math.sqrt(dx2)
       const dy = Math.sqrt(dy2)
-      const sdltx = dltx/dx
-      const sdlty = dlty/dy
+      const sdltx = dltx / dx
+      const sdlty = dlty / dy
       // First arc infos
-      const rc_start = Math.max(100, this.thickness/2) // TODO parametre config + limite par thickness & distance noeuds
+      const rc_start = Math.max(100, this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
       const xc_start = x2
-      const yc_start = y2 + sdlty*rc_start
+      const yc_start = y2 + sdlty * rc_start
       // Second arc infos
-      const rc_end = Math.max(100, this.thickness/2) // TODO parametre config + limite par thickness & distance noeuds
+      const rc_end = Math.max(100, this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
       const xc_end = x4
-      const yc_end = y4 - sdlty*rc_end
+      const yc_end = y4 - sdlty * rc_end
       // Squared distance between centre of circles
-      const d2 = (xc_start - xc_end)*(xc_start - xc_end) + (yc_start - yc_end)*(yc_start - yc_end)
+      const d2 = (xc_start - xc_end) * (xc_start - xc_end) + (yc_start - yc_end) * (yc_start - yc_end)
       const d = Math.sqrt(d2)
       // Check which mode of drawing we keep
       const two_circle_that_touch = (rc_start + rc_end > d)
@@ -2559,44 +2559,44 @@ export abstract class ClassTemplate_LinkElement
       // Drawing mode - 1 line + 2 arc + 1 line
       if (two_circle_that_touch) {
         // Middle point
-        const x3 = (x2 + x4)/2
-        const y3 = (y2 + y4)/2
+        const x3 = (x2 + x4) / 2
+        const y3 = (y2 + y4) / 2
         // First arc infos
-        const yc_start = ((x2 - x3)*(x2 - x3) + y3*y3 - y2*y2)/(2*(y3 - y2))
+        const yc_start = ((x2 - x3) * (x2 - x3) + y3 * y3 - y2 * y2) / (2 * (y3 - y2))
         const rc_start = Math.abs(yc_start - y2)
         // Second arc infos
-        const yc_end = ((x4 - x3)*(x4 - x3) + y3*y3 - y4*y4)/(2*(y3 - y4))
+        const yc_end = ((x4 - x3) * (x4 - x3) + y3 * y3 - y4 * y4) / (2 * (y3 - y4))
         const rc_end = Math.abs(yc_end - y4)
         // Path for drawing
         return 'M ' + x0 + ' , ' + y0
-            + ' L ' + x2 + ' , ' + y2
-            + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3 + ' , ' + y3
-            + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x4 + ' , ' + y4
-            + ' L ' + x6 + ' , ' + y6
+          + ' L ' + x2 + ' , ' + y2
+          + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3 + ' , ' + y3
+          + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x4 + ' , ' + y4
+          + ' L ' + x6 + ' , ' + y6
       }
       // Drawing mode - 1 line + 1 arc + 1 line + 1 arc + 1 line
       else {
         // Distance between tangeants points
-        const l2 = d2 - (rc_end + rc_start)*(rc_end + rc_start)
+        const l2 = d2 - (rc_end + rc_start) * (rc_end + rc_start)
         // First tangeant resolving
         // see : https://lucidar.me/fr/mathematics/tangent-line-segments-to-circle/
-        const r1 = Math.sqrt(l2 + rc_end*rc_end)
-        const sig1 = 0.25*Math.sqrt((d + rc_start + r1)*(d + rc_start - r1)*(d - rc_start + r1)*(-d + rc_start + r1))
-        const x3_1 = (xc_start + xc_end)/2 + (xc_end - xc_start)*(rc_start*rc_start - r1*r1)/(2*d2) + ssig1_x*(2*sig1*(yc_start - yc_end)/d2)
-        const y3_1 = (yc_start + yc_end)/2 + (yc_end - yc_start)*(rc_start*rc_start - r1*r1)/(2*d2) + ssig1_y*(2*sig1*(xc_start - xc_end)/d2)
+        const r1 = Math.sqrt(l2 + rc_end * rc_end)
+        const sig1 = 0.25 * Math.sqrt((d + rc_start + r1) * (d + rc_start - r1) * (d - rc_start + r1) * (-d + rc_start + r1))
+        const x3_1 = (xc_start + xc_end) / 2 + (xc_end - xc_start) * (rc_start * rc_start - r1 * r1) / (2 * d2) + ssig1_x * (2 * sig1 * (yc_start - yc_end) / d2)
+        const y3_1 = (yc_start + yc_end) / 2 + (yc_end - yc_start) * (rc_start * rc_start - r1 * r1) / (2 * d2) + ssig1_y * (2 * sig1 * (xc_start - xc_end) / d2)
         // Second tangeant resolving
         // see : https://lucidar.me/fr/mathematics/tangent-line-segments-to-circle/
-        const r2 = Math.sqrt(l2 + rc_start*rc_start)
-        const sig2 = 0.25*Math.sqrt((d + rc_end + r2)*(d + rc_end - r2)*(d - rc_end + r2)*(-d + rc_end + r2))
-        const x3_2 = (xc_start + xc_end)/2 + (xc_start - xc_end)*(rc_end*rc_end - r2*r2)/(2*d2) + ssig2_x*(2*sig2*(yc_end - yc_start)/d2)
-        const y3_2 = (yc_start + yc_end)/2 + (yc_start - yc_end)*(rc_end*rc_end - r2*r2)/(2*d2) + ssig2_y*(2*sig2*(xc_end - xc_start)/d2)
+        const r2 = Math.sqrt(l2 + rc_start * rc_start)
+        const sig2 = 0.25 * Math.sqrt((d + rc_end + r2) * (d + rc_end - r2) * (d - rc_end + r2) * (-d + rc_end + r2))
+        const x3_2 = (xc_start + xc_end) / 2 + (xc_start - xc_end) * (rc_end * rc_end - r2 * r2) / (2 * d2) + ssig2_x * (2 * sig2 * (yc_end - yc_start) / d2)
+        const y3_2 = (yc_start + yc_end) / 2 + (yc_start - yc_end) * (rc_end * rc_end - r2 * r2) / (2 * d2) + ssig2_y * (2 * sig2 * (xc_end - xc_start) / d2)
         // Return path
         return 'M ' + x0 + ' , ' + y0
-            + ' L ' + x2 + ' , ' + y2
-            + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3_1 + ' , ' + y3_1
-            + ' L ' + x3_2 + ' , ' + y3_2
-            + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x4 + ' , ' + y4
-            + ' L ' + x6 + ' , ' + y6
+          + ' L ' + x2 + ' , ' + y2
+          + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3_1 + ' , ' + y3_1
+          + ' L ' + x3_2 + ' , ' + y3_2
+          + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x4 + ' , ' + y4
+          + ' L ' + x6 + ' , ' + y6
       }
     }
     else {
@@ -3462,11 +3462,11 @@ export abstract class ClassTemplate_LinkElement
       } /*else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }*/
-     return this.valueData
+      return this.valueData
     }
-    if (this.drawing_area.type_data === 'free_interval' ) {
-      if ( this.value?.result_min !== null ) {
-        return '['+this.value!.result_min+','+this.value!.result_max+']'
+    if (this.drawing_area.type_data === 'free_interval') {
+      if (this.value?.result_min !== null) {
+        return '[' + this.value!.result_min + ',' + this.value!.result_max + ']'
       }
     }
 
@@ -5753,7 +5753,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
 
   public addFrom(element: Class_LinkValue) {
-    this.data_value = element.data_value === null ? null : this.data_value!+element.data_value!
+    this.data_value = element.data_value === null ? null : this.data_value! + element.data_value!
   }
 
   /**
