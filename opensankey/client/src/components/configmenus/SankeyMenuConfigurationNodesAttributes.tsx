@@ -1465,14 +1465,13 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
 
   return <Box layerStyle='box_content_config'>
     <React.Fragment key={'selection_node'}>{selection_node}</React.Fragment>
-    <>
       {
         elements.length > 0 ? <>
 
           <React.Fragment key={'style'}>{content_style}</React.Fragment>
           <React.Fragment key={'lab_text'}>{content_label}</React.Fragment>
           <React.Fragment key={'lab_val'}>{content_label_value}</React.Fragment></> : <></>
-      }</>
+      }
   </Box>
 }
 

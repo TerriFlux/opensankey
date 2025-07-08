@@ -187,7 +187,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
 }) => {
   const { t } = new_data
   const {
-    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
+    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader,ref_setter_show_modal_excel_saver, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
   const [show_tuto, set_show_tuto] = useState(false)
@@ -390,7 +390,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
         {t('Menu.open_json')}
       </MenuItem>
       <MenuItem
-        onClick={() => new_data.saveToExcel('/opensankey/')}
+        onClick={() => ref_setter_show_modal_excel_saver.current(true)}
       >
         {new_data.icon_library.icon_save_sankey_excel}
         {t('Menu.open_excel')}
