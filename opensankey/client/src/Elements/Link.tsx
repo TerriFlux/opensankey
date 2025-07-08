@@ -673,7 +673,6 @@ export abstract class ClassTemplate_LinkElement
     this._control_points.starting_bezier_point.unDraw()
     this._control_points.ending_bezier_point.unDraw()
     this._control_points.middle_recycling_point.unDraw()
-
   }
 
   public drawPath() {
@@ -1070,6 +1069,7 @@ export abstract class ClassTemplate_LinkElement
       const yf = this.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
       const show_as_path = true //show_as_dash //|| ((dist / thickness) > 2) || this.shape_is_recycling
+      const useBeziers = false // TODO put as parameter
       // Show as full shape for specific shapes
       if (!show_as_path) {
         this.d3_selection?.append('path')
@@ -1088,11 +1088,11 @@ export abstract class ClassTemplate_LinkElement
       else {
         // Which path to use
         let path
-        if (true) { // TODO put condition
-          path = this.getArcsPaths()
+        if (useBeziers) {
+          path = this.getBezierPath()
         }
         else {
-          path = this.getBezierPath()
+          path = this.getArcsPaths()
         }
         // Add new path
         this.d3_selection?.append('path')
@@ -2034,11 +2034,17 @@ export abstract class ClassTemplate_LinkElement
 
   /**
    * Return a svg path for link path drawing
+   * Varinat with only straight lines
    * @private
-   * @return {*}
+   * @return {string}
    * @memberof ClassTemplate_LinkElement
    */
-  private getBezierPath() {
+  private getLinesPath(): string {
+    // Security
+    if (this.shape_is_curved) {
+      return this.getBezierPath()
+    }
+
     // Update control points
     this.computeControlPoints()
 
@@ -2053,41 +2059,14 @@ export abstract class ClassTemplate_LinkElement
       // Get control points coordinates
       const x1 = this._control_points.starting_curve_point.position_x
       const y1 = this._control_points.starting_curve_point.position_y
-
-      const x2 = this._control_points.starting_bezier_point.position_x
-      const y2 = this._control_points.starting_bezier_point.position_y
-
-      const x4 = this._control_points.ending_bezier_point.position_x
-      const y4 = this._control_points.ending_bezier_point.position_y
-
       const x5 = this._control_points.ending_curve_point.position_x
       const y5 = this._control_points.ending_curve_point.position_y
 
-      // Center point
-      // let k = 1
-      // if (Math.abs(x4 - x5) > 0) {
-      //   k = Math.abs((x2 - x1)/(x4 - x5))
-      //   k = k / (1 + k)
-      // }
-      // const x3 = x2 + k*(x4 - x2)
-      // const y3 = y2 + k*(y4 - y2)
-      const x3 = (x2 + x4) / 2
-      const y3 = (y2 + y4) / 2
-
       // Return paths
-      if (!this.shape_is_curved) {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' L ' + x5 + ',' + y5
-          + ' L ' + x6 + ',' + y6
-      }
-      else {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
-          + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
-          + ' L ' + x6 + ',' + y6
-      }
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' L ' + x5 + ',' + y5
+        + ' L ' + x6 + ',' + y6
     }
     // Recycling mode
     else {
@@ -2170,39 +2149,161 @@ export abstract class ClassTemplate_LinkElement
       }
 
       // Return paths
-      if (!this.shape_is_curved) {
-        let path = 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' L ' + x2 + ',' + y2
-          + ' L ' + x3 + ',' + y3
-        if (this.is_vertical || this.is_horizontal)
-          path = path
-            + ' L ' + x4 + ',' + y4
-            + ' L ' + x5 + ',' + y5
-            + ' L ' + x5 + ',' + y5
-            + ' L ' + x6 + ',' + y6
+      let path = 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' L ' + x2 + ',' + y2
+        + ' L ' + x3 + ',' + y3
+      if (this.is_vertical || this.is_horizontal)
         path = path
-          + ' L ' + x7 + ',' + y7
-          + ' L ' + x8 + ',' + y8
-          + ' L ' + x9 + ',' + y9
-          + ' L ' + x10 + ',' + y10
-          + ' L ' + xf + ',' + yf
-        return path
+          + ' L ' + x4 + ',' + y4
+          + ' L ' + x5 + ',' + y5
+          + ' L ' + x5 + ',' + y5
+          + ' L ' + x6 + ',' + y6
+      path = path
+        + ' L ' + x7 + ',' + y7
+        + ' L ' + x8 + ',' + y8
+        + ' L ' + x9 + ',' + y9
+        + ' L ' + x10 + ',' + y10
+        + ' L ' + xf + ',' + yf
+      return path
+    }
+  }
+
+  /**
+   * Return a svg path for link path drawing
+   * @private
+   * @return {*}
+   * @memberof ClassTemplate_LinkElement
+   */
+  private getBezierPath(): string{
+    // Security
+    if (!this.shape_is_curved) {
+      return this.getLinesPath()
+    }
+
+    // Update control points
+    this.computeControlPoints()
+
+    // Normal mode
+    if (!this.shape_is_recycling) {
+      // Get starting and ending position per type of shape
+      const x0 = this.position_x_start  // Shorter to write
+      const y0 = this.position_y_start  // ...
+      const x6 = this.position_x_end
+      const y6 = this.position_y_end
+
+      // Get control points coordinates
+      const x1 = this._control_points.starting_curve_point.position_x
+      const y1 = this._control_points.starting_curve_point.position_y
+      const x2 = this._control_points.starting_bezier_point.position_x
+      const y2 = this._control_points.starting_bezier_point.position_y
+      const x4 = this._control_points.ending_bezier_point.position_x
+      const y4 = this._control_points.ending_bezier_point.position_y
+      const x5 = this._control_points.ending_curve_point.position_x
+      const y5 = this._control_points.ending_curve_point.position_y
+
+      // Center point
+      const x3 = (x2 + x4) / 2
+      const y3 = (y2 + y4) / 2
+
+      // Return path
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
+        + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+        + ' L ' + x6 + ',' + y6
+    }
+    // Recycling mode
+    else {
+      // Get starting and ending position per type of shape
+      const x0 = this.position_x_start  // Shorter to write
+      const y0 = this.position_y_start  // ...
+      const xf = this.position_x_end
+      const yf = this.position_y_end
+
+      // Get middle point coordinates
+      const x_mid = this._control_points.middle_recycling_point.position_x
+      const y_mid = this._control_points.middle_recycling_point.position_y
+
+      // Get starting control points coordinates
+      const x1 = this._control_points.starting_curve_point.position_x
+      const y1 = this._control_points.starting_curve_point.position_y
+      const x2 = this._control_points.starting_bezier_point.position_x
+      const y2 = this._control_points.starting_bezier_point.position_y
+
+      // First curve
+      let x3, y3
+      let x4, y4
+      let x5, y5
+      if (this.is_horizontal) {
+        x4 = x2
+        y4 = y_mid
+        x3 = x4
+        y3 = (y4 + y2) / 2
+        x5 = x1
+        y5 = y4
+      }
+      else if (this.is_vertical) {
+        x4 = x_mid
+        y4 = y2
+        x3 = (x4 + x2) / 2
+        y3 = y4
+        x5 = x4
+        y5 = y1
       }
       else {
-        let path = 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
-        if (this.is_vertical || this.is_horizontal)
-          path = path
-            + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
-            + ' L ' + x6 + ',' + y6
-        path = path
-          + ' Q ' + x7 + ',' + y7 + ' ' + x8 + ',' + y8
-          + ' Q ' + x9 + ',' + y9 + ' ' + x10 + ',' + y10
-          + ' L ' + xf + ',' + yf
-        return path
+        x4 = x_mid
+        y4 = y_mid
+        x3 = (x4 + x2) / 2
+        y3 = (y4 + y2) / 2
       }
+
+      // Get ending control points coordinates
+      const x9 = this._control_points.ending_bezier_point.position_x
+      const y9 = this._control_points.ending_bezier_point.position_y
+      const x10 = this._control_points.ending_curve_point.position_x
+      const y10 = this._control_points.ending_curve_point.position_y
+
+      // End curve
+      let x6, y6
+      let x7, y7
+      let x8, y8
+      if (this.is_horizontal) {
+        x7 = x9
+        y7 = y_mid
+        x8 = x9
+        y8 = (y7 + y9) / 2
+        x6 = x10
+        y6 = y7
+      }
+      else if (this.is_vertical) {
+        x7 = x_mid
+        y7 = y9
+        x8 = (x7 + x9) / 2
+        y8 = y7
+        x6 = x7
+        y6 = y10
+      }
+      else {
+        x7 = x_mid
+        y7 = y_mid
+        x8 = (x7 + x9) / 2
+        y8 = (y7 + y9) / 2
+      }
+
+      // Return paths
+      let path = 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
+      if (this.is_vertical || this.is_horizontal)
+        path = path
+          + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+          + ' L ' + x6 + ',' + y6
+      path = path
+        + ' Q ' + x7 + ',' + y7 + ' ' + x8 + ',' + y8
+        + ' Q ' + x9 + ',' + y9 + ' ' + x10 + ',' + y10
+        + ' L ' + xf + ',' + yf
+      return path
     }
   }
 
@@ -2218,11 +2319,13 @@ export abstract class ClassTemplate_LinkElement
 
     // Normal mode
     if (!this.shape_is_recycling) {
+
       // Get starting and ending position per type of shape
       const x0 = this.position_x_start
       const y0 = this.position_y_start
       const x6 = this.position_x_end
       const y6 = this.position_y_end
+
       // Get control points coordinates
       const x1 = this._control_points.starting_curve_point.position_x
       const y1 = this._control_points.starting_curve_point.position_y
@@ -2232,6 +2335,7 @@ export abstract class ClassTemplate_LinkElement
       const y4 = this._control_points.ending_bezier_point.position_y
       const x5 = this._control_points.ending_curve_point.position_x
       const y5 = this._control_points.ending_curve_point.position_y
+
       // Coefs to help tranform path -> shape
       const half_thickness = this.thickness / 2
       const dx = x5 - x1
@@ -2239,6 +2343,7 @@ export abstract class ClassTemplate_LinkElement
       let ang
       let v_axe, v_ortho
       let dx_fwd, dy_fwd
+
       // Clamping function
       function clamp(p: number, v: number, pmin: number, pmax: number) {
         const dmin = p - pmin
@@ -2260,6 +2365,7 @@ export abstract class ClassTemplate_LinkElement
           return p
         }
       }
+
       // Upper part of shape
       let x0_fwd, y0_fwd
       let x1_fwd, y1_fwd
@@ -2267,6 +2373,7 @@ export abstract class ClassTemplate_LinkElement
       let x4_fwd, y4_fwd
       let x5_fwd, y5_fwd
       let x6_fwd, y6_fwd
+
       // First part of path
       if (this.is_horizontal || this.is_horizontal_vertical) {
         // Coefs to help tranform path -> shape
@@ -2303,7 +2410,6 @@ export abstract class ClassTemplate_LinkElement
         else if (dy < 0 && dx < 0) {
           v_axe = -half_thickness * Math.tan(ang / 2)
           v_ortho = half_thickness
-
         }
         else {
           v_axe = -half_thickness * Math.tan((Math.PI / 2 - ang) / 2)
@@ -2321,6 +2427,7 @@ export abstract class ClassTemplate_LinkElement
         x2_fwd = x0_fwd
         y2_fwd = clamp(y2, dy_fwd, y1, y6)
       }
+
       // Second part of path
       if (this.is_horizontal || this.is_vertical_horizontal) {
         // Coefs to help tranform path -> shape
@@ -2375,6 +2482,7 @@ export abstract class ClassTemplate_LinkElement
         x4_fwd = x6_fwd
         y4_fwd = clamp(y4, dy_fwd, y0, y5)
       }
+
       // Rotating function
       function rotx(p: number, pc: number) {
         const v = p - pc
@@ -2384,6 +2492,7 @@ export abstract class ClassTemplate_LinkElement
         const v = p - pc
         return p - 2 * v
       }
+
       // Lower part of shape
       let x0_bwd, y0_bwd
       let x1_bwd, y1_bwd
@@ -2476,15 +2585,24 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_LinkElement
    */
   private getArcsPaths() {
+
+    // Security
+    if (!this.shape_is_curved) {
+      return this.getLinesPath()
+    }
+
     // Update control points
     this.computeControlPoints()
+
     // Normal mode
     if (!this.shape_is_recycling) {
+
       // Get starting and ending position per type of shape
       const x0 = this.position_x_start
       const y0 = this.position_y_start
       const x6 = this.position_x_end
       const y6 = this.position_y_end
+
       // Get control points coordinates
       const x1 = this._control_points.starting_curve_point.position_x
       const y1 = this._control_points.starting_curve_point.position_y
@@ -2494,28 +2612,34 @@ export abstract class ClassTemplate_LinkElement
       const y4 = this._control_points.ending_bezier_point.position_y
       const x5 = this._control_points.ending_curve_point.position_x
       const y5 = this._control_points.ending_curve_point.position_y
+
       // Dist between starting points
-      const dltx = (x4 - x2)
-      const dlty = (y4 - y2)
-      const dx2 = dltx * dltx
-      const dy2 = dlty * dlty
-      const dx = Math.sqrt(dx2)
-      const dy = Math.sqrt(dy2)
+      const dltx = (x5 - x1)
+      const dlty = (y5 - y1)
+      const dx1 = dltx * dltx
+      const dy1 = dlty * dlty
+      const dx = Math.sqrt(dx1)
+      const dy = Math.sqrt(dy1)
       const sdltx = dltx / dx
       const sdlty = dlty / dy
+
       // First arc infos
-      const rc_start = Math.max(100, this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
-      const xc_start = x2
-      const yc_start = y2 + sdlty * rc_start
+      const rc_start = Math.max(Math.abs(x1 - x2), this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
+      const xc_start = x1
+      const yc_start = y1 + sdlty * rc_start
+
       // Second arc infos
-      const rc_end = Math.max(100, this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
-      const xc_end = x4
-      const yc_end = y4 - sdlty * rc_end
+      const rc_end = Math.max(Math.abs(x4 - x5), this.thickness / 2) // TODO parametre config + limite par thickness & distance noeuds
+      const xc_end = x5
+      const yc_end = y5 - sdlty * rc_end
+
       // Squared distance between centre of circles
       const d2 = (xc_start - xc_end) * (xc_start - xc_end) + (yc_start - yc_end) * (yc_start - yc_end)
       const d = Math.sqrt(d2)
+
       // Check which mode of drawing we keep
       const two_circle_that_touch = (rc_start + rc_end > d)
+
       // Signs and sweepflag for arcs
       let ssig1_x, ssig1_y // signs for sig1 part
       let ssig2_x, ssig2_y // signs for sig2 part
@@ -2556,24 +2680,26 @@ export abstract class ClassTemplate_LinkElement
           sweep2 = 0
         }
       }
+
       // Drawing mode - 1 line + 2 arc + 1 line
       if (two_circle_that_touch) {
         // Middle point
-        const x3 = (x2 + x4) / 2
-        const y3 = (y2 + y4) / 2
+        const x3 = (x1 + x5) / 2
+        const y3 = (y1 + y5) / 2
         // First arc infos
-        const yc_start = ((x2 - x3) * (x2 - x3) + y3 * y3 - y2 * y2) / (2 * (y3 - y2))
-        const rc_start = Math.abs(yc_start - y2)
+        const yc_start = ((x1 - x3) * (x1 - x3) + y3 * y3 - y1 * y1) / (2 * (y3 - y1))
+        const rc_start = Math.abs(yc_start - y1)
         // Second arc infos
-        const yc_end = ((x4 - x3) * (x4 - x3) + y3 * y3 - y4 * y4) / (2 * (y3 - y4))
-        const rc_end = Math.abs(yc_end - y4)
+        const yc_end = ((x5 - x3) * (x5 - x3) + y3 * y3 - y5 * y5) / (2 * (y3 - y5))
+        const rc_end = Math.abs(yc_end - y5)
         // Path for drawing
         return 'M ' + x0 + ' , ' + y0
-          + ' L ' + x2 + ' , ' + y2
+          + ' L ' + x1 + ' , ' + y1
           + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3 + ' , ' + y3
-          + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x4 + ' , ' + y4
+          + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x5 + ' , ' + y5
           + ' L ' + x6 + ' , ' + y6
       }
+
       // Drawing mode - 1 line + 1 arc + 1 line + 1 arc + 1 line
       else {
         // Distance between tangeants points
@@ -2592,10 +2718,10 @@ export abstract class ClassTemplate_LinkElement
         const y3_2 = (yc_start + yc_end) / 2 + (yc_start - yc_end) * (rc_end * rc_end - r2 * r2) / (2 * d2) + ssig2_y * (2 * sig2 * (xc_end - xc_start) / d2)
         // Return path
         return 'M ' + x0 + ' , ' + y0
-          + ' L ' + x2 + ' , ' + y2
+          + ' L ' + x1 + ' , ' + y1
           + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3_1 + ' , ' + y3_1
           + ' L ' + x3_2 + ' , ' + y3_2
-          + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x4 + ' , ' + y4
+          + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x5 + ' , ' + y5
           + ' L ' + x6 + ' , ' + y6
       }
     }
