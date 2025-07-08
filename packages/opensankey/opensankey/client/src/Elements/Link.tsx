@@ -1069,20 +1069,7 @@ export abstract class ClassTemplate_LinkElement
       const xf = this.position_x_end
       const yf = this.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
-      const show_as_path = show_as_dash || ((dist / thickness) > 2) || this.shape_is_recycling
-      // Add new path
-      this.d3_selection?.append('path')
-        .classed('link', true)
-        .classed('link_path', true)
-        .attr('d', () => this.getBezierPath())
-      // Apply properties
-      this.d3_selection?.selectAll('.link_path')
-        .attr('id', this.id)
-        .attr('fill', 'none')
-        .attr('stroke', show_as_path ? shape_color : 'none')
-        .attr('stroke-opacity', show_as_path ? shape_opacity : '0')
-        .attr('stroke-width', show_as_path ? thickness : '0')
-        .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+      const show_as_path = true //show_as_dash //|| ((dist / thickness) > 2) || this.shape_is_recycling
       // Show as full shape for specific shapes
       if (!show_as_path) {
         this.d3_selection?.append('path')
@@ -1097,6 +1084,29 @@ export abstract class ClassTemplate_LinkElement
           .attr('stroke', 'none')
           .attr('stroke-opacity', '0')
           .attr('stroke-width', '0')
+      }
+      else {
+        // Which path to use
+        let path
+        if (true) { // TODO put condition
+          path = this.getArcsPaths()
+        }
+        else {
+          path = this.getBezierPath()
+        }
+        // Add new path
+        this.d3_selection?.append('path')
+          .classed('link', true)
+          .classed('link_path', true)
+          .attr('d', path)
+        // Apply properties
+        this.d3_selection?.selectAll('.link_path')
+          .attr('id', this.id)
+          .attr('fill', 'none')
+          .attr('stroke', show_as_path ? shape_color : 'none')
+          .attr('stroke-opacity', show_as_path ? shape_opacity : '0')
+          .attr('stroke-width', show_as_path ? thickness : '0')
+          .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
       }
     }
   }
@@ -2465,10 +2475,9 @@ export abstract class ClassTemplate_LinkElement
    * @return {*}
    * @memberof ClassTemplate_LinkElement
    */
-  private getBezierShape2() {
+  private getArcsPaths() {
     // Update control points
     this.computeControlPoints()
-
     // Normal mode
     if (!this.shape_is_recycling) {
       // Get starting and ending position per type of shape
@@ -2485,7 +2494,68 @@ export abstract class ClassTemplate_LinkElement
       const y4 = this._control_points.ending_bezier_point.position_y
       const x5 = this._control_points.ending_curve_point.position_x
       const y5 = this._control_points.ending_curve_point.position_y
-      const two_circle_that_touch = false
+      // Dist between starting points
+      const dltx = (x4 - x2)
+      const dlty = (y4 - y2)
+      const dx2 = dltx*dltx
+      const dy2 = dlty*dlty
+      const dx = Math.sqrt(dx2)
+      const dy = Math.sqrt(dy2)
+      const sdltx = dltx/dx
+      const sdlty = dlty/dy
+      // First arc infos
+      const rc_start = Math.max(100, this.thickness/2) // TODO parametre config + limite par thickness & distance noeuds
+      const xc_start = x2
+      const yc_start = y2 + sdlty*rc_start
+      // Second arc infos
+      const rc_end = Math.max(100, this.thickness/2) // TODO parametre config + limite par thickness & distance noeuds
+      const xc_end = x4
+      const yc_end = y4 - sdlty*rc_end
+      // Squared distance between centre of circles
+      const d2 = (xc_start - xc_end)*(xc_start - xc_end) + (yc_start - yc_end)*(yc_start - yc_end)
+      const d = Math.sqrt(d2)
+      // Check which mode of drawing we keep
+      const two_circle_that_touch = (rc_start + rc_end > d)
+      // Signs and sweepflag for arcs
+      let ssig1_x, ssig1_y // signs for sig1 part
+      let ssig2_x, ssig2_y // signs for sig2 part
+      let sweep1, sweep2
+      if (sdltx > 0) {
+        if (sdlty > 0) {
+          ssig1_x = -1
+          ssig1_y = 1
+          ssig2_x = -1
+          ssig2_y = 1
+          sweep1 = 1
+          sweep2 = 0
+        }
+        else {
+          ssig1_x = 1
+          ssig1_y = -1
+          ssig2_x = 1
+          ssig2_y = -1
+          sweep1 = 0
+          sweep2 = 1
+        }
+      }
+      else {
+        if (sdlty > 0) {
+          ssig1_x = 1
+          ssig1_y = -1
+          ssig2_x = 1
+          ssig2_y = -1
+          sweep1 = 0
+          sweep2 = 1
+        }
+        else {
+          ssig1_x = -1
+          ssig1_y = 1
+          ssig2_x = -1
+          ssig2_y = 1
+          sweep1 = 1
+          sweep2 = 0
+        }
+      }
       // Drawing mode - 1 line + 2 arc + 1 line
       if (two_circle_that_touch) {
         // Middle point
@@ -2497,87 +2567,17 @@ export abstract class ClassTemplate_LinkElement
         // Second arc infos
         const yc_end = ((x4 - x3)*(x4 - x3) + y3*y3 - y4*y4)/(2*(y3 - y4))
         const rc_end = Math.abs(yc_end - y4)
-        // Create new group
-        const d3_selection_shape = this.d3_selection?.append('g')
-          .attr('id', 'g_link_shape')
-        // First part
-        d3_selection_shape?.append('path')
-          .classed('link', true)
-          .classed('link_shape', true)
-          .attr('d',
-            'M ' + x0 + ',' + y0
-            + ' L ' + x2 + ',' + y2
-            + 'A' + rc_start + ',' + rc_start + ',0,0,0,' + x3 + ',' + y3
-            + 'A' + rc_end + ',' + rc_end + ',0,0,1,' + x4 + ',' + y4
-            + ' L ' + x6 + ',' + y6
-          )
+        // Path for drawing
+        return 'M ' + x0 + ' , ' + y0
+            + ' L ' + x2 + ' , ' + y2
+            + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3 + ' , ' + y3
+            + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x4 + ' , ' + y4
+            + ' L ' + x6 + ' , ' + y6
       }
       // Drawing mode - 1 line + 1 arc + 1 line + 1 arc + 1 line
       else {
-        // Dist between starting points
-        const dltx = (x4 - x2)
-        const dlty = (y4 - y2)
-        const dx2 = dltx*dltx
-        const dy2 = dlty*dlty
-        const dx = Math.sqrt(dx2)
-        const dy = Math.sqrt(dy2)
-        const dxy = Math.sqrt(dx2 + dy2)
-        const sdltx = dltx/dx
-        const sdlty = dlty/dy
-        console.log(sdltx, sdlty)
-        // First arc infos
-        const rc_start = Math.max(100, this.thickness/2) // TODO parametre config + limite par thickness & distance noeuds
-        const xc_start = x2
-        const yc_start = y2 + sdlty*rc_start
-        // Second arc infos
-        const rc_end = Math.max(100, this.thickness/2)
-        const xc_end = x4
-        const yc_end = y4 - sdlty*rc_end // TODO signe variable
-        // Sqared distance between centre of circles
-        const d2 = (xc_start - xc_end)*(xc_start - xc_end) + (yc_start - yc_end)*(yc_start - yc_end)
-        const d = Math.sqrt(d2)
         // Distance between tangeants points
         const l2 = d2 - (rc_end + rc_start)*(rc_end + rc_start)
-        // Signs and sweepflag for arcs
-        let ssig1_x, ssig1_y // signs for sig1 part
-        let ssig2_x, ssig2_y // signs for sig2 part
-        let sweep1, sweep2
-        if (sdltx > 0) {
-          if (sdlty > 0) {
-            ssig1_x = -1
-            ssig1_y = 1
-            ssig2_x = -1
-            ssig2_y = 1
-            sweep1 = 1
-            sweep2 = 0
-          }
-          else {
-            ssig1_x = 1
-            ssig1_y = -1
-            ssig2_x = 1
-            ssig2_y = -1
-            sweep1 = 0
-            sweep2 = 1
-          }
-        }
-        else {
-          if (sdlty > 0) {
-            ssig1_x = 1
-            ssig1_y = -1
-            ssig2_x = 1
-            ssig2_y = -1
-            sweep1 = 0
-            sweep2 = 1
-          }
-          else {
-            ssig1_x = -1
-            ssig1_y = 1
-            ssig2_x = -1
-            ssig2_y = 1
-            sweep1 = 1
-            sweep2 = 0
-          }
-        }
         // First tangeant resolving
         // see : https://lucidar.me/fr/mathematics/tangent-line-segments-to-circle/
         const r1 = Math.sqrt(l2 + rc_end*rc_end)
@@ -2588,54 +2588,19 @@ export abstract class ClassTemplate_LinkElement
         // see : https://lucidar.me/fr/mathematics/tangent-line-segments-to-circle/
         const r2 = Math.sqrt(l2 + rc_start*rc_start)
         const sig2 = 0.25*Math.sqrt((d + rc_end + r2)*(d + rc_end - r2)*(d - rc_end + r2)*(-d + rc_end + r2))
-        if (sdltx > 0) {
-          if (sdlty > 0) {
-          }
-          else {
-          }
-        }
-        else {
-          if (sdlty > 0) {
-          }
-          else {
-          }
-        }
         const x3_2 = (xc_start + xc_end)/2 + (xc_start - xc_end)*(rc_end*rc_end - r2*r2)/(2*d2) + ssig2_x*(2*sig2*(yc_end - yc_start)/d2)
         const y3_2 = (yc_start + yc_end)/2 + (yc_start - yc_end)*(rc_end*rc_end - r2*r2)/(2*d2) + ssig2_y*(2*sig2*(xc_end - xc_start)/d2)
-        // Create new group
-        const d3_selection_shape = this.d3_selection?.append('g')
-          .attr('id', 'g_link_shape')
-        // First part
-        d3_selection_shape?.append('path')
-          .classed('link', true)
-          .classed('link_shape', true)
-          .attr('d',
-            'M ' + x0 + ',' + y0
-            + ' L ' + x2 + ',' + y2
-            + ' A' + rc_start + ',' + rc_start + ',0,0,' + sweep1 + ',' + x3_1 + ',' + y3_1
-            + ' L' + x3_2 + ',' + y3_2
-            + ' A' + rc_end + ',' + rc_end + ',0,0,' + sweep2 + ',' + x4 + ',' + y4
-            + ' L ' + x6 + ',' + y6
-          )
+        // Return path
+        return 'M ' + x0 + ' , ' + y0
+            + ' L ' + x2 + ' , ' + y2
+            + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3_1 + ' , ' + y3_1
+            + ' L ' + x3_2 + ' , ' + y3_2
+            + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x4 + ' , ' + y4
+            + ' L ' + x6 + ' , ' + y6
       }
-      // // Middle part
-      // d3_selection_shape?.append('path')
-      //   .classed('link', true)
-      //   .classed('link_shape', true)
-      //   .attr('d',
-      //     'M ' + x2 + ',' + y2
-      //     + ' L ' + x4 + ',' + y4)
-      // // Last part
-      // d3_selection_shape?.append('path')
-      //   .classed('link', true)
-      //   .classed('link_shape', true)
-      //   .attr('d',
-      //     'M ' + x4 + ',' + y4
-      //     + ' L ' + x6 + ',' + y6)
     }
     else {
-      // do nothing
-
+      return this.getBezierPath()
     }
   }
 
