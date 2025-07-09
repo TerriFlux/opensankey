@@ -57,8 +57,7 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
   new_data,
   additionalMenus
 }) => {
-  const { t, icon_library, } = new_data
-  const { icon_undo } = icon_library
+  const { t } = new_data
   const { ref_selected_style_node } = new_data.menu_configuration
 
   // Component's state
@@ -192,15 +191,13 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
 
 export const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
   const { t, icon_library } = new_data
-  const { icon_add_element, icon_remove_element, icon_open_selector, icon_undo } = icon_library
+  const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 
   // Shared refs for external components
   const { ref_selected_style_node } = new_data.menu_configuration
+
   // Dict of links styles
   const node_styles_dict = new_data.drawing_area.sankey.node_styles_dict
-
-  const style_select = node_styles_dict[ref_selected_style_node.current]
-
 
   return <Box layerStyle='menuconfigpanel_grid'>
     <Box
@@ -346,7 +343,7 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
     setSelectedLinkStyleId(default_style_id)
   } else {
     const style_select = link_styles_dict[ref_selected_style_link.current]
-    
+
     const content_node_customisable_attribute_style = <Menu direction='rtl' placement='left' closeOnSelect={false}>
       <OSTooltip label={t('Menu.tooltips.style_attr_applicated')}>
         <MenuButton as={Button} variant='menuconfigpanel_option_button'>

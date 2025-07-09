@@ -66,7 +66,7 @@ import {
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
-import { Class_NodeAttribute, Class_NodeStyle, default_dx } from '../Elements/NodeAttributes'
+import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
 import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
 import { TypeGeneric_Handler } from '../Elements/Handler'
 
@@ -2120,7 +2120,7 @@ export abstract class ClassTemplate_DrawingArea
         column.sort((n1, n2) => n1.position_y - n2.position_y)
         let current_v = 0
         column.forEach(n => n.position_v = current_v++ )
-      })   
+      })
     }
     this.sankey.level_taggs_list.forEach(tagGroup => {
       Object.values(columns).forEach(column => {
@@ -2314,7 +2314,7 @@ export abstract class ClassTemplate_DrawingArea
    * Return an element (node,flow) given an id
    *
    * @param {string} id
-   * @return {*} 
+   * @return {*}
    * @memberof ClassTemplate_DrawingArea
    */
   public elementFromId(id: string) {
@@ -2900,7 +2900,7 @@ export abstract class ClassTemplate_DrawingArea
         if (nb_type_el_sel == 2) {
           this.application_data.menu_configuration.openConfigMenuElementsNodesLinks()
         } else if (nb_type_el_sel == 1) {
-          // else if 1 type of element was selected, open config for nodes 
+          // else if 1 type of element was selected, open config for nodes
           // (can't select flow without selecting nodes so if we have 1 type of element selected it's the nodes)
           this.application_data.menu_configuration.openConfigMenuElementsNodes()
         }

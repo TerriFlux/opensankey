@@ -76,8 +76,8 @@ import { setDiagram } from './SankeyMenuBanner'
 import { clickSavePDF } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
-import { 
-  decompressUploadedFileUniversal, 
+import {
+  decompressUploadedFileUniversal,
 } from '../dialogs/UniversalJSONCompression'
 
 /*************************************************************************************************/
@@ -277,13 +277,13 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
         style={{ display: 'none' }}
         onChange={async (evt: ChangeEvent) => {
           const files = (evt.target as HTMLFormElement).files
-          
+
           if (!files || files.length === 0) return
-          
+
           try {
             const JSON_data = await decompressUploadedFileUniversal(files[0])
             new_data.fromJSON(JSON_data as Type_JSON)
-            
+
           } catch (error) {
             console.error('Erreur lors du chargement:', error)
           }
@@ -642,7 +642,6 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
  * @return {*}
  */
 export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
-  const { t } = new_data
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
 
@@ -769,7 +768,7 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
  * @return {*}
  */
 export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
-  const { logo, logo_terriflux } = new_data
+  const { logo } = new_data
   const [flag, setFlag] = useState('fr')
   const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
 

@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -59,7 +59,7 @@ import {
   FCType_ApplyLayoutDialog,
   FType_DiagramSelector
 } from './types/SankeyMenuDialogsTypes'
-import { default_style_id, OSTooltip, Type_JSON } from '../../types/Utils'
+import { default_style_id, OSTooltip } from '../../types/Utils'
 import {
   FCType_ApplySaveJSONDialog,
   FCType_ExcelModal
@@ -68,7 +68,7 @@ import { isPositionOverloaded } from '../../Elements/Node'
 
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { Type_GenericApplicationData } from '../../types/Types'
-import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu, WrapperCheckBoxSubSectionMenu } from '../configmenus/SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable, WrapperCheckBoxSubSectionMenu } from '../configmenus/SankeyMenuComponents'
 import { checked } from './SankeyMenuContextLink'
 
 
@@ -1065,10 +1065,10 @@ export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicat
       dict_option.current = { ...dict_option.current, ...defaultFluxOptionValue }
     } else {
       dict_option.current['with_flux_sheets'] = false
-      delete dict_option.current['activate_data_table'] 
-      delete dict_option.current['data_table_with_all_flux'] 
-      delete dict_option.current['activate_flux_matrix'] 
-      delete dict_option.current['flux_matrix_with_data'] 
+      delete dict_option.current['activate_data_table']
+      delete dict_option.current['data_table_with_all_flux']
+      delete dict_option.current['activate_flux_matrix']
+      delete dict_option.current['flux_matrix_with_data']
 
     }
     setUpdate(a => a + 1)
@@ -1118,7 +1118,7 @@ export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicat
       dict_option.current['activate_flux_matrix'] = true
       dict_option.current['flux_matrix_with_data'] = false
     } else {
-      dict_option.current['activate_flux_matrix'] =false 
+      dict_option.current['activate_flux_matrix'] =false
       delete dict_option.current['flux_matrix_with_data']
     }
     setUpdate(a => a + 1)
@@ -1355,7 +1355,7 @@ export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicat
                 if (val[0] == ent[0]) {
                   val[1] = evt.target.value
                 }
-                setUpdate(a => a = +1)
+                setUpdate(a => a + 1)
               })
             }}>
             {taggs_dict[ent[0]].tags_list.map((tag, idx) => {

@@ -33,17 +33,7 @@ import {
   Menu,
   MenuButton,
   MenuItem,
-  MenuList,
-  useBoolean,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Select,
-  Text,
+  MenuList
 } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
