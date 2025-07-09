@@ -1069,7 +1069,7 @@ export abstract class ClassTemplate_LinkElement
       const yf = this.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
       const show_as_path = show_as_dash || ((dist / thickness) > 1.5) || this.shape_is_recycling
-      const useBeziers = false // TODO put as parameter
+      const useBeziers = true // TODO put as parameter
       // Show as full shape for specific shapes
       if (!show_as_path) {
         // Which shape to use
