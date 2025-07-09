@@ -549,8 +549,8 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 node_styles_dict['default'].position.auto_x = evt.target.checked
                 set_auto_x(evt.target.checked)
                 Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
-                    .forEach(style => style.position.auto_x = evt.target.checked)
+                  .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                  .forEach(style => style.position.auto_x = evt.target.checked)
                 if (evt.target.checked) {
                   // Object.values(node_styles_dict)
                   //   .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
@@ -1113,7 +1113,7 @@ export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicat
     setUpdate(a => a + 1)
   }
 
-    const changeMatrixTable = (evt: boolean) => {
+  const changeMatrixTable = (evt: boolean) => {
     if (evt) {
       dict_option.current['activate_flux_matrix'] = true
       dict_option.current['flux_matrix_with_data'] = false

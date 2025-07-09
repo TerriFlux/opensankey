@@ -574,7 +574,7 @@ export const UploadExemple: FType_UploadExemple = (
   fetch(url, fetchData).then(async (response) => {
     try {
       // Vérifier le type de contenu retourné par le serveur
-     const contentType = response.headers.get('content-type')
+      const contentType = response.headers.get('content-type')
       const originalContentType = response.headers.get('x-original-content-type')
       const compressionMethod = response.headers.get('x-compression-method')
       
