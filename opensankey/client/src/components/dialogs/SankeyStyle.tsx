@@ -179,14 +179,14 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
     maxW='20%'
     customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
   />
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_modal_styles_nodes_context'}
-      content={content_node_style_context}
-      title={t('Menu.esn')}
-      maxW='20%'
-      customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
-    />
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+    dialog_name={'ref_setter_show_modal_styles_nodes_context'}
+    content={content_node_style_context}
+    title={t('Menu.esn')}
+    maxW='20%'
+    customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
+  />
   </>
 }
 
@@ -447,15 +447,15 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
     customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
 
   />
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_modal_styles_links_context'}
-      content={content_apparence_contenxt}
-      title={t('Menu.esf')}
-      maxW='20%'
-      customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+    dialog_name={'ref_setter_show_modal_styles_links_context'}
+    content={content_apparence_contenxt}
+    title={t('Menu.esf')}
+    maxW='20%'
+    customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
 
-    />
+  />
   </>
 }
 

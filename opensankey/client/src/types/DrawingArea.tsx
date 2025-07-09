@@ -610,7 +610,7 @@ export abstract class ClassTemplate_DrawingArea
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
       .attr('id', 'draw_zoom')
-      .attr('width', "100%")
+      .attr('width', '100%')
       .attr('height', height)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
@@ -1229,7 +1229,7 @@ export abstract class ClassTemplate_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-      (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+        (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -2177,8 +2177,8 @@ export abstract class ClassTemplate_DrawingArea
     }
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
-      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-      if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
+    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+    if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
       return new_current_v+1
     }
     desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]

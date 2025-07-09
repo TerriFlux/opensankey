@@ -263,30 +263,30 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       })
     }
 
-      {/* Choix du type de donnée */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.data.data_type')}
-        </Box>
-        {/* <OSTooltip label={t('Flux.data.tooltips.data_type')}> */}
-          <Select
-            value={value_option}
-            onChange={(evt) => {
-              selected_links.forEach(l=>l.value!.value_option = evt.target.value as ValueOptionType)
-              new_data.drawing_area.updateScaleAtLinkValueSetting()
-              // Update this menu
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          >
-            {new_data.menu_configuration.data_type.map(el => {
-              // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
-              //   return <></>
-              // }
-              return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.data.'+el)}</OSTooltip></></option>
-            })}
-          </Select>
-        {/* </OSTooltip> */}
+    {/* Choix du type de donnée */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Flux.data.data_type')}
       </Box>
+      {/* <OSTooltip label={t('Flux.data.tooltips.data_type')}> */}
+      <Select
+        value={value_option}
+        onChange={(evt) => {
+          selected_links.forEach(l=>l.value!.value_option = evt.target.value as ValueOptionType)
+          new_data.drawing_area.updateScaleAtLinkValueSetting()
+          // Update this menu
+          refreshThisAndUpdateRelatedComponents()
+        }}
+      >
+        {new_data.menu_configuration.data_type.map(el => {
+          // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
+          //   return <></>
+          // }
+          return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.data.'+el)}</OSTooltip></></option>
+        })}
+      </Select>
+      {/* </OSTooltip> */}
+    </Box>
     {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
     <OSTooltip label={t('Flux.data.tooltips.vpp')}>
       <Box
@@ -325,7 +325,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         />
       </Box>
     </OSTooltip>
-    </Box>
+  </Box>
   // Return JSX component
   return content
 }
