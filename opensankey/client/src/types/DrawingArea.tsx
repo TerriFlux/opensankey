@@ -66,7 +66,7 @@ import {
 } from '../types/Abstract'
 import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
-import { Class_NodeAttribute, Class_NodeStyle, default_dx } from '../Elements/NodeAttributes'
+import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
 import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
 import { TypeGeneric_Handler } from '../Elements/Handler'
 
@@ -610,7 +610,7 @@ export abstract class ClassTemplate_DrawingArea
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
       .attr('id', 'draw_zoom')
-      .attr('width', "100%")
+      .attr('width', '100%')
       .attr('height', height)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
@@ -1229,7 +1229,7 @@ export abstract class ClassTemplate_DrawingArea
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recyling flux
-      (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
+        (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -2120,7 +2120,7 @@ export abstract class ClassTemplate_DrawingArea
         column.sort((n1, n2) => n1.position_y - n2.position_y)
         let current_v = 0
         column.forEach(n => n.position_v = current_v++ )
-      })   
+      })
     }
     this.sankey.level_taggs_list.forEach(tagGroup => {
       Object.values(columns).forEach(column => {
@@ -2177,8 +2177,8 @@ export abstract class ClassTemplate_DrawingArea
     }
     let new_current_v = current_v
     let desagregated_nodes: Type_GenericNodeElement[] = []
-      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-      if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
+    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
+    if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
       return new_current_v+1
     }
     desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
@@ -2314,7 +2314,7 @@ export abstract class ClassTemplate_DrawingArea
    * Return an element (node,flow) given an id
    *
    * @param {string} id
-   * @return {*} 
+   * @return {*}
    * @memberof ClassTemplate_DrawingArea
    */
   public elementFromId(id: string) {
@@ -2900,7 +2900,7 @@ export abstract class ClassTemplate_DrawingArea
         if (nb_type_el_sel == 2) {
           this.application_data.menu_configuration.openConfigMenuElementsNodesLinks()
         } else if (nb_type_el_sel == 1) {
-          // else if 1 type of element was selected, open config for nodes 
+          // else if 1 type of element was selected, open config for nodes
           // (can't select flow without selecting nodes so if we have 1 type of element selected it's the nodes)
           this.application_data.menu_configuration.openConfigMenuElementsNodes()
         }

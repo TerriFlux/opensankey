@@ -647,13 +647,13 @@ export abstract class ClassTemplate_ApplicationData
   }
 
 
-/**
+  /**
  * Function to that fetch json data from an url (the file has to be compressed with gzip)
  *
  * @param {string} url_data
  * @memberof ClassTemplate_ApplicationData
  */
-public readUrlJSON(url_data: string) {
+  public readUrlJSON(url_data: string) {
     if (url_data.includes('.gz')) {
       // Create url request
       const root = window.location.origin
@@ -1130,7 +1130,7 @@ public readUrlJSON(url_data: string) {
             this._toast_processes.splice(0, 1) // pop process from processes list
             resolve(200) // end
           },
-            500) // Leave 500ms of delay in order to give enough time to load spinner component
+          500) // Leave 500ms of delay in order to give enough time to load spinner component
         }),
         {
           success: {
@@ -1210,7 +1210,7 @@ public readUrlJSON(url_data: string) {
   public get url_prefix(): string { return this._url_prefix }
 
   public get logo(): string { 
-      if ( this.is_static && window.sankey && window.sankey.logo) {
+    if ( this.is_static && window.sankey && window.sankey.logo) {
       return window.sankey.logo
     }
     return this._logo_opensankey 

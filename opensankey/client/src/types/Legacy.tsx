@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -1325,7 +1325,7 @@ const convert_tags: convert_tagsFuncType = (
   // }
   if (('Primaire' in data.levelTags) && Object.values(data.levelTags).length > 1) {
     delete data.levelTags['Primaire']
-  } 
+  }
   // Convertie les anciens groupTag des données issu d'un excel qui ont pour valeur 1 ou 0 pour signifier un boolean
   Object.values(data.nodeTags).forEach(t => {
     t.show_legend = typeof (t.show_legend) == 'boolean' ? t.show_legend : ((t.show_legend === 1))
@@ -1443,7 +1443,7 @@ const convert_nodes: convert_nodesFuncType = (
 
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes = Object.values(data.nodes).map(n => n.idNode)
-  const list_links = Object.values(data.links)
+  // const list_links = Object.values(data.links)
   let trade_set = false
   Object.values(data.nodes).forEach(n => {
     const n_depreciated = (n as unknown) as ConvertSankeyNode
@@ -1599,9 +1599,9 @@ const convert_nodes: convert_nodesFuncType = (
         setTrade(data)
       } else if (n.local.position == undefined && !n.trade_close ) {
         trade_set = true
-        setTrade(data)       
+        setTrade(data)
       }
-    } 
+    }
 
     delete n_depreciated.visible
 
@@ -1688,7 +1688,7 @@ const convert_nodes: convert_nodesFuncType = (
       image?: string
       is_image: boolean,
       image_src: string,
-    } 
+    }
 
     const nn = n as unknown as OSP_type
     if ( nn.image != undefined && nn.FO_content == nn.image ) {
@@ -1778,7 +1778,7 @@ const convert_nodes: convert_nodesFuncType = (
         .forEach(lid => {
           if (!data.links[lid]) {
             console.log(lid)
-            console.log(Object.values(data.links).filter(l=>l.idLink.includes('Ethanol')))            
+            console.log(Object.values(data.links).filter(l=>l.idLink.includes('Ethanol')))
             return
           }
           const output_node = data.nodes[data.links[lid].idTarget]
@@ -1866,8 +1866,8 @@ const convert_nodes: convert_nodesFuncType = (
           n.dimensions[leveltagg_id].children_tags = leveltagg_tags_ids
           n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
         } else if (
-          Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] && 
-            Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1 
+          Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] &&
+            Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1
         ) {
           if (n.dimensions['Primaire'] && n.dimensions['Primaire'].parent_name) {
             let parent_tag: number | undefined
@@ -1896,7 +1896,7 @@ const convert_nodes: convert_nodesFuncType = (
             }
           } /*else {
               n.dimensions[leveltagg_id] = {}
-              n.dimensions[leveltagg_id].antitag = true              
+              n.dimensions[leveltagg_id].antitag = true
             }*/
         }
       }
@@ -2668,22 +2668,22 @@ const normalizeName = (name: string) => {
 
 /**
  * Convert JSON from App that are previous to 0.91,
- * 
+ *
  * Since 0.91 :
  *  - link attribute/style label_position & orthogonal_label_position  value have changed :
- * 
+ *
  *    - start -> left
- * 
+ *
  *    - end -> right
- * 
+ *
  *    - above -> top
- * 
+ *
  *    - below -> bottom
- * 
+ *
  * This is due to the creation of a component to modify value attriubtes for nodes AND links so we have normalised some attributes values
  *
  * @param {Type_JSON} data
- * @return {*} 
+ * @return {*}
  */
 export const convert_pre_v_0_91 = (data: Type_JSON) => {
   Object.values(data.links).forEach(link => {
