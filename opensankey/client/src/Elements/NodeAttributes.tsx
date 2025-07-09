@@ -786,13 +786,13 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     json_node_object: Type_JSON
   ) {
     super.fromJSON(json_node_object)
-      this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-      this._position.relative_dx = getNumberFromJSON(json_node_object, 'relative_dx', default_relative_dx)
-      this._position.relative_dy = getNumberFromJSON(json_node_object, 'relative_dy', default_relative_dy)
-      this._position.dx = getNumberFromJSON(json_node_object, 'dx', default_dx)
-      this._position.dy = getNumberFromJSON(json_node_object, 'dy', default_dy)
+    this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
+    this._position.relative_dx = getNumberFromJSON(json_node_object, 'relative_dx', default_relative_dx)
+    this._position.relative_dy = getNumberFromJSON(json_node_object, 'relative_dy', default_relative_dy)
+    this._position.dx = getNumberFromJSON(json_node_object, 'dx', default_dx)
+    this._position.dy = getNumberFromJSON(json_node_object, 'dy', default_dy)
 
-      this._customisable_attribute = getJSONFromJSON(json_node_object, 'customisable_props', this._customisable_attribute) as typeof this._customisable_attribute
+    this._customisable_attribute = getJSONFromJSON(json_node_object, 'customisable_props', this._customisable_attribute) as typeof this._customisable_attribute
 
 
   }

@@ -363,7 +363,7 @@ const processLinksForAggregationExpansion = (
   config: AggregationExpansionConfig
 ): LinkProcessingResult => {
   let original_links: Type_GenericLinkElement[] = []
-  let border_nodes: Type_GenericNodeElement[] = []
+  const border_nodes: Type_GenericNodeElement[] = []
   let is_extremity = true
 
   // Vérifier si les nœuds à agréger sont à une extrémité
@@ -387,7 +387,7 @@ const processLinksForAggregationExpansion = (
       // Cas extrémité : utiliser les liens de sortie
       config.nodes_to_agregate.forEach(c => {
         const visibleLinks = (c as Type_GenericNodeElement).output_links_list.filter(l => l.target.is_visible)
-        original_links = [...original_links, ...visibleLinks];
+        original_links = [...original_links, ...visibleLinks]
         //(c as Type_GenericNodeElement).output_links_list.forEach(l => l.setInvisible())
       })
       is_extremity = true
@@ -405,7 +405,7 @@ const processLinksForAggregationExpansion = (
       // Cas extrémité : utiliser les liens d'entrée
       config.nodes_to_agregate.forEach(c => {
         const visibleLinks = (c as Type_GenericNodeElement).input_links_list.filter(l => l.source.is_visible)
-        original_links = [...original_links, ...visibleLinks];
+        original_links = [...original_links, ...visibleLinks]
         //(c as Type_GenericNodeElement).input_links_list.forEach(l => l.setInvisible())
       })
       is_extremity = true
@@ -475,7 +475,7 @@ const updateLinkValuesForDisaggregationExpansion = (
       
       if (expand_left) {
         if (!linkResult.is_extremity) {
-          let laggregate_child = laggregate.source.output_links_list.find(l => 
+          const laggregate_child = laggregate.source.output_links_list.find(l => 
             l.target === newNode.sibling || l.target === newNode
           )
           
@@ -487,7 +487,7 @@ const updateLinkValuesForDisaggregationExpansion = (
           laggregate.setInvisible()
         } else {
           // Cas extrémité : les liens viennent de la direction opposée
-          let laggregate_child = laggregate.target.input_links_list.find(l => 
+          const laggregate_child = laggregate.target.input_links_list.find(l => 
             l.source === newNode.sibling || l.source === newNode
           )
           
@@ -500,7 +500,7 @@ const updateLinkValuesForDisaggregationExpansion = (
         }
       } else {
         if (!linkResult.is_extremity) {
-          let laggregate_child = laggregate.target.input_links_list.find(l => 
+          const laggregate_child = laggregate.target.input_links_list.find(l => 
             l.source === newNode.sibling || l.source === newNode
           )
           
@@ -512,7 +512,7 @@ const updateLinkValuesForDisaggregationExpansion = (
           laggregate.setInvisible()
         } else {
           // Cas extrémité : les liens viennent de la direction opposée
-          let laggregate_child = laggregate.source.output_links_list.find(l => 
+          const laggregate_child = laggregate.source.output_links_list.find(l => 
             l.target === newNode.sibling || l.target === newNode
           )
           
@@ -690,7 +690,7 @@ export const disaggregate = (
   const current_height = aggregateNode.getShapeHeightToUse()
   parent_dim.setForceToShowChildren()
   const new_nodes = parent_dim.children
-  let total_height = calculateTotalHeight(new_nodes as Type_GenericNodeElement[], new_data.drawing_area.vertical_spacing)
+  const total_height = calculateTotalHeight(new_nodes as Type_GenericNodeElement[], new_data.drawing_area.vertical_spacing)
   const shift_y = total_height / 2
   
   new_nodes.forEach((n, i) => {
@@ -936,7 +936,7 @@ const contractAfterExpand = (
   const l = expand_left ? contextualised_node.output_links_list[0] : contextualised_node.input_links_list[0]
   if (!l) return
   
-  let parent_node = expand_left ? l.target : l.source
+  const parent_node = expand_left ? l.target : l.source
   
   // Collecter tous les enfants temporaires à supprimer
   const children = expand_left 

@@ -726,40 +726,40 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
   }
 
   return <Box
-      display='grid'
-      gridAutoFlow='column'
-      gridTemplateColumns={'repeat(' + String(new_data.menu_configuration.menu_top_order.length) + ', max-content 3px)'}
-    >
-      {
-        new_data.menu_configuration.menu_top_order
-          .map((arr, i) => {
-            return <Fragment key={'top_grp_'+i}>
-              <ButtonGroup
-                marginRight='1rem'
-                marginLeft='1rem'
-              >
-                {
-                  arr.map((k, i) => {
-                    return <React.Fragment
-                      key={'menutop_button_' + i}>
-                      {dict_components_menu_top[k]}
-                    </React.Fragment>
-                  })
-                }
-              </ButtonGroup>
+    display='grid'
+    gridAutoFlow='column'
+    gridTemplateColumns={'repeat(' + String(new_data.menu_configuration.menu_top_order.length) + ', max-content 3px)'}
+  >
+    {
+      new_data.menu_configuration.menu_top_order
+        .map((arr, i) => {
+          return <Fragment key={'top_grp_'+i}>
+            <ButtonGroup
+              marginRight='1rem'
+              marginLeft='1rem'
+            >
               {
-                (i < (new_data.menu_configuration.menu_top_order.length)) ?
-                  <Divider
-                    orientation='vertical'
-                    margin='0'
-                  />
-                  :
-                  <></>
+                arr.map((k, i) => {
+                  return <React.Fragment
+                    key={'menutop_button_' + i}>
+                    {dict_components_menu_top[k]}
+                  </React.Fragment>
+                })
               }
-            </Fragment>
-          })
-      }
-    </Box>
+            </ButtonGroup>
+            {
+              (i < (new_data.menu_configuration.menu_top_order.length)) ?
+                <Divider
+                  orientation='vertical'
+                  margin='0'
+                />
+                :
+                <></>
+            }
+          </Fragment>
+        })
+    }
+  </Box>
 }
 
 /**
@@ -819,12 +819,12 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
           height='100%'
         >
           {/* {!new_data.is_static ? */}
-            <Image
-              height='80%'
-              justifySelf='center'
-              alignSelf='center'
-              src={logo} />
-            {/* <Image
+          <Image
+            height='80%'
+            justifySelf='center'
+            alignSelf='center'
+            src={logo} />
+          {/* <Image
               height='5rem'
               margin='5% 0'
               src={logo_terriflux}

@@ -1135,105 +1135,105 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         label_font_family: 'name_label_font_family',
       }} />
 
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
 
-        <Checkbox
-          isDisabled={!disable_attr_props['name_label_background']}
-          variant='menuconfigpanel_option_checkbox'
-          isIndeterminate={is_indeterminated}
-          isChecked={name_label_background}
-          onChange={(evt) => {
-            updateElements('name_label_background', evt.target.checked)
-          }}
-        >
-          <OSTooltip label={t('Noeud.labels.tooltips.name_label_background')}>
-            {t('Noeud.labels.name_label_background')}
-          </OSTooltip>
+      <Checkbox
+        isDisabled={!disable_attr_props['name_label_background']}
+        variant='menuconfigpanel_option_checkbox'
+        isIndeterminate={is_indeterminated}
+        isChecked={name_label_background}
+        onChange={(evt) => {
+          updateElements('name_label_background', evt.target.checked)
+        }}
+      >
+        <OSTooltip label={t('Noeud.labels.tooltips.name_label_background')}>
+          {t('Noeud.labels.name_label_background')}
+        </OSTooltip>
+        <TooltipElementOverloaded k='name_label_background' />
+      </Checkbox>
+      <OSColorPicker
+        isDisabled={!disable_attr_props['name_label_background_color']}
+        initialColor={name_label_background_color}
+        functionOnBlur={(new_color) => {
+          updateElements('name_label_background_color', new_color)
+        }}
+      />
+    </Box>
+    {/* Largeur de la zone de texte du label */}
+    <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.labels.name_label_box_width')}
           <TooltipElementOverloaded k='name_label_background' />
-        </Checkbox>
-        <OSColorPicker
-          isDisabled={!disable_attr_props['name_label_background_color']}
-          initialColor={name_label_background_color}
-          functionOnBlur={(new_color) => {
-            updateElements('name_label_background_color', new_color)
+        </Box>
+        <ConfigMenuNumberInput
+          disabled={!disable_attr_props['name_label_box_width']}
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs[0]}
+          default_value={name_label_box_width}
+          function_on_blur={(value) => {
+            updateElements('name_label_box_width', (value ?? undefined))
           }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+          multiValue={is_name_label_box_width_indeterminated}
         />
       </Box>
-      {/* Largeur de la zone de texte du label */}
-      <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.name_label_box_width')}
-            <TooltipElementOverloaded k='name_label_background' />
-          </Box>
-          <ConfigMenuNumberInput
-            disabled={!disable_attr_props['name_label_box_width']}
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[0]}
-            default_value={name_label_box_width}
-            function_on_blur={(value) => {
-              updateElements('name_label_box_width', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-            multiValue={is_name_label_box_width_indeterminated}
-          />
-        </Box>
-      </OSTooltip>
+    </OSTooltip>
 
-      {/* Position horizontal du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.name_label_horiz_shift')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.name_label_horiz_shift')}
-            <TooltipElementOverloaded k='name_label_horiz_shift' />
-          </Box>
-          <ConfigMenuNumberInput
-            disabled={!disable_attr_props['name_label_horiz_shift']}
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[1]}
-            default_value={name_label_horiz_shift}
-            function_on_blur={(value) => {
-              updateElements('name_label_horiz_shift', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-            multiValue={is_name_label_horiz_shift_indeterminated}
-          />
+    {/* Position horizontal du label par rapport à l'ancre*/}
+    <OSTooltip label={t('Noeud.labels.tooltips.name_label_horiz_shift')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.labels.name_label_horiz_shift')}
+          <TooltipElementOverloaded k='name_label_horiz_shift' />
         </Box>
-      </OSTooltip>
+        <ConfigMenuNumberInput
+          disabled={!disable_attr_props['name_label_horiz_shift']}
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs[1]}
+          default_value={name_label_horiz_shift}
+          function_on_blur={(value) => {
+            updateElements('name_label_horiz_shift', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+          multiValue={is_name_label_horiz_shift_indeterminated}
+        />
+      </Box>
+    </OSTooltip>
 
-      {/* Position vertical du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.anchor_dy')}
-            <TooltipElementOverloaded k='name_label_vert_shift' />
-          </Box>
-
-          <ConfigMenuNumberInput
-            disabled={!disable_attr_props['name_label_vert_shift']}
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[2]}
-            default_value={name_label_vert_shift}
-            function_on_blur={(value) => {
-              updateElements('name_label_vert_shift', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-            multiValue={is_name_label_vert_shift_indeterminated}
-          />
+    {/* Position vertical du label par rapport à l'ancre*/}
+    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.labels.anchor_dy')}
+          <TooltipElementOverloaded k='name_label_vert_shift' />
         </Box>
-      </OSTooltip>
+
+        <ConfigMenuNumberInput
+          disabled={!disable_attr_props['name_label_vert_shift']}
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs[2]}
+          default_value={name_label_vert_shift}
+          function_on_blur={(value) => {
+            updateElements('name_label_vert_shift', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+          multiValue={is_name_label_vert_shift_indeterminated}
+        />
+      </Box>
+    </OSTooltip>
     </> : <></>}
 
   </Box>
@@ -1465,13 +1465,13 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
 
   return <Box layerStyle='box_content_config'>
     <React.Fragment key={'selection_node'}>{selection_node}</React.Fragment>
-      {
-        elements.length > 0 ? <>
+    {
+      elements.length > 0 ? <>
 
-          <React.Fragment key={'style'}>{content_style}</React.Fragment>
-          <React.Fragment key={'lab_text'}>{content_label}</React.Fragment>
-          <React.Fragment key={'lab_val'}>{content_label_value}</React.Fragment></> : <></>
-      }
+        <React.Fragment key={'style'}>{content_style}</React.Fragment>
+        <React.Fragment key={'lab_text'}>{content_label}</React.Fragment>
+        <React.Fragment key={'lab_val'}>{content_label_value}</React.Fragment></> : <></>
+    }
   </Box>
 }
 

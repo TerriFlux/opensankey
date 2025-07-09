@@ -443,8 +443,8 @@ const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, 
 
       'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
-        <LayoutConfigDAScaleAndLimit new_data={new_data} />
-        <GraphElementsOrdoner new_data={new_data}/>
+          <LayoutConfigDAScaleAndLimit new_data={new_data} />
+          <GraphElementsOrdoner new_data={new_data}/>
         </>
       </WrapperContentConfig>,
       'node': <WrapperContentConfig title={t('Menu.Config.title_node')}>
