@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,7 +24,18 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_JSON, getBooleanFromJSON, getStringFromJSON, getNumberFromJSON, Type_ElementPosition, getStringOrUndefinedFromJSON, Type_Position, default_element_color, default_font, Type_ElementPositionOptionnal, getJSONFromJSON } from '../types/Utils'
+import {
+  default_element_color,
+  default_font,
+  getBooleanFromJSON,
+  getJSONFromJSON,
+  getNumberFromJSON,
+  getStringFromJSON,
+  getStringOrUndefinedFromJSON,
+  Type_ElementPositionOptionnal,
+  Type_JSON,
+  Type_Position,
+} from '../types/Utils'
 import { Type_Side } from './LinkAttributes'
 import { Type_AnyNodeElement } from './Node'
 
@@ -503,14 +514,14 @@ export class Class_NodeAttribute {
   public set name_label_color(_: string | undefined) { this._name_label_color = _; this.update() }
   public set name_label_vert(_: Type_TextVPos | undefined) {
     this._name_label_vert = _
-    // Check if name_label_horiz is dragged before reseting it to 'normal' value 
+    // Check if name_label_horiz is dragged before reseting it to 'normal' value
     // (exemple: if we set middle to name_label_horiz then check if name_label_vert is dragged to reset it's attr)
     this._name_label_horiz = (this._name_label_horiz == 'dragged' && _ !== 'dragged') ? 'middle' : this._name_label_horiz
     this.update()
   }
   public set name_label_horiz(_: Type_TextHPos | undefined) {
     this._name_label_horiz = _
-    // Check if name_label_vert is dragged before reseting it to 'normal' value 
+    // Check if name_label_vert is dragged before reseting it to 'normal' value
     // (exemple: if we set middle to name_label_vert then check if name_label_horiz is dragged to reset it's attr)
     this._name_label_vert = (this._name_label_vert == 'dragged' && _ !== 'dragged') ? 'middle' : this._name_label_vert
     this.update()
@@ -532,14 +543,14 @@ export class Class_NodeAttribute {
   public set value_label_color(_: string | undefined) { this._value_label_color = _; this.update() }
   public set value_label_horiz(_: Type_TextHPos | undefined) {
     this._value_label_horiz = _
-    // Check if value_label_vert is dragged before reseting it to 'normal' value 
+    // Check if value_label_vert is dragged before reseting it to 'normal' value
     // (exemple: if we set middle to value_label_horiz then check if value_label_vert is dragged to reset it's attr)
     this._value_label_vert = (this._value_label_vert == 'dragged' && _ !== 'dragged') ? 'middle' : this._value_label_vert
     this.update()
   }
   public set value_label_vert(_: Type_TextVPos | undefined) {
     this._value_label_vert = _
-    // Check if value_label_horiz is dragged before reseting it to 'normal' value 
+    // Check if value_label_horiz is dragged before reseting it to 'normal' value
     // (exemple: if we set middle to value_label_vert then check if value_label_horiz is dragged to reset it's attr)
     this._value_label_horiz = (this._value_label_horiz == 'dragged' && _ !== 'dragged') ? 'middle' : this._value_label_horiz
     this.update()
