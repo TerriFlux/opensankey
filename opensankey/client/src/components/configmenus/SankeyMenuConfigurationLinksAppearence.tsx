@@ -31,10 +31,6 @@ import {
   Button,
   Checkbox,
   InputGroup,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
   Select,
 } from '@chakra-ui/react'
 
@@ -120,7 +116,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const { t, icon_library, OSColorPicker, drawing_area } = new_data
   const { sankey } = drawing_area
 
-  const { icon_redo, icon_open_selector, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
+  const { icon_redo, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_links } = dict_setter_show_dialog
@@ -765,7 +761,6 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   // Get traduction function
   const { t, icon_library, drawing_area } = new_data
   const { sankey } = drawing_area
-  const { icon_open_selector } = icon_library
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_links_context } = dict_setter_show_dialog
@@ -1222,12 +1217,12 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
 
 /**
- * Component to modify order of style in selected elements, 
+ * Component to modify order of style in selected elements,
  * it take first selected flow has reference to which style must go before/after which style
  * (because order of style can be different between flow)
  *
  * @param {*} { new_data }
- * @return {*} 
+ * @return {*}
  */
 export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
   const { drawing_area, t, icon_library } = new_data
@@ -1264,7 +1259,7 @@ export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Type_
 
                   return (
                     <Draggable isDragDisabled={draggDisabled} key={node_style.id} index={element_idx} draggableId={'line_drag_' + node_style.id}>
-                      {(provided, snapshot) => (
+                      {(provided, _) => (
                         <Box key={node_style.id} layerStyle='drag_line_element_order' ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}

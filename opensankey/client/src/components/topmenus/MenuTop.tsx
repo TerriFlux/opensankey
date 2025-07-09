@@ -76,8 +76,8 @@ import { setDiagram } from './SankeyMenuBanner'
 import { clickSavePDF } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
-import { 
-  decompressUploadedFileUniversal, 
+import {
+  decompressUploadedFileUniversal,
 } from '../dialogs/UniversalJSONCompression'
 
 /*************************************************************************************************/
@@ -277,13 +277,13 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
         style={{ display: 'none' }}
         onChange={async (evt: ChangeEvent) => {
           const files = (evt.target as HTMLFormElement).files
-          
+
           if (!files || files.length === 0) return
-          
+
           try {
             const JSON_data = await decompressUploadedFileUniversal(files[0])
             new_data.fromJSON(JSON_data as Type_JSON)
-            
+
           } catch (error) {
             console.error('Erreur lors du chargement:', error)
           }
@@ -642,7 +642,6 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
  * @return {*}
  */
 export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
-  const { t } = new_data
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
 
@@ -726,40 +725,40 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
   }
 
   return <Box
-      display='grid'
-      gridAutoFlow='column'
-      gridTemplateColumns={'repeat(' + String(new_data.menu_configuration.menu_top_order.length) + ', max-content 3px)'}
-    >
-      {
-        new_data.menu_configuration.menu_top_order
-          .map((arr, i) => {
-            return <Fragment key={'top_grp_'+i}>
-              <ButtonGroup
-                marginRight='1rem'
-                marginLeft='1rem'
-              >
-                {
-                  arr.map((k, i) => {
-                    return <React.Fragment
-                      key={'menutop_button_' + i}>
-                      {dict_components_menu_top[k]}
-                    </React.Fragment>
-                  })
-                }
-              </ButtonGroup>
+    display='grid'
+    gridAutoFlow='column'
+    gridTemplateColumns={'repeat(' + String(new_data.menu_configuration.menu_top_order.length) + ', max-content 3px)'}
+  >
+    {
+      new_data.menu_configuration.menu_top_order
+        .map((arr, i) => {
+          return <Fragment key={'top_grp_'+i}>
+            <ButtonGroup
+              marginRight='1rem'
+              marginLeft='1rem'
+            >
               {
-                (i < (new_data.menu_configuration.menu_top_order.length)) ?
-                  <Divider
-                    orientation='vertical'
-                    margin='0'
-                  />
-                  :
-                  <></>
+                arr.map((k, i) => {
+                  return <React.Fragment
+                    key={'menutop_button_' + i}>
+                    {dict_components_menu_top[k]}
+                  </React.Fragment>
+                })
               }
-            </Fragment>
-          })
-      }
-    </Box>
+            </ButtonGroup>
+            {
+              (i < (new_data.menu_configuration.menu_top_order.length)) ?
+                <Divider
+                  orientation='vertical'
+                  margin='0'
+                />
+                :
+                <></>
+            }
+          </Fragment>
+        })
+    }
+  </Box>
 }
 
 /**
@@ -769,7 +768,7 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
  * @return {*}
  */
 export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
-  const { logo, logo_terriflux } = new_data
+  const { logo } = new_data
   const [flag, setFlag] = useState('fr')
   const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
 
@@ -819,12 +818,12 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
           height='100%'
         >
           {/* {!new_data.is_static ? */}
-            <Image
-              height='80%'
-              justifySelf='center'
-              alignSelf='center'
-              src={logo} />
-            {/* <Image
+          <Image
+            height='80%'
+            justifySelf='center'
+            alignSelf='center'
+            src={logo} />
+          {/* <Image
               height='5rem'
               margin='5% 0'
               src={logo_terriflux}

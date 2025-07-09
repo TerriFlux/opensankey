@@ -370,7 +370,7 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
     this.children.forEach(c => c.dimensionsUpdated())
   }
 
-    /**
+  /**
    * For nodes wich are leaf for a given dimesion anf for which the level tag is not the lower
    * it creates some additional parent child relation so that the node is displayed for several level 
    * (2 and 3 for example)
@@ -410,11 +410,11 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   }
 
   public get short_name() {
-    return this.name.substring(0,50);
+    return this.name.substring(0,50)
   }
 
   public get children_name() {
-    return this.children.map(c=>c.name+' ').join().substring(0,30);
+    return this.children.map(c=>c.name+' ').join().substring(0,30)
   }
 
   /**

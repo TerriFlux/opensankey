@@ -200,13 +200,13 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     <Box style={{ display: 'flex', flex: '1 2' }}>
       <label htmlFor='color_bg_zdd' style={{ margin: 'auto auto auto 0' }}>{t('Menu.BgC')}</label>
       <Box w='100%'>
-      <OSColorPicker
-        initialColor={new_data.drawing_area.color}
-        functionOnBlur={(new_color) => {
-          new_data.drawing_area.color = new_color
-          closeContextMenu()
-        }}
-      />
+        <OSColorPicker
+          initialColor={new_data.drawing_area.color}
+          functionOnBlur={(new_color) => {
+            new_data.drawing_area.color = new_color
+            closeContextMenu()
+          }}
+        />
       </Box>
     </Box>
   </Button>
@@ -222,14 +222,14 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         {t('MEP.Echelle')}
       </Box>
       <Box margin={'auto'}>
-      <ConfigMenuNumberInput
-        t={new_data.t}
-        ref_to_set_value={ref_set_number_inputs}
-        default_value={new_data.drawing_area.scale}
-        function_on_blur={changeScale}
-        minimum_value={1}
-        stepper={false}
-      />
+        <ConfigMenuNumberInput
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs}
+          default_value={new_data.drawing_area.scale}
+          function_on_blur={changeScale}
+          minimum_value={1}
+          stepper={false}
+        />
       </Box>
     </Box>
   </Box>

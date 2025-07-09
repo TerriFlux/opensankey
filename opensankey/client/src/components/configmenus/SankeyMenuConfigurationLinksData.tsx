@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -84,7 +84,6 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   // Refs used to trigger refreshing of number & text inputs
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
-  const ref_set_number_input = useRef((_: string | null | undefined) => null)
 
   let unit_text : string | undefined
   let default_value = value?.valueData
@@ -149,7 +148,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       // Update this menu
       refreshThisAndUpdateRelatedComponents()
     }
-    // Mutate link value 
+    // Mutate link value
     const _updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
@@ -188,7 +187,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       refreshThisAndUpdateRelatedComponents()
     }
 
-    // Mutate link value 
+    // Mutate link value
     const _updateTextLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
@@ -206,7 +205,6 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     _updateTextLinks()
   }
 
-  const is_value_indeterminated = !selected_links.every(el => el.value?.valueData == selected_links[0].value?.valueData)
   const is_label_indeterminated = !selected_links.every(el => el.value?.text_value == selected_links[0].value?.text_value)
 
   // JSX -------------------------------------------------------------------------------
@@ -263,30 +261,30 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
       })
     }
 
-      {/* Choix du type de donnée */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.data.data_type')}
-        </Box>
-        {/* <OSTooltip label={t('Flux.data.tooltips.data_type')}> */}
-          <Select
-            value={value_option}
-            onChange={(evt) => {
-              selected_links.forEach(l=>l.value!.value_option = evt.target.value as ValueOptionType)
-              new_data.drawing_area.updateScaleAtLinkValueSetting()
-              // Update this menu
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          >
-            {new_data.menu_configuration.data_type.map(el => {
-              // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
-              //   return <></>
-              // }
-              return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.data.'+el)}</OSTooltip></></option>
-            })}
-          </Select>
-        {/* </OSTooltip> */}
+    {/* Choix du type de donnée */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Flux.data.data_type')}
       </Box>
+      {/* <OSTooltip label={t('Flux.data.tooltips.data_type')}> */}
+      <Select
+        value={value_option}
+        onChange={(evt) => {
+          selected_links.forEach(l=>l.value!.value_option = evt.target.value as ValueOptionType)
+          new_data.drawing_area.updateScaleAtLinkValueSetting()
+          // Update this menu
+          refreshThisAndUpdateRelatedComponents()
+        }}
+      >
+        {new_data.menu_configuration.data_type.map(el => {
+          // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
+          //   return <></>
+          // }
+          return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.data.'+el)}</OSTooltip></></option>
+        })}
+      </Select>
+      {/* </OSTooltip> */}
+    </Box>
     {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
     <OSTooltip label={t('Flux.data.tooltips.vpp')}>
       <Box
@@ -325,7 +323,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
         />
       </Box>
     </OSTooltip>
-    </Box>
+  </Box>
   // Return JSX component
   return content
 }
