@@ -840,7 +840,7 @@ export const resources_app_elements = {
           l_u: 'Unit\'s name',
           unit_factor: 'Unit factor',
 
-               name_label_font_family: 'Style de police',
+          name_label_font_family: 'Style de police',
           name_label_bold: 'Bold',
           name_label_uppercase: 'Uppercase',
           name_label_horiz: 'Horizontal position',

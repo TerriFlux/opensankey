@@ -733,29 +733,29 @@ export const WrapperCheckBoxSubSectionMenu: FunctionComponent<FCType_WrapperChec
   // Hooks controlling collapse opening, initiallised at true
   const { isOpen, onToggle } = useDisclosure({ isOpen: open })
   return<> <Box layerStyle='menu_sub_section_title'>
-      <Checkbox
-        variant='menuconfigpanel_part_title_1_checkbox'
-        isChecked={isOpen}
-        onChange={()=>{
-          onClick(!isOpen)
-          onToggle()
+    <Checkbox
+      variant='menuconfigpanel_part_title_1_checkbox'
+      isChecked={isOpen}
+      onChange={()=>{
+        onClick(!isOpen)
+        onToggle()
         
-        }}
-      >
-        {title}
-      </Checkbox>
+      }}
+    >
+      {title}
+    </Checkbox>
+  </Box>
+  <Collapse in={isOpen} animateOpacity>
+    <Box
+      layerStyle='menuconfigpanel_grid'
+      marginLeft='1rem'
+      borderLeft='lightgray 1px solid'
+      paddingLeft='0.2rem'
+    >
+      {children}
     </Box>
-    <Collapse in={isOpen} animateOpacity>
-      <Box
-        layerStyle='menuconfigpanel_grid'
-        marginLeft='1rem'
-        borderLeft='lightgray 1px solid'
-        paddingLeft='0.2rem'
-      >
-        {children}
-      </Box>
-    </Collapse>
-    </>
+  </Collapse>
+  </>
 }
 
 /**

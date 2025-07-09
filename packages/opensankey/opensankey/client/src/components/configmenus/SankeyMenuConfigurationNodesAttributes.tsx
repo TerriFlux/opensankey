@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,10 +31,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
   Slider,
   SliderFilledTrack,
   SliderMark,
@@ -90,7 +86,6 @@ import {
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { MenuResetAttrLocal, MenuUnit, OSMultiSelect, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, typeElementSelectable, WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
-import { FaCheck } from 'react-icons/fa'
 import { Draggable, DraggingStyle, DragDropContext, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 
 export const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -139,7 +134,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   const { sankey } = drawing_area
   const { ref_selected_style_node } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_nodes } = new_data.menu_configuration.dict_setter_show_dialog
-  const { icon_direction_down, icon_direction_left, icon_direction_rift, icon_direction_up, icon_locked, icon_unlocked, icon_open_selector, icon_move_element_down, icon_move_element_up } = icon_library
+  const { icon_direction_down, icon_direction_left, icon_direction_rift, icon_direction_up, icon_locked, icon_unlocked } = icon_library
   // Elements on which this menu applies ------------------------------------------------
 
   let selected_nodes: Type_GenericNodeElement[]
@@ -174,9 +169,9 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
 
   /**
    *  Define a type of function that will be used to update elements and save unde/redo in data history
-   * 
+   *
    * We can't directly define 1 function to treat Style & Links because they don't have exactly the same Class functions
-   * 
+   *
    * And generic function setValueWithDecoratorRetriever don't like it
    *  @type {*} */
   let updateElements: (((k: keyNodeStyle, value: typeValNodeStyle) => void) | ((k: keyNodeAttr, value: typeValNodeAttr) => void))
@@ -319,7 +314,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
    * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
    *
    * @param {*} {k}
-   * @return {*} 
+   * @return {*}
    */
   const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
     if (menu_for_style)
@@ -932,7 +927,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   // Get traduction function
   const { t, menu_configuration, icon_library, OSColorPicker, drawing_area } = new_data
   const { sankey } = drawing_area
-  const { icon_open_selector, icon_edit_style } = icon_library
+  const { icon_edit_style } = icon_library
   const { ref_selected_style_node, dict_setter_show_dialog } = menu_configuration
   const { ref_setter_show_modal_styles_nodes_context } = dict_setter_show_dialog
 
@@ -1015,7 +1010,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
  * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
  *
  * @param {*} {k}
- * @return {*} 
+ * @return {*}
  */
   const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
     if (menu_for_style)
@@ -1135,105 +1130,105 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         label_font_family: 'name_label_font_family',
       }} />
 
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
 
-        <Checkbox
-          isDisabled={!disable_attr_props['name_label_background']}
-          variant='menuconfigpanel_option_checkbox'
-          isIndeterminate={is_indeterminated}
-          isChecked={name_label_background}
-          onChange={(evt) => {
-            updateElements('name_label_background', evt.target.checked)
-          }}
-        >
-          <OSTooltip label={t('Noeud.labels.tooltips.name_label_background')}>
-            {t('Noeud.labels.name_label_background')}
-          </OSTooltip>
+      <Checkbox
+        isDisabled={!disable_attr_props['name_label_background']}
+        variant='menuconfigpanel_option_checkbox'
+        isIndeterminate={is_indeterminated}
+        isChecked={name_label_background}
+        onChange={(evt) => {
+          updateElements('name_label_background', evt.target.checked)
+        }}
+      >
+        <OSTooltip label={t('Noeud.labels.tooltips.name_label_background')}>
+          {t('Noeud.labels.name_label_background')}
+        </OSTooltip>
+        <TooltipElementOverloaded k='name_label_background' />
+      </Checkbox>
+      <OSColorPicker
+        isDisabled={!disable_attr_props['name_label_background_color']}
+        initialColor={name_label_background_color}
+        functionOnBlur={(new_color) => {
+          updateElements('name_label_background_color', new_color)
+        }}
+      />
+    </Box>
+    {/* Largeur de la zone de texte du label */}
+    <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.labels.name_label_box_width')}
           <TooltipElementOverloaded k='name_label_background' />
-        </Checkbox>
-        <OSColorPicker
-          isDisabled={!disable_attr_props['name_label_background_color']}
-          initialColor={name_label_background_color}
-          functionOnBlur={(new_color) => {
-            updateElements('name_label_background_color', new_color)
+        </Box>
+        <ConfigMenuNumberInput
+          disabled={!disable_attr_props['name_label_box_width']}
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs[0]}
+          default_value={name_label_box_width}
+          function_on_blur={(value) => {
+            updateElements('name_label_box_width', (value ?? undefined))
           }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+          multiValue={is_name_label_box_width_indeterminated}
         />
       </Box>
-      {/* Largeur de la zone de texte du label */}
-      <OSTooltip label={t('Noeud.labels.tooltips.cl')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.name_label_box_width')}
-            <TooltipElementOverloaded k='name_label_background' />
-          </Box>
-          <ConfigMenuNumberInput
-            disabled={!disable_attr_props['name_label_box_width']}
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[0]}
-            default_value={name_label_box_width}
-            function_on_blur={(value) => {
-              updateElements('name_label_box_width', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-            multiValue={is_name_label_box_width_indeterminated}
-          />
-        </Box>
-      </OSTooltip>
+    </OSTooltip>
 
-      {/* Position horizontal du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.name_label_horiz_shift')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.name_label_horiz_shift')}
-            <TooltipElementOverloaded k='name_label_horiz_shift' />
-          </Box>
-          <ConfigMenuNumberInput
-            disabled={!disable_attr_props['name_label_horiz_shift']}
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[1]}
-            default_value={name_label_horiz_shift}
-            function_on_blur={(value) => {
-              updateElements('name_label_horiz_shift', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-            multiValue={is_name_label_horiz_shift_indeterminated}
-          />
+    {/* Position horizontal du label par rapport à l'ancre*/}
+    <OSTooltip label={t('Noeud.labels.tooltips.name_label_horiz_shift')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.labels.name_label_horiz_shift')}
+          <TooltipElementOverloaded k='name_label_horiz_shift' />
         </Box>
-      </OSTooltip>
+        <ConfigMenuNumberInput
+          disabled={!disable_attr_props['name_label_horiz_shift']}
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs[1]}
+          default_value={name_label_horiz_shift}
+          function_on_blur={(value) => {
+            updateElements('name_label_horiz_shift', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+          multiValue={is_name_label_horiz_shift_indeterminated}
+        />
+      </Box>
+    </OSTooltip>
 
-      {/* Position vertical du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.anchor_dy')}
-            <TooltipElementOverloaded k='name_label_vert_shift' />
-          </Box>
-
-          <ConfigMenuNumberInput
-            disabled={!disable_attr_props['name_label_vert_shift']}
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[2]}
-            default_value={name_label_vert_shift}
-            function_on_blur={(value) => {
-              updateElements('name_label_vert_shift', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-            multiValue={is_name_label_vert_shift_indeterminated}
-          />
+    {/* Position vertical du label par rapport à l'ancre*/}
+    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.labels.anchor_dy')}
+          <TooltipElementOverloaded k='name_label_vert_shift' />
         </Box>
-      </OSTooltip>
+
+        <ConfigMenuNumberInput
+          disabled={!disable_attr_props['name_label_vert_shift']}
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs[2]}
+          default_value={name_label_vert_shift}
+          function_on_blur={(value) => {
+            updateElements('name_label_vert_shift', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+          multiValue={is_name_label_vert_shift_indeterminated}
+        />
+      </Box>
+    </OSTooltip>
     </> : <></>}
 
   </Box>
@@ -1465,23 +1460,23 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
 
   return <Box layerStyle='box_content_config'>
     <React.Fragment key={'selection_node'}>{selection_node}</React.Fragment>
-      {
-        elements.length > 0 ? <>
+    {
+      elements.length > 0 ? <>
 
-          <React.Fragment key={'style'}>{content_style}</React.Fragment>
-          <React.Fragment key={'lab_text'}>{content_label}</React.Fragment>
-          <React.Fragment key={'lab_val'}>{content_label_value}</React.Fragment></> : <></>
-      }
+        <React.Fragment key={'style'}>{content_style}</React.Fragment>
+        <React.Fragment key={'lab_text'}>{content_label}</React.Fragment>
+        <React.Fragment key={'lab_val'}>{content_label_value}</React.Fragment></> : <></>
+    }
   </Box>
 }
 
 /**
- * Component to modify order of style in selected elements, 
+ * Component to modify order of style in selected elements,
  * it take first selected node has reference to which style must go before/after which style
  * (because order of style can be different between node)
  *
  * @param {*} { new_data }
- * @return {*} 
+ * @return {*}
  */
 const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
   const { drawing_area, t, icon_library } = new_data
@@ -1501,7 +1496,7 @@ const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Type_Generic
 
       const style_src = style_list_to_use[evt.source.index]
       const style_trgt = style_list_to_use[dest_to_use]
-      elements.forEach(n => {
+      elements.forEach(_ => {
         drawing_area.moveOrderStyleInSelectedNodes(style_src, style_trgt)
       })
     }}>
@@ -1520,7 +1515,7 @@ const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Type_Generic
 
                   return (
                     <Draggable isDragDisabled={draggDisabled} key={node_style.id} index={element_idx} draggableId={'line_drag_' + node_style.id}>
-                      {(provided, snapshot) => (
+                      {(provided, _) => (
                         <Box key={node_style.id} layerStyle='drag_line_element_order' ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
@@ -1536,7 +1531,7 @@ const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Type_Generic
 
                                 const style_src = style_list_to_use[element_idx]
                                 const style_trgt = style_list_to_use[element_idx - 1]
-                                elements.forEach(n => {
+                                elements.forEach(_ => {
                                   drawing_area.moveOrderStyleInSelectedNodes(style_src, style_trgt)
                                 })
                                 new_data.menu_configuration.updateComponentRelatedToNodesApparence()
@@ -1551,7 +1546,7 @@ const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Type_Generic
                               onClick={() => {
                                 const style_src = style_list_to_use[element_idx]
                                 const style_trgt = style_list_to_use[element_idx + 1]
-                                elements.forEach(n => {
+                                elements.forEach(_ => {
                                   drawing_area.moveOrderStyleInSelectedNodes(style_src, style_trgt)
                                 })
                                 new_data.menu_configuration.updateComponentRelatedToNodesApparence()

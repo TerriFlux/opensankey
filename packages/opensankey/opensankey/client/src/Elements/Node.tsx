@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,7 +31,6 @@ import { textwrap } from 'd3-textwrap'
 // Local types imports
 import type {
   ClassAbstract_DrawingArea,
-  ClassAbstract_ProtoLevelTag,
   ClassAbstract_Sankey
 } from '../types/Abstract'
 import type { Type_Side } from './LinkAttributes'
@@ -44,7 +43,6 @@ import type {
   Class_TagGroup,
   Class_LevelTagGroup,
   Class_LevelTag,
-  Class_ProtoLevelTag
 } from '../types/Tag'
 import type {
   Class_MenuConfig
@@ -62,7 +60,6 @@ import {
 
 import {
   ClassAbstract_NodeElement,
-  ClassAbstract_NodeStyle
 } from '../types/AbstractNode'
 import {
   Type_ElementPosition,
@@ -233,7 +230,7 @@ export abstract class ClassTemplate_NodeElement
   // Tooltips
   private _tooltip_text: string = ''
 
-  // Other 
+  // Other
   private _drag_start_pos: { [x: string]: [number, number] } = {} //attr used to cancel drag undo function (LMB event can trigger drag event therefore a undo function )
   private first_drag_move = true //boolean to cancel a strange phenomenon when dragTextMove is use just after dragTextStart dx & dy are way off chart causing problem
 
@@ -845,7 +842,7 @@ export abstract class ClassTemplate_NodeElement
     this._process_or_bypass(() => { this._drawLinksArrow(); this._orderD3Elements() })
   }
 
-  
+
 
   /**
    * Display the tooltip on drawing area
@@ -1967,29 +1964,29 @@ export abstract class ClassTemplate_NodeElement
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-                break
-              case 'top':
-                node_face_size = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size = sumLinkTop
-                break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size2 = sumLinkRight
-                break
-              case 'top':
-                node_face_size2 = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size2 = sumLinkTop
-                break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2250,7 +2247,7 @@ export abstract class ClassTemplate_NodeElement
       return
     }
 
-    //Shallow copy of dict old pos so undo func doesn't call object attr but this dict (which don't mutate at each dragEnd) 
+    //Shallow copy of dict old pos so undo func doesn't call object attr but this dict (which don't mutate at each dragEnd)
     const dict_old_pos: { [x: string]: [number, number] } = { ...this._drag_start_pos }
 
     // If we moved 'this' node then we save  nodes dragged previous pos in undo & current pos in redo
@@ -2564,7 +2561,7 @@ export abstract class ClassTemplate_NodeElement
     this.name_label_vert = 'dragged'
 
 
-    // Undo function 
+    // Undo function
     const inv_dragTextStart = () => {
       this._display.position_x_label = old_val[0]
       this._display.position_y_label = old_val[1]
@@ -2601,7 +2598,7 @@ export abstract class ClassTemplate_NodeElement
     this.menu_config.updateAllComponentsRelatedToNodes()
     const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [this._display.position_x_label, this._display.position_y_label, this.name_label_horiz, this.name_label_vert]
     this.first_drag_move = true
-    // redo function 
+    // redo function
     const _dragTextend = () => {
       this._display.position_x_label = old_val[0]
       this._display.position_y_label = old_val[1]
@@ -2721,7 +2718,7 @@ export abstract class ClassTemplate_NodeElement
     const link_to_redraw: Type_GenericLinkElement[] = [] // avoid recomputation
 
     const doublon:Type_AnyLinkElement[]=[]
-    
+
     // Loop on all links to compute starting / ending position
     this._links_order
       .forEach(link => {
@@ -3121,11 +3118,11 @@ export abstract class ClassTemplate_NodeElement
   /**
    * Function that return the frist style that has the k attribute,
    * if not take default node style that is guaranted to have the attribute.
-   * 
-   * Go from last style added to oldest (default style) 
+   *
+   * Go from last style added to oldest (default style)
    *
    * @param {keyof Class_NodeStyle} k
-   * @return {*} 
+   * @return {*}
    * @memberof ClassTemplate_NodeElement
    */
   public getStyleWithAttr(k: keyof Class_NodeStyle) {
@@ -3427,7 +3424,7 @@ export abstract class ClassTemplate_NodeElement
     const value = Math.max(input_val / pow_in, output_val / pow_out) / factor_unit
 
     let str_val = String(value)
-    // Rounded value only apparent when value_label_nb_digit is inferior to the number of decimal of the value 
+    // Rounded value only apparent when value_label_nb_digit is inferior to the number of decimal of the value
     if (this.value_label_custom_digit)
       str_val = String(parseFloat(value.toFixed(this.value_label_nb_digit)))
 
@@ -3648,7 +3645,7 @@ export abstract class ClassTemplate_NodeElement
   public set position_auto_x(_) {
     this._display.position.auto_x = _
     this.applyPosition()
-  }  
+  }
 
   // Shape related --------------------------------------------------------------------
 
