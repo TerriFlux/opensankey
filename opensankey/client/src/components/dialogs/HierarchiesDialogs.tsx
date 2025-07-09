@@ -7,17 +7,17 @@ import {
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,8 +42,8 @@ import { aggregate, disaggregate, aggregationExpansion, disaggregationExpansion,
 //   const l = expand_left ? contextualised_node.output_links_list[0] : contextualised_node.input_links_list[0]
 //   if (!l) return
 //   let parent_node = expand_left ? l.target : l.source
-//   const children = expand_left 
-//     ? parent_node.input_links_list.filter(l => l.is_visible) 
+//   const children = expand_left
+//     ? parent_node.input_links_list.filter(l => l.is_visible)
 //     : parent_node.output_links_list.filter(l => l.is_visible)
 //   children.forEach((c) => {
 //     new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
@@ -362,7 +362,6 @@ export const hierarchyManipulationMenu = (
     return b
   }
 
-  const expand_left = selected_nodes.length > 0 ? selected_nodes[0].output_links_list.length == 0 : true
   const parent_dims = contextualised_node.dimensions_as_parent_pure
   let child_dims = contextualised_node.dimensions_as_child_pure
   const forced_dim = child_dims.filter(dim => dim.force_show_children)
