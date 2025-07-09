@@ -2399,7 +2399,7 @@ export abstract class ClassTemplate_LinkElement
    * @return {*}
    * @memberof ClassTemplate_LinkElement
    */
-  private getBezierPath(): string{
+  private getBezierPath(): string {
     // Security
     if (!this.shape_is_curved)
       return this.getLinesPath()
@@ -2975,9 +2975,9 @@ export abstract class ClassTemplate_LinkElement
         // Drawing mode - 1 line + 2 arc + 1 line
         if (this.is_horizontal || this.is_vertical) {
           // Middle point
-          const k = rc_start/rc_end
-          const x3 = (x1 + k*x5)/(1 + k)
-          const y3 = (y1 + k*y5)/(1 + k)
+          const k = rc_start / rc_end
+          const x3 = (x1 + k * x5) / (1 + k)
+          const y3 = (y1 + k * y5) / (1 + k)
           // Update first arc infos
           if (this.is_horizontal) {
             const yc_start = ((x1 - x3) * (x1 - x3) + y3 * y3 - y1 * y1) / (2 * (y3 - y1))
@@ -3074,8 +3074,8 @@ export abstract class ClassTemplate_LinkElement
       const y0 = this.position_y_start
       const x6 = this.position_x_end
       const y6 = this.position_y_end
-      const sdltx = (x6 - x0)/Math.abs(x6 - x0)
-      const sdlty = (y6 - y0)/Math.abs(y6 - y0)
+      const sdltx = (x6 - x0) / Math.abs(x6 - x0)
+      const sdlty = (y6 - y0) / Math.abs(y6 - y0)
 
       // Get control points coordinates
       const x1 = this._control_points.starting_curve_point.position_x
@@ -3145,34 +3145,34 @@ export abstract class ClassTemplate_LinkElement
         y0_fwd = y0 - half_thickness
         x1_fwd = x1
         y1_fwd = y1 - half_thickness
-        x6_fwd = x6 + sdltx*sdlty*half_thickness
+        x6_fwd = x6 + sdltx * sdlty * half_thickness
         y6_fwd = y6
-        x5_fwd = x5 + sdltx*sdlty*half_thickness
+        x5_fwd = x5 + sdltx * sdlty * half_thickness
         y5_fwd = y5
         // Lower part
         x0_bwd = x0
         y0_bwd = y0 + half_thickness
         x1_bwd = x1
         y1_bwd = y1 + half_thickness
-        x6_bwd = x6 - sdltx*sdlty*half_thickness
+        x6_bwd = x6 - sdltx * sdlty * half_thickness
         y6_bwd = y6
-        x5_bwd = x5 - sdltx*sdlty*half_thickness
+        x5_bwd = x5 - sdltx * sdlty * half_thickness
         y5_bwd = y5
       }
       else { // if (this.is_vertical_horizontal)
         // Upper part
-        x0_fwd = x0 + sdltx*sdlty*half_thickness
+        x0_fwd = x0 + sdltx * sdlty * half_thickness
         y0_fwd = y0
-        x1_fwd = x1 + sdltx*sdlty*half_thickness
+        x1_fwd = x1 + sdltx * sdlty * half_thickness
         y1_fwd = y1
         x6_fwd = x6
         y6_fwd = y6 - half_thickness
         x5_fwd = x5
         y5_fwd = y5 - half_thickness
         // Lower part
-        x0_bwd = x0 - sdltx*sdlty*half_thickness
+        x0_bwd = x0 - sdltx * sdlty * half_thickness
         y0_bwd = y0
-        x1_bwd = x1 - sdltx*sdlty*half_thickness
+        x1_bwd = x1 - sdltx * sdlty * half_thickness
         y1_bwd = y1
         x6_bwd = x6
         y6_bwd = y6 + half_thickness
