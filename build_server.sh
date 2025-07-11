@@ -9,9 +9,38 @@ exit_if_error() {
     }
 }
 
+# Check args
+from_frozen_requirements=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --from-frozen-requirement | -f )
+      from_frozen_requirements=true
+      shift # past argument
+      ;;
+    --help | -H)
+      echo 'Options: '
+      echo '--from-frozen-requirement | -f : Requirements from frozen requirements files'
+      exit 1
+      ;;
+    *)
+      echo 'Unknown option $1'
+      echo ''
+      echo 'Options: '
+      echo '--from-frozen-requirement | -f : Requirements from frozen requirements files'
+      exit 1
+      ;;
+  esac
+done
+
 # Install requirements
-pip install -r requirements.txt  || exit_if_error $?
-pip install -r conda_requirements.txt  || exit_if_error $?
+if [ "$from_frozen_requirements" = false ] ; then
+  pip install -r requirements.txt  || exit_if_error $?
+  pip install -r conda_requirements.txt  || exit_if_error $?
+else
+  pip install -r requirements_frozen.txt  || exit_if_error $?
+  pip install -r conda_requirements_frozen.txt  || exit_if_error $?
+fi
 
 # Install deps
 cd ./submodules/SankeyExcelParser
