@@ -1,0 +1,10 @@
+CairoSVG==2.7.0
+flaskfilemanager==0.0.6
+Sphinx==6.2.1
+sphinx-rtd-theme==1.2.2
+sphinx-multibuild==1.2.1
+webcolors==24.11.1
+wheel==0.37.1
+pdfkit==1.0.0
+imgkit==1.2.3
+uWSGI==2.0.30

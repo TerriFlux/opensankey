@@ -1,7 +1,7 @@
 openpyxl
 scs
 pandas
-flask
+flask==2.3.3
 flask_login
 flask_cors
 flask_sqlalchemy
