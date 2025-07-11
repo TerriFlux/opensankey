@@ -79,11 +79,22 @@ converter_funct = {
 }
 
 template_folder = os.path.join(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'),
+    os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(
+                    __file__))),
+        'client'),
     'build'
 )
+
 static_folder = os.path.join(
-    os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'), 'build'),
+    os.path.join(
+        os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__))),
+            'client'),
+        'build'),
     'static'
 )
 
