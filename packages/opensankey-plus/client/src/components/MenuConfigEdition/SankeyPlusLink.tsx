@@ -29,10 +29,7 @@ import {
   isAttributeOverloaded
 } from '../../deps/OpenSankey/Elements/Link'
 import {
-  default_link_value_label_nb_significant_digits,
-  default_link_value_label_scientific_notation,
-  default_link_value_label_significant_digits,
-  default_shape_is_dashed
+  ATTRIBUTES_CONFIG
 } from '../../deps/OpenSankey/Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../deps/OpenSankey/Elements/LinkAttributes'
 
@@ -87,7 +84,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
     elements = selected_links
   }
 
-  const shape_is_dashed = (elements[0]?.shape_is_dashed ?? default_shape_is_dashed)
+  const shape_is_dashed = (elements[0]?.shape_is_dashed ?? ATTRIBUTES_CONFIG.shape_is_dashed.default)
 
 
   // Function that can be undone ===================================
@@ -165,9 +162,9 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
   }
 
 
-  const value_label_scientific_notation = (elements[0]?.value_label_scientific_notation ?? default_link_value_label_scientific_notation)
-  const value_label_significant_digits = (elements[0]?.value_label_significant_digits ?? default_link_value_label_significant_digits)
-  const value_label_nb_significant_digits = (elements[0]?.value_label_nb_significant_digits ?? default_link_value_label_nb_significant_digits)
+  const value_label_scientific_notation = (elements[0]?.value_label_scientific_notation ?? ATTRIBUTES_CONFIG.value_label_scientific_notation.default)
+  const value_label_significant_digits = (elements[0]?.value_label_significant_digits ?? ATTRIBUTES_CONFIG.value_label_significant_digits.default)
+  const value_label_nb_significant_digits = (elements[0]?.value_label_nb_significant_digits ?? ATTRIBUTES_CONFIG.value_label_nb_significant_digits.default)
 
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
   ref_set_number_inputs.current(String(value_label_nb_significant_digits))
