@@ -365,7 +365,7 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
               onClick={() => {
                 //if style attribute is not customisable delete value
                 if (ent[1])
-                  style_select[ent[0] as Type_customisable_flow_style_attr] = undefined
+                  delete style_select[ent[0] as Type_customisable_flow_style_attr] 
 
                 //Update style attribute customisability
                 style_select.customisable_attribute[ent[0] as Type_customisable_flow_style_attr] = !ent[1]
@@ -411,7 +411,7 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
               onClick={() => {
                 //if style attribute is not customisable delete value
                 if (ent[1])
-                  style_select[ent[0] as Type_customisable_flow_style_attr] = undefined
+                  delete style_select[ent[0] as Type_customisable_flow_style_attr]
 
                 //Update style attribute customisability
                 style_select.customisable_attribute[ent[0] as Type_customisable_flow_style_attr] = !ent[1]

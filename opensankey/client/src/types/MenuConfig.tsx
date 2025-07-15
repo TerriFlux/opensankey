@@ -30,7 +30,7 @@ import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } 
 // Local imports
 import { Type_MacroTagGroup } from '../types/Utils'
 import { Type_AdditionalMenus } from './Types'
-import { ValueOptionType } from '../Elements/Link'
+import { ValueOptionType } from '../Elements/Class_LinkValueTree'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -107,6 +107,7 @@ export class Class_MenuConfig {
   ]
 
   protected _flow_color_origin_type: string[] = ['flow', 'source', 'target']
+  protected _shape_shape: string[] = ['bezier_path', 'bezier_outline', 'arc_path','arc_outline']
   protected _data_type: ValueOptionType[] = ['value', 'ratio_input', 'ratio_output'/*, 'ratio_source_parent' , 'ratio_target_parent', 'unit_conversion'*/]
 
   /**
@@ -1298,6 +1299,7 @@ export class Class_MenuConfig {
   public get style_config(): { [x: string]: { theme: string; elements_configurable: string[] } } { return this._style_config }
   public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
   public get data_type(): string[] { return this._data_type }
+  public get shape_shape(): string[] { return this._shape_shape }
 
   public get additionalMenus(): MutableRefObject<Type_AdditionalMenus> {
     return this._additionalMenus

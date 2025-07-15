@@ -528,6 +528,11 @@ export const opensankey_theme = extendTheme({
       gridTemplateColumns: '2fr 1.5fr 1.5fr',
       gridColumnGap: '0.25rem',
     },
+    menuconfigpanel_row_3colsbis: {
+      display: 'grid',
+      gridTemplateColumns: '2fr 1fr 2fr',
+      gridColumnGap: '0.25rem',
+    },
     menuconfigpanel_2row_3cols: {
       display: 'grid',
       gridTemplateColumns: '2fr 1.25fr 1.75fr',

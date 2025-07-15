@@ -35,7 +35,7 @@ import {
 import { ClassAbstract_NodeElement } from '../types/AbstractNode'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
 import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
-import { Class_LinkValue } from '../Elements/Link'
+import { Class_LinkValue } from '../Elements/Class_LinkValueTree'
 
 
 type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>

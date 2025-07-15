@@ -265,7 +265,7 @@ export class Class_LinkElement
     this.source.addOutputLink(this)
     this.target.addInputLink(this)// Target
     // Instanciate display on svg
-    this.computeControlPoints()
+    this._link_control_points.computeControlPoints()
     this.draw()
   }
 }

@@ -54,9 +54,9 @@ import {
 } from './Handler'
 import {
   ClassTemplate_LinkElement,
-  ClassTemplate_GhostLinkElement,
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
+import { ClassTemplate_GhostLinkElement } from './ClassTemplate_GhostLinkElement'
 
 import {
   ClassAbstract_NodeElement,

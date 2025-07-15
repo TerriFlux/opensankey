@@ -524,7 +524,7 @@ export const resources_app_elements = {
           shape_color_sustainable: 'Static color',
           shape_type: 'Shape of node',
           Geometry: 'Geometry',
-          Cercle: 'Circle',
+          Cercle: 'Arc',
           Rectangle: 'Rectangle',
           shape_min_width: 'Minimum width',
           shape_min_height: 'Minimum height',
@@ -777,6 +777,12 @@ export const resources_app_elements = {
           shape_is_dashed: 'Dashed',
 
           shape_is_curved:'Curved',
+          shape_shape:'Type',
+          bezier_path:'Bezier path',
+          bezier_outline:'Bezier outline',          
+          arc_path:'Arc path',
+          arc_outline:'Arc outline',   
+
           shape_curvature:'Curvature',
           shape_is_recycling:'Recycling',
           shape_arrow_size:'Arrow size',
@@ -785,7 +791,7 @@ export const resources_app_elements = {
           shape_color_rule:'Color rule',
           shape_opacity:'Opacity',
           shape_is_structure:'Structur',
-          shape_local_link_scale:'Scale',
+          shape_local_link_scale:'Flux Scale',
 
           data_off_scale: 'Scale',
           tooltips: {
@@ -1825,6 +1831,11 @@ export const resources_app_elements = {
           shape_is_dashed: 'Haché',
 
           shape_is_curved:'Courbe',
+          shape_shape:'Type',
+          bezier_path:'Chemin Bezier',
+          bezier_outline:'Contour Bezier',          
+          arc_path:'Chemin circulaire',
+          arc_outline:'Contour circulaire',
           shape_curvature:'Courbure',
           shape_is_recycling:'Recyclage',
           shape_arrow_size:'Taille flêche',
@@ -1833,7 +1844,7 @@ export const resources_app_elements = {
           shape_color_rule:'Règle couleur',
           shape_opacity:'Opacité',
           shape_is_structure:'Structure',
-          shape_local_link_scale:'Échelle',
+          shape_local_link_scale:'Échelle du flux',
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
             color_source: {

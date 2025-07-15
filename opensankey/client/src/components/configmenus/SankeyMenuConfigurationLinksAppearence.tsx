@@ -40,27 +40,9 @@ import {
   isAttributeOverloaded,
 } from '../../Elements/Link'
 import {
-  default_shape_arrow_size,
-  default_shape_color,
-  default_shape_ending_curve,
-  default_shape_ending_tangeant,
-  default_shape_is_arrow,
-  default_shape_is_curved,
-  default_shape_is_recycling,
-  default_shape_is_structure,
-  default_shape_local_scale,
-  default_shape_opacity,
-  default_shape_orientation,
-  default_shape_starting_curve,
-  default_shape_starting_tangeant,
-  default_link_value_label_is_visible,
-  default_link_value_label_on_path,
-  default_link_value_label_pos_auto,
-  default_link_name_label_is_visible,
-  default_shape_color_rule,
   Class_LinkAttribute,
-  default_link_value_label_percent_input,
-  default_link_value_label_percent_output
+  ATTRIBUTES_CONFIG,
+  default_shape_local_scale
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
 import {
@@ -215,21 +197,21 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const is_indeterminate = !selected_links.every(check_indeterminate)
 
   const element_ref = elements[0]
-  const shape_orientation = (element_ref?.shape_orientation ?? default_shape_orientation)
-  const shape_starting_curve = (element_ref?.shape_starting_curve ?? default_shape_starting_curve)
-  const shape_ending_curve = (element_ref?.shape_ending_curve ?? default_shape_ending_curve)
-  const shape_starting_tangeant = (element_ref?.shape_starting_tangeant ?? default_shape_starting_tangeant)
-  const shape_ending_tangeant = (element_ref?.shape_ending_tangeant ?? default_shape_ending_tangeant)
-  const shape_is_curved = (element_ref?.shape_is_curved ?? default_shape_is_curved)
-  const shape_is_recycling = (element_ref?.shape_is_recycling ?? default_shape_is_recycling)
-  const shape_arrow_size = (element_ref?.shape_arrow_size ?? default_shape_arrow_size)
-  const shape_is_arrow = (element_ref?.shape_is_arrow ?? default_shape_is_arrow)
-  const shape_color = (element_ref?.shape_color ?? default_shape_color)
-  const shape_color_rule = (element_ref?.shape_color_rule ?? default_shape_color_rule)
-  const shape_opacity = (element_ref?.shape_opacity ?? default_shape_opacity)
-  const shape_is_structure = (element_ref?.shape_is_structure ?? default_shape_is_structure)
+  const shape_orientation = (element_ref?.shape_orientation ?? ATTRIBUTES_CONFIG.shape_orientation.default)
+  const shape_starting_curve = (element_ref?.shape_starting_curve ?? ATTRIBUTES_CONFIG.shape_starting_curve.default)
+  const shape_ending_curve = (element_ref?.shape_ending_curve ?? ATTRIBUTES_CONFIG.shape_ending_curve.default)
+  const shape_starting_tangeant = (element_ref?.shape_starting_tangeant ?? ATTRIBUTES_CONFIG.shape_starting_tangeant.default)
+  const shape_ending_tangeant = (element_ref?.shape_ending_tangeant ?? ATTRIBUTES_CONFIG.shape_ending_tangeant.default)
+  const shape_is_curved = (element_ref?.shape_is_curved ?? ATTRIBUTES_CONFIG.shape_is_curved.default)
+  const shape_shape = (element_ref?.shape_shape ?? ATTRIBUTES_CONFIG.shape_shape.default)
+  const shape_is_recycling = (element_ref?.shape_is_recycling ?? ATTRIBUTES_CONFIG.shape_is_recycling.default)
+  const shape_arrow_size = (element_ref?.shape_arrow_size ?? ATTRIBUTES_CONFIG.shape_arrow_size.default)
+  const shape_is_arrow = (element_ref?.shape_is_arrow ?? ATTRIBUTES_CONFIG.shape_is_arrow.default)
+  const shape_color = (element_ref?.shape_color ?? ATTRIBUTES_CONFIG.shape_color.default)
+  const shape_color_rule = (element_ref?.shape_color_rule ?? ATTRIBUTES_CONFIG.shape_color_rule.default)
+  const shape_opacity = (element_ref?.shape_opacity ?? ATTRIBUTES_CONFIG.shape_opacity.default)
+  const shape_is_structure = (element_ref?.shape_is_structure ?? ATTRIBUTES_CONFIG.shape_is_structure.default)
   const shape_local_scale = (element_ref?.shape_local_link_scale ?? default_shape_local_scale)
-
 
 
   // Components updaters ----------------------------------------------------------------
@@ -463,17 +445,38 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       </Box>
 
       {/* Forme courbée  */}
-      <Checkbox
-        isDisabled={!disable_attr_props['shape_is_curved']}
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminate}
-        isChecked={shape_is_curved}
-        onChange={(evt) => { updateElements('shape_is_curved', evt.target.checked) }}>
-        <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
-          {t('Flux.apparence.shape_is_curved')}
-          <TooltipElementOverloaded k={'shape_is_curved'} />
-        </OSTooltip>
-      </Checkbox>
+      {/* Choix de la forme du flux */}
+      <Box as='span' layerStyle='menuconfigpanel_row_3colsbis' >
+        <Checkbox
+          isDisabled={!disable_attr_props['shape_is_curved']}
+          variant='menuconfigpanel_option_checkbox'
+          isIndeterminate={is_indeterminate}
+          isChecked={shape_is_curved}
+          onChange={(evt) => { updateElements('shape_is_curved', evt.target.checked) }}>
+          <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
+            {t('Flux.apparence.shape_is_curved')}
+            <TooltipElementOverloaded k={'shape_is_curved'} />
+          </OSTooltip>
+        </Checkbox>
+        {shape_is_curved?<><Box layerStyle='menuconfigpanel_option_name'>
+          {t('Flux.apparence.shape_shape')}
+          <TooltipElementOverloaded k={'shape_shape'} />
+        </Box>
+        <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
+          <Select
+            //isDisabled={!disable_attr_props['shape_shape']}
+            value={shape_shape}
+            onChange={(evt) => {
+              updateElements('shape_shape', evt.target.value)
+            }}
+          >
+            {new_data.menu_configuration.shape_shape.map(el => {
+              return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+            })}
+          </Select>
+        </OSTooltip></>:<></>}
+      </Box>
+
       <Box layerStyle='menuconfigpanel_row_2cols'>
         {/* Forme fleche droite  */}
         <Checkbox
@@ -531,7 +534,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
           <>
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
-                {t('Flux.apparence.local_link_scale')}
+                {t('Flux.apparence.shape_local_link_scale')}
                 <TooltipElementOverloaded k={'shape_local_link_scale'} />
               </Box>
               <ConfigMenuNumberOrUndefinedInput
@@ -668,20 +671,21 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   if (!menu_for_style) {
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      _shape_orientation: { overloaded: isAttributeOverloaded(selected_links, 'shape_orientation'), name: t('Flux.apparence.of') },
-      _shape_starting_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_curve'), name: t('Flux.apparence.shape_starting_curve') },
-      _shape_ending_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_curve'), name: t('Flux.apparence.shape_ending_curve') },
-      _shape_starting_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_tangeant'), name: t('Flux.apparence.shape_starting_tangeant') },
-      _shape_ending_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_tangeant'), name: t('Flux.apparence.shape_ending_tangeant') },
-      _shape_is_curved: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_curved'), name: t('Flux.apparence.shape_is_curved') },
-      _shape_is_recycling: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_recycling'), name: t('Flux.apparence.shape_is_recycling') },
-      _shape_arrow_size: { overloaded: isAttributeOverloaded(selected_links, 'shape_arrow_size'), name: t('Flux.apparence.shape_arrow_size') },
-      _shape_is_arrow: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_arrow'), name: t('Flux.apparence.shape_is_arrow') },
-      _shape_color: { overloaded: isAttributeOverloaded(selected_links, 'shape_color'), name: t('Flux.apparence.shape_color') },
-      _shape_color_rule: { overloaded: isAttributeOverloaded(selected_links, 'shape_color_rule'), name: t('Flux.apparence.shape_color_rule') },
-      _shape_opacity: { overloaded: isAttributeOverloaded(selected_links, 'shape_opacity'), name: t('Flux.apparence.shape_opacity') },
-      _shape_is_structure: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_structure'), name: t('Flux.apparence.shape_is_structure') },
-      _shape_local_link_scale: { overloaded: isAttributeOverloaded(selected_links, 'shape_local_link_scale'), name: t('Flux.apparence.shape_local_link_scale') },
+      shape_orientation: { overloaded: isAttributeOverloaded(selected_links, 'shape_orientation'), name: t('Flux.apparence.of') },
+      shape_starting_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_curve'), name: t('Flux.apparence.shape_starting_curve') },
+      shape_ending_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_curve'), name: t('Flux.apparence.shape_ending_curve') },
+      shape_starting_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_tangeant'), name: t('Flux.apparence.shape_starting_tangeant') },
+      shape_ending_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_tangeant'), name: t('Flux.apparence.shape_ending_tangeant') },
+      shape_is_curved: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_curved'), name: t('Flux.apparence.shape_is_curved') },
+      shape_shape: { overloaded: isAttributeOverloaded(selected_links, 'shape_shape'), name: t('Flux.apparence.shape_shape') },
+      shape_is_recycling: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_recycling'), name: t('Flux.apparence.shape_is_recycling') },
+      shape_arrow_size: { overloaded: isAttributeOverloaded(selected_links, 'shape_arrow_size'), name: t('Flux.apparence.shape_arrow_size') },
+      shape_is_arrow: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_arrow'), name: t('Flux.apparence.shape_is_arrow') },
+      shape_color: { overloaded: isAttributeOverloaded(selected_links, 'shape_color'), name: t('Flux.apparence.shape_color') },
+      shape_color_rule: { overloaded: isAttributeOverloaded(selected_links, 'shape_color_rule'), name: t('Flux.apparence.shape_color_rule') },
+      shape_opacity: { overloaded: isAttributeOverloaded(selected_links, 'shape_opacity'), name: t('Flux.apparence.shape_opacity') },
+      shape_is_structure: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_structure'), name: t('Flux.apparence.shape_is_structure') },
+      shape_local_link_scale: { overloaded: isAttributeOverloaded(selected_links, 'shape_local_link_scale'), name: t('Flux.apparence.shape_local_link_scale') },
     }
 
     const options_selector: typeElementSelectable = sankey.link_styles_list.map(style => {
@@ -875,14 +879,14 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
   // Elements attributes ----------------------------------------------------------------
   const element_ref = elements[0]
-  const value_label_on_path = (element_ref?.value_label_on_path ?? default_link_value_label_on_path)
-  const value_label_pos_auto = (element_ref?.value_label_pos_auto ?? default_link_value_label_pos_auto)
-  const value_label_is_visible = (element_ref?.value_label_is_visible ?? default_link_value_label_is_visible)
-  const name_label_is_visible = (element_ref?.name_label_is_visible ?? default_link_name_label_is_visible)
-  const name_label_on_path = (element_ref?.name_label_on_path ?? default_link_value_label_on_path)
-  const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? default_link_value_label_pos_auto)
-  const value_label_percent_input = (element_ref?.value_label_percent_input ?? default_link_value_label_percent_input)
-  const value_label_percent_output = (element_ref?.value_label_percent_output ?? default_link_value_label_percent_output)
+  const value_label_on_path = (element_ref?.value_label_on_path ?? ATTRIBUTES_CONFIG.value_label_on_path.default)
+  const value_label_pos_auto = (element_ref?.value_label_pos_auto ?? ATTRIBUTES_CONFIG.value_label_pos_auto.default)
+  const value_label_is_visible = (element_ref?.value_label_is_visible ?? ATTRIBUTES_CONFIG.value_label_is_visible.default)
+  const name_label_is_visible = (element_ref?.name_label_is_visible ?? ATTRIBUTES_CONFIG.name_label_is_visible.default)
+  const name_label_on_path = (element_ref?.name_label_on_path ?? ATTRIBUTES_CONFIG.value_label_on_path.default)
+  const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? ATTRIBUTES_CONFIG.value_label_pos_auto.default)
+  const value_label_percent_input = (element_ref?.value_label_percent_input ?? ATTRIBUTES_CONFIG.value_label_percent_input.default)
+  const value_label_percent_output = (element_ref?.value_label_percent_output ?? ATTRIBUTES_CONFIG.value_label_percent_output.default)
 
   /**
    * function that go throught all links of an array & check if they're all equals
@@ -1120,35 +1124,35 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   if (!menu_for_style) {
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      _name_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'name_label_is_visible'), name: t('Noeud.labels.name_label_is_visible') },
-      _value_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_is_visible'), name: t('Flux.labels.value_label_is_visible') },
-      _value_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'value_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
-      _value_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'value_label_pos_auto'), name: '' },
-      _name_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'name_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
-      _name_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'name_label_pos_auto'), name: '' },
+      name_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'name_label_is_visible'), name: t('Noeud.labels.name_label_is_visible') },
+      value_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_is_visible'), name: t('Flux.labels.value_label_is_visible') },
+      value_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'value_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
+      value_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'value_label_pos_auto'), name: '' },
+      name_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'name_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
+      name_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'name_label_pos_auto'), name: '' },
 
-      _value_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'value_label_horiz'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_horiz') },
-      _value_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'value_label_vert'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_vert') },
-      _value_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_size'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_size') },
-      _value_label_color: { overloaded: isAttributeOverloaded(selected_links, 'value_label_color'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_color') },
-      _value_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_family'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_family') },
-      _value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_visible'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_visible') },
-      _value_label_unit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit') },
-      _value_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'value_label_bold'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_bold') },
-      _value_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'value_label_uppercase'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_uppercase') },
-      _value_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'value_label_italic'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_italic') },
-      _value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_factor'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_factor') },
-      _value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_custom_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_custom_digit') },
-      _value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_nb_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_nb_digit') },
+      value_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'value_label_horiz'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_horiz') },
+      value_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'value_label_vert'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_vert') },
+      value_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_size'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_size') },
+      value_label_color: { overloaded: isAttributeOverloaded(selected_links, 'value_label_color'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_color') },
+      value_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_family'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_family') },
+      value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_visible'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_visible') },
+      value_label_unit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit') },
+      value_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'value_label_bold'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_bold') },
+      value_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'value_label_uppercase'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_uppercase') },
+      value_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'value_label_italic'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_italic') },
+      value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_factor'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_factor') },
+      value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_custom_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_custom_digit') },
+      value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_nb_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_nb_digit') },
 
-      _name_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_horiz') },
-      _name_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_vert') },
-      _name_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_size') },
-      _name_label_color: { overloaded: isAttributeOverloaded(selected_links, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_color') },
-      _name_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_family') },
-      _name_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_bold') },
-      _name_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Label.uppercase') },
-      _name_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_italic') },
+      name_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_horiz') },
+      name_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_vert') },
+      name_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_size') },
+      name_label_color: { overloaded: isAttributeOverloaded(selected_links, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_color') },
+      name_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_family') },
+      name_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_bold') },
+      name_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Label.uppercase') },
+      name_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_italic') },
     }
 
     const options_selector: typeElementSelectable = sankey.link_styles_list.map(style => {
