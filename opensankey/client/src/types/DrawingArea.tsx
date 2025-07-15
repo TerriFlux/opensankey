@@ -53,10 +53,10 @@ import {
   sortNodesElements
 } from '../Elements/Node'
 import {
-  ClassTemplate_GhostLinkElement,
   ClassTemplate_LinkElement,
   sortLinksElementsByIds
 } from '../Elements/Link'
+import { ClassTemplate_GhostLinkElement } from '../Elements/ClassTemplate_GhostLinkElement'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { ClassTemplate_ZoneSelection } from '../Elements/SelectionZone'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
@@ -67,7 +67,7 @@ import {
 import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
 import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
-import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
+import { ATTRIBUTES_CONFIG, Class_LinkStyle } from '../Elements/LinkAttributes'
 import { TypeGeneric_Handler } from '../Elements/Handler'
 
 declare const window: Window &
@@ -2298,12 +2298,12 @@ export abstract class ClassTemplate_DrawingArea
    * @param {keyof Class_LinkAttribute} k
    * @memberof ClassTemplate_DrawingArea
    */
-  public deleteLocalAttrSelectedLinks(k: keyof Class_LinkAttribute) {
+  public deleteLocalAttrSelectedLinks(k: keyof typeof ATTRIBUTES_CONFIG) {
     const list_links = this.selected_links_list
 
     list_links.forEach(link => {
-      if (k in link.display.attributes) {
-        delete link.display.attributes[k]
+      if (k in ATTRIBUTES_CONFIG) {
+        link.display.attributes.delete_attribute(k)
         link.drawWithNodes()
       }
     })

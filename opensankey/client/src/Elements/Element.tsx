@@ -634,7 +634,7 @@ export abstract class ClassTemplate_ProtoElement
   public get sankey() { return this._display.sankey }
 
   // Get application config menu
-  protected get menu_config(): Class_MenuConfig { return this._menu_config }
+  public get menu_config(): Class_MenuConfig { return this._menu_config }
 }
 
 // CLASS ELEMENT ************************************************************************

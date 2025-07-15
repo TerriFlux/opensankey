@@ -40,7 +40,7 @@ import {
 import { t, TFunction } from 'i18next'
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { ClassTemplate_LinkElement } from '../../Elements/Link'
-import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
+import { ATTRIBUTES_CONFIG, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, default_style_id, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
@@ -793,7 +793,7 @@ export const MenuResetAttrLocal: FunctionComponent<{ new_data: Type_GenericAppli
   // Delete all local attributes of selected elements
   const resetAll = () => nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
   // Delete local attributes 'k' of selected elements
-  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as keyof Class_LinkAttribute)
+  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as (keyof typeof ATTRIBUTES_CONFIG))
 
   return <Menu direction='rtl' placement='left' closeOnSelect={false}>
     <MenuButton as={Button} variant='menuconfigpanel_option_button'>
