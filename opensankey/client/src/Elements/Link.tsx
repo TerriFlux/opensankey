@@ -1629,7 +1629,7 @@ export abstract class ClassTemplate_LinkElement
   }
 
   public get shape_local_link_scale(): number | undefined {
-    if ('_shape_local_link_scale' in this._display.attributes) {
+    if ('shape_local_link_scale' in this._display.attributes) {
       return this._display.attributes.shape_local_link_scale
     } else {
       const valueOfStyle = this.getStyleWithAttr('shape_local_link_scale')
