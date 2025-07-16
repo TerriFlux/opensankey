@@ -58,24 +58,24 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
   // Check if there is difference between text in editor and link tooltips
   let s_tmp_editor_content_changed = false
   if (selected_links.length > 0) {
-    if (selected_links[0].tooltip_text !== editor_content_tooltip) {
+    if (selected_links[0]._link_tooltip.tooltip_text !== editor_content_tooltip) {
       s_tmp_editor_content_changed = true
     }
   }
 
   const applyEditor = () => {
     const dict_old_value: { [x: string]: string } = {}
-    selected_links.map(link => dict_old_value[link.id] = link.tooltip_text)
+    selected_links.map(link => dict_old_value[link.id] = link._link_tooltip.tooltip_text)
 
     const _applyEditor = () => {
-      selected_links.map(link => link.tooltip_text = tmp_editor_content_tooltip)
+      selected_links.map(link => link._link_tooltip.tooltip_text = tmp_editor_content_tooltip)
       setEditorContentTooltip(tmp_editor_content_tooltip)
       // Toogle saving indicator
       new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     }
     const inv_applyEditor = () => {
-      selected_links.map(link => link.tooltip_text = dict_old_value[link.id])
-      setEditorContentTooltip(selected_links[0].tooltip_text)
+      selected_links.map(link => link._link_tooltip.tooltip_text = dict_old_value[link.id])
+      setEditorContentTooltip(selected_links[0]._link_tooltip.tooltip_text)
     }
 
     new_data.history.saveUndo(inv_applyEditor)
@@ -89,15 +89,15 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
   // Update what is displayed in text editor
   const resetTextEditor = () => {
     if (selected_links.length > 0) {
-      if (typeof selected_links[0].tooltip_text !== 'undefined') {
+      if (typeof selected_links[0]._link_tooltip.tooltip_text !== 'undefined') {
         // Reset textaera
         if (typeof inputRef.current !== 'undefined') {
           if (inputRef.current !== null) {
-            inputRef.current.value = selected_links[0].tooltip_text
+            inputRef.current.value = selected_links[0]._link_tooltip.tooltip_text
           }
         }
         // Reset state value
-        setEditorContentTooltip(selected_links[0].tooltip_text)
+        setEditorContentTooltip(selected_links[0]._link_tooltip.tooltip_text)
       }
       else {
         // Reset textaera

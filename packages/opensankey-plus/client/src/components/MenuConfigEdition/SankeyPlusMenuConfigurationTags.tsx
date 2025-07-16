@@ -43,7 +43,7 @@ import {
   GetRandomInt,
   OSTooltip
 } from '../../deps/OpenSankey/types/Utils'
-import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Link'
+import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Class_LinkValueTree'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 
 const list_palette_color = [

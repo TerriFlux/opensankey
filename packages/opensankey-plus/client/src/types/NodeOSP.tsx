@@ -85,13 +85,13 @@ export abstract class ClassTemplate_NodeElementOSP
     position_y_label?: number// Relative y position of label when dragged (optionnal)
   }
 
-  /**
-   * Config menu ref to html element & function to update it
-   * @protected
-   * @type {Class_MenuConfigOSP}
-   * @memberof ClassTemplate_Element
-   */
-  protected _menu_config: Class_MenuConfigOSP
+  // /**
+  //  * Config menu ref to html element & function to update it
+  //  * @protected
+  //  * @type {Class_MenuConfigOSP}
+  //  * @memberof ClassTemplate_Element
+  //  */
+  // public _menu_config: Class_MenuConfigOSP
 
   protected d3_selection_g_FO_illustration: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_image: d3.Selection<SVGImageElement, unknown, SVGGElement, unknown> | null = null
@@ -134,8 +134,8 @@ export abstract class ClassTemplate_NodeElementOSP
   ) {
     // Heritance
     super(id, name, drawing_area, menu_config)
-    // Overrides
-    this._menu_config = menu_config
+    // // Overrides
+    // this._menu_config = menu_config
     // New attributes
     this._iconName = ''
     this._iconColor = ''
@@ -163,22 +163,22 @@ export abstract class ClassTemplate_NodeElementOSP
    * @param {ClassTemplate_NodeElementOSP} node_to_copy
    * @memberof ClassTemplate_NodeElementOSP
    */
-  public copyAttrFrom(
-    node_to_copy: ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-  ): void {
-    super.copyAttrFrom(node_to_copy)
-    this._iconName = node_to_copy._iconName
-    this._iconColor = node_to_copy._iconColor
-    this._iconVisible = node_to_copy._iconVisible
-    this._iconViewBox = node_to_copy._iconViewBox
-    this._iconColorSustainable = node_to_copy._iconColorSustainable
-    this._has_FO = node_to_copy._has_FO
-    this._is_FO_raw = node_to_copy._is_FO_raw
-    this._FO_content = node_to_copy._FO_content
-    this._is_image = node_to_copy._is_image
-    this._image_src = node_to_copy._image_src
-    this._hyperlink = node_to_copy._hyperlink
-  }
+  // public copyAttrFrom(
+  //   node_to_copy: ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  // ): void {
+  //   super.copyAttrFrom(node_to_copy)
+  //   this._iconName = node_to_copy._iconName
+  //   this._iconColor = node_to_copy._iconColor
+  //   this._iconVisible = node_to_copy._iconVisible
+  //   this._iconViewBox = node_to_copy._iconViewBox
+  //   this._iconColorSustainable = node_to_copy._iconColorSustainable
+  //   this._has_FO = node_to_copy._has_FO
+  //   this._is_FO_raw = node_to_copy._is_FO_raw
+  //   this._FO_content = node_to_copy._FO_content
+  //   this._is_image = node_to_copy._is_image
+  //   this._image_src = node_to_copy._image_src
+  //   this._hyperlink = node_to_copy._hyperlink
+  // }
 
   // SAVING METHODS =====================================================================
 
@@ -242,51 +242,51 @@ export abstract class ClassTemplate_NodeElementOSP
     return this._display.attributes[attr] !== undefined
   }
 
-  public override isEqual(
-    _: ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-  ): boolean {
-    const super_equal = super.isEqual(_)
-    if (super_equal == false) {
-      return false
-    }
-    if (this._iconName != _._iconName) {
-      return false
-    }
-    if (this._iconColor != _._iconColor) {
-      return false
-    }
-    if (this._iconVisible != _._iconVisible) {
-      return false
-    }
-    if (this._iconViewBox != _._iconViewBox) {
-      return false
-    }
-    if (this._iconColorSustainable != _._iconColorSustainable) {
-      return false
-    }
-    if (this._has_FO != _._has_FO) {
-      return false
-    }
-    if (this._is_FO_raw != _._is_FO_raw) {
-      return false
-    }
-    if (this._FO_content != _._FO_content) {
-      return false
-    }
-    if (this._is_image != _._is_image) {
-      return false
-    }
-    if (this._image_src != _._image_src) {
-      return false
-    }
-    if (this._hyperlink != _._hyperlink) {
-      return false
-    }
-    if (this.name_label_background !== _.name_label_background) {
-      return false
-    }
-    return true
-  }
+  // public override isEqual(
+  //   _: ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  // ): boolean {
+  //   const super_equal = super.isEqual(_)
+  //   if (super_equal == false) {
+  //     return false
+  //   }
+  //   if (this._iconName != _._iconName) {
+  //     return false
+  //   }
+  //   if (this._iconColor != _._iconColor) {
+  //     return false
+  //   }
+  //   if (this._iconVisible != _._iconVisible) {
+  //     return false
+  //   }
+  //   if (this._iconViewBox != _._iconViewBox) {
+  //     return false
+  //   }
+  //   if (this._iconColorSustainable != _._iconColorSustainable) {
+  //     return false
+  //   }
+  //   if (this._has_FO != _._has_FO) {
+  //     return false
+  //   }
+  //   if (this._is_FO_raw != _._is_FO_raw) {
+  //     return false
+  //   }
+  //   if (this._FO_content != _._FO_content) {
+  //     return false
+  //   }
+  //   if (this._is_image != _._is_image) {
+  //     return false
+  //   }
+  //   if (this._image_src != _._image_src) {
+  //     return false
+  //   }
+  //   if (this._hyperlink != _._hyperlink) {
+  //     return false
+  //   }
+  //   if (this.name_label_background !== _.name_label_background) {
+  //     return false
+  //   }
+  //   return true
+  // }
 
   // New --------------------------------------------------------------------------------
 
@@ -622,7 +622,7 @@ export abstract class ClassTemplate_NodeElementOSP
   // Overrides --------------------------------------------------------------------------
 
   // Get application config menu
-  protected override get menu_config(): Class_MenuConfigOSP { return this._menu_config }
+  // protected override get menu_config(): Class_MenuConfigOSP { return this._menu_config }
 
   // New ---------------------------------------------------------------------------------
 

@@ -351,7 +351,7 @@ export class Class_LinkAttributeOSP extends Class_LinkAttribute {
     if (json_local_object['version'] === undefined) {
       const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', default_shape_shape_is_gradient) as boolean
       if (was_gradient) {
-        this._shape_color_rule = 'gradient'
+        this.shape_color_rule = 'gradient'
       }
     }
 
