@@ -274,7 +274,7 @@ export abstract class ClassTemplate_LinkElement
   protected _link_control_points : LinkControlPoints<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
   protected _link_draw_label : LinkDrawLabel<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
   protected _link_draw_value : LinkDrawValue<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
-  protected _link_tooltip : LinkTooltip<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+  public _link_tooltip : LinkTooltip<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
 
   /**
   * Node from which link starts
