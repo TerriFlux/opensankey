@@ -90,17 +90,10 @@ export class LinkDrawShape<
       const yf = this._link.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
       const show_as_path = show_as_dash || ((dist / thickness) > 1.5) || this._link.shape_is_recycling
-      const useBeziers = this._link.shape_shape == 'bezier_path' || this._link.shape_shape == 'bezier_outline'
       // Show as full shape for specific shapes
       if (!show_as_path && this._link.shape_shape !== 'bezier_outline') {
         // Which shape to use
-        let shape
-        if (useBeziers) {
-          shape = this.getBezierShape()
-        }
-        else {
-          shape = this.getArcsShape()
-        }
+        let shape = this.getBezierPath(true)
         this._link.d3_selection?.append('path')
           .classed('link', true)
           .classed('link_shape', true)
@@ -117,8 +110,9 @@ export class LinkDrawShape<
       else {
         // Which path to use
         let path
+        const useBeziers = this._link.shape_shape == 'bezier_path' || this._link.shape_shape == 'bezier_outline'
         if (useBeziers) {
-          path = this.getBezierPath()
+          path = this.getBezierPath(this._link.shape_shape == 'bezier_outline')
         }
         else {
           path = this.getArcsPaths()
@@ -131,7 +125,7 @@ export class LinkDrawShape<
         // Apply properties
         this._link.d3_selection?.selectAll('.link_path')
           .attr('id', this._link.id)
-          .attr('fill', this._link.shape_shape == 'bezier_outline' || this._link.shape_shape == 'arc_outline' ? shape_color : 'none')
+          .attr('fill', this._link.shape_shape == 'bezier_outline' ? shape_color : 'none')
           .attr('stroke', this._link.shape_shape == 'bezier_path' || this._link.shape_shape == 'arc_path' ? shape_color : 'none')
           .attr('stroke-opacity', this._link.shape_shape == 'bezier_path' || this._link.shape_shape == 'arc_path' ? shape_opacity : '0')
           .attr('stroke-width', this._link.shape_shape == 'bezier_path' || this._link.shape_shape == 'arc_path' ? thickness : '0')
@@ -150,7 +144,7 @@ export class LinkDrawShape<
   public getLinesPath(): string {
     // Security
     if (this._link.shape_is_curved) {
-      return this.getBezierPath()
+      return this.getBezierPath(false)
     }
 
     // Update control points
@@ -498,7 +492,7 @@ export class LinkDrawShape<
    * @public
    * @return {*}
    */
-  public getBezierPath(): string {
+  public getBezierPath(is_outline:boolean): string {
     // Security
     if (!this._link.shape_is_curved)
       return this.getLinesPath()
@@ -515,13 +509,13 @@ export class LinkDrawShape<
       let y6 = this._link.position_y_end
 
       let shift_x = 0
-      if (this._link.shape_shape == 'bezier_outline') {
+      if (is_outline) {
         if (this._link.shape_orientation == 'vv' || this._link.shape_orientation == 'vh') {
           shift_x = this._link.thickness / 2
         }
       }
       let shift_y = 0
-      if (this._link.shape_shape == 'bezier_outline') {
+      if (is_outline) {
         if (this._link.shape_orientation == 'hh' || this._link.shape_orientation == 'hv') {
           shift_y = this._link.thickness / 2
         }
@@ -545,7 +539,7 @@ export class LinkDrawShape<
       const x3 = (x2 + x4) / 2
       const y3 = (y2 + y4) / 2
 
-      if (this._link.shape_shape == 'bezier_path') {
+      if (!is_outline) {
         return 'M ' + x0 + ',' + y0
           + ' L ' + x1 + ',' + y1
           + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
@@ -907,7 +901,7 @@ export class LinkDrawShape<
     this._link_control_points.computeControlPoints()
 
     if (this._link.shape_is_recycling) {
-      return this.getBezierPath()
+      return this.getBezierPath(false)
     }
 
     // Get starting and ending position per type of shape
@@ -917,17 +911,8 @@ export class LinkDrawShape<
     let y6 = this._link.position_y_end
 
     let shift_x = 0
-    if (this._link.shape_shape == 'arc_outline') {
-      if (this._link.shape_orientation == 'vv' || this._link.shape_orientation == 'vh') {
-        shift_x = this._link.thickness / 2
-      }
-    }
     let shift_y = 0
-    if (this._link.shape_shape == 'arc_outline') {
-      if (this._link.shape_orientation == 'hh' || this._link.shape_orientation == 'hv') {
-        shift_y = this._link.thickness / 2
-      }
-    }
+
 
     x0 = x0 - shift_x
     y0 = y0 - shift_y
@@ -1150,258 +1135,26 @@ export class LinkDrawShape<
       const x3_2 = (xc_start + xc_end) / 2 + (xc_start - xc_end) * (rc_end * rc_end - r2 * r2) / (2 * d2) + ssig2_x * (2 * sig2 * (yc_end - yc_start) / d2)
       const y3_2 = (yc_start + yc_end) / 2 + (yc_start - yc_end) * (rc_end * rc_end - r2 * r2) / (2 * d2) + ssig2_y * (2 * sig2 * (xc_end - xc_start) / d2)
       // Return path
-      if (this._link.shape_shape == 'arc_path') {
-        return 'M ' + x0 + ' , ' + y0
-          + ' L ' + x1 + ' , ' + y1
-          + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3_1 + ' , ' + y3_1
-          + ' L ' + x3_2 + ' , ' + y3_2
-          + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x5 + ' , ' + y5
-          + ' L ' + x6 + ' , ' + y6
-      }
       return 'M ' + x0 + ' , ' + y0
         + ' L ' + x1 + ' , ' + y1
         + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3_1 + ' , ' + y3_1
         + ' L ' + x3_2 + ' , ' + y3_2
         + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x5 + ' , ' + y5
         + ' L ' + x6 + ' , ' + y6
-        + ' L ' + (x6 + 2 * shift_x) + ' , ' + (y6 + 2 * shift_y)
-        + ' L ' + (x5 + 2 * shift_x) + ' , ' + (y5 + 2 * shift_y)
-        + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + (1 - sweep2) + ' , ' + (x3_2 + 2 * shift_x) + ' , ' + (y3_2 + 2 * shift_y)
-        + ' L ' + (x3_1 + 2 * shift_x) + ' , ' + (y3_1 + 2 * shift_y)
-        + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + (1 - sweep1) + ' , ' + (x1 + 2 * shift_x) + ' , ' + (y1 + 2 * shift_y)
-        + ' L ' + (x0 + 2 * shift_x) + ' , ' + (y0 + 2 * shift_y)
-        + ' Z'
+
+      // return 'M ' + x0 + ' , ' + y0
+      //   + ' L ' + x1 + ' , ' + y1
+      //   + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + sweep1 + ' , ' + x3_1 + ' , ' + y3_1
+      //   + ' L ' + x3_2 + ' , ' + y3_2
+      //   + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + sweep2 + ' , ' + x5 + ' , ' + y5
+      //   + ' L ' + x6 + ' , ' + y6
+      //   + ' L ' + (x6 + 2 * shift_x) + ' , ' + (y6 + 2 * shift_y)
+      //   + ' L ' + (x5 + 2 * shift_x) + ' , ' + (y5 + 2 * shift_y)
+      //   + ' A ' + rc_end + ' , ' + rc_end + ' , 0 , 0 , ' + (1 - sweep2) + ' , ' + (x3_2 + 2 * shift_x) + ' , ' + (y3_2 + 2 * shift_y)
+      //   + ' L ' + (x3_1 + 2 * shift_x) + ' , ' + (y3_1 + 2 * shift_y)
+      //   + ' A ' + rc_start + ' , ' + rc_start + ' , 0 , 0 , ' + (1 - sweep1) + ' , ' + (x1 + 2 * shift_x) + ' , ' + (y1 + 2 * shift_y)
+      //   + ' L ' + (x0 + 2 * shift_x) + ' , ' + (y0 + 2 * shift_y)
+      //   + ' Z'
     }
   }
-
-  /**
-   * Return a svg shape for link path drawing using arcs.
-   * Only used for short shapes.
-   * @public
-   * @return {string}
-   */
-  public getArcsShape() {
-    // Security
-    if (!this._link.shape_is_curved) {
-      return this.getLineShape()
-    }
-
-    // Update control points
-    this._link_control_points.computeControlPoints()
-
-    // Normal mode
-    if (!this._link.shape_is_recycling) {
-
-      // Get starting and ending position per type of shape
-      const x0 = this._link.position_x_start
-      const y0 = this._link.position_y_start
-      const x6 = this._link.position_x_end
-      const y6 = this._link.position_y_end
-      const sdltx = (x6 - x0) / Math.abs(x6 - x0)
-      const sdlty = (y6 - y0) / Math.abs(y6 - y0)
-
-      // Get control points coordinates
-      const x1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_x
-      const y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y
-      const x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
-      const y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y
-
-      // Coefs to help tranform path -> shape
-      const half_thickness = this._link.thickness / 2
-
-      // Upper part of shape
-      let x0_fwd, y0_fwd
-      let x1_fwd, y1_fwd
-      let x5_fwd, y5_fwd
-      let x6_fwd, y6_fwd
-
-      // Lower part of shape
-      let x0_bwd, y0_bwd
-      let x1_bwd, y1_bwd
-      let x5_bwd, y5_bwd
-      let x6_bwd, y6_bwd
-
-      // Source node
-      if (this._link.is_horizontal) {
-        // Upper part
-        x0_fwd = x0
-        y0_fwd = y0 - half_thickness
-        x1_fwd = x1
-        y1_fwd = y1 - half_thickness
-        x6_fwd = x6
-        y6_fwd = y6 - half_thickness
-        x5_fwd = x5
-        y5_fwd = y5 - half_thickness
-        // Lower part
-        x0_bwd = x0
-        y0_bwd = y0 + half_thickness
-        x1_bwd = x1
-        y1_bwd = y1 + half_thickness
-        x6_bwd = x6
-        y6_bwd = y6 + half_thickness
-        x5_bwd = x5
-        y5_bwd = y5 + half_thickness
-      }
-      else if (this._link.is_vertical) {
-        // Upper part
-        x0_fwd = x0 + half_thickness
-        y0_fwd = y0
-        x1_fwd = x1 + half_thickness
-        y1_fwd = y1
-        x6_fwd = x6 + half_thickness
-        y6_fwd = y6
-        x5_fwd = x5 + half_thickness
-        y5_fwd = y5
-        // Lower part
-        x0_bwd = x0 - half_thickness
-        y0_bwd = y0
-        x1_bwd = x1 - half_thickness
-        y1_bwd = y1
-        x6_bwd = x6 - half_thickness
-        y6_bwd = y6
-        x5_bwd = x5 - half_thickness
-        y5_bwd = y5
-      }
-      else if (this._link.is_horizontal_vertical) {
-        // Upper part
-        x0_fwd = x0
-        y0_fwd = y0 - half_thickness
-        x1_fwd = x1
-        y1_fwd = y1 - half_thickness
-        x6_fwd = x6 + sdltx * sdlty * half_thickness
-        y6_fwd = y6
-        x5_fwd = x5 + sdltx * sdlty * half_thickness
-        y5_fwd = y5
-        // Lower part
-        x0_bwd = x0
-        y0_bwd = y0 + half_thickness
-        x1_bwd = x1
-        y1_bwd = y1 + half_thickness
-        x6_bwd = x6 - sdltx * sdlty * half_thickness
-        y6_bwd = y6
-        x5_bwd = x5 - sdltx * sdlty * half_thickness
-        y5_bwd = y5
-      }
-      else { // if (this._link.is_vertical_horizontal)
-        // Upper part
-        x0_fwd = x0 + sdltx * sdlty * half_thickness
-        y0_fwd = y0
-        x1_fwd = x1 + sdltx * sdlty * half_thickness
-        y1_fwd = y1
-        x6_fwd = x6
-        y6_fwd = y6 - half_thickness
-        x5_fwd = x5
-        y5_fwd = y5 - half_thickness
-        // Lower part
-        x0_bwd = x0 - sdltx * sdlty * half_thickness
-        y0_bwd = y0
-        x1_bwd = x1 - sdltx * sdlty * half_thickness
-        y1_bwd = y1
-        x6_bwd = x6
-        y6_bwd = y6 + half_thickness
-        x5_bwd = x5
-        y5_bwd = y5 + half_thickness
-      }
-
-      // Sweepflag for arcs
-      let sweep_fwd, sweep_bwd
-      if (sdltx > 0) {
-        if (sdlty > 0) {
-          if (this._link.is_horizontal) {
-            sweep_fwd = 1
-            sweep_bwd = 1
-          }
-          else if (this._link.is_vertical) {
-            sweep_fwd = 1
-            sweep_bwd = 1
-          }
-          else if (this._link.is_horizontal_vertical) {
-            sweep_fwd = 1
-            sweep_bwd = 0
-          }
-          else {
-            sweep_fwd = 0
-            sweep_bwd = 1
-          }
-        }
-        else {
-          if (this._link.is_horizontal) {
-            sweep_fwd = 1
-            sweep_bwd = 1
-          }
-          else if (this._link.is_vertical) {
-            sweep_fwd = 0
-            sweep_bwd = 0
-          }
-          else if (this._link.is_horizontal_vertical) {
-            sweep_fwd = 0
-            sweep_bwd = 1
-          }
-          else {
-            sweep_fwd = 1
-            sweep_bwd = 0
-          }
-        }
-      }
-      else {
-        if (sdlty > 0) {
-          if (this._link.is_horizontal) {
-            sweep_fwd = 0
-            sweep_bwd = 0
-          }
-          else if (this._link.is_vertical) {
-            sweep_fwd = 1
-            sweep_bwd = 1
-          }
-          else if (this._link.is_horizontal_vertical) {
-            sweep_fwd = 0
-            sweep_bwd = 1
-          }
-          else {
-            sweep_fwd = 1
-            sweep_bwd = 0
-          }
-        }
-        else {
-          if (this._link.is_horizontal) {
-            sweep_fwd = 0
-            sweep_bwd = 0
-          }
-          else if (this._link.is_vertical) {
-            sweep_fwd = 0
-            sweep_bwd = 0
-          }
-          else if (this._link.is_horizontal_vertical) {
-            sweep_fwd = 1
-            sweep_bwd = 0
-          }
-          else {
-            sweep_fwd = 0
-            sweep_bwd = 1
-          }
-        }
-      }
-
-      // Radius
-      const rcx_fwd = Math.abs(x1_fwd - x5_fwd)
-      const rcy_fwd = Math.abs(y1_fwd - y5_fwd)
-      const rcx_bwd = Math.abs(x1_bwd - x5_bwd)
-      const rcy_bwd = Math.abs(y1_bwd - y5_bwd)
-
-      // Return paths
-      return 'M ' + x0_fwd + ',' + y0_fwd
-        + ' L ' + x1_fwd + ',' + y1_fwd
-        + ' A ' + rcx_fwd + ' , ' + rcy_fwd + ' , 0 , 0 , ' + sweep_fwd + ' , ' + x5_fwd + ' , ' + y5_fwd
-        + ' L ' + x6_fwd + ',' + y6_fwd
-        + ' L ' + x6_bwd + ',' + y6_bwd
-        + ' L ' + x5_bwd + ',' + y5_bwd
-        + ' A ' + rcx_bwd + ' , ' + rcy_bwd + ' , 0 , 0 , ' + sweep_bwd + ' , ' + x1_bwd + ' , ' + y1_bwd
-        + ' L ' + x0_bwd + ',' + y0_bwd
-    }
-    else {
-      return ''
-    }
-  }
-
-
 }
