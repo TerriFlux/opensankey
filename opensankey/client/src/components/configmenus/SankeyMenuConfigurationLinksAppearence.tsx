@@ -541,7 +541,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
                 disabled={!disable_attr_props['shape_local_link_scale']}
                 ref_to_set_value={ref_set_link_scale_inputs}
                 default_value={selected_links[0]?.shape_local_link_scale ?? undefined}
-                function_on_blur={(_) => { updateElements('shape_local_link_scale', (_ !== undefined) ? undefined : _) }}
+                function_on_blur={(_) => { updateElements('shape_local_link_scale', _ as number) }}
                 minimum_value={0}
                 stepper={true}
                 step={1}
