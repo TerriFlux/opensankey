@@ -39,12 +39,12 @@ import {
   defaultLinkId,
   sortLinksElementsByIds
 } from '../Elements/Link'
-import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
+import { Class_LinkAttribute, Class_LinkStyle, Type_customisable_flow_style_attr } from '../Elements/LinkAttributes'
 import {
   ClassTemplate_NodeElement,
   sortNodesElements
 } from '../Elements/Node'
-import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
+import { Class_NodeAttribute, Class_NodeStyle,Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
 import {
   Class_NodeTagGroup,
   Class_FluxTagGroup,
@@ -65,7 +65,6 @@ import {
   makeId
 } from '../types/Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
-import { DefaultLinkExportStyle, DefaultLinkImportStyle, DefaultNodeExportStyle, DefaultNodeImportStyle, DefaultNodeProductStyle, DefaultNodeSectorStyle } from './Legacy'
 import { Class_NodeElement } from './Types'
 
 
@@ -898,40 +897,102 @@ export abstract class ClassTemplate_Sankey
         })
       // Create default style for 'Type de noeud' if they don't exist
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
-        Object.entries({
-          'NodeProductStyle': DefaultNodeProductStyle,
-          'NodeSectorStyle': DefaultNodeSectorStyle,
-          'NodeImportStyle': DefaultNodeImportStyle,
-          'NodeExportStyle': DefaultNodeExportStyle
-        })
-          .forEach(([style_id, fn]) => {
-            if (this._node_styles[style_id]) {
-              // if style already exists do nothings
-              return
+        const nodeStyleConfigs = [
+          {
+            id: 'NodeProductStyle',
+            config: {'shape_type': 'ellipse'},
+            position: {}
+          },
+          {
+            id: 'NodeSectorStyle',
+            config: {'shape_type': 'rect'},
+            position: {}
+          },
+          {
+            id: 'NodeImportExportStyle',
+            config: {
+              'name_label_is_visible': false,
+              'shape_visible': false,
+              'shape_min_width': 1,
+              'name_label_box_width': 300,
+              'name_label_vert': 'middle',
+              'name_label_horiz': 'left'
+            },
+            position: {
+              'type': 'relative',
+              'dy': 20,
             }
-            const json_style = fn()
-            const new_style = this.createNewNodeStyle(style_id, json_style.name, true)
-            // Set node style value to node from JSON
-            new_style.fromJSON(json_style)
-            // Add node style to sankey
-            this._node_styles[style_id] = new_style
-          })
-        Object.entries({
-          'LinkImportStyle': DefaultLinkImportStyle,
-          'LinkExportStyle': DefaultLinkExportStyle
-        })
-          .forEach(([style_id, fn]) => {
-            if (this._link_styles[style_id]) {
-              // if style already exists do nothing
-              return
+          },
+          {
+            id: 'NodeImportStyle',
+            config: {},
+            position: {
+              'relative_dx': -100,
+              'relative_dy': -50
             }
-            const json_style = fn()
-            const new_style = this.createNewLinkStyle(style_id, json_style.name, true)
-            // Set node style value to node from JSON
-            new_style.fromJSON(fn())
-            // Add node style to sankey
-            this._link_styles[style_id] = new_style
-          })
+          },
+          {
+            id: 'NodeExportStyle',
+            config: {},
+            position: {
+              'relative_dx': 100,
+              'relative_dy': 50
+            }
+          }]
+        nodeStyleConfigs.forEach(({ id, config, position }) => {
+          const new_style = this.createNewNodeStyle(id, id, true)
+          Object.keys(config).forEach(key => {
+              new_style.customisable_attribute[key as Type_customisable_node_style_attr] = true
+              // @ts-ignore
+              new_style[key] = config[key]
+            }
+          )
+          Object.keys(position).forEach(key => {
+              // new_style.customisable_attribute[key as Type_customisable_node_style_attr] = true
+              // @ts-ignore
+              new_style.position[key] = position[key]
+            }
+          )
+          this._node_styles[id] = new_style
+        })
+
+        const linkStyleConfigs = [
+          {
+            id: 'LinkImportExportStyle',
+            config: {
+              'value_label_is_visible' : true,
+              'value_label_position' : 'end',
+              'value_label_on_path' : true
+
+            }
+          },
+          {
+            id: 'LinkImportStyle',
+            config: {
+              'shape_orientation' : 'vh',
+              'shape_starting_tangeant' : 1,
+              'shape_ending_tangeant' : 0.25
+            }
+          },
+          {
+            id: 'LinkExportStyle',
+            config: {
+              'shape_orientation' : 'hv',
+              'shape_starting_tangeant' : 0.25,
+              'shape_ending_tangeant' : 1
+            }
+          }]
+        linkStyleConfigs.forEach(({ id, config}) => {
+          const new_style = this.createNewLinkStyle(id, id, true)
+          Object.keys(config).forEach(key => {
+              new_style.customisable_attribute[key as Type_customisable_flow_style_attr] = true
+              // @ts-ignore
+              new_style[key] = config[key]
+            }
+          )
+
+          this._link_styles[id] = new_style
+        })
       }
     }
     json_entry = 'fluxTags'
@@ -1026,13 +1087,15 @@ export abstract class ClassTemplate_Sankey
       }
       const product_tag = tagg.tags_dict['produit']
       const sector_tag = tagg.tags_dict['secteur']
+      const echange_tag = tagg.tags_dict['echange']
       if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
         n.style = [this.node_styles_dict['NodeProductStyle']]
       } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
         n.style = [this.node_styles_dict['NodeSectorStyle']]
+      } else if (n.hasGivenTag(echange_tag) && n.style.some(s => s.id === 'default')) {
+        n.style = [this.node_styles_dict['NodeSectorStyle'],this.node_styles_dict['NodeImportExportStyle']]
       }
     })
-    //}
   }
 
   public matchAndModifyJSONIds(

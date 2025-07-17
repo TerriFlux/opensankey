@@ -75,6 +75,7 @@ import {
   getStringListOrUndefinedFromJSON,
   getStringOrUndefinedFromJSON,
   Type_JSON,
+  Type_ElementPositionOptionnal,
 } from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
 import {
@@ -1620,6 +1621,9 @@ export abstract class ClassTemplate_NodeElement
           }
         }
       }
+      const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+      this.input_links_list.filter(l=>l.source.hasGivenTag(echangeTag as Class_Tag)).forEach(l=>l.source.applyPosition())
+      this.output_links_list.filter(l=>l.target.hasGivenTag(echangeTag as Class_Tag)).forEach(l=>l.target.applyPosition())
       // Apply selected coordinates
       super._applyPosition()
     }
@@ -3128,7 +3132,9 @@ export abstract class ClassTemplate_NodeElement
   public getStyleWithAttr(k: keyof Class_NodeStyle) {
     return this._display.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_node_style as Class_NodeStyle
   }
-
+  public getStyleWithPositionAttr(k: keyof Type_ElementPositionOptionnal) {
+    return this._display.style.slice().reverse().find(s => s.position[k as keyof Type_ElementPositionOptionnal] !== undefined) ?? this.sankey.default_node_style as Class_NodeStyle
+  }
 
   // GETTERS / SETTERS ==================================================================
   public get display() { return this._display }
@@ -3513,7 +3519,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.type !== undefined) {
       return this._display.position.type
     }
-    const valueOfStyle = this.getStyleWithAttr('position')
+    const valueOfStyle = this.getStyleWithPositionAttr('type')
     if (valueOfStyle.position.type !== undefined) {
       return valueOfStyle.position.type
     }
@@ -3536,7 +3542,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.dx !== undefined) {
       return this._display.position.dx
     }
-    const valueOfStyle = this.getStyleWithAttr('position')
+    const valueOfStyle = this.getStyleWithPositionAttr('dx')
     if (valueOfStyle.position.dx !== undefined) {
       return valueOfStyle.position.dx
     }
@@ -3558,7 +3564,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.dy !== undefined) {
       return this._display.position.dy
     }
-    const valueOfStyle = this.getStyleWithAttr('position')
+    const valueOfStyle = this.getStyleWithPositionAttr('dy')
 
     if (valueOfStyle.position.dy !== undefined) {
       return valueOfStyle.position.dy
@@ -3581,7 +3587,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.relative_dx !== undefined) {
       return this._display.position.relative_dx
     }
-    const valueOfStyle = this.getStyleWithAttr('position')
+    const valueOfStyle = this.getStyleWithPositionAttr('relative_dx')
 
     if (valueOfStyle.position.relative_dx !== undefined) {
       return valueOfStyle.position.relative_dx
@@ -3605,7 +3611,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.relative_dy !== undefined) {
       return this._display.position.relative_dy
     }
-    const valueOfStyle = this.getStyleWithAttr('position')
+    const valueOfStyle = this.getStyleWithPositionAttr('relative_dy')
 
     if (valueOfStyle.position.relative_dy !== undefined) {
       return valueOfStyle.position.relative_dy
@@ -3630,7 +3636,7 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.auto_x !== undefined) {
       return this._display.position.auto_x
     }
-    const valueOfStyle = this.getStyleWithAttr('position')
+    const valueOfStyle = this.getStyleWithPositionAttr('auto_x')
 
     if (valueOfStyle.position.auto_x !== undefined) {
       return valueOfStyle.position.auto_x
@@ -5115,9 +5121,10 @@ export abstract class ClassTemplate_NodeElement
       this.tags_list.forEach(tag => {
         new_node.addTag(tag)
       });
-
-      (new_node as Type_AnyNodeElement).style = [importation ? new_node.sankey.node_styles_dict['NodeImportStyle'] as Class_NodeStyle : new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle]
-      input_or_output_link.style = [importation ? new_node.sankey.link_styles_dict['LinkImportStyle'] as Class_LinkStyle : new_node.sankey.link_styles_dict['LinkExportStyle'] as Class_LinkStyle]
+      this.style.forEach(s=>new_node.style.push(s));
+      (new_node as Type_AnyNodeElement).style.push(importation ? new_node.sankey.node_styles_dict['NodeImportStyle'] as Class_NodeStyle : new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle)
+      input_or_output_link.style = [new_node.sankey.link_styles_dict['LinkImportExportStyle'] as Class_LinkStyle]
+      input_or_output_link.style.push(importation ? new_node.sankey.link_styles_dict['LinkImportStyle'] as Class_LinkStyle : new_node.sankey.link_styles_dict['LinkExportStyle'] as Class_LinkStyle)
       // (new_node as Type_AnyNodeElement).show = extremity_node.show // TODO replace with an other method
 
       input_or_output_link.shape_is_recycling = false
