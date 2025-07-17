@@ -310,7 +310,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
     this.pushViewIdInViewOrder(default_main_sankey_id)
     // Read views parts
     // this.deleteCurrentOriginalView() // TODO est-ce vraiment necessaire ?
-    this.extractViewsFromJSON(json_object)
+    
+    this.extractViewsFromJSON(json_object,true)
     // Set view to the one active when saved
     const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
     if (
@@ -319,6 +320,10 @@ export abstract class ClassTemplate_ApplicationDataOSP
     ) {
       this._drawing_area = this._views[active_view_id]
     }
+      // Exécution asynchrone à la fin
+    setTimeout(() => {
+        this.extractViewsFromJSON(json_object, false)
+    }, 0)
   }
 
 
@@ -328,7 +333,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * @param {Type_JSON} json_object
    * @memberof ClassTemplate_ApplicationDataOSP
    */
-  public extractViewsFromJSON(json_object: Type_JSON) {
+  public extractViewsFromJSON(json_object: Type_JSON, current_view: boolean) {
     let views = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views) {
       return
@@ -338,10 +343,21 @@ export abstract class ClassTemplate_ApplicationDataOSP
     Object.entries(views)
       .forEach(([view_id, view_json]) => {
         if (view_id !== default_main_sankey_id) {
+          if (current_view) {
+              const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+              if (view_id !== active_view_id) {
+                return
+              }
+          } else {
+              const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+              if (view_id === active_view_id) {
+                return
+              }            
+          }
           // Create and populate drawing area
           console.log('Charging '+(view_json as Type_JSON).name)
           const drawing_area_view = this.createNewDrawingArea(view_id)
-          drawing_area_view.bypass_redraws = this.drawing_area.bypass_redraws
+          drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
           drawing_area_view.fromJSON(view_json as Type_JSON)
           drawing_area_view.arrangeTrade(false)
           // Add new drawing area to views

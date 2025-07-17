@@ -473,7 +473,8 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
             new_data_plus.sendWaitingToast(
               () => {
                 new_data_plus.drawing_area.bypass_redraws = true
-                new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON)
+                new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON,true)
+                new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON,false)
               })
           }
         })()
@@ -1508,7 +1509,8 @@ const TabImportExcelDataForUnitary: FunctionComponent<{ new_data_plus: Type_Gene
               })
               const obj_view: Type_JSON = {}
               local_app_data.current.views.forEach(v => obj_view[v.id] = v.toJSON())
-              new_data_plus.extractViewsFromJSON({ views: obj_view })
+              new_data_plus.extractViewsFromJSON({ views: obj_view },true)
+              new_data_plus.extractViewsFromJSON({ views: obj_view },false)
               new_data_plus.menu_configuration.updateComponentRelatedToViews()
             },
             {
