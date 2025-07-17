@@ -88,7 +88,7 @@ function sortElementByIdOrder(
 }
 // CONSTANTS ****************************************************************************
 
-const initial_show_structure = 'data'
+const initial_show_structure = 'free_value'
 const default_grid_size = 50
 const default_grid_visible = true
 const default_horizontal_spacing = 200

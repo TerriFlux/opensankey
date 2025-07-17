@@ -344,7 +344,7 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
  * Return default style configuration for link to export node
  * @return {*}
  */
-export const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
+const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
   const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
   link_style.orientation = 'hv'
   link_style.label_visible = true
@@ -361,7 +361,7 @@ export const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
  *
  * @return {*}
  */
-export const DefaultLinkImportStyle: DefaultLinkStyleFuncType = () => {
+const DefaultLinkImportStyle: DefaultLinkStyleFuncType = () => {
   const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
   link_style.orientation = 'vh'
   link_style.label_visible = true
@@ -1593,15 +1593,15 @@ const convert_nodes: convert_nodesFuncType = (
       delete n.position
     }
 
-    if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.local != undefined) {
-      if (n.local.position=='absolute' && !trade_set) {
-        trade_set = true
-        setTrade(data)
-      } else if (n.local.position == undefined && !n.trade_close ) {
-        trade_set = true
-        setTrade(data)
-      }
-    }
+    // if (n.tags['type de noeud'] && n.tags['type de noeud'] && n.tags['type de noeud'][0]=='echange' && n.local != undefined) {
+    //   if (n.local.position=='absolute' && !trade_set) {
+    //     trade_set = true
+    //     setTrade(data)
+    //   } else if (n.local.position == undefined && !n.trade_close ) {
+    //     trade_set = true
+    //     setTrade(data)
+    //   }
+    // }
 
     delete n_depreciated.visible
 
