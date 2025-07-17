@@ -108,18 +108,18 @@ export const GetLinkValue = (
   // Split the id and search for value after the original link id
   //  each value represent wich dataTag to choose among those where selected is at true in link.value
   // If there no dataTag (or no multiple dataTag selected then it take the first selected)
-  let idDt : string[] = []
-  if ( Object.values(dataTags).filter(tagGroup=>tagGroup.banner === 'multi').length > 0) {
+  let idDt: string[] = []
+  if (Object.values(dataTags).filter(tagGroup => tagGroup.banner === 'multi').length > 0) {
     idDt = idLink.split('_')
-    idDt.splice(0,1)
+    idDt.splice(0, 1)
   }
 
-  const defaultInd=Object.values(data.dataTags)
-    .map(d=>{
-      return Object.values((d as {tags:Record<string,unknown>}).tags).filter(t=>(t  as {selected:boolean}).selected).map((dd,i)=>i)[0]
+  const defaultInd = Object.values(data.dataTags)
+    .map(d => {
+      return Object.values((d as { tags: Record<string, unknown> }).tags).filter(t => (t as { selected: boolean }).selected).map((dd, i) => i)[0]
     })
 
-  const index_dataTag=(idDt.length==0)?defaultInd:idDt.map(d=>Number(d))
+  const index_dataTag = (idDt.length == 0) ? defaultInd : idDt.map(d => Number(d))
 
   if (!(idLink in links)) {
 
@@ -133,7 +133,7 @@ export const GetLinkValue = (
   let val = links[idLink].value
   const listKey = [] as string[]
   let missing_key = false
-  Object.values(dataTags).filter(dataTag =>(Object.keys(dataTag.tags).length != 0)).forEach((dataTag,i) => {
+  Object.values(dataTags).filter(dataTag => (Object.keys(dataTag.tags).length != 0)).forEach((dataTag, i) => {
     const selected_tags = Object.entries(dataTag.tags).filter(([, tag]) => { return tag.selected })
     if (selected_tags.length == 0 || missing_key) {
       missing_key = true
@@ -336,7 +336,7 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
 
     starting_tangeant: 0.25,
     ending_tangeant: 0.25,
-    color_rule:'auto'
+    color_rule: 'auto'
   }
 }
 
@@ -534,7 +534,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   if (data_to_convert.node_label_separator === undefined || data_to_convert.node_label_separator === null) {
     data_to_convert.node_label_separator = ' - '
   }
-  if ( data_to_convert.node_label_separator_first == undefined) {
+  if (data_to_convert.node_label_separator_first == undefined) {
     data_to_convert.node_label_separator_part = 'before'
   } else {
     data_to_convert.node_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
@@ -574,9 +574,36 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
       legend_var[list_legacy_legend_var[i]] = json_object[list_legacy_legend_var[i]]
     }
   }
-  json_object.legend['legacy_legend']=true
+  json_object.legend['legacy_legend'] = true
 
   clean_data_local(data_to_convert)
+
+  Object.values(data_to_convert.nodes).forEach(n => {
+    // Change style if node has default style & 'Type de noeud' tags
+    if (n.tags['type de noeud']) {
+      if (n.tags['type de noeud'].includes('produit')) {
+        // @ts-ignore
+        n.style = ['default', 'NodeProductStyle']
+      } else if (n.tags['type de noeud'].includes('secteur')) {
+        // @ts-ignore
+        n.style = ['default', 'NodeSectorStyle']
+      } else if (n.tags['type de noeud'].includes('echange')) {
+        // @ts-ignore
+        n.style = ['default', 'NodeSectorStyle', 'NodeImportExportStyle']
+        if (n.inputLinksId.length > 0) {
+          // @ts-ignore
+          data_to_convert.links[n.inputLinksId[0]].style = ['default', 'LinkImportExportStyle', 'LinkExportStyle']
+          // @ts-ignore
+          n.style.push('NodeExportStyle')
+        } else {
+          // @ts-ignore
+          data_to_convert.links[n.outputLinksId[0]].style = ['default', 'LinkImportExportStyle', 'LinkImportStyle']
+          // @ts-ignore
+          n.style.push('NodeImportStyle')
+        }
+      }
+    }
+  })
 }
 
 /**
@@ -942,7 +969,7 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 //     data.display_style.filter_label = flux_max / 10
 //   }
 // }
-const setTrade = (data:SankeyData) => {
+const setTrade = (data: SankeyData) => {
   let s = data.style_node['NodeImportStyle'] as Type_JSON
   s.position = 'absolute'
   s.shape_visible = false
@@ -1035,11 +1062,11 @@ const convert_tags: convert_tagsFuncType = (
         data.fluxTags[key] = { ...tags_group }
         data.fluxTags[key].banner = 'none'
       }
-      if(tags_group.banner=='movie'){
-        (tags_group as TagsGroup & {is_sequence:boolean}).is_sequence=true
-        tags_group.banner='one'
-        Object.values(tags_group.tags).forEach((tag,idx)=>{
-          tag.selected=idx==0
+      if (tags_group.banner == 'movie') {
+        (tags_group as TagsGroup & { is_sequence: boolean }).is_sequence = true
+        tags_group.banner = 'one'
+        Object.values(tags_group.tags).forEach((tag, idx) => {
+          tag.selected = idx == 0
         })
       }
     }
@@ -1118,12 +1145,12 @@ const convert_tags: convert_tagsFuncType = (
     if (!Object.keys(data.style_node).includes('NodeExportStyle')) {
       data.style_node['NodeExportStyle'] = DefaultNodeExportStyle()
     }
-    if(!Object.keys(data.style_link).includes('LinkImportStyle')){
-      data.style_link['LinkImportStyle']=DefaultLinkImportStyle()
+    if (!Object.keys(data.style_link).includes('LinkImportStyle')) {
+      data.style_link['LinkImportStyle'] = DefaultLinkImportStyle()
     }
     data.style_link['LinkImportStyle'].ending_tangeant = 0.25
-    if(!Object.keys(data.style_link).includes('LinkExportStyle')){
-      data.style_link['LinkExportStyle']=DefaultLinkExportStyle()
+    if (!Object.keys(data.style_link).includes('LinkExportStyle')) {
+      data.style_link['LinkExportStyle'] = DefaultLinkExportStyle()
     }
     data.style_link['LinkExportStyle'].starting_tangeant = 0.25
   }
@@ -1346,12 +1373,12 @@ const convert_tags: convert_tagsFuncType = (
     Object.values(data.levelTags).forEach(tag => tag.banner = 'level')
     data.nodeTags = Object.fromEntries(Object.entries(data.nodeTags).filter(nt => nt[1].banner !== 'level' && nt[0] !== 'Primaire'))
   }
-  Object.entries(data.nodeTags).forEach(tagg=>{
+  Object.entries(data.nodeTags).forEach(tagg => {
     // happen for RefFlux volaille
     if ('siblings' in tagg[1] && tagg[1].siblings.length > 0) {
       data.levelTags[tagg[0]] = tagg[1]
       delete data.nodeTags[tagg[0]]
-    } else if (Object.keys(data.nodeTags[tagg[0]].tags)[0]=='1') {
+    } else if (Object.keys(data.nodeTags[tagg[0]].tags)[0] == '1') {
       data.levelTags[tagg[0]] = tagg[1]
       delete data.nodeTags[tagg[0]]
     }
@@ -1411,7 +1438,7 @@ export const NodeHasDisplayedLevel = (
   // - The node.nodeTags have more level grp tag than 'Primaire', if that's the case we don't use grp tag 'Primaire' in the filter of node grp tag
   // - The node grp tag is activated (variable is set false if we activate another grp tag that has this grp tag in variable sibling)
   // - The node has the grp tag name in his tags
-  Object.entries(data.levelTags).filter(nt =>nt[1].activated).forEach(nt => {
+  Object.entries(data.levelTags).filter(nt => nt[1].activated).forEach(nt => {
     // Check tags from the group attribued to the node
     // If the node don't have tag attribued from the group then it is not affected by filter and we display it
     const node_tags_attr = n.tags[nt[0]]
@@ -1420,7 +1447,7 @@ export const NodeHasDisplayedLevel = (
       // If the node has tag from the group attribued to it but are not selected then we don't display it
       const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t.name)
       to_display = (node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
-    } else if (n.dimensions[nt[0]] && n.dimensions[nt[0]].children_tags != undefined && n.dimensions[nt[0]].children_tags!.length !=0) {
+    } else if (n.dimensions[nt[0]] && n.dimensions[nt[0]].children_tags != undefined && n.dimensions[nt[0]].children_tags!.length != 0) {
       const tags_from_grp_to_display = Object.values(nt[1].tags).filter(t => t.selected).map(t => t.name)
       to_display = (n.dimensions[nt[0]].children_tags!.filter(t => tags_from_grp_to_display.includes(t)).length > 0) ? to_display : false
     } else if (n.dimensions[nt[0]] && n.dimensions[nt[0]].force_show_children) {
@@ -1624,7 +1651,7 @@ const convert_nodes: convert_nodesFuncType = (
     // }
     if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior') {
       n.tags['type de noeud'] = ['echange']
-      if ( n.outputLinksId.length > 0 ) {
+      if (n.outputLinksId.length > 0) {
         n.style = 'NodeImportStyle'
         data.links[n.outputLinksId[0]].style = 'LinkImportStyle'
       } else {
@@ -1691,7 +1718,7 @@ const convert_nodes: convert_nodesFuncType = (
     }
 
     const nn = n as unknown as OSP_type
-    if ( nn.image != undefined && nn.FO_content == nn.image ) {
+    if (nn.image != undefined && nn.FO_content == nn.image) {
       nn.has_FO = false
       nn.FO_content = ''
       nn.is_image = true
@@ -1738,14 +1765,14 @@ const convert_nodes: convert_nodesFuncType = (
     ) => {
       // quand un neoud est à force_children il faut remonter tous ces ancêtres
       // jusqu'à celui qui est normalement visible d'aprés les tags de niveaux
-      const parents = Object.entries(node.dimensions).filter(cur_dim => cur_dim[0] == dim && cur_dim[1].parent_name!=undefined)
+      const parents = Object.entries(node.dimensions).filter(cur_dim => cur_dim[0] == dim && cur_dim[1].parent_name != undefined)
       if (parents.length == 0) {
         return
       }
       const parent = parents[0][1].parent_name!
       data.nodes[parent].dimensions[dim].force_show_children = true
       if (!NodeHasDisplayedLevel(data, data.nodes[parent])) {
-        forceShowChildren(data, data.nodes[parent],dim)
+        forceShowChildren(data, data.nodes[parent], dim)
       }
     }
 
@@ -1778,7 +1805,7 @@ const convert_nodes: convert_nodesFuncType = (
         .forEach(lid => {
           if (!data.links[lid]) {
             console.log(lid)
-            console.log(Object.values(data.links).filter(l=>l.idLink.includes('Ethanol')))
+            console.log(Object.values(data.links).filter(l => l.idLink.includes('Ethanol')))
             return
           }
           const output_node = data.nodes[data.links[lid].idTarget]
@@ -1819,7 +1846,7 @@ const convert_nodes: convert_nodesFuncType = (
               data.nodes[dim[1].parent_name!].local!.local_aggregation == false
             ) {
               dim[1].force_show_children = true
-              forceShowChildren(data,n,dim[0])
+              forceShowChildren(data, n, dim[0])
               treatExchangeNodes(data, n, dim[0], true)
             } else {
               forceShowParent(data, n, dim[0])
@@ -1840,7 +1867,7 @@ const convert_nodes: convert_nodesFuncType = (
     tmp.forEach(nt => {
       const leveltagg_tags_ids = nt[1]
       const leveltagg_id = nt[0]
-      if (!n.dimensions[leveltagg_id] ) {
+      if (!n.dimensions[leveltagg_id]) {
         n.dimensions[leveltagg_id] = {}
       }
       if (leveltagg_tags_ids.includes('0')) {
@@ -1867,7 +1894,7 @@ const convert_nodes: convert_nodesFuncType = (
           n.dimensions[leveltagg_id].parent_tag = possible_parent_tag
         } else if (
           Object.keys(n.dimensions[leveltagg_id]).length == 0 && n.tags[leveltagg_id] &&
-            Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1
+          Object.keys(data_to_convert.levelTags[leveltagg_id].tags).indexOf(n.tags[leveltagg_id][0]) >= 1
         ) {
           if (n.dimensions['Primaire'] && n.dimensions['Primaire'].parent_name) {
             let parent_tag: number | undefined
@@ -1886,7 +1913,7 @@ const convert_nodes: convert_nodesFuncType = (
                 // in old file the continuity between levels could be missing
                 // Exemple in Carbone 4 we were jumping from 2 to 4 so we correct
                 // by 3:4
-                children_tags = [...children_tags,...curLevelTag]
+                children_tags = [...children_tags, ...curLevelTag]
               }
               n.dimensions[leveltagg_id] = {
                 parent_tag: String(parent_tag),
@@ -1915,21 +1942,21 @@ const convert_nodes: convert_nodesFuncType = (
       if (!pid) {
         return
       }
-      Object.entries(data.nodes[pid].dimensions).forEach(([pk,pdim])=>{
+      Object.entries(data.nodes[pid].dimensions).forEach(([pk, pdim]) => {
         if (!data.levelTags[pk]) {
           return
         }
         if (!data.levelTags[pk].activated) {
           return
         }
-        if (pdim.antitag || (data.nodes[pid].tags[pk] && data.nodes[pid].tags[pk][0]=='0')) {
+        if (pdim.antitag || (data.nodes[pid].tags[pk] && data.nodes[pid].tags[pk][0] == '0')) {
           return
         }
         const grand_parent_id = pdim.parent_name
         if (grand_parent_id == undefined) {
           return
         }
-        Object.entries(n.dimensions).forEach(([k,dim])=>{
+        Object.entries(n.dimensions).forEach(([k, dim]) => {
           if (data.levelTags[k] == undefined) {
             delete n.dimensions[k]
             return
@@ -1960,14 +1987,7 @@ const convert_nodes: convert_nodesFuncType = (
         n.local.name_label_horiz_shift = n.local.label_horiz_shift
       }
     }
-    // Change style if node has default style & 'Type de noeud' tags
-    if(n.tags['type de noeud'] && n.style==='default'){
-      if(n.tags['type de noeud'].includes('produit')){
-        n.style='NodeProductStyle'
-      }else if(n.tags['type de noeud'].includes('secteur')){
-        n.style='NodeSectorStyle'
-      }
-    }
+
   }
   )
 }
@@ -2066,21 +2086,21 @@ const convert_links: convert_linksFuncType = (
     data_to_convert.nodes = Object.assign({}, ...((data.nodes as unknown) as SankeyNode[]).map((n: SankeyNode) => ({ [n.idNode]: { ...n } })))
   }
 
-  const mapper : {[_:string]:string} = {}
-  Object.values(data.links).forEach(l=>{
+  const mapper: { [_: string]: string } = {}
+  Object.values(data.links).forEach(l => {
     const previous_link_id = l.idLink
-    const new_link_id=previous_link_id+makeId('_idLink')
+    const new_link_id = previous_link_id + makeId('_idLink')
     l.idLink = new_link_id
     mapper[previous_link_id] = l.idLink
   })
   data_to_convert.links = Object.assign({}, ...(Object.values(data.links)).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
-  Object.values(data.nodes).forEach(n=>{
-    const newInputLinksId : string[]= []
-    n.inputLinksId.forEach(id=>newInputLinksId.push(mapper[id]))
+  Object.values(data.nodes).forEach(n => {
+    const newInputLinksId: string[] = []
+    n.inputLinksId.forEach(id => newInputLinksId.push(mapper[id]))
     n.inputLinksId = newInputLinksId
 
-    const newOutputLinksId : string[]= []
-    n.outputLinksId.forEach(id=>newOutputLinksId.push(mapper[id]))
+    const newOutputLinksId: string[] = []
+    n.outputLinksId.forEach(id => newOutputLinksId.push(mapper[id]))
     n.outputLinksId = newOutputLinksId
 
     // Add links_order to node by combining input/outputs id (for version>=0.9)
@@ -2104,7 +2124,7 @@ const convert_links: convert_linksFuncType = (
     dataTags: TagsGroup[],
     v: SankeyLinkValue | SankeyLinkValueDict,
     depth: number,
-    returnObj:Type_JSON
+    returnObj: Type_JSON
   ) => {
     if (dataTags.length == 0 || depth === dataTags.length) {
       if (v.display_value === undefined) {
@@ -2172,8 +2192,8 @@ const convert_links: convert_linksFuncType = (
         }
       }
 
-      if (v.display_value !=='') {
-        returnObj['hide_value']=true
+      if (v.display_value !== '') {
+        returnObj['hide_value'] = true
       }
       return
     }
@@ -2185,7 +2205,7 @@ const convert_links: convert_linksFuncType = (
         if (v === undefined) {
           break
         }
-        convert_display(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1,returnObj)
+        convert_display(dataTags, (v as unknown as { [key: string]: SankeyLinkValue })[listKey[i]], depth + 1, returnObj)
       }
     }
   }
@@ -2236,7 +2256,7 @@ const convert_links: convert_linksFuncType = (
       l.local!.label_unit_visible = true
       l.local!.label_unit = l_convert.natural_unit
       delete l_convert.display_unit
-      l.local!.label_unit_factor = 1/l_convert.conv![1]
+      l.local!.label_unit_factor = 1 / l_convert.conv![1]
     }
 
     // Delete agregated data value entry
@@ -2339,9 +2359,9 @@ const convert_links: convert_linksFuncType = (
       AssignLinkLocalAttribute(l, 'text_color', ReturnValueLink(data, l, 'color'))
     }
     delete l_convert.text_same_color
-    const objectReturn:Type_JSON={}
+    const objectReturn: Type_JSON = {}
     // Values ?
-    convert_display(dataTagsArray, l.value as SankeyLinkValue, 0,objectReturn)
+    convert_display(dataTagsArray, l.value as SankeyLinkValue, 0, objectReturn)
 
     // Add opacity attribute
     if (!ReturnValueLink(data, l, 'opacity')) {
@@ -2405,7 +2425,7 @@ const convert_links: convert_linksFuncType = (
       }
     })
 
-    const isEchange = (node:SankeyNode) => {
+    const isEchange = (node: SankeyNode) => {
       return node.tags['type de noeud'] != undefined && node.tags['type de noeud'][0] == 'echange'
     }
 
@@ -2417,7 +2437,7 @@ const convert_links: convert_linksFuncType = (
         if (l.local.curvature) {
           if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
             // I made an approx. here because we can't have a direct transform from old behavior (Cubic / Bezier) to new (Quadratic) for path drawing
-            if (!isEchange(data.nodes[l.idSource]) && !isEchange(data.nodes[l.idTarget]) ) {
+            if (!isEchange(data.nodes[l.idSource]) && !isEchange(data.nodes[l.idTarget])) {
               AssignLinkLocalAttribute(l, 'starting_tangeant', 0.75 * l.local.curvature)
               AssignLinkLocalAttribute(l, 'ending_tangeant', 0.75 * l.local.curvature)
             }
@@ -2457,8 +2477,8 @@ const convert_links: convert_linksFuncType = (
 
           const source_y = data.nodes[l.idSource].y
           const target_y = data.nodes[l.idTarget].y
-          const middle_y = (target_y+source_y)/2
-          const global_position_y = Math.max(source_y,target_y) + l.local.vert_shift + scale(2*+GetLinkValue(data,l.idLink).value)
+          const middle_y = (target_y + source_y) / 2
+          const global_position_y = Math.max(source_y, target_y) + l.local.vert_shift + scale(2 * +GetLinkValue(data, l.idLink).value)
           const new_vert_shift = global_position_y - middle_y
           AssignLinkLocalAttribute(l, 'vert_shift', new_vert_shift) // value in [0; +oo]
         }
@@ -2469,7 +2489,7 @@ const convert_links: convert_linksFuncType = (
           const shift_dist = Math.max(shift_dist_min, original_dist - curve_dist) // Approx to keep general shape
           // Assign new values
           AssignLinkLocalAttribute(l, 'left_horiz_shift', shift_dist / dist) // value in [0; +oo]
-          AssignLinkLocalAttribute(l, 'starting_tangeant',curve_dist / dist) // value in [0; +oo]
+          AssignLinkLocalAttribute(l, 'starting_tangeant', curve_dist / dist) // value in [0; +oo]
         }
         if (l.local.right_horiz_shift !== undefined) {
           // Avoid having too big curbe
@@ -2491,8 +2511,8 @@ const convert_links: convert_linksFuncType = (
       l.position_offset_label = l.drag_label_offset
     }
 
-    if(objectReturn['hide_value']===true){
-      l.local['value_label_is_visible']=false
+    if (objectReturn['hide_value'] === true) {
+      l.local['value_label_is_visible'] = false
     }
 
   })
