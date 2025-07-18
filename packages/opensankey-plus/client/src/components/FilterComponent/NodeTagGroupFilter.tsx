@@ -195,6 +195,8 @@ export const NodeTagGroupFilter: FunctionComponent<FCType_NodeTagGroupFilter> = 
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           // Set tag with given id as selected : other are unselected
           tagg.selectTagsFromId(evt.target.value)
+          new_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+          new_data.drawing_area.sankey.nodes_list.forEach(n => n.draw())
           // Refresh this & related component
           new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
         }}
