@@ -601,7 +601,7 @@ export const resources_app_elements = {
         'cbl': 'Couleur bordure',
         'labels': 'Style police',
 
-        'title': 'Titre',
+        'title': 'Name',
         tiedToNodes: 'Lie la position et taille aux noeuds',
         margin: 'Marge',
         tiedToNodesExtremity: 'Positionné à l\'extrémité',
