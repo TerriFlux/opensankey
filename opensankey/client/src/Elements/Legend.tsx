@@ -54,6 +54,7 @@ import {
   const_default_position_x,
 } from '../types/Utils'
 import {
+  Class_DrawingArea,
   Type_GenericNodeElement
 } from '../types/Types'
 import {
@@ -86,6 +87,7 @@ export class ClassTemplate_Legend
 
   private _pos_from_legacy = false
 
+  private _stick_to_drawing =false
   // Legend Class attributes
   private _masked: boolean = true
   private _display_legend_scale: boolean = false
@@ -293,8 +295,8 @@ export class ClassTemplate_Legend
    *
    * @memberof ClassTemplate_Legend
    */
-  public posIfFromLegacy() {
-    if (this._pos_from_legacy) {
+  public posIfFromLegacy(force:boolean = false) {
+    if (this._pos_from_legacy || force) {
       let x = 0, y = 0, k = 1
       const tmp = this.drawing_area.d3_selection_zoom_area?.node()
       if (tmp && tmp !== null) {
@@ -391,9 +393,13 @@ export class ClassTemplate_Legend
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ): void {
     this._display.position.x += (event.sourceEvent.movementX)
-    if (this._display.position.x < 0) this._display.position.x = 0
+    if (!this.stick_to_drawing) {
+      if (this._display.position.x < 0) this._display.position.x = 0
+    }
     this._display.position.y += (event.sourceEvent.movementY)
-    if (this._display.position.y < 0) this._display.position.y = 0
+    if (!this.stick_to_drawing) {
+      if (this._display.position.y < 0) this._display.position.y = 0
+    }
 
     this.setPosXY(this._display.position.x, this._display.position.y)
     this.drawDragHandlers()
@@ -855,34 +861,47 @@ export class ClassTemplate_Legend
   }
 
   public get masked(): boolean { return this._masked }
-  public set masked(value: boolean) { this._masked = value; this.draw(); this.drawing_area.checkAndUpdateAreaSize() }
+  public set masked(_) { this._masked = _; this.draw(); this.drawing_area.checkAndUpdateAreaSize() }
 
   public get display_legend_scale(): boolean { return this._display_legend_scale }
-  public set display_legend_scale(value: boolean) { this._display_legend_scale = value; this.draw() }
+  public set display_legend_scale(_) { this._display_legend_scale = _; this.draw() }
 
   public get legend_police(): number { return this._legend_police }
-  public set legend_police(value: number) { this._legend_police = value; this.draw() }
+  public set legend_police(_) { this._legend_police = _; this.draw() }
 
   public get legend_bg_border(): boolean { return this._legend_bg_border }
-  public set legend_bg_border(value: boolean) { this._legend_bg_border = value; this.draw() }
+  public set legend_bg_border(_) { this._legend_bg_border = _; this.draw() }
 
   public get legend_bg_color(): string { return this._legend_bg_color }
-  public set legend_bg_color(value: string) { this._legend_bg_color = value; this.draw() }
+  public set legend_bg_color(_) { this._legend_bg_color = _; this.draw() }
 
   public get legend_bg_opacity(): number { return this._legend_bg_opacity }
-  public set legend_bg_opacity(value: number) { this._legend_bg_opacity = value; this.draw() }
+  public set legend_bg_opacity(_) { this._legend_bg_opacity = _; this.draw() }
 
   public get legend_show_dataTags(): boolean { return this._legend_show_dataTags }
-  public set legend_show_dataTags(value: boolean) { this._legend_show_dataTags = value; this.draw() }
+  public set legend_show_dataTags(_) { this._legend_show_dataTags = _; this.draw() }
 
   public get node_label_separator(): string { return this._node_label_separator }
-  public set node_label_separator(value: string) { this._node_label_separator = value; this.draw() }
+  public set node_label_separator(_) { this._node_label_separator = _; this.draw() }
 
   public get width(): number { return this._width }
-  public set width(value: number) { this._width = value; this.draw() }
+  public set width(_) { this._width = _; this.draw() }
 
   public get info_link_value_void(): boolean { return this._info_link_value_void }
-  public set info_link_value_void(value: boolean) { this._info_link_value_void = value; this.draw() }
+  public set info_link_value_void(_) { this._info_link_value_void = _; this.draw() }
 
-
+  public get stick_to_drawing(): boolean { return this._stick_to_drawing}
+  public set stick_to_drawing(_) { 
+    this._stick_to_drawing = _;
+    const da = this.drawing_area as unknown as Class_DrawingArea
+    if (this.stick_to_drawing) {
+      this.drawing_area.d3_selection_zoom_area?.select('#grp_legend').remove();
+      da.d3_selection_legend = da.d3_selection!.append('g').attr('id', 'grp_legend')
+    } else {
+      this.drawing_area.d3_selection?.select('#grp_legend').remove();
+      da.d3_selection_legend = da.d3_selection_zoom_area!.append('g').attr('id', 'grp_legend')
+      this.posIfFromLegacy(true)
+    }
+    this.draw() 
+  }
 }
