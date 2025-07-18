@@ -461,6 +461,13 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
       new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_bg_opacity', evt, f)
     }
   }
+  const eventLegendStickDrawing = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.legend.stick_to_drawing = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'stick_to_drawing', evt.target.checked, f)
+  }
 
   const eventLegendBorder = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
@@ -471,7 +478,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
   }
 
   const eventLegendPosX = (evt: number | undefined | null) => {
-    if (evt) {
+    if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
         new_data.drawing_area.legend.position_x = _
         new_data.drawing_area.legend.applyPosition()
@@ -482,7 +489,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
   }
 
   const eventLegendPosY = (evt: number | undefined | null) => {
-    if (evt) {
+    if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
         new_data.drawing_area.legend.position_y = _
         new_data.drawing_area.legend.applyPosition()
@@ -516,6 +523,18 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
         {t('Menu.Leg')}
       </Checkbox>
     </Box>
+      {/* Solidaire du diagramme */}
+      <Box layerStyle='menuconfigpanel_grid'>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={new_data.drawing_area.legend.stick_to_drawing}
+          onChange={eventLegendStickDrawing}
+        >
+          <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
+            {t('Menu.LegStickDrawing')}
+          </OSTooltip>
+        </Checkbox>
+      </Box>
 
     <Box
       layerStyle='menuconfigpanel_grid'

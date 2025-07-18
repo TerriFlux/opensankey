@@ -628,13 +628,20 @@ export abstract class ClassTemplate_DrawingArea
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
 
     // Since legend can't be affected by zoom, it outside g_drawing
-    this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
+
+
 
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
     this.d3_selection_elements_sankey_group = this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
+
+    if (this._legend.stick_to_drawing) {
+      this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
+    } else {
+      this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
+    }
   }
 
   /**
