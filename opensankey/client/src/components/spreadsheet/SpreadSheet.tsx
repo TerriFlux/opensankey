@@ -41,7 +41,9 @@ import {
   CellLocation
 } from '@silevis/reactgrid'
 import '@silevis/reactgrid/styles.css'
-
+import {
+  Checkbox
+} from '@chakra-ui/react'
 import {
   Type_GenericApplicationData,
   Type_GenericDrawingArea,
@@ -89,6 +91,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   { new_data }: { new_data: Type_GenericApplicationData }
 ) => {
   const { menu_configuration } = new_data
+  const [freeze, set_freeze] = useState(false)
 
   // Table header
   const headerRow: Row = {
@@ -215,7 +218,9 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   }
 
   const redraw = () => {
-    new_data.drawing_area.computeAutoSankey(true)
+    if (!freeze) {
+      new_data.drawing_area.computeAutoSankey(true)
+    }
     new_data.draw()
   }
 
@@ -541,7 +546,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
 
   // Render the ReactGrid component
-  return <ReactGrid
+  return <><ReactGrid
     rows={rows}
     columns={columns}
     onCellsChanged={
@@ -710,4 +715,14 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       ]
     }}
   />
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={freeze}
+      onChange={(evt) => {
+        set_freeze(evt.target.checked)
+      }}
+    >
+      {'Freeze'}
+    </Checkbox>
+  </>
 }
