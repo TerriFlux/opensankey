@@ -40,7 +40,7 @@ import {
 import { t, TFunction } from 'i18next'
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
 import { ClassTemplate_LinkElement } from '../../Elements/Link'
-import { ATTRIBUTES_CONFIG, Class_LinkStyle } from '../../Elements/LinkAttributes'
+import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, default_style_id, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
@@ -50,19 +50,7 @@ import { ClassTemplate_NodeElement } from '../../Elements/Node'
 import {
   Class_NodeAttribute,
   Class_NodeStyle,
-  default_node_value_label_bold,
-  default_node_value_label_color,
-  default_node_value_label_custom_digit,
-  default_node_value_label_font_family,
-  default_node_value_label_font_size,
-  default_node_value_label_horiz,
-  default_node_value_label_italic,
-  default_node_value_label_nb_digit,
-  default_node_value_label_unit,
-  default_node_value_label_unit_factor,
-  default_node_value_label_unit_visible,
-  default_node_value_label_uppercase,
-  default_node_value_label_vert,
+  NODES_ATTRIBUTES_CONFIG
 } from '../../Elements/NodeAttributes'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
@@ -104,7 +92,7 @@ function getValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
 type elementsType = Class_LinkStyle | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
 type valueType = labelValueAttribute[valueKeu]
 type valueKeu = keyof labelValueAttribute
-type valueElementsType = elementsType[valueType]
+type valueElementsType = elementsType[valueType] | undefined
 
 
 /**
@@ -120,9 +108,9 @@ type valueElementsType = elementsType[valueType]
 function setValueWithDecoratorRetriever<TModel, TKey extends keyof TModel, Tvalue extends TModel[TKey]>(
   model: TModel,
   key: TKey,
-  value: Tvalue
+  value: Tvalue | undefined
 ) {
-  model[key] = value
+  model[key] = value as TModel[TKey]
 }
 
 /**
@@ -135,7 +123,8 @@ function setValueWithDecoratorRetriever<TModel, TKey extends keyof TModel, Tvalu
  * @param {valueElementsType} val
  * @param {() => void} refreshParentComponent
  */
-const updateElements = (data: Type_GenericApplicationData,
+const updateElements = (
+  data: Type_GenericApplicationData,
   elements: elementsType[],
   _dict_decorator_name: labelValueAttribute | labelAttributeType, // declare var can be both type so we can use the function in SankeyMenuLabelComponent & SankeyMenuValueLabelComponent 
   k: keyof labelValueAttribute, // key of labelValueAttribute also contain key of labelAttributeType (since labelValueAttribute is a composite type with labelAttributeType)
@@ -241,28 +230,36 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
   }
   const is_indeterminate = !selectedElements.every(check_indeterminate)
   // Declare var used to set default attribute value in inputs 
-  let get_label_horiz = default_node_value_label_horiz
-  let get_label_vert = default_node_value_label_vert
-  let get_label_font_size = default_node_value_label_font_size
-  let get_label_color = default_node_value_label_color
-  let get_label_bold = default_node_value_label_bold
-  let get_label_italic = default_node_value_label_italic
-  let get_label_uppercase = default_node_value_label_uppercase
-  let get_label_font_family = default_node_value_label_font_family
+  let get_label_horiz = NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
+  let get_label_vert = NODES_ATTRIBUTES_CONFIG.value_label_vert.default
+  let get_label_font_size = NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
+  let get_label_color = NODES_ATTRIBUTES_CONFIG.value_label_color.default
+  let get_label_bold = NODES_ATTRIBUTES_CONFIG.value_label_bold.default
+  let get_label_italic = NODES_ATTRIBUTES_CONFIG.value_label_italic.default
+  let get_label_uppercase = NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
+  let get_label_font_family = NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
 
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0]
     // Since element_ref can be LinkAttributes | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    get_label_horiz = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_horiz']) ?? default_node_value_label_horiz)
-    get_label_vert = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_vert']) ?? default_node_value_label_vert)
-    get_label_font_size = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_size']) ?? default_node_value_label_font_size)
-    get_label_color = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_color']) ?? default_node_value_label_color)
-    get_label_font_family = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_family']) ?? default_node_value_label_font_family)
-    get_label_bold = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_bold'])) ?? default_node_value_label_bold
-    get_label_italic = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_italic'])) ?? default_node_value_label_italic
-    get_label_uppercase = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_uppercase'])) ?? default_node_value_label_uppercase
+    // @ts-ignore
+    get_label_horiz = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_horiz']) ?? NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
+    // @ts-ignore
+    get_label_vert = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_vert']) ?? NODES_ATTRIBUTES_CONFIG.value_label_vert.default
+    // @ts-ignore
+    get_label_font_size = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_size']) ?? NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
+    // @ts-ignore
+    get_label_color = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_color']) ?? NODES_ATTRIBUTES_CONFIG.value_label_color.default
+    // @ts-ignore
+    get_label_font_family =getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_family']) ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
+    // @ts-ignore
+    get_label_bold = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_bold']) ?? NODES_ATTRIBUTES_CONFIG.value_label_bold.default
+    // @ts-ignore
+    get_label_italic = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_italic']) ?? NODES_ATTRIBUTES_CONFIG.value_label_italic.default
+    // @ts-ignore
+    get_label_uppercase = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_uppercase']) ?? NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
   }
 
 
@@ -594,16 +591,18 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
   }
   const is_indeterminate = !selectedElements.every(check_indeterminate)
   // Declare var used to set default attribute value in inputs 
-  let get_label_custom_digit = default_node_value_label_custom_digit
-  let get_label_nb_digit = default_node_value_label_nb_digit
+  let get_label_custom_digit = NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default
+  let get_label_nb_digit = NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default
 
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0]
     // Since element_ref can be LinkAttributes | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    get_label_custom_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_custom_digit']) ?? default_node_value_label_custom_digit)
-    get_label_nb_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_digit']) ?? default_node_value_label_nb_digit)
+    // @ts-ignore
+    get_label_custom_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_custom_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default)
+    // @ts-ignore
+    get_label_nb_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default)
   }
 
   // Link to ConfigMenuNumberInput state variable
@@ -793,7 +792,7 @@ export const MenuResetAttrLocal: FunctionComponent<{ new_data: Type_GenericAppli
   // Delete all local attributes of selected elements
   const resetAll = () => nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
   // Delete local attributes 'k' of selected elements
-  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as (keyof typeof ATTRIBUTES_CONFIG))
+  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG))
 
   return <Menu direction='rtl' placement='left' closeOnSelect={false}>
     <MenuButton as={Button} variant='menuconfigpanel_option_button'>
@@ -834,9 +833,9 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
   // By combining the different variable correct_ref_style_to_use can only be used when MenuUnit is used with style element (instead of normal element)
   const disable_attr_props = menu_for_style ? correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute : correct_dict_style_to_use[default_style_id].customisable_attribute
   // Declare var used to set default attribute value in inputs 
-  let get_label_unit_visible = default_node_value_label_unit_visible
-  let get_label_unit = default_node_value_label_unit
-  let get_label_unit_factor = default_node_value_label_unit_factor
+  let get_label_unit_visible = NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default
+  let get_label_unit = NODES_ATTRIBUTES_CONFIG.value_label_unit.default
+  let get_label_unit_factor = NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default
 
 
   // If elements selected set displayed value with first selected element
@@ -844,9 +843,12 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
     const element_ref = elements[0]
     // Since element_ref can be LinkAttributes | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    get_label_unit_visible = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_visible']) ?? default_node_value_label_unit_visible)
-    get_label_unit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit']) ?? default_node_value_label_unit)
-    get_label_unit_factor = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_factor']) ?? default_node_value_label_unit_factor)
+    // @ts-ignore
+    get_label_unit_visible = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_visible']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default)
+    // @ts-ignore
+    get_label_unit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit.default)
+    // @ts-ignore
+    get_label_unit_factor = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_factor']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default)
   }
 
   /**

@@ -268,7 +268,7 @@ export abstract class ClassTemplate_ProtoElement
     _kwargs?: Type_JSON
   ) {
     json_object['id'] = this._id
-    json_object['is_visible'] = this._is_visible
+    if (!this._is_visible) json_object['is_visible'] = this._is_visible
   }
 
   /**
@@ -637,6 +637,7 @@ export abstract class ClassTemplate_ProtoElement
   public get menu_config(): Class_MenuConfig { return this._menu_config }
 }
 
+export type Type_AnyElement = ClassTemplate_Element<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 // CLASS ELEMENT ************************************************************************
 
 /**

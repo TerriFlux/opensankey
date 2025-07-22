@@ -585,10 +585,10 @@ export abstract class ClassTemplate_ApplicationData
     if (this._language !== undefined)
       json_object['language'] = this._language
     // Node label separator attribute
-    json_object['node_label_separator'] = this._node_label_separator
-    json_object['node_label_separator_part'] = this._node_label_separator_part
+    if (this._node_label_separator != ' - ') json_object['node_label_separator'] = this._node_label_separator
+    if (this._node_label_separator_part != 'before' ) json_object['node_label_separator_part'] = this._node_label_separator_part
     //File name
-    json_object['name_file'] = this._file_name
+    if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
 
     // Dump with drawing area & its content in json struct
     return {
@@ -687,7 +687,8 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
-    this._drawing_area.arrangeTrade(false)
+    this._drawing_area.splitTrade()
+    //this._drawing_area.arrangeTrade(false)
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 

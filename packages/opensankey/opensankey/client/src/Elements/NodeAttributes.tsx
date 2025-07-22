@@ -36,9 +36,7 @@ import {
   Type_JSON,
   Type_Position,
 } from '../types/Utils'
-import { Type_Side } from './LinkAttributes'
 import { Type_AnyNodeElement } from './Node'
-
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -49,671 +47,310 @@ export const default_dy = 50
 export const default_relative_dx = 100
 export const default_relative_dy = 50
 
-export const default_shape_visible = true
-export const default_shape_type: Type_Shape = 'rect'
-export const default_shape_arrow_angle_factor = 30
-export const default_shape_arrow_angle_direction: Type_Side = 'right'
-export const default_shape_min_width = 40
-export const default_shape_min_height = 40
-export const default_shape_color = default_element_color
-export const default_shape_opacity = 0.85
-export const default_shape_color_sustainable = false
-
-export const default_node_name_label_is_visible = true
-export const default_node_name_label_font_family = default_font
-export const default_node_name_label_font_size = 14
-export const default_node_name_label_uppercase = false
-export const default_node_name_label_bold = false
-export const default_node_name_label_italic = false
-export const default_node_name_label_color = 'black'
-export const default_node_name_label_vert: Type_TextVPos = 'bottom'
-export const default_node_name_label_horiz: Type_TextHPos = 'middle'
-
-export const default_node_name_label_background = true
-export const default_node_name_label_background_color = '#ffffff'
-export const default_node_name_label_horiz_shift = 0
-export const default_node_name_label_vert_shift = 0
-export const default_node_name_label_box_width = 150
-
-export const default_node_value_label_is_visible = false
-export const default_node_value_label_font_family = default_font
-export const default_node_value_label_font_size = 14
-export const default_node_value_label_uppercase = false
-export const default_node_value_label_bold = false
-export const default_node_value_label_italic = false
-export const default_node_value_label_color = 'black'
-export const default_node_value_label_horiz: Type_TextHPos = 'middle'
-export const default_node_value_label_vert: Type_TextVPos = 'top'
-
-export const default_node_value_label_background = false
-export const default_node_value_label_background_color = '#ffffff'
-export const default_node_value_label_horiz_shift = 0
-export const default_node_value_label_vert_shift = 0
-export const default_node_value_label_box_width = 150
-
-export const default_node_value_label_scientific_notation = false
-export const default_node_value_label_significant_digits = false
-export const default_node_value_label_nb_significant_digits = 3
-export const default_node_value_label_custom_digit = true
-export const default_node_value_label_nb_digit = 2
-export const default_node_value_label_unit_visible = false
-export const default_node_value_label_unit = ''
-export const default_node_value_label_unit_factor = 1
-
 // SPECIFIC TYPES ***********************************************************************
 
 export type Type_Shape = 'ellipse' | 'rect' | 'arrow'
 export type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
+export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 
-export type Type_customisable_node_style_attr= 'shape_visible'| 'shape_type'| 'shape_min_width'| 'shape_min_height'| 'shape_color'| 'shape_opacity'| 'shape_color_sustainable'| 'shape_arrow_angle_factor'| 'shape_arrow_angle_direction'| 'name_label_is_visible'| 'name_label_font_family'| 'name_label_font_size'| 'name_label_uppercase'| 'name_label_bold'| 'name_label_italic'| 'name_label_color'| 'name_label_horiz'| 'name_label_vert'| 'name_label_background'| 'name_label_background_color'| 'name_label_horiz_shift'| 'name_label_vert_shift'| 'name_label_box_width'| 'value_label_is_visible'| 'value_label_font_family'| 'value_label_font_size'| 'value_label_uppercase'| 'value_label_bold'| 'value_label_italic'| 'value_label_color'| 'value_label_horiz'| 'value_label_vert'| 'value_label_background'| 'value_label_background_color'| 'value_label_horiz_shift'| 'value_label_vert_shift'| 'value_label_box_width'| 'value_label_scientific_notation'| 'value_label_significant_digits'| 'value_label_nb_significant_digits'| 'value_label_custom_digit'| 'value_label_nb_digit'| 'value_label_unit_visible'| 'value_label_unit'| 'value_label_unit_factor'
+export type Type_customisable_node_style_attr = 
+  'shape_visible' | 'shape_type' | 'shape_min_width' | 'shape_min_height' | 'shape_color' | 'shape_opacity' | 
+  'shape_color_sustainable' | 'shape_arrow_angle_factor' | 'shape_arrow_angle_direction' | 'name_label_is_visible' | 
+  'name_label_font_family' | 'name_label_font_size' | 'name_label_uppercase' | 'name_label_bold' | 'name_label_italic' | 
+  'name_label_color' | 'name_label_horiz' | 'name_label_vert' | 'name_label_background' | 'name_label_background_color' | 
+  'name_label_horiz_shift' | 'name_label_vert_shift' | 'name_label_box_width' | 'value_label_is_visible' | 
+  'value_label_font_family' | 'value_label_font_size' | 'value_label_uppercase' | 'value_label_bold' | 'value_label_italic' | 
+  'value_label_color' | 'value_label_horiz' | 'value_label_vert' | 'value_label_background' | 'value_label_background_color' | 
+  'value_label_horiz_shift' | 'value_label_vert_shift' | 'value_label_box_width' | 'value_label_scientific_notation' | 
+  'value_label_significant_digits' | 'value_label_nb_significant_digits' | 'value_label_custom_digit' | 'value_label_nb_digit' | 
+  'value_label_unit_visible' | 'value_label_unit' | 'value_label_unit_factor'
 
-// CLASS NODE ATTRIBUTES ****************************************************************
-/**
- * Define all attributes that can be apply to a node
- *
- * @export
- * @class Class_NodeAttribute
- */
+// CONFIGURATION CENTRALISÉE - SOURCE UNIQUE DE VÉRITÉ
+export const NODES_ATTRIBUTES_CONFIG = {
+  // Shape attributes
+  shape_visible: { default: true, type: (() => true) as (() => boolean) },
+  shape_type: { default: 'rect' as Type_Shape, type: (() => 'rect') as (() => Type_Shape) },
+  shape_arrow_angle_factor: { default: 30, type: (() => 30) as (() => number) },
+  shape_arrow_angle_direction: { default: 'right' as Type_Side, type: (() => 'right') as (() => Type_Side) },
+  shape_min_width: { default: 40, type: (() => 40) as (() => number) },
+  shape_min_height: { default: 40, type: (() => 40) as (() => number) },
+  shape_color: { default: default_element_color, type: (() => default_element_color) as (() => string) },
+  shape_opacity: { default: 0.85, type: (() => 0.85) as (() => number) },
+  shape_color_sustainable: { default: false, type: (() => false) as (() => boolean) },
+  
+  // Name label attributes
+  name_label_is_visible: { default: true, type: (() => true) as (() => boolean) },
+  name_label_font_family: { default: default_font, type: (() => default_font) as (() => string) },
+  name_label_font_size: { default: 14, type: (() => 14) as (() => number) },
+  name_label_uppercase: { default: false, type: (() => false) as (() => boolean) },
+  name_label_bold: { default: false, type: (() => false) as (() => boolean) },
+  name_label_italic: { default: false, type: (() => false) as (() => boolean) },
+  name_label_color: { default: 'black', type: (() => 'black') as (() => string) },
+  name_label_horiz: { default: 'middle' as Type_TextHPos, type: (() => 'middle') as (() => Type_TextHPos), setter: 'customNameLabelHoriz' },
+  name_label_vert: { default: 'bottom' as Type_TextVPos, type: (() => 'bottom') as (() => Type_TextVPos), setter: 'customNameLabelVert' },
+  name_label_background: { default: true, type: (() => true) as (() => boolean) },
+  name_label_background_color: { default: '#ffffff', type: (() => '#ffffff') as (() => string) },
+  name_label_horiz_shift: { default: 0, type: (() => 0) as (() => number) },
+  name_label_vert_shift: { default: 0, type: (() => 0) as (() => number) },
+  name_label_box_width: { default: 150, type: (() => 150) as (() => number) },
+  
+  // Value label attributes
+  value_label_is_visible: { default: false, type: (() => false) as (() => boolean) },
+  value_label_font_family: { default: default_font, type: (() => default_font) as (() => string) },
+  value_label_font_size: { default: 14, type: (() => 0) as (() => number) },
+  value_label_uppercase: { default: false, type: (() => false) as (() => boolean) },
+  value_label_bold: { default: false, type: (() => false) as (() => boolean) },
+  value_label_italic: { default: false, type: (() => false) as (() => boolean) },
+  value_label_color: { default: 'black', type: (() => 'black') as (() => string) },
+  value_label_horiz: { default: 'middle' as Type_TextHPos, type: (() => 'middle') as (() => Type_TextHPos), setter: 'customValueLabelHoriz' },
+  value_label_vert: { default: 'top' as Type_TextVPos, type: (() => 'top') as (() => Type_TextVPos), setter: 'customValueLabelVert' },
+  value_label_background: { default: false, type: (() => false) as (() => boolean) },
+  value_label_background_color: { default: '#ffffff', type: (() => '#ffffff') as (() => string) },
+  value_label_horiz_shift: { default: 0, type: (() => 0) as (() => number) },
+  value_label_vert_shift: { default: 0, type: (() => 0) as (() => number) },
+  value_label_box_width: { default: 150, type: (() => 0) as (() => number) },
+  value_label_scientific_notation: { default: false, type: (() => false) as (() => boolean) },
+  value_label_significant_digits: { default: false, type: (() => false) as (() => boolean) },
+  value_label_nb_significant_digits: { default: 3, type: (() => 3) as (() => number) },
+  value_label_custom_digit: { default: true, type: (() => true) as (() => boolean) },
+  value_label_nb_digit: { default: 2, type: (() => 2) as (() => number) },
+  value_label_unit_visible: { default: false, type: (() => false) as (() => boolean) },
+  value_label_unit: { default: '', type: (() => '') as (() => string) },
+  value_label_unit_factor: { default: 1, type: (() => 1) as (() => number) },
+} as const
 
+type AttributeKey = keyof typeof NODES_ATTRIBUTES_CONFIG
+
+// GÉNÉRATION AUTOMATIQUE DES TYPES à partir de la config
+type AttributeTypes = {
+  [K in AttributeKey]: ReturnType<typeof NODES_ATTRIBUTES_CONFIG[K]['type']>
+}
+
+// CLASSE DE BASE avec déclarations automatiques
 export class Class_NodeAttribute {
+  protected _attributes: { [K in AttributeKey]?: any } = {}
 
-  // PROTECTED ATTRIBUTES ===============================================================
+  // Déclarations automatiques générées à partir de la config
+  shape_visible!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_visible']['type']>
+  shape_type!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_type']['type']>
+  shape_arrow_angle_factor!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_arrow_angle_factor']['type']>
+  shape_arrow_angle_direction!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_arrow_angle_direction']['type']>
+  shape_min_width!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_min_width']['type']>
+  shape_min_height!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_min_height']['type']>
+  shape_color!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_color']['type']>
+  shape_opacity!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_opacity']['type']>
+  shape_color_sustainable!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_color_sustainable']['type']>
+  name_label_is_visible!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_is_visible']['type']>
+  name_label_font_family!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_font_family']['type']>
+  name_label_font_size!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_font_size']['type']>
+  name_label_uppercase!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_uppercase']['type']>
+  name_label_bold!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_bold']['type']>
+  name_label_italic!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_italic']['type']>
+  name_label_color!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_color']['type']>
+  name_label_horiz!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_horiz']['type']>
+  name_label_vert!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_vert']['type']>
+  name_label_background!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_background']['type']>
+  name_label_background_color!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_background_color']['type']>
+  name_label_horiz_shift!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_horiz_shift']['type']>
+  name_label_vert_shift!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_vert_shift']['type']>
+  name_label_box_width!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_box_width']['type']>
+  value_label_is_visible!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_is_visible']['type']>
+  value_label_font_family!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_font_family']['type']>
+  value_label_font_size!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_font_size']['type']>
+  value_label_uppercase!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_uppercase']['type']>
+  value_label_bold!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_bold']['type']>
+  value_label_italic!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_italic']['type']>
+  value_label_color!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_color']['type']>
+  value_label_horiz!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_horiz']['type']>
+  value_label_vert!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_vert']['type']>
+  value_label_background!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_background']['type']>
+  value_label_background_color!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_background_color']['type']>
+  value_label_horiz_shift!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_horiz_shift']['type']>
+  value_label_vert_shift!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_vert_shift']['type']>
+  value_label_box_width!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_box_width']['type']>
+  value_label_scientific_notation!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']>
+  value_label_significant_digits!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_significant_digits']['type']>
+  value_label_nb_significant_digits!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']>
+  value_label_custom_digit!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']>
+  value_label_nb_digit!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_nb_digit']['type']>
+  value_label_unit_visible!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit_visible']['type']>
+  value_label_unit!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit']['type']>
+  value_label_unit_factor!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']>
 
-  // Parameters for geometry
-  protected _dx?: number
-  protected _dy?: number
-  protected _relative_dx?: number
-  protected _relative_dy?: number
+  constructor() {
+    this.createDynamicProperties()
+  }
 
-  // Parameters for shape
-  protected _shape_visible?: boolean
-  protected _shape_type?: Type_Shape
-  protected _shape_arrow_angle_factor?: number
-  protected _shape_arrow_angle_direction?: Type_Side
-  protected _shape_min_width?: number
-  protected _shape_min_height?: number
-  protected _shape_color?: string
-  protected _shape_opacity?: number
-  protected _shape_color_sustainable?: boolean
+  private createDynamicProperties() {
+    // Création automatique de TOUTES les propriétés en une seule boucle
+    (Object.keys(NODES_ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
+      Object.defineProperty(this, key, {
+        get: () => this._attributes[key],
+        set: (value: any) => {
+          const config = NODES_ATTRIBUTES_CONFIG[key] as any
+          if (config.setter && typeof this[config.setter as keyof this] === 'function') {
+            (this[config.setter as keyof this] as Function).call(this, value)
+          } else {
+            this._attributes[key] = value
+            if (config.callback) {
+              (this[config.callback as keyof this] as Function).call(this)
+            } else {
+              this.update()
+            }
+          }
+        },
+        enumerable: true,
+        configurable: true
+      })
+    })
+  }
 
-  // Parameter of node label - Default params for all labels
-  protected _name_label_is_visible?: boolean
-  protected _name_label_font_family?: string
-  protected _name_label_font_size?: number
-  protected _name_label_uppercase?: boolean
-  protected _name_label_bold?: boolean
-  protected _name_label_italic?: boolean
-  protected _name_label_color?: string
-  protected _name_label_vert?: Type_TextVPos
-  protected _name_label_horiz?: Type_TextHPos
+  public delete_attribute(k: keyof typeof NODES_ATTRIBUTES_CONFIG) {
+    delete this._attributes[k]
+  }
 
-  // Parameter of node label - Specific params for nodes
-  protected _name_label_background?: boolean
-  protected _name_label_background_color?: string
-  protected _name_label_horiz_shift?: number
-  protected _name_label_vert_shift?: number
-  protected _name_label_box_width?: number
+  // Setters personnalisés pour la logique complexe
+  private customNameLabelHoriz(value: Type_TextHPos) {
+    this._attributes.name_label_horiz = value
+    this._attributes.name_label_vert = (this._attributes.name_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this._attributes.name_label_vert
+    this.update()
+  }
 
-  // Parameter of node value label - Default params for all labels
-  protected _value_label_is_visible?: boolean
-  protected _value_label_font_family?: string
-  protected _value_label_font_size?: number
-  protected _value_label_uppercase?: boolean
-  protected _value_label_bold?: boolean
-  protected _value_label_italic?: boolean
-  protected _value_label_color?: string
-  protected _value_label_horiz?: Type_TextHPos
-  protected _value_label_vert?: Type_TextVPos
+  private customNameLabelVert(value: Type_TextVPos) {
+    this._attributes.name_label_vert = value
+    this._attributes.name_label_horiz = (this._attributes.name_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this._attributes.name_label_horiz
+    this.update()
+  }
 
-  // Parameter of node value label - Specific param for nodes
-  protected _value_label_background?: boolean
-  protected _value_label_background_color?: string
-  protected _value_label_horiz_shift?: number
-  protected _value_label_vert_shift?: number
-  protected _value_label_box_width?: number
+  private customValueLabelHoriz(value: Type_TextHPos) {
+    this._attributes.value_label_horiz = value
+    this._attributes.value_label_vert = (this._attributes.value_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this._attributes.value_label_vert
+    this.update()
+  }
 
-  // Parameter of node value label - Specific params for value display
-  protected _value_label_scientific_notation?: boolean
-  protected _value_label_significant_digits?: boolean
-  protected _value_label_nb_significant_digits?: number
-  protected _value_label_custom_digit?: boolean
-  protected _value_label_nb_digit?: number
-  protected _value_label_unit_visible?: boolean
-  protected _value_label_unit?: string
-  protected _value_label_unit_factor?: number
+  private customValueLabelVert(value: Type_TextVPos) {
+    this._attributes.value_label_vert = value
+    this._attributes.value_label_horiz = (this._attributes.value_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this._attributes.value_label_horiz
+    this.update()
+  }
 
-  // CONSTRUCTOR ========================================================================
-  constructor() { }
-
-  // PUBLIC METHODS =====================================================================
-
-  /**
-   * Create a compact json struct from attributes
-   * @return Type_JSON
-   * @memberof Class_NodeAttribute
-   */
-  public toJSON() {
-    // Init
+  // Méthodes JSON simplifiées
+  public toJSON(): Type_JSON {
     const json_object = {} as Type_JSON
 
-    // Version
-    json_object['version'] = 1  // Always integer, increase only if keys are changed
+    // Mapping JSON pour éviter la répétition
+    const jsonMapping: { [key: string]: string } = {
+      shape_type: 'shape',
+      shape_arrow_angle_factor: 'node_arrow_angle_factor',
+      shape_arrow_angle_direction: 'node_arrow_angle_direction',
+      shape_min_width: 'node_width',
+      shape_min_height: 'node_height',
+      shape_color: 'color',
+      shape_opacity: 'opacity',
+      shape_color_sustainable: 'colorSustainable',
+    }
 
-    // One line 'if' to add local attribute to json object if they're not undefined
-    // Parameters for shape
-    if (this._shape_visible !== undefined) json_object['shape_visible'] = this._shape_visible
-    if (this._shape_type !== undefined) json_object['shape'] = this._shape_type
-    if (this._shape_arrow_angle_factor !== undefined) json_object['node_arrow_angle_factor'] = this._shape_arrow_angle_factor
-    if (this._shape_arrow_angle_direction !== undefined) json_object['node_arrow_angle_direction'] = this._shape_arrow_angle_direction
-    if (this._shape_min_width !== undefined) json_object['node_width'] = this._shape_min_width
-    if (this._shape_min_height !== undefined) json_object['node_height'] = this._shape_min_height
-    if (this._shape_color !== undefined) json_object['color'] = this._shape_color
-    if (this._shape_opacity !== undefined) json_object['opacity'] = this._shape_opacity
-    if (this._shape_color_sustainable !== undefined) json_object['colorSustainable'] = this._shape_color_sustainable
+    Object.entries(this._attributes).forEach(([key, value]) => {
+      if (value !== undefined) {
+        const jsonKey = jsonMapping[key] || key
+        json_object[jsonKey] = value
+      }
+    })
 
-    // Parameter of node label - Default params for all labels
-    if (this._name_label_is_visible !== undefined) json_object['name_label_is_visible'] = this._name_label_is_visible
-    if (this._name_label_font_family !== undefined) json_object['name_label_font_family'] = this._name_label_font_family
-    if (this._name_label_font_size !== undefined) json_object['name_label_font_size'] = this._name_label_font_size
-    if (this._name_label_uppercase !== undefined) json_object['name_label_uppercase'] = this._name_label_uppercase
-    if (this._name_label_bold !== undefined) json_object['name_label_bold'] = this._name_label_bold
-    if (this._name_label_italic !== undefined) json_object['name_label_italic'] = this._name_label_italic
-    if (this._name_label_color !== undefined) json_object['name_label_color'] = this._name_label_color
-    if (this._name_label_vert !== undefined) json_object['name_label_vert'] = this._name_label_vert
-    if (this._name_label_horiz !== undefined) json_object['name_label_horiz'] = this._name_label_horiz
-
-    // Parameter of node label - Specific params for nodes
-    if (this._name_label_background !== undefined) json_object['name_label_background'] = this._name_label_background
-    if (this._name_label_background_color !== undefined) json_object['name_label_background_color'] = this._name_label_background_color
-    if (this._name_label_horiz_shift !== undefined) json_object['name_label_horiz_shift'] = this._name_label_horiz_shift
-    if (this._name_label_vert_shift !== undefined) json_object['name_label_vert_shift'] = this._name_label_vert_shift
-    if (this._name_label_box_width !== undefined) json_object['name_label_box_width'] = this._name_label_box_width
-
-    // Parameter of node value label - Default params for all labels
-    if (this._value_label_is_visible !== undefined) json_object['value_label_is_visible'] = this._value_label_is_visible
-    if (this._value_label_font_family !== undefined) json_object['value_label_font_family'] = this._value_label_font_family
-    if (this._value_label_font_size !== undefined) json_object['value_label_font_size'] = this._value_label_font_size
-    if (this._value_label_uppercase !== undefined) json_object['value_label_uppercase'] = this._value_label_uppercase
-    if (this._value_label_bold !== undefined) json_object['value_label_bold'] = this._value_label_bold
-    if (this._value_label_italic !== undefined) json_object['value_label_italic'] = this._value_label_italic
-    if (this._value_label_color !== undefined) json_object['value_label_color'] = this._value_label_color
-    if (this._value_label_horiz !== undefined) json_object['value_label_horiz'] = this._value_label_horiz
-    if (this._value_label_vert !== undefined) json_object['value_label_vert'] = this._value_label_vert
-
-    // Parameter of node value label - Specific params for value display
-    if (this._value_label_background !== undefined) json_object['value_label_background'] = this._value_label_background
-    if (this._value_label_background_color !== undefined) json_object['value_label_background_color'] = this._value_label_background_color
-    if (this._value_label_horiz_shift !== undefined) json_object['value_label_horiz_shift'] = this._value_label_horiz_shift
-    if (this._value_label_vert_shift !== undefined) json_object['value_label_vert_shift'] = this._value_label_vert_shift
-    if (this._value_label_box_width !== undefined) json_object['value_label_box_width'] = this._value_label_box_width
-
-    // Parameter of node value label - Specific params for value display
-    if (this._value_label_scientific_notation !== undefined) json_object['value_label_scientific_notation'] = this._value_label_scientific_notation
-    if (this._value_label_significant_digits !== undefined) json_object['value_label_significant_digits'] = this._value_label_significant_digits
-    if (this._value_label_nb_significant_digits !== undefined) json_object['value_label_nb_significant_digits'] = this._value_label_nb_significant_digits
-    if (this._value_label_custom_digit !== undefined) json_object['value_label_custom_digit'] = this._value_label_custom_digit
-    if (this._value_label_nb_digit !== undefined) json_object['value_label_nb_digit'] = this._value_label_nb_digit
-    if (this._value_label_unit_visible !== undefined) json_object['value_label_unit_visible'] = this._value_label_unit_visible
-    if (this._value_label_unit !== undefined) json_object['value_label_unit'] = this._value_label_unit
-    if (this._value_label_unit_factor !== undefined) json_object['value_label_unit_factor'] = this._value_label_unit_factor
-
-    // Out
     return json_object
   }
 
-  /**
-   * Read all attributes from a legacy input JSON struct
-   * @protected
-   * @param {Type_JSON} json_local_object
-   * @memberof Class_NodeAttribute
-   */
-  protected fromLegacyJSON(json_local_object: Type_JSON) {
-    if (json_local_object['version'] === undefined) {
-      // Parameter of node label - Default params for all labels
-      if (json_local_object['label_visible'] !== undefined) this._name_label_is_visible = getBooleanFromJSON(json_local_object, 'label_visible', default_node_name_label_is_visible)
-      if (json_local_object['font_family'] !== undefined) this._name_label_font_family = getStringFromJSON(json_local_object, 'font_family', default_node_name_label_font_family)
-      if (json_local_object['font_size'] !== undefined) this._name_label_font_size = getNumberFromJSON(json_local_object, 'font_size', default_node_name_label_font_size)
-      if (json_local_object['uppercase'] !== undefined) this._name_label_uppercase = getBooleanFromJSON(json_local_object, 'uppercase', default_node_name_label_uppercase)
-      if (json_local_object['bold'] !== undefined) this._name_label_bold = getBooleanFromJSON(json_local_object, 'bold', default_node_name_label_bold)
-      if (json_local_object['italic'] !== undefined) this._name_label_italic = getBooleanFromJSON(json_local_object, 'italic', default_node_name_label_italic)
-      if (json_local_object['label_color'] !== undefined) this._name_label_color = getStringFromJSON(json_local_object, 'label_color', default_node_name_label_color)
-      if (json_local_object['label_horiz'] !== undefined) this._name_label_horiz = getStringFromJSON(json_local_object, 'label_horiz', default_node_name_label_horiz) as Type_TextHPos
-      if (json_local_object['label_vert'] !== undefined) this._name_label_vert = getStringFromJSON(json_local_object, 'label_vert', default_node_name_label_vert) as Type_TextVPos
+  public fromJSON(json_local_object: Type_JSON) {
+    // Mapping inverse pour fromJSON
+    const fromJsonMapping: { [key: string]: string } = this.jsonMapping()
 
-      // Parameter of node label - Specific params for nodes
-      if (json_local_object['label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'label_background', default_node_name_label_background)
-      if (json_local_object['label_background_color'] !== undefined) this._name_label_background_color = getStringFromJSON(json_local_object, 'label_background_color', default_node_name_label_background_color)
-      if (json_local_object['label_box_width'] !== undefined) this._name_label_box_width = getNumberFromJSON(json_local_object, 'label_box_width', default_node_name_label_box_width)
+    Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
+      if (json_local_object[jsonKey] !== undefined && json_local_object[jsonKey] != NODES_ATTRIBUTES_CONFIG[attrKey as AttributeKey].default) {
+        this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
+      }
+    })
 
-      // Parameter of node value label - Default params for all labels
-      if (json_local_object['show_value'] !== undefined) this._value_label_is_visible = getBooleanFromJSON(json_local_object, 'show_value', default_node_value_label_is_visible)
-      if (json_local_object['value_font_size'] !== undefined) this._value_label_font_size = getNumberFromJSON(json_local_object, 'value_font_size', default_node_name_label_font_size)
-      if (json_local_object['label_horiz_valeur'] !== undefined) this._value_label_horiz = getStringFromJSON(json_local_object, 'label_horiz_valeur', default_node_value_label_horiz) as Type_TextHPos
-      if (json_local_object['label_vert_valeur'] !== undefined) this._value_label_vert = getStringFromJSON(json_local_object, 'label_vert_valeur', default_node_value_label_vert) as Type_TextVPos
-
-      // Parameter of node value label - Specific params for value display
-      if (json_local_object['to_precision'] !== undefined) this._value_label_scientific_notation = getBooleanFromJSON(json_local_object, 'to_precision', default_node_value_label_scientific_notation)
-      if (json_local_object['scientific_precision'] !== undefined) this._value_label_significant_digits = getBooleanFromJSON(json_local_object, 'scientific_precision', default_node_value_label_significant_digits)
-      if (json_local_object['nb_scientific_precision'] !== undefined) this._value_label_nb_significant_digits = getNumberFromJSON(json_local_object, 'nb_scientific_precision', default_node_value_label_nb_significant_digits)
-      if (json_local_object['custom_digit'] !== undefined) this._value_label_custom_digit = getBooleanFromJSON(json_local_object, 'custom_digit', default_node_value_label_custom_digit)
-      if (json_local_object['nb_digit'] !== undefined) this._value_label_nb_digit = getNumberFromJSON(json_local_object, 'nb_digit', default_node_value_label_nb_digit)
-      if (json_local_object['label_unit_visible'] !== undefined) this._value_label_unit_visible = getBooleanFromJSON(json_local_object, 'label_unit_visible', default_node_value_label_unit_visible)
-      if (json_local_object['label_unit'] !== undefined) this._value_label_unit = getStringFromJSON(json_local_object, 'label_unit', default_node_value_label_unit)
-      if (json_local_object['label_unit_factor'] !== undefined) this._value_label_unit_factor = getNumberFromJSON(json_local_object, 'label_unit_factor', default_node_value_label_unit_factor)
-    }
+    // Traitement des attributs directs (même nom)
+    Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
+      if (json_local_object[key] !== undefined && json_local_object[key] != NODES_ATTRIBUTES_CONFIG[key as AttributeKey].default) {
+        this._attributes[key as AttributeKey] = json_local_object[key]
+      }
+    })
   }
 
-  /**
-   * Read all attributes from inpout JSON struct
-   * @param {Type_JSON} json_local_object
-   * @memberof Class_NodeAttribute
-   */
-  public fromJSON(json_local_object: Type_JSON) {
-    // if attribute object has these variable then add it to local
-    // this function is also called when creating style from json and should trigger all if, because in style all attribute are defined
-
-    // First read as legacy
-    this.fromLegacyJSON(json_local_object)
-
-    // Parameters for shape
-    if (json_local_object['shape_visible'] !== undefined) this._shape_visible = getBooleanFromJSON(json_local_object, 'shape_visible', default_shape_visible)
-    if (json_local_object['shape'] !== undefined) this._shape_type = getStringFromJSON(json_local_object, 'shape', default_shape_type) as Type_Shape
-    if (json_local_object['node_arrow_angle_factor'] !== undefined) this._shape_arrow_angle_factor = getNumberFromJSON(json_local_object, 'node_arrow_angle_factor', default_shape_arrow_angle_factor)
-    if (json_local_object['node_arrow_angle_direction'] !== undefined) this._shape_arrow_angle_direction = getStringFromJSON(json_local_object, 'node_arrow_angle_direction', default_shape_arrow_angle_direction) as Type_Side
-    if (json_local_object['node_width'] !== undefined) this._shape_min_width = getNumberFromJSON(json_local_object, 'node_width', default_shape_min_width)
-    if (json_local_object['node_height'] !== undefined) this._shape_min_height = getNumberFromJSON(json_local_object, 'node_height', default_shape_min_height)
-    if (json_local_object['color'] !== undefined) this._shape_color = getStringFromJSON(json_local_object, 'color', default_shape_color)
-    if (json_local_object['opacity'] !== undefined) this._shape_opacity = getNumberFromJSON(json_local_object, 'opacity', default_shape_opacity)
-    if (json_local_object['colorSustainable'] !== undefined) this._shape_color_sustainable = getBooleanFromJSON(json_local_object, 'colorSustainable', default_shape_color_sustainable)
-
-    // Parameter of node label - Default params for all labels
-    if (json_local_object['name_label_is_visible'] !== undefined) this._name_label_is_visible = getBooleanFromJSON(json_local_object, 'name_label_is_visible', default_node_name_label_is_visible)
-    if (json_local_object['name_label_font_family'] !== undefined) this._name_label_font_family = getStringFromJSON(json_local_object, 'name_label_font_family', default_node_name_label_font_family)
-    if (json_local_object['name_label_font_size'] !== undefined) this._name_label_font_size = getNumberFromJSON(json_local_object, 'name_label_font_size', default_node_name_label_font_size)
-    if (json_local_object['name_label_uppercase'] !== undefined) this._name_label_uppercase = getBooleanFromJSON(json_local_object, 'name_label_uppercase', default_node_name_label_uppercase)
-    if (json_local_object['name_label_bold'] !== undefined) this._name_label_bold = getBooleanFromJSON(json_local_object, 'name_label_bold', default_node_name_label_bold)
-    if (json_local_object['name_label_italic'] !== undefined) this._name_label_italic = getBooleanFromJSON(json_local_object, 'name_label_italic', default_node_name_label_italic)
-    if (json_local_object['name_label_color'] !== undefined) this._name_label_color = getStringFromJSON(json_local_object, 'name_label_color', default_node_name_label_color)
-    if (json_local_object['name_label_horiz'] !== undefined) this._name_label_horiz = getStringFromJSON(json_local_object, 'name_label_horiz', default_node_name_label_horiz) as Type_TextHPos
-    if (json_local_object['name_label_vert'] !== undefined) this._name_label_vert = getStringFromJSON(json_local_object, 'name_label_vert', default_node_name_label_vert) as Type_TextVPos
-
-    // Parameter of node label - Specific params for nodes
-    if (json_local_object['name_label_background'] !== undefined) this._name_label_background = getBooleanFromJSON(json_local_object, 'name_label_background', default_node_name_label_background)
-    if (json_local_object['name_label_background_color'] !== undefined) this._name_label_background_color = getStringFromJSON(json_local_object, 'name_label_background_color', default_node_name_label_background_color)
-    if (json_local_object['name_label_horiz_shift'] !== undefined) this._name_label_horiz_shift = getNumberFromJSON(json_local_object, 'name_label_horiz_shift', default_node_name_label_horiz_shift) as number
-    if (json_local_object['name_label_vert_shift'] !== undefined) this._name_label_vert_shift = getNumberFromJSON(json_local_object, 'name_label_vert_shift', default_node_name_label_vert_shift) as number
-    if (json_local_object['name_label_box_width'] !== undefined) this._name_label_box_width = getNumberFromJSON(json_local_object, 'name_label_box_width', default_node_name_label_box_width)
-
-    // Parameter of node value label - Default params for all labels
-    if (json_local_object['value_label_is_visible'] !== undefined) this._value_label_is_visible = getBooleanFromJSON(json_local_object, 'value_label_is_visible', default_node_value_label_is_visible)
-    if (json_local_object['value_label_font_family'] !== undefined) this._value_label_font_family = getStringFromJSON(json_local_object, 'value_label_font_family', default_node_name_label_font_family)
-    if (json_local_object['value_label_font_size'] !== undefined) this._value_label_font_size = getNumberFromJSON(json_local_object, 'value_label_font_size', default_node_name_label_font_size)
-    if (json_local_object['value_label_uppercase'] !== undefined) this._value_label_uppercase = getBooleanFromJSON(json_local_object, 'value_label_uppercase', default_node_name_label_uppercase)
-    if (json_local_object['value_label_bold'] !== undefined) this._value_label_bold = getBooleanFromJSON(json_local_object, 'value_label_bold', default_node_name_label_bold)
-    if (json_local_object['value_label_italic'] !== undefined) this._value_label_italic = getBooleanFromJSON(json_local_object, 'value_label_italic', default_node_name_label_italic)
-    if (json_local_object['value_label_color'] !== undefined) this._value_label_color = getStringFromJSON(json_local_object, 'value_label_color', default_node_name_label_color)
-    if (json_local_object['value_label_horiz'] !== undefined) this._value_label_horiz = getStringFromJSON(json_local_object, 'value_label_horiz', default_node_value_label_horiz) as Type_TextHPos
-    if (json_local_object['value_label_vert'] !== undefined) this._value_label_vert = getStringFromJSON(json_local_object, 'value_label_vert', default_node_value_label_vert) as Type_TextVPos
-
-    // Parameter of node value label - Specific param for nodes
-    if (json_local_object['value_label_background'] !== undefined) this._value_label_background = getBooleanFromJSON(json_local_object, 'value_label_background', default_node_value_label_background)
-    if (json_local_object['value_label_background_color'] !== undefined) this._value_label_background_color = getStringFromJSON(json_local_object, 'value_label_background_color', default_node_value_label_background_color)
-    if (json_local_object['value_label_horiz_shift'] !== undefined) this._value_label_horiz_shift = getNumberFromJSON(json_local_object, 'value_label_horiz_shift', default_node_value_label_horiz_shift) as number
-    if (json_local_object['value_label_vert_shift'] !== undefined) this._value_label_vert_shift = getNumberFromJSON(json_local_object, 'value_label_vert_shift', default_node_value_label_vert_shift) as number
-    if (json_local_object['value_label_box_width'] !== undefined) this._value_label_box_width = getNumberFromJSON(json_local_object, 'value_label_box_width', default_node_name_label_box_width)
-
-    // Parameter of node value label - Specific params for value display
-    if (json_local_object['value_label_scientific_notation'] !== undefined) this._value_label_scientific_notation = getBooleanFromJSON(json_local_object, 'value_label_scientific_notation', default_node_value_label_scientific_notation)
-    if (json_local_object['value_label_significant_digits'] !== undefined) this._value_label_significant_digits = getBooleanFromJSON(json_local_object, 'value_label_significant_digits', default_node_value_label_significant_digits)
-    if (json_local_object['value_label_nb_significant_digits'] !== undefined) this._value_label_nb_significant_digits = getNumberFromJSON(json_local_object, 'value_label_nb_significant_digits', default_node_value_label_nb_significant_digits)
-    if (json_local_object['value_label_custom_digit'] !== undefined) this._value_label_custom_digit = getBooleanFromJSON(json_local_object, 'value_label_custom_digit', default_node_value_label_custom_digit)
-    if (json_local_object['value_label_nb_digit'] !== undefined) this._value_label_nb_digit = getNumberFromJSON(json_local_object, 'value_label_nb_digit', default_node_value_label_nb_digit)
-    if (json_local_object['value_label_unit_visible'] !== undefined) this._value_label_unit_visible = getBooleanFromJSON(json_local_object, 'value_label_unit_visible', default_node_value_label_unit_visible)
-    if (json_local_object['value_label_unit'] !== undefined) this._value_label_unit = getStringFromJSON(json_local_object, 'value_label_unit', default_node_value_label_unit)
-    if (json_local_object['value_label_unit_factor'] !== undefined) this._value_label_unit_factor = getNumberFromJSON(json_local_object, 'value_label_unit_factor', default_node_value_label_unit_factor)
+  protected jsonMapping(): { [key: string]: string } {
+    return {
+      'label_visible': 'name_label_is_visible',
+      'font_family': 'name_label_font_family',
+      'font_size': 'name_label_font_size',
+      'uppercase': 'name_label_uppercase',
+      'bold': 'name_label_bold',
+      'italic': 'name_label_italic',
+      'label_color': 'name_label_color',
+      'label_horiz': 'name_label_horiz',
+      'label_vert': 'name_label_vert',
+      'label_background': 'name_label_background',
+      'label_background_color': 'name_label_background_color',
+      'label_box_width': 'name_label_box_width',
+      'show_value': 'value_label_is_visible',
+      'value_font_size': 'value_label_font_size',
+      'label_horiz_valeur': 'value_label_horiz',
+      'label_vert_valeur': 'value_label_vert',
+      'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_significant_digits',
+      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'custom_digit': 'value_label_custom_digit',
+      'nb_digit': 'value_label_nb_digit',
+      'label_unit_visible': 'value_label_unit_visible',
+      'label_unit': 'value_label_unit',
+      'label_unit_factor': 'value_label_unit_factor',
+      'shape': 'shape_type',
+      'node_arrow_angle_factor': 'shape_arrow_angle_factor',
+      'node_arrow_angle_direction': 'shape_arrow_angle_direction',
+      'node_width': 'shape_min_width',
+      'node_height': 'shape_min_height',
+      'color': 'shape_color',
+      'opacity': 'shape_opacity',
+      'colorSustainable': 'shape_color_sustainable',
+    }
   }
 
   public copyFrom(element: Class_NodeAttribute) {
-
-    // Parameters for shape
-    this._shape_visible = element._shape_visible
-    this._shape_type = element._shape_type
-    this._shape_arrow_angle_factor = element._shape_arrow_angle_factor
-    this._shape_arrow_angle_direction = element._shape_arrow_angle_direction
-    this._shape_min_width = element._shape_min_width
-    this._shape_min_height = element._shape_min_height
-    this._shape_color = element._shape_color
-    this._shape_opacity = element._shape_opacity
-    this._shape_color_sustainable = element._shape_color_sustainable
-
-    // Parameter of node label - Default params for all labels
-    this._name_label_is_visible = element._name_label_is_visible
-    this._name_label_font_family = element._name_label_font_family
-    this._name_label_font_size = element._name_label_font_size
-    this._name_label_uppercase = element._name_label_uppercase
-    this._name_label_bold = element._name_label_bold
-    this._name_label_italic = element._name_label_italic
-    this._name_label_color = element._name_label_color
-    this._name_label_horiz = element._name_label_horiz
-    this._name_label_vert = element._name_label_vert
-
-    // Parameter of node label - Specific params for nodes
-    this._name_label_background = element._name_label_background
-    this._name_label_background_color = element._name_label_background_color
-    this._name_label_horiz_shift = element._name_label_horiz_shift
-    this._name_label_vert_shift = element._name_label_vert_shift
-    this._name_label_box_width = element._name_label_box_width
-
-    // Parameter of node value label - Default params for all labels
-    this._value_label_is_visible = element._value_label_is_visible
-    this._value_label_font_family = element._value_label_font_family
-    this._value_label_font_size = element._value_label_font_size
-    this._value_label_uppercase = element._value_label_uppercase
-    this._value_label_bold = element._value_label_bold
-    this._value_label_italic = element._value_label_italic
-    this._value_label_color = element._value_label_color
-    this._value_label_horiz = element._value_label_horiz
-    this._value_label_vert = element._value_label_vert
-
-    // Parameter of node value label - Specific param for nodes
-    this._value_label_background = element._value_label_background
-    this._value_label_background_color = element._value_label_background_color
-    this._value_label_horiz_shift = element._value_label_horiz_shift
-    this._value_label_vert_shift = element._value_label_vert_shift
-    this._value_label_box_width = element._value_label_box_width
-
-    // Parameter of node value label - Specific params for value display
-    this._value_label_scientific_notation = element._value_label_scientific_notation
-    this._value_label_significant_digits = element._value_label_significant_digits
-    this._value_label_nb_significant_digits = element._value_label_nb_significant_digits
-    this._value_label_custom_digit = element._value_label_custom_digit
-    this._value_label_nb_digit = element._value_label_nb_digit
-    this._value_label_unit_visible = element._value_label_unit_visible
-    this._value_label_unit = element._value_label_unit
-    this._value_label_unit_factor = element._value_label_unit_factor
+    Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
+      this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
+    })
   }
 
-  // PROTECTED METHODS ==================================================================
+  // Méthodes abstraites
   protected update() { }
 
-  // GETTERS ============================================================================
-  // Parameters for shape
-  public get shape_visible() { return this._shape_visible }
-  public get shape_type() { return this._shape_type }
-  public get shape_arrow_angle_factor() { return this._shape_arrow_angle_factor }
-  public get shape_arrow_angle_direction() { return this._shape_arrow_angle_direction }
-  public get shape_min_width() { return this._shape_min_width }
-  public get shape_min_height() { return this._shape_min_height }
-  public get shape_color() { return this._shape_color }
-  public get shape_opacity() { return this._shape_opacity }
-  public get shape_color_sustainable() { return this._shape_color_sustainable }
-
-  // Parameter of node label
-  public get name_label_is_visible() { return this._name_label_is_visible }
-  public get name_label_font_family() { return this._name_label_font_family }
-  public get name_label_font_size() { return this._name_label_font_size }
-  public get name_label_uppercase() { return this._name_label_uppercase }
-  public get name_label_bold() { return this._name_label_bold }
-  public get name_label_italic() { return this._name_label_italic }
-  public get name_label_color() { return this._name_label_color }
-  public get name_label_horiz() { return this._name_label_horiz }
-  public get name_label_vert() { return this._name_label_vert }
-
-  public get name_label_background() { return this._name_label_background }
-  public get name_label_background_color() { return this._name_label_background_color }
-  public get name_label_horiz_shift() { return this._name_label_horiz_shift }
-  public get name_label_vert_shift() { return this._name_label_vert_shift }
-  public get name_label_box_width() { return this._name_label_box_width }
-
-  // Parameter of node value label
-  public get value_label_is_visible() { return this._value_label_is_visible }
-  public get value_label_font_family() { return this._value_label_font_family }
-  public get value_label_font_size() { return this._value_label_font_size }
-  public get value_label_uppercase() { return this._value_label_uppercase }
-  public get value_label_bold() { return this._value_label_bold }
-  public get value_label_italic() { return this._value_label_italic }
-  public get value_label_color() { return this._value_label_color }
-  public get value_label_horiz() { return this._value_label_horiz }
-  public get value_label_vert() { return this._value_label_vert }
-
-  public get value_label_background() { return this._value_label_background }
-  public get value_label_background_color() { return this._value_label_background_color }
-  public get value_label_horiz_shift() { return this._value_label_horiz_shift }
-  public get value_label_vert_shift() { return this._value_label_vert_shift }
-  public get value_label_box_width() { return this._value_label_box_width }
-
-  public get value_label_scientific_notation() { return this._value_label_scientific_notation }
-  public get value_label_significant_digits() { return this._value_label_significant_digits }
-  public get value_label_nb_significant_digits() { return this._value_label_nb_significant_digits }
-  public get value_label_custom_digit() { return this._value_label_custom_digit }
-  public get value_label_nb_digit() { return this._value_label_nb_digit }
-  public get value_label_unit_visible() { return this._value_label_unit_visible }
-  public get value_label_unit() { return this._value_label_unit }
-  public get value_label_unit_factor() { return this._value_label_unit_factor }
-
-  // SETTERS ============================================================================
-  // Parameters for shape
-  public set shape_visible(_: boolean | undefined) { this._shape_visible = _; this.update() }
-  public set shape_type(_: Type_Shape | undefined) { this._shape_type = _; this.update() }
-  public set shape_arrow_angle_factor(_: number | undefined) { this._shape_arrow_angle_factor = _; this.update() }
-  public set shape_arrow_angle_direction(_: Type_Side | undefined) { this._shape_arrow_angle_direction = _; this.update() }
-  public set shape_min_width(_: number | undefined) { this._shape_min_width = _; this.update() }
-  public set shape_min_height(_: number | undefined) { this._shape_min_height = _; this.update() }
-  public set shape_color(_: string | undefined) { this._shape_color = _; this.update() }
-  public set shape_opacity(_) { this._shape_opacity = _; this.update() }
-  public set shape_color_sustainable(_: boolean | undefined) { this._shape_color_sustainable = _; this.update() }
-
-  // Parameter of node label
-  public set name_label_is_visible(_: boolean | undefined) { this._name_label_is_visible = _; this.update() }
-  public set name_label_font_family(_: string | undefined) { this._name_label_font_family = _; this.update() }
-  public set name_label_font_size(_: number | undefined) { this._name_label_font_size = _; this.update() }
-  public set name_label_uppercase(_: boolean | undefined) { this._name_label_uppercase = _; this.update() }
-  public set name_label_bold(_: boolean | undefined) { this._name_label_bold = _; this.update() }
-  public set name_label_italic(_: boolean | undefined) { this._name_label_italic = _; this.update() }
-  public set name_label_color(_: string | undefined) { this._name_label_color = _; this.update() }
-  public set name_label_vert(_: Type_TextVPos | undefined) {
-    this._name_label_vert = _
-    // Check if name_label_horiz is dragged before reseting it to 'normal' value
-    // (exemple: if we set middle to name_label_horiz then check if name_label_vert is dragged to reset it's attr)
-    this._name_label_horiz = (this._name_label_horiz == 'dragged' && _ !== 'dragged') ? 'middle' : this._name_label_horiz
-    this.update()
-  }
-  public set name_label_horiz(_: Type_TextHPos | undefined) {
-    this._name_label_horiz = _
-    // Check if name_label_vert is dragged before reseting it to 'normal' value
-    // (exemple: if we set middle to name_label_vert then check if name_label_horiz is dragged to reset it's attr)
-    this._name_label_vert = (this._name_label_vert == 'dragged' && _ !== 'dragged') ? 'middle' : this._name_label_vert
-    this.update()
-  }
-
-  public set name_label_background(_: boolean | undefined) { this._name_label_background = _; this.update() }
-  public set name_label_background_color(_: string | undefined) { this._name_label_background_color = _; this.update() }
-  public set name_label_horiz_shift(_: number | undefined) { this._name_label_horiz_shift = _; this.update() }
-  public set name_label_vert_shift(_: number | undefined) { this._name_label_vert_shift = _; this.update() }
-  public set name_label_box_width(_: number | undefined) { this._name_label_box_width = _; this.update() }
-
-  // Parameter of node value label
-  public set value_label_is_visible(_: boolean | undefined) { this._value_label_is_visible = _; this.update() }
-  public set value_label_font_family(_: string | undefined) { this._value_label_font_family = _; this.update() }
-  public set value_label_font_size(_: number | undefined) { this._value_label_font_size = _; this.update() }
-  public set value_label_uppercase(_: boolean | undefined) { this._value_label_uppercase = _; this.update() }
-  public set value_label_bold(_: boolean | undefined) { this._value_label_bold = _; this.update() }
-  public set value_label_italic(_: boolean | undefined) { this._value_label_italic = _; this.update() }
-  public set value_label_color(_: string | undefined) { this._value_label_color = _; this.update() }
-  public set value_label_horiz(_: Type_TextHPos | undefined) {
-    this._value_label_horiz = _
-    // Check if value_label_vert is dragged before reseting it to 'normal' value
-    // (exemple: if we set middle to value_label_horiz then check if value_label_vert is dragged to reset it's attr)
-    this._value_label_vert = (this._value_label_vert == 'dragged' && _ !== 'dragged') ? 'middle' : this._value_label_vert
-    this.update()
-  }
-  public set value_label_vert(_: Type_TextVPos | undefined) {
-    this._value_label_vert = _
-    // Check if value_label_horiz is dragged before reseting it to 'normal' value
-    // (exemple: if we set middle to value_label_vert then check if value_label_horiz is dragged to reset it's attr)
-    this._value_label_horiz = (this._value_label_horiz == 'dragged' && _ !== 'dragged') ? 'middle' : this._value_label_horiz
-    this.update()
-  }
-
-  public set value_label_horiz_shift(_: number | undefined) { this._value_label_horiz_shift = _; this.update() }
-  public set value_label_vert_shift(_: number | undefined) { this._value_label_vert_shift = _; this.update() }
-  public set value_label_background(_: boolean | undefined) { this._value_label_background = _; this.update() }
-  public set value_label_background_color(_: string | undefined) { this._value_label_background_color = _; this.update() }
-  public set value_label_box_width(_: number | undefined) { this._value_label_box_width = _; this.update() }
-
-  public set value_label_scientific_notation(_: boolean | undefined) { this._value_label_scientific_notation = _; this.update() }
-  public set value_label_significant_digits(_: boolean | undefined) { this._value_label_significant_digits = _; this.update() }
-  public set value_label_nb_significant_digits(_: number | undefined) { this._value_label_nb_significant_digits = _; this.update() }
-  public set value_label_custom_digit(_: boolean | undefined) { this._value_label_custom_digit = _; this.update() }
-  public set value_label_nb_digit(_: number | undefined) { this._value_label_nb_digit = _; this.update() }
-  public set value_label_unit_visible(_: boolean | undefined) { this._value_label_unit_visible = _; this.update() }
-  public set value_label_unit(_: string | undefined) { this._value_label_unit = _; this.update() }
-  public set value_label_unit_factor(_: number | undefined) { this._value_label_unit_factor = _; this.update() }
+  public get id() { return 'undefined' }
+  public get name(): string { return 'none' }
 }
 
-// CLASS NODE STYLE *********************************************************************
-/**
- * Define style for nodes
- *
- * @export
- * @class Class_NodeStyle
- * @extends {Class_NodeAttribute}
- */
-
 export class Class_NodeStyle extends Class_NodeAttribute {
-
-  // PRIVATE ATTRIBUTES =================================================================
   private _id: string
-
   private _name: string
-
   private _is_deletable: boolean
-
   private _references: { [_: string]: Type_AnyNodeElement } = {}
-  // Dict of attr that is activated to customise
-  private _customisable_attribute: {
-    shape_visible: boolean,
-    shape_type: boolean,
-    shape_min_width: boolean,
-    shape_min_height: boolean,
-    shape_color: boolean,
-    shape_opacity: boolean,
-    shape_color_sustainable: boolean,
-    shape_arrow_angle_factor: boolean,
-    shape_arrow_angle_direction: boolean,
-    name_label_is_visible: boolean,
-    name_label_font_family: boolean,
-    name_label_font_size: boolean,
-    name_label_uppercase: boolean,
-    name_label_bold: boolean,
-    name_label_italic: boolean,
-    name_label_color: boolean,
-    name_label_horiz: boolean,
-    name_label_vert: boolean,
-    name_label_background: boolean,
-    name_label_background_color: boolean,
-    name_label_horiz_shift: boolean,
-    name_label_vert_shift: boolean,
-    name_label_box_width: boolean,
-    value_label_is_visible: boolean,
-    value_label_font_family: boolean,
-    value_label_font_size: boolean,
-    value_label_uppercase: boolean,
-    value_label_bold: boolean,
-    value_label_italic: boolean,
-    value_label_color: boolean,
-    value_label_horiz: boolean,
-    value_label_vert: boolean,
-    value_label_background: boolean,
-    value_label_background_color: boolean,
-    value_label_horiz_shift: boolean,
-    value_label_vert_shift: boolean,
-    value_label_box_width: boolean,
-    value_label_scientific_notation: boolean,
-    value_label_significant_digits: boolean,
-    value_label_nb_significant_digits: boolean,
-    value_label_custom_digit: boolean,
-    value_label_nb_digit: boolean,
-    value_label_unit_visible: boolean,
-    value_label_unit: boolean,
-    value_label_unit_factor: boolean,
-  }
+  private _customisable_attribute: { [K in AttributeKey]: boolean }
+  private _position: Type_ElementPositionOptionnal = {}
 
-  private _position: Type_ElementPositionOptionnal
-
-  // CONSTRUCTOR ========================================================================
-  constructor(
-    id: string,
-    name: string,
-    is_deletable: boolean = true,
-  ) {
-    // Instantiate super class
+  constructor(id: string, name: string, is_deletable: boolean = true) {
     super()
-
-    // Set id
     this._id = id
-
-    // Set name
     this._name = name
-
-    // Set as deletable or not
     this._is_deletable = is_deletable
 
-    // Parameters for geometry
-    this._position = {}
+    // Initialiser les attributs customisables
+    this._customisable_attribute = {} as { [K in AttributeKey]: boolean }
+    Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
+      this._customisable_attribute[key as AttributeKey] = !is_deletable
+    })
 
-    this._customisable_attribute = {
-      shape_visible: !this._is_deletable,
-      shape_type: !this._is_deletable,
-      shape_min_width: !this._is_deletable,
-      shape_min_height: !this._is_deletable,
-      shape_color: !this._is_deletable,
-      shape_opacity: !this._is_deletable,
-      shape_color_sustainable: !this._is_deletable,
-      shape_arrow_angle_factor: !this._is_deletable,
-      shape_arrow_angle_direction: !this._is_deletable,
-      name_label_is_visible: !this._is_deletable,
-      name_label_font_family: !this._is_deletable,
-      name_label_font_size: !this._is_deletable,
-      name_label_uppercase: !this._is_deletable,
-      name_label_bold: !this._is_deletable,
-      name_label_italic: !this._is_deletable,
-      name_label_color: !this._is_deletable,
-      name_label_horiz: !this._is_deletable,
-      name_label_vert: !this._is_deletable,
-      name_label_background: !this._is_deletable,
-      name_label_background_color: !this._is_deletable,
-      name_label_horiz_shift: !this._is_deletable,
-      name_label_vert_shift: !this._is_deletable,
-      name_label_box_width: !this._is_deletable,
-      value_label_is_visible: !this._is_deletable,
-      value_label_font_family: !this._is_deletable,
-      value_label_font_size: !this._is_deletable,
-      value_label_uppercase: !this._is_deletable,
-      value_label_bold: !this._is_deletable,
-      value_label_italic: !this._is_deletable,
-      value_label_color: !this._is_deletable,
-      value_label_horiz: !this._is_deletable,
-      value_label_vert: !this._is_deletable,
-      value_label_background: !this._is_deletable,
-      value_label_background_color: !this._is_deletable,
-      value_label_horiz_shift: !this._is_deletable,
-      value_label_vert_shift: !this._is_deletable,
-      value_label_box_width: !this._is_deletable,
-      value_label_scientific_notation: !this._is_deletable,
-      value_label_significant_digits: !this._is_deletable,
-      value_label_nb_significant_digits: !this._is_deletable,
-      value_label_custom_digit: !this._is_deletable,
-      value_label_nb_digit: !this._is_deletable,
-      value_label_unit_visible: !this._is_deletable,
-      value_label_unit: !this._is_deletable,
-      value_label_unit_factor: !this._is_deletable,
-    }
-
-    // If it is not deletable then it's default style so we init value
+    // Initialiser les valeurs par défaut si non deletable
     if (!is_deletable) {
-      // Parameters for geometry
       this._position = {
         type: 'absolute',
         x: 10,
@@ -726,155 +363,101 @@ export class Class_NodeStyle extends Class_NodeAttribute {
         relative_dy: default_relative_dy
       }
 
-      // Parameters for shape
-      this._shape_visible = default_shape_visible
-      this._shape_type = default_shape_type
-      this._shape_min_width = default_shape_min_width
-      this._shape_min_height = default_shape_min_height
-      this._shape_color = default_shape_color
-      this._shape_opacity = default_shape_opacity
-      this._shape_color_sustainable = default_shape_color_sustainable
-      this._shape_arrow_angle_factor = default_shape_arrow_angle_factor
-      this._shape_arrow_angle_direction = default_shape_arrow_angle_direction
+      Object.entries(NODES_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
+        this._attributes[key as AttributeKey] = config.default
+      })
+    }
+  }
 
-      // Parameter of node label
-      this._name_label_is_visible = default_node_name_label_is_visible
-      this._name_label_font_family = default_node_name_label_font_family
-      this._name_label_font_size = default_node_name_label_font_size
-      this._name_label_uppercase = default_node_name_label_uppercase
-      this._name_label_bold = default_node_name_label_bold
-      this._name_label_italic = default_node_name_label_italic
-      this._name_label_color = default_node_name_label_color
-      this._name_label_horiz = default_node_name_label_horiz
-      this._name_label_vert = default_node_name_label_vert
+  public delete() {
+    if (this._is_deletable) {
+      Object.values(this._references).forEach(ref => ref.useDefaultStyle())
+      this._references = {}
+    }
+  }
 
-      this._name_label_background = default_node_name_label_background
-      this._name_label_background_color = default_node_name_label_background_color
-      this._name_label_horiz_shift = default_node_name_label_horiz_shift
-      this._name_label_vert_shift = default_node_name_label_vert_shift
-      this._name_label_box_width = default_node_name_label_box_width
+  public addReference(ref: Type_AnyNodeElement) {
+    if (!this._references[ref.id]) {
+      this._references[ref.id] = ref
+    }
+  }
 
-      // Parameter of node value label
-      this._value_label_is_visible = default_node_value_label_is_visible
-      this._value_label_font_family = default_node_name_label_font_family
-      this._value_label_font_size = default_node_name_label_font_size
-      this._value_label_uppercase = default_node_name_label_uppercase
-      this._value_label_bold = default_node_name_label_bold
-      this._value_label_italic = default_node_name_label_italic
-      this._value_label_color = default_node_name_label_color
-      this._value_label_horiz = default_node_value_label_horiz
-      this._value_label_vert = default_node_value_label_vert
+  public removeReference(ref: Type_AnyNodeElement) {
+    if (this._references[ref.id] !== undefined) {
+      delete this._references[ref.id]
+    }
+  }
 
-      this._value_label_background = default_node_value_label_background
-      this._value_label_background_color = default_node_value_label_background_color
-      this._value_label_horiz_shift = default_node_value_label_horiz_shift
-      this._value_label_vert_shift = default_node_value_label_vert_shift
-      this._value_label_box_width = default_node_name_label_box_width
+  public fromJSON(json_local_object: Type_JSON): void {
+    super.fromJSON(json_local_object)
+    this._position.type = getStringOrUndefinedFromJSON(json_local_object, 'position') as Type_Position
+    this._position.relative_dx = getNumberFromJSON(json_local_object, 'relative_dx', default_relative_dx)
+    this._position.relative_dy = getNumberFromJSON(json_local_object, 'relative_dy', default_relative_dy)
+    this._position.dx = getNumberFromJSON(json_local_object, 'dx', default_dx)
+    this._position.dy = getNumberFromJSON(json_local_object, 'dy', default_dy)
 
-      // Parameter of node value label - Specific params for value display
-      this._value_label_scientific_notation = default_node_value_label_scientific_notation
-      this._value_label_scientific_notation = default_node_value_label_scientific_notation
-      this._value_label_significant_digits = default_node_value_label_significant_digits
-      this._value_label_nb_significant_digits = default_node_value_label_nb_significant_digits
-      this._value_label_custom_digit = default_node_value_label_custom_digit
-      this._value_label_nb_digit = default_node_value_label_nb_digit
-      this._value_label_unit_visible = default_node_value_label_unit_visible
-      this._value_label_unit = default_node_value_label_unit
-      this._value_label_unit_factor = default_node_value_label_unit_factor
+    const fromJsonMapping: { [key: string]: string } = this.jsonMapping()
+
+    Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
+      if (json_local_object[jsonKey] !== undefined && json_local_object[jsonKey] != NODES_ATTRIBUTES_CONFIG[attrKey as AttributeKey].default) {
+        this._customisable_attribute[attrKey as AttributeKey] = true
+      }
+    })
+
+    Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
+      if (json_local_object[key] !== undefined && json_local_object[key] != NODES_ATTRIBUTES_CONFIG[key as AttributeKey].default) {
+        this._customisable_attribute[key as AttributeKey] = true
+      }
+    })
+  }
+
+  public toJSON(): Type_JSON {
+    const json_object = {} as Type_JSON
+    if (this.position.type) json_object['position'] = this.position.type
+    // if (this.position.x) json_object['position'] = this.position.x
+    // if (this.position.y) json_object['position'] = this.position.y
+    // if (this.position.u) json_object['position'] = this.position.u
+    // if (this.position.v) json_object['position'] = this.position.v
+    // if (this.position.dx) json_object['position'] = this.position.dx
+    // if (this.position.dy) json_object['position'] = this.position.dy
+    if (this.position.relative_dx) json_object['relative_dx'] = this.position.relative_dx
+    if (this.position.relative_dy) json_object['relative_dy'] = this.position.relative_dy
+    if (this.position.auto_x) json_object['auto_x'] = this.position.auto_x
+
+    // Mapping JSON pour éviter la répétition
+    const jsonMapping: { [key: string]: string } = {
+      shape_type: 'shape',
+      shape_arrow_angle_factor: 'node_arrow_angle_factor',
+      shape_arrow_angle_direction: 'node_arrow_angle_direction',
+      shape_min_width: 'node_width',
+      shape_min_height: 'node_height',
+      shape_color: 'color',
+      shape_opacity: 'opacity',
+      shape_color_sustainable: 'colorSustainable',
     }
 
+    Object.entries(this._attributes).forEach(([key, value]) => {
+      if (value !== undefined && this._customisable_attribute[key as AttributeKey] && value != NODES_ATTRIBUTES_CONFIG[key as AttributeKey].default) {
+        const jsonKey = jsonMapping[key] || key
+        json_object[jsonKey] = value
+      }
+    })
 
-  }
-
-  /**
-     * Assign to node implementation values from json,
-     * Does not assign links -> need to read links from JSON before
-     *
-     * @param {Type_JSON} json_node_object
-     * @memberof ClassTemplate_NodeElement
-     */
-  public fromJSON(
-    json_node_object: Type_JSON
-  ) {
-    super.fromJSON(json_node_object)
-    this._position.type = getStringOrUndefinedFromJSON(json_node_object, 'position') as Type_Position
-    this._position.relative_dx = getNumberFromJSON(json_node_object, 'relative_dx', default_relative_dx)
-    this._position.relative_dy = getNumberFromJSON(json_node_object, 'relative_dy', default_relative_dy)
-    this._position.dx = getNumberFromJSON(json_node_object, 'dx', default_dx)
-    this._position.dy = getNumberFromJSON(json_node_object, 'dy', default_dy)
-
-    this._customisable_attribute = getJSONFromJSON(json_node_object, 'customisable_props', this._customisable_attribute) as typeof this._customisable_attribute
-
-
-  }
-
-  public toJSON() {
-    const json_object = super.toJSON()
-    if (this.position.type) json_object['position'] = this.position.type
-    json_object['customisable_props']=this._customisable_attribute
     return json_object
   }
 
-  // CLEANING ===========================================================================
-  public delete() {
-    if (this._is_deletable) {
-      // Switch all refs to default style
-      Object.values(this._references)
-        .forEach(ref => {
-          ref.useDefaultStyle()
-        })
-      this._references = {}
-      // Garbage collector will do the rest....
-    }
-  }
-
-  // PUBLIC METHODS =======================================================================
-  public addReference(_: Type_AnyNodeElement) {
-    if (!this._references[_.id]) {
-      this._references[_.id] = _
-    }
-  }
-
-  public removeReference(_: Type_AnyNodeElement) {
-    if (this._references[_.id] !== undefined) {
-      delete this._references[_.id]
-    }
-  }
-
-  // PROTECTED METHODS ==================================================================
   protected update() {
     this.updateReferencesDraw()
   }
 
-  // PRIVATE METHODS ======================================================================
   private updateReferencesDraw() {
-    Object.values(this._references)
-      .forEach(ref => ref.draw())
+    Object.values(this._references).forEach(ref => ref.draw())
   }
 
-  // GETTERS ============================================================================
-  /**
-     * get id of style
-     * @readonly
-     * @memberof Class_NodeStyle
-     */
   public get id() { return this._id }
-
-  /**
-     * Get name of style != id
-     * @memberof Class_NodeStyle
-     */
   public get name() { return this._name }
-
-  // SETTERS =============================================================================
-  /**
-     * Set name of style != id
-     * @memberof Class_NodeStyle
-     */
-  public set name(_: string) { this._name = _ }
-
+  public set name(value: string) { this._name = value }
+  public get customisable_attribute() { return this._customisable_attribute }
   public get position() { return this._position }
-  public set position(_) { this._position = _ }
-
-  public get customisable_attribute(){return this._customisable_attribute}
+  public set position(value: Type_ElementPositionOptionnal) { this._position = value }
 }

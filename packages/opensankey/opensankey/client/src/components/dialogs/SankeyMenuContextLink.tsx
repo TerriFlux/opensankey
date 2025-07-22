@@ -229,14 +229,14 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
 
   const moveToFirstPlan = () => {
     drawing_area.selected_links_list.forEach(link => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(link)
       drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
     })
     closeContextMenu()
   }
   const moveToLastPlan = () => {
     drawing_area.selected_links_list.forEach(link => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(link)
       drawing_area.moveOrderElementInDA(idx_to_shift, 0)
     })
     closeContextMenu()

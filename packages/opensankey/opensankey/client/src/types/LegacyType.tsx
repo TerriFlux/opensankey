@@ -167,6 +167,8 @@ export type SankeyLinkAttrLocal = {
   right_horiz_shift?: number,
   starting_tangeant?: number,
   ending_tangeant?: number,
+  starting_curve?: number,
+  ending_curve?: number,
   vert_shift?: number,
   curvature?: number,
   curved?: boolean,

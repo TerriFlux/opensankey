@@ -249,9 +249,9 @@ export const DefaultNodeProductStyle: DefaultNodeProductStyleFuncStyle = (): San
  * Return default style configuration for exchange import node
  * @return {*}
  */
-export const DefaultNodeImportStyle: DefaultNodeSectorStyleFuncStyle = () => {
+export const DefaultNodeImportCloseStyle: DefaultNodeSectorStyleFuncStyle = () => {
   const node_style = JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
-  node_style.idNode = 'NodeImportStyle'
+  node_style.idNode = 'NodeImportCloseStyle'
   node_style.name = 'Noeuds de type importations'
   // relative
   node_style.position = 'relative'
@@ -274,9 +274,9 @@ export const DefaultNodeImportStyle: DefaultNodeSectorStyleFuncStyle = () => {
  * Return default style configuration for exchange export node
  * @return {*}
  */
-export const DefaultNodeExportStyle: DefaultNodeSectorStyleFuncStyle = () => {
+export const DefaultNodeExportCloseStyle: DefaultNodeSectorStyleFuncStyle = () => {
   const node_style = JSON.parse(JSON.stringify(DefaultNodeStyle())) as SankeyNodeStyle
-  node_style.idNode = 'NodeExportStyle'
+  node_style.idNode = 'NodeExportCloseStyle'
   node_style.name = 'Noeuds de type exportations'
   // relative
   node_style.position = 'relative'
@@ -344,14 +344,14 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
  * Return default style configuration for link to export node
  * @return {*}
  */
-const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
+const DefaultLinkExportCloseStyle: DefaultLinkStyleFuncType = () => {
   const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
   link_style.orientation = 'hv'
   link_style.label_visible = true
   link_style.label_position = 'end'
   link_style.label_on_path = true
   link_style.label_visible = true
-  link_style.idLink = 'LinkExportStyle'
+  link_style.idLink = 'LinkExportCloseStyle'
   link_style.name = 'Flux de type exportations'
   link_style.starting_tangeant = 0.25
   return link_style
@@ -361,14 +361,14 @@ const DefaultLinkExportStyle: DefaultLinkStyleFuncType = () => {
  *
  * @return {*}
  */
-const DefaultLinkImportStyle: DefaultLinkStyleFuncType = () => {
+const DefaultLinkImportCloseStyle: DefaultLinkStyleFuncType = () => {
   const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
   link_style.orientation = 'vh'
   link_style.label_visible = true
   link_style.label_position = 'beginning'
   link_style.label_on_path = true
   link_style.label_visible = true
-  link_style.idLink = 'LinkImportStyle'
+  link_style.idLink = 'LinkImportCloseStyle'
   link_style.name = 'Flux de type importations'
   link_style.ending_tangeant = 0.25
   return link_style
@@ -589,17 +589,17 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
         n.style = ['default', 'NodeSectorStyle']
       } else if (n.tags['type de noeud'].includes('echange')) {
         // @ts-ignore
-        n.style = ['default', 'NodeSectorStyle', 'NodeImportExportStyle']
+        n.style = ['default', 'NodeSectorStyle', 'NodeImportExportCloseStyle']
         if (n.inputLinksId.length > 0) {
           // @ts-ignore
-          data_to_convert.links[n.inputLinksId[0]].style = ['default', 'LinkImportExportStyle', 'LinkExportStyle']
+          data_to_convert.links[n.inputLinksId[0]].style = ['default', 'LinkImportExportCloseStyle', 'LinkExportCloseStyle']
           // @ts-ignore
-          n.style.push('NodeExportStyle')
+          n.style.push('NodeImportCloseStyle')
         } else {
           // @ts-ignore
-          data_to_convert.links[n.outputLinksId[0]].style = ['default', 'LinkImportExportStyle', 'LinkImportStyle']
+          data_to_convert.links[n.outputLinksId[0]].style = ['default', 'LinkImportExportCloseStyle', 'LinkImportCloseStyle']
           // @ts-ignore
-          n.style.push('NodeImportStyle')
+          n.style.push('NodeImportCloseStyle')
         }
       }
     }
@@ -970,7 +970,7 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 //   }
 // }
 const setTrade = (data: SankeyData) => {
-  let s = data.style_node['NodeImportStyle'] as Type_JSON
+  let s = data.style_node['NodeImportCloseStyle'] as Type_JSON
   s.position = 'absolute'
   s.shape_visible = false
   s.shape_min_height = 1
@@ -982,7 +982,7 @@ const setTrade = (data: SankeyData) => {
   s.value_label_vert = 'middle'
   //s.value_label_horiz_shift = -10
 
-  s = data.style_node['NodeExportStyle'] as Type_JSON
+  s = data.style_node['NodeImportCloseStyle'] as Type_JSON
   s.position = 'absolute'
   s.shape_visible = false
   s.shape_min_height = 1
@@ -994,10 +994,10 @@ const setTrade = (data: SankeyData) => {
   s.value_label_vert = 'middle'
   //s.value_label_horiz_shift = 10
 
-  s = data.style_link['LinkImportStyle'] as Type_JSON
+  s = data.style_link['LinkImportCloseStyle'] as Type_JSON
   s.orientation = 'hh'
   s.value_label_is_visible = true
-  s = data.style_link['LinkExportStyle'] as Type_JSON
+  s = data.style_link['LinkExportCloseStyle'] as Type_JSON
   s.orientation = 'hh'
   s.value_label_is_visible = true
 }
@@ -1139,20 +1139,20 @@ const convert_tags: convert_tagsFuncType = (
     if (!Object.keys(data.style_node).includes('NodeSectorStyle')) {
       data.style_node['NodeSectorStyle'] = DefaultNodeSectorStyle()
     }
-    if (!Object.keys(data.style_node).includes('NodeImportStyle')) {
-      data.style_node['NodeImportStyle'] = DefaultNodeImportStyle()
+    if (!Object.keys(data.style_node).includes('NodeImportCloseStyle')) {
+      data.style_node['NodeImportCloseStyle'] = DefaultNodeImportCloseStyle()
     }
-    if (!Object.keys(data.style_node).includes('NodeExportStyle')) {
-      data.style_node['NodeExportStyle'] = DefaultNodeExportStyle()
+    if (!Object.keys(data.style_node).includes('NodeImportCloseStyle')) {
+      data.style_node['NodeImportCloseStyle'] = DefaultNodeImportCloseStyle()
     }
-    if (!Object.keys(data.style_link).includes('LinkImportStyle')) {
-      data.style_link['LinkImportStyle'] = DefaultLinkImportStyle()
+    if (!Object.keys(data.style_link).includes('LinkImportCloseStyle')) {
+      data.style_link['LinkImportCloseStyle'] = DefaultLinkImportCloseStyle()
     }
-    data.style_link['LinkImportStyle'].ending_tangeant = 0.25
-    if (!Object.keys(data.style_link).includes('LinkExportStyle')) {
-      data.style_link['LinkExportStyle'] = DefaultLinkExportStyle()
+    data.style_link['LinkImportCloseStyle'].ending_tangeant = 0.25
+    if (!Object.keys(data.style_link).includes('LinkExportCloseStyle')) {
+      data.style_link['LinkExportCloseStyle'] = DefaultLinkExportCloseStyle()
     }
-    data.style_link['LinkExportStyle'].starting_tangeant = 0.25
+    data.style_link['LinkExportCloseStyle'].starting_tangeant = 0.25
   }
 
   if (data.nodeTags.Dimensions) {
@@ -1401,20 +1401,20 @@ const convert_tags: convert_tagsFuncType = (
       if (n.tags['Type de noeud'] !== undefined) {
         n.tags['type de noeud'] = JSON.parse(JSON.stringify(n.tags['Type de noeud']))
         delete n.tags['Type de noeud']
-        if (n.tags['type de noeud'][0] == 'echange') {
-          //if (n.style == 'default') {
-          if (n.inputLinksId.length === 0) {
-            n.style = 'NodeImportStyle'
-            if (n.outputLinksId.length !== 0) {
-              data.links[n.outputLinksId[0]].style = 'LinkImportStyle'
-            }
-          } else if (n.outputLinksId.length === 0) {
-            n.style = 'NodeExportStyle'
-            if (n.inputLinksId.length !== 0) {
-              data.links[n.inputLinksId[0]].style = 'LinkExportStyle'
-            }
-          }
-        }
+        // if (n.tags['type de noeud'][0] == 'echange') {
+        //   if (n.style == 'default') {
+        //   if (n.inputLinksId.length === 0) {
+        //     n.style = 'NodeImportCloseStyle'
+        //     if (n.outputLinksId.length !== 0) {
+        //       data.links[n.outputLinksId[0]].style = 'LinkImportCloseStyle'
+        //     }
+        //   } else if (n.outputLinksId.length === 0) {
+        //     n.style = 'NodeImportCloseStyle'
+        //     if (n.inputLinksId.length !== 0) {
+        //       data.links[n.inputLinksId[0]].style = 'LinkExportCloseStyle'
+        //     }
+        //   }
+        // }
       }
     })
   }
@@ -1652,11 +1652,11 @@ const convert_nodes: convert_nodesFuncType = (
     if (n.tags['Exchanges'] && n.tags['Exchanges'][0] !== 'interior') {
       n.tags['type de noeud'] = ['echange']
       if (n.outputLinksId.length > 0) {
-        n.style = 'NodeImportStyle'
-        data.links[n.outputLinksId[0]].style = 'LinkImportStyle'
+        n.style = 'NodeImportCloseStyle'
+        data.links[n.outputLinksId[0]].style = 'LinkImportCloseStyle'
       } else {
-        n.style = 'NodeExportStyle'
-        data.links[n.inputLinksId[0]].style = 'LinkExportStyle'
+        n.style = 'NodeImportCloseStyle'
+        data.links[n.inputLinksId[0]].style = 'LinkExportCloseStyle'
       }
 
       if (!n.dimensions) {
@@ -2438,8 +2438,10 @@ const convert_links: convert_linksFuncType = (
           if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
             // I made an approx. here because we can't have a direct transform from old behavior (Cubic / Bezier) to new (Quadratic) for path drawing
             if (!isEchange(data.nodes[l.idSource]) && !isEchange(data.nodes[l.idTarget])) {
-              AssignLinkLocalAttribute(l, 'starting_tangeant', 0.75 * l.local.curvature)
-              AssignLinkLocalAttribute(l, 'ending_tangeant', 0.75 * l.local.curvature)
+              AssignLinkLocalAttribute(l, 'starting_curve', 0.05)
+              AssignLinkLocalAttribute(l, 'ending_curve', 0.95)
+              AssignLinkLocalAttribute(l, 'starting_tangeant', l.local.orientation == 'vh' ? 0.05 : 0.95)
+              AssignLinkLocalAttribute(l, 'ending_tangeant', 0.95)
             }
           }
           else {

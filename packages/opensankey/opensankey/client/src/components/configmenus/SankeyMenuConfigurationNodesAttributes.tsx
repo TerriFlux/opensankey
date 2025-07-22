@@ -47,30 +47,12 @@ import {
   isAttributeOverloaded,
 } from '../../Elements/Node'
 import {
-  default_node_name_label_box_width,
-  default_node_name_label_is_visible,
-  default_shape_arrow_angle_direction,
-  default_shape_arrow_angle_factor,
-  default_shape_color,
-  default_shape_color_sustainable,
-  default_shape_min_height,
-  default_shape_min_width,
-  default_shape_type,
-  default_shape_visible, default_dy,
+  default_dy,
   default_position_type,
   default_relative_dx,
   default_relative_dy,
-  default_node_value_label_is_visible,
-  default_node_name_label_background,
-  default_node_value_label_background,
-  default_node_value_label_horiz_shift,
-  default_node_value_label_vert_shift,
-  default_node_name_label_horiz_shift,
-  default_node_name_label_vert_shift,
-  default_node_name_label_background_color,
-  default_node_value_label_background_color,
   Class_NodeAttribute,
-  default_shape_opacity
+  NODES_ATTRIBUTES_CONFIG
 } from '../../Elements/NodeAttributes'
 import { type Class_NodeStyle } from '../../Elements/NodeAttributes'
 import {
@@ -153,7 +135,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   const updateValueForListElements = <TModel, TKey extends keyof TModel>(
     model: TModel[],
     key: TKey,
-    value: TModel[TKey]
+    value: TModel[TKey] | undefined
   ) => {
     model.forEach(el => updateValueForElement(el, key, value))
   }
@@ -161,9 +143,9 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   const updateValueForElement = <TModel, TKey extends keyof TModel>(
     model: TModel,
     key: TKey,
-    value: TModel[TKey]
+    value: TModel[TKey] | undefined
   ) => {
-    model[key] = value
+    model[key] = value as TModel[TKey]
   }
 
 
@@ -174,16 +156,16 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
    *
    * And generic function setValueWithDecoratorRetriever don't like it
    *  @type {*} */
-  let updateElements: (((k: keyNodeStyle, value: typeValNodeStyle) => void) | ((k: keyNodeAttr, value: typeValNodeAttr) => void))
+  let updateElements: (((k: keyNodeStyle, value: typeValNodeStyle|undefined) => void) | ((k: keyNodeAttr, value: typeValNodeAttr|undefined) => void))
   let disable_attr_props = sankey.node_styles_dict[default_style_id].customisable_attribute
   if (menu_for_style) {
     elements = [sankey.node_styles_dict[ref_selected_style_node.current]]
     disable_attr_props = sankey.node_styles_dict[ref_selected_style_node.current].customisable_attribute
-    updateElements = (k: keyNodeStyle, value: typeValNodeStyle) => {
+    updateElements = (k: keyNodeStyle, value: typeValNodeStyle|undefined) => {
       // Save old value
       const old_val = sankey.node_styles_dict[ref_selected_style_node.current][k]
       // Define fucntion that will mutate value of 'k' attribute in Style
-      const _updateElements = (_: typeValNodeStyle) => {
+      const _updateElements = (_: typeValNodeStyle|undefined) => {
         updateValueForListElements([sankey.node_styles_dict[ref_selected_style_node.current]], k, _)
         refreshThisAndUpdateRelatedComponents()
       }
@@ -233,15 +215,15 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
   const element_ref = elements[0]
   // Get values or default values
-  const shape_visible = (element_ref?.shape_visible ?? default_shape_visible)
-  const shape_min_width = (element_ref?.shape_min_width ?? default_shape_min_width)
-  const shape_min_height = (element_ref?.shape_min_height ?? default_shape_min_height)
-  const shape_color = (element_ref?.shape_color ?? default_shape_color)
-  const shape_type = (element_ref?.shape_type ?? default_shape_type)
-  const shape_arrow_angle_factor = (element_ref?.shape_arrow_angle_factor ?? default_shape_arrow_angle_factor)
-  const shape_arrow_angle_direction = (element_ref?.shape_arrow_angle_direction ?? default_shape_arrow_angle_direction)
-  const shape_color_sustainable = (element_ref?.shape_color_sustainable ?? default_shape_color_sustainable)
-  const shape_opacity = (element_ref?.shape_opacity ?? default_shape_opacity)
+  const shape_visible = (element_ref?.shape_visible ?? NODES_ATTRIBUTES_CONFIG.shape_visible.default)
+  const shape_min_width = (element_ref?.shape_min_width ?? NODES_ATTRIBUTES_CONFIG.shape_min_width.default)
+  const shape_min_height = (element_ref?.shape_min_height ?? NODES_ATTRIBUTES_CONFIG.shape_min_height.default)
+  const shape_color = (element_ref?.shape_color ?? NODES_ATTRIBUTES_CONFIG.shape_color.default)
+  const shape_type = (element_ref?.shape_type ?? NODES_ATTRIBUTES_CONFIG.shape_type.default)
+  const shape_arrow_angle_factor = (element_ref?.shape_arrow_angle_factor ?? NODES_ATTRIBUTES_CONFIG.shape_arrow_angle_factor.default)
+  const shape_arrow_angle_direction = (element_ref?.shape_arrow_angle_direction ?? NODES_ATTRIBUTES_CONFIG.shape_arrow_angle_direction.default)
+  const shape_color_sustainable = (element_ref?.shape_color_sustainable ?? NODES_ATTRIBUTES_CONFIG.shape_color_sustainable.default)
+  const shape_opacity = (element_ref?.shape_opacity ?? NODES_ATTRIBUTES_CONFIG.shape_opacity.default)
 
 
   const position_type = menu_for_style ?
@@ -695,7 +677,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             {t('Noeud.apparence.geometry_parametric')}
           </Button>
 
-          { elements[0].id == 'NodeExportStyle' || elements[0].id == 'NodeImportStyle' ? <Button
+          { elements[0].id == 'NodeImportCloseStyle' || elements[0].id == 'NodeImportCloseStyle' ? <Button
             variant={
               position_type==='relative'?
                 'menuconfigpanel_option_button_activated':
@@ -841,15 +823,15 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   if (!menu_for_style) {
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      _shape_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_visible'), name: t('Noeud.apparence.shape_visible') },
-      _shape_min_width: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_min_width'), name: t('Noeud.apparence.shape_min_width') },
-      _shape_min_height: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_min_height'), name: t('Noeud.apparence.shape_min_height') },
-      _shape_color: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color'), name: t('Noeud.apparence.shape_color') },
-      _shape_type: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_type'), name: t('Noeud.apparence.shape_type') },
-      _shape_arrow_angle_factor: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_factor'), name: t('Noeud.apparence.shape_arrow_angle_factor') },
-      _shape_arrow_angle_direction: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_direction'), name: t('Noeud.apparence.shape_arrow_angle_direction') },
-      _shape_color_sustainable: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color_sustainable'), name: t('Noeud.apparence.shape_color_sustainable') },
-      _shape_opacity: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_opacity'), name: t('Noeud.apparence.shape_opacity') }
+      shape_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_visible'), name: t('Noeud.apparence.shape_visible') },
+      shape_min_width: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_min_width'), name: t('Noeud.apparence.shape_min_width') },
+      shape_min_height: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_min_height'), name: t('Noeud.apparence.shape_min_height') },
+      shape_color: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color'), name: t('Noeud.apparence.shape_color') },
+      shape_type: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_type'), name: t('Noeud.apparence.shape_type') },
+      shape_arrow_angle_factor: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_factor'), name: t('Noeud.apparence.shape_arrow_angle_factor') },
+      shape_arrow_angle_direction: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_arrow_angle_direction'), name: t('Noeud.apparence.shape_arrow_angle_direction') },
+      shape_color_sustainable: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_color_sustainable'), name: t('Noeud.apparence.shape_color_sustainable') },
+      shape_opacity: { overloaded: isAttributeOverloaded(selected_nodes, 'shape_opacity'), name: t('Noeud.apparence.shape_opacity') }
     }
     const options_selector: typeElementSelectable = sankey.node_styles_list.map(style => {
       return {
@@ -948,7 +930,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   const updateValueForListElements = <TModel, TKey extends keyof TModel>(
     model: TModel[],
     key: TKey,
-    value: TModel[TKey]
+    value: TModel[TKey] | undefined
   ) => {
     model.forEach(el => updateValueForElement(el, key, value))
   }
@@ -956,23 +938,23 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   const updateValueForElement = <TModel, TKey extends keyof TModel>(
     model: TModel,
     key: TKey,
-    value: TModel[TKey]
+    value: TModel[TKey] | undefined
   ) => {
-    model[key] = value
+    model[key] = value as TModel[TKey]
   }
 
 
-  let updateElements: (((k: keyNodeStyle, value: typeValNodeStyle) => void) | ((k: keyNodeAttr, value: typeValNodeAttr) => void))
+  let updateElements: (((k: keyNodeStyle, value: typeValNodeStyle | undefined) => void) | ((k: keyNodeAttr, value: typeValNodeAttr| undefined) => void))
   let disable_attr_props = sankey.node_styles_dict[default_style_id].customisable_attribute
 
   if (menu_for_style) {
     elements = [sankey.node_styles_dict[ref_selected_style_node.current]]
     disable_attr_props = sankey.node_styles_dict[ref_selected_style_node.current].customisable_attribute
-    updateElements = (k: keyNodeStyle, value: typeValNodeStyle) => {
+    updateElements = (k: keyNodeStyle, value: typeValNodeStyle| undefined) => {
       // Save old value
       const old_val = sankey.node_styles_dict[ref_selected_style_node.current][k]
       // Define fucntion that will mutate value of 'k' attribute in Style
-      const _updateElements = (_: typeValNodeStyle) => {
+      const _updateElements = (_: typeValNodeStyle| undefined) => {
         updateValueForListElements([sankey.node_styles_dict[ref_selected_style_node.current]], k, _)
         refreshThisAndUpdateRelatedComponents()
       }
@@ -1034,17 +1016,17 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
   const element_ref = elements[0]
-  const name_label_is_visible = (element_ref?.name_label_is_visible ?? default_node_name_label_is_visible)
-  const value_label_is_visible = (element_ref?.value_label_is_visible ?? default_node_value_label_is_visible)
-  const name_label_background = (element_ref?.name_label_background ?? default_node_name_label_background)
-  const name_label_background_color = (element_ref?.name_label_background_color ?? default_node_name_label_background_color)
-  const value_label_background = (element_ref?.value_label_background ?? default_node_value_label_background)
-  const value_label_background_color = (element_ref?.value_label_background_color ?? default_node_value_label_background_color)
-  const name_label_box_width = (element_ref?.name_label_box_width ?? default_node_name_label_box_width)
-  const value_label_horiz_shift = (element_ref?.value_label_horiz_shift ?? default_node_value_label_horiz_shift)
-  const value_label_vert_shift = (element_ref?.value_label_vert_shift ?? default_node_value_label_vert_shift)
-  const name_label_horiz_shift = (element_ref?.name_label_horiz_shift ?? default_node_name_label_horiz_shift)
-  const name_label_vert_shift = (element_ref?.name_label_vert_shift ?? default_node_name_label_vert_shift)
+  const name_label_is_visible = (element_ref?.name_label_is_visible ?? NODES_ATTRIBUTES_CONFIG.name_label_is_visible.default)
+  const value_label_is_visible = (element_ref?.value_label_is_visible ?? NODES_ATTRIBUTES_CONFIG.value_label_is_visible.default)
+  const name_label_background = (element_ref?.name_label_background ?? NODES_ATTRIBUTES_CONFIG.name_label_background.default)
+  const name_label_background_color = (element_ref?.name_label_background_color ?? NODES_ATTRIBUTES_CONFIG.name_label_background_color.default)
+  const value_label_background = (element_ref?.value_label_background ?? NODES_ATTRIBUTES_CONFIG.value_label_background.default)
+  const value_label_background_color = (element_ref?.value_label_background_color ?? NODES_ATTRIBUTES_CONFIG.value_label_background_color.default)
+  const name_label_box_width = (element_ref?.name_label_box_width ?? NODES_ATTRIBUTES_CONFIG.name_label_box_width.default)
+  const value_label_horiz_shift = (element_ref?.value_label_horiz_shift ?? NODES_ATTRIBUTES_CONFIG.value_label_horiz_shift.default)
+  const value_label_vert_shift = (element_ref?.value_label_vert_shift ?? NODES_ATTRIBUTES_CONFIG.value_label_vert_shift.default)
+  const name_label_horiz_shift = (element_ref?.name_label_horiz_shift ?? NODES_ATTRIBUTES_CONFIG.name_label_horiz_shift.default)
+  const name_label_vert_shift = (element_ref?.name_label_vert_shift ?? NODES_ATTRIBUTES_CONFIG.name_label_vert_shift.default)
 
   // Components updaters ----------------------------------------------------------------
 
@@ -1369,40 +1351,40 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
 
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      _name_label_is_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_is_visible'), name: t('Noeud.labels.name_label_is_visible') },
-      _value_label_is_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_is_visible'), name: t('Flux.labels.vbd') },
-      _name_label_background: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_background'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_background') },
-      _name_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_background_color'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_background_color') },
-      _value_label_background: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_background') },
-      _value_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background_color'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_background_color') },
-      _name_label_box_width: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_box_width'), name: t('Noeud.labels.name_label_box_width') },
-      _value_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_horiz_shift') },
-      _value_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.anchor_dy') },
-      _name_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_horiz_shift') },
-      _name_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.anchor_dy') },
+      name_label_is_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_is_visible'), name: t('Noeud.labels.name_label_is_visible') },
+      value_label_is_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_is_visible'), name: t('Flux.labels.vbd') },
+      name_label_background: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_background'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_background') },
+      name_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_background_color'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_background_color') },
+      value_label_background: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_background') },
+      value_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background_color'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_background_color') },
+      name_label_box_width: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_box_width'), name: t('Noeud.labels.name_label_box_width') },
+      value_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_horiz_shift') },
+      value_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.anchor_dy') },
+      name_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_horiz_shift') },
+      name_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.anchor_dy') },
 
-      _value_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_horiz') },
-      _value_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_vert') },
-      _value_label_font_size: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_font_size'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_font_size') },
-      _value_label_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_color'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_color') },
-      _value_label_font_family: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_font_family'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_font_family') },
-      _value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit_visible'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit_visible') },
-      _value_label_unit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit') },
-      _value_label_bold: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_bold'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_bold') },
-      _value_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_uppercase'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_uppercase') },
-      _value_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_italic'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_italic') },
-      _value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit_factor'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit_factor') },
-      _value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_custom_digit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_custom_digit') },
-      _value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_nb_digit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_nb_digit') },
+      value_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_horiz') },
+      value_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_vert') },
+      value_label_font_size: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_font_size'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_font_size') },
+      value_label_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_color'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_color') },
+      value_label_font_family: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_font_family'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_font_family') },
+      value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit_visible'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit_visible') },
+      value_label_unit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit') },
+      value_label_bold: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_bold'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_bold') },
+      value_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_uppercase'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_uppercase') },
+      value_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_italic'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_italic') },
+      value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_unit_factor'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_unit_factor') },
+      value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_custom_digit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_custom_digit') },
+      value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_nb_digit'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_nb_digit') },
 
-      _name_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_horiz') },
-      _name_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_vert') },
-      _name_label_font_size: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_font_size') },
-      _name_label_color: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_color') },
-      _name_label_font_family: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_font_family') },
-      _name_label_bold: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_bold') },
-      _name_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_uppercase') },
-      _name_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_italic') },
+      name_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_horiz') },
+      name_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_vert') },
+      name_label_font_size: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_font_size') },
+      name_label_color: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_color') },
+      name_label_font_family: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_font_family') },
+      name_label_bold: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_bold') },
+      name_label_uppercase: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_uppercase') },
+      name_label_italic: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Noeud.labels.name_label_italic') },
     }
     const options_selector: typeElementSelectable = sankey.node_styles_list.map(style => {
       return {
