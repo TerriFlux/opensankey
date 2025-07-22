@@ -45,7 +45,7 @@ import type {
 import {
   OSTooltip
 } from '../../types/Utils'
-import { ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributes'
+import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributes'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 import { ValueOptionType } from '../../Elements/Class_LinkValueTree'
@@ -417,7 +417,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
     unit_text={
       (
         selected_links[0]?.value_label_unit_visible &&
-        selected_links[0]?.value_label_unit !== ATTRIBUTES_CONFIG.value_label_unit.default
+        selected_links[0]?.value_label_unit !== LINKS_ATTRIBUTES_CONFIG.value_label_unit.default
       ) ?
         selected_links[0]?.value_label_unit :
         undefined

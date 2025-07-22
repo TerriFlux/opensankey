@@ -67,7 +67,7 @@ import {
 import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
 import { Class_LevelTagGroup, Class_Tag } from './Tag'
 import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
-import { ATTRIBUTES_CONFIG, Class_LinkStyle } from '../Elements/LinkAttributes'
+import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../Elements/LinkAttributes'
 import { TypeGeneric_Handler } from '../Elements/Handler'
 
 declare const window: Window &
@@ -296,11 +296,10 @@ export abstract class ClassTemplate_DrawingArea
   // Objects containeds in drawing area -------------------------------------------------
 
   public _selection_zone: ClassTemplate_ZoneSelection<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
-  private _number_of_elements: number = 0
 
   // Context attributes for drawing area ------------------------------------------------
 
-  private _list_g_element: string[] = []
+  private _list_g_element: Type_AnyProtoElement[] = []
 
   protected _group_to_select: string = '.gg_nodes,.gg_links'
 
@@ -428,7 +427,6 @@ export abstract class ClassTemplate_DrawingArea
     this._horizontal_spacing = drawing_area_to_copy._horizontal_spacing
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
-    this._number_of_elements = drawing_area_to_copy._number_of_elements
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
@@ -471,20 +469,21 @@ export abstract class ClassTemplate_DrawingArea
     // Dump DA attributes
     json_object['height'] = this._height
     json_object['width'] = this._width
-    json_object['grid_visible'] = this._grid_visible
-    json_object['grid_square_size'] = this._grid_size
-    json_object['h_space'] = this._horizontal_spacing
-    json_object['v_space'] = this._vertical_spacing
-    json_object['user_scale'] = this._scale
-    json_object['couleur_fond_sankey'] = this._color
+
+    if (this._grid_visible != default_grid_visible) json_object['grid_visible'] = this._grid_visible
+    if (this._grid_size != default_grid_size) json_object['grid_square_size'] = this._grid_size
+    if (this._horizontal_spacing !=default_horizontal_spacing) json_object['h_space'] = this._horizontal_spacing
+    if (this._vertical_spacing !=default_vertical_spacing) json_object['v_space'] = this._vertical_spacing
+    if (this._scale != default_scale)  json_object['user_scale'] = this._scale
+    if (this._color != default_background_color) json_object['couleur_fond_sankey'] = this._color
+    if (this._grid_color != default_grid_color) json_object['default_grid_color'] = this._grid_color
     if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
     if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
-    json_object['filter_label'] = this._filter_label
-    json_object['filter_link_value'] = this._filter_link_value
-    json_object['show_structure'] = this._type_data
-    json_object['number_of_elements'] = this._number_of_elements
-    json_object['magnetic_nodes'] = this._magnetic_nodes
-    json_object['order_g_elements'] = this._list_g_element
+    if (this._filter_label>0) json_object['filter_label'] = this._filter_label
+    if (this._filter_link_value>0) json_object['filter_link_value'] = this._filter_link_value
+    if (this._type_data != initial_show_structure) json_object['show_structure'] = this._type_data
+    if (this._magnetic_nodes) json_object['magnetic_nodes'] = this._magnetic_nodes
+
     // Dump with json of contained elements
     const out = {
       ...json_object,
@@ -494,6 +493,7 @@ export abstract class ClassTemplate_DrawingArea
         with_values
       )
     }
+    out['order_g_elements'] = this._list_g_element.map(el => el.id) // Order elements by id 
     return out
   }
 
@@ -544,7 +544,6 @@ export abstract class ClassTemplate_DrawingArea
     this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
     this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
     this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
-    this._number_of_elements = getNumberFromJSON(json_object, 'number_of_elements', this._number_of_elements)
     this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = getStringFromJSON(json_object, 'show_structure', this._type_data) as Type_Structure
@@ -558,7 +557,9 @@ export abstract class ClassTemplate_DrawingArea
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
 
-    this._list_g_element = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element)
+    //this._list_g_element = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element.map(el=>el.id)).map(id=>)
+
+
 
   }
 
@@ -734,18 +735,6 @@ export abstract class ClassTemplate_DrawingArea
     this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
     this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
   }
-
-  public addElement() {
-    // We increase by two, in order to easyly swap elements
-    // ie : element0 order = 0, element1 order = 2, element3 order = 4
-    // to increase element 0 order, juste add 3
-    // then : element0 order = 3, element1 order = 2, element3 order = 4
-    // then orderElement() method will display elements as wanted + update their order value
-    // ie : element1 order = 0, element0 order = 2, element3 order = 4
-    this._number_of_elements = this._number_of_elements + 2
-    return this._number_of_elements
-  }
-
 
   /**
    * Checks if it is possible to directly deal with events
@@ -1385,13 +1374,15 @@ export abstract class ClassTemplate_DrawingArea
       if (node.input_links_list.length > 0) {
         (node as Type_GenericNodeElement).SplitIOrE(false)
       }
-      this.sankey.deleteNode(node)
+      node.setInvisible()
+      //this.sankey.deleteNode(node)
     })
-    trade_nodes = this.sankey.nodes_list.filter(n =>
+    const split_trade_nodes = this.sankey.nodes_list.filter(n =>
       n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
     )
     // the set dimensions. It must be done after each trade node has been split
-    trade_nodes.forEach(node => {
+    split_trade_nodes.forEach(node => {
+      if (!node.sibling) return
       (node as Type_GenericNodeElement).setTradeDimensions(true);
       (node as Type_GenericNodeElement).setTradeDimensions(false)
     })
@@ -1543,7 +1534,7 @@ export abstract class ClassTemplate_DrawingArea
           // Initially there is only one node per type of exchanges.
           // it must be splitted to have one import and one export per product
           // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
-          this.splitTrade()
+          //this.splitTrade()
           // Computes u v,x and initial y for trade nodes
           this.arrangeTrade(true)
         }
@@ -1884,6 +1875,7 @@ export abstract class ClassTemplate_DrawingArea
 
     let prev_col_width = 0
 
+    let shift = 0
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       // Pass if no nodes for this horizontal_index
       // TODO : if it is the case -> something was wrong before
@@ -1896,7 +1888,7 @@ export abstract class ClassTemplate_DrawingArea
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
       const h_position_for_index = prev_col_width + h_left_margin + horizontal_index * this.horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
-      let upper_node_height_and_margin = v_margin_for_index
+      let upper_node_height_and_margin = v_margin_for_index + shift
 
       if (center_biggest_nodes === true) {
         // From the bottom to the top : plot node every two index
@@ -1926,6 +1918,10 @@ export abstract class ClassTemplate_DrawingArea
           // Node position
           this.sankey.nodes_dict[node_id].position_x = h_position_for_index
           this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
+          const import_link = this.sankey.nodes_dict[node_id].input_links_list.filter(l=>l.source.hasGivenTag(echangeTag as Class_Tag))
+          if (import_link.length>0) {
+            this.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
+          }
           // Update upper margin for next node
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
@@ -1937,10 +1933,23 @@ export abstract class ClassTemplate_DrawingArea
       }
       else {
         node_id_per_hxv_indexes[horizontal_index]
-          .forEach(node_id => {
+          .forEach((node_id,idx) => {
             // Node position
             this.sankey.nodes_dict[node_id].position_x = h_position_for_index
             this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
+            const import_link = this.sankey.nodes_dict[node_id].input_links_list.filter(l=>l.source.hasGivenTag(echangeTag as Class_Tag))
+            if (import_link.length>0) {
+              this.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
+              if (idx == 0) {
+                shift = this.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
+              }
+            }
+            if (this.sankey.nodes_dict[node_id].input_links_list.filter(l=>l.is_visible&&!l.shape_is_recycling).length==1) {
+              this.sankey.nodes_dict[node_id].position_y = this.sankey.nodes_dict[node_id].input_links_list[0].source.position_y
+              if (idx == 0) {
+                shift = this.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
+              }
+            }
             // Update upper margin for next node
             const node_height = height_per_nodes_ids[node_id]
             upper_node_height_and_margin += node_height + v_margin
@@ -1972,6 +1981,7 @@ export abstract class ClassTemplate_DrawingArea
     if (!this.sankey.node_taggs_dict['type de noeud']) {
       return
     }
+
     const process_nodes = this.sankey.nodes_list
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
     const import_nodes = process_nodes.filter(n =>
@@ -2305,11 +2315,11 @@ export abstract class ClassTemplate_DrawingArea
    * @param {keyof Class_LinkAttribute} k
    * @memberof ClassTemplate_DrawingArea
    */
-  public deleteLocalAttrSelectedLinks(k: keyof typeof ATTRIBUTES_CONFIG) {
+  public deleteLocalAttrSelectedLinks(k: keyof typeof LINKS_ATTRIBUTES_CONFIG) {
     const list_links = this.selected_links_list
 
     list_links.forEach(link => {
-      if (k in ATTRIBUTES_CONFIG) {
+      if (k in LINKS_ATTRIBUTES_CONFIG) {
         link.display.attributes.delete_attribute(k)
         link.drawWithNodes()
       }
@@ -2344,7 +2354,7 @@ export abstract class ClassTemplate_DrawingArea
    */
   public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
     // Save old value that can be used in undo
-    const list_old_io: string[] = this.list_g_element ?? []
+    const list_old_io: Type_AnyProtoElement[] = this.list_g_element ?? []
     // Function undo
     const inv_moveElement = () => {
       this.list_g_element = list_old_io
@@ -2368,9 +2378,10 @@ export abstract class ClassTemplate_DrawingArea
   }
 
   public orderElementOnDA() {
+    const list_element_id = this._list_g_element.map(e=>e.id)
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
-      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, [...this._list_g_element].reverse()) })
+      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, [...list_element_id].reverse()) })
       .order()
   }
 
@@ -3164,9 +3175,6 @@ export abstract class ClassTemplate_DrawingArea
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
   public get window_fitting_width(): number { return window.innerWidth - this._fit_margin }
 
-  // Number of element
-  public get number_of_element() { return this._number_of_elements }
-
   /**
    * Return height of the top nav bar
    *
@@ -3278,5 +3286,5 @@ export abstract class ClassTemplate_DrawingArea
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
 
   public get list_g_element() { return this._list_g_element }
-  public set list_g_element(list: string[]) { this._list_g_element = list }
+  public set list_g_element(list) { this._list_g_element = list }
 }

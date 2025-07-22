@@ -37,6 +37,8 @@ import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { Type_GenericApplicationData } from '../../types/Types'
 import { t } from 'i18next'
+import { Type_AnyElement } from '../../Elements/Element'
+import { Type_AnyLinkElement } from '../../Elements/Link'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -875,19 +877,19 @@ export const GraphElementsOrdoner: FunctionComponent<{ new_data: Type_GenericApp
           >
             {
               new_data.drawing_area.list_g_element
-                .map((id_element, element_idx) => {
-                  const element = new_data.drawing_area.elementFromId(id_element)
+                .map((element, element_idx) => {
+                  //const element = new_data.drawing_area.elementFromId(id_element)
                   if (!element.is_visible)
                     return <></>
                   return (
-                    <Draggable key={id_element} index={element_idx} draggableId={'line_drag_' + id_element}>
+                    <Draggable key={element.id} index={element_idx} draggableId={'line_drag_' + element.id}>
                       {(provided, snapshot) => (
-                        <Box key={id_element} layerStyle='drag_line_element_order' ref={provided.innerRef}
+                        <Box key={element.id} layerStyle='drag_line_element_order' ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
                           style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
                         >
-                          <Box className='name_element'>{element.name}</Box>
+                          <Box className='name_element'>{(element as Type_AnyLinkElement).name}</Box>
                           <Box layerStyle="options_2cols">
                             <Button
                               variant='menuconfigpanel_move_order_node_io'
