@@ -51,6 +51,7 @@ import {
   Class_DataTag,
   Class_DataTagGroup,
   Class_LevelTagGroup,
+  Class_Tag,
 } from '../types/Tag'
 import {
   Type_JSON,
@@ -756,22 +757,30 @@ export abstract class ClassTemplate_Sankey
     // Id
     json_object['id'] = this._id
     // Add tag groups
-    json_object['levelTags'] = json_object_levelTags
-    this.level_taggs_list.forEach(tagg => {
-      json_object_levelTags[tagg.id] = tagg.toJSON()
-    })
-    json_object['nodeTags'] = json_object_nodeTags
-    this.node_taggs_list.forEach(tagg => {
-      json_object_nodeTags[tagg.id] = tagg.toJSON()
-    })
-    json_object['fluxTags'] = json_object_fluxTags
-    this.flux_taggs_list.forEach(tagg => {
-      json_object_fluxTags[tagg.id] = tagg.toJSON()
-    })
-    json_object['dataTags'] = json_object_dataTags
-    this.data_taggs_list.forEach(tagg => {
-      json_object_dataTags[tagg.id] = tagg.toJSON()
-    })
+    if (this.level_taggs_list.length>0) {
+      json_object['levelTags'] = json_object_levelTags
+      this.level_taggs_list.forEach(tagg => {
+        json_object_levelTags[tagg.id] = tagg.toJSON()
+      })
+    }
+    if (this.node_taggs_list.length>0) {    
+      json_object['nodeTags'] = json_object_nodeTags
+      this.node_taggs_list.forEach(tagg => {
+        json_object_nodeTags[tagg.id] = tagg.toJSON()
+      })
+    }
+    if (this.flux_taggs_list.length>0) {  
+      json_object['fluxTags'] = json_object_fluxTags
+      this.flux_taggs_list.forEach(tagg => {
+        json_object_fluxTags[tagg.id] = tagg.toJSON()
+      })
+    }
+    if (this.data_taggs_list.length>0) {      
+      json_object['dataTags'] = json_object_dataTags
+      this.data_taggs_list.forEach(tagg => {
+        json_object_dataTags[tagg.id] = tagg.toJSON()
+      })
+    }
     // Add Styles
     json_object['style_node'] = json_object_styles_nodes
     this.node_styles_list.forEach(style => {
@@ -787,8 +796,13 @@ export abstract class ClassTemplate_Sankey
     // Add nodes
     json_object['nodes'] = json_object_nodes
     const nodes_list = (only_visible_elements ? this.visible_nodes_list : this.nodes_list)
+    const echangeTag = this.node_taggs_dict['type de noeud'] ? this.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+
     nodes_list
       .forEach(node => {
+        if (node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
+          return
+        }
         json_object_nodes[node.id] = node.toJSON()
       })
     // Add links
@@ -909,14 +923,14 @@ export abstract class ClassTemplate_Sankey
             position: {}
           },
           {
-            id: 'NodeImportExportStyle',
+            id: 'NodeImportExportCloseStyle',
             config: {
               'name_label_is_visible': false,
               'shape_visible': false,
               'shape_min_width': 1,
-              'name_label_box_width': 300,
-              'name_label_vert': 'middle',
-              'name_label_horiz': 'left'
+              'name_label_box_width': 300
+              // 'name_label_vert': 'middle',
+              // 'name_label_horiz': 'left'
             },
             position: {
               'type': 'relative',
@@ -924,7 +938,21 @@ export abstract class ClassTemplate_Sankey
             }
           },
           {
-            id: 'NodeImportStyle',
+            id: 'NodeImportExportAboveBelowStyle',
+            config: {
+              'name_label_is_visible': true,
+              'shape_visible': false,
+              'shape_min_height': 1,
+              'value_label_is_visible': true,
+              'value_label_vert' : 'middle',
+              'name_label_vert': 'middle',
+            },
+            position: {
+              'type': 'parametric'
+            }
+          },
+          {
+            id: 'NodeImportCloseStyle',
             config: {},
             position: {
               'relative_dx': -100,
@@ -932,14 +960,38 @@ export abstract class ClassTemplate_Sankey
             }
           },
           {
-            id: 'NodeExportStyle',
+            id: 'NodeImportAboveStyle',
+            config: {
+              'name_label_horiz' : 'left',
+              //'name_label_horiz_shift' : -200,
+              'value_label_horiz' : 'left',
+              'value_label_horiz_shift' : -10,
+            },
+            position: {}
+          },
+          {
+            id: 'NodeExportCloseStyle',
             config: {},
             position: {
               'relative_dx': 100,
               'relative_dy': 50
             }
-          }]
+          },
+          {
+            id: 'NodeExportBelowStyle',
+            config: {
+              'name_label_horiz' : 'right',
+              //'name_label_horiz_shift' : 200,
+              'value_label_horiz' : 'right',
+              'value_label_horiz_shift' : 10,
+            },
+            position: {}
+          }
+        ]
         nodeStyleConfigs.forEach(({ id, config, position }) => {
+          if (this._node_styles[id] ) {
+            return
+          }
           const new_style = this.createNewNodeStyle(id, id, true)
           Object.keys(config).forEach(key => {
               new_style.customisable_attribute[key as Type_customisable_node_style_attr] = true
@@ -956,18 +1008,20 @@ export abstract class ClassTemplate_Sankey
           this._node_styles[id] = new_style
         })
 
+
+
         const linkStyleConfigs = [
           {
-            id: 'LinkImportExportStyle',
+            id: 'LinkImportExportCloseStyle',
             config: {
               'value_label_is_visible' : true,
-              'value_label_position' : 'end',
+              //'value_label_position' : 'end',
               'value_label_on_path' : true
 
             }
           },
           {
-            id: 'LinkImportStyle',
+            id: 'LinkImportCloseStyle',
             config: {
               'shape_orientation' : 'vh',
               'shape_starting_tangeant' : 1,
@@ -975,7 +1029,7 @@ export abstract class ClassTemplate_Sankey
             }
           },
           {
-            id: 'LinkExportStyle',
+            id: 'LinkExportCloseStyle',
             config: {
               'shape_orientation' : 'hv',
               'shape_starting_tangeant' : 0.25,
@@ -1077,25 +1131,6 @@ export abstract class ClassTemplate_Sankey
           matching_tags_id['levelTags'] ?? {}
         )
       })
-    //if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
-    // Change style if node has default style & 'Type de noeud' tags
-    this.nodes_list.forEach(n => {
-      //n.dimensions_as_parent.forEach(pdim=>pdim.normalize())
-      const tagg = this.node_taggs_dict['type de noeud']
-      if (!tagg) {
-        return
-      }
-      const product_tag = tagg.tags_dict['produit']
-      const sector_tag = tagg.tags_dict['secteur']
-      const echange_tag = tagg.tags_dict['echange']
-      if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
-        n.style = [this.node_styles_dict['NodeProductStyle']]
-      } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
-        n.style = [this.node_styles_dict['NodeSectorStyle']]
-      } else if (n.hasGivenTag(echange_tag) && n.style.some(s => s.id === 'default')) {
-        n.style = [this.node_styles_dict['NodeSectorStyle'],this.node_styles_dict['NodeImportExportStyle']]
-      }
-    })
   }
 
   public matchAndModifyJSONIds(

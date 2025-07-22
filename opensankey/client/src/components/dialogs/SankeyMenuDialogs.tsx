@@ -90,11 +90,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   const [mode_trans, set_mode_trans] = useState('simple')
   const [parametric, set_parametric] = useState(node_styles_dict[default_style_id].position.type == 'parametric')
   const [auto_x, set_auto_x] = useState(node_styles_dict[default_style_id].position.auto_x)
-  let trade_close = true
-  if ('NodeImportStyle' in node_styles_dict) {
-    trade_close = node_styles_dict['NodeImportStyle'].position.type == 'relative'
-  }
-  //const [trade_close, set_trade_close] = useState(true)
+  const [trade_close, set_trade_close] = useState(true)
 
   ref_to_updater_modal_apply_layout.current = () => setForceUpdate(b => !b)
 
@@ -118,53 +114,62 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 
   const setTrade = (trade_close: boolean) => {
     applicationData.drawing_area.bypass_redraws = true
+    const process_nodes = applicationData.drawing_area.sankey.nodes_list
+    const echangeTag = applicationData.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
+    const import_nodes = process_nodes.filter(n =>
+      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
+    )
+    const export_nodes = process_nodes.filter(n =>
+      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
+    )
     if (trade_close) {
-      // nodes of type
-      node_styles_dict['NodeImportStyle'].position.type = 'relative'
-      node_styles_dict['NodeImportStyle'].shape_visible = false
-      node_styles_dict['NodeImportStyle'].shape_min_height = 40
-      node_styles_dict['NodeImportStyle'].name_label_is_visible = false
-      node_styles_dict['NodeImportStyle'].value_label_is_visible = false
-      // node_styles_dict['NodeImportStyle'].value_label_horiz = 'middle'
-      // node_styles_dict['NodeImportStyle'].value_label_vert = 'top'
-
-      node_styles_dict['NodeExportStyle'].position.type = 'relative'
-      node_styles_dict['NodeExportStyle'].shape_visible = false
-      node_styles_dict['NodeExportStyle'].shape_min_height = 40
-      node_styles_dict['NodeExportStyle'].name_label_is_visible = false
-      node_styles_dict['NodeExportStyle'].value_label_is_visible = false
-      // node_styles_dict['NodeExportStyle'].value_label_horiz = 'middle'
-      // node_styles_dict['NodeExportStyle'].value_label_vert = 'bottom'
-
-      link_styles_dict['LinkImportStyle'].shape_orientation = 'vh'
-      link_styles_dict['LinkExportStyle'].shape_orientation = 'hv'
+      import_nodes.forEach(n=>{
+        n.style = [
+          applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
+          applicationData.drawing_area.sankey.node_styles_dict['NodeImportCloseStyle']
+        ]
+        n.getFirstOutputLink()!.style = [
+            applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportCloseStyle'],
+            applicationData.drawing_area.sankey.link_styles_dict['LinkExportCloseStyle']
+        ]
+    })
+      export_nodes.forEach(n=>{
+        n.style = [
+            applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+            applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
+            applicationData.drawing_area.sankey.node_styles_dict['NodeExportCloseStyle']
+          ]
+        n.getFirstInputLink()!.style = [
+            applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportCloseStyle'],
+            applicationData.drawing_area.sankey.link_styles_dict['LinkExportCloseStyle']
+        ]
+    })
     } else {
-      node_styles_dict['NodeImportStyle'].position.type = 'parametric'
-      node_styles_dict['NodeImportStyle'].shape_visible = false
-      node_styles_dict['NodeImportStyle'].shape_min_height = 1
-      node_styles_dict['NodeImportStyle'].name_label_is_visible = true
-      node_styles_dict['NodeImportStyle'].name_label_horiz = 'left'
-      node_styles_dict['NodeImportStyle'].name_label_horiz_shift = -200
-      node_styles_dict['NodeImportStyle'].value_label_is_visible = true
-      node_styles_dict['NodeImportStyle'].value_label_horiz = 'left'
-      node_styles_dict['NodeImportStyle'].value_label_vert = 'middle'
-      node_styles_dict['NodeImportStyle'].value_label_horiz_shift = -10
+      import_nodes.forEach(n=>{
+        n.style = [
+          applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
+          applicationData.drawing_area.sankey.node_styles_dict['NodeImportAboveStyle']
+        ]
+        n.getFirstOutputLink()!.style = [
+            applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportAboveBelowStyle'],
+            applicationData.drawing_area.sankey.link_styles_dict['LinkImportAboveStyle']
+        ]
+    })
+      export_nodes.forEach(n=>{
+        n.style = [
+            applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+            applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
+            applicationData.drawing_area.sankey.node_styles_dict['NodeExportBelowStyle']
+          ]
+        n.getFirstInputLink()!.style = [
+            applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportAboveBelowStyle'],
+            applicationData.drawing_area.sankey.link_styles_dict['LinkExportBelowStyle']
+        ]
+    })
 
-      node_styles_dict['NodeExportStyle'].position.type = 'parametric'
-      node_styles_dict['NodeExportStyle'].shape_visible = false
-      node_styles_dict['NodeExportStyle'].shape_min_height = 1
-      node_styles_dict['NodeExportStyle'].name_label_is_visible = true
-      node_styles_dict['NodeExportStyle'].name_label_horiz = 'right'
-      node_styles_dict['NodeExportStyle'].name_label_horiz_shift = 200
-      node_styles_dict['NodeExportStyle'].value_label_is_visible = true
-      node_styles_dict['NodeExportStyle'].value_label_horiz = 'right'
-      node_styles_dict['NodeExportStyle'].value_label_vert = 'middle'
-      node_styles_dict['NodeExportStyle'].value_label_horiz_shift = 10
 
-      link_styles_dict['LinkImportStyle'].shape_orientation = 'hh'
-      link_styles_dict['LinkImportStyle'].value_label_is_visible = false
-      link_styles_dict['LinkExportStyle'].shape_orientation = 'hh'
-      link_styles_dict['LinkExportStyle'].value_label_is_visible = false
     }
   }
 
@@ -549,17 +554,17 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 node_styles_dict['default'].position.auto_x = evt.target.checked
                 set_auto_x(evt.target.checked)
                 Object.values(node_styles_dict)
-                  .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                  .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
                   .forEach(style => style.position.auto_x = evt.target.checked)
                 if (evt.target.checked) {
                   // Object.values(node_styles_dict)
-                  //   .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                  //   .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeImportCloseStyle')
                   //   .forEach(style => style.position.type = 'parametric')
                   // applicationData.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
                   applicationData.drawing_area.computeParametrization()
                 } /*else {
                   Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeImportCloseStyle')
                     .forEach(style => style.position.type = 'absolute')
                 }*/
               }}
@@ -576,13 +581,13 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 set_parametric(evt.target.checked)
                 if (evt.target.checked) {
                   Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
                     .forEach(style => style.position.type = 'parametric')
                   applicationData.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
                   applicationData.drawing_area.computeParametrization()
                 } else {
                   Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
                     .forEach(style => style.position.type = 'absolute')
                 }
               }}
@@ -598,12 +603,12 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 set_parametric(!evt.target.checked)
                 if (!evt.target.checked) {
                   Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
                     .forEach(style => style.position.type = 'parametric')
                   applicationData.drawing_area.computeParametrization()
                 } else {
                   Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeExportStyle' && style.id !== 'NodeImportStyle')
+                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
                     .forEach(style => style.position.type = 'absolute')
                 }
               }}
@@ -638,6 +643,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 variant='menuconfigpanel_option_checkbox'
                 isChecked={trade_close}
                 onChange={(evt: { target: { checked: boolean } }) => {
+                  set_trade_close(evt.target.checked)
                   setTrade(evt.target.checked)
                   applicationData.drawing_area.arrangeTrade(true)
                   applicationData.draw()

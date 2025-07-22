@@ -666,8 +666,8 @@ export abstract class Class_ProtoLevelTag extends ClassAbstract_ProtoLevelTag {
     _kwargs?: Type_JSON
   ) {
     json_object['name'] = this._name
-    json_object['selected'] = this._is_selected
-    json_object['color'] = this._color
+    if (!this._is_selected) json_object['selected'] = this._is_selected
+    if (this._color) json_object['color'] = this._color
   }
 
   public fromJSON(
@@ -683,7 +683,7 @@ export abstract class Class_ProtoLevelTag extends ClassAbstract_ProtoLevelTag {
     _kwargs?: Type_JSON
   ) {
     this._name = getStringFromJSON(json_object, 'name', this._name)
-    this._is_selected = getBooleanFromJSON(json_object, 'selected', false)
+    this._is_selected = getBooleanFromJSON(json_object, 'selected', true)
     this._color = getStringFromJSON(json_object, 'color', this._color)
   }
 

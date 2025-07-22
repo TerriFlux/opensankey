@@ -79,22 +79,8 @@ import {
 } from '../types/Utils'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
 import {
-  Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, default_shape_color_sustainable,
-  default_shape_min_height, default_shape_min_width, default_shape_type, default_shape_visible,
-  default_node_value_label_horiz, default_node_value_label_horiz_shift, default_node_value_label_vert,
-  default_node_value_label_vert_shift, Type_Shape, Type_TextHPos, Type_TextVPos,
-  default_node_name_label_is_visible, default_node_name_label_vert,
-  default_node_name_label_horiz, default_node_name_label_horiz_shift, default_node_name_label_vert_shift,
-  default_position_type, default_relative_dx, default_relative_dy, default_shape_arrow_angle_direction,
-  default_shape_arrow_angle_factor, default_shape_color, default_node_name_label_background,
-  default_node_name_label_bold, default_node_name_label_box_width, default_node_name_label_color,
-  default_node_name_label_font_family, default_node_name_label_font_size, default_node_name_label_italic,
-  default_node_name_label_uppercase, default_node_value_label_custom_digit, default_node_value_label_nb_digit,
-  default_node_value_label_nb_significant_digits, default_node_value_label_scientific_notation,
-  default_node_value_label_significant_digits, default_node_value_label_unit,
-  default_node_value_label_unit_factor, default_node_value_label_unit_visible,
-  default_node_value_label_background, default_node_value_label_is_visible,
-  default_node_name_label_background_color, default_node_value_label_background_color, default_shape_opacity,
+  Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy,  Type_Shape, Type_TextHPos, Type_TextVPos,
+  default_position_type, default_relative_dx, default_relative_dy, NODES_ATTRIBUTES_CONFIG,
   default_auto_x
 } from './NodeAttributes'
 import { Class_DrawingArea } from '../types/Types'
@@ -268,7 +254,7 @@ export abstract class ClassTemplate_NodeElement
     // Link with default style
     this._display.style[0].addReference(this)
 
-    drawing_area.list_g_element.unshift(this.id)
+    drawing_area.list_g_element.unshift(this)
   }
 
   // CLEANING METHODS ===================================================================
@@ -533,12 +519,12 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
     if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
     // Fill style & local attributes
-    json_object['style'] = this.style.map(s => s.id)
+    if (this.style.length>0) json_object['style'] = this.style.map(s => s.id)
     json_object['local'] = this._display.attributes.toJSON()
     // Tooltip
     if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
     // Tags
-    json_object['tags'] = Object.fromEntries(
+    if (this.taggs_list.length>0) json_object['tags'] = Object.fromEntries(
       this.taggs_list
         .map(tagg => [
           tagg.id,
@@ -560,10 +546,12 @@ export abstract class ClassTemplate_NodeElement
               'parent_name': dimension.parent.id,
               'parent_tag': dimension.parent_level_tag.id,
               'children_tags': [dimension.child_level_tag.id],
-              'antitag': false,
-              'force_show_children': dimension.force_show_children,
-              'force_show_parent': dimension.force_show_parent
+              // 'antitag': false,
+              // 'force_show_children': dimension.force_show_children,
+              // 'force_show_parent': dimension.force_show_parent
             }
+            if (dimension.force_show_children) dimensions[dimension.related_level_tagg.id].force_show_children = true
+            if (dimension.force_show_parent) dimensions[dimension.related_level_tagg.id].force_show_parent = true
           } else {
             const cur_children_tags = dimensions[dimension.related_level_tagg.id].children_tags as string[]
             dimensions[dimension.related_level_tagg.id].children_tags = [...cur_children_tags, dimension.child_level_tag.id]
@@ -590,10 +578,10 @@ export abstract class ClassTemplate_NodeElement
         dimensions[leveltagg.id]['antitag'] = true
       })
     // Dimension
-    json_object['dimensions'] = dimensions
+    if (Object.keys(dimensions).length>0) json_object['dimensions'] = dimensions
     // Links
-    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
-    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
+    // if (this.input_links_list.length>0) json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
+    // if (this.output_links_list.length>0) json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
     json_object['links_order'] = this._links_order.map(link => link.id)
   }
 
@@ -661,22 +649,22 @@ export abstract class ClassTemplate_NodeElement
     json_node_object: Type_JSON,
     matching_links_id: { [_: string]: string } = {}
   ) {
-    // Input links
-    getStringListFromJSON(json_node_object, 'inputLinksId', [])
-      .forEach(l_id => {
-        if (l_id !== 'ghost_link') {
-          const link_id = matching_links_id[l_id] ?? l_id
-          this.addInputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
-        }
-      })
-    // Output links
-    getStringListFromJSON(json_node_object, 'outputLinksId', [])
-      .forEach(l_id => {
-        if (l_id !== 'ghost_link') {
-          const link_id = matching_links_id[l_id] ?? l_id
-          this.addOutputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
-        }
-      })
+    // // Input links
+    // getStringListFromJSON(json_node_object, 'inputLinksId', [])
+    //   .forEach(l_id => {
+    //     if (l_id !== 'ghost_link') {
+    //       const link_id = matching_links_id[l_id] ?? l_id
+    //       this.addInputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
+    //     }
+    //   })
+    // // Output links
+    // getStringListFromJSON(json_node_object, 'outputLinksId', [])
+    //   .forEach(l_id => {
+    //     if (l_id !== 'ghost_link') {
+    //       const link_id = matching_links_id[l_id] ?? l_id
+    //       this.addOutputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
+    //     }
+    //   })
     // Ordering
     const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
     if (ordered_link_ids.length === this._links_order.length) { // Avoid creation of loose links on node
@@ -686,6 +674,10 @@ export abstract class ClassTemplate_NodeElement
           return this.sankey.links_dict[link_id]
         }) as Type_GenericLinkElement[]
     }
+    this._links_order.forEach(l=>{
+      if(l.source===this) this._output_links[l.id] = l 
+      else this._input_links[l.id] = l 
+    })
   }
 
   /**
@@ -1289,7 +1281,7 @@ export abstract class ClassTemplate_NodeElement
     node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
   ) {
     if (this._input_links[link.id] !== undefined) {
-      this.removeInputLink(link)
+      //this.removeInputLink(link)
       node.addInputLink(link)
       this.drawLinks()
       this.drawValueLabel()
@@ -1304,7 +1296,7 @@ export abstract class ClassTemplate_NodeElement
    */
   public swapOutputLink(link: Type_GenericLinkElement, node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
     if (this._output_links[link.id] !== undefined) {
-      this.removeOutputLink(link)
+      //this.removeOutputLink(link)
       node.addOutputLink(link)
       this.drawLinks()
       this.drawValueLabel()
@@ -1388,9 +1380,14 @@ export abstract class ClassTemplate_NodeElement
    * @memberof ClassTemplate_NodeElement
    */
   public reorganizeIOLinks() {
-    this._links_order = this._links_order
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
+    const import_links = this.input_links_list.filter(l=>l.source.hasGivenTag(echangeTag as Class_Tag))
+    const export_links = this.output_links_list.filter(l=>l.target.hasGivenTag(echangeTag as Class_Tag))
+    const recycling_links = this._links_order.filter(l=>l.shape_is_recycling)
+    this._links_order = this._links_order.filter(l=>!import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l) )
       .sort((link_a, link_b) =>
         sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
+    this._links_order = [...import_links,...this._links_order,...recycling_links,...export_links]
     this.draw()
   }
 
@@ -3667,7 +3664,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.shape_visible !== undefined) {
       return valueOfStyle.shape_visible
     }
-    return default_shape_visible
+    return NODES_ATTRIBUTES_CONFIG.shape_visible.default
   }
 
   /**
@@ -3692,7 +3689,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.shape_min_width !== undefined) {
       return valueOfStyle.shape_min_width
     }
-    return default_shape_min_width
+    return NODES_ATTRIBUTES_CONFIG.shape_min_width.default
   }
 
   /**
@@ -3717,7 +3714,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.shape_min_height !== undefined) {
       return valueOfStyle.shape_min_height
     }
-    return default_shape_min_height
+    return NODES_ATTRIBUTES_CONFIG.shape_min_height.default
   }
 
   /**
@@ -3743,7 +3740,7 @@ export abstract class ClassTemplate_NodeElement
       return valueOfStyle.shape_color
     }
 
-    return default_shape_color
+    return NODES_ATTRIBUTES_CONFIG.shape_color.default
   }
 
   /**
@@ -3759,7 +3756,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.shape_opacity !== undefined) {
       return valueOfStyle.shape_opacity
     }
-    return default_shape_opacity
+    return NODES_ATTRIBUTES_CONFIG.shape_opacity.default
   }
 
   /**
@@ -3797,7 +3794,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.shape_type !== undefined) {
       return valueOfStyle.shape_type
     }
-    return default_shape_type
+    return NODES_ATTRIBUTES_CONFIG.shape_type.default
   }
 
   /**
@@ -3822,7 +3819,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.shape_arrow_angle_factor !== undefined) {
       return valueOfStyle.shape_arrow_angle_factor
     }
-    return default_shape_arrow_angle_factor
+    return NODES_ATTRIBUTES_CONFIG.shape_arrow_angle_factor.default
   }
 
   /**
@@ -3847,7 +3844,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.shape_arrow_angle_direction !== undefined) {
       return valueOfStyle.shape_arrow_angle_direction
     }
-    return default_shape_arrow_angle_direction
+    return NODES_ATTRIBUTES_CONFIG.shape_arrow_angle_direction.default
   }
 
   /**
@@ -3872,7 +3869,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.shape_color_sustainable !== undefined) {
       return valueOfStyle.shape_color_sustainable
     }
-    return default_shape_color_sustainable
+    return NODES_ATTRIBUTES_CONFIG.shape_color_sustainable.default
   }
 
   /**
@@ -3899,7 +3896,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_is_visible !== undefined) {
       return valueOfStyle.name_label_is_visible
     }
-    return default_node_name_label_is_visible
+    return NODES_ATTRIBUTES_CONFIG.name_label_is_visible.default
   }
 
   /**
@@ -3924,7 +3921,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_font_family !== undefined) {
       return valueOfStyle.name_label_font_family
     }
-    return default_node_name_label_font_family
+    return NODES_ATTRIBUTES_CONFIG.name_label_font_family.default
   }
 
   /**
@@ -3949,7 +3946,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_font_size !== undefined) {
       return valueOfStyle.name_label_font_size
     }
-    return default_node_name_label_font_size
+    return NODES_ATTRIBUTES_CONFIG.name_label_font_size.default
   }
 
   /**
@@ -3973,7 +3970,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_uppercase !== undefined) {
       return valueOfStyle.name_label_uppercase
     }
-    return default_node_name_label_uppercase
+    return NODES_ATTRIBUTES_CONFIG.name_label_uppercase.default
   }
 
   /**
@@ -3997,7 +3994,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_bold !== undefined) {
       return valueOfStyle.name_label_bold
     }
-    return default_node_name_label_bold
+    return NODES_ATTRIBUTES_CONFIG.name_label_bold.default
   }
 
   /**
@@ -4021,7 +4018,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_italic !== undefined) {
       return valueOfStyle.name_label_italic
     }
-    return default_node_name_label_italic
+    return NODES_ATTRIBUTES_CONFIG.name_label_italic.default
   }
 
   /**
@@ -4045,7 +4042,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_box_width !== undefined) {
       return valueOfStyle.name_label_box_width
     }
-    return default_node_name_label_box_width
+    return NODES_ATTRIBUTES_CONFIG.name_label_box_width.default
   }
 
   /**
@@ -4070,7 +4067,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_color !== undefined) {
       return valueOfStyle.name_label_color
     }
-    return default_node_name_label_color
+    return NODES_ATTRIBUTES_CONFIG.name_label_color.default
   }
 
   /**
@@ -4094,7 +4091,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_vert !== undefined) {
       return valueOfStyle.name_label_vert
     }
-    return default_node_name_label_vert
+    return NODES_ATTRIBUTES_CONFIG.name_label_vert.default
   }
 
   /**
@@ -4119,7 +4116,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_vert_shift !== undefined) {
       return valueOfStyle.name_label_vert_shift
     }
-    return default_node_name_label_vert_shift
+    return NODES_ATTRIBUTES_CONFIG.name_label_vert_shift.default
   }
 
   /**
@@ -4143,7 +4140,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_horiz !== undefined) {
       return valueOfStyle.name_label_horiz
     }
-    return default_node_name_label_horiz
+    return NODES_ATTRIBUTES_CONFIG.name_label_horiz.default
   }
 
   /**
@@ -4168,7 +4165,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_horiz_shift !== undefined) {
       return valueOfStyle.name_label_horiz_shift
     }
-    return default_node_name_label_horiz_shift
+    return NODES_ATTRIBUTES_CONFIG.name_label_horiz_shift.default
   }
 
   /**
@@ -4193,7 +4190,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_background !== undefined) {
       return valueOfStyle.name_label_background
     }
-    return default_node_name_label_background
+    return NODES_ATTRIBUTES_CONFIG.name_label_background.default
   }
 
   /**
@@ -4217,7 +4214,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.name_label_background_color !== undefined) {
       return valueOfStyle.name_label_background_color
     }
-    return default_node_name_label_background_color
+    return NODES_ATTRIBUTES_CONFIG.name_label_background_color.default
   }
 
   /**
@@ -4244,7 +4241,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_is_visible !== undefined) {
       return valueOfStyle.value_label_is_visible
     }
-    return default_node_value_label_is_visible
+    return NODES_ATTRIBUTES_CONFIG.value_label_is_visible.default
   }
 
   /**
@@ -4268,7 +4265,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_vert !== undefined) {
       return valueOfStyle.value_label_vert
     }
-    return default_node_value_label_vert
+    return NODES_ATTRIBUTES_CONFIG.value_label_vert.default
   }
 
   /** Set value for value_label_vert
@@ -4292,7 +4289,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_vert_shift !== undefined) {
       return valueOfStyle.value_label_vert_shift
     }
-    return default_node_value_label_vert_shift
+    return NODES_ATTRIBUTES_CONFIG.value_label_vert_shift.default
   }
 
   /** Set value for value_label_vert
@@ -4316,7 +4313,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_horiz !== undefined) {
       return valueOfStyle.value_label_horiz
     }
-    return default_node_value_label_horiz
+    return NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
   }
 
   /**
@@ -4340,7 +4337,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_horiz_shift !== undefined) {
       return valueOfStyle.value_label_horiz_shift
     }
-    return default_node_value_label_horiz_shift
+    return NODES_ATTRIBUTES_CONFIG.value_label_horiz_shift.default
   }
 
   /**
@@ -4364,7 +4361,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_font_size !== undefined) {
       return valueOfStyle.value_label_font_size
     }
-    return default_node_name_label_font_size
+    return NODES_ATTRIBUTES_CONFIG.name_label_font_size.default
   }
 
   /**
@@ -4388,7 +4385,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_background !== undefined) {
       return valueOfStyle.value_label_background
     }
-    return default_node_value_label_background
+    return NODES_ATTRIBUTES_CONFIG.value_label_background.default
   }
 
   /**
@@ -4412,7 +4409,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_background_color !== undefined) {
       return valueOfStyle.value_label_background_color
     }
-    return default_node_value_label_background_color
+    return NODES_ATTRIBUTES_CONFIG.value_label_background_color.default
   }
 
   /**
@@ -4436,7 +4433,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_color !== undefined) {
       return valueOfStyle.value_label_color
     }
-    return default_node_name_label_color
+    return NODES_ATTRIBUTES_CONFIG.name_label_color.default
   }
 
   /**
@@ -4460,7 +4457,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_uppercase !== undefined) {
       return valueOfStyle.value_label_uppercase
     }
-    return default_node_name_label_uppercase
+    return NODES_ATTRIBUTES_CONFIG.name_label_uppercase.default
   }
 
   /**
@@ -4484,7 +4481,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_bold !== undefined) {
       return valueOfStyle.value_label_bold
     }
-    return default_node_name_label_bold
+    return NODES_ATTRIBUTES_CONFIG.name_label_bold.default
   }
 
   /**
@@ -4507,7 +4504,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_italic !== undefined) {
       return valueOfStyle.value_label_italic
     }
-    return default_node_name_label_italic
+    return NODES_ATTRIBUTES_CONFIG.name_label_italic.default
   }
 
   /**
@@ -4531,7 +4528,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_font_family !== undefined) {
       return valueOfStyle.value_label_font_family
     }
-    return default_node_name_label_font_family
+    return NODES_ATTRIBUTES_CONFIG.name_label_font_family.default
   }
 
   /**
@@ -4556,7 +4553,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_scientific_notation !== undefined) {
       return valueOfStyle.value_label_scientific_notation
     }
-    return default_node_value_label_scientific_notation
+    return NODES_ATTRIBUTES_CONFIG.value_label_scientific_notation.default
   }
 
   /**
@@ -4577,7 +4574,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_significant_digits !== undefined) {
       return valueOfStyle.value_label_significant_digits
     }
-    return default_node_value_label_significant_digits
+    return NODES_ATTRIBUTES_CONFIG.value_label_significant_digits.default
   }
 
   /**
@@ -4592,7 +4589,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_nb_significant_digits !== undefined) {
       return valueOfStyle.value_label_nb_significant_digits
     }
-    return default_node_value_label_nb_significant_digits
+    return NODES_ATTRIBUTES_CONFIG.value_label_nb_significant_digits.default
   }
 
   /**
@@ -4604,7 +4601,7 @@ export abstract class ClassTemplate_NodeElement
    * TODO Description
    * @memberof Class_LinkElement
    */
-  public set value_label_nb_significant_digits(_: number | undefined) { this._display.attributes.value_label_nb_significant_digits = _; this.drawValueLabel() }
+  public set value_label_nb_significant_digits(_: number) { this._display.attributes.value_label_nb_significant_digits = _; this.drawValueLabel() }
 
   /**
    * TODO Description
@@ -4618,7 +4615,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_unit_visible !== undefined) {
       return valueOfStyle.value_label_unit_visible
     }
-    return default_node_value_label_unit_visible
+    return NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default
   }
 
   /**
@@ -4639,7 +4636,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_unit !== undefined) {
       return valueOfStyle.value_label_unit
     }
-    return default_node_value_label_unit
+    return NODES_ATTRIBUTES_CONFIG.value_label_unit.default
   }
 
   /**
@@ -4660,7 +4657,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_unit_factor !== undefined) {
       return valueOfStyle.value_label_unit_factor
     }
-    return default_node_value_label_unit_factor
+    return NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default
   }
 
   /**
@@ -4681,7 +4678,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_custom_digit !== undefined) {
       return valueOfStyle.value_label_custom_digit
     }
-    return default_node_value_label_custom_digit
+    return NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default
   }
 
   /**
@@ -4702,7 +4699,7 @@ export abstract class ClassTemplate_NodeElement
     if (valueOfStyle.value_label_nb_digit !== undefined) {
       return valueOfStyle.value_label_nb_digit
     }
-    return default_node_value_label_nb_digit
+    return NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default
   }
 
   /**
@@ -5091,6 +5088,7 @@ export abstract class ClassTemplate_NodeElement
       idTrade = idTrade.replaceAll(' ', '')
 
       const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom)
+      new_node.sibling = this
       Object.values(this._dimensions_as_child)
         .forEach(dim => {
           const node_parent = dim.parent
@@ -5122,9 +5120,9 @@ export abstract class ClassTemplate_NodeElement
         new_node.addTag(tag)
       });
       this.style.forEach(s=>new_node.style.push(s));
-      (new_node as Type_AnyNodeElement).style.push(importation ? new_node.sankey.node_styles_dict['NodeImportStyle'] as Class_NodeStyle : new_node.sankey.node_styles_dict['NodeExportStyle'] as Class_NodeStyle)
-      input_or_output_link.style = [new_node.sankey.link_styles_dict['LinkImportExportStyle'] as Class_LinkStyle]
-      input_or_output_link.style.push(importation ? new_node.sankey.link_styles_dict['LinkImportStyle'] as Class_LinkStyle : new_node.sankey.link_styles_dict['LinkExportStyle'] as Class_LinkStyle)
+      (new_node as Type_AnyNodeElement).style.push(importation ? new_node.sankey.node_styles_dict['NodeImportCloseStyle'] as Class_NodeStyle : new_node.sankey.node_styles_dict['NodeExportCloseStyle'] as Class_NodeStyle)
+      input_or_output_link.style = [new_node.sankey.link_styles_dict['LinkImportExportCloseStyle'] as Class_LinkStyle]
+      input_or_output_link.style.push(importation ? new_node.sankey.link_styles_dict['LinkImportCloseStyle'] as Class_LinkStyle : new_node.sankey.link_styles_dict['LinkExportCloseStyle'] as Class_LinkStyle)
       // (new_node as Type_AnyNodeElement).show = extremity_node.show // TODO replace with an other method
 
       input_or_output_link.shape_is_recycling = false

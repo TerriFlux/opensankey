@@ -222,7 +222,7 @@ export class Class_LinkElement
   protected _display: {
     drawing_area: Class_DrawingArea,
     sankey: Class_Sankey,
-    displaying_order: number,
+    //displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
     style: Class_LinkStyle[],
@@ -244,7 +244,7 @@ export class Class_LinkElement
     this._display = {
       drawing_area: drawing_area,
       sankey: drawing_area.sankey,
-      displaying_order: drawing_area.addElement(),
+      //displaying_order: drawing_area.addElement(),
       position_starting: {
         x: 0,
         y: 0,

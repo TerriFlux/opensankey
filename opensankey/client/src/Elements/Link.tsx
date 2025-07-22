@@ -59,7 +59,7 @@ import {
   getStringListFromJSON
 } from '../types/Utils'
 import {
-  Class_LinkStyle, Class_LinkAttribute, ATTRIBUTES_CONFIG,
+  Class_LinkStyle, Class_LinkAttribute, LINKS_ATTRIBUTES_CONFIG,
   Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side
 } from './LinkAttributes'
 import { Class_LinkValueTree, Class_LinkValue } from './Class_LinkValueTree'
@@ -204,7 +204,7 @@ export function isAttributeOverloaded(
   return overloaded
 }
 
-type StyleProperty = keyof typeof ATTRIBUTES_CONFIG;
+type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
 /**
  * Class that define how to display a link element and how to interact with it
@@ -358,7 +358,7 @@ export abstract class ClassTemplate_LinkElement
     this._target = target
     this._target_visibility_fingerprint = target.visibility_fingerprint
 
-    drawing_area.list_g_element.push(this.id)
+    drawing_area.list_g_element.push(this)
   }
 
   public createLinkValue(
@@ -491,16 +491,13 @@ export abstract class ClassTemplate_LinkElement
   ) {
     super._toJSON(json_object, kwargs)
     // Related nodes
-    json_object['idSource'] = this._source.id
-    json_object['idTarget'] = this._target.id
+    json_object['idSource'] = this._source.sibling ? this._source.sibling.id : this._source.id
+    json_object['idTarget'] =  this._target.sibling ? this._target.sibling.id : this._target.id
     // Fill style & local attributes
-    json_object['style'] = this.style.map(s => s.id)
-    json_object['local'] = this._display.attributes.toJSON()
+    if (this.style.length>0) json_object['style'] = this.style.map(s => s.id)
+    const attr_json = this._display.attributes.toJSON()
+    if (Object.keys(attr_json).length>0) json_object['local'] = this._display.attributes.toJSON()
     // Fill positions attributes
-    json_object['position_starting_x'] = this._display.position_starting.x
-    json_object['position_starting_y'] = this._display.position_starting.y
-    json_object['position_ending_x'] = this._display.position_ending.x
-    json_object['position_ending_y'] = this._display.position_ending.y
     if (this._display.position_offset_value !== undefined) json_object['position_offset_label'] = this._display.position_offset_value
     if (this._display.position_offset_name !== undefined) json_object['position_offset_label'] = this._display.position_offset_name
     if (this._display.position_x_value !== undefined) json_object['position_x_label'] = this._display.position_x_value
@@ -509,7 +506,7 @@ export abstract class ClassTemplate_LinkElement
     if (this._display.position_y_name !== undefined) json_object['position_y_name'] = this._display.position_y_name
 
     // Tooltips
-    json_object['tooltip_text'] = this._link_tooltip.tooltip_text
+    if (this._link_tooltip.tooltip_text) json_object['tooltip_text'] = this._link_tooltip.tooltip_text
     // Values
     if (!(kwargs && kwargs['without_values']))
       json_object['value'] = this._values.toJSON(kwargs)
@@ -547,10 +544,6 @@ export abstract class ClassTemplate_LinkElement
       if ('shape_local_link_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.shape_local_link_scale)
     }
     // Get positions infos
-    this._display.position_starting.x = getNumberFromJSON(json_object, 'position_starting_x', this._display.position_starting.x)
-    this._display.position_starting.y = getNumberFromJSON(json_object, 'position_starting_y', this._display.position_starting.y)
-    this._display.position_ending.x = getNumberFromJSON(json_object, 'position_ending_x', this._display.position_starting.x)
-    this._display.position_ending.y = getNumberFromJSON(json_object, 'position_ending_y', this._display.position_starting.y)
     this._display.position_offset_value = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
     this._display.position_offset_name = getNumberOrUndefinedFromJSON(json_object, 'position_offset_name')
     this._display.position_x_value = getNumberOrUndefinedFromJSON(json_object, 'position_x_label')
@@ -1163,7 +1156,7 @@ export abstract class ClassTemplate_LinkElement
    * @memberof ClassTemplate_NodeElement
    */
   public getStyleWithAttr(k: keyof Class_LinkStyle) {
-    return this._display.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_node_style as Class_LinkStyle
+    return this._display.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_link_style as Class_LinkStyle
   }
 
   // GETTERS / SETTERS ==================================================================
@@ -1658,10 +1651,10 @@ export abstract class ClassTemplate_LinkElement
     }
     
     // Enfin la valeur par défaut
-    return ATTRIBUTES_CONFIG[propertyName].default;
+    return LINKS_ATTRIBUTES_CONFIG[propertyName].default;
   }
   
-  public get shape_orientation() { return this.getStyleProperty('shape_orientation') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_orientation']['type']> }
+  public get shape_orientation() { return this.getStyleProperty('shape_orientation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_orientation']['type']> }
   public set shape_orientation(_: Type_Orientation) {
     if (
       (!this.shape_is_recycling) && (
@@ -1686,7 +1679,7 @@ export abstract class ClassTemplate_LinkElement
   public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
   public get is_vertical_horizontal() { return this.shape_orientation === 'vh' }
 
-  public get shape_starting_curve() { return this.getStyleProperty('shape_starting_curve') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_starting_curve']['type']> }
+  public get shape_starting_curve() { return this.getStyleProperty('shape_starting_curve') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_curve']['type']> }
 
   public set shape_starting_curve(_: number) {
     if (_ >= 0) {
@@ -1719,7 +1712,7 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
-  public get shape_ending_curve() { return this.getStyleProperty('shape_ending_curve') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_ending_curve']['type']> }
+  public get shape_ending_curve() { return this.getStyleProperty('shape_ending_curve') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_curve']['type']> }
 
   public set shape_ending_curve(_: number) {
     if (_ >= 0) {
@@ -1752,7 +1745,7 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
-  public get shape_starting_tangeant() { return this.getStyleProperty('shape_starting_tangeant') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_starting_tangeant']['type']> }
+  public get shape_starting_tangeant() { return this.getStyleProperty('shape_starting_tangeant') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_tangeant']['type']> }
 
   public set shape_starting_tangeant(_: number) {
     if (_ > 0) {
@@ -1762,7 +1755,7 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
-  public get shape_ending_tangeant() { return this.getStyleProperty('shape_ending_tangeant') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_ending_tangeant']['type']> }
+  public get shape_ending_tangeant() { return this.getStyleProperty('shape_ending_tangeant') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_tangeant']['type']> }
 
   public set shape_ending_tangeant(_: number) {
     if (_ > 0) {
@@ -1772,7 +1765,7 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
-  public get shape_middle_recycling() { return this.getStyleProperty('shape_middle_recycling') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_middle_recycling']['type']> }
+  public get shape_middle_recycling() { return this.getStyleProperty('shape_middle_recycling') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_middle_recycling']['type']> }
 
   public set shape_middle_recycling(_: number) {
     this._display.attributes.shape_middle_recycling = _
@@ -1780,7 +1773,7 @@ export abstract class ClassTemplate_LinkElement
     this._link_control_points.drawControlPoint()
   }
 
-  public get shape_shape() { return this.getStyleProperty('shape_shape') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_shape']['type']> }
+  public get shape_shape() { return this.getStyleProperty('shape_shape') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_shape']['type']> }
 
   public set shape_shape(_: string) {
     this._display.attributes.shape_shape = _
@@ -1788,10 +1781,10 @@ export abstract class ClassTemplate_LinkElement
     this._link_control_points.drawControlPoint()
   }
 
-  public get shape_curvature() { return this.getStyleProperty('shape_curvature') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_curvature']['type']> }
+  public get shape_curvature() { return this.getStyleProperty('shape_curvature') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_curvature']['type']> }
   public set shape_curvature(_: number) { this._display.attributes.shape_curvature = _; this.drawElements() }
 
-  public get shape_is_curved() { return this.getStyleProperty('shape_is_curved') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_curved']['type']> }
+  public get shape_is_curved() { return this.getStyleProperty('shape_is_curved') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_curved']['type']> }
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this._link_control_points.drawControlPoint() }
 
   public get shape_is_structure() {
@@ -1814,7 +1807,7 @@ export abstract class ClassTemplate_LinkElement
     if (valueOfStyle.shape_is_structure !== undefined) {
       return valueOfStyle.shape_is_structure
     }
-    return ATTRIBUTES_CONFIG.shape_is_structure.default
+    return LINKS_ATTRIBUTES_CONFIG.shape_is_structure.default
   }
 
   public set shape_is_structure(_: boolean) { 
@@ -1823,7 +1816,7 @@ export abstract class ClassTemplate_LinkElement
     this._link_control_points.drawControlPoint() 
   }
 
-  public get shape_is_recycling() { return this.getStyleProperty('shape_is_recycling') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_recycling']['type']> }
+  public get shape_is_recycling() { return this.getStyleProperty('shape_is_recycling') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_recycling']['type']> }
 
   public set shape_is_recycling(_: boolean) {
     // In recylcing mode we dont have upperbound for starting & ending
@@ -1839,7 +1832,7 @@ export abstract class ClassTemplate_LinkElement
     this._link_control_points.drawControlPoint()
   }
 
-  public get shape_arrow_size() { return this.getStyleProperty('shape_arrow_size') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_arrow_size']['type']> }
+  public get shape_arrow_size() { return this.getStyleProperty('shape_arrow_size') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_arrow_size']['type']> }
   public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawElements() }
 
   /**
@@ -1850,24 +1843,24 @@ export abstract class ClassTemplate_LinkElement
     this.drawArrow()
   }
 
-  public get shape_is_arrow() { return this.getStyleProperty('shape_is_arrow') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_arrow']['type']> }
+  public get shape_is_arrow() { return this.getStyleProperty('shape_is_arrow') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_arrow']['type']> }
   public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawElements() }
 
-  public get shape_color() { return this.getStyleProperty('shape_color') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_color']['type']> }
+  public get shape_color() { return this.getStyleProperty('shape_color') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color']['type']> }
   public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawElements() }
 
-  public get shape_color_rule() { return this.getStyleProperty('shape_color_rule') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_color_rule']['type']> }
+  public get shape_color_rule() { return this.getStyleProperty('shape_color_rule') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color_rule']['type']> }
 
   public set shape_color_rule(_: string) { this._display.attributes.shape_color_rule = _; this.drawElements() }
 
-  public get shape_opacity() { return this.getStyleProperty('shape_opacity') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_opacity']['type']> }
+  public get shape_opacity() { return this.getStyleProperty('shape_opacity') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_opacity']['type']> }
   public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawElements() }
 
-  public get shape_is_dashed() { return this.getStyleProperty('shape_is_dashed') as ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_dashed']['type']> }
+  public get shape_is_dashed() { return this.getStyleProperty('shape_is_dashed') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_dashed']['type']> }
   public set shape_is_dashed(_: boolean) { this._display.attributes.shape_is_dashed = _; this.drawElements() }
 
   // ------------ Decorator about value label attribute -------------
-  public get value_label_horiz() { return this.getStyleProperty('value_label_horiz') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_horiz']['type']> }
+  public get value_label_horiz() { return this.getStyleProperty('value_label_horiz') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_horiz']['type']> }
   public set value_label_horiz(_: Type_PathLabelHPosition) {
     this._display.attributes.value_label_pos_auto = false
     if (_ !== 'dragged') this.deleteDraggedValuePos()
@@ -1875,7 +1868,7 @@ export abstract class ClassTemplate_LinkElement
     this.drawValue()
   }
 
-  public get value_label_vert() { return this.getStyleProperty('value_label_vert') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_vert']['type']> }
+  public get value_label_vert() { return this.getStyleProperty('value_label_vert') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_vert']['type']> }
   public set value_label_vert(_: Type_PathLabelVPosition) {
     if (_ !== 'dragged') this.deleteDraggedValuePos()
     this._display.attributes.value_label_pos_auto = false
@@ -1883,7 +1876,7 @@ export abstract class ClassTemplate_LinkElement
     this.drawValue()
   }
 
-  public get value_label_on_path() { return this.getStyleProperty('value_label_on_path') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_on_path']['type']> }
+  public get value_label_on_path() { return this.getStyleProperty('value_label_on_path') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_on_path']['type']> }
   public set value_label_on_path(_: boolean) {
     this._display.attributes.value_label_on_path = _
     if (_) {
@@ -1895,50 +1888,50 @@ export abstract class ClassTemplate_LinkElement
     this.drawValue()
   }
 
-  public get value_label_pos_auto() { return this.getStyleProperty('value_label_pos_auto') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_pos_auto']['type']> }
+  public get value_label_pos_auto() { return this.getStyleProperty('value_label_pos_auto') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_pos_auto']['type']> }
   public set value_label_pos_auto(_: boolean) {
     this._display.attributes.value_label_pos_auto = _
     this._display.attributes.value_label_vert = (this._display.attributes.value_label_vert === 'dragged') ? 'middle' : this._display.attributes.value_label_vert
     this.drawValue()
   }
 
-  public get value_label_is_visible() { return this.getStyleProperty('value_label_is_visible') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_is_visible']['type']> }
+  public get value_label_is_visible() { return this.getStyleProperty('value_label_is_visible') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_is_visible']['type']> }
   public set value_label_is_visible(_: boolean) { this._display.attributes.value_label_is_visible = _; this.drawValue() }
 
-  public get value_label_font_size() { return this.getStyleProperty('value_label_font_size') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_font_size']['type']> }
+  public get value_label_font_size() { return this.getStyleProperty('value_label_font_size') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_size']['type']> }
   public set value_label_font_size(_: number) { this._display.attributes.value_label_font_size = _; this.drawValue() }
 
-  public get value_label_color() { return this.getStyleProperty('value_label_color') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_color']['type']> }
+  public get value_label_color() { return this.getStyleProperty('value_label_color') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']> }
   public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawValue() }
 
-  public get value_label_percent_input() { return this.getStyleProperty('value_label_percent_input') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_percent_input']['type']> }
+  public get value_label_percent_input() { return this.getStyleProperty('value_label_percent_input') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_input']['type']> }
   public set value_label_percent_input(_: boolean) { this._display.attributes.value_label_percent_input = _; this.drawValue() }
 
-  public get value_label_percent_output() { return this.getStyleProperty('value_label_percent_output') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_percent_output']['type']> }
+  public get value_label_percent_output() { return this.getStyleProperty('value_label_percent_output') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_output']['type']> }
   public set value_label_percent_output(_: boolean) { this._display.attributes.value_label_percent_output = _; this.drawValue() }
 
-  public get value_label_scientific_notation() { return this.getStyleProperty('value_label_scientific_notation') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']> }
+  public get value_label_scientific_notation() { return this.getStyleProperty('value_label_scientific_notation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']> }
   public set value_label_scientific_notation(_: boolean) { this._display.attributes.value_label_scientific_notation = _; this.drawValue() }
 
-  public get value_label_significant_digits() { return this.getStyleProperty('value_label_significant_digits') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_significant_digits']['type']> }
+  public get value_label_significant_digits() { return this.getStyleProperty('value_label_significant_digits') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_significant_digits']['type']> }
   public set value_label_significant_digits(_: boolean) { this._display.attributes.value_label_significant_digits = _; this.drawValue() }
 
-  public get value_label_nb_significant_digits() { return this.getStyleProperty('value_label_nb_significant_digits') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']> }
+  public get value_label_nb_significant_digits() { return this.getStyleProperty('value_label_nb_significant_digits') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']> }
   public set value_label_nb_significant_digits(_: number) { this._display.attributes.value_label_nb_significant_digits = _; this.drawValue() }
 
-  public get value_label_font_family() { return this.getStyleProperty('value_label_font_family') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_font_family']['type']> }
+  public get value_label_font_family() { return this.getStyleProperty('value_label_font_family') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_family']['type']> }
   public set value_label_font_family(_: string) { this._display.attributes.value_label_font_family = _; this.drawValue() }
 
-  public get value_label_unit_visible() { return this.getStyleProperty('value_label_unit_visible') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_unit_visible']['type']> }
+  public get value_label_unit_visible() { return this.getStyleProperty('value_label_unit_visible') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_visible']['type']> }
   public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawValue() }
 
-  public get value_label_unit() { return this.getStyleProperty('value_label_unit') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_unit']['type']> }
+  public get value_label_unit() { return this.getStyleProperty('value_label_unit') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit']['type']> }
   public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawValue() }
 
-  public get value_label_unit_factor() { return this.getStyleProperty('value_label_unit_factor') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_unit_factor']['type']> }
+  public get value_label_unit_factor() { return this.getStyleProperty('value_label_unit_factor') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']> }
   public set value_label_unit_factor(_: number) { this._display.attributes.value_label_unit_factor = _; this.drawValue() }
 
-  public get value_label_custom_digit() { return this.getStyleProperty('value_label_custom_digit') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_custom_digit']['type']> }
+  public get value_label_custom_digit() { return this.getStyleProperty('value_label_custom_digit') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']> }
   public set value_label_custom_digit(_: boolean) {
     this._display.attributes.value_label_custom_digit = _
     if (_) {
@@ -1948,42 +1941,42 @@ export abstract class ClassTemplate_LinkElement
     this.drawValue()
   }
 
-  public get value_label_nb_digit() { return this.getStyleProperty('value_label_nb_digit') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_nb_digit']['type']> }
+  public get value_label_nb_digit() { return this.getStyleProperty('value_label_nb_digit') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_digit']['type']> }
   public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawValue() }
 
-  public get value_label_uppercase() { return this.getStyleProperty('value_label_uppercase') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_uppercase']['type']> }
+  public get value_label_uppercase() { return this.getStyleProperty('value_label_uppercase') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_uppercase']['type']> }
   public set value_label_uppercase(_: boolean) { this._display.attributes.value_label_uppercase = _; this.drawValue() }
 
-  public get value_label_bold() { return this.getStyleProperty('value_label_bold') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_bold']['type']> }
+  public get value_label_bold() { return this.getStyleProperty('value_label_bold') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_bold']['type']> }
   public set value_label_bold(_: boolean) { this._display.attributes.value_label_bold = _; this.drawValue() }
 
-  public get value_label_italic() { return this.getStyleProperty('value_label_italic') as ReturnType<typeof ATTRIBUTES_CONFIG['value_label_italic']['type']> }
+  public get value_label_italic() { return this.getStyleProperty('value_label_italic') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_italic']['type']> }
   public set value_label_italic(_: boolean) { this._display.attributes.value_label_italic = _; this.drawValue() }
 
   // ------------ Decorator about name label attribute -------------
 
-  public get name_label_is_visible() { return this.getStyleProperty('name_label_is_visible') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_is_visible']['type']> }
+  public get name_label_is_visible() { return this.getStyleProperty('name_label_is_visible') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_is_visible']['type']> }
   public set name_label_is_visible(_: boolean) { this._display.attributes.name_label_is_visible = _; this.drawLabel() }
 
-  public get name_label_font_family() { return this.getStyleProperty('name_label_font_family') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_font_family']['type']> }
+  public get name_label_font_family() { return this.getStyleProperty('name_label_font_family') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_family']['type']> }
   public set name_label_font_family(_: string) { this._display.attributes.name_label_font_family = _; this.drawLabel() }
 
-  public get name_label_font_size() { return this.getStyleProperty('name_label_font_size') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_font_size']['type']> }
+  public get name_label_font_size() { return this.getStyleProperty('name_label_font_size') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_size']['type']> }
   public set name_label_font_size(_: number) { this._display.attributes.name_label_font_size = _; this.drawLabel() }
 
-  public get name_label_uppercase() { return this.getStyleProperty('name_label_uppercase') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_uppercase']['type']> }
+  public get name_label_uppercase() { return this.getStyleProperty('name_label_uppercase') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_uppercase']['type']> }
   public set name_label_uppercase(_: boolean) { this._display.attributes.name_label_uppercase = _; this.drawLabel() }
 
-  public get name_label_bold() { return this.getStyleProperty('name_label_bold') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_bold']['type']> }
+  public get name_label_bold() { return this.getStyleProperty('name_label_bold') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_bold']['type']> }
   public set name_label_bold(_: boolean) { this._display.attributes.name_label_bold = _; this.drawLabel() }
 
-  public get name_label_italic() { return this.getStyleProperty('name_label_italic') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_italic']['type']> }
+  public get name_label_italic() { return this.getStyleProperty('name_label_italic') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_italic']['type']> }
   public set name_label_italic(_: boolean) { this._display.attributes.name_label_italic = _; this.drawLabel() }
 
-  public get name_label_color() { return this.getStyleProperty('name_label_color') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_color']['type']> }
+  public get name_label_color() { return this.getStyleProperty('name_label_color') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_color']['type']> }
   public set name_label_color(_: string) { this._display.attributes.name_label_color = _; this.drawLabel() }
 
-  public get name_label_pos_auto() { return this.getStyleProperty('name_label_pos_auto') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_pos_auto']['type']> }
+  public get name_label_pos_auto() { return this.getStyleProperty('name_label_pos_auto') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']> }
   public set name_label_pos_auto(_: boolean) {
     this._display.attributes.name_label_pos_auto = _
     const orth_pos = this.name_label_vert
@@ -1991,7 +1984,7 @@ export abstract class ClassTemplate_LinkElement
     this.drawLabel()
   }
 
-  public get name_label_on_path() { return this.getStyleProperty('name_label_on_path') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_on_path']['type']> }
+  public get name_label_on_path() { return this.getStyleProperty('name_label_on_path') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_on_path']['type']> }
   public set name_label_on_path(_: boolean) {
     this._display.attributes.name_label_on_path = _
     if (_) {
@@ -2003,10 +1996,10 @@ export abstract class ClassTemplate_LinkElement
     this.drawLabel()
   }
 
-  public get name_label_vert() { return this.getStyleProperty('name_label_vert') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_vert']['type']> }
+  public get name_label_vert() { return this.getStyleProperty('name_label_vert') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_vert']['type']> }
   public set name_label_vert(_: Type_PathLabelVPosition) { if (_ !== 'dragged') this.deleteDraggedLabelPos(); this._display.attributes.name_label_vert = _; this.drawLabel() }
 
-  public get name_label_horiz() { return this.getStyleProperty('name_label_horiz') as ReturnType<typeof ATTRIBUTES_CONFIG['name_label_horiz']['type']> }
+  public get name_label_horiz() { return this.getStyleProperty('name_label_horiz') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_horiz']['type']> }
   public set name_label_horiz(_: Type_PathLabelHPosition) { if (_ !== 'dragged') this.deleteDraggedLabelPos(); this._display.attributes.name_label_horiz = _; this.drawLabel() }
 
   // ------------ Other Decorators  -------------

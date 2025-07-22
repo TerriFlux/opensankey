@@ -29,7 +29,8 @@ import { ClassAbstract_LinkStyle } from '../types/AbstractLink'
 import { Type_AnyLinkElement } from './Link'
 import {
   Type_TextVPos,
-  Type_TextHPos
+  Type_TextHPos,
+  NODES_ATTRIBUTES_CONFIG
 } from './NodeAttributes'
 import {
   Type_JSON,
@@ -69,7 +70,7 @@ export type Type_customisable_flow_style_attr=
   'name_label_vert'|'name_label_on_path'|'name_label_pos_auto'
 
 // CONFIGURATION CENTRALISÉE - SOURCE UNIQUE DE VÉRITÉ
-export const ATTRIBUTES_CONFIG = {
+export const LINKS_ATTRIBUTES_CONFIG = {
   // Scale
   shape_local_link_scale: { default: undefined as number | undefined, type: (() => undefined) as (() => number | undefined), callback: 'updateLinkAndSourceTarget' },
   
@@ -135,11 +136,11 @@ export const ATTRIBUTES_CONFIG = {
   name_label_pos_auto: { default: false, type: (() => false) as (() => boolean), setter: 'customNameLabelPosAuto' },
 } as const
 
-type AttributeKey = keyof typeof ATTRIBUTES_CONFIG
+type AttributeKey = keyof typeof LINKS_ATTRIBUTES_CONFIG
 
 // GÉNÉRATION AUTOMATIQUE DES TYPES à partir de la config
 type AttributeTypes = {
-  [K in AttributeKey]: ReturnType<typeof ATTRIBUTES_CONFIG[K]['type']>
+  [K in AttributeKey]: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG[K]['type']>
 }
 
 // CLASSE DE BASE avec déclarations automatiques
@@ -147,56 +148,56 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   protected _attributes: { [K in AttributeKey]?: any } = {}
 
   // Déclarations automatiques générées à partir de la config (une ligne par attribut)
-  shape_local_link_scale!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_local_link_scale']['type']>
-  shape_is_curved!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_curved']['type']>
-  shape_shape!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_shape']['type']>
-  shape_curvature!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_curvature']['type']>
-  shape_is_recycling!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_recycling']['type']>
-  shape_is_structure!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_structure']['type']>
-  shape_orientation!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_orientation']['type']>
-  shape_starting_curve!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_starting_curve']['type']>
-  shape_ending_curve!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_ending_curve']['type']>
-  shape_starting_tangeant!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_starting_tangeant']['type']>
-  shape_ending_tangeant!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_ending_tangeant']['type']>
-  shape_middle_recycling!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_middle_recycling']['type']>
-  shape_is_arrow!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_arrow']['type']>
-  shape_arrow_size!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_arrow_size']['type']>
-  shape_is_dashed!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_is_dashed']['type']>
-  shape_color!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_color']['type']>
-  shape_color_rule!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_color_rule']['type']>
-  shape_opacity!: ReturnType<typeof ATTRIBUTES_CONFIG['shape_opacity']['type']>
-  value_label_is_visible!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_is_visible']['type']>
-  value_label_font_family!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_font_family']['type']>
-  value_label_font_size!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_font_size']['type']>
-  value_label_uppercase!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_uppercase']['type']>
-  value_label_bold!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_bold']['type']>
-  value_label_italic!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_italic']['type']>
-  value_label_color!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_color']['type']>
-  value_label_horiz!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_horiz']['type']>
-  value_label_vert!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_vert']['type']>
-  value_label_on_path!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_on_path']['type']>
-  value_label_pos_auto!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_pos_auto']['type']>
-  value_label_percent_input!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_percent_input']['type']>
-  value_label_percent_output!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_percent_output']['type']>
-  value_label_scientific_notation!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']>
-  value_label_significant_digits!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_significant_digits']['type']>
-  value_label_nb_significant_digits!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']>
-  value_label_custom_digit!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_custom_digit']['type']>
-  value_label_nb_digit!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_nb_digit']['type']>
-  value_label_unit_visible!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_unit_visible']['type']>
-  value_label_unit!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_unit']['type']>
-  value_label_unit_factor!: ReturnType<typeof ATTRIBUTES_CONFIG['value_label_unit_factor']['type']>
-  name_label_is_visible!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_is_visible']['type']>
-  name_label_font_family!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_font_family']['type']>
-  name_label_font_size!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_font_size']['type']>
-  name_label_uppercase!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_uppercase']['type']>
-  name_label_bold!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_bold']['type']>
-  name_label_italic!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_italic']['type']>
-  name_label_color!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_color']['type']>
-  name_label_horiz!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_horiz']['type']>
-  name_label_vert!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_vert']['type']>
-  name_label_on_path!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_on_path']['type']>
-  name_label_pos_auto!: ReturnType<typeof ATTRIBUTES_CONFIG['name_label_pos_auto']['type']>
+  shape_local_link_scale!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_local_link_scale']['type']>
+  shape_is_curved!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_curved']['type']>
+  shape_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_shape']['type']>
+  shape_curvature!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_curvature']['type']>
+  shape_is_recycling!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_recycling']['type']>
+  shape_is_structure!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_structure']['type']>
+  shape_orientation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_orientation']['type']>
+  shape_starting_curve!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_curve']['type']>
+  shape_ending_curve!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_curve']['type']>
+  shape_starting_tangeant!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_tangeant']['type']>
+  shape_ending_tangeant!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_tangeant']['type']>
+  shape_middle_recycling!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_middle_recycling']['type']>
+  shape_is_arrow!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_arrow']['type']>
+  shape_arrow_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_arrow_size']['type']>
+  shape_is_dashed!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_dashed']['type']>
+  shape_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color']['type']>
+  shape_color_rule!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color_rule']['type']>
+  shape_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_opacity']['type']>
+  value_label_is_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_is_visible']['type']>
+  value_label_font_family!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_family']['type']>
+  value_label_font_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_size']['type']>
+  value_label_uppercase!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_uppercase']['type']>
+  value_label_bold!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_bold']['type']>
+  value_label_italic!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_italic']['type']>
+  value_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']>
+  value_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_horiz']['type']>
+  value_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_vert']['type']>
+  value_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_on_path']['type']>
+  value_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_pos_auto']['type']>
+  value_label_percent_input!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_input']['type']>
+  value_label_percent_output!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_output']['type']>
+  value_label_scientific_notation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']>
+  value_label_significant_digits!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_significant_digits']['type']>
+  value_label_nb_significant_digits!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']>
+  value_label_custom_digit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']>
+  value_label_nb_digit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_digit']['type']>
+  value_label_unit_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_visible']['type']>
+  value_label_unit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit']['type']>
+  value_label_unit_factor!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']>
+  name_label_is_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_is_visible']['type']>
+  name_label_font_family!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_family']['type']>
+  name_label_font_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_size']['type']>
+  name_label_uppercase!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_uppercase']['type']>
+  name_label_bold!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_bold']['type']>
+  name_label_italic!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_italic']['type']>
+  name_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_color']['type']>
+  name_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_horiz']['type']>
+  name_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_vert']['type']>
+  name_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_on_path']['type']>
+  name_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']>
 
   constructor() { 
     super()
@@ -205,11 +206,11 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
   private createDynamicProperties() {
     // Création automatique de TOUTES les propriétés en une seule boucle
-    (Object.keys(ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
+    (Object.keys(LINKS_ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
       Object.defineProperty(this, key, {
         get: () => this._attributes[key],
         set: (value: any) => {
-          const config = ATTRIBUTES_CONFIG[key] as any
+          const config = LINKS_ATTRIBUTES_CONFIG[key] as any
           if (config.setter && typeof this[config.setter as keyof this] === 'function') {
             (this[config.setter as keyof this] as Function).call(this, value)
           } else {
@@ -227,7 +228,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     })
   }
 
-  public delete_attribute(k : keyof typeof ATTRIBUTES_CONFIG) {
+  public delete_attribute(k : keyof typeof LINKS_ATTRIBUTES_CONFIG) {
     delete this._attributes[k]
   }
 
@@ -250,7 +251,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
         if ((this._attributes.shape_orientation === 'vh') || (this._attributes.shape_orientation === 'hv')) {
           this._attributes.shape_starting_curve = value <= 1.0 ? value : 1.0
         } else {
-          const endingCurve = this._attributes.shape_ending_curve ?? ATTRIBUTES_CONFIG.shape_ending_curve.default
+          const endingCurve = this._attributes.shape_ending_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_curve.default
           this._attributes.shape_starting_curve = (value + endingCurve) <= 1.0 ? value : 1.0 - endingCurve
         }
       } else {
@@ -268,7 +269,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
         if ((this._attributes.shape_orientation === 'vh') || (this._attributes.shape_orientation === 'hv')) {
           this._attributes.shape_ending_curve = value <= 1.0 ? value : 1.0
         } else {
-          const startingCurve = this._attributes.shape_starting_curve ?? ATTRIBUTES_CONFIG.shape_starting_curve.default
+          const startingCurve = this._attributes.shape_starting_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_curve.default
           this._attributes.shape_ending_curve = (value + startingCurve) <= 1.0 ? value : 1.0 - startingCurve
         }
       } else {
@@ -352,7 +353,6 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   // Méthodes JSON simplifiées
   public toJSON(): Type_JSON {
     const json_object = {} as Type_JSON
-    json_object['version'] = 1
 
     // Mapping JSON pour éviter la répétition
     const jsonMapping: { [key: string]: string } = {
@@ -377,7 +377,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     }
 
     Object.entries(this._attributes).forEach(([key, value]) => {
-      if (value !== undefined) {
+      if (value !== undefined && value != LINKS_ATTRIBUTES_CONFIG[key as AttributeKey].default) {
         const jsonKey = jsonMapping[key] || key
         json_object[jsonKey] = value
       }
@@ -450,13 +450,13 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     }
 
     Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-      if (json_local_object[jsonKey] !== undefined) {
+      if (json_local_object[jsonKey] !== undefined ) {
         this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
       }
     })
 
     // Traitement des attributs directs (même nom)
-    Object.keys(ATTRIBUTES_CONFIG).forEach(key => {
+    Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
       if (json_local_object[key] !== undefined) {
         this._attributes[key as AttributeKey] = json_local_object[key]
       }
@@ -464,7 +464,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   }
 
   public copyFrom(element: Class_LinkAttribute) {
-    Object.keys(ATTRIBUTES_CONFIG).forEach(key => {
+    Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
       this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
     })
   }
@@ -492,13 +492,13 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
     // Initialiser les attributs customisables
     this._customisable_attribute = {} as { [K in AttributeKey]: boolean }
-    Object.keys(ATTRIBUTES_CONFIG).forEach(key => {
+    Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
       this._customisable_attribute[key as AttributeKey] = !is_deletable
     })
 
     // Initialiser les valeurs par défaut si non deletable
     if (!is_deletable) {
-      Object.entries(ATTRIBUTES_CONFIG).forEach(([key, config]) => {
+      Object.entries(LINKS_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
         this._attributes[key as AttributeKey] = config.default
       })
     }
@@ -524,13 +524,77 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   }
 
   public fromJSON(json_local_object: Type_JSON): void {
-    super.fromJSON(json_local_object)
-    this._customisable_attribute = getJSONFromJSON(json_local_object, 'customisable_props', this._customisable_attribute) as typeof this._customisable_attribute
+    // super.fromJSON(json_local_object)
+    // this._customisable_attribute = getJSONFromJSON(json_local_object, 'customisable_props', this._customisable_attribute) as typeof this._customisable_attribute
+    // Mapping inverse pour fromJSON
+    const fromJsonMapping: { [key: string]: string } = {
+      'user_scale': 'shape_local_link_scale',
+      'curved': 'shape_is_curved',
+      'curvature': 'shape_curvature',
+      'recycling': 'shape_is_recycling',
+      'is_structur': 'shape_is_structure',
+      'orientation': 'shape_orientation',
+      'left_horiz_shift': 'shape_starting_curve',
+      'right_horiz_shift': 'shape_ending_curve',
+      'starting_tangeant': 'shape_starting_tangeant',
+      'ending_tangeant': 'shape_ending_tangeant',
+      'vert_shift': 'shape_middle_recycling',
+      'arrow': 'shape_is_arrow',
+      'arrow_size': 'shape_arrow_size',
+      'dashed': 'shape_is_dashed',
+      'color': 'shape_color',
+      'color_rule': 'shape_color_rule',
+      'opacity': 'shape_opacity',
+    }
+
+    Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
+      if (json_local_object[jsonKey] !== undefined) {
+        this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
+        this._customisable_attribute[attrKey as AttributeKey] = true
+      }
+    })
+
+    // Traitement des attributs directs (même nom)
+    Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
+      if (json_local_object[key] !== undefined) {
+        this._attributes[key as AttributeKey] = json_local_object[key]
+        this._customisable_attribute[key as AttributeKey] = true
+      }
+    })
   }
 
   public toJSON(): Type_JSON {
-    const json_object = super.toJSON()
-    json_object['customisable_props'] = this._customisable_attribute
+    const json_object = {} as Type_JSON  
+
+    // Mapping JSON pour éviter la répétition
+    const jsonMapping: { [key: string]: string } = {
+      shape_local_link_scale: 'user_scale',
+      shape_is_curved: 'curved',
+      shape_shape: 'shape_shape',
+      shape_curvature: 'curvature',
+      shape_is_recycling: 'recycling',
+      shape_is_structure: 'is_structur',
+      shape_orientation: 'orientation',
+      shape_starting_curve: 'left_horiz_shift',
+      shape_ending_curve: 'right_horiz_shift',
+      shape_starting_tangeant: 'starting_tangeant',
+      shape_ending_tangeant: 'ending_tangeant',
+      shape_middle_recycling: 'vert_shift',
+      shape_is_arrow: 'arrow',
+      shape_arrow_size: 'arrow_size',
+      shape_is_dashed: 'dashed',
+      shape_color: 'color',
+      shape_color_rule: 'color_rule',
+      shape_opacity: 'opacity',
+    }
+
+    Object.entries(this._attributes).forEach(([key, value]) => {
+      if (value !== undefined && this._customisable_attribute[key as AttributeKey] && value != LINKS_ATTRIBUTES_CONFIG[key as AttributeKey].default) {
+        const jsonKey = jsonMapping[key] || key
+        json_object[jsonKey] = value
+      }
+    })
+
     return json_object
   }
 

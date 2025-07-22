@@ -34,6 +34,7 @@ import type { ClassAbstract_NodeElement, ClassAbstract_NodeStyle, ClassAbstract_
 import type { Class_MenuConfig } from '../types/MenuConfig'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Type_GenericSankey } from './Types'
+import { Type_AnyProtoElement } from '../Elements/Element'
 
 type TypeAbstract_LinkElement = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 export type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
@@ -79,7 +80,7 @@ export abstract class ClassAbstract_DrawingArea {
   // Mandatory methods
   public abstract isInSelectionMode(): boolean
   public abstract isInEditionMode(): boolean
-  public abstract addElement(): number
+  //public abstract addElement(): number
   public abstract checkAndUpdateAreaSize(): void
   public abstract deleteNode(_: TypeAbstract_NodeElement): void
   public abstract deleteLink(_: TypeAbstract_LinkElement): void
@@ -124,7 +125,7 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract set scale(_: number)
   public abstract get magnetic_nodes(): boolean
   public abstract set magnetic_nodes(b: boolean)
-  public abstract get list_g_element(): string[]
+  public abstract get list_g_element(): Type_AnyProtoElement[]
 
 }
 

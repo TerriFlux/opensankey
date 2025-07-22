@@ -1451,6 +1451,8 @@ class JsonToSankey(object):
                             tag = self._nodetags_id_corresp[tagg_id][tag_id]
                             node.add_tag(tag)
             # Save dimensions
+            if "dimensions" not in node_json:
+                continue
             for dimension_id, dimension in node_json["dimensions"].items():
                 if "parent_name" in dimension.keys():
                     all_dim_parent_child.append(
@@ -1574,16 +1576,17 @@ class JsonToSankey(object):
             data = flux.get_corresponding_datas_from_tags(datatags_list)[0]
             # Get all fluxtags
             fluxtags_list = []
-            for fluxtagg_id in datas_json["tags"].keys():
-                # Get all tags related to this taggroup and to this flux
-                for fluxtag_id in datas_json["tags"][fluxtagg_id]:
-                    if fluxtag_id == "initial_data" or fluxtag_id == "computed_data":
-                        continue
-                    if fluxtag_id not in self._fluxtags_id_corresp[fluxtagg_id].keys():
-                        # sanity check
-                        continue
-                    fluxtags_list.append(
-                        self._fluxtags_id_corresp[fluxtagg_id][fluxtag_id]
+            if "tags" in datas_json:
+                for fluxtagg_id in datas_json["tags"].keys():
+                    # Get all tags related to this taggroup and to this flux
+                    for fluxtag_id in datas_json["tags"][fluxtagg_id]:
+                        if fluxtag_id == "initial_data" or fluxtag_id == "computed_data":
+                            continue
+                        if fluxtag_id not in self._fluxtags_id_corresp[fluxtagg_id].keys():
+                            # sanity check
+                            continue
+                        fluxtags_list.append(
+                            self._fluxtags_id_corresp[fluxtagg_id][fluxtag_id]
                     )
             # Check if data is result or not
             # data_is_computed = False

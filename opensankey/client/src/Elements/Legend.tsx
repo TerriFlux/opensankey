@@ -52,6 +52,7 @@ import {
   getStringListFromJSON,
   getJSONFromJSON,
   const_default_position_x,
+  const_default_position_y,
 } from '../types/Utils'
 import {
   Class_DrawingArea,
@@ -62,7 +63,17 @@ import {
 } from './Handler'
 import { Class_DataTag } from '../types/Tag'
 
-
+const default_pos_from_legacy = false
+const default_stick_to_drawing = false
+const default_masked = true
+const default_display_legend_scale = false
+const default_legend_police = 16
+const default_legend_bg_border = false
+const default_legend_bg_color = default_element_color
+const default_legend_bg_opacity = 0
+const default_legend_show_dataTags = false
+const default_width = 180
+const default_info_link_value_void = false
 // CLASS LEGEND *************************************************************************
 
 /**
@@ -85,20 +96,17 @@ export class ClassTemplate_Legend
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  private _pos_from_legacy = false
-
-  private _stick_to_drawing =false
-  // Legend Class attributes
-  private _masked: boolean = true
-  private _display_legend_scale: boolean = false
-  private _legend_police: number = 16
-  private _legend_bg_border: boolean = false
-  private _legend_bg_color: string = default_element_color
-  private _legend_bg_opacity: number = 0
-  private _legend_show_dataTags: boolean = false
-  private _node_label_separator: string = ''
-  private _width: number = 180
-  private _info_link_value_void: boolean = false
+  private _pos_from_legacy = default_pos_from_legacy;
+  private _stick_to_drawing = default_stick_to_drawing;
+  private _masked: boolean = default_masked
+  private _display_legend_scale: boolean = default_display_legend_scale
+  private _legend_police: number = default_legend_police
+  private _legend_bg_border: boolean = default_legend_bg_border
+  private _legend_bg_color: string = default_legend_bg_color
+  private _legend_bg_opacity: number = default_legend_bg_opacity
+  private _legend_show_dataTags: boolean = default_legend_show_dataTags
+  private _width: number = default_width
+  private _info_link_value_void: boolean = default_info_link_value_void
 
   private _drag_handler: {
     left: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
@@ -176,7 +184,7 @@ export class ClassTemplate_Legend
       sankey: drawing_area.sankey as Type_GenericSankey,
       position: {
         x: const_default_position_x,
-        y: drawing_area.getNavBarHeight() + 50,
+        y: const_default_position_y,
         u: 0,
         v: 0
       }
@@ -226,9 +234,9 @@ export class ClassTemplate_Legend
     this._legend_bg_color = _._legend_bg_color
     this._legend_bg_opacity = _._legend_bg_opacity
     this._legend_show_dataTags = _._legend_show_dataTags
-    this._node_label_separator = _._node_label_separator
     this._info_link_value_void = _._info_link_value_void
     this._pos_from_legacy = _._pos_from_legacy
+    this._stick_to_drawing = _._stick_to_drawing
   }
 
   // SAVING METHODS =====================================================================
@@ -237,24 +245,22 @@ export class ClassTemplate_Legend
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ): void {
-    // we need to create an entry legend to do this
-    super._toJSON(json_object, kwargs)
     json_object['legend'] = {}
     const json_legend = json_object['legend']
-    json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
-    json_legend['mask_legend'] = this._masked
-    json_legend['legend_dx'] = this._dx
-    json_legend['legend_dy'] = this._dy
-    json_legend['legend_scale'] = this._scale
-    json_legend['legend_width'] = this._width
-    json_legend['display_legend_scale'] = this._display_legend_scale
-    json_legend['legend_police'] = this._legend_police
-    json_legend['legend_bg_border'] = this._legend_bg_border
-    json_legend['legend_bg_color'] = this._legend_bg_color
-    json_legend['legend_bg_opacity'] = this._legend_bg_opacity
-    json_legend['legend_show_dataTags'] = this._legend_show_dataTags
-    json_legend['node_label_separator'] = this._node_label_separator
-    json_legend['info_link_value_void'] = this._info_link_value_void
+    if (this.position_x != const_default_position_x || this.position_x != const_default_position_y) json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
+    if (!this._masked) json_legend['mask_legend'] = this._masked
+    if (this._dx) json_legend['legend_dx'] = this._dx
+    if (this._dy) json_legend['legend_dy'] = this._dy
+    if (this._display_legend_scale) json_legend['legend_scale'] = this._scale
+    if (this._width != default_width) json_legend['legend_width'] = this._width
+    if (this._display_legend_scale) json_legend['display_legend_scale'] = this._display_legend_scale
+    if (this._legend_police != default_legend_police) json_legend['legend_police'] = this._legend_police
+    if (this._legend_bg_border) json_legend['legend_bg_border'] = this._legend_bg_border
+    if (this._legend_bg_color != default_legend_bg_color) json_legend['legend_bg_color'] = this._legend_bg_color
+    if (this._legend_bg_opacity != default_legend_bg_opacity) json_legend['legend_bg_opacity'] = this._legend_bg_opacity
+    if (this._legend_show_dataTags) json_legend['legend_show_dataTags'] = this._legend_show_dataTags
+    if (this._stick_to_drawing) json_legend['legend_stick_to_drawing'] = this._stick_to_drawing
+    if (this._info_link_value_void) json_legend['info_link_value_void'] = this._info_link_value_void
   }
 
   protected _fromJSON(
@@ -264,10 +270,11 @@ export class ClassTemplate_Legend
     super._fromJSON(json_object, kwargs)
     const json_legend = getJSONFromJSON(json_object, 'legend', {})
 
-    const legend_position = getStringListFromJSON(json_legend, 'legend_position', ['0', String(this.drawing_area.getNavBarHeight())])
+    const legend_position = getStringListFromJSON(
+      json_legend, 'legend_position', [String(const_default_position_x), String(const_default_position_y)]
+    )
     this._display.position.x = +legend_position[0]
-    const tmp_y = +legend_position[1]
-    this._display.position.y = (tmp_y < this.drawing_area.getNavBarHeight()) ? this.drawing_area.getNavBarHeight() : tmp_y //fix legend position by putting it position just under the navbar
+    this._display.position.y = +legend_position[1]
     this._masked = getBooleanFromJSON(json_legend, 'mask_legend', this._masked)
     this._dx = getNumberFromJSON(json_legend, 'legend_dx', this._dx)
     this._dy = getNumberFromJSON(json_legend, 'legend_dy', this._dy)
@@ -279,9 +286,8 @@ export class ClassTemplate_Legend
     this._legend_bg_color = getStringFromJSON(json_legend, 'legend_bg_color', this._legend_bg_color)
     this._legend_bg_opacity = getNumberFromJSON(json_legend, 'legend_bg_opacity', this._legend_bg_opacity)
     this._legend_show_dataTags = getBooleanFromJSON(json_legend, 'legend_show_dataTags', this._legend_show_dataTags)
-    this._node_label_separator = getStringFromJSON(json_legend, 'node_label_separator', this._node_label_separator)
     this._info_link_value_void = getBooleanFromJSON(json_legend, 'info_link_value_void', this._info_link_value_void)
-
+    this._stick_to_drawing = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', this._stick_to_drawing)
     // Var only present if json is legacy
     this._pos_from_legacy = getBooleanFromJSON(json_legend, 'legacy_legend', this._pos_from_legacy)
 
@@ -295,7 +301,7 @@ export class ClassTemplate_Legend
    *
    * @memberof ClassTemplate_Legend
    */
-  public posIfFromLegacy(force:boolean = false) {
+  public posIfFromLegacy(force: boolean = false) {
     if (this._pos_from_legacy || force) {
       let x = 0, y = 0, k = 1
       const tmp = this.drawing_area.d3_selection_zoom_area?.node()
@@ -462,9 +468,10 @@ export class ClassTemplate_Legend
  */
   protected override _applyPosition() {
     if (this.d3_selection !== null) {
+      const position_y = this.position_y + this.drawing_area.getNavBarHeight()
       this.d3_selection.attr(
         'transform',
-        'translate(' + this.position_x + ', ' + this.position_y + ')')
+        'translate(' + this.position_x + ', ' + position_y + ')')
     }
   }
 
@@ -881,17 +888,14 @@ export class ClassTemplate_Legend
   public get legend_show_dataTags(): boolean { return this._legend_show_dataTags }
   public set legend_show_dataTags(_) { this._legend_show_dataTags = _; this.draw() }
 
-  public get node_label_separator(): string { return this._node_label_separator }
-  public set node_label_separator(_) { this._node_label_separator = _; this.draw() }
-
   public get width(): number { return this._width }
   public set width(_) { this._width = _; this.draw() }
 
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(_) { this._info_link_value_void = _; this.draw() }
 
-  public get stick_to_drawing(): boolean { return this._stick_to_drawing}
-  public set stick_to_drawing(_) { 
+  public get stick_to_drawing(): boolean { return this._stick_to_drawing }
+  public set stick_to_drawing(_) {
     this._stick_to_drawing = _;
     const da = this.drawing_area as unknown as Class_DrawingArea
     if (this.stick_to_drawing) {
@@ -902,6 +906,6 @@ export class ClassTemplate_Legend
       da.d3_selection_legend = da.d3_selection_zoom_area!.append('g').attr('id', 'grp_legend')
       this.posIfFromLegacy(true)
     }
-    this.draw() 
+    this.draw()
   }
 }

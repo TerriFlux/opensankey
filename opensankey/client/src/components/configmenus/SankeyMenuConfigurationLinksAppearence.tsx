@@ -41,7 +41,7 @@ import {
 } from '../../Elements/Link'
 import {
   Class_LinkAttribute,
-  ATTRIBUTES_CONFIG,
+  LINKS_ATTRIBUTES_CONFIG,
   default_shape_local_scale
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
@@ -197,20 +197,20 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const is_indeterminate = !selected_links.every(check_indeterminate)
 
   const element_ref = elements[0]
-  const shape_orientation = (element_ref?.shape_orientation ?? ATTRIBUTES_CONFIG.shape_orientation.default)
-  const shape_starting_curve = (element_ref?.shape_starting_curve ?? ATTRIBUTES_CONFIG.shape_starting_curve.default)
-  const shape_ending_curve = (element_ref?.shape_ending_curve ?? ATTRIBUTES_CONFIG.shape_ending_curve.default)
-  const shape_starting_tangeant = (element_ref?.shape_starting_tangeant ?? ATTRIBUTES_CONFIG.shape_starting_tangeant.default)
-  const shape_ending_tangeant = (element_ref?.shape_ending_tangeant ?? ATTRIBUTES_CONFIG.shape_ending_tangeant.default)
-  const shape_is_curved = (element_ref?.shape_is_curved ?? ATTRIBUTES_CONFIG.shape_is_curved.default)
-  const shape_shape = (element_ref?.shape_shape ?? ATTRIBUTES_CONFIG.shape_shape.default)
-  const shape_is_recycling = (element_ref?.shape_is_recycling ?? ATTRIBUTES_CONFIG.shape_is_recycling.default)
-  const shape_arrow_size = (element_ref?.shape_arrow_size ?? ATTRIBUTES_CONFIG.shape_arrow_size.default)
-  const shape_is_arrow = (element_ref?.shape_is_arrow ?? ATTRIBUTES_CONFIG.shape_is_arrow.default)
-  const shape_color = (element_ref?.shape_color ?? ATTRIBUTES_CONFIG.shape_color.default)
-  const shape_color_rule = (element_ref?.shape_color_rule ?? ATTRIBUTES_CONFIG.shape_color_rule.default)
-  const shape_opacity = (element_ref?.shape_opacity ?? ATTRIBUTES_CONFIG.shape_opacity.default)
-  const shape_is_structure = (element_ref?.shape_is_structure ?? ATTRIBUTES_CONFIG.shape_is_structure.default)
+  const shape_orientation = (element_ref?.shape_orientation ?? LINKS_ATTRIBUTES_CONFIG.shape_orientation.default)
+  const shape_starting_curve = (element_ref?.shape_starting_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_curve.default)
+  const shape_ending_curve = (element_ref?.shape_ending_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_curve.default)
+  const shape_starting_tangeant = (element_ref?.shape_starting_tangeant ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_tangeant.default)
+  const shape_ending_tangeant = (element_ref?.shape_ending_tangeant ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_tangeant.default)
+  const shape_is_curved = (element_ref?.shape_is_curved ?? LINKS_ATTRIBUTES_CONFIG.shape_is_curved.default)
+  const shape_shape = (element_ref?.shape_shape ?? LINKS_ATTRIBUTES_CONFIG.shape_shape.default)
+  const shape_is_recycling = (element_ref?.shape_is_recycling ?? LINKS_ATTRIBUTES_CONFIG.shape_is_recycling.default)
+  const shape_arrow_size = (element_ref?.shape_arrow_size ?? LINKS_ATTRIBUTES_CONFIG.shape_arrow_size.default)
+  const shape_is_arrow = (element_ref?.shape_is_arrow ?? LINKS_ATTRIBUTES_CONFIG.shape_is_arrow.default)
+  const shape_color = (element_ref?.shape_color ?? LINKS_ATTRIBUTES_CONFIG.shape_color.default)
+  const shape_color_rule = (element_ref?.shape_color_rule ?? LINKS_ATTRIBUTES_CONFIG.shape_color_rule.default)
+  const shape_opacity = (element_ref?.shape_opacity ?? LINKS_ATTRIBUTES_CONFIG.shape_opacity.default)
+  const shape_is_structure = (element_ref?.shape_is_structure ?? LINKS_ATTRIBUTES_CONFIG.shape_is_structure.default)
   const shape_local_scale = (element_ref?.shape_local_link_scale ?? default_shape_local_scale)
 
 
@@ -879,14 +879,14 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
   // Elements attributes ----------------------------------------------------------------
   const element_ref = elements[0]
-  const value_label_on_path = (element_ref?.value_label_on_path ?? ATTRIBUTES_CONFIG.value_label_on_path.default)
-  const value_label_pos_auto = (element_ref?.value_label_pos_auto ?? ATTRIBUTES_CONFIG.value_label_pos_auto.default)
-  const value_label_is_visible = (element_ref?.value_label_is_visible ?? ATTRIBUTES_CONFIG.value_label_is_visible.default)
-  const name_label_is_visible = (element_ref?.name_label_is_visible ?? ATTRIBUTES_CONFIG.name_label_is_visible.default)
-  const name_label_on_path = (element_ref?.name_label_on_path ?? ATTRIBUTES_CONFIG.value_label_on_path.default)
-  const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? ATTRIBUTES_CONFIG.value_label_pos_auto.default)
-  const value_label_percent_input = (element_ref?.value_label_percent_input ?? ATTRIBUTES_CONFIG.value_label_percent_input.default)
-  const value_label_percent_output = (element_ref?.value_label_percent_output ?? ATTRIBUTES_CONFIG.value_label_percent_output.default)
+  const value_label_on_path = (element_ref?.value_label_on_path ?? LINKS_ATTRIBUTES_CONFIG.value_label_on_path.default)
+  const value_label_pos_auto = (element_ref?.value_label_pos_auto ?? LINKS_ATTRIBUTES_CONFIG.value_label_pos_auto.default)
+  const value_label_is_visible = (element_ref?.value_label_is_visible ?? LINKS_ATTRIBUTES_CONFIG.value_label_is_visible.default)
+  const name_label_is_visible = (element_ref?.name_label_is_visible ?? LINKS_ATTRIBUTES_CONFIG.name_label_is_visible.default)
+  const name_label_on_path = (element_ref?.name_label_on_path ?? LINKS_ATTRIBUTES_CONFIG.value_label_on_path.default)
+  const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? LINKS_ATTRIBUTES_CONFIG.value_label_pos_auto.default)
+  const value_label_percent_input = (element_ref?.value_label_percent_input ?? LINKS_ATTRIBUTES_CONFIG.value_label_percent_input.default)
+  const value_label_percent_output = (element_ref?.value_label_percent_output ?? LINKS_ATTRIBUTES_CONFIG.value_label_percent_output.default)
 
   /**
    * function that go throught all links of an array & check if they're all equals

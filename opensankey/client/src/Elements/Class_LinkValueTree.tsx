@@ -726,16 +726,18 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     if (this.result_min) json_object['result_min'] = this.result_min;
     if (this.result_max) json_object['result_max'] = this.result_max;
 
-    if (this.text_value) json_object['text_value'] = this.text_value;
-    json_object['value_option'] = this.value_option;
-    json_object['tags'] = Object.fromEntries(
-      this.flux_taggs_list
-        .map(tagg => [
-          tagg.id,
-          this.flux_tags_list
-            .filter(tag => (tag.group === tagg))
-            .map(tag => tag.id)
-        ]));
+    if (this.text_value) json_object['text_value'] = this.text_value
+    if (this.value_option !== 'value') json_object['value_option'] = this.value_option
+    if (this.flux_taggs_list.length>0) {
+      json_object['tags'] = Object.fromEntries(
+        this.flux_taggs_list
+          .map(tagg => [
+            tagg.id,
+            this.flux_tags_list
+              .filter(tag => (tag.group === tagg))
+              .map(tag => tag.id)
+          ]));
+        }
     // Output
     return json_object;
   }
