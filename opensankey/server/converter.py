@@ -1588,7 +1588,7 @@ class JsonToSankey(object):
                             continue
                         fluxtags_list.append(
                             self._fluxtags_id_corresp[fluxtagg_id][fluxtag_id]
-                    )
+                        )
             # Check if data is result or not
             # data_is_computed = False
             # if "flux_types" in datas_json["tags"].keys():
