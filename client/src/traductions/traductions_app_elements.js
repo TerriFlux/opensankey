@@ -813,7 +813,7 @@ export const resources_app_elements = {
         'cbl': 'Couleur bordure',
         'labels': 'Style police',
 
-        'title': 'Titre'
+        'title': 'Nom'
       },
       UserNav: {
         'to_con': 'Connectez vous',

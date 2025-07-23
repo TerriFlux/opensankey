@@ -55,3 +55,4 @@ client/public/meta/favicon-32x32.png
 client/public/meta/manifest.json
 env.bat
 preferences/**
+client/.env
