@@ -150,17 +150,17 @@ def save_excel():
         - 402 : Error when saving mfa data
     '''
     # Extract Sankey structure from JSON
-    try:
-        data = request.form['data']
-        sankey_as_data = data
-        sankey_as_json = json.loads(sankey_as_data)
-        sankey = converter_funct['extract_sankey_from_json'](sankey_as_json)
-        options = request.form['options']
-        options_save_excel = json.loads(options)
-    except Exception as excpt:
-        return Response(
-            response='save_excel: ' + str(excpt),
-            status=500)
+    # try:
+    data = request.form['data']
+    sankey_as_data = data
+    sankey_as_json = json.loads(sankey_as_data)
+    sankey = converter_funct['extract_sankey_from_json'](sankey_as_json)
+    options = request.form['options']
+    options_save_excel = json.loads(options)
+    # except Exception as excpt:
+    #     return Response(
+    #         response='save_excel: ' + str(excpt),
+    #         status=500)
     # Save Sankey structure in Excel
     try:
         cwd = os.getcwd()
