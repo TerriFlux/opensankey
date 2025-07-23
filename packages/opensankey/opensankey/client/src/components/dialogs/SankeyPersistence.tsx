@@ -367,7 +367,7 @@ export const JSONtoExcel: FType_JSONtoExcel = (
     root = root.replace('dashboard', '')
   }
   let url = root + url_prefix + 'excel/save'
-  const options_save_excel:string=JSON.stringify(save_options)
+  const options_save_excel: string = JSON.stringify(save_options)
 
   const form_data = new FormData()
   form_data.append(
@@ -441,6 +441,20 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
   data_as_json['version'] = new_data.version // Avoid converter process
   // Extract sankey datas from JSON
   new_data.fromJSON(data_as_json, false)
+  new_data.drawing_area.sankey.nodes_list.forEach(n => {
+    const tagg = new_data.drawing_area.sankey.node_taggs_dict['type de noeud']
+    if (!tagg) {
+      return
+    }
+    const product_tag = tagg.tags_dict['produit']
+    const sector_tag = tagg.tags_dict['secteur']
+    //const echange_tag = tagg.tags_dict['echange']
+    if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
+      n.style = [new_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
+    } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
+      n.style = [new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
+    }
+  })
   // Case 1 : Apply extracted layout if present -> contains positions
   if (data_as_json['layout']) {
     new_data.updateFromJSON(data_as_json)
@@ -450,39 +464,6 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     // Recompute all positions
     new_data.computeAutoFullSankey()
   }
-
-  // Redraw
-  new_data.sendWaitingToast(
-    () => {
-      //Change style if node has default style & 'Type de noeud' tags
-      new_data.drawing_area.sankey.nodes_list.forEach(n => {
-        const tagg = new_data.drawing_area.sankey.node_taggs_dict['type de noeud']
-        if (!tagg) {
-          return
-        }
-        const product_tag = tagg.tags_dict['produit']
-        const sector_tag = tagg.tags_dict['secteur']
-        const echange_tag = tagg.tags_dict['echange']
-        if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [new_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
-        } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
-        } else if (n.hasGivenTag(echange_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [
-            new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
-            new_data.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle']
-          ]
-          if (n.hasInputLinks()) n.style.push(new_data.drawing_area.sankey.node_styles_dict['NodeExportCloseStyle'])
-          if (n.hasOutputLinks()) n.style.push(new_data.drawing_area.sankey.node_styles_dict['NodeImportCloseStyle'])
-        }
-      })
-      new_data.drawing_area.sankey.default_node_style.position.type = 'parametric'
-      if (new_data.drawing_area.sankey.node_taggs_list.length>0) {
-        new_data.drawing_area.sankey.node_taggs_list[0].show_legend = true
-      }
-      new_data.draw()
-    })
-  //new_data.draw()
 }
 
 

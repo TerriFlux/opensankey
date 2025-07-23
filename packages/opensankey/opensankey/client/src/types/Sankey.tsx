@@ -801,6 +801,7 @@ export abstract class ClassTemplate_Sankey
     nodes_list
       .forEach(node => {
         if (node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
+          if(!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON()
           return
         }
         json_object_nodes[node.id] = node.toJSON()
@@ -940,6 +941,7 @@ export abstract class ClassTemplate_Sankey
           {
             id: 'NodeImportExportAboveBelowStyle',
             config: {
+              'min_width': 40,
               'name_label_is_visible': true,
               'shape_visible': false,
               'shape_min_height': 1,
@@ -965,7 +967,7 @@ export abstract class ClassTemplate_Sankey
               'name_label_horiz' : 'left',
               //'name_label_horiz_shift' : -200,
               'value_label_horiz' : 'left',
-              'value_label_horiz_shift' : -10,
+              'value_label_horiz_shift' : 40,
             },
             position: {}
           },
@@ -983,7 +985,8 @@ export abstract class ClassTemplate_Sankey
               'name_label_horiz' : 'right',
               //'name_label_horiz_shift' : 200,
               'value_label_horiz' : 'right',
-              'value_label_horiz_shift' : 10,
+              'value_label_horiz_shift' : -40,
+
             },
             position: {}
           }
@@ -1035,8 +1038,34 @@ export abstract class ClassTemplate_Sankey
               'shape_starting_tangeant' : 0.25,
               'shape_ending_tangeant' : 1
             }
+          },
+          {
+            id: 'LinkImportExportAboveBelowStyle',
+            config: {
+              'shape_starting_point' : 0.25,
+              'shape_starting_tangeant' : 0.5,
+              'shape_ending_tangeant' : 0.5,
+              'shape_ending_point' : 0.75,
+              'value_label_is_visible' : false,
+              //'value_label_position' : 'end',
+              'value_label_on_path' : true
+
+            }
+          },
+          {
+            id: 'LinkImportAboveStyle',
+            config: {
+            }
+          },
+          {
+            id: 'LinkExportBelowStyle',
+            config: {
+            }
           }]
         linkStyleConfigs.forEach(({ id, config}) => {
+          if (this._link_styles[id] ) {
+            return
+          }
           const new_style = this.createNewLinkStyle(id, id, true)
           Object.keys(config).forEach(key => {
               new_style.customisable_attribute[key as Type_customisable_flow_style_attr] = true
