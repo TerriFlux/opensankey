@@ -688,7 +688,7 @@ export abstract class ClassTemplate_ApplicationData
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
     this._drawing_area.splitTrade()
-    //this._drawing_area.arrangeTrade(false)
+    this._drawing_area.arrangeTrade(true)
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 

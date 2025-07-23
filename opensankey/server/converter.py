@@ -1443,13 +1443,14 @@ class JsonToSankey(object):
             # self._nodes_id_corresp[node_json['id']] = node
             self._nodes_id_corresp[node_id] = node
             # Apply node tags
-            for tagg_id in node_json["tags"].keys():
-                if tagg_id in self._nodetags_id_corresp.keys():
-                    # Get corresponding tags
-                    for tag_id in node_json["tags"][tagg_id]:
-                        if tag_id in self._nodetags_id_corresp[tagg_id].keys():
-                            tag = self._nodetags_id_corresp[tagg_id][tag_id]
-                            node.add_tag(tag)
+            if "tags" in node_json:
+                for tagg_id in node_json["tags"].keys():
+                    if tagg_id in self._nodetags_id_corresp.keys():
+                        # Get corresponding tags
+                        for tag_id in node_json["tags"][tagg_id]:
+                            if tag_id in self._nodetags_id_corresp[tagg_id].keys():
+                                tag = self._nodetags_id_corresp[tagg_id][tag_id]
+                                node.add_tag(tag)
             # Save dimensions
             if "dimensions" not in node_json:
                 continue

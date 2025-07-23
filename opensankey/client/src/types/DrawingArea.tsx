@@ -1368,6 +1368,10 @@ export abstract class ClassTemplate_DrawingArea
     )
     // first split the nodes
     trade_nodes.forEach(node => {
+      if (node.style.length<2) node.style = [
+        this.sankey.node_styles_dict['NodeSectorStyle'] as Class_NodeStyle,
+        this.sankey.node_styles_dict['NodeImportExportCloseStyle'] as Class_NodeStyle
+      ]
       if (node.output_links_list.length > 0) {
         (node as Type_GenericNodeElement).SplitIOrE(true)
       }

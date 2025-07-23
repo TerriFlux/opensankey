@@ -123,7 +123,11 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
       n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
     )
     if (trade_close) {
-      import_nodes.forEach(n=>{
+      import_nodes.forEach((n,i)=>{
+        if (i==0) n.sibling!.style = [
+          applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
+        ]
         n.style = [
           applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
           applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
@@ -131,7 +135,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
         ]
         n.getFirstOutputLink()!.style = [
             applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportCloseStyle'],
-            applicationData.drawing_area.sankey.link_styles_dict['LinkExportCloseStyle']
+            applicationData.drawing_area.sankey.link_styles_dict['LinkImportCloseStyle']
         ]
     })
       export_nodes.forEach(n=>{
@@ -146,7 +150,11 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
         ]
     })
     } else {
-      import_nodes.forEach(n=>{
+      import_nodes.forEach((n,i)=>{
+        if (i==0) n.sibling!.style = [
+          applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
+        ]
         n.style = [
           applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
           applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
@@ -580,16 +588,16 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 node_styles_dict['default'].position.type = evt.target.checked ? 'parametric' : 'absolute'
                 set_parametric(evt.target.checked)
                 if (evt.target.checked) {
-                  Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
-                    .forEach(style => style.position.type = 'parametric')
+                  // Object.values(node_styles_dict)
+                  //   .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
+                  //   .forEach(style => style.position.type = 'parametric')
                   applicationData.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
                   applicationData.drawing_area.computeParametrization()
-                } else {
+                } /*else {
                   Object.values(node_styles_dict)
                     .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
                     .forEach(style => style.position.type = 'absolute')
-                }
+                }*/
               }}
             >
               <OSTooltip label={t('MEP.tooltips.parametricMode')}>
@@ -659,6 +667,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 variant='menuconfigpanel_option_checkbox'
                 isChecked={!trade_close}
                 onChange={(evt: { target: { checked: boolean } }) => {
+                  set_trade_close(!evt.target.checked)
                   setTrade(!evt.target.checked)
                   applicationData.drawing_area.arrangeTrade(true)
                   applicationData.draw()
