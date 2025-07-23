@@ -254,10 +254,10 @@ export abstract class ClassTemplate_DrawingAreaOSP
     // Herited toJSON
     const json_entry: Type_JSON = super.toJSON(only_visible_elements, with_values)
     // Add new attributes
-    json_entry['show_background_image'] = this._show_background_image
-    json_entry['background_image'] = this._background_image
-    json_entry['name'] = this.name
-    json_entry['heredited_attr'] = this._heredited_attr
+    if (this._show_background_image) json_entry['show_background_image'] = this._show_background_image
+    if (this._show_background_image) json_entry['background_image'] = this._background_image
+    if (this.name != default_main_sankey_id) json_entry['name'] = this.name
+    if (Object.keys(this._heredited_attr).length>0) json_entry['heredited_attr'] = this._heredited_attr
     return json_entry
   }
 

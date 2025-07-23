@@ -138,7 +138,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
 
   const applyEditor = () => {
     const dict_old_value: { [x: string]: string } = {}
-    selected_nodes.map(node => dict_old_value[node.id] = node.FO_content)
+    selected_nodes.map(node => dict_old_value[node.id] = node.FO_content!)
 
     const _applyEditor = () => {
       selected_nodes.map(node => {
@@ -154,7 +154,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
         node.FO_content = dict_old_value[node.id]
         node.drawFO()
       })
-      sEditorContentFoNode(selected_nodes[0].FO_content)
+      sEditorContentFoNode(selected_nodes[0].FO_content??'')
     }
 
     new_data_plus.history.saveUndo(inv_applyEditor)

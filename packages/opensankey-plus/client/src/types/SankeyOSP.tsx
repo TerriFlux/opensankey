@@ -200,14 +200,16 @@ export abstract class ClassTemplate_SankeyOSP
     const json_entry = super.toJSON(only_visible_elements, with_values)
 
     // Class container
-    const json_object_labels = {} as Type_JSON
-    json_entry['labels'] = json_object_labels
-    this.containers_list.forEach(obj => {
-      json_object_labels[obj.id] = obj.toJSON()
-    })
+    if (this.containers_list.length>0) {
+      const json_object_labels = {} as Type_JSON
+      json_entry['labels'] = json_object_labels
+      this.containers_list.forEach(obj => {
+        json_object_labels[obj.id] = obj.toJSON()
+      })
+    }
 
     // Icon catalog
-    json_entry['icon_catalog'] = this._icon_catalog as Type_JSON
+    if (Object.keys(this._icon_catalog).length>0) json_entry['icon_catalog'] = this._icon_catalog as Type_JSON
 
     return json_entry
   }

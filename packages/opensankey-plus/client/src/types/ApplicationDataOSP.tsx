@@ -298,7 +298,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
     }
 
     // Add var to remember active view when saved
-    json_entry['current_view'] = current_view
+    if (current_view !== default_main_sankey_id) json_entry['current_view'] = current_view
     return json_entry
   }
 

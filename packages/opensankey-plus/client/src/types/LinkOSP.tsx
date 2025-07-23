@@ -71,7 +71,7 @@ export abstract class ClassTemplate_LinkElementOSP
   protected abstract _display: {
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
-    displaying_order: number,
+    //displaying_order: number,
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
     style: Class_LinkStyleOSP[],

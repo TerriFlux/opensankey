@@ -99,20 +99,20 @@ export abstract class ClassTemplate_NodeElementOSP
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  private _iconName: string
-  private _iconColor: string
+  private _iconName: string | undefined
+  private _iconColor: string | undefined
   private _iconVisible: boolean
   private _iconViewBox?: string | undefined
   private _iconColorSustainable: boolean
 
   private _has_FO: boolean
   private _is_FO_raw: boolean
-  private _FO_content: string
+  private _FO_content: string | undefined
 
   private _is_image: boolean
-  private _image_src: string
+  private _image_src: string | undefined
 
-  private _hyperlink: string
+  private _hyperlink: string | undefined
 
   private _attached_container: Type_AnyContainerElement[]
 
@@ -134,20 +134,12 @@ export abstract class ClassTemplate_NodeElementOSP
   ) {
     // Heritance
     super(id, name, drawing_area, menu_config)
-    // // Overrides
-    // this._menu_config = menu_config
-    // New attributes
-    this._iconName = ''
-    this._iconColor = ''
+
     this._iconVisible = false
-    this._iconViewBox = ''
     this._iconColorSustainable = false
     this._has_FO = false
     this._is_FO_raw = false
-    this._FO_content = ''
     this._is_image = false
-    this._image_src = ''
-    this._hyperlink = ''
     this._attached_container = []
   }
 
@@ -193,17 +185,17 @@ export abstract class ClassTemplate_NodeElementOSP
     // Extract root attributes
     super._toJSON(json_object, kwargs)
     // Added attributes
-    json_object['iconName'] = this._iconName
-    json_object['iconColor'] = this._iconColor
-    json_object['iconVisible'] = this._iconVisible
+    if ( this._iconName) json_object['iconName'] = this._iconName
+    if ( this._iconColor) json_object['iconColor'] = this._iconColor
+    if (this._iconVisible) json_object['iconVisible'] = this._iconVisible
     if (this._iconViewBox) json_object['iconViewBox'] = this._iconViewBox
-    json_object['iconColorSustainable'] = this._iconColorSustainable
-    json_object['has_FO'] = this._has_FO
-    json_object['is_FO_raw'] = this._is_FO_raw
-    json_object['FO_content'] = this._FO_content
-    json_object['is_image'] = this._is_image
-    json_object['image_src'] = this._image_src
-    json_object['hyperlink'] = this._hyperlink
+    if (this._iconColorSustainable) json_object['iconColorSustainable'] = this._iconColorSustainable
+    if (this._has_FO) json_object['has_FO'] = this._has_FO
+    if (this._is_FO_raw) json_object['is_FO_raw'] = this._is_FO_raw
+    if (this._FO_content) json_object['FO_content'] = this._FO_content
+    if (this._is_image) json_object['is_image'] = this._is_image
+    if (this._image_src) json_object['image_src'] = this._image_src
+    if (this._hyperlink) json_object['hyperlink'] = this._hyperlink
   }
 
   /**
@@ -221,17 +213,17 @@ export abstract class ClassTemplate_NodeElementOSP
     // Get root attributes
     super._fromJSON(json_node_object, kwargs)
     // New attributes
-    this._iconName = getStringFromJSON(json_node_object, 'iconName', this._iconName)
-    this._iconColor = getStringFromJSON(json_node_object, 'iconColor', this._iconColor)
+    this._iconName = getStringOrUndefinedFromJSON(json_node_object, 'iconName')
+    this._iconColor = getStringOrUndefinedFromJSON(json_node_object, 'iconColor')
     this._iconVisible = getBooleanFromJSON(json_node_object, 'iconVisible', this._iconVisible)
     this._iconViewBox = getStringOrUndefinedFromJSON(json_node_object, 'iconViewBox')
     this._iconColorSustainable = getBooleanFromJSON(json_node_object, 'iconColorSustainable', this._iconColorSustainable)
     this._has_FO = getBooleanFromJSON(json_node_object, 'has_FO', this._has_FO)
     this._is_FO_raw = getBooleanFromJSON(json_node_object, 'is_FO_raw', this._is_FO_raw)
-    this._FO_content = getStringFromJSON(json_node_object, 'FO_content', this._FO_content)
+    this._FO_content = getStringOrUndefinedFromJSON(json_node_object, 'FO_content')
     this._is_image = getBooleanFromJSON(json_node_object, 'is_image', this._is_image)
-    this._image_src = getStringFromJSON(json_node_object, 'image_src', this._image_src)
-    this._hyperlink = getStringFromJSON(json_node_object, 'hyperlink', this._hyperlink)
+    this._image_src = getStringOrUndefinedFromJSON(json_node_object, 'image_src')
+    this._hyperlink = getStringOrUndefinedFromJSON(json_node_object, 'hyperlink')
   }
 
   // PUBLIC METHOD ======================================================================
@@ -432,7 +424,7 @@ export abstract class ClassTemplate_NodeElementOSP
       return
 
     this.d3_selection?.select('.node_fo').remove()
-    if (!this.has_FO) {
+    if (!this.has_FO || !this._FO_content) {
       return
     }
     this.d3_selection_g_FO_illustration = this.d3_selection?.append('foreignObject')
@@ -458,7 +450,7 @@ export abstract class ClassTemplate_NodeElementOSP
 
   protected _drawIllustrationImage() {
 
-    if (!this.d3_selection)
+    if (!this.d3_selection || !this.image_src)
       return
     this.d3_selection_g_image = this.d3_selection?.append('image')
       .attr('id', 'image_node_' + this.id)
@@ -472,7 +464,7 @@ export abstract class ClassTemplate_NodeElementOSP
   }
 
   protected _drawIllustrationIcon() {
-    if (!this.d3_selection)
+    if (!this.d3_selection || !this.iconName || !this.iconColor)
       return
     this.d3_selection_g_icon = this.d3_selection?.append('svg')
       .attr('id', 'icon_node_' + this.id)
@@ -583,7 +575,7 @@ export abstract class ClassTemplate_NodeElementOSP
     }
   }
 
-  protected override eventMouseDragEnd(
+  public override eventMouseDragEnd(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     // Apply parent behavior first
@@ -598,7 +590,7 @@ export abstract class ClassTemplate_NodeElementOSP
     }
   }
 
-  protected eventSimpleLMBCLick(
+  public eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Apply parent behavior first
@@ -626,17 +618,17 @@ export abstract class ClassTemplate_NodeElementOSP
 
   // New ---------------------------------------------------------------------------------
 
-  public get iconName(): string { return this._iconName }
-  public set iconName(value: string) { this._iconName = value }
+  public get iconName() { return this._iconName }
+  public set iconName(value) { this._iconName = value }
 
-  public get iconColor(): string { return this._iconColor }
-  public set iconColor(value: string) { this._iconColor = value }
+  public get iconColor() { return this._iconColor }
+  public set iconColor(value) { this._iconColor = value }
 
   public get iconVisible(): boolean { return this._iconVisible }
   public set iconVisible(value: boolean) { this._iconVisible = value }
 
-  public get iconViewBox(): string | undefined { return this._iconViewBox }
-  public set iconViewBox(value: string | undefined) { this._iconViewBox = value }
+  public get iconViewBox() { return this._iconViewBox }
+  public set iconViewBox(value) { this._iconViewBox = value }
 
   public get iconColorSustainable(): boolean { return this._iconColorSustainable }
   public set iconColorSustainable(value: boolean) { this._iconColorSustainable = value }
@@ -644,11 +636,11 @@ export abstract class ClassTemplate_NodeElementOSP
   public get is_image(): boolean { return this._is_image }
   public set is_image(value: boolean) { this._is_image = value }
 
-  public get image_src(): string { return this._image_src }
-  public set image_src(value: string) { this._image_src = value }
+  public get image_src() { return this._image_src }
+  public set image_src(value) { this._image_src = value }
 
-  public get hyperlink(): string { return this._hyperlink }
-  public set hyperlink(value: string) { this._hyperlink = value }
+  public get hyperlink() { return this._hyperlink }
+  public set hyperlink(value) { this._hyperlink = value }
 
   public get has_FO(): boolean { return this._has_FO }
   public set has_FO(value: boolean) { this._has_FO = value }
@@ -656,8 +648,8 @@ export abstract class ClassTemplate_NodeElementOSP
   public get is_FO_raw(): boolean { return this._is_FO_raw }
   public set is_FO_raw(value: boolean) { this._is_FO_raw = value }
 
-  public get FO_content(): string { return this._FO_content }
-  public set FO_content(value: string) { this._FO_content = value }
+  public get FO_content() { return this._FO_content }
+  public set FO_content(value) { this._FO_content = value }
 
   public get attached_container(): Type_AnyContainerElement[] { return this._attached_container }
 

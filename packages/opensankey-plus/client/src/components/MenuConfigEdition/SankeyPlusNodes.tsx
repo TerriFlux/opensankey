@@ -114,7 +114,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const updateNodeIconColor = (_: string) => {
     const dict_old_value: { [x: string]: string } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.iconColor
+      dict_old_value[n.id] = n.iconColor!
     })
     const _updateNodeIconColor = () => {
       selected_nodes.forEach(n => {
@@ -240,7 +240,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const updateNodeImageSrc = (_: string) => {
     const dict_old_value: { [x: string]: string } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.image_src
+      dict_old_value[n.id] = n.image_src!
     })
     const _updateNodeImageSrc = () => {
       selected_nodes.forEach(n => {
@@ -270,7 +270,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const resetNodeImageSrc = () => {
     const dict_old_value: { [x: string]: string } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.image_src
+      dict_old_value[n.id] = n.image_src!
     })
     const _resetNodeImageSrc = () => {
       selected_nodes.forEach(n => {
@@ -341,7 +341,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                 <Box>
                   <OSColorPicker
                     isDisabled={new_data_plus.has_sankey_plus}
-                    initialColor={(selected_nodes.length === 1) ?
+                    initialColor={(selected_nodes.length === 1 && selected_nodes[0].iconColor) ?
                       selected_nodes[0].iconColor :
                       '#ffffff'}
                     functionOnBlur={(new_color) => {
@@ -532,7 +532,7 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
   const updateHyperlinkValue = (_: string) => {
     const dict_old_value: { [x: string]: string } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.hyperlink
+      dict_old_value[n.id] = n.hyperlink as string
     })
     const _updateHyperlinkValue = () => {
       selected_nodes.forEach(n => {

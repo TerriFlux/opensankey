@@ -57,7 +57,7 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
   const updateNodeIcon = (iconName: string) => {
     const dict_old_value: { [x: string]: [name: string, color: string, viewBox: string | undefined] } = {}
     list_nodes_selected.forEach(n => {
-      dict_old_value[n.id] = [n.iconName, n.iconColor, n.iconViewBox]
+      dict_old_value[n.id] = [n.iconName!, n.iconColor!, n.iconViewBox!]
     })
     const _updateNodeIcon = () => {
       list_nodes_selected.forEach(n => {
@@ -88,7 +88,7 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
   const updateNodeIconImported = (ki: string) => {
     const dict_old_value: { [x: string]: [name: string, color: string, viewBox: string | undefined] } = {}
     list_nodes_selected.forEach(n => {
-      dict_old_value[n.id] = [n.iconName, n.iconColor, n.iconViewBox]
+      dict_old_value[n.id] = [n.iconName!, n.iconColor!, n.iconViewBox!]
     })
     const _updateNodeIconImported = () => {
       list_nodes_selected.forEach(n => {

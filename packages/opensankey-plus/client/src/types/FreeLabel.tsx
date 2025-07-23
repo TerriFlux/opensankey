@@ -199,7 +199,7 @@ export class Class_ContainerElement
         this.dragHandleEnd(),
         { class: 'zdt_right_handle' }),
     }
-    drawing_area.list_g_element.push(id)
+    drawing_area.list_g_element.push(this)
 
     // Launch timer to reorder elemeent on DA
     this.drawing_area.application_data._add_waiting_process('order_elements_on_da', () => {
