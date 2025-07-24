@@ -394,7 +394,7 @@ export abstract class ClassTemplate_NodeElementOSP
    */
   public getListDescendantOfNode() {
     let node_list: ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[] = []
-    this.dimensions_as_parent.forEach(dim => {
+    this.dimensions_as_parent_pure.forEach(dim => {
       // Get child of 'this' node (from all dimensions)
       node_list = [...node_list, ...(dim.children as ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[])]
 

@@ -654,7 +654,11 @@ export const ButtonNodeContextCreateZDTAroundSelectedNode: FunctionComponent<FCT
       const cont = new_data.drawing_area.sankey.addNewDefaultFreeLabel()
       cont.tied_to_nodes = true
       new_data.drawing_area.selected_nodes_list.forEach(node => {
-        new_data.drawing_area.sankey.attachNodeToCont(node, cont)
+          node.getListDescendantOfNode().forEach(n => {
+            new_data.drawing_area.sankey.attachNodeToCont(n, cont)
+            //new_data_plus.drawing_area.addNodeToSelection(node)
+          })
+        new_data.drawing_area.sankey.attachNodeToCont(node,cont)
       })
       cont.draw()
       closeContextMenu()
