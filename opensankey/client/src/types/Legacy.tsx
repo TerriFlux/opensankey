@@ -51,7 +51,6 @@ import {
   DefaultNodeProductStyleFuncStyle,
   DefaultNodeSectorStyleFuncStyle,
   DefaultNodeStyleFuncType,
-  DefaultSankeyDataFuncType,
   ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType,
   ReturnValueLinkFuncType,
@@ -62,9 +61,7 @@ import {
 } from './LegacyType'
 import {
   default_dx,
-  default_dy,
-  default_relative_dx,
-  default_relative_dy
+  default_dy
 } from '../Elements/NodeAttributes'
 
 const default_element_color = '#a9a9a9'
@@ -205,8 +202,6 @@ const DefaultNodeStyle: DefaultNodeStyleFuncType = () => {
     label_color: false,
 
     position: 'absolute',
-    relative_dx: default_relative_dx,
-    relative_dy: default_relative_dy,
     dy: default_dy,
     dx: default_dx,
 
@@ -255,8 +250,6 @@ export const DefaultNodeImportCloseStyle: DefaultNodeSectorStyleFuncStyle = () =
   node_style.name = 'Noeuds de type importations'
   // relative
   node_style.position = 'relative'
-  node_style.relative_dx = -100
-  node_style.relative_dy = -50
   // parametric
   node_style.dy = 20
   // common import export
@@ -280,8 +273,6 @@ export const DefaultNodeExportCloseStyle: DefaultNodeSectorStyleFuncStyle = () =
   node_style.name = 'Noeuds de type exportations'
   // relative
   node_style.position = 'relative'
-  node_style.relative_dx = 100
-  node_style.relative_dy = 50
   // parametric
   node_style.dy = 20
   // common import export
@@ -456,30 +447,27 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
       data_to_convert.display_style.unit = true
     }
   }
-  // Assign default value to missing variable
-  const defaut_data = DefaultSankeyData()
-  if (data_to_convert.style_link === undefined) {
-    data_to_convert.style_link = {}
-  }
+
   Object.entries(data_to_convert.style_link).forEach(s => {
-    s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])), s[1])
-    data_to_convert.style_link[s[0]] = s[1]
+    //s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])), s[1])
+    //data_to_convert.style_link[s[0]] = s[1]
     if (s[1].idLink === 'par défaut') {
       s[1].idLink = 'default'
     }
     // Change default behavior on right shift for link
     s[1].right_horiz_shift = 1.0 - s[1].right_horiz_shift
-    s[1].scientific_precision = true
+    //s[1].scientific_precision = true
   })
   if (data_to_convert.style_node === undefined) {
     data_to_convert.style_node = {}
   }
   Object.entries(data_to_convert.style_node).forEach(s => {
-    s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_node['default'])), s[1])
-    data_to_convert.style_node[s[0]] = s[1]
+    //s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_node['default'])), s[1])
+    //data_to_convert.style_node[s[0]] = s[1]
     if (s[1].idNode === 'par défaut') {
       s[1].idNode = 'default'
     }
+    s[1].label_background = true
     if (s[1].label_horiz_valeur_shift) {
       s[1].value_label_horiz_shift = s[1].label_horiz_valeur_shift
     }
@@ -583,27 +571,59 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     if (n.tags['type de noeud']) {
       if (n.tags['type de noeud'].includes('produit')) {
         // @ts-ignore
-        n.style = ['default', 'NodeProductStyle']
+        n.style = ['NodeProductStyle']
       } else if (n.tags['type de noeud'].includes('secteur')) {
         // @ts-ignore
-        n.style = ['default', 'NodeSectorStyle']
+        n.style = ['NodeSectorStyle']
       } else if (n.tags['type de noeud'].includes('echange')) {
         // @ts-ignore
-        n.style = ['default', 'NodeSectorStyle', 'NodeImportExportCloseStyle']
-        if (n.inputLinksId.length > 0) {
+        const close = data_to_convert.style_node['NodeImportStyle'].position === 'relative'
+        if (close) {
           // @ts-ignore
-          data_to_convert.links[n.inputLinksId[0]].style = ['default', 'LinkImportExportCloseStyle', 'LinkExportCloseStyle']
-          // @ts-ignore
-          n.style.push('NodeImportCloseStyle')
+          n.style = ['NodeSectorStyle', 'NodeImportExportCloseStyle']
         } else {
           // @ts-ignore
-          data_to_convert.links[n.outputLinksId[0]].style = ['default', 'LinkImportExportCloseStyle', 'LinkImportCloseStyle']
+          n.style = ['NodeSectorStyle', 'NodeImportExportAboveBelowStyle']
+        }
+        if (n.inputLinksId.length > 0) {
           // @ts-ignore
-          n.style.push('NodeImportCloseStyle')
+          if (close) {
+            // @ts-ignore
+            data_to_convert.links[n.inputLinksId[0]].style = ['LinkImportExportCloseStyle', 'LinkExportCloseStyle']
+            // @ts-ignore
+            n.style.push('NodeExportCloseStyle')
+            delete data_to_convert.links[n.inputLinksId[0]].local!['left_horiz_shift']
+            delete data_to_convert.links[n.inputLinksId[0]].local!['right_horiz_shift']
+          } else {
+            // @ts-ignore
+            data_to_convert.links[n.inputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkExportBelowStyle']
+            // @ts-ignore
+            n.style.push('NodeExportBelowStyle')
+          }
+        } else {
+          if (!data_to_convert.links[n.outputLinksId[0]]) {
+            return
+          }
+          // @ts-ignore
+          if (close) {
+            // @ts-ignore
+            data_to_convert.links[n.outputLinksId[0]].style = ['LinkImportExportCloseStyle', 'LinkImportCloseStyle']
+            // @ts-ignore
+            n.style.push('NodeImportCloseStyle')
+            delete data_to_convert.links[n.outputLinksId[0]].local!['left_horiz_shift']
+            delete data_to_convert.links[n.outputLinksId[0]].local!['right_horiz_shift']
+          } else {
+            // @ts-ignore
+            data_to_convert.links[n.outputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkImportAboveStyle']
+            // @ts-ignore
+            n.style.push('NodeImportAboveStyle')
+          }
         }
       }
     }
   })
+  delete data_to_convert.style_node['NodeExportStyle']
+  delete data_to_convert.style_node['NodeImportStyle']
 }
 
 /**
@@ -638,80 +658,6 @@ const clean_data_local = (data: SankeyData) => {
       })
     }
   })
-}
-
-
-/**
- * return a default sankey_data, use at the initialisation or re-initialisation of the application
- *
- * @returns {SankeyData}
- */
-export const DefaultSankeyData: DefaultSankeyDataFuncType = (): SankeyData => {
-  const data: Omit<SankeyData, 'style_node' | 'style_link'> = {
-    version: '0.8',
-    couleur_fond_sankey: '#f2f2f2',
-    displayed_node_selector: false,
-    displayed_link_selector: false,
-    nodes: {},
-    links: {},
-    user_scale: 20,
-
-    accordeonToShow: ['MEP'],
-
-    width: window.innerWidth - 50,
-    height: window.innerHeight - 50,
-    linkZIndex: [],
-
-    h_space: 200,
-    v_space: 50,
-
-    show_structure: 'reconciled',
-    fit_screen: false,
-
-    left_shift: 0,
-    right_shift: 1,
-    display_style: {
-      filter: 0,
-      filter_label: 0,
-      font_family: ['Arial,sans-serif', 'Helvetica,sans-serif', 'Verdana,sans-serif', 'Calibri,sans-serif', 'Noto,sans-serif', 'Lucida Sans,sans-serif', 'Gill Sans,sans-serif', 'Century Gothic,sans-serif', 'Candara,sans-serif', 'Futara,sans-serif', 'Franklin Gothic Medium,sans-serif', 'Trebuchet MS,sans-serif', 'Geneva,sans-serif', 'Segoe UI,sans-serif', 'Optima,sans-serif', 'Avanta Garde,sans-serif',
-        'Times New Roman,serif', 'Big Caslon,serif', 'Bodoni MT,serif', 'Book Antiqua,serif', 'Bookman,serif', 'New Century Schoolbook,serif', 'Calisto MT,serif', 'Cambria,serif', 'Didot,serif', 'Garamond,serif', 'Georgia,serif', 'Goudy Old Style,serif', 'Hoefler Text,serif', 'Lucida Bright,serif', 'Palatino,serif', 'Perpetua,serif', 'Rockwell,serif', 'Rockwell Extra Bold,serif', 'Baskerville,serif',
-        'Consolas,monospace', 'Courier,monospace', 'Courier New,monospace', 'Lucida Console,monospace', 'Lucidatypewriter,monospace', 'Lucida Sans Typewriter,monospace', 'Monaco,monospace', 'Andale Mono,monospace',
-        'Comic Sans,cursive', 'Comic Sans MS,cursive', 'Apple Chancery,cursive', 'Zapf Chancery,cursive', 'Bradley Hand,cursive', 'Brush Script MT,cursive', 'Brush Script Std,cursive', 'Snell Roundhan,cursive', 'URW Chancery,cursive', 'Coronet script,cursive', 'Florence,cursive', 'Parkavenue,cursive'
-      ],
-    },
-    grid_square_size: 50,
-    grid_visible: true,
-
-
-    nodeTags: {},
-    dataTags: {},
-    fluxTags: {},
-    levelTags: {},
-
-    colorMap: 'no_colormap',
-    nodesColorMap: 'no_colormap',
-    linksColorMap: 'no_colormap',
-
-    legend_width: 180,
-    legend_position: [0, 0],
-    mask_legend: false,
-    display_legend_scale: false,
-    legend_police: 16,
-    legend_bg_border: false,
-    legend_bg_color: default_element_color,
-    legend_bg_opacity: 0,
-    legend_show_dataTags: false,
-    node_label_separator: ' - ',
-    node_label_separator_part: 'before'
-  }
-  const node_style_sect = DefaultNodeSectorStyle()
-  const node_style_prod = DefaultNodeProductStyle()
-  const default_data = {
-    ...data,
-    style_node: { 'default': DefaultNodeStyle(), 'NodeSectorStyle': node_style_sect, 'NodeProductStyle': node_style_prod },
-    style_link: { 'default': DefaultLinkStyle() }
-  }
-  return (default_data as unknown as SankeyData)
 }
 
 /**
@@ -969,38 +915,7 @@ export const AssignLinkLocalAttribute: AssignLinkLocalAttributeFuncType = (l: Sa
 //     data.display_style.filter_label = flux_max / 10
 //   }
 // }
-const setTrade = (data: SankeyData) => {
-  let s = data.style_node['NodeImportCloseStyle'] as Type_JSON
-  s.position = 'absolute'
-  s.shape_visible = false
-  s.shape_min_height = 1
-  s.name_label_is_visible = true
-  s.name_label_horiz = 'left'
-  //s.name_label_horiz_shift = -200
-  s.value_label_visible = true
-  s.value_label_horiz = 'left'
-  s.value_label_vert = 'middle'
-  //s.value_label_horiz_shift = -10
 
-  s = data.style_node['NodeImportCloseStyle'] as Type_JSON
-  s.position = 'absolute'
-  s.shape_visible = false
-  s.shape_min_height = 1
-  s.name_label_is_visible = true
-  s.name_label_horiz = 'right'
-  //s.name_label_horiz_shift = 200
-  s.value_label_visible = true
-  s.value_label_horiz = 'right'
-  s.value_label_vert = 'middle'
-  //s.value_label_horiz_shift = 10
-
-  s = data.style_link['LinkImportCloseStyle'] as Type_JSON
-  s.orientation = 'hh'
-  s.value_label_is_visible = true
-  s = data.style_link['LinkExportCloseStyle'] as Type_JSON
-  s.orientation = 'hh'
-  s.value_label_is_visible = true
-}
 
 const convert_tags: convert_tagsFuncType = (
   data: SankeyData
@@ -1130,29 +1045,14 @@ const convert_tags: convert_tagsFuncType = (
     if (Object.keys(data.style_node).includes('style_node_sect')) {
       delete data.style_node['style_node_sect']
     }
-
-    // If data has NodeTags 'Type de noeud' but not the style associated to it
-    // then add it
-    if (!Object.keys(data.style_node).includes('NodeProductStyle')) {
-      data.style_node['NodeProductStyle'] = DefaultNodeProductStyle()
-    }
-    if (!Object.keys(data.style_node).includes('NodeSectorStyle')) {
-      data.style_node['NodeSectorStyle'] = DefaultNodeSectorStyle()
-    }
-    if (!Object.keys(data.style_node).includes('NodeImportCloseStyle')) {
-      data.style_node['NodeImportCloseStyle'] = DefaultNodeImportCloseStyle()
-    }
-    if (!Object.keys(data.style_node).includes('NodeImportCloseStyle')) {
-      data.style_node['NodeImportCloseStyle'] = DefaultNodeImportCloseStyle()
-    }
-    if (!Object.keys(data.style_link).includes('LinkImportCloseStyle')) {
-      data.style_link['LinkImportCloseStyle'] = DefaultLinkImportCloseStyle()
-    }
-    data.style_link['LinkImportCloseStyle'].ending_tangeant = 0.25
-    if (!Object.keys(data.style_link).includes('LinkExportCloseStyle')) {
-      data.style_link['LinkExportCloseStyle'] = DefaultLinkExportCloseStyle()
-    }
-    data.style_link['LinkExportCloseStyle'].starting_tangeant = 0.25
+    // // If data has NodeTags 'Type de noeud' but not the style associated to it
+    // // then add it
+    // if (!Object.keys(data.style_node).includes('NodeProductStyle')) {
+    //   data.style_node['NodeProductStyle'] = DefaultNodeProductStyle()
+    // }
+    // if (!Object.keys(data.style_node).includes('NodeSectorStyle')) {
+    //   data.style_node['NodeSectorStyle'] = DefaultNodeSectorStyle()
+    // }
   }
 
   if (data.nodeTags.Dimensions) {
@@ -2671,6 +2571,7 @@ const convert_links: convert_linksFuncType = (
       }
     )
   }
+  delete data_to_convert.style_node['exprt']
 }
 
 const has_not_converted_nodeTags_as_levelTags = (data: SankeyData) => {

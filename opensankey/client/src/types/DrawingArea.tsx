@@ -69,6 +69,7 @@ import { Class_LevelTagGroup, Class_Tag } from './Tag'
 import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
 import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../Elements/LinkAttributes'
 import { TypeGeneric_Handler } from '../Elements/Handler'
+import { NodePositioning } from '../Elements/NodePositioning'
 
 declare const window: Window &
   typeof globalThis & {
@@ -91,8 +92,6 @@ function sortElementByIdOrder(
 const initial_show_structure = 'free_value'
 const default_grid_size = 50
 const default_grid_visible = true
-const default_horizontal_spacing = 200
-const default_vertical_spacing = 50
 const default_scale = 50
 const default_DA_marging = 50
 
@@ -125,7 +124,8 @@ export abstract class ClassTemplate_DrawingArea
    * @memberof ClassTemplate_DrawingArea
    */
   public application_data: ClassAbstract_ApplicationData
-
+ // Node positioning system
+  public nodePositioning: NodePositioning
   /**
  * d3 svg element containing all sub svg elements, it is also wher we can zoom with scroll wheel
  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
@@ -270,10 +270,6 @@ export abstract class ClassTemplate_DrawingArea
     .domain([0, this._scale])
     .range([0, 100])
 
-  // Positionning
-  private _horizontal_spacing: number = default_horizontal_spacing
-  private _vertical_spacing: number = default_vertical_spacing
-
   // Shifting of d3 elements
   private _elements_d3_groups_shift_x: number = 0
   private _elements_d3_groups_shift_y: number = 0
@@ -373,6 +369,7 @@ export abstract class ClassTemplate_DrawingArea
     this._sankey = this.createNewSankey(id)
     this._legend = new ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
     this._selection_zone = this.createNewSelectionZone()
+    this.nodePositioning = new NodePositioning(this)
   }
 
   // CLEANING METHODS ===================================================================
@@ -424,13 +421,11 @@ export abstract class ClassTemplate_DrawingArea
     this._grid_size = drawing_area_to_copy._grid_size
     this._grid_visible = drawing_area_to_copy._grid_visible
     this._height = drawing_area_to_copy._height
-    this._horizontal_spacing = drawing_area_to_copy._horizontal_spacing
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
-    this._vertical_spacing = drawing_area_to_copy._vertical_spacing
     this._width = drawing_area_to_copy._width
   }
 
@@ -472,8 +467,6 @@ export abstract class ClassTemplate_DrawingArea
 
     if (this._grid_visible != default_grid_visible) json_object['grid_visible'] = this._grid_visible
     if (this._grid_size != default_grid_size) json_object['grid_square_size'] = this._grid_size
-    if (this._horizontal_spacing !=default_horizontal_spacing) json_object['h_space'] = this._horizontal_spacing
-    if (this._vertical_spacing !=default_vertical_spacing) json_object['v_space'] = this._vertical_spacing
     if (this._scale != default_scale)  json_object['user_scale'] = this._scale
     if (this._color != default_background_color) json_object['couleur_fond_sankey'] = this._color
     if (this._grid_color != default_grid_color) json_object['default_grid_color'] = this._grid_color
@@ -527,11 +520,6 @@ export abstract class ClassTemplate_DrawingArea
       console.log(json_object.version)
     }
 
-
-    // Set node label separator attribute from json
-    this.application_data.node_label_separator = getStringFromJSON(json_object, 'node_label_separator', ' - ')
-    this.application_data.node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', 'before') as 'before' | 'after'
-
     this.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
 
     // Update direct attributes
@@ -541,13 +529,11 @@ export abstract class ClassTemplate_DrawingArea
     this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
     this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
     this._height = getNumberFromJSON(json_object, 'height', this._height)
-    this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
     this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
     this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
     this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = getStringFromJSON(json_object, 'show_structure', this._type_data) as Type_Structure
-    this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
     this._width = getNumberFromJSON(json_object, 'width', this._width)
     this._magnetic_nodes = getBooleanFromJSON(json_object, 'magnetic_nodes', this._magnetic_nodes)
 
@@ -1191,206 +1177,10 @@ export abstract class ClassTemplate_DrawingArea
         [x0, y0])
     }
   }
+/**
+ * Version corrigée de l'algorithme computeAutoSankey avec meilleure détection des flux de recyclage
+ */
 
-  /**
-   * Explore all node's branches to compute all their nodes horizontal index
-   *
-   * @param {SankeyNode} node Node to start exploring from
-   * @param {number} starting_index
-   * @param {string[]} visited_nodes_ids List of nodes (by their id) that have been visited. Helps to find recycling flux
-   * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
-   * @param {object} horizontal_indexes_per_nodes_ids Current horizontal index for given node id
-   */
-  public computeHorizontalIndex(
-    node: Type_GenericNodeElement,
-    nodes_to_process: Type_GenericNodeElement[],
-    starting_index: number,
-    visited_nodes_ids: string[],
-    recycling_links_ids: string[],
-    horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
-  ) {
-    // Update node index
-    if (!horizontal_indexes_per_nodes_ids[node.id]) {
-      horizontal_indexes_per_nodes_ids[node.id] = starting_index
-    }
-    else {
-      if (starting_index > horizontal_indexes_per_nodes_ids[node.id]) {
-        horizontal_indexes_per_nodes_ids[node.id] = starting_index
-      }
-    }
-    // From current node, use output links to
-    // recurse on following node
-    node
-      .output_links_list
-      .filter(link =>
-      // Computes only for link to visible nodes
-      // and not for nodes related to recyling flux
-        (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
-        !recycling_links_ids.includes(link.id)))
-      .forEach(link => {
-        // Next node to recurse on
-        const next_node = this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id]
-        // But first we check if next node has not been already visited
-        if (!visited_nodes_ids.includes(next_node.id)) {
-          // Recursive calling
-          this.computeHorizontalIndex(
-            next_node,
-            nodes_to_process,
-            starting_index + 1,
-            [...visited_nodes_ids, node.id],
-            recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        }
-        else {
-          // If next node has already been visited then this means
-          // that link between current node and next node
-          // is a recycling flux
-          //
-          // To illustrate :
-          // -> This example count as recycling flux :
-          //    N0 - N11 - N21 - N3
-          //       \ N12 - N22 -
-          //          |         |
-          //           ---------
-          // -> But not this one :
-          //    N0 - N11 - N21 - N3
-          //       \ N12 - N22 \
-          //          |         |
-          //           ---------
-          recycling_links_ids.push(link.id)
-        }
-      })
-  }
-
-  /**
-   * Recompte index for link taggued as recyling links
-   * We need to recompute positionning of next_node,
-   * because of recycling link, its position can be all wrong
-   * -> exemple
-   *
-   *     N0 - N11 - N21 - N3
-   *       \     \
-   *        N12 - N22 \
-   *         |         |
-   *          ---------
-   *
-   *    So we got N0->N11->N22->N12->N22 stop
-   *               0   1    2    3
-   *    And the link N12->N22 will be considered as
-   *    recycled link and we will get
-   *
-   *      N0 - N11 - N21 - N3
-   *        \      \
-   *         \       N22
-   *          \    /
-   *           \   -------------
-   *            \              |
-   *             --------- N12 -
-   *    So we need to recompute N12 index
-   *
-   * @param {SankeyLink} link Link that has been previoulsy taggued ass possible recyling link
-   * @param {string[]} visible_nodes_ids List of nodes (by their id) that are currently visible on Sankey diagram
-   * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
-   * @param {object} horizontal_indexes_per_nodes_ids Current index for given node id
-   * @param {object} links
-   * @param {object} nodes
-   */
-  public computeRecyclingHorizontalIndex(
-    nodes_to_process: Type_GenericNodeElement[],
-    link: Type_GenericLinkElement,
-    recycling_links_ids: string[],
-    horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
-  ) {
-    // Get id for source and target
-    const target_node_id = link.id
-    const source_node_id = link.id
-    // Compute only if horizontal indexes for source >= horizontal index for target
-    // which can not be the case if these nodes' indexes have been reprocessed
-    // by this same function
-    if (horizontal_indexes_per_nodes_ids[source_node_id] >=
-      horizontal_indexes_per_nodes_ids[target_node_id]) {
-      // For source node, check if there is a gap
-      // between its horizontal index and all the horizontal
-      // indexes of nodes that are sources of its own inputs links
-      const indexes_before_source_node: number[] = []
-      let min_index = -1
-      this.sankey.nodes_dict[source_node_id]
-        .input_links_list
-        .forEach(input_link => {
-          const index = horizontal_indexes_per_nodes_ids[this.sankey.links_dict[input_link.id].id]
-          if (min_index >= 0) {
-            if (index < min_index) {
-              min_index = index
-            }
-          }
-          else {
-            min_index = index
-          }
-          indexes_before_source_node.push(index)
-        })
-      // If there is a gap, we recompute source node horizontal indexing
-      const horizontal_index_of_source_node = horizontal_indexes_per_nodes_ids[source_node_id] // memorize value for loop
-      for (let index = min_index + 1; index < horizontal_index_of_source_node; index++) {
-        // Gap check here
-        if (!indexes_before_source_node.includes(index)) {
-          horizontal_indexes_per_nodes_ids[source_node_id] = index
-          // TODO faut un forçage des indexs à suivre.
-          this.computeHorizontalIndex(
-            this.sankey.nodes_dict[source_node_id],
-            nodes_to_process,
-            index,
-            [],
-            recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-          break
-        }
-      }
-    }
-  }
-
-  /**
-   * Initially there is only one node per type of exchanges.
-   * it must be splitted to have one import and one export per product
-   * International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public splitTrade(
-  ) {
-    if (!this.sankey.node_taggs_dict['type de noeud']) {
-      return
-    }
-
-    let trade_nodes = this.sankey.nodes_list.filter(n =>
-      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
-    )
-    // first split the nodes
-    trade_nodes.forEach(node => {
-      if (node.style.length<2) node.style = [
-        this.sankey.node_styles_dict['NodeSectorStyle'] as Class_NodeStyle,
-        this.sankey.node_styles_dict['NodeImportExportCloseStyle'] as Class_NodeStyle
-      ]
-      if (node.output_links_list.length > 0) {
-        (node as Type_GenericNodeElement).SplitIOrE(true)
-      }
-      if (node.input_links_list.length > 0) {
-        (node as Type_GenericNodeElement).SplitIOrE(false)
-      }
-      node.setInvisible()
-      //this.sankey.deleteNode(node)
-    })
-    const split_trade_nodes = this.sankey.nodes_list.filter(n =>
-      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
-    )
-    // the set dimensions. It must be done after each trade node has been split
-    split_trade_nodes.forEach(node => {
-      if (!node.sibling) return
-      (node as Type_GenericNodeElement).setTradeDimensions(true);
-      (node as Type_GenericNodeElement).setTradeDimensions(false)
-    })
-  }
 
   /**
    *Inverse selected links and save undoing
@@ -1499,739 +1289,11 @@ export abstract class ClassTemplate_DrawingArea
     _updateSelectedNodesTagAssignation()
   }
 
-  /**
-   * Compute the position of the nodes which are not trade nodes
-   *
-   * /!\ Add to waiting spinner queue
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public computeAutoSankey(
-    launched_from_process: boolean,
-  ) {
-    this.application_data.sendWaitingToast(
-      () => {
-        // If it's not launched_from_process then we assume it's user input so we save it undoing
-        if (!launched_from_process) {
-          const node_pos = Object.fromEntries(this._sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
-          const link_recy = Object.fromEntries(this._sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
-          const inv_computeAutoSankey = () => {
-            this._sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
-            // Reposition node to old pos
-            this._sankey.visible_nodes_list.forEach(n => {
-              n.display.position.x = node_pos[n.id].x
-              n.display.position.y = node_pos[n.id].y
-              // Reset old node IO order
-              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
-              n.draw()
-            })
-            this.areaAutoFit(true)
-
-          }
-          this.saveUndo(inv_computeAutoSankey)
-        }
-        // Compute auto pos of nodes
-        this._computeAutoSankey(launched_from_process)
-        this.computeParametrization()
-        if (launched_from_process) {
-          // Initially there is only one node per type of exchanges.
-          // it must be splitted to have one import and one export per product
-          // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
-          //this.splitTrade()
-          // Computes u v,x and initial y for trade nodes
-          this.arrangeTrade(true)
-        }
-
-        // Defaut color + auto reorg of links
-        const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-        this.sankey.visible_nodes_list.forEach((n, i, a) => {
-          n.resetPositionAttribute('dy')
-          n.reorganizeIOLinks()
-          if (launched_from_process) {
-            this.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
-          }
-        })
-        if (launched_from_process) {
-          // Update defaut data on recycling mode
-          this.sankey.links_list.forEach(l => {
-            if (l.shape_is_recycling) {
-              l.shape_starting_tangeant = 0.01
-              l.shape_ending_tangeant = 0.01
-            }
-          })
-        }
-        this.draw()
-        // Update area
-        this.areaAutoFit(true)
-        // Toggle saving indicator
-        this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-        // If it's not launched_from_process then we assume it's user input so we save it undoing
-        if (!launched_from_process) {
-          const node_pos = Object.fromEntries(this._sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
-          const link_recy = Object.fromEntries(this._sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
-
-          const _computeAutoSankey = () => {
-            this._sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
-
-            // Reposition node to old pos
-            this._sankey.visible_nodes_list.forEach(n => {
-              n.display.position.x = node_pos[n.id].x
-              n.display.position.y = node_pos[n.id].y
-              // Reset old node IO order
-              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
-              n.draw()
-            })
-            this.areaAutoFit(true)
-
-          }
-          this.saveRedo(_computeAutoSankey)
-        }
-      },
-      {
-        success: {
-          title: this.application_data.t('toast.compute_auto_sankey.success.title')
-        },
-        loading: {
-          title: this.application_data.t('toast.compute_auto_sankey.loading.title')
-        }
-      }
-    )
-  }
   public callComputeAutoSankey(
     launched_from_process: boolean,
   ) {
-    this._computeAutoSankey(launched_from_process)
-  }
-
-  /**
-   * Compute the position of the nodes which are not trade nodes
-   * @protected
-   * @param {boolean} launched_from_process
-   * @memberof ClassTemplate_DrawingArea
-   */
-  protected _computeAutoSankey(
-    launched_from_process: boolean
-  ) {
-    // Calcul de la valeur max des flux
-    let linksMaxValue = 0
-    this.sankey.links_list.forEach(link => {
-      // We use a function to max value for each link because
-      // each link can have multiple values
-      const linkMaxValue = link.getMaxValue()
-      linksMaxValue = Math.max(
-        linksMaxValue,
-        linkMaxValue ? linkMaxValue : 0
-      )
-    })
-    linksMaxValue += 1 // Protection if all values are at 0
-
-    // Get scale from max value
-    if (launched_from_process) {
-      this.scale = this._maximum_flux ? Math.max(this._maximum_flux, linksMaxValue) : linksMaxValue
-    }
-
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
-    const nodes_to_process = this.sankey.visible_nodes_list.filter(n => !echangeTag || !n.hasGivenTag(echangeTag))
-
-    // Compute positionning indexes
-    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-    const possible_recycling_links_ids: string[] = []
-    nodes_to_process
-      .forEach(node => {
-        //     const node = data.nodes[node_id]
-        if (!node.hasInputLinks() && node.hasOutputLinks()) {
-          // get current node horizontal index (eg longest branch length)
-          const starting_index = 0
-          this.computeHorizontalIndex(
-            node,
-            nodes_to_process,
-            starting_index,
-            [],
-            possible_recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        }
-        else {
-          // Lone node case
-          if (!node.hasInputLinks() && !node.hasOutputLinks()) {
-            horizontal_indexes_per_nodes_ids[node.id] = 0
-          }
-        }
-      })
-
-    // Double check recycling links
-    const checked_recycling_links_ids: string[] = []
-    Object.values(possible_recycling_links_ids)
-      .forEach(link_id =>
-        this.computeRecyclingHorizontalIndex(
-          nodes_to_process,
-          this.sankey.links_dict[link_id],
-          checked_recycling_links_ids,
-          horizontal_indexes_per_nodes_ids
-        ))
-
-    // Use results from previous index computing
-    // TODO : maybe possible to speed up here overall computing with getting
-    //        max_horizontal_index and nodes_per_horizontal_indexes from another loop
-    let max_horizontal_index = 0
-    const nodes_per_horizontal_indexes: { [index: number]: Type_GenericNodeElement[] } = {}
-    this.sankey.visible_nodes_list.forEach(node => {
-      // Previously computed index for given node
-      const node_index = horizontal_indexes_per_nodes_ids[node.id]
-      // Update reversed dict index-> nodes
-      if (!nodes_per_horizontal_indexes[node_index]) {
-        nodes_per_horizontal_indexes[node_index] = []
-      }
-      nodes_per_horizontal_indexes[node_index].push(this.sankey.nodes_dict[node.id])
-      // Update max horizontal index
-      if (node_index > max_horizontal_index) {
-        max_horizontal_index = node_index
-      }
-      // Set recycling links
-      Object.values(this.sankey.nodes_dict[node.id].output_links_list)
-        .forEach(link => {
-          // Get id for source and target
-          const target_node_id = this.sankey.links_dict[link.id].target.id
-          // Compute only if indexes for source >= index for target
-          // which can not be the case if these nodes have been reprocessed
-          // by this same function
-          if (node_index >= horizontal_indexes_per_nodes_ids[target_node_id]) {
-            this.sankey.links_dict[link.id].shape_is_recycling = true
-          }
-          else {
-            this.sankey.links_dict[link.id].shape_is_recycling = false
-          }
-        })
-    })
-    // for the node which have no input links they should stick to the next output node and
-    // have an horizontal index equal to output node horizontal index minus one
-    for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
-      // Pass if no nodes for this horizontal_index
-      // TODO : if it is the case -> something was wrong before
-      if (!nodes_per_horizontal_indexes[horizontal_index]) {
-        continue
-      }
-      const to_splice: Type_GenericNodeElement[] = []
-      nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
-        if (!node.hasInputLinks()) {
-          let min_next_horizontal_index = max_horizontal_index + 1
-          node.output_links_list.forEach(
-            (link) => {
-              if (this.sankey.nodes_dict[this.sankey.links_dict[link.id].source.id].is_visible &&
-                this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id].is_visible
-              ) {
-                const target_node = this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id]
-                if (target_node === undefined) {
-                  return
-                }
-                if (horizontal_indexes_per_nodes_ids[target_node.id] < horizontal_indexes_per_nodes_ids[node.id]) {
-                  return
-                }
-                if (horizontal_indexes_per_nodes_ids[target_node.id] < min_next_horizontal_index) {
-                  min_next_horizontal_index = horizontal_indexes_per_nodes_ids[target_node.id]
-                }
-              }
-            })
-          if (horizontal_indexes_per_nodes_ids[node.id] < min_next_horizontal_index - 1) {
-            to_splice.push(node as Type_GenericNodeElement)
-            // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
-            // ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
-            horizontal_indexes_per_nodes_ids[node.id] = min_next_horizontal_index - 1
-            if (!nodes_per_horizontal_indexes[min_next_horizontal_index - 1]) {
-              nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
-            }
-            nodes_per_horizontal_indexes[min_next_horizontal_index - 1].push(node)
-          }
-        }
-      })
-      to_splice.forEach(node => nodes_per_horizontal_indexes[horizontal_index].splice(nodes_per_horizontal_indexes[horizontal_index].indexOf(node), 1))
-    }
-
-    // Loop on all index "columns"
-    let h_left_margin = this._horizontal_spacing
-    let h_right_margin = this._horizontal_spacing
-    const height_cumul_per_indexes: number[] = []
-    const height_per_nodes_ids: { [node_id: string]: number } = {}
-    const node_id_per_hxv_indexes: string[][] = []
-    let max_height_cumul = 0
-    for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
-      // Pass if no nodes for this index
-      if (!nodes_per_horizontal_indexes[h_index]) {
-        continue
-      }
-
-      // Loop on nodes from computed horizontal index
-      let height_cumul_for_index = 0
-      let max_vertical_index = 0
-      const sortcoef_per_nodes_ids: { [node_id: string]: number } = {}
-      const vertical_indexes_per_node_id: { [node_id: string]: number } = {}
-      const nodes_ids_per_vertical_index: string[] = []
-      nodes_per_horizontal_indexes[h_index]
-        .forEach(node => {
-          // Node height
-          const node_height = node.getShapeHeightToUse()
-          // Coef to verticaly sort nodes - highest coef is upper
-          // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
-          const node_sortcoef = node_height * (0.8 + 0.2 / (node.output_links_list.length + node.input_links_list.length))
-
-          // Verticaly sort nodes accordingly to their height
-          height_per_nodes_ids[node.id] = node_height
-          sortcoef_per_nodes_ids[node.id] = node_sortcoef
-          vertical_indexes_per_node_id[node.id] = max_vertical_index
-          nodes_ids_per_vertical_index.push(node.id)
-          if (max_vertical_index > 0) {
-            // Bubble sort algo
-            for (let v_index = max_vertical_index; v_index > 0; v_index--) {
-              // Prev node infos
-              const prev_v_index = v_index - 1
-              const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
-              const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
-              if (prev_node_sortcoef < node_sortcoef) {
-                // Update referencing for bubble node
-                vertical_indexes_per_node_id[node.id] = prev_v_index
-                nodes_ids_per_vertical_index[prev_v_index] = node.id
-                // Update referencing for prev node
-                vertical_indexes_per_node_id[prev_node_id] = v_index
-                nodes_ids_per_vertical_index[v_index] = prev_node_id
-              }
-              else {
-                break
-              }
-            }
-          }
-          max_vertical_index += 1
-
-          // Compute cumulative height for given index
-          height_cumul_for_index += node_height
-
-          // Compute left horizontal margin
-          if (h_index == 0) {
-            const style_node = node.getStyleWithAttr('name_label_box_width')
-            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
-            const needed_margin = this.grid_size + node_label_width
-            if (needed_margin > h_left_margin) {
-              h_left_margin = needed_margin
-            }
-          }
-
-          // Compute right horizontal margin
-          // if (h_index == (max_horizontal_index - cumul_shifting_value)) {
-          if (h_index == max_horizontal_index) {
-            const style_node = node.getStyleWithAttr('name_label_box_width')
-            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
-            const needed_margin = this.grid_size + node_label_width
-            if (needed_margin > h_right_margin) {
-              h_right_margin = needed_margin
-            }
-          }
-
-          // If we launched the function from process example
-          // then we assume we need to place node label according to some parameters
-          if (launched_from_process) {
-            // Place labels accordingly
-            // If node is lone, source, sink or in the middle
-            if (!node.hasInputLinks() && !node.hasOutputLinks()) {
-              // Node is lone node
-              node.name_label_horiz = 'middle'
-              node.name_label_vert = 'middle'
-              // node.name_label_background = true
-            }
-            else if (node.input_links_list.length === 0) {
-              // Node is a source : no input link
-              node.name_label_horiz = 'left'
-              node.name_label_vert = 'middle'
-            }
-            else if (node.output_links_list.length === 0) {
-              // Node is a sink : no output link
-              node.name_label_horiz = 'right'
-              node.name_label_vert = 'middle'
-            }
-            else {
-              // Node is in the middle of the sankey
-              node.name_label_horiz = 'left'
-              node.name_label_vert = 'middle'
-              // node.name_label_background = true
-            }
-          }
-
-        })
-
-      // Get horizontal index that need the most of vertical space
-      // with vertical spacing between nodes in account
-      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * (this.vertical_spacing)
-      if (height_cumul_for_index > max_height_cumul) {
-        max_height_cumul = height_cumul_for_index
-      }
-      height_cumul_per_indexes.push(height_cumul_for_index)
-
-      // Update global indexing table
-      node_id_per_hxv_indexes.push(nodes_ids_per_vertical_index)
-    }
-    max_horizontal_index = (node_id_per_hxv_indexes.length - 1)
-
-
-    // Update horizontal and vertical position of nodes
-    // compute total height of nodes that belong to the same column,
-    // then compute the spaces between them and their positions.
-    const v_margin = this.vertical_spacing
-
-    let prev_col_width = 0
-
-    let shift = 0
-    for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
-      // Pass if no nodes for this horizontal_index
-      // TODO : if it is the case -> something was wrong before
-      if (!node_id_per_hxv_indexes[horizontal_index]) {
-        continue
-      }
-      let max_w_col = 0
-
-      // Loop on horizontal_index node
-      const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-      const h_position_for_index = prev_col_width + h_left_margin + horizontal_index * this.horizontal_spacing
-      const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
-      let upper_node_height_and_margin = v_margin_for_index + shift
-
-      if (center_biggest_nodes === true) {
-        // From the bottom to the top : plot node every two index
-        let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
-        for (let index = last_index; index >= 0; index -= 2) {
-          const node_id = node_id_per_hxv_indexes[horizontal_index][index]
-          // Node position
-          this.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-          // Update upper margin for next node
-          const node_height = height_per_nodes_ids[node_id]
-          upper_node_height_and_margin += node_height + v_margin
-          // Test if node width is the largest of column
-          const node_w = this.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > max_w_col)
-            max_w_col = node_w
-          // Update last index
-          last_index = index
-        }
-        // From the top to the bottom : remaining index
-        if (last_index == 0)
-          last_index = 1
-        else
-          last_index = 0
-        for (let index = last_index; index < node_id_per_hxv_indexes[horizontal_index].length; index += 2) {
-          const node_id = node_id_per_hxv_indexes[horizontal_index][index]
-          // Node position
-          this.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-          const import_link = this.sankey.nodes_dict[node_id].input_links_list.filter(l=>l.source.hasGivenTag(echangeTag as Class_Tag))
-          if (import_link.length>0) {
-            this.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
-          }
-          // Update upper margin for next node
-          const node_height = height_per_nodes_ids[node_id]
-          upper_node_height_and_margin += node_height + v_margin
-          // Test if node width is the largest of column
-          const node_w = this.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > max_w_col)
-            max_w_col = node_w
-        }
-      }
-      else {
-        node_id_per_hxv_indexes[horizontal_index]
-          .forEach((node_id,idx) => {
-            // Node position
-            this.sankey.nodes_dict[node_id].position_x = h_position_for_index
-            this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-            const import_link = this.sankey.nodes_dict[node_id].input_links_list.filter(l=>l.source.hasGivenTag(echangeTag as Class_Tag))
-            if (import_link.length>0) {
-              this.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
-              if (idx == 0) {
-                shift = this.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-              }
-            }
-            if (this.sankey.nodes_dict[node_id].input_links_list.filter(l=>l.is_visible&&!l.shape_is_recycling).length==1) {
-              this.sankey.nodes_dict[node_id].position_y = this.sankey.nodes_dict[node_id].input_links_list[0].source.position_y
-              if (idx == 0) {
-                shift = this.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-              }
-            }
-            // Update upper margin for next node
-            const node_height = height_per_nodes_ids[node_id]
-            upper_node_height_and_margin += node_height + v_margin
-            // Test if node width is the largest of column
-            const node_w = this.sankey.nodes_dict[node_id].shape_min_width
-            if (node_w > max_w_col)
-              max_w_col = node_w
-          })
-      }
-      // Add colmun width to horiz shift for next col pos x
-      prev_col_width += max_w_col
-    }
-
-    const possible_witdh = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
-    const possible_height = (v_margin * 2 + max_height_cumul)
-
-    this.width = (this.window_fitting_width < possible_witdh) ? possible_witdh : this.window_fitting_width
-    this.height = (this.window_fitting_height < possible_height) ? possible_height : this.window_fitting_height
-  }
-
-  /**
-   * Computes u,v,x and initial y for trade nodes
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public arrangeTrade(
-    compute_xy: boolean
-  ) {
-    if (!this.sankey.node_taggs_dict['type de noeud']) {
-      return
-    }
-
-    const process_nodes = this.sankey.nodes_list
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
-    const import_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
-    )
-    const export_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
-    )
-    const other_nodes = process_nodes.filter(n => !n.hasGivenTag(echangeTag))
-
-    let max_vertical_offset = 0
-    other_nodes.forEach(n =>
-      max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
-    )
-    max_vertical_offset = max_vertical_offset + 200
-    // const firstNonEchangeNodeBelow = other_nodes.sort((n1,n2)=> n1.position_y-n2.position_y)[0]
-
-    import_nodes.forEach(node => {
-      const output_link = node.output_links_list[0]
-      const target_node = output_link.target
-      node.position_u = target_node.position_u
-      node.position_v = target_node.position_v
-      if (compute_xy) {
-        const x = target_node.position_x - this.horizontal_spacing
-        node.position_x = x
-        node.position_y = 50
-      }
-    })
-
-    export_nodes.forEach(node => {
-      const input_link = node.input_links_list[0]
-      const source_node = input_link.source
-      node.position_u = source_node.position_u
-      node.position_v = source_node.position_v
-      if (node.position_x < source_node.position_x) {
-        node.position_x = source_node.position_x + 1
-      }
-      if (compute_xy) {
-        const x = source_node.position_x + this.horizontal_spacing
-        node.position_x = x
-        node.position_y = max_vertical_offset
-      }
-    })
-  }
-
-  /**
-   * Computes u,v for nodes in the drawing area
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public computeParametrization() {
-
-    // let smaller_x: number
-    // this.sankey.visible_nodes_list.forEach(n => {
-    //   if (smaller_x === undefined) {
-    //     smaller_x = n.position_x
-    //   }
-    //   if (n.position_x < smaller_x) {
-    //     smaller_x = n.position_x
-    //   }
-    // })
-
-    // this.sankey.visible_nodes_list.forEach(n => {
-    //   if (n.position_type === 'relative') {
-    //     return
-    //   }
-    //   n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / this.sankey.default_node_style.position.dx!)*4
-    // })
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
-    const nodes_to_process = this.sankey.visible_nodes_list.filter(n => !echangeTag || !n.hasGivenTag(echangeTag))
-
-    // Compute positionning indexes
-    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-    const possible_recycling_links_ids: string[] = []
-    nodes_to_process
-      .forEach(node => {
-        //     const node = data.nodes[node_id]
-        if (!node.hasInputLinks() && node.hasOutputLinks()) {
-          // get current node horizontal index (eg longest branch length)
-          const starting_index = 0
-          this.computeHorizontalIndex(
-            node,
-            nodes_to_process,
-            starting_index,
-            [],
-            possible_recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        }
-        else {
-          // Lone node case
-          if (!node.hasInputLinks() && !node.hasOutputLinks()) {
-            horizontal_indexes_per_nodes_ids[node.id] = 0
-          }
-        }
-      })
-
-    // Double check recycling links
-    const checked_recycling_links_ids: string[] = []
-    Object.values(possible_recycling_links_ids)
-      .forEach(link_id =>
-        this.computeRecyclingHorizontalIndex(
-          nodes_to_process,
-          this.sankey.links_dict[link_id],
-          checked_recycling_links_ids,
-          horizontal_indexes_per_nodes_ids
-        ))
-
-    //let max_horizontal_index = 0
-    //const nodes_per_horizontal_indexes: { [index: number]: Type_GenericNodeElement[] } = {}
-    this.sankey.visible_nodes_list.forEach(node => {
-      // Previously computed index for given node
-      const node_index = horizontal_indexes_per_nodes_ids[node.id]
-      node.display.position.u = node_index+1
-    })
-
-    this.computeParametricV()
-  }
-
-  /**
-   * Computes v for nodes in the drawing area
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public computeParametricV() {
-    const columns: { [_: number]: Type_AnyNodeElement[] } = {}
-    this.sankey.visible_nodes_list.forEach(n => {
-      if (n.position_type === 'relative') {
-        return
-      }
-      if (!(n.position_u in columns)) {
-        columns[n.position_u] = [n]
-      } else {
-        columns[n.position_u].push(n)
-      }
-    })
-    Object.values(columns).forEach(column => {
-      column.sort((n1, n2) => n1.position_y - n2.position_y)
-      column.forEach((n, i) => {
-        if (i == 0) {
-          return
-        }
-        const dy = n.position_y - column[i - 1].position_y - column[i - 1].getShapeHeightToUse()
-        if (dy !== 0) {
-          n.position_dy = dy
-        } else {
-          //delete n.local!.dy
-        }
-      })
-    })
-    if (this.sankey.level_taggs_list.length == 0 ) {
-      Object.values(columns).forEach(column => {
-        column.sort((n1, n2) => n1.position_y - n2.position_y)
-        let current_v = 0
-        column.forEach(n => n.position_v = current_v++ )
-      })
-    }
-    this.sankey.level_taggs_list.forEach(tagGroup => {
-      Object.values(columns).forEach(column => {
-        column.sort((n1, n2) => n1.position_y - n2.position_y)
-        let current_v = 0
-        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v,tagGroup))
-      })
-      Object.values(columns).forEach(column => {
-        column.forEach(n => this.apply_v_agregate(n,tagGroup))
-      })
-    })
-    this.sankey.sortNodes()
-  }
-
-  /**
-   * Computes v for nodes in the drawing area
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public apply_v_agregate(
-    node: Type_AnyNodeElement,
-    tagGroup: Class_LevelTagGroup
-  ) {
-    const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
-    if (!nodeDimParent) {
-      return
-    }
-    if (nodeDimParent.parent.display.position.v != -1) {
-      // v is computed at the first path
-      return
-    }
-    nodeDimParent.parent.display.position.y = node.position_y
-    nodeDimParent.parent.display.position.u = node.position_u
-    nodeDimParent.parent.display.position.v = node.position_v
-    this.apply_v_agregate(nodeDimParent.parent as Type_AnyNodeElement, tagGroup)
-  }
-
-  /**
-   * Computes v for nodes in the drawing area
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public apply_v_desagregate(
-    node: Type_AnyNodeElement,
-    current_v: number,
-    tagGroup: Class_LevelTagGroup
-  ) {
-    if (node.sibling) {
-      return current_v
-    }
-    if (node.display.position.v == -1) {
-      // v is computed at the first path
-      node.display.position.v = current_v
-    }
-    let new_current_v = current_v
-    let desagregated_nodes: Type_GenericNodeElement[] = []
-    const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-    if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
-      return new_current_v+1
-    }
-    desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
-    desagregated_nodes = [...new Set(desagregated_nodes)]
-    const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
-    if (desagregated_nodes.length > 0) {
-      let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
-      desagregated_nodes.forEach(nn => {
-        if (nn.sibling) {
-          return
-        }
-        nn.display.position.x = node.position_x
-        nn.display.position.u = node.position_u
-        nn.display.position.y = current_y
-        current_y += 20
-        new_current_v = this.apply_v_desagregate(nn, new_current_v, tagGroup)
-      })
-    }
-    return new_current_v + 1
-  }
-
-  /**
-   * Reposition visible nodes so that their left/top side is close to a grid line
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public arrangeNodesToGrid() {
-    this._sankey.visible_nodes_list.forEach(node => {
-      const shift_x = node.position_x - (node.position_x % this.grid_size)// get position so that the node position_x is set to previous horizontal grid line
-      const shift_y = node.position_y - (node.position_y % this.grid_size)// get position so that the node position_y is set to previous vertical grid line
-      node.setPosXY(shift_x, shift_y)
-    })
+    this.nodePositioning.computeAutoSankeyWithToast(launched_from_process)
   }
 
   /**
@@ -2524,7 +1586,7 @@ export abstract class ClassTemplate_DrawingArea
    * History saving
    * @param f
    */
-  protected saveUndo(f: (_: Type_AnyDrawingArea) => void) {
+  public saveUndo(f: (_: Type_AnyDrawingArea) => void) {
     this.application_data.history.saveUndo(() => { f(this) })
   }
 
@@ -2532,7 +1594,7 @@ export abstract class ClassTemplate_DrawingArea
   * History saving
   * @param f
   */
-  protected saveRedo(f: (_: Type_AnyDrawingArea) => void) {
+  public saveRedo(f: (_: Type_AnyDrawingArea) => void) {
     this.application_data.history.saveRedo(() => { f(this) })
   }
 
@@ -2907,7 +1969,7 @@ export abstract class ClassTemplate_DrawingArea
         if (this.sankey.default_node_style.position && this.sankey.default_node_style.position.type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
-              this.computeParametrization()
+              this.nodePositioning.computeParametrization()
             })
         }
       }
@@ -3233,12 +2295,6 @@ export abstract class ClassTemplate_DrawingArea
   // Grid size
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
-
-  // Horizontal spacing
-  public get horizontal_spacing() { return this._horizontal_spacing }
-  public set horizontal_spacing(_: number) { this._horizontal_spacing = _ }
-  public get vertical_spacing() { return this._vertical_spacing }
-  public set vertical_spacing(_: number) { this._vertical_spacing = _ }
 
   public get selection_zone(): ClassTemplate_ZoneSelection<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._selection_zone }
 
