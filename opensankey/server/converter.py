@@ -1655,4 +1655,3 @@ class JsonToSankey(object):
                 # Recurse
                 self._extract_data(datas_json[datatag_id], flux, new_datatags_list)
         return
-    
