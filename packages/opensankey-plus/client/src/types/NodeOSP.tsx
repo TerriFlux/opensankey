@@ -343,7 +343,7 @@ export abstract class ClassTemplate_NodeElementOSP
     // Compute longest possible path from clicked node (number of link before we get to a node without output link)
     // so we can determinate a timeout before reseting the sankey
     const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-    this.drawing_area.computeHorizontalIndex(this, nodes_to_process, 0, [], [], horizontal_indexes_per_nodes_ids)
+    this.drawing_area.nodePositioning.computeHorizontalIndex(this, nodes_to_process, 0, [], [], horizontal_indexes_per_nodes_ids)
 
     // Compute time to animate the whole sankey from clicked node
     let time_to_animate = 500

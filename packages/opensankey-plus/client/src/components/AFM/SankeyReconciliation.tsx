@@ -276,39 +276,6 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
         else {
           application_data_mfa.fromJSON(new_sankey_json_obj)
         }
-
-        //const new_data = Object.assign(DefaultSankeyData(), new_sankey_json_obj) as AFMSankeyData
-
-        // ProcessExample(
-        //   application_data_mfa,
-        //   postProcessLoadExcel
-        // )
-        // const default_nstyle = DefaultSankeyData().style_node['default']
-        // const default_lstyle = DefaultSankeyData().style_link['default']
-        // new_data.style_node['default'] = default_nstyle
-        // new_data.style_link['default'] = default_lstyle
-        //delete (new_data as SankeyData & { layout?: SankeyData }).layout
-        // if (Object.values(new_data.nodeTags).filter(tagg => tagg.show_legend).length > 0) {
-        //   new_data.colorMap = Object.entries(new_data.nodeTags).filter(tagg => tagg[1].show_legend)[0][0]
-        //   Object.values(new_data.nodes).forEach(el => {
-        //     el.colorParameter = 'groupTag'
-        //     el.colorTag = new_data.colorMap
-        //   })
-        // }
-        // if (Object.keys(new_data.nodeTags).filter(t => new_data.nodeTags[t].show_legend).length == 0 &&
-        //   Object.keys(new_data.fluxTags).filter(tag => tag === 'flux_type').length == 0 &&
-        //   Object.values(new_data.nodes).filter(n => n.local && n.local.color).length == 0 &&
-        //   Object.values(new_data.links).filter(l => l.local && l.local.color).length == 0
-        // ) {
-        //   const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-        //   const n_keys = Object.keys(new_data.nodes)
-        //   const size_color = n_keys.length
-
-        //   for (const i in d3.range(size_color)) {
-        //     AssignNodeLocalAttribute(new_data.nodes[n_keys[i]], 'color', (d3.color(color_selected(+i / size_color))?.formatHex() as string))
-        //   }
-        //}
-        //set_data({ ...new_data })
       }
       catch (err) {
         alert('Could not display optimized Sankey : ' + err)

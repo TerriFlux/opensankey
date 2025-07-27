@@ -4,11 +4,6 @@ import { FType_DiagramSelector } from '../deps/OpenSankey/components/dialogs/typ
 import { OSPApplicationDataType, OSPData } from '../types/LegacyTypes'
 import { Type_GenericApplicationDataOSP } from '../types/TypesOSP'
 
-export type FType_ConvertDataOSP = (
-  data: OSPData,
-  DefaultSankeyData: () => OSPData
-) => void
-
 export type FType_DiagramSelectorOSP = (
   applicationData: OSPApplicationDataType,
 ) => FType_DiagramSelector

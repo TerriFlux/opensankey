@@ -359,7 +359,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
           const drawing_area_view = this.createNewDrawingArea(view_id)
           drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
           drawing_area_view.fromJSON(view_json as Type_JSON)
-          drawing_area_view.arrangeTrade(false)
+          drawing_area_view.nodePositioning.arrangeTrade(false)
           // Add new drawing area to views
           this._views[view_id] = drawing_area_view
           this.pushViewIdInViewOrder(view_id)
@@ -766,7 +766,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
       tagg.show_legend = false
     })
 
-    new_drawing_area.horizontal_spacing = 300
+
     new_drawing_area.callComputeAutoSankey(false)
     new_drawing_area.sankey.nodes_list
       .forEach(node => {
