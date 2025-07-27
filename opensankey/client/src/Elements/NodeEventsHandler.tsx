@@ -193,7 +193,8 @@ export class NodeEventsHandler<
 
     // Move all elements so none of them are outside the DA
     this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
-    this._node.drawing_area.computeParametricV()
+    // @ts-ignore
+    this._node.drawing_area.nodePositioning.computeParametricV()
 
     const drawing_area = this._node.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list

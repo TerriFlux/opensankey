@@ -704,8 +704,6 @@ export abstract class ClassTemplate_Element
     this._display.position.v = _._display.position.v
     this._display.position.dx = _._display.position.dx
     this._display.position.dy = _._display.position.dy
-    this._display.position.relative_dx = _._display.position.relative_dx
-    this._display.position.relative_dy = _._display.position.relative_dy
   }
 
   // SAVING METHODS =====================================================================
@@ -795,22 +793,18 @@ export abstract class ClassTemplate_Element
 
   // Position 
   public get position_x() { return this._display.position.x }
-  public set position_x(_: number) { this._display.position.x = _ /*this.applyPosition()*/ }
+  public set position_x(_: number) { this._display.position.x = _ }
   public get position_y() { return this._display.position.y }
-  public set position_y(_: number) { this._display.position.y = _ /*this.applyPosition()*/ }
+  public set position_y(_: number) { this._display.position.y = _ }
   public get position_u() { return this._display.position.u }
-  public set position_u(_: number) { this._display.position.u = _ /*this.applyPosition()*/ }
+  public set position_u(_: number) { this._display.position.u = _ }
   public get position_v() { return this._display.position.v }
-  public set position_v(_: number) { this._display.position.v = _ /*this.applyPosition()*/ }
+  public set position_v(_: number) { this._display.position.v = _ }
   public get position_dx() { return this._display.position.dx }
-  public set position_dx(_) { this._display.position.dx = _ /*this.applyPosition()*/ }
-  public get position_relative_dx() { return this._display.position.relative_dx }
-  public set position_relative_dx(_) { this._display.position.relative_dx = _ /*this.applyPosition()*/ }
+  public set position_dx(_) { this._display.position.dx = _ }
   public get position_dy() { return this._display.position.dy }
-  public set position_dy(_) { this._display.position.dy = _ /*this.applyPosition()*/ }
-  public get position_relative_dy() { return this._display.position.relative_dy }
-  public set position_relative_dy(_) { this._display.position.relative_dy = _ /*this.applyPosition()*/ }
+  public set position_dy(_) { this._display.position.dy = _ }
   public get position_auto_x() { return this._display.position.auto_x }
-  public set position_auto_x(_) { this._display.position.auto_x = _ /*this.applyPosition()*/ }
+  public set position_auto_x(_) { this._display.position.auto_x = _ }
   public get display() { return this._display }
 }

@@ -94,7 +94,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     const node_pos = Object.fromEntries(new_data.drawing_area.sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y }]))
 
     const _arrangeNodesToGrid = () => {
-      new_data.drawing_area.arrangeNodesToGrid()
+      new_data.drawing_area.nodePositioning.arrangeNodesToGrid()
       indicateSankeyToSaveInCache()
     }
 
@@ -192,6 +192,77 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       new_data.setValueAndSaveHistory(new_data.drawing_area, 'scale', evt, f)
     }
   }
+  const setTrade = (close: boolean) => {
+    if (!new_data.drawing_area.sankey.node_taggs_dict['type de noeud']) {
+      return
+    }
+    new_data.drawing_area.bypass_redraws = true
+    const process_nodes = new_data.drawing_area.sankey.nodes_list
+    const echangeTag = new_data.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
+    const import_nodes = process_nodes.filter(n =>
+      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
+    )
+    const export_nodes = process_nodes.filter(n =>
+      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
+    )
+    if (close) {
+      import_nodes.forEach((n, i) => {
+        if (i == 0) n.sibling!.style = [
+          new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
+        ]
+        n.style = [
+          new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeImportCloseStyle']
+        ]
+        n.getFirstOutputLink()!.style = [
+          new_data.drawing_area.sankey.link_styles_dict['LinkImportExportCloseStyle'],
+          new_data.drawing_area.sankey.link_styles_dict['LinkImportCloseStyle']
+        ]
+      })
+      export_nodes.forEach(n => {
+        n.style = [
+          new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeExportCloseStyle']
+        ]
+        n.getFirstInputLink()!.style = [
+          new_data.drawing_area.sankey.link_styles_dict['LinkImportExportCloseStyle'],
+          new_data.drawing_area.sankey.link_styles_dict['LinkExportCloseStyle']
+        ]
+      })
+    } else {
+      import_nodes.forEach((n, i) => {
+        if (i == 0) n.sibling!.style = [
+          new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
+        ]
+        n.style = [
+          new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeImportAboveStyle']
+        ]
+        n.getFirstOutputLink()!.style = [
+          new_data.drawing_area.sankey.link_styles_dict['LinkImportExportAboveBelowStyle'],
+          new_data.drawing_area.sankey.link_styles_dict['LinkImportAboveStyle']
+        ]
+      })
+      export_nodes.forEach(n => {
+        n.style = [
+          new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
+          new_data.drawing_area.sankey.node_styles_dict['NodeExportBelowStyle']
+        ]
+        n.getFirstInputLink()!.style = [
+          new_data.drawing_area.sankey.link_styles_dict['LinkImportExportAboveBelowStyle'],
+          new_data.drawing_area.sankey.link_styles_dict['LinkExportBelowStyle']
+        ]
+      })
+    }
+    new_data.drawing_area.nodePositioning.arrangeTrade(true)
+    new_data.drawing_area.draw()
+  }
 
 
   // Buttons components ==============================================================
@@ -249,9 +320,9 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         <NumberInput
           variant='menuconfigpanel_option_numberinput_with_right_addon'
           min={0}
-          value={new_data.drawing_area.horizontal_spacing}
+          value={new_data.drawing_area.sankey.node_styles_dict['default'].position.dx}
           onChange={evt => {
-            new_data.drawing_area.horizontal_spacing = +evt
+            new_data.drawing_area.sankey.node_styles_dict['default'].position.dx = +evt
             indicateSankeyToSaveInCache()
             setForceUpdate(a => a + 1)
           }}>
@@ -268,9 +339,9 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
         <NumberInput
           variant='menuconfigpanel_option_numberinput_with_right_addon'
           min={0}
-          value={new_data.drawing_area.vertical_spacing}
+          value={new_data.drawing_area.sankey.node_styles_dict['default'].position.dy}
           onChange={evt => {
-            new_data.drawing_area.vertical_spacing = +evt
+            new_data.drawing_area.sankey.node_styles_dict['default'].position.dy = +evt
             indicateSankeyToSaveInCache()
             setForceUpdate(a => a + 1)
           }}>
@@ -280,7 +351,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
       <Button variant='contextmenu_button'
         onClick={() => {
-          new_data.drawing_area.computeAutoSankey(false)
+          new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(false)
         }}>
         {t('MEP.PA_action')}
       </Button>
@@ -296,6 +367,30 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   const button_an = <Button variant='contextmenu_button'
     onClick={arrangeNodesToGrid}>
     {t('MEP.AN')}
+  </Button>
+
+  const button_trade_close = <Button variant='contextmenu_button'
+    onClick={() => setTrade(true)}>
+    {t('MEP.importExportClose')}
+  </Button>
+  const button_trade_open = <Button variant='contextmenu_button'
+    onClick={() => setTrade(false)}>
+    {t('MEP.importExportAboveBelow')}
+  </Button>
+  const button_parametric = <Button variant='contextmenu_button'
+    onClick={() => {
+      new_data.drawing_area.sankey.node_styles_dict['default'].position.type = 'parametric' 
+      new_data.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      Object.values(new_data.drawing_area.sankey.nodes_dict)
+        .filter(node => node.display.position.type !== 'relative')
+        .forEach(node => {
+            node.resetPositionAttribute('dy')
+            node.applyPosition()
+          }
+        )
+      new_data.drawing_area.nodePositioning.computeParametrization()
+    }}>
+    {t('MEP.parametricMode')}
   </Button>
 
   let full = t('fullscreen')
@@ -329,6 +424,9 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     <ButtonGroup isAttached orientation='vertical'>
       {button_pa}
       {button_an}
+      {button_trade_close}
+      {button_trade_open}
+      {button_parametric}
       {sep}
       {button_assgn_rand_node_color}
       {sep}

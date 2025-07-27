@@ -1518,13 +1518,42 @@ class JsonToSankey(object):
         ----------
         None
         """
+        # Grouper les flux par paire source-destination
+        flux_groups = {}
         for flux_id, flux_json in self.json["links"].items():
-            # Create flux
-            orig_node = self._nodes_id_corresp[flux_json["idSource"]]
-            dest_node = self._nodes_id_corresp[flux_json["idTarget"]]
-            flux = self.sankey.get_or_create_flux(orig_node.name, dest_node.name)
-            # Get data
-            self._extract_data(flux_json["value"], flux)
+            source_id = flux_json["idSource"]
+            target_id = flux_json["idTarget"]
+            key = (source_id, target_id)
+
+            if key not in flux_groups:
+                flux_groups[key] = []
+            flux_groups[key].append(flux_json)
+        # Créer un flux unique par paire avec tous les flux tags
+        for (source_id, target_id), flux_list in flux_groups.items():
+            # Obtenir les nœuds
+            orig_node = self._nodes_id_corresp[source_id]
+            dest_node = self._nodes_id_corresp[target_id]
+            for flux_json in flux_list:
+                if "tags" in flux_json["value"]:
+                    for tagg_id in flux_json["value"]["tags"].keys():
+                        if tagg_id in self._fluxtags_id_corresp.keys():
+                            # Get corresponding tags
+                            for tag_id in flux_json["value"]["tags"][tagg_id]:
+                                if tag_id in self._fluxtags_id_corresp[tagg_id].keys():
+                                    tag = self._fluxtags_id_corresp[tagg_id][tag_id]
+                                    flux = self.sankey.get_or_create_flux(
+                                        orig_node.name,
+                                        dest_node.name,
+                                        tag
+                                    )
+                                    self._extract_data(flux_json["value"], flux)
+                else:
+                    flux = self.sankey.get_or_create_flux(
+                        orig_node.name,
+                        dest_node.name,
+                        tag
+                    )
+                    self._extract_data(flux_json["value"], flux)
 
     def _extract_data(self, datas_json, flux, datatags_list=[], datataggs_list=None):
         """
@@ -1626,3 +1655,4 @@ class JsonToSankey(object):
                 # Recurse
                 self._extract_data(datas_json[datatag_id], flux, new_datatags_list)
         return
+    

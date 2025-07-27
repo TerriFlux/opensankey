@@ -57,10 +57,6 @@ export abstract class ClassAbstract_ApplicationData {
   public abstract get t(): TFunction
   public abstract get history(): ClassAbstract_ApplicationHistory
   public abstract get menu_configuration(): Class_MenuConfig
-  public abstract get node_label_separator(): string
-  public abstract set node_label_separator(_: string)
-  public abstract get node_label_separator_part(): 'before' | 'after'
-  public abstract set node_label_separator_part(_: 'before' | 'after')
   public abstract set language(_: string | undefined)
   public abstract get language(): string | undefined
 }
@@ -95,7 +91,6 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract updateFrom(other_drawing_area: ClassAbstract_DrawingArea, mode: string[]): void
   public abstract draw(): void
   public abstract orderElementOnDA(): void
-  public abstract computeParametricV(): void
   public abstract getNavBarHeight(): number
   public abstract getZoomScale():number
   // Mandatory getters
@@ -120,7 +115,6 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract set filter_label(_: number)
   public abstract get type_data(): string
   public abstract get grid_size(): number
-  public abstract get vertical_spacing() : number
   // MAndatory setters
   public abstract set scale(_: number)
   public abstract get magnetic_nodes(): boolean

@@ -88,15 +88,10 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 
   const [forceUpdate, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
-  const [parametric, set_parametric] = useState(node_styles_dict[default_style_id].position.type == 'parametric')
   const [auto_x, set_auto_x] = useState(node_styles_dict[default_style_id].position.auto_x)
   const [trade_close, set_trade_close] = useState(true)
 
   ref_to_updater_modal_apply_layout.current = () => setForceUpdate(b => !b)
-
-  if (parametric !== (node_styles_dict[default_style_id].position.type == 'parametric')) {
-    set_parametric(node_styles_dict[default_style_id].position.type == 'parametric')
-  }
   if (auto_x !== (node_styles_dict[default_style_id].position.auto_x)) {
     set_auto_x(node_styles_dict[default_style_id].position.auto_x)
   }
@@ -112,607 +107,307 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
     'attrDrawingArea'
   ]
 
-  const setTrade = (trade_close: boolean) => {
-    applicationData.drawing_area.bypass_redraws = true
-    const process_nodes = applicationData.drawing_area.sankey.nodes_list
-    const echangeTag = applicationData.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
-    const import_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
-    )
-    const export_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
-    )
-    if (trade_close) {
-      import_nodes.forEach((n,i)=>{
-        if (i==0) n.sibling!.style = [
-          applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
-          applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
-        ]
-        n.style = [
-          applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
-          applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
-          applicationData.drawing_area.sankey.node_styles_dict['NodeImportCloseStyle']
-        ]
-        n.getFirstOutputLink()!.style = [
-            applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportCloseStyle'],
-            applicationData.drawing_area.sankey.link_styles_dict['LinkImportCloseStyle']
-        ]
-    })
-      export_nodes.forEach(n=>{
-        n.style = [
-            applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
-            applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportCloseStyle'],
-            applicationData.drawing_area.sankey.node_styles_dict['NodeExportCloseStyle']
-          ]
-        n.getFirstInputLink()!.style = [
-            applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportCloseStyle'],
-            applicationData.drawing_area.sankey.link_styles_dict['LinkExportCloseStyle']
-        ]
-    })
-    } else {
-      import_nodes.forEach((n,i)=>{
-        if (i==0) n.sibling!.style = [
-          applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
-          applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
-        ]
-        n.style = [
-          applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
-          applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
-          applicationData.drawing_area.sankey.node_styles_dict['NodeImportAboveStyle']
-        ]
-        n.getFirstOutputLink()!.style = [
-            applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportAboveBelowStyle'],
-            applicationData.drawing_area.sankey.link_styles_dict['LinkImportAboveStyle']
-        ]
-    })
-      export_nodes.forEach(n=>{
-        n.style = [
-            applicationData.drawing_area.sankey.node_styles_dict['NodeSectorStyle'],
-            applicationData.drawing_area.sankey.node_styles_dict['NodeImportExportAboveBelowStyle'],
-            applicationData.drawing_area.sankey.node_styles_dict['NodeExportBelowStyle']
-          ]
-        n.getFirstInputLink()!.style = [
-            applicationData.drawing_area.sankey.link_styles_dict['LinkImportExportAboveBelowStyle'],
-            applicationData.drawing_area.sankey.link_styles_dict['LinkExportBelowStyle']
-        ]
-    })
 
 
-    }
-  }
+  const content_modal_layout = <Box layerStyle='menuconfigpanel_grid' >
+    {diagramSelector(applicationData)}
 
-  const content_modal_layout = <Tabs>
-    <TabList>
-      <Box layerStyle='submenuconfig_tab' >
-        <Tab>{t('Menu.Transformation.amp_import')}</Tab>
+    <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
+
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.choseTransforDifficulty')}
       </Box>
-      <Box layerStyle='submenuconfig_tab' >
-        <Tab>{t('Menu.Transformation.amp_manuelle')}</Tab>
+      <Box layerStyle='options_3cols' >
+        <Button variant={mode_trans == 'simple' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('simple'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Basiques</Button>
+        <Button variant={mode_trans == 'expert' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('expert'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Tous</Button>
       </Box>
-    </TabList>
+    </Box>
 
-    <TabPanels>
-      {/* Import data */}
-      <TabPanel >
-        <Box layerStyle='menuconfigpanel_grid' >
+    <OSTooltip label={t('Menu.Transformation.tooltips.Shortcuts')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Shortcuts')}</Box>
+        <Box layerStyle='options_4cols' >
 
-          {diagramSelector(applicationData)}
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              data_var_to_update.current.length = 0
+              menu_configuration.updateComponentApplyLayout()
+            }}
+          >{t('Menu.Transformation.unSelectAll')}</Button>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              data_var_to_update.current.length = 0
+              if (mode_trans === 'simple') {
+                simple_element_to_transform.forEach(el => data_var_to_update.current.push(el))
+              } else {
+                applicationData.transform_layout_all_attr.forEach(el => data_var_to_update.current.push(el))
+              }
+              menu_configuration.updateComponentApplyLayout()
+            }}
+          >{t('Menu.Transformation.selectAll')}</Button>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              data_var_to_update.current.length = 0
+              default_element_to_transform.forEach(el => data_var_to_update.current.push(el))
+              menu_configuration.updateComponentApplyLayout()
+            }}
+          >{t('Menu.Transformation.selectDefault')}</Button>
 
-          <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Menu.choseTransforDifficulty')}
-            </Box>
-            <Box layerStyle='options_3cols' >
-              <Button variant={mode_trans == 'simple' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('simple'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Basiques</Button>
-              <Button variant={mode_trans == 'expert' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('expert'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Tous</Button>
-            </Box>
-          </Box>
-
-          <OSTooltip label={t('Menu.Transformation.tooltips.Shortcuts')}>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Shortcuts')}</Box>
-              <Box layerStyle='options_4cols' >
-
-                <Button
-                  variant='menuconfigpanel_option_button'
-                  onClick={() => {
-                    data_var_to_update.current.length = 0
-                    menu_configuration.updateComponentApplyLayout()
-                  }}
-                >{t('Menu.Transformation.unSelectAll')}</Button>
-                <Button
-                  variant='menuconfigpanel_option_button'
-                  onClick={() => {
-                    data_var_to_update.current.length = 0
-                    if (mode_trans === 'simple') {
-                      simple_element_to_transform.forEach(el => data_var_to_update.current.push(el))
-                    } else {
-                      applicationData.transform_layout_all_attr.forEach(el => data_var_to_update.current.push(el))
-                    }
-                    menu_configuration.updateComponentApplyLayout()
-                  }}
-                >{t('Menu.Transformation.selectAll')}</Button>
-                <Button
-                  variant='menuconfigpanel_option_button'
-                  onClick={() => {
-                    data_var_to_update.current.length = 0
-                    default_element_to_transform.forEach(el => data_var_to_update.current.push(el))
-                    menu_configuration.updateComponentApplyLayout()
-                  }}
-                >{t('Menu.Transformation.selectDefault')}</Button>
-
-              </Box>
-            </Box>
-          </OSTooltip>
-
-          {mode_trans != 'simple' ?
-            <OSTooltip label={t('Menu.Transformation.tooltips.Topology')}>
-              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Topology')}</Box>
-                <Box layerStyle='options_4cols' >
-                  <Button
-                    variant={data_var_to_update.current.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('addNode')) {
-                        data_var_to_update.current.push('addNode')
-                        menu_configuration.updateComponentApplyLayout()
-                      } else {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('addNode'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-                      }
-                    }
-                    }
-                  >{t('Menu.Transformation.addNode')}</Button>
-                  <Button
-                    variant={data_var_to_update.current.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('removeNode')) {
-                        data_var_to_update.current.push('removeNode')
-                        menu_configuration.updateComponentApplyLayout()
-                      } else {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('removeNode'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-                      }
-                    }
-                    }
-                  >{t('Menu.Transformation.removeNode')}</Button>
-                  <Button
-                    variant={data_var_to_update.current.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('addFlux')) {
-                        data_var_to_update.current.push('addFlux')
-                        menu_configuration.updateComponentApplyLayout()
-                      } else {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('addFlux'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-                      }
-                    }
-                    }>{t('Menu.Transformation.addFlux')}</Button>
-                  <Button
-                    variant={data_var_to_update.current.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('removeFlux')) {
-                        data_var_to_update.current.push('removeFlux')
-                        menu_configuration.updateComponentApplyLayout()
-                      } else {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('removeFlux'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-                      }
-                    }
-                    }>{t('Menu.Transformation.removeFlux')}</Button>
-                </Box>
-              </Box></OSTooltip> : <></>}
-
-          {/* Taille et pos des noeud/flux */}
-          <OSTooltip label={t('Menu.Transformation.tooltips.Geometry')}  >
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Geometry')}</Box>
-              <Box layerStyle='options_4cols' >
-                <Button
-                  variant={data_var_to_update.current.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!data_var_to_update.current.includes('posNode')) {
-                      data_var_to_update.current.push('posNode')
-                      menu_configuration.updateComponentApplyLayout()
-                    } else {
-                      data_var_to_update.current.splice(data_var_to_update.current.indexOf('posNode'), 1)
-                      menu_configuration.updateComponentApplyLayout()
-                    }
-                  }
-                  }>{t('Menu.Transformation.PosNoeud')}</Button>
-                <Button
-                  variant={data_var_to_update.current.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!data_var_to_update.current.includes('posFlux')) {
-                      data_var_to_update.current.push('posFlux')
-                      menu_configuration.updateComponentApplyLayout()
-                    } else {
-                      data_var_to_update.current.splice(data_var_to_update.current.indexOf('posFlux'), 1)
-                      menu_configuration.updateComponentApplyLayout()
-                    }
-                  }
-                  }> {t('Menu.Transformation.posFlux')}</Button>
-              </Box>
-
-            </Box>
-          </OSTooltip>
-
-          {/* Valeur des flux */}
-          {mode_trans != 'simple' ?
-            <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
-              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
-                <Box layerStyle='options_4cols' >
-                  <Button
-                    variant={data_var_to_update.current.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('Values')) {
-                        data_var_to_update.current.push('Values')
-                        // Also need dataTags because we can't only import values without the structur of dataTags
-                        // (but we can import dataTags without values)
-                        if (!data_var_to_update.current.includes('tagData')) {
-                          data_var_to_update.current.push('tagData')
-                        }
-                        menu_configuration.updateComponentApplyLayout()
-                      } else {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('Values'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-                      }
-                    }
-                    }
-                  >{data_var_to_update.current.includes('Values') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
-                </Box>
-              </Box></OSTooltip> : <></>}
-
-          <OSTooltip label={t('Menu.Transformation.tooltips.Attribut')} >
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'><Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
-              <Box layerStyle='options_4cols' >
-                <Button
-                  variant={data_var_to_update.current.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!data_var_to_update.current.includes('attrNode')) {
-                      data_var_to_update.current.push('attrNode')
-                      menu_configuration.updateComponentApplyLayout()
-
-                    } else {
-                      data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrNode'), 1)
-                      menu_configuration.updateComponentApplyLayout()
-                    }
-                  }
-                  }
-                >{t('Menu.Transformation.attrNode')}</Button>
-                <Button
-                  variant={data_var_to_update.current.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!data_var_to_update.current.includes('attrFlux')) {
-                      data_var_to_update.current.push('attrFlux')
-                      menu_configuration.updateComponentApplyLayout()
-                    } else {
-                      data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrFlux'), 1)
-                      menu_configuration.updateComponentApplyLayout()
-                    }
-                  }
-                  }
-                >{t('Menu.Transformation.attrFlux')}</Button>
-              </Box>
-            </Box></OSTooltip>
-
-          {/* Etiquette */}
-          {mode_trans == 'expert' ?
-            <OSTooltip label={t('Menu.Transformation.tooltips.Tags')} >
-              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
-                <Box layerStyle='options_4cols' >
-                  <Button
-                    variant={data_var_to_update.current.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('tagNode')) {
-                        data_var_to_update.current.push('tagNode')
-                        menu_configuration.updateComponentApplyLayout()
-                      } else {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagNode'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-
-                      }
-                    }
-                    }
-                  >{t('Menu.Transformation.tagNode')}</Button>
-                  <Button
-                    variant={data_var_to_update.current.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('tagFlux')) {
-                        data_var_to_update.current.push('tagFlux')
-                        menu_configuration.updateComponentApplyLayout()
-                      } else {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagFlux'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-                      }
-                    }
-                    }
-                  >{t('Menu.Transformation.tagFlux')}</Button>
-                  <Button
-                    variant={data_var_to_update.current.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('tagData')) {
-                        data_var_to_update.current.push('tagData')
-                        menu_configuration.updateComponentApplyLayout()
-                      } else if (!data_var_to_update.current.includes('Values')) {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagData'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-                      }
-                    }
-                    }
-                  >{t('Menu.Transformation.tagData')}</Button>
-                </Box>
-              </Box></OSTooltip> : <></>}
-
-          {/* Aggrégation */}
-          {mode_trans == 'expert' ?
-            <OSTooltip label={t('Menu.Transformation.tooltips.tagLevel')} >
-              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
-                <Box layerStyle='options_4cols' >
-                  <Button
-                    variant={data_var_to_update.current.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      if (!data_var_to_update.current.includes('tagLevel')) {
-                        data_var_to_update.current.push('tagLevel')
-                        menu_configuration.updateComponentApplyLayout()
-                      } else {
-                        data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagLevel'), 1)
-                        menu_configuration.updateComponentApplyLayout()
-                      }
-                    }
-                    }
-                  >{data_var_to_update.current.includes('tagLevel') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
-                </Box>
-              </Box></OSTooltip> : <></>}
-
-          <OSTooltip label={t('Menu.Transformation.tooltips.attrDrawingArea')} >
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
-              <Box layerStyle='options_4cols' >
-                <Button
-                  variant={data_var_to_update.current.includes('attrDrawingArea') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!data_var_to_update.current.includes('attrDrawingArea')) {
-                      data_var_to_update.current.push('attrDrawingArea')
-                      menu_configuration.updateComponentApplyLayout()
-                    } else {
-                      data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrDrawingArea'), 1)
-                      menu_configuration.updateComponentApplyLayout()
-                    }
-                  }
-                  }
-                >{data_var_to_update.current.includes('attrDrawingArea') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
-              </Box>
-            </Box></OSTooltip>
-          {mode_trans == 'expert' ? apply_transformation_additional_elements.map((c: JSX.Element, i: number) => {
-            return <React.Fragment key={i}>{c}</React.Fragment>
-          }) : <></>}
         </Box>
-      </TabPanel>
+      </Box>
+    </OSTooltip>
 
-      {/* Geometry */}
-      <TabPanel>
-        <Box layerStyle='menuconfigpanel_grid' >
-          <h5><center>{t('MEP.columnsParameters')}</center></h5>
-          {/* Ecart horizontal */}
-          <OSTooltip label={t('MEP.tooltips.EEN_h')} >
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.Horizontal')}</Box>
-              <NumberInput
-                variant='menuconfigpanel_option_numberinput'
-                step={1}
-                min={0}
-                allowMouseWheel
-                value={applicationData.drawing_area.horizontal_spacing}
-                onChange={evt => {
-                  applicationData.drawing_area.horizontal_spacing = +evt
-                  menu_configuration.updateComponentApplyLayout()
-                }}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-
-              </NumberInput>
-            </Box>
-          </OSTooltip>
-
-          {/* Ecart Vertical */}
-          <OSTooltip label={t('MEP.tooltips.EEN_v')} >
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('MEP.Vertical')}</Box>
-              <NumberInput
-                variant='menuconfigpanel_option_numberinput'
-                step={1}
-                min={0}
-                allowMouseWheel
-                value={applicationData.drawing_area.vertical_spacing}
-                onChange={(evt: string | number) => {
-                  applicationData.drawing_area.vertical_spacing = +evt
-                  node_styles_dict['default'].position.dy = +evt
-                  if (node_styles_dict['NodeSectorStyle']) {
-                    node_styles_dict['NodeSectorStyle'].position.dy = +evt
-                  }
-                  if (node_styles_dict['NodeProductStyle']) {
-                    node_styles_dict['NodeProductStyle'].position.dy = +evt
-                  }
-                  menu_configuration.updateComponentApplyLayout()
-                }}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-            </Box>
-          </OSTooltip></Box>
-        <Box layerStyle='menuconfigpanel_grid' >
-          <h5><center>{t('MEP.positioningMode')}</center></h5>
-          <Box as='span' layerStyle='menuconfigpanel_row_4cols'>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isChecked={auto_x}
-              onChange={(evt: { target: { checked: boolean } }) => {
-                node_styles_dict['default'].position.auto_x = evt.target.checked
-                set_auto_x(evt.target.checked)
-                Object.values(node_styles_dict)
-                  .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
-                  .forEach(style => style.position.auto_x = evt.target.checked)
-                if (evt.target.checked) {
-                  // Object.values(node_styles_dict)
-                  //   .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeImportCloseStyle')
-                  //   .forEach(style => style.position.type = 'parametric')
-                  // applicationData.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
-                  applicationData.drawing_area.computeParametrization()
-                } /*else {
-                  Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeImportCloseStyle')
-                    .forEach(style => style.position.type = 'absolute')
-                }*/
-              }}
-            >
-              <OSTooltip label={t('MEP.tooltips.parametricMode')}>
-                {t('MEP.autoX')}
-              </OSTooltip>
-            </Checkbox>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isChecked={parametric}
-              onChange={(evt: { target: { checked: boolean } }) => {
-                node_styles_dict['default'].position.type = evt.target.checked ? 'parametric' : 'absolute'
-                set_parametric(evt.target.checked)
-                if (evt.target.checked) {
-                  // Object.values(node_styles_dict)
-                  //   .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
-                  //   .forEach(style => style.position.type = 'parametric')
-                  applicationData.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
-                  applicationData.drawing_area.computeParametrization()
-                } /*else {
-                  Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
-                    .forEach(style => style.position.type = 'absolute')
-                }*/
-              }}
-            >
-              <OSTooltip label={t('MEP.tooltips.parametricMode')}>
-                {t('MEP.parametricMode')}
-              </OSTooltip>
-            </Checkbox>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              isChecked={!parametric}
-              onChange={(evt: { target: { checked: boolean } }) => {
-                set_parametric(!evt.target.checked)
-                if (!evt.target.checked) {
-                  Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
-                    .forEach(style => style.position.type = 'parametric')
-                  applicationData.drawing_area.computeParametrization()
-                } else {
-                  Object.values(node_styles_dict)
-                    .filter(style => style.id !== 'NodeImportCloseStyle' && style.id !== 'NodeExportCloseStyle')
-                    .forEach(style => style.position.type = 'absolute')
-                }
-              }}
-            >
-              <OSTooltip label={t('MEP.tooltips.absoluteMode')}>
-                {t('MEP.absoluteMode')}
-              </OSTooltip>
-            </Checkbox>
-            {parametric ? <Button
-              variant='menuconfigpanel_option_button'
+    {mode_trans != 'simple' ?
+      <OSTooltip label={t('Menu.Transformation.tooltips.Topology')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Topology')}</Box>
+          <Box layerStyle='options_4cols' >
+            <Button
+              variant={data_var_to_update.current.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (parametric) {
-                  Object.values(applicationData.drawing_area.sankey.nodes_dict)
-                    .filter(node => node.display.position.type !== 'relative')
-                    .forEach(node => {
-                      if (isPositionOverloaded([node], 'dy')) {
-                        node.resetPositionAttribute('dy')
-                        node.applyPosition()
-                      }
-                    })
+                if (!data_var_to_update.current.includes('addNode')) {
+                  data_var_to_update.current.push('addNode')
+                  menu_configuration.updateComponentApplyLayout()
+                } else {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('addNode'), 1)
+                  menu_configuration.updateComponentApplyLayout()
                 }
-                applicationData.draw()
-              }}>
-              {t('MEP.reInitDY')}
-            </Button> : <></>}
+              }
+              }
+            >{t('Menu.Transformation.addNode')}</Button>
+            <Button
+              variant={data_var_to_update.current.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                if (!data_var_to_update.current.includes('removeNode')) {
+                  data_var_to_update.current.push('removeNode')
+                  menu_configuration.updateComponentApplyLayout()
+                } else {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('removeNode'), 1)
+                  menu_configuration.updateComponentApplyLayout()
+                }
+              }
+              }
+            >{t('Menu.Transformation.removeNode')}</Button>
+            <Button
+              variant={data_var_to_update.current.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                if (!data_var_to_update.current.includes('addFlux')) {
+                  data_var_to_update.current.push('addFlux')
+                  menu_configuration.updateComponentApplyLayout()
+                } else {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('addFlux'), 1)
+                  menu_configuration.updateComponentApplyLayout()
+                }
+              }
+              }>{t('Menu.Transformation.addFlux')}</Button>
+            <Button
+              variant={data_var_to_update.current.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                if (!data_var_to_update.current.includes('removeFlux')) {
+                  data_var_to_update.current.push('removeFlux')
+                  menu_configuration.updateComponentApplyLayout()
+                } else {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('removeFlux'), 1)
+                  menu_configuration.updateComponentApplyLayout()
+                }
+              }
+              }>{t('Menu.Transformation.removeFlux')}</Button>
           </Box>
-          <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-          <Box layerStyle='menuconfigpanel_grid' >
-            <h5><center>{t('MEP.importExport')}</center></h5>
-            <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
-              <Checkbox
-                variant='menuconfigpanel_option_checkbox'
-                isChecked={trade_close}
-                onChange={(evt: { target: { checked: boolean } }) => {
-                  set_trade_close(evt.target.checked)
-                  setTrade(evt.target.checked)
-                  applicationData.drawing_area.arrangeTrade(true)
-                  applicationData.draw()
-                  setForceUpdate(!forceUpdate)
-                }}
-              >
-                <OSTooltip label={t('MEP.tooltips.importExportClose')}>
-                  {t('MEP.importExportClose')}
-                </OSTooltip>
-              </Checkbox>
-              <Checkbox
-                isDisabled={!parametric}
-                variant='menuconfigpanel_option_checkbox'
-                isChecked={!trade_close}
-                onChange={(evt: { target: { checked: boolean } }) => {
-                  set_trade_close(!evt.target.checked)
-                  setTrade(!evt.target.checked)
-                  applicationData.drawing_area.arrangeTrade(true)
-                  applicationData.draw()
-                  setForceUpdate(!forceUpdate)
-                }}
-              >
-                <OSTooltip label={t('MEP.tooltips.importExportAboveBelow')}>
-                  {t('MEP.importExportAboveBelow')}
-                </OSTooltip>
-              </Checkbox>
-            </Box>
-          </Box>
+        </Box></OSTooltip> : <></>}
 
-          <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
-
-          { /* Positionnement des noeuds */}
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            { /* Mise en forme automatique */}
-            <OSTooltip label={t('MEP.tooltips.PA')} >
-              <Button
-                variant={'menuconfigpanel_option_button'}
-                onClick={() => {
-                  applicationData.drawing_area.computeAutoSankey(false)
-                }}>
-                {t('MEP.PA')}
-              </Button>
-            </OSTooltip>{/* Arranger les noeud */}
-            <OSTooltip label={t('MEP.tooltips.AN')}>
-              <Button
-                variant={'menuconfigpanel_option_button'}
-                onClick={() => {
-                  // arrangeNodes(data)
-                  // set_data({ ...data })
-                }}>
-                {t('MEP.AN')}
-              </Button>
-            </OSTooltip>
-
-          </Box>
+    {/* Taille et pos des noeud/flux */}
+    <OSTooltip label={t('Menu.Transformation.tooltips.Geometry')}  >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Geometry')}</Box>
+        <Box layerStyle='options_4cols' >
+          <Button
+            variant={data_var_to_update.current.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => {
+              if (!data_var_to_update.current.includes('posNode')) {
+                data_var_to_update.current.push('posNode')
+                menu_configuration.updateComponentApplyLayout()
+              } else {
+                data_var_to_update.current.splice(data_var_to_update.current.indexOf('posNode'), 1)
+                menu_configuration.updateComponentApplyLayout()
+              }
+            }
+            }>{t('Menu.Transformation.PosNoeud')}</Button>
+          <Button
+            variant={data_var_to_update.current.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => {
+              if (!data_var_to_update.current.includes('posFlux')) {
+                data_var_to_update.current.push('posFlux')
+                menu_configuration.updateComponentApplyLayout()
+              } else {
+                data_var_to_update.current.splice(data_var_to_update.current.indexOf('posFlux'), 1)
+                menu_configuration.updateComponentApplyLayout()
+              }
+            }
+            }> {t('Menu.Transformation.posFlux')}</Button>
         </Box>
-      </TabPanel>
 
-    </TabPanels>
+      </Box>
+    </OSTooltip>
 
-  </Tabs>
+    {/* Valeur des flux */}
+    {mode_trans != 'simple' ?
+      <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
+          <Box layerStyle='options_4cols' >
+            <Button
+              variant={data_var_to_update.current.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                if (!data_var_to_update.current.includes('Values')) {
+                  data_var_to_update.current.push('Values')
+                  // Also need dataTags because we can't only import values without the structur of dataTags
+                  // (but we can import dataTags without values)
+                  if (!data_var_to_update.current.includes('tagData')) {
+                    data_var_to_update.current.push('tagData')
+                  }
+                  menu_configuration.updateComponentApplyLayout()
+                } else {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('Values'), 1)
+                  menu_configuration.updateComponentApplyLayout()
+                }
+              }
+              }
+            >{data_var_to_update.current.includes('Values') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
+          </Box>
+        </Box></OSTooltip> : <></>}
+
+    <OSTooltip label={t('Menu.Transformation.tooltips.Attribut')} >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'><Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
+        <Box layerStyle='options_4cols' >
+          <Button
+            variant={data_var_to_update.current.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => {
+              if (!data_var_to_update.current.includes('attrNode')) {
+                data_var_to_update.current.push('attrNode')
+                menu_configuration.updateComponentApplyLayout()
+
+              } else {
+                data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrNode'), 1)
+                menu_configuration.updateComponentApplyLayout()
+              }
+            }
+            }
+          >{t('Menu.Transformation.attrNode')}</Button>
+          <Button
+            variant={data_var_to_update.current.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => {
+              if (!data_var_to_update.current.includes('attrFlux')) {
+                data_var_to_update.current.push('attrFlux')
+                menu_configuration.updateComponentApplyLayout()
+              } else {
+                data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrFlux'), 1)
+                menu_configuration.updateComponentApplyLayout()
+              }
+            }
+            }
+          >{t('Menu.Transformation.attrFlux')}</Button>
+        </Box>
+      </Box></OSTooltip>
+
+    {/* Etiquette */}
+    {mode_trans == 'expert' ?
+      <OSTooltip label={t('Menu.Transformation.tooltips.Tags')} >
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
+          <Box layerStyle='options_4cols' >
+            <Button
+              variant={data_var_to_update.current.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                if (!data_var_to_update.current.includes('tagNode')) {
+                  data_var_to_update.current.push('tagNode')
+                  menu_configuration.updateComponentApplyLayout()
+                } else {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagNode'), 1)
+                  menu_configuration.updateComponentApplyLayout()
+
+                }
+              }
+              }
+            >{t('Menu.Transformation.tagNode')}</Button>
+            <Button
+              variant={data_var_to_update.current.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                if (!data_var_to_update.current.includes('tagFlux')) {
+                  data_var_to_update.current.push('tagFlux')
+                  menu_configuration.updateComponentApplyLayout()
+                } else {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagFlux'), 1)
+                  menu_configuration.updateComponentApplyLayout()
+                }
+              }
+              }
+            >{t('Menu.Transformation.tagFlux')}</Button>
+            <Button
+              variant={data_var_to_update.current.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                if (!data_var_to_update.current.includes('tagData')) {
+                  data_var_to_update.current.push('tagData')
+                  menu_configuration.updateComponentApplyLayout()
+                } else if (!data_var_to_update.current.includes('Values')) {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagData'), 1)
+                  menu_configuration.updateComponentApplyLayout()
+                }
+              }
+              }
+            >{t('Menu.Transformation.tagData')}</Button>
+          </Box>
+        </Box></OSTooltip> : <></>}
+
+    {/* Aggrégation */}
+    {mode_trans == 'expert' ?
+      <OSTooltip label={t('Menu.Transformation.tooltips.tagLevel')} >
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
+          <Box layerStyle='options_4cols' >
+            <Button
+              variant={data_var_to_update.current.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                if (!data_var_to_update.current.includes('tagLevel')) {
+                  data_var_to_update.current.push('tagLevel')
+                  menu_configuration.updateComponentApplyLayout()
+                } else {
+                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagLevel'), 1)
+                  menu_configuration.updateComponentApplyLayout()
+                }
+              }
+              }
+            >{data_var_to_update.current.includes('tagLevel') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
+          </Box>
+        </Box></OSTooltip> : <></>}
+
+    <OSTooltip label={t('Menu.Transformation.tooltips.attrDrawingArea')} >
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
+        <Box layerStyle='options_4cols' >
+          <Button
+            variant={data_var_to_update.current.includes('attrDrawingArea') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => {
+              if (!data_var_to_update.current.includes('attrDrawingArea')) {
+                data_var_to_update.current.push('attrDrawingArea')
+                menu_configuration.updateComponentApplyLayout()
+              } else {
+                data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrDrawingArea'), 1)
+                menu_configuration.updateComponentApplyLayout()
+              }
+            }
+            }
+          >{data_var_to_update.current.includes('attrDrawingArea') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
+        </Box>
+      </Box></OSTooltip>
+    {mode_trans == 'expert' ? apply_transformation_additional_elements.map((c: JSX.Element, i: number) => {
+      return <React.Fragment key={i}>{c}</React.Fragment>
+    }) : <></>}
+  </Box>
+
   const dragLayout = <MenuDraggable
     dict_hook_ref_setter_show_dialog_components={applicationData.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_apply_layout'}
@@ -1122,7 +817,7 @@ export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicat
       dict_option.current['activate_data_table'] = true
       dict_option.current['data_table_with_all_flux'] = false
     } else {
-      dict_option.current['activate_data_table'] =false
+      dict_option.current['activate_data_table'] = false
       delete dict_option.current['data_table_with_all_flux']
     }
     setUpdate(a => a + 1)
@@ -1133,7 +828,7 @@ export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicat
       dict_option.current['activate_flux_matrix'] = true
       dict_option.current['flux_matrix_with_data'] = false
     } else {
-      dict_option.current['activate_flux_matrix'] =false
+      dict_option.current['activate_flux_matrix'] = false
       delete dict_option.current['flux_matrix_with_data']
     }
     setUpdate(a => a + 1)
@@ -1271,7 +966,7 @@ export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicat
           variant='menuconfigpanel_option_checkbox'
           isChecked={dict_option.current['flux_matrix_with_data'] === true}
           onChange={(evt: { target: { checked: boolean } }) => {
-            dict_option.current['flux_matrix_with_data'] =evt.target.checked
+            dict_option.current['flux_matrix_with_data'] = evt.target.checked
             setUpdate(a => a + 1)
           }}>
           {t('Menu.saveExcel.fluxData')}
@@ -1287,7 +982,7 @@ export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicat
           variant='menuconfigpanel_option_checkbox'
           isChecked={dict_option.current['data_table_with_all_flux'] === true}
           onChange={(evt: { target: { checked: boolean } }) => {
-            dict_option.current['data_table_with_all_flux'] =evt.target.checked
+            dict_option.current['data_table_with_all_flux'] = evt.target.checked
             setUpdate(a => a + 1)
           }}>
           {t('Menu.saveExcel.fluxAllData')}

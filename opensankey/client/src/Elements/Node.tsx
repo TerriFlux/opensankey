@@ -71,7 +71,7 @@ import {
 } from '../types/Utils'
 import {
   Class_NodeStyle, Class_NodeAttribute, default_dx, default_dy, Type_Shape, Type_TextHPos, Type_TextVPos,
-  default_position_type, default_relative_dx, default_relative_dy, NODES_ATTRIBUTES_CONFIG,
+  default_position_type, NODES_ATTRIBUTES_CONFIG,
   default_auto_x
 } from './NodeAttributes'
 import { Class_DrawingArea } from '../types/Types'
@@ -343,10 +343,13 @@ export abstract class ClassTemplate_NodeElement
     
     if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
     if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
-    
+
+
     if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
     json_object['local'] = this._display.attributes.toJSON()
-    
+    if (this._display.position.dx) json_object['local']['dx'] = this._display.position.dx
+    if (this._display.position.dy) json_object['local']['dy'] = this._display.position.dy
+
     if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
     
     // Délégation aux managers
@@ -379,9 +382,7 @@ export abstract class ClassTemplate_NodeElement
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
       this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
-      this._display.position.relative_dx = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dx')
       this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
-      this._display.position.relative_dy = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dy')
     }
     
     this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
@@ -889,46 +890,47 @@ export abstract class ClassTemplate_NodeElement
             // Node is export
             const input_link = this.getFirstInputLink()
             const source_node = input_link!.source
-            this._display.position.x = source_node.position_x + this.position_relative_dx + source_node.getShapeWidthToUse()
-            this._display.position.y = source_node.position_y + this.position_relative_dy + source_node.getShapeHeightToUse()
+            this._display.position.x = source_node.position_x + this.position_dx + source_node.getShapeWidthToUse()
+            this._display.position.y = source_node.position_y + this.position_dy + source_node.getShapeHeightToUse()
           }
           else if (this.hasOutputLinks()) {
             // Node is import
             const output_link = this.getFirstOutputLink()
             const target_node = output_link!.target
-            this._display.position.x = target_node.position_x + this.position_relative_dx - this.getShapeWidthToUse()
-            this._display.position.y = target_node.position_y + this.position_relative_dy
+            this._display.position.x = target_node.position_x + this.position_dx - this.getShapeWidthToUse()
+            this._display.position.y = target_node.position_y + this.position_dy
           }
         }
         // Apply parametric position
         else { // if (this.position_type === 'parametric')
           const process_nodes = this.sankey.visible_nodes_list
-          let same_u = process_nodes.filter(n => n.position_u === this.position_u)
           const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
+          let same_u_import = process_nodes.filter(n => n.output_links_list.length>0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
+          let same_u_export = process_nodes.filter(n => n.input_links_list.length>0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
+          let same_u_other = process_nodes.filter(n => !n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
           if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
             // Importations
-            const firstNonEchangeNodeBelow = same_u.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
-            same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
-            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            const firstNonEchangeNodeBelow = same_u_other.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
+            //same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
+            const nodeAbove = same_u_import[same_u_import.indexOf(this) - 1]
             if (nodeAbove) {
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
             } else {
               // position of the first import node
-              this._display.position.y = 200
+              this._display.position.y = firstNonEchangeNodeBelow.position_y - 100 - this.getShapeHeightToUse()- (same_u_import.length-1)*this.position_dy
             }
-            if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
-              // The import nodes must be above the rest of the diagram. It is pushed downward.
-              const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
-              this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
-              this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.draw())
-            }
+            // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
+            //   // The import nodes must be above the rest of the diagram. It is pushed downward.
+            //   const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
+            //   this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
+            //   this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.draw())
+            // }
           }
           else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
             // Exportations
-            same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.input_links_list.length > 0)
-            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            const nodeAbove = same_u_export[same_u_export.indexOf(this) - 1]
             if (nodeAbove) {
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
@@ -942,22 +944,21 @@ export abstract class ClassTemplate_NodeElement
             }
           }
           else {
-            const nodeAbove = same_u[same_u.indexOf(this) - 1]
+            const nodeAbove = same_u_other[same_u_other.indexOf(this) - 1]
             if (nodeAbove) {
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
             }
             if (this.position_auto_x) {
-              this._display.position.x = this._display.position.u * (this.sankey.drawing_area as Class_DrawingArea).horizontal_spacing
+              this._display.position.x = this._display.position.u * this._display.position.dx!
             }
           }
         }
       }
       
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
-      this.input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag)).forEach(l => l.source.applyPosition())
-      this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag)).forEach(l => l.target.applyPosition())
+      this.input_links_list.filter(l => l.source.position_type == 'relative').forEach(l => l.source.applyPosition())
+      this.output_links_list.filter(l => l.target.position_type == 'relative').forEach(l => l.target.applyPosition())
       
       super._applyPosition()
     }
@@ -1521,9 +1522,9 @@ export abstract class ClassTemplate_NodeElement
   }
 
   public get name_label() {
-    if (this.drawing_area.application_data.node_label_separator !== '') {
-      const splitted_label = this._name.split(this.drawing_area.application_data.node_label_separator)
-      return (splitted_label.length > 1 && this.drawing_area.application_data.node_label_separator_part == 'after') ? splitted_label[splitted_label.length - 1] : splitted_label[0]
+    if (this.name_label_separator !== '') {
+      const splitted_label = this._name.split(this.name_label_separator)
+      return (splitted_label.length > 1 && this.name_label_separator_part == 'after') ? splitted_label[splitted_label.length - 1] : splitted_label[0]
     }
     return this._name
   }
@@ -1698,38 +1699,6 @@ export abstract class ClassTemplate_NodeElement
     this._display.position.dy = _
   }
 
-  public get position_relative_dx() {
-    if (this._display.position.relative_dx !== undefined) {
-      return this._display.position.relative_dx
-    }
-    const valueOfStyle = this.getStyleWithPositionAttr('relative_dx')
-    if (valueOfStyle.position.relative_dx !== undefined) {
-      return valueOfStyle.position.relative_dx
-    }
-    return default_relative_dx
-  }
-
-  public set position_relative_dx(_: number) {
-    this._display.position.relative_dx = _
-    this.applyPosition()
-  }
-
-  public get position_relative_dy() {
-    if (this._display.position.relative_dy !== undefined) {
-      return this._display.position.relative_dy
-    }
-    const valueOfStyle = this.getStyleWithPositionAttr('relative_dy')
-    if (valueOfStyle.position.relative_dy !== undefined) {
-      return valueOfStyle.position.relative_dy
-    }
-    return default_relative_dy
-  }
-
-  public set position_relative_dy(_: number) {
-    this._display.position.relative_dy = _
-    this.applyPosition()
-  }
-
   public get position_auto_x() {
     if (this._display.position.auto_x !== undefined) {
       return this._display.position.auto_x
@@ -1852,6 +1821,17 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_background_color() { return this.getStyleProperty('name_label_background_color') as string }
   public set name_label_background_color(_: string) { this._display.attributes.name_label_background_color = _; this.drawNameLabel() }
 
+  public get name_label_separator() { return this.getStyleProperty('name_label_separator') as string}
+  public set name_label_separator(_: string) {
+    this._display.attributes.name_label_separator = _
+    this.drawNameLabel()
+  }
+  public get name_label_separator_part() { return this.getStyleProperty('name_label_separator_part') as "after" | "before"}
+  public set name_label_separator_part(_:"after" | "before") {
+    this._display.attributes.name_label_separator_part = _
+    this.drawNameLabel()
+  }
+  
   // VALUE LABEL ATTRIBUTE GETTERS/SETTERS =============================================
 
   public get value_label_is_visible() { return this.getStyleProperty('value_label_is_visible') as boolean }

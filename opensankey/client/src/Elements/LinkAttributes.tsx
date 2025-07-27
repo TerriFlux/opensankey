@@ -57,30 +57,30 @@ export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'dragged' | 'top' | 'middle' | 'bottom'
 
-export type Type_customisable_flow_style_attr=
-  'shape_local_link_scale'|'shape_is_curved'|'shape_shape'|'shape_curvature'|'shape_is_recycling'|'shape_is_structure'|
-  'shape_orientation'|'shape_starting_curve'|'shape_ending_curve'|'shape_starting_tangeant'|'shape_ending_tangeant'|
-  'shape_middle_recycling'|'shape_is_arrow'|'shape_arrow_size'|'shape_is_dashed'|'shape_color'|'shape_color_rule'|
-  'shape_opacity'|'value_label_is_visible'|'value_label_font_family'|'value_label_font_size'|'value_label_uppercase'|
-  'value_label_bold'|'value_label_italic'|'value_label_color'|'value_label_horiz'|'value_label_vert'|'value_label_on_path'|
-  'value_label_pos_auto'|'value_label_percent_input'|'value_label_percent_output'|'value_label_scientific_notation'|
-  'value_label_significant_digits'|'value_label_nb_significant_digits'|'value_label_custom_digit'|'value_label_nb_digit'|
-  'value_label_unit_visible'|'value_label_unit'|'value_label_unit_factor'|'name_label_is_visible'|'name_label_font_family'|
-  'name_label_font_size'|'name_label_uppercase'|'name_label_bold'|'name_label_italic'|'name_label_color'|'name_label_horiz'|
-  'name_label_vert'|'name_label_on_path'|'name_label_pos_auto'
+export type Type_customisable_flow_style_attr =
+  'shape_local_link_scale' | 'shape_is_curved' | 'shape_shape' | 'shape_curvature' | 'shape_is_recycling' | 'shape_is_structure' |
+  'shape_orientation' | 'shape_starting_curve' | 'shape_ending_curve' | 'shape_starting_tangeant' | 'shape_ending_tangeant' |
+  'shape_middle_recycling' | 'shape_is_arrow' | 'shape_arrow_size' | 'shape_is_dashed' | 'shape_color' | 'shape_color_rule' |
+  'shape_opacity' | 'value_label_is_visible' | 'value_label_font_family' | 'value_label_font_size' | 'value_label_uppercase' |
+  'value_label_bold' | 'value_label_italic' | 'value_label_color' | 'value_label_horiz' | 'value_label_vert' | 'value_label_on_path' |
+  'value_label_pos_auto' | 'value_label_percent_input' | 'value_label_percent_output' | 'value_label_scientific_notation' |
+  'value_label_significant_digits' | 'value_label_nb_significant_digits' | 'value_label_custom_digit' | 'value_label_nb_digit' |
+  'value_label_unit_visible' | 'value_label_unit' | 'value_label_unit_factor' | 'name_label_is_visible' | 'name_label_font_family' |
+  'name_label_font_size' | 'name_label_uppercase' | 'name_label_bold' | 'name_label_italic' | 'name_label_color' | 'name_label_horiz' |
+  'name_label_vert' | 'name_label_on_path' | 'name_label_pos_auto'
 
 // CONFIGURATION CENTRALISÉE - SOURCE UNIQUE DE VÉRITÉ
 export const LINKS_ATTRIBUTES_CONFIG = {
   // Scale
   shape_local_link_scale: { default: undefined as number | undefined, type: (() => undefined) as (() => number | undefined), callback: 'updateLinkAndSourceTarget' },
-  
+
   // Shape type
   shape_is_curved: { default: true, type: (() => true) as (() => boolean) },
   shape_shape: { default: 'bezier_path', type: (() => 'bezier_path') as (() => string) },
   shape_curvature: { default: 0.5, type: (() => 0.5) as (() => number) },
   shape_is_recycling: { default: false, type: (() => false) as (() => boolean) },
   shape_is_structure: { default: false, type: (() => false) as (() => boolean) },
-  
+
   // Shape orientation
   shape_orientation: { default: 'hh' as Type_Orientation, type: (() => 'hh') as (() => Type_Orientation), callback: 'updateLinkAndSourceTarget', setter: 'customShapeOrientation' },
   shape_starting_curve: { default: 0.05, type: (() => 0.050) as (() => number), setter: 'customStartingCurve' },
@@ -88,17 +88,17 @@ export const LINKS_ATTRIBUTES_CONFIG = {
   shape_starting_tangeant: { default: 0.25, type: (() => 0.25) as (() => number), setter: 'customStartingTangeant' },
   shape_ending_tangeant: { default: 0.25, type: (() => 0.25) as (() => number), setter: 'customEndingTangeant' },
   shape_middle_recycling: { default: 100, type: (() => 100) as (() => number) },
-  
+
   // Shape's arrow attributes
   shape_is_arrow: { default: true, type: (() => true) as (() => boolean) },
   shape_arrow_size: { default: 10, type: (() => 10) as (() => number) },
-  
+
   // Shape's Filling attributes
   shape_is_dashed: { default: false, type: (() => false) as (() => boolean) },
   shape_color: { default: default_element_color, type: (() => default_element_color) as (() => string) },
   shape_color_rule: { default: default_element_color_source, type: (() => default_element_color_source) as (() => string) },
   shape_opacity: { default: 0.85, type: (() => 0.85) as (() => number) },
-  
+
   // Value label attributes
   value_label_is_visible: { default: true, type: (() => true) as (() => boolean) },
   value_label_font_family: { default: default_font, type: (() => default_font) as (() => string) },
@@ -121,7 +121,7 @@ export const LINKS_ATTRIBUTES_CONFIG = {
   value_label_unit_visible: { default: false, type: (() => false) as (() => boolean) },
   value_label_unit: { default: '', type: (() => '') as (() => string) },
   value_label_unit_factor: { default: 1, type: (() => 1) as (() => number) },
-  
+
   // Name label attributes
   name_label_is_visible: { default: true, type: (() => true) as (() => boolean) },
   name_label_font_family: { default: default_font, type: (() => default_font) as (() => string) },
@@ -199,7 +199,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   name_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_on_path']['type']>
   name_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']>
 
-  constructor() { 
+  constructor() {
     super()
     this.createDynamicProperties()
   }
@@ -228,7 +228,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     })
   }
 
-  public delete_attribute(k : keyof typeof LINKS_ATTRIBUTES_CONFIG) {
+  public delete_attribute(k: keyof typeof LINKS_ATTRIBUTES_CONFIG) {
     delete this._attributes[k]
   }
 
@@ -416,7 +416,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
         'name_label_on_path': 'name_label_on_path',
         'name_label_pos_auto': 'name_label_pos_auto'
       }
-      
+
       Object.entries(legacyMapping).forEach(([oldKey, newKey]) => {
         if (json_local_object[oldKey] !== undefined) {
           this._attributes[newKey as AttributeKey] = json_local_object[oldKey]
@@ -450,7 +450,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     }
 
     Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-      if (json_local_object[jsonKey] !== undefined ) {
+      if (json_local_object[jsonKey] !== undefined) {
         this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
       }
     })
@@ -472,7 +472,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   // Méthodes abstraites
   protected update() { }
   protected updateLinkAndSourceTarget() { }
-  
+
   public get id() { return 'undefined' }
   public get name(): string { return 'none' }
 }
@@ -528,6 +528,32 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     // this._customisable_attribute = getJSONFromJSON(json_local_object, 'customisable_props', this._customisable_attribute) as typeof this._customisable_attribute
     // Mapping inverse pour fromJSON
     const fromJsonMapping: { [key: string]: string } = {
+      'label_visible': 'value_label_is_visible',
+      'font_family': 'value_label_font_family',
+      'label_font_size': 'value_label_font_size',
+      'text_color': 'value_label_color',
+      'label_position': 'value_label_horiz',
+      'orthogonal_label_position': 'value_label_vert',
+      'label_on_path': 'value_label_on_path',
+      'label_pos_auto': 'value_label_pos_auto',
+      'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_significant_digits',
+      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'custom_digit': 'value_label_custom_digit',
+      'nb_digit': 'value_label_nb_digit',
+      'label_unit_visible': 'value_label_unit_visible',
+      'label_unit': 'value_label_unit',
+      'label_unit_factor': 'value_label_unit_factor',
+      'font_size': 'name_label_font_size',
+      'uppercase': 'name_label_uppercase',
+      'bold': 'name_label_bold',
+      'italic': 'name_label_italic',
+      'label_color': 'name_label_color',
+      'label_horiz': 'name_label_horiz',
+      'label_vert': 'name_label_vert',
+      'name_label_on_path': 'name_label_on_path',
+      'name_label_pos_auto': 'name_label_pos_auto',
+      // end of legacy 
       'user_scale': 'shape_local_link_scale',
       'curved': 'shape_is_curved',
       'curvature': 'shape_curvature',
@@ -564,7 +590,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   }
 
   public toJSON(): Type_JSON {
-    const json_object = {} as Type_JSON  
+    const json_object = {} as Type_JSON
 
     // Mapping JSON pour éviter la répétition
     const jsonMapping: { [key: string]: string } = {
