@@ -112,8 +112,6 @@ export type SankeyNodeStyle = {
   label_horiz_shift: number,
   name_label_horiz_shift: number,
 
-  relative_dx: number
-  relative_dy: number
   position: 'absolute' | 'relative',
   dy: number
 }
@@ -351,10 +349,6 @@ export type applicationDataType = {
   data: SankeyData,
   set_data: (_: SankeyData) => void,
   get_default_data: OSGetDefaultData,
-  // convert_data: ConvertDataFuncType,
-  // display_nodes: {[_: string]: SankeyNode},
-  // display_links: {[_: string]: SankeyLink},
-  // min_link_thickness: number,
   dataVarToUpdate: MutableRefObject<string[]>,
   setDiagram: FType_SetDiagram,
   new_data: Type_GenericApplicationData
@@ -502,8 +496,6 @@ export type layout_type = {
 
 export type GetLinkValueFuncType = (data: SankeyData, idLink: string, up?: boolean) => SankeyLinkValue
 
-export type DefaultSankeyDataFuncType = () => SankeyData
-
 export type DefaultNodeFuncType = (data: SankeyData) => SankeyNode
 
 export type DefaultNodeStyleFuncType = () => SankeyNodeStyle
@@ -543,17 +535,6 @@ export type convert_booleanFType = (
 export type compute_flux_maxFType = (
   data: SankeyData
 ) => void
-
-export type ConvertDataFuncType = (
-  applicationData: applicationDataType,
-  DefaultSankeyData: () => SankeyData
-) => void
-
-// export type complete_sankey_dataFunctType = (
-//   data: SankeyData, DefaultSankeyData: () => SankeyData,
-//   DefaultNode: (data: SankeyData) => SankeyNode,
-//   DefaultLink: (data: SankeyData) => SankeyLink
-// ) => void
 
 export type convert_nodesFuncType = (data: SankeyData) => void
 

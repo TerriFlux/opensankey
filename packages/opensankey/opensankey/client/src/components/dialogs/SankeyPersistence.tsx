@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { FunctionComponent, useEffect, useState, } from 'react'
-
+import * as d3 from 'd3'
 import FileSaver from 'file-saver'
 
 import {
@@ -51,7 +51,7 @@ import type {
   FType_UploadExemple,
   FType_JSONtoExcel
 } from './types/SankeyPersistenceTypes'
-import type { Type_JSON } from '../../types/Utils'
+import { GetRandomInt, list_palette_color, type Type_JSON } from '../../types/Utils'
 import type { Type_GenericApplicationData } from '../../types/Types'
 import type { FCType_SankeyLoad } from '../../types/FunctionTypes'
 
@@ -457,6 +457,16 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
           n.style = [new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
         }
       })
+      new_data.drawing_area.legend.masked = false
+      if (new_data.drawing_area.sankey.flux_taggs_list.length > 0) {
+        new_data.drawing_area.sankey.flux_taggs_list[0].show_legend = true
+      } else if (new_data.drawing_area.sankey.node_taggs_list.length == 0) {
+        // Default color + auto reorg of links
+        const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
+        new_data.drawing_area.sankey.visible_nodes_list.forEach((n, i, a) => {
+          new_data.drawing_area.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
+        })
+      }
     })
   // Case 1 : Apply extracted layout if present -> contains positions
   if (data_as_json['layout']) {

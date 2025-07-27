@@ -251,23 +251,6 @@ export abstract class ClassTemplate_ApplicationData
   private _url_prefix: string = '/opensankey/'
 
   /**
-   * Variable to modify node name label displayed,
-   * it can contain separator (special caracter) that split label between what we want tot display and what not
-   * @private
-   * @memberof ClassTemplate_ApplicationData
-   */
-  private _node_label_separator = '-'
-
-  /**
-   * Variable to modify node name label displayed,
-   * it can contain separator (special caracter) that split label between what we want tot display and what not
-   * @private
-   * @type {('before' | 'after')}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  private _node_label_separator_part: 'before' | 'after' = 'before'
-
-  /**
    * Varaible to save language selected
    * @private
    * @type {(string | undefined)}
@@ -409,8 +392,6 @@ export abstract class ClassTemplate_ApplicationData
     this._drawing_area = this.createNewDrawingArea()
 
     this._drawing_area.bypass_redraws = by_pass_redraw
-    this._node_label_separator = '-'
-    this._node_label_separator_part = 'before'
 
     // Reset Class_DataHistory
     this._history = new Class_ApplicationHistory(this._menu_configuration)
@@ -584,9 +565,6 @@ export abstract class ClassTemplate_ApplicationData
     // App language
     if (this._language !== undefined)
       json_object['language'] = this._language
-    // Node label separator attribute
-    if (this._node_label_separator != ' - ') json_object['node_label_separator'] = this._node_label_separator
-    if (this._node_label_separator_part != 'before' ) json_object['node_label_separator_part'] = this._node_label_separator_part
     //File name
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
 
@@ -687,8 +665,12 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
-    this._drawing_area.splitTrade()
-    this._drawing_area.arrangeTrade(true)
+    const echangeTag = this._drawing_area.sankey.node_taggs_dict['type de noeud'] ? this._drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const exchanges_nodes = this._drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!))
+    if (exchanges_nodes.length > 0 && (exchanges_nodes[0].input_links_list.length>1 || exchanges_nodes[0].output_links_list.length>1)) {
+      this._drawing_area.nodePositioning.splitTrade()
+    }
+    this._drawing_area.nodePositioning.arrangeTrade(true)
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 
@@ -762,7 +744,7 @@ export abstract class ClassTemplate_ApplicationData
   public computeAutoFullSankey() {
     this.sendWaitingToast(
       () => {
-        this.drawing_area.computeAutoSankey(true)
+        this.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
       },
       {
         success: {
@@ -1225,12 +1207,6 @@ export abstract class ClassTemplate_ApplicationData
 
   public get app_name(): string { return this._app_name }
   public set app_name(value: string) { this._app_name = value }
-
-  public get node_label_separator() { return this._node_label_separator }
-  public set node_label_separator(_: string) { this._node_label_separator = _ }
-
-  public get node_label_separator_part() { return this._node_label_separator_part }
-  public set node_label_separator_part(_: 'before' | 'after') { this._node_label_separator_part = _ }
 
   public get processFunction(): FType_ProcessFunctions { return this._processFunction }
 

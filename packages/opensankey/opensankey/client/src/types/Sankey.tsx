@@ -957,8 +957,8 @@ export abstract class ClassTemplate_Sankey
             id: 'NodeImportCloseStyle',
             config: {},
             position: {
-              'relative_dx': -100,
-              'relative_dy': -50
+              'dx': -100,
+              'dy': -50
             }
           },
           {
@@ -969,14 +969,17 @@ export abstract class ClassTemplate_Sankey
               'value_label_horiz' : 'left',
               'value_label_horiz_shift' : 40,
             },
-            position: {}
+            position: {
+              'dx': -200,
+              'dy': 20
+            }
           },
           {
             id: 'NodeExportCloseStyle',
             config: {},
             position: {
-              'relative_dx': 100,
-              'relative_dy': 50
+              'dx': 100,
+              'dy': 50
             }
           },
           {
@@ -988,7 +991,10 @@ export abstract class ClassTemplate_Sankey
               'value_label_horiz_shift' : -40,
 
             },
-            position: {}
+            position: {
+              'dx': 200,
+              'dy': 20
+            }
           }
         ]
         nodeStyleConfigs.forEach(({ id, config, position }) => {
@@ -1293,6 +1299,37 @@ export abstract class ClassTemplate_Sankey
   }
 
   // Nodes related ----------------------------------------------------------------------
+  /**
+   * Create and add a node for this Sankey
+   * @param {string} id
+   * @param {string} name
+   * @return {Class_Node}
+   * @memberof ClassTemplate_Sankey
+   */
+  public addNewNodeWithName(name: string): Type_GenericNodeElement {
+      // Fonction pour normaliser les caractères accentués
+  const normalizeAccents = (str: string) => {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  };
+    const id = normalizeAccents(name)
+    .toLowerCase()                    // Convertir en minuscules
+    .replace(/[^a-z0-9 ]/g, '')      // Garder seulement lettres, chiffres et espaces
+    .split(' ')                      // Séparer par les espaces
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitaliser chaque mot
+    .join('');
+    if (!this._nodes[id]) {
+      // Create node
+      const node = this.createNewNode(id, name)
+      // Set node to default position
+      node.initDefaultPosXY()
+      // Update registry of nodes
+      this._addNode(node)
+      return node
+    }
+    else {
+      return this.addNewNode(id + '_0', name + '_0')
+    }
+  }
 
   /**
    * Create and add a node for this Sankey
@@ -2024,7 +2061,7 @@ export abstract class ClassTemplate_Sankey
         return n2.position_v - n1.position_v
       }
     })
-    const all_nodes = [...sorted_nodes, ...import_nodes, ...export_nodes]
+    const all_nodes = [...import_nodes, ...sorted_nodes,  ...export_nodes]
     this._nodes = Object.assign({}, ...all_nodes.map((n) => ({ [n.id]: n })))
   }
 

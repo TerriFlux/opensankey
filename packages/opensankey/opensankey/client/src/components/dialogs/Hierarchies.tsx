@@ -112,7 +112,7 @@ const finalizeOperation = (
   new_data: Type_GenericApplicationData,
   nodes: Type_GenericNodeElement[]
 ) => {
-  new_data.drawing_area.computeParametrization()
+  new_data.drawing_area.nodePositioning.computeParametrization()
   nodes.forEach(n => n.resetPositionAttribute('dy'))
   new_data.drawing_area.draw()
 
@@ -252,9 +252,9 @@ const updateNodePositioning = (
     .forEach(n2 => {
       n2.position_u += expand_left ? -1 : 1
     })
-
+  const vertical_spacing = contextualised_node.position_dy!
   // Calcul de la position Y
-  const total_height = calculateTotalHeight(nodes, new_data.drawing_area.vertical_spacing)
+  const total_height = calculateTotalHeight(nodes, vertical_spacing)
   const shift_y = total_height / 2
 
   nodes.forEach((n, i) => {
@@ -280,9 +280,9 @@ const updateAggregationExpansionPositioning = (
     .forEach(n2 => n2.position_u += config.expand_left ? -1 : 1)
 
   aggregateNode.position_u = config.contextualised_node.position_u + (config.expand_left ? -1 : 1)
-
+  const vertical_spacing = aggregateNode.position_dy!
   // Calcul de la position Y
-  const total_height = calculateTotalHeight(config.nodes_to_agregate as Type_GenericNodeElement[], new_data.drawing_area.vertical_spacing)
+  const total_height = calculateTotalHeight(config.nodes_to_agregate as Type_GenericNodeElement[], vertical_spacing)
   const center = total_height / 2
 
   if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type === 'parametric') {
@@ -685,11 +685,11 @@ export const disaggregate = (
   if (!parent_dim) {
     return
   }
-
+  const vertical_spacing = aggregateNode.position_dy!
   const current_height = aggregateNode.getShapeHeightToUse()
   parent_dim.setForceToShowChildren()
   const new_nodes = parent_dim.children
-  const total_height = calculateTotalHeight(new_nodes as Type_GenericNodeElement[], new_data.drawing_area.vertical_spacing)
+  const total_height = calculateTotalHeight(new_nodes as Type_GenericNodeElement[], vertical_spacing)
   const shift_y = total_height / 2
 
   new_nodes.forEach((n, i) => {
@@ -802,7 +802,7 @@ export const contract = (
     contractLegacy(new_data, contextualised_node)
   }*/
 
-  new_data.drawing_area.computeParametrization()
+  new_data.drawing_area.nodePositioning.computeParametrization()
   new_data.drawing_area.draw()
 }
 

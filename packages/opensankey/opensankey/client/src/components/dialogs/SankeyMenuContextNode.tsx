@@ -400,6 +400,8 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
     })
     closeContextMenu()
   }
+
+
   // JSX Components ---------------------------------------------------------------------
 
   // Menu to change some pararmeter concerning the style of the node

@@ -749,8 +749,8 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
 
   const content = <Box layerStyle='menuconfigpanel_grid'>
     {selection_link}
+    {content_style}
     {elements.length > 0 ? <>
-      {content_style}
       {content_config}</> : <></>}
   </Box>
 

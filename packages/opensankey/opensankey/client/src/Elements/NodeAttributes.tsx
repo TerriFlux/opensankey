@@ -42,10 +42,8 @@ import { Type_AnyNodeElement } from './Node'
 
 export const default_position_type = 'absolute'
 export const default_auto_x = false
-export const default_dx = 100
+export const default_dx = 200
 export const default_dy = 50
-export const default_relative_dx = 100
-export const default_relative_dy = 50
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -60,6 +58,7 @@ export type Type_customisable_node_style_attr =
   'name_label_font_family' | 'name_label_font_size' | 'name_label_uppercase' | 'name_label_bold' | 'name_label_italic' | 
   'name_label_color' | 'name_label_horiz' | 'name_label_vert' | 'name_label_background' | 'name_label_background_color' | 
   'name_label_horiz_shift' | 'name_label_vert_shift' | 'name_label_box_width' | 'value_label_is_visible' | 
+  'name_label_separator' | 'name_label_separator_part' |
   'value_label_font_family' | 'value_label_font_size' | 'value_label_uppercase' | 'value_label_bold' | 'value_label_italic' | 
   'value_label_color' | 'value_label_horiz' | 'value_label_vert' | 'value_label_background' | 'value_label_background_color' | 
   'value_label_horiz_shift' | 'value_label_vert_shift' | 'value_label_box_width' | 'value_label_scientific_notation' | 
@@ -94,7 +93,9 @@ export const NODES_ATTRIBUTES_CONFIG = {
   name_label_horiz_shift: { default: 0, type: (() => 0) as (() => number) },
   name_label_vert_shift: { default: 0, type: (() => 0) as (() => number) },
   name_label_box_width: { default: 150, type: (() => 150) as (() => number) },
-  
+  name_label_separator: { default: ' - ', type: (() => ' - ') as (() => string) },
+  name_label_separator_part: { default: 'after' as 'before' | 'after', type: (() => 'after') as (() => 'before' | 'after') },
+
   // Value label attributes
   value_label_is_visible: { default: false, type: (() => false) as (() => boolean) },
   value_label_font_family: { default: default_font, type: (() => default_font) as (() => string) },
@@ -155,6 +156,8 @@ export class Class_NodeAttribute {
   name_label_horiz_shift!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_horiz_shift']['type']>
   name_label_vert_shift!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_vert_shift']['type']>
   name_label_box_width!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_box_width']['type']>
+  name_label_separator!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_separator']['type']>
+  name_label_separator_part!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['name_label_separator_part']['type']>
   value_label_is_visible!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_is_visible']['type']>
   value_label_font_family!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_font_family']['type']>
   value_label_font_size!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_font_size']['type']>
@@ -358,9 +361,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
         u: 0,
         v: 0,
         dx: default_dx,
-        dy: default_dy,
-        relative_dx: default_relative_dx,
-        relative_dy: default_relative_dy
+        dy: default_dy
       }
 
       Object.entries(NODES_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
@@ -391,8 +392,6 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public fromJSON(json_local_object: Type_JSON): void {
     super.fromJSON(json_local_object)
     this._position.type = getStringOrUndefinedFromJSON(json_local_object, 'position') as Type_Position
-    this._position.relative_dx = getNumberFromJSON(json_local_object, 'relative_dx', default_relative_dx)
-    this._position.relative_dy = getNumberFromJSON(json_local_object, 'relative_dy', default_relative_dy)
     this._position.dx = getNumberFromJSON(json_local_object, 'dx', default_dx)
     this._position.dy = getNumberFromJSON(json_local_object, 'dy', default_dy)
 
@@ -414,14 +413,9 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public toJSON(): Type_JSON {
     const json_object = {} as Type_JSON
     if (this.position.type) json_object['position'] = this.position.type
-    // if (this.position.x) json_object['position'] = this.position.x
-    // if (this.position.y) json_object['position'] = this.position.y
-    // if (this.position.u) json_object['position'] = this.position.u
-    // if (this.position.v) json_object['position'] = this.position.v
-    // if (this.position.dx) json_object['position'] = this.position.dx
-    // if (this.position.dy) json_object['position'] = this.position.dy
-    if (this.position.relative_dx) json_object['relative_dx'] = this.position.relative_dx
-    if (this.position.relative_dy) json_object['relative_dy'] = this.position.relative_dy
+    if (this.position.dx) json_object['dx'] = this.position.dx
+    if (this.position.dy) json_object['dy'] = this.position.dy
+
     if (this.position.auto_x) json_object['auto_x'] = this.position.auto_x
 
     // Mapping JSON pour éviter la répétition
@@ -460,4 +454,10 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public get customisable_attribute() { return this._customisable_attribute }
   public get position() { return this._position }
   public set position(value: Type_ElementPositionOptionnal) { this._position = value }
+  public get position_type() { return this._position.type }
+  public set position_type(_) { this._position.type = _ }
+  public get position_dx() { return this._position.dx }
+  public set position_dx(_) { this._position.dx = _ }
+  public get position_dy() { return this._position.dy }
+  public set position_dy(_) { this._position.dy = _ }
 }

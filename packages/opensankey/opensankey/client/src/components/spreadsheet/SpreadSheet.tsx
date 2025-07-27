@@ -66,16 +66,6 @@ interface IType_SpreadSheetFlux {
   source: string // Source node of the flow
   target: string // Target node of the flow
   value?: number // Value of the flow (optional)
-  type?: string
-}
-
-const type_map={
-  'value':'v',
-  'ratio_input':'%s',
-  'ratio_output':'%d',
-  'ratio_source_parent':'%sp',
-  'ratio_target_parent':'%dp'
-  // 'unit_conversion':'uc'
 }
 
 // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
@@ -86,12 +76,11 @@ const getFluxFromSankey = (new_data: Type_GenericApplicationData): IType_SpreadS
         id: l.id, //Link id
         source: l.source.name, // Get source node name
         target: l.target.name, // Get target node name
-        value: l.value?.valueData as number|undefined,  // Get the value of the link
-        type: l.value? type_map[l.value.value_option]:undefined
+        value: l.value?.valueData as number|undefined  // Get the value of the link
       }
     })
   // Add an empty row for new flux input
-  a.push({ id: 'empty', source: '', target: '',type: 'v' })
+  a.push({ id: 'empty', source: '', target: '' })
   return a
 }
 
@@ -107,8 +96,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     cells: [
       { type: 'header', text: new_data.t('Flux.src') },
       { type: 'header', text: new_data.t('Flux.trgt') },
-      { type: 'header', text: new_data.t('Flux.value') },
-      { type: 'header', text: new_data.t('Flux.type') },
+      { type: 'header', text: new_data.t('Flux.value') }
     ]
   }
 
@@ -121,8 +109,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         cells: [
           { type: 'text', text: flux.source },
           { type: 'text', text: flux.target },
-          { type: 'number', value: flux.value as number  },
-          { type: 'text', text: flux.type as string }
+          { type: 'number', value: flux.value as number }
         ]
       }
     })
@@ -136,8 +123,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   const [columns, setColumns] = useState<Column[]>([
     { columnId: 'source', width: innerW * 0.050, resizable: true },
     { columnId: 'target', width: innerW * 0.050, resizable: true },
-    { columnId: 'value', width: innerW * 0.045, resizable: true },
-    { columnId: 'type', width: innerW * 0.010, resizable: true }
+    { columnId: 'value', width: innerW * 0.045, resizable: true }
   ])
 
   // Map node and link names to their IDs for quick lookups
@@ -155,11 +141,10 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
   // Function to add a new node to the Sankey diagram
   const addNode = (name: string) => {
-    const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
+    const new_node = new_data.drawing_area.sankey.addNewNodeWithName(name)
     new_node.name = name // Set the name of the new node
     return new_node
   }
-
 
   type typeCreatedNode = { name: string, id: string }
   type typeCreatedLink = { id: string; idSrc: string, idTrgt: string }
@@ -229,11 +214,9 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   }
 
   const redraw = () => {
-    new_data.drawing_area.computeAutoSankey(true)
+    new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
     new_data.draw()
   }
-
-
 
   // Functions called in onCellChanges that can be undone ===============================================
 
@@ -300,7 +283,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       setSpreadSheetFlux([...spreadSheetFlux])//Update Table
       menu_configuration.updateComponentRelatedToLinksData()
     }
-
   }
 
   /**
@@ -333,7 +315,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         }
       })
 
-
       // Create undo of original function ----------------------------
       const undoNewFlux = () => {
         // Delete created elements 
@@ -351,13 +332,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         } else {
           setSpreadSheetFlux([...spreadSheetFlux])//Update Table
         }
-
       }
 
       // Create redo of original function ----------------------------
       const redoNewFlux = () => {
         if (createdElements.length > 0) {
-
           // Delete created elements 
           createdElements.forEach(line => {
             line[1].forEach(n => {
@@ -378,7 +357,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       new_data.history.saveRedo(redoNewFlux)
     }
   }
-
 
   /**
    * Function called in onChanges of Spreadsheet to change source/target of existing links,
@@ -419,7 +397,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         menu_configuration.updateComponentRelatedToLinksData()
       })
 
-
       // Create undo of original function ----------------------------
       const undoModifyFlux = () => {
         const dict_l = new_data.drawing_area.sankey.links_dict
@@ -457,7 +434,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         const dict_n = new_data.drawing_area.sankey.nodes_dict
 
         Object.entries(dict_new_id).forEach(ent_l => {
-
           if (ent_l[1].source !== undefined) {
             const prevSrc = dict_l[ent_l[0]].source
             dict_l[ent_l[0]].source = dict_n[ent_l[1].source]
@@ -552,7 +528,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       new_data.history.saveRedo(redoChangeNodeName)
     }
   }
-
 
   // Render the ReactGrid component
   return <ReactGrid
@@ -683,7 +658,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
               // Post-paste functions ====================================
               if (redraw) {
-                new_data.drawing_area.computeAutoSankey(true)
+                new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
                 new_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()
               }
@@ -711,7 +686,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
               const redoPaste = () => {
                 new_data.drawing_area.fromJSON(nextSankey, false)
-                new_data.drawing_area.computeAutoSankey(true)
+                new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
                 new_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()
               }
