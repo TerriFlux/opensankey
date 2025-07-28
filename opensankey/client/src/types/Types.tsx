@@ -194,10 +194,6 @@ export class Class_Sankey
     return style
   }
 
-  protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
-    return new Class_NodeStyle(id, name, is_deletable)
-  }
-
   public get default_link_style() {
     return this._link_styles[default_style_id]
   }

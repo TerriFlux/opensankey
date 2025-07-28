@@ -59,7 +59,7 @@ import {
 import { ClassTemplate_GhostLinkElement } from '../Elements/ClassTemplate_GhostLinkElement'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { ClassTemplate_ZoneSelection } from '../Elements/SelectionZone'
-import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
+import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
 import {
   ClassAbstract_DrawingArea,
   ClassAbstract_ApplicationData,
@@ -507,7 +507,8 @@ export abstract class ClassTemplate_DrawingArea
       (Number(version) < 0.9)
     ) {
       console.log('convert_data_legacy')
-      convert_data_legacy(json_object) // FIXME
+      convert_data_legacy(json_object) 
+      this.sankey.link_styles_dict['default'].shape_color_rule = 'auto'
       console.log(json_object.version)
     }
 

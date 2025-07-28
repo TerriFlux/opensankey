@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import {
-  applicationDataType } from '../../../types/LegacyType'
+  applicationDataType } from '../../../Persistence/LegacyType'
 import { Type_GenericApplicationData } from '../../../types/Types'
 
 

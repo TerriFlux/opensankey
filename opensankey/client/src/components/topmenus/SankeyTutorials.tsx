@@ -52,7 +52,7 @@ import {
 } from '@chakra-ui/react'
 
 // Local libs
-import { UploadExemple } from '../dialogs/SankeyPersistence'
+import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { ExempleMenuTypes } from '../welcome/MenuExamples'
 import { FCType_ModalTuto } from './types/SankeyTemplatesTypes'
 

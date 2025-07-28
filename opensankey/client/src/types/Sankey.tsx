@@ -1285,7 +1285,7 @@ export abstract class ClassTemplate_Sankey
   protected abstract createNewNode(id: string, name: string): Type_GenericNodeElement
   protected abstract createNewLink(id: string, source: Type_GenericNodeElement, target: Type_GenericNodeElement): Type_GenericLinkElement
   protected abstract createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle
-  protected abstract createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle
+
 
   // PUBLIC METHODS =====================================================================
 
@@ -2333,5 +2333,9 @@ export abstract class ClassTemplate_Sankey
 
   public get level_taggs_list() {
     return Object.values(this._level_taggs)
+  }
+
+  protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
+    return new Class_NodeStyle(id, name, is_deletable)
   }
 }

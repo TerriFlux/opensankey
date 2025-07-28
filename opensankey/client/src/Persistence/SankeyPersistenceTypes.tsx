@@ -24,9 +24,9 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { SankeyData } from '../../../types/LegacyType'
-import { Type_GenericApplicationData } from '../../../types/Types'
-import { Type_JSON } from '../../../types/Utils'
+import { SankeyData } from './LegacyType'
+import { Type_GenericApplicationData } from '../types/Types'
+import { Type_JSON } from '../types/Utils'
 
 /**
  * Description placeholder

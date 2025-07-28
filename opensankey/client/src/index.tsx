@@ -47,7 +47,7 @@ import {
 } from './Modules'
 import {
   ClickSaveDiagram
-} from './components/dialogs/SankeyPersistence'
+} from './Persistence/SankeyPersistence'
 import {
   ModalWelcomeBuilder
 } from './components/welcome/ModalWelcome'
