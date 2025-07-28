@@ -778,9 +778,6 @@ export const resources_app_elements = {
           shape_shape: 'Type',
           bezier_path: 'Bezier path',
           bezier_outline: 'Bezier outline',
-          arc_path: 'Arc path',
-          arc_outline: 'Arc outline',
-
           shape_curvature: 'Curvature',
           shape_is_recycling: 'Recycling',
           shape_arrow_size: 'Arrow size',
@@ -1830,8 +1827,6 @@ export const resources_app_elements = {
           shape_shape: 'Type',
           bezier_path: 'Chemin Bezier',
           bezier_outline: 'Contour Bezier',
-          arc_path: 'Chemin circulaire',
-          arc_outline: 'Contour circulaire',
           shape_curvature: 'Courbure',
           shape_is_recycling: 'Recyclage',
           shape_arrow_size: 'Taille flêche',

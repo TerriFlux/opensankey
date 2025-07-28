@@ -1850,8 +1850,7 @@ export abstract class ClassTemplate_LinkElement
   public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawElements() }
 
   public get shape_color_rule() { return this.getStyleProperty('shape_color_rule') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color_rule']['type']> }
-
-  public set shape_color_rule(_: string) { this._display.attributes.shape_color_rule = _; this.drawElements() }
+  public set shape_color_rule(_) { this._display.attributes.shape_color_rule = _; this.drawElements() }
 
   public get shape_opacity() { return this.getStyleProperty('shape_opacity') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_opacity']['type']> }
   public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawElements() }

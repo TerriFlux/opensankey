@@ -96,7 +96,7 @@ export const LINKS_ATTRIBUTES_CONFIG = {
   // Shape's Filling attributes
   shape_is_dashed: { default: false, type: (() => false) as (() => boolean) },
   shape_color: { default: default_element_color, type: (() => default_element_color) as (() => string) },
-  shape_color_rule: { default: default_element_color_source, type: (() => default_element_color_source) as (() => string) },
+  shape_color_rule: { default: default_element_color_source, type: (() => default_element_color_source) as (() => 'flow' | 'source' | 'target' | 'gradient' | 'auto' ) },
   shape_opacity: { default: 0.85, type: (() => 0.85) as (() => number) },
 
   // Value label attributes

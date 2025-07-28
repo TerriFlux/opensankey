@@ -106,8 +106,8 @@ export class Class_MenuConfig {
     ]
   ]
 
-  protected _flow_color_origin_type: string[] = ['flow', 'source', 'target']
-  protected _shape_shape: string[] = ['bezier_path', 'bezier_outline', 'arc_path']
+  protected _flow_color_origin_type: ('flow' | 'source' | 'target' | 'gradient' | 'auto')[] = ['flow', 'source', 'target']
+  protected _shape_shape: string[] = ['bezier_path', 'bezier_outline']
   protected _data_type: ValueOptionType[] = ['value', 'ratio_input', 'ratio_output'/*, 'ratio_source_parent' , 'ratio_target_parent', 'unit_conversion'*/]
 
   /**

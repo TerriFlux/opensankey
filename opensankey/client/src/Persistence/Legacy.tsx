@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import * as d3 from 'd3'
-import { makeId, Type_JSON } from './Utils'
+import { makeId, Type_JSON } from '../types/Utils'
 import {
   SankeyNode,
   SankeyNodeStyle,
@@ -331,39 +331,7 @@ const DefaultLinkStyle: DefaultLinkStyleFuncType = () => {
   }
 }
 
-/**
- * Return default style configuration for link to export node
- * @return {*}
- */
-const DefaultLinkExportCloseStyle: DefaultLinkStyleFuncType = () => {
-  const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
-  link_style.orientation = 'hv'
-  link_style.label_visible = true
-  link_style.label_position = 'end'
-  link_style.label_on_path = true
-  link_style.label_visible = true
-  link_style.idLink = 'LinkExportCloseStyle'
-  link_style.name = 'Flux de type exportations'
-  link_style.starting_tangeant = 0.25
-  return link_style
-}
-/**
- * Return default style configuration for link from import node
- *
- * @return {*}
- */
-const DefaultLinkImportCloseStyle: DefaultLinkStyleFuncType = () => {
-  const link_style = JSON.parse(JSON.stringify(DefaultLinkStyle()))
-  link_style.orientation = 'vh'
-  link_style.label_visible = true
-  link_style.label_position = 'beginning'
-  link_style.label_on_path = true
-  link_style.label_visible = true
-  link_style.idLink = 'LinkImportCloseStyle'
-  link_style.name = 'Flux de type importations'
-  link_style.ending_tangeant = 0.25
-  return link_style
-}
+
 
 // CONVERSIONS ************************************************************************************
 

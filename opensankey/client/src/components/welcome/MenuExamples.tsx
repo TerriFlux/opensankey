@@ -29,7 +29,7 @@ import React from 'react'
 import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Type_GenericApplicationData } from '../../types/Types'
-import { UploadExemple } from '../dialogs/SankeyPersistence'
+import { UploadExemple } from '../../Persistence/SankeyPersistence'
 
 /**
  * Description placeholder

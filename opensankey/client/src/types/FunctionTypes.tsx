@@ -37,7 +37,7 @@ import {
   FType_ClickSaveDiagram,
   FType_RetrieveExcelResults,
   FType_UploadExcelImpl
-} from '../components/dialogs/types/SankeyPersistenceTypes'
+} from '../Persistence/SankeyPersistenceTypes'
 import {
   FType_DiagramSelector,
   FType_InitializeDiagrammSelector
