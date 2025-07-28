@@ -8,26 +8,19 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { default_save_JSON_options, OSColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
+import { Class_ApplicationData, default_save_JSON_options, OSColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, OSTooltip, Type_JSON } from '../deps/OpenSankey/types/Utils'
-import { GetOldDataFromView } from '../components/ConvertOSP'
-import { getOldViewsFromJSON } from '../components/UtilsOSP'
-import { ClassAbstract_ApplicationDataOSP } from './AbstractOSP'
-
-// Local imports
-import { ClassTemplate_DrawingAreaOSP } from './DrawingAreaOSP'
-import { ViewType, OSPData } from './LegacyTypes'
-import { ClassTemplate_LinkElementOSP } from './LinkOSP'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
-import { ClassTemplate_NodeElementOSP } from './NodeOSP'
-import { ClassTemplate_SankeyOSP } from './SankeyOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_IconLibraryOSP } from './IconLibrairieOSP'
-import { Type_GenericNodeElementOSP } from './TypesOSP'
 import { Box } from '@chakra-ui/react'
 import React, { CSSProperties, FunctionComponent, useState } from 'react'
 import { ColorResult, SketchPicker, SwatchesPicker } from 'react-color'
 import { Type_SaveDiagramOptions } from '../deps/OpenSankey/Persistence/SankeyPersistenceTypes'
+import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
+import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
+import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 
 declare const window: Window &
   typeof globalThis & {
@@ -42,25 +35,12 @@ export interface Type_SaveDiagramOptionsOSP extends Type_SaveDiagramOptions {
 // CLASS APPLICATION DATA PLUS **********************************************************
 
 /**
- * Override some ClassTemplate_ApplicationData behaviors for OpenSankey+
+ * Override some Class_ApplicationData behaviors for OpenSankey+
  * @export
- * @class ClassTemplate_ApplicationDataOSP
- * @extends {ClassTemplate_ApplicationData}
+ * @class Class_ApplicationDataOSP
+ * @extends {Class_ApplicationData}
  */
-export abstract class ClassTemplate_ApplicationDataOSP
-  <
-    Type_GenericDrawingArea extends ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
-    Type_GenericSankey extends ClassTemplate_SankeyOSP<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
-    Type_GenericNodeElement extends ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
-    Type_GenericLinkElement extends ClassTemplate_LinkElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
-  >
-  extends ClassAbstract_ApplicationDataOSP
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey,
-    Type_GenericNodeElement,
-    Type_GenericLinkElement
-  > {
+export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   // PUBLIC ATTRIBUTES =================================================================
 
@@ -70,24 +50,12 @@ export abstract class ClassTemplate_ApplicationDataOSP
   // Static path
   public override static_path: string = 'static/sankeyanimation'
 
-  // PROTECTED ATTRIBUTES ===============================================================
+  protected _has_sankey_plus: boolean = true
 
-  /**
-   * Configuration Menu
-   *
-   * @protected
-   * @type {Class_MenuConfig}
-   * @memberof ClassTemplate_ApplicationData
-   */
-  protected _menu_configuration: Class_MenuConfigOSP
-
-  protected _has_sankey_plus: boolean = true // token for sankeyplus (if user is connected with an account)
-  //protected _has_sankey_afm: boolean = true // token for sankeyplus (if user is connected with an account)
-
-  protected _views: { [id: string]: Type_GenericDrawingArea } = {}
+  protected _views: { [id: string]: Class_DrawingArea } = {}
   protected _views_order: string[] = []
 
-  protected _original_current_view: Type_GenericDrawingArea | undefined
+  protected _original_current_view: Class_DrawingArea | undefined
 
   protected _list_color_palette: string[] = [
     'custom',
@@ -143,7 +111,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
    *
    * @protected
    * @type {string[]}
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   protected _transform_layout_all_attr: string[] = [...this.transform_layout_all_attr, 'freeLabels', 'icon_catalog']
 
@@ -159,18 +127,15 @@ export abstract class ClassTemplate_ApplicationDataOSP
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of ClassTemplate_ApplicationDataOSP.
+   * Creates an instance of Class_ApplicationDataOSP.
    * @param {boolean} published_mode
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   constructor(
     published_mode: boolean,
     options: { [_: string]: boolean | string } = {}
   ) {
     super(published_mode, options)
-
-    // OVERRIDE some values for OpenSankey+ purpose
-    this._menu_configuration = this.menu_configuration
 
     // Assign master in views
     this._views[this._drawing_area.id] = this._drawing_area
@@ -208,12 +173,25 @@ export abstract class ClassTemplate_ApplicationDataOSP
     }
   }
 
-  // CLEANING METHODS ===================================================================
+  public createNewMenuConfiguration(): Class_MenuConfig {
+    return new Class_MenuConfigOSP() as Class_MenuConfig
+  }
+
+  public createNewDrawingArea(id?: string): Class_DrawingAreaOSP {
+    const drawing_area = new Class_DrawingAreaOSP(
+      this,
+      id
+    )
+    return drawing_area
+  }
+  public createNewIconLibrary(): Class_IconLibraryOSP {
+    return new Class_IconLibraryOSP()
+  }
 
   /**
-   * Override function from ClassTemplate_ApplicationData, to reset views before reseting normally
+   * Override function from Class_ApplicationData, to reset views before reseting normally
    *
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   protected _reset(): void {
     this._views = {}
@@ -230,7 +208,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
 
   /**
    * Reset data & delete application data in navigator cache   *
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public override reinitialization(redraw: boolean = true): void {
     super.reinitialization(redraw)
@@ -246,7 +224,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
    *
    * @param {boolean} [with_view=true]
    * @return {*}
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   protected _toJSON() {
     let current_view = default_main_sankey_id
@@ -310,8 +288,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
     this.pushViewIdInViewOrder(default_main_sankey_id)
     // Read views parts
     // this.deleteCurrentOriginalView() // TODO est-ce vraiment necessaire ?
-    
-    this.extractViewsFromJSON(json_object,true)
+
+    this.extractViewsFromJSON(json_object, true)
     // Set view to the one active when saved
     const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
     if (
@@ -320,9 +298,9 @@ export abstract class ClassTemplate_ApplicationDataOSP
     ) {
       this._drawing_area = this._views[active_view_id]
     }
-      // Exécution asynchrone à la fin
+    // Exécution asynchrone à la fin
     setTimeout(() => {
-        this.extractViewsFromJSON(json_object, false)
+      this.extractViewsFromJSON(json_object, false)
     }, 0)
   }
 
@@ -331,10 +309,10 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * Function to add views from a JSON file to current application data
    *
    * @param {Type_JSON} json_object
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public extractViewsFromJSON(json_object: Type_JSON, current_view: boolean) {
-    let views = getJSONOrUndefinedFromJSON(json_object, 'views')
+    const views = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views) {
       return
     }
@@ -344,18 +322,18 @@ export abstract class ClassTemplate_ApplicationDataOSP
       .forEach(([view_id, view_json]) => {
         if (view_id !== default_main_sankey_id) {
           if (current_view) {
-              const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
-              if (view_id !== active_view_id) {
-                return
-              }
+            const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+            if (view_id !== active_view_id) {
+              return
+            }
           } else {
-              const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
-              if (view_id === active_view_id) {
-                return
-              }            
+            const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+            if (view_id === active_view_id) {
+              return
+            }
           }
           // Create and populate drawing area
-          console.log('Charging '+(view_json as Type_JSON).name)
+          console.log('Charging ' + (view_json as Type_JSON).name)
           const drawing_area_view = this.createNewDrawingArea(view_id)
           drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
           drawing_area_view.fromJSON(view_json as Type_JSON)
@@ -475,13 +453,13 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * Note : even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
    *
    * @private
-   * @param {ClassTemplate_ApplicationDataOSP} app_ref
+   * @param {Class_ApplicationDataOSP} app_ref
    * @return {*}
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   protected _keyboardEventProcessing(
     evt: KeyboardEvent,
-    app_ref: ClassTemplate_ApplicationDataOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
+    app_ref: Class_ApplicationDataOSP
   ) {
     // Apply first default OS key processing
     super._keyboardEventProcessing(evt, app_ref)
@@ -597,10 +575,10 @@ export abstract class ClassTemplate_ApplicationDataOSP
   /**
    * Create a new view (sankey) from given sankey
    *
-   * @memberof ClassTemplate_DrawingAreaOSP
+   * @memberof Class_DrawingAreaOSP
    */
   public createNewView(
-    base_drawing_area: Type_GenericDrawingArea | undefined = undefined
+    base_drawing_area: Class_DrawingArea | undefined = undefined
   ) {
     // If no base sankey is given, we take the currently active sankey
     if (base_drawing_area === undefined)
@@ -628,10 +606,10 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * 
    * An unitary sankey is a sub-sankey containing one node and it's input/ouput
    *
-   * @param {Type_GenericNodeElementOSP} node_ref
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @param {Class_NodeElement} node_ref
+   * @memberof Class_ApplicationDataOSP
    */
-  public createUnitaryNewView(node_ref: Type_GenericNodeElementOSP) {
+  public createUnitaryNewView(node_ref: Class_NodeElement) {
     // If no base sankey is given, we take the currently active sankey
     const base_drawing_area = this._drawing_area
     base_drawing_area.purgeSelection()
@@ -821,10 +799,11 @@ export abstract class ClassTemplate_ApplicationDataOSP
       ) {
         // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
         this._waiting_to_set_view = id
-        this.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
+        this.menu_configuration_osp.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
       }
       // Case 2 : Otherwise, just set new view
       else {
+        const drawing_area_plus = this._drawing_area as Class_DrawingAreaOSP
         // Hide previous diplayed sankey
         this._drawing_area.sankey.setInvisible()
         // Keep current mode in memory
@@ -840,7 +819,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
         // we change view and don't want to save current modification
         if (id !== default_main_sankey_id) {
           // Update view with attr heredited from master
-          this._drawing_area.updateFrom(this._views[default_main_sankey_id], this._drawing_area.heredited_attr)
+          this._drawing_area.updateFrom(this._views[default_main_sankey_id], drawing_area_plus.heredited_attr)
           this.options_save_json = default_save_JSON_options
           // Create a clone of current view's DA
           const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
@@ -860,8 +839,8 @@ export abstract class ClassTemplate_ApplicationDataOSP
         this._history = new Class_ApplicationHistory(this._menu_configuration)
 
         // Update components related to viewss
-        this._menu_configuration.updateAllMenuComponents()
-        this._menu_configuration.updateComponentRelatedToViews()
+        this.menu_configuration.updateAllMenuComponents()
+        this.menu_configuration_osp.updateComponentRelatedToViews()
         // Update menu save diagram JSON
         this.menu_configuration.updateComponentSaveDiagramJSON()
       }
@@ -891,7 +870,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
   /**
    * Delete current view
    *
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public deleteCurrentView() {
     this.deleteView(this._drawing_area.sankey.id) // Remove for view dict
@@ -901,7 +880,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * Delete view from applicationData & go to master
    *
    * @param {string} id
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public deleteView(id: string) {
     // Check if we are not trying to delete master
@@ -922,7 +901,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * Move up view id in _views_order
    *
    * @param {string} id id of the view to move
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public moveViewUpInOrder(id: string) {
     if (id !== default_main_sankey_id) {//Can't move position of master in _views_order
@@ -938,7 +917,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * Move down view id in _views_order
    *
    * @param {string} id id of the view to move
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public moveViewDownInOrder(id: string) {
     if (id !== default_main_sankey_id) {//Can't move position of master in _views_order
@@ -953,7 +932,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
   /**
    * Reset current view with the one in the temporary variable
    *
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public resetViewWithOriginal() {
     if (
@@ -974,7 +953,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
   /**
    * Function to save the current view before changing active view to another one
    *
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public saveBeforeChangingView() {
     const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
@@ -990,7 +969,7 @@ export abstract class ClassTemplate_ApplicationDataOSP
    * it check if the id isn't already in order because duplicate id can cause so issue when navigating views
    *
    * @param {string} id
-   * @memberof ClassTemplate_ApplicationDataOSP
+   * @memberof Class_ApplicationDataOSP
    */
   public pushViewIdInViewOrder(id: string) {
     if (this._views_order.includes(id)) {
@@ -1002,23 +981,23 @@ export abstract class ClassTemplate_ApplicationDataOSP
   // GETTERS / SETTERS ==================================================================
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
 
-  public get has_sankey_plus() { return this._has_sankey_plus || this.is_static}
+  public get has_sankey_plus() { return this._has_sankey_plus || this.is_static }
   public set has_sankey_plus(_) { this._has_sankey_plus = _ }
 
   public get has_sankey_afm() { return process.env.REACT_APP_AFM == 'true' }
 
   // Override getter & setter so we can get new type
-  public get menu_configuration(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
-  public set menu_configuration(_: Class_MenuConfigOSP) { this._menu_configuration = _ }
+  public get menu_configuration_osp(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
+  public set menu_configuration_osp(_) { this._menu_configuration = _ }
 
   public get icon_library(): Class_IconLibraryOSP { return this._icon_library as Class_IconLibraryOSP }
 
   // Views
-  public get views(): Type_GenericDrawingArea[] {
+  public get views(): Class_DrawingArea[] {
     return Object.values(this._views)
   }
 
-  public get master_view(): Type_GenericDrawingArea | undefined {
+  public get master_view(): Class_DrawingArea | undefined {
     if (this.has_views)
       if (this.has_master_sankey)
         return this._views[default_main_sankey_id]

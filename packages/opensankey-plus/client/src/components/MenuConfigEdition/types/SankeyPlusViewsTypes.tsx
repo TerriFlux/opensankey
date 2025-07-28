@@ -1,11 +1,12 @@
-import { Type_GenericApplicationDataOSP } from '../../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../../types/ApplicationDataOSP'
+
 
 export type FCType_SelecteurView = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }
 
 export type FCType_ViewAccordion = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }
 
 /**
@@ -25,23 +26,23 @@ export type FCType_ViewAccordion = {
  * @return {*}
  */
 export type FCType_BannerViewsOSP = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }
 
 export type FCType_MenuPreferenceViewOSP = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }
 
 // Modal used when we want to switch to master or a view without saving some changements we made on the current view
 // It give the option save or not the changements made
 export type FCType_ModalViewNotSavedOSP = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }
 
 export type FCType_ModalTransparentViewAttrOSP = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }
 
 export type FCType_MenuEnregistrerViewOSP = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }

@@ -8,13 +8,13 @@ import {
 
 // Local types
 import type { Class_Tag } from '../../deps/OpenSankey/types/Tag'
-import type { Type_GenericNodeElement } from '../../deps/OpenSankey/types/Types'
 import type {
   FCType_SankeyMenuConfigurationNodesTags
 } from './types/SankeyMenuConfigurationNodesTagsTypes'
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { SankeyNodeSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 
 // Component definition =================================================================
 
@@ -42,7 +42,7 @@ export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMe
 
   // Selected nodes ---------------------------------------------------------------------
 
-  let selected_nodes: Type_GenericNodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted

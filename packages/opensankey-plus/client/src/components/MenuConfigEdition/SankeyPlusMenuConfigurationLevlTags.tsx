@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, useState, useRef } from 'react'
+import React, { FunctionComponent, useState } from 'react'
 import {
   Box,
   Checkbox,
@@ -8,16 +8,16 @@ import {
 
 // Local types
 import type { Class_LevelTag, Class_LevelTagGroup} from '../../deps/OpenSankey/types/Tag'
-import type { Type_GenericApplicationData, Type_GenericNodeElement } from '../../deps/OpenSankey/types/Types'
 
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
-import { Type_GenericApplicationDataOSP, Type_GenericNodeElementOSP } from '../../types/TypesOSP'
 import { Class_NodeDimension } from '../../deps/OpenSankey/Elements/NodeDimension'
+import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 
 
 type FCType_SankeyMenuConfigurationLevelTags = {
-  new_data: Type_GenericApplicationDataOSP,
+  new_data: Class_ApplicationDataOSP,
 }
 
 /**
@@ -38,8 +38,8 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
 
   // Nodes to select --------------------------------------------------------------------
 
-  let nodes: Type_GenericNodeElementOSP[]
-  let selected_nodes: Type_GenericNodeElementOSP[]
+  let nodes: Class_NodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     nodes = new_data.drawing_area.sankey.nodes_list_sorted
@@ -136,7 +136,7 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
                 // Update selection list
                 selected_nodes.forEach(n => new_data.drawing_area.removeNodeFromSelection(n))
                 const entries_values = entries.map(d => d.value)
-                const selected_nodes_set = new Set<Type_GenericNodeElement>()
+                const selected_nodes_set = new Set<Class_NodeElement>()
                 const selected_nodes_dimensions = nodes_dimensions.filter(dim => {
                   if (entries_values.includes(dim.short_name)) {
                     return true
@@ -146,11 +146,11 @@ export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMe
                 setSelectedNodesDimensions(selected_nodes_dimensions)
                 nodes_dimensions.forEach(dim => {
                   if (entries_values.includes(dim.short_name)) {
-                    selected_nodes_set.add(dim.parent as Type_GenericNodeElement)
+                    selected_nodes_set.add(dim.parent as Class_NodeElement)
                   }
                 });
                 [...selected_nodes_set].forEach(n => {
-                  new_data.drawing_area.addNodeToSelection(n as Type_GenericNodeElementOSP)
+                  new_data.drawing_area.addNodeToSelection(n as Class_NodeElement)
                 })
                 // Update all menus
                 updateThis()

@@ -43,8 +43,9 @@ import {
   GetRandomInt,
   OSTooltip
 } from '../../deps/OpenSankey/types/Utils'
-import { Class_LinkValue } from '../../deps/OpenSankey/Elements/Class_LinkValueTree'
+
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { Class_LinkValue } from '../../deps/OpenSankey/Elements/LinkValues'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -216,13 +217,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-      id: tag.id,
-      name: tag.name,
-      elementsRef: dict_ref_element,
-      grp: tag.group,
-      color: tag.color,
-      dict_link_value: {}
-    }
+        id: tag.id,
+        name: tag.name,
+        elementsRef: dict_ref_element,
+        grp: tag.group,
+        color: tag.color,
+        dict_link_value: {}
+      }
 
     if (tag instanceof Class_DataTag) {
       // Save value of each links in dict
@@ -297,13 +298,13 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
 
     const old_val: typeDictTag
       = {
-      id: tagg.id,
-      name: tagg.name,
-      activated: tagg.show_legend,
-      banner: tagg.banner,
-      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
-      dict_link_value: {}
-    }
+        id: tagg.id,
+        name: tagg.name,
+        activated: tagg.show_legend,
+        banner: tagg.banner,
+        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+        dict_link_value: {}
+      }
 
     if (tagg instanceof Class_DataTagGroup) {
       new_data.drawing_area.sankey.links_list.forEach(l => {
@@ -742,7 +743,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                       {/* Choix de la couleur*/}
                       {
                         elementTagNameProp !== 'level_taggs' ?
-                        <Td w='100%'>
+                          <Td w='100%'>
                             <OSTooltip label={t('Tags.tooltips.couleur')}>
                               <Box>
                                 <OSColorPicker
@@ -811,7 +812,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                           isChecked={tag_group_as_data_grp.is_sequence}
                           onChange={evt => {
                             tag_group_as_data_grp.is_sequence = evt.target.checked
-                            new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater.current()
+                            new_data.menu_configuration_osp.ref_to_drawer_sequence_data_tag_updater.current()
                             // Update menus
                             updateThisAndRelatedComponents()
                           }}

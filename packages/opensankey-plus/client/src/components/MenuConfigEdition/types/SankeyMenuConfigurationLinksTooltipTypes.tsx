@@ -1,5 +1,6 @@
-import { Type_GenericApplicationDataOSP } from '../../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../../types/ApplicationDataOSP'
+
 
 export type FCType_MenuConfigurationLinksTooltip = {
-  new_data: Type_GenericApplicationDataOSP,
+  new_data: Class_ApplicationDataOSP,
 }

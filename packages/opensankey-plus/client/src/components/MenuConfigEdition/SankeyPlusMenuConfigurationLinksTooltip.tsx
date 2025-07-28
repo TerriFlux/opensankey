@@ -8,12 +8,12 @@ import {
 
 // Local types
 import type { FCType_MenuConfigurationLinksTooltip } from './types/SankeyMenuConfigurationLinksTooltipTypes'
-import type { Type_GenericLinkElement } from '../../deps/OpenSankey/types/Types'
 
 // Local functions
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { SankeyLinkSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { Class_LinkElement } from '../../deps/OpenSankey/Elements/Link'
 
 // MENU COMPONENT ***********************************************************************
 
@@ -37,7 +37,7 @@ export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigu
 
   // Selected links ---------------------------------------------------------------------
 
-  let selected_links: Type_GenericLinkElement[]
+  let selected_links: Class_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted

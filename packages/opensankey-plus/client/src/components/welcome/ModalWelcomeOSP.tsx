@@ -5,11 +5,11 @@ import React, { FunctionComponent, useState } from 'react'
 import { ModalWelcome, ModalWelcomeContent } from '../../deps/OpenSankey/components/welcome/ModalWelcome'
 import { FCType_ModalWelcomeBuilder } from '../../deps/OpenSankey/components/welcome/types/ModalWelcome'
 import { Box, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react'
-// Local libs
-import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+
 
 const ShortcutsOSP = (
-  new_data_plus: Type_GenericApplicationDataOSP,
+  new_data_plus: Class_ApplicationDataOSP,
   page_content: { [_: string]: JSX.Element }
 ) => {
   const { t } = new_data_plus
@@ -89,7 +89,7 @@ export const ModalWelcomeBuilderOSP: FunctionComponent<FCType_ModalWelcomeBuilde
   )
 
   ShortcutsOSP(
-    new_data as Type_GenericApplicationDataOSP,
+    new_data as Class_ApplicationDataOSP,
     page_content
   )
 

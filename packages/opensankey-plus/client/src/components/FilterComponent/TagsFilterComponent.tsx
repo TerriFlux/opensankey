@@ -2,19 +2,19 @@ import React, { FunctionComponent, useState, RefObject, useRef, MutableRefObject
 import { Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure, Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select } from '@chakra-ui/react'
 import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 import { FCType_ToolbarFilter, FCType_FlowValueFilter } from './type'
-import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
 import { NodeTagGroupFilter } from './NodeTagGroupFilter'
 import { FlowTagGroupFilter } from './FlowTagGroupFilter'
 import { DataTagGroupFilter } from './DataTagGroupFilter'
 import { LevelTagFilter } from './LevelTagFilter'
+import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 
 
 // Types for FunctionComponent ==========================================
 
-type FCType_CollapseButton = { new_data: Type_GenericApplicationDataOSP, isOpen: boolean, onToggle: () => void }
+type FCType_CollapseButton = { new_data: Class_ApplicationDataOSP, isOpen: boolean, onToggle: () => void }
 
 type FCType_FilterTagGroup = {
-  new_data: Type_GenericApplicationDataOSP,
+  new_data: Class_ApplicationDataOSP,
   title: string,
   children: ReactNode,
 
@@ -23,7 +23,7 @@ type FCType_FilterTagGroup = {
 // General fixed variable ==========================================
 const width_fitler_drawer = 270
 
-export const title_filter_column = (new_data: Type_GenericApplicationDataOSP) => <Box
+export const title_filter_column = (new_data: Class_ApplicationDataOSP) => <Box
   as='span'
   layerStyle='popover_sidebar_row_tag_filter'
 >
@@ -44,7 +44,7 @@ export const title_filter_column = (new_data: Type_GenericApplicationDataOSP) =>
 export const ToolbarFilter: FunctionComponent<FCType_ToolbarFilter> = ({ new_data }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const width_drawer = (drawerOpen ? width_fitler_drawer + new_data.drawing_area.fit_margin / 2 : 0) + new_data.drawing_area.fit_margin / 2
-  new_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
+  new_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
 
   return <>
     <Button
@@ -111,7 +111,7 @@ const FlowValueFilter: FunctionComponent<FCType_FlowValueFilter> = ({ new_data }
   const max_link_value = Math.max(0, ...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.shape_local_link_scale ?? 1))) + 1
   const [, setCount] = useState(0)
 
-  new_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
+  new_data.menu_configuration_osp.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
 
   // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
   const ref: RefObject<HTMLButtonElement> = useRef(null)

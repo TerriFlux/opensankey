@@ -39,31 +39,31 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
   const [s_show_modal, sShowModal] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(false)
 
-  new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current = sShowModal
+  new_data_plus.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_import_icons.current = sShowModal
 
 
   const isAllIconVisible = () => {
-    let selected_icon = list_nodes_selected.length > 0 ? list_nodes_selected[0].iconName : ''
+    let selected_icon = list_nodes_selected.length > 0 ? list_nodes_selected[0].icon_name : ''
 
-    list_nodes_selected.map(d => selected_icon = (d.iconName === selected_icon) ? selected_icon : '')
+    list_nodes_selected.map(d => selected_icon = (d.icon_name === selected_icon) ? selected_icon : '')
     return selected_icon
   }
   const allSelectedNodeHasSameicon = isAllIconVisible()
 
-  list_nodes_selected.length > 0 ? list_nodes_selected[0].iconName : 'None'
+  list_nodes_selected.length > 0 ? list_nodes_selected[0].icon_name : 'None'
 
   // Functions we can undo ====================================================
 
   const updateNodeIcon = (iconName: string) => {
     const dict_old_value: { [x: string]: [name: string, color: string, viewBox: string | undefined] } = {}
     list_nodes_selected.forEach(n => {
-      dict_old_value[n.id] = [n.iconName!, n.iconColor!, n.iconViewBox!]
+      dict_old_value[n.id] = [n.icon_name!, n.icon_color!, n.icon_view_box!]
     })
     const _updateNodeIcon = () => {
       list_nodes_selected.forEach(n => {
-        n.iconName = iconName
-        if (!n.iconColor) n.iconColor = '#000000'
-        delete n.iconViewBox
+        n.icon_name = iconName
+        if (!n.icon_color) n.icon_color = '#000000'
+        delete n.icon_view_box
         n.draw()
       })
       setForceUpdate(!forceUpdate)
@@ -71,9 +71,9 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
 
     const inv_updateNodeIcon = () => {
       list_nodes_selected.forEach(n => {
-        n.iconName = dict_old_value[n.id][0]
-        n.iconColor = dict_old_value[n.id][1]
-        n.iconViewBox = dict_old_value[n.id][2]
+        n.icon_name = dict_old_value[n.id][0]
+        n.icon_color = dict_old_value[n.id][1]
+        n.icon_view_box = dict_old_value[n.id][2]
         n.draw()
       })
       setForceUpdate(!forceUpdate)
@@ -88,13 +88,13 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
   const updateNodeIconImported = (ki: string) => {
     const dict_old_value: { [x: string]: [name: string, color: string, viewBox: string | undefined] } = {}
     list_nodes_selected.forEach(n => {
-      dict_old_value[n.id] = [n.iconName!, n.iconColor!, n.iconViewBox!]
+      dict_old_value[n.id] = [n.icon_name!, n.icon_color!, n.icon_view_box!]
     })
     const _updateNodeIconImported = () => {
       list_nodes_selected.forEach(n => {
-        n.iconName = 'icon_imported_' + ki
-        n.iconViewBox = import_svg.current[ki].Vb
-        n.iconColor = '#000000'
+        n.icon_name = 'icon_imported_' + ki
+        n.icon_view_box = import_svg.current[ki].Vb
+        n.icon_color = '#000000'
         n.draw()
       })
       setForceUpdate(!forceUpdate)
@@ -102,9 +102,9 @@ export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIcon
 
     const inv_updateNodeIconImported = () => {
       list_nodes_selected.forEach(n => {
-        n.iconName = dict_old_value[n.id][0]
-        n.iconColor = dict_old_value[n.id][1]
-        n.iconViewBox = dict_old_value[n.id][2]
+        n.icon_name = dict_old_value[n.id][0]
+        n.icon_color = dict_old_value[n.id][1]
+        n.icon_view_box = dict_old_value[n.id][2]
         n.draw()
       })
       setForceUpdate(!forceUpdate)

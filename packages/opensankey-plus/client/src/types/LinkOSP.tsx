@@ -8,23 +8,19 @@
 // ==================================================================================================
 
 // OpenSankey imports
+import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import {
   Class_LinkAttribute,
   Class_LinkStyle
 } from '../deps/OpenSankey/Elements/LinkAttributes'
+import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import {
   getBooleanFromJSON,
   Type_ElementPosition,
   Type_JSON,
 } from '../deps/OpenSankey/types/Utils'
 
-// Local imports
-import {
-  ClassAbstract_LinkElementOSP,
-  ClassAbstract_DrawingAreaOSP,
-  ClassAbstract_NodeElementOSP,
-  ClassAbstract_SankeyOSP
-} from './AbstractOSP'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 
 export const default_shape_shape_is_gradient = false
@@ -34,87 +30,66 @@ export const default_shape_shape_is_gradient = false
 /**
  * Override OpenSankey's class to take in account specifities of OpenSankey+ app
  * @export
- * @class ClassTemplate_LinkElementOSP
- * @extends {ClassTemplate_LinkElement}
+ * @class Class_LinkElementOSP
+ * @extends {Class_LinkElement}
  */
-export abstract class ClassTemplate_LinkElementOSP
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, ClassTemplate_LinkElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>>,
-    Type_GenericSankey extends ClassAbstract_SankeyOSP<Type_GenericDrawingArea, Type_GenericNodeElement, ClassTemplate_LinkElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>>,
-    Type_GenericNodeElement extends ClassAbstract_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, ClassTemplate_LinkElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>>
-  >
-  extends ClassAbstract_LinkElementOSP
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey,
-    Type_GenericNodeElement
-  > {
-  // ABSTRACT ATTRIBUTES ===============================================================
+export class Class_LinkElementOSP extends Class_LinkElement {
 
-  /**
-   * Display attributes
-   * @protected
-   * @abstract
-   * @type {{
-   *       drawing_area: Type_GenericDrawingArea,
-   *       displaying_order: number,
-   *       position_starting: Type_ElementPosition,
-   *       position_ending: Type_ElementPosition,
-   *       style: Class_LinkStyleOSP[],
-   *       attributes: Class_LinkAttributeOSP,
-   *       position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-   *       position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-   *       position_offset_label?: number // optional var used when label is dragged (if label follow link path)
-   *     }}
-   * @memberof ClassTemplate_LinkElementOSP
-   */
-  protected abstract _display: {
-    drawing_area: Type_GenericDrawingArea,
-    sankey: Type_GenericSankey,
-    //displaying_order: number,
+
+  protected _display: {
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
-    style: Class_LinkStyleOSP[],
+    style: Class_LinkStyle[],
     attributes: Class_LinkAttributeOSP,
-    position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-    position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-    position_offset_label?: number // optional var used when label is dragged (if label follow link path)
+    position_x_label?: number
+    position_y_label?: number
+    position_offset_label?: number
   }
 
-  // PUBLIC ATTRIBUTES ==================================================================
-
-  // PROTECTED ATTRIBUTE ================================================================
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  // CONSTRUCTOR ========================================================================
-
   /**
-   * Creates an instance of ClassTemplate_LinkElementOSP.
+   * Creates an instance of Class_LinkElementOSP.
    * @param {string} id
-   * @param {Type_GenericNodeElement} source
-   * @param {Type_GenericNodeElement} target
-   * @param {Type_GenericDrawingArea} drawing_area
+   * @param {Class_NodeElement} source
+   * @param {Class_NodeElement} target
+   * @param {Class_DrawingArea} drawing_area
    * @param {Class_MenuConfigOSP} menu_config
-   * @memberof ClassTemplate_LinkElementOSP
+   * @memberof Class_LinkElementOSP
    */
   constructor(
     id: string,
-    source: Type_GenericNodeElement,
-    target: Type_GenericNodeElement,
-    drawing_area: Type_GenericDrawingArea,
+    source: Class_NodeElement,
+    target: Class_NodeElement,
+    drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfigOSP,
   ) {
     // Heritance
     super(id, source, target, drawing_area, menu_config)
     // Override menu config
     this._menu_config = menu_config
-    // TODO trouver comment faire proprement
-    // this.source.addOutputLink(this)
-    // this.target.addInputLink(this)// Target
-    // // Instanciate display on svg
-    // this.computeControlPoints()
-    // this.draw()
+    // Display
+    this._display = {
+      position_starting: {
+        x: 0,
+        y: 0,
+        u: 0,
+        v: 0
+      },
+      position_ending: {
+        x: 0,
+        y: 0,
+        u: 0,
+        v: 0
+      },
+      style: [drawing_area.sankey.default_link_style],
+      attributes: new Class_LinkAttributeOSP()
+    }
+    // Link with style
+    this._display.style[0].addReference(this)
+    this.source.addOutputLink(this)
+    this.target.addInputLink(this)// Target
+    // Instanciate display on svg
+    this._link_control_points.computeControlPoints()
+    this.draw()
   }
 
   public override _draw() {
@@ -356,43 +331,5 @@ export class Class_LinkAttributeOSP extends Class_LinkAttribute {
     }
 
   }
-
-  // PROTECTED METHODS ==================================================================
-
-  // GETTERS ============================================================================
-
-
-  // SETTERS ============================================================================
-
 }
 
-// CLASS LINK STYLE *********************************************************************
-
-/**
- * Define style for links
- *
- * @export
- * @class LinkAttributes
- * @extends {Class_LinkAttribute}
- */
-export class Class_LinkStyleOSP extends Class_LinkStyle {
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  // CONSTRUCTOR ========================================================================
-  constructor(
-    id: string,
-    name: string,
-    is_deletable: boolean = true
-  ) {
-    // Instantiate super class
-    super(id, name, is_deletable)
-    // Update new attributes
-  }
-
-  // PROTECTED METHODS ==================================================================
-
-  // PRIVATE METHODS ====================================================================
-
-  // GETTERS ============================================================================
-}

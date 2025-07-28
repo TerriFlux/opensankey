@@ -1,24 +1,15 @@
-import { ClassTemplate_ZoneSelection } from '../deps/OpenSankey/Elements/SelectionZone'
-import { ClassAbstract_DrawingAreaOSP, ClassAbstract_SankeyOSP } from './AbstractOSP'
-import { Class_ContainerElement } from './FreeLabel'
+import { Class_ZoneSelection } from '../deps/OpenSankey/Elements/SelectionZone'
+import { Class_ContainerElement } from '../deps/OpenSankey/Elements/FreeLabel'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
+import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 
 /**
  * Class that helps to create a selection zone for elements on the drawing area
  * @export
- * @class ClassTemplate_ZoneSelection
+ * @class Class_ZoneSelection
  * @extends {ClassTemplate_Element}
  */
-export class ClassTemplate_ZoneSelectionOSP
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingAreaOSP<Type_GenericSankey, any, any>, // eslint-disable-line
-    Type_GenericSankey extends ClassAbstract_SankeyOSP<Type_GenericDrawingArea, any, any> // eslint-disable-line
-  >
-  extends ClassTemplate_ZoneSelection
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey
-  > {
+export class Class_ZoneSelectionOSP extends Class_ZoneSelection {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -27,13 +18,13 @@ export class ClassTemplate_ZoneSelectionOSP
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of ClassTemplate_ZoneSelection.
-   * @param {Type_GenericDrawingArea} drawing_area
+   * Creates an instance of Class_ZoneSelection.
+   * @param {Class_DrawingArea} drawing_area
    * @param {Class_MenuConfig} menu_config
-   * @memberof ClassTemplate_ZoneSelection
+   * @memberof Class_ZoneSelection
    */
   constructor(
-    drawing_area: Type_GenericDrawingArea,
+    drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfigOSP,
   ) {
     // Init parent class attributes
@@ -45,7 +36,7 @@ export class ClassTemplate_ZoneSelectionOSP
   /**
    * Function to select elements present in the selection zone
    * (nodes has to be fully inside the zone to be selected)
-   * @memberof ClassTemplate_ZoneSelection
+   * @memberof Class_ZoneSelection
    */
   public selectElementsInside() {
     // Get OpenSankey standard elements
@@ -69,7 +60,7 @@ export class ClassTemplate_ZoneSelectionOSP
         return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
       })
       .forEach(container => {
-        this.drawing_area.addContainerToSelection(container as Class_ContainerElement<Type_GenericDrawingArea, Type_GenericSankey>)
+        this.drawing_area.addContainerToSelection(container as Class_ContainerElement)
       })
 
     return nbtype

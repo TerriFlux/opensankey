@@ -26,6 +26,7 @@ import {
   TooltipValueSurcharge
 } from '../../deps/OpenSankey/types/Utils'
 import {
+  Class_LinkElement,
   isAttributeOverloaded
 } from '../../deps/OpenSankey/Elements/Link'
 import {
@@ -44,16 +45,8 @@ import type {
   FCType_MenuConfLinkScientificPrecision,
   FCType_MenuContextLink
 } from './types/SankeyPlusGradientTypes'
-import type {
-  Class_LinkStyleOSP
-} from '../../types/LinkOSP'
-import type {
-  Type_GenericLinkElementOSP,
-} from '../../types/TypesOSP'
+
 import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
-
-
-
 
 export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLinkApparenceDashedOSP> = ({ new_data_plus,
   menu_for_style }) => {
@@ -76,7 +69,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
   }
 
   // Elements on which menu modification applies
-  let elements: Class_LinkStyleOSP[] | Type_GenericLinkElementOSP[]
+  let elements: Class_LinkStyle[] | Class_LinkElement[]
   if (menu_for_style) {
     elements = [new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
   }
@@ -107,7 +100,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
     _updateDashedLinks()
   }
 
-  const check_indeterminate = (curr: Type_GenericLinkElementOSP) => {
+  const check_indeterminate = (curr: Class_LinkElement) => {
     return (selected_links[0].shape_is_dashed == curr.shape_is_dashed)
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
@@ -140,7 +133,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
   menu_configuration.ref_to_menu_config_link_scientific_precision_updater.current = () => setCount(a => a + 1)
   // Ref to input displayed value
 
-  let selected_links: Type_GenericLinkElementOSP[]
+  let selected_links: Class_LinkElement[]
   if (!menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = drawing_area.selected_links_list_sorted
@@ -150,7 +143,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
     selected_links = drawing_area.visible_and_selected_links_list_sorted
   }
   // Elements on which menu modification applies
-  let elements: Class_LinkStyle[] | Type_GenericLinkElementOSP[]
+  let elements: Class_LinkStyle[] | Class_LinkElement[]
   let disable_attr_props = new_data_plus.drawing_area.sankey.link_styles_dict[default_style_id].customisable_attribute
   if (menu_for_style) {
     elements = [new_data_plus.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
@@ -170,7 +163,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
   ref_set_number_inputs.current(String(value_label_nb_significant_digits))
 
 
-  // const check_indeterminate = (curr: Type_GenericLinkElementOSP) => {
+  // const check_indeterminate = (curr: Class_LinkElementOSP) => {
   //   return (elements[0].shape_is_gradient == curr.shape_is_gradient)
   // }
   // const is_indeterminate = !elements.every(check_indeterminate)
@@ -200,7 +193,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
     <Box as='span' layerStyle='menuconfigpanel_row_2cols_little_input' >
       {/* Choix d'affichage du nombre de chiffre significatifs  */}
       <Checkbox
-          isDisabled={!disable_attr_props['value_label_significant_digits']}
+        isDisabled={!disable_attr_props['value_label_significant_digits']}
         variant='menuconfigpanel_option_checkbox'
         isChecked={value_label_significant_digits}
         onChange={(evt) => {
@@ -224,14 +217,14 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
         }
       </Checkbox>
       {value_label_significant_digits ?
-        /* Choose number of custom digit */
+      /* Choose number of custom digit */
 
         /* <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.labels.NbDigit')}
               </Box> */
         <OSTooltip label={t('Flux.labels.tooltips.significantDigits')}>
           <ConfigMenuNumberInput
-          disabled={!disable_attr_props['value_label_nb_significant_digits']}
+            disabled={!disable_attr_props['value_label_nb_significant_digits']}
             t={new_data_plus.t}
             ref_to_set_value={ref_set_number_inputs}
             default_value={value_label_nb_significant_digits}
@@ -249,7 +242,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
       }
     </Box>
     <Checkbox
-    isDisabled={!disable_attr_props['value_label_scientific_notation']}
+      isDisabled={!disable_attr_props['value_label_scientific_notation']}
       variant='menuconfigpanel_option_checkbox'
       isChecked={value_label_scientific_notation}
       onChange={(evt) => {
@@ -285,55 +278,55 @@ export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLin
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-    {sep}
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {t('Menu.Transformation.tagFlux_assign')}
-      </MenuButton>
+      {sep}
+      <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {t('Menu.Transformation.tagFlux_assign')}
+        </MenuButton>
 
-      <MenuList>
-        {
-          new_data.drawing_area.sankey.flux_taggs_list
-            .filter(tagg => tagg.has_tags)
-            .map((tagg, i) => {
-              return <Menu key={i} placement='end'>
-                <MenuButton
-                  variant='contextmenu_button'
-                  as={Button}
-                  rightIcon={<ChevronRightIcon />}
-                  className="dropdown-basic"
-                >
-                  {tagg.name}
-                </MenuButton>
-                <MenuList>
-                  {
-                    tagg.tags_list
-                      .map(tag => {
-                        const has_tag = contextualised_link.hasGivenTag(tag)
-                        return <MenuItem
-                          display='flex'
-                          onClick={() => {
-                            new_data.drawing_area.updateSelectedLinksTagAssignation(!has_tag, tag)
-                            new_data.drawing_area.link_contextualised = undefined
-                            new_data.menu_configuration.ref_to_menu_context_links_updater.current()
-                            setUpdate(a => a + 1)
-                          }}
-                        >
-                          {tag.name}
-                          {checked(has_tag)}
-                        </MenuItem>
-                      })
-                  }
-                </MenuList>
-              </Menu>
-            })
-        }
-      </MenuList>
-    </Menu></> :
+        <MenuList>
+          {
+            new_data.drawing_area.sankey.flux_taggs_list
+              .filter(tagg => tagg.has_tags)
+              .map((tagg, i) => {
+                return <Menu key={i} placement='end'>
+                  <MenuButton
+                    variant='contextmenu_button'
+                    as={Button}
+                    rightIcon={<ChevronRightIcon />}
+                    className="dropdown-basic"
+                  >
+                    {tagg.name}
+                  </MenuButton>
+                  <MenuList>
+                    {
+                      tagg.tags_list
+                        .map(tag => {
+                          const has_tag = contextualised_link.hasGivenTag(tag)
+                          return <MenuItem
+                            display='flex'
+                            onClick={() => {
+                              new_data.drawing_area.updateSelectedLinksTagAssignation(!has_tag, tag)
+                              new_data.drawing_area.link_contextualised = undefined
+                              new_data.menu_configuration.ref_to_menu_context_links_updater.current()
+                              setUpdate(a => a + 1)
+                            }}
+                          >
+                            {tag.name}
+                            {checked(has_tag)}
+                          </MenuItem>
+                        })
+                    }
+                  </MenuList>
+                </Menu>
+              })
+          }
+        </MenuList>
+      </Menu></> :
     <></>
 }

@@ -6,25 +6,17 @@
 // Date : 28/08/2024
 // All rights reserved for TerriFlux
 // ==================================================================================================
-
-// Local imports
-import {
-  type ClassAbstract_ApplicationDataOSP,
-  ClassAbstract_DrawingAreaOSP
-} from './AbstractOSP'
-import { ClassTemplate_SankeyOSP } from './SankeyOSP'
-import type { ClassTemplate_NodeElementOSP } from './NodeOSP'
-import { type Class_ContainerElement } from './FreeLabel'
-import type { ClassTemplate_LinkElementOSP } from './LinkOSP'
-import { ClassTemplate_ZoneSelectionOSP } from './SelectionZoneOSP'
+import { Class_ZoneSelectionOSP } from './SelectionZoneOSP'
 import {
   default_main_sankey_id,
-  getBooleanFromJSON,
   getStringFromJSON,
   getStringOrUndefinedFromJSON,
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 import { convert_data_plus_legacy, getArrayFromJSON } from '../components/UtilsOSP'
+import { Class_Sankey } from '../deps/OpenSankey/types/Sankey'
+import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
+import { Class_ApplicationDataOSP } from './ApplicationDataOSP'
 
 // CLASS DRAWING AREA PLUS **************************************************************
 
@@ -32,77 +24,54 @@ import { convert_data_plus_legacy, getArrayFromJSON } from '../components/UtilsO
  * Override OpenSankey's class to take in account specifities of OpenSankey+ app
  *
  * @export
- * @class ClassTemplate_DrawingAreaOSP
- * @extends {ClassTemplate_DrawingArea}
+ * @class Class_DrawingAreaOSP
+ * @extends {Class_DrawingArea}
  */
-export abstract class ClassTemplate_DrawingAreaOSP
-  <
-    Type_GenericSankey extends ClassTemplate_SankeyOSP<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
-    Type_GenericNodeElement extends ClassTemplate_NodeElementOSP<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
-    Type_GenericLinkElement extends ClassTemplate_LinkElementOSP<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>
-  >
-  extends ClassAbstract_DrawingAreaOSP
-  <
-    Type_GenericSankey,
-    Type_GenericNodeElement,
-    Type_GenericLinkElement
-  > {
+export class Class_DrawingAreaOSP extends Class_DrawingArea {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
-  /**
+  /** 
    * Application object which relates to this drawing area
-   * @type {ClassTemplate_ApplicationData}
-   * @memberof ClassTemplate_DrawingArea
+   * @type {Class_ApplicationData}
+   * @memberof Class_DrawingArea
    */
-  public application_data: ClassAbstract_ApplicationDataOSP<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
-
-  /**
-     * d3 selection of svg group that contains drawing area container
-     * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-     * @memberof ClassTemplate_DrawingArea
-     */
-  public d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  private _contextualised_free_label: Class_ContainerElement<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined = undefined
-
-  // Attribute for background image
-  private _show_background_image: boolean = false
-  private _background_image: string = ''
+  public application_data: Class_ApplicationDataOSP
 
   // Attr for views
   private _heredited_attr: string[] = []
 
-  private _number_of_containers: number = 0
-
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of ClassTemplate_DrawingAreaOSP.
+   * Creates an instance of Class_DrawingAreaOSP.
    * @param {number} height
    * @param {number} width
    * @param {
    *  ClassAbstract_ApplicationDataOSP} application_data
-   * @memberof ClassTemplate_DrawingAreaOSP
+   * @memberof Class_DrawingAreaOSP
    */
   constructor(
-    application_data: ClassAbstract_ApplicationDataOSP<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    application_data: Class_ApplicationDataOSP,
     id: string = default_main_sankey_id
   ) {
     // Heritance
     super(application_data, id)
     // Overrides
-    this.application_data = application_data
+    this.application_data = application_data as Class_ApplicationDataOSP
     this._group_to_select += ',.gg_labels'
   }
 
   // ABSTRACT METHODS ===================================================================
 
-  protected abstract createNewSelectionZone(): ClassTemplate_ZoneSelectionOSP<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
+  protected createNewSankey(id?: string) {
+    const sankey = new Class_Sankey(this, this.application_data.menu_configuration, id)
+    return sankey
+  }
+
+  protected createNewSelectionZone(): Class_ZoneSelectionOSP {
+    return new Class_ZoneSelectionOSP(this, this.application_data.menu_configuration_osp)
+  }
 
   // CLEANING METHODS ===================================================================
 
@@ -113,131 +82,17 @@ export abstract class ClassTemplate_DrawingAreaOSP
     this.application_data.deleteView(this.id)
   }
 
-  /**
-   * Delete a given container -> container will not exist anymore
-   * @param {Class_ContainerElement<any, any>} container
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public deleteContainer(container: Class_ContainerElement<any, any>) { // eslint-disable-line
-    // Remove from selection if necessary
-    this.removeContainerFromSelection(container)
-    // Remove container from sankey
-    this.sankey.deleteContainer(container)
-    // Self delete container
-    container.delete()
-    // Update related menus
-    this.application_data.menu_configuration.updateComponentRelatedToContainers()
-  }
-
-  public addContainerElement() {
-    // We increase by two, in order to easyly swap elements
-    // ie : element0 order = 0, element1 order = 2, element3 order = 4
-    // to increase element 0 order, juste add 3
-    // then : element0 order = 3, element1 order = 2, element3 order = 4
-    // then orderElement() method will display elements as wanted + update their order value
-    // ie : element1 order = 0, element0 order = 2, element3 order = 4
-    this._number_of_containers = this._number_of_containers + 2
-    return this._number_of_containers
-  }
-
-
-  /**
-   * Permanently delete selected containers
-   * Update menu accordingly
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public deleteSelectedContainers() {
-    // Get copy of selected nodes
-    const selected_containers = this.selected_containers_list
-    // Delete each one of them
-    selected_containers.forEach(container => { this.deleteContainer(container) })
-    // Then let garbage collector do the rest...
-  }
-
-  /**
-   * Delete all selected elements & save it's undo
-   *
-   * @param {boolean} deleteSelectedNodes
-   * @param {boolean} deleteSelectedLinks
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public deleteSelection(deleteSelectedNodes: boolean, deleteSelectedLinks: boolean) {
-    super.deleteSelection(deleteSelectedNodes, deleteSelectedLinks)
-    this.deleteSelectedContainers()
-  }
-
-  /**
-   *Function that save in history the undo of dragging free label
-   *
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public saveUndoLabelSelectedPos() {
-    const containers_selected = this.selected_containers_list.filter(cont => !cont.tied_to_nodes) // desn't keep track of tied to nodes containers
-    const nodes_selected = this.selected_nodes_list
-    const dict_old_pos_label: { [x: string]: [number, number] } = {}
-    const dict_old_pos_node: { [x: string]: [number, number] } = {}
-    // Memorize for undo
-    containers_selected.forEach(n => {
-      dict_old_pos_label[n.id] = [n.display.position.x, n.display.position.y]
-    })
-    nodes_selected.forEach(n => {
-      dict_old_pos_node[n.id] = [n.display.position.x, n.display.position.y]
-    })
-    // undo function
-    const undo = () => {
-      containers_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
-      })
-      nodes_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
-      })
-      this.checkAndUpdateAreaSize()
-    }
-    this.application_data.history.saveUndo(undo)
-  }
-
-  /**
-   *Function that save in history the redo of dragging free label
-   *
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public saveRedoLabelSelectedPos() {
-    const containers_selected = this.selected_containers_list.filter(zdt => !zdt.tied_to_nodes) // desn't keep track of tied to nodes containers
-    const nodes_selected = this.selected_nodes_list
-    const dict_old_pos_label: { [x: string]: [number, number] } = {}
-    const dict_old_pos_node: { [x: string]: [number, number] } = {}
-    // Memorize for redo
-    containers_selected.forEach(n => {
-      dict_old_pos_label[n.id] = [n.display.position.x, n.display.position.y]
-    })
-    nodes_selected.forEach(n => {
-      dict_old_pos_node[n.id] = [n.display.position.x, n.display.position.y]
-    })
-    // redo function
-    const redo = () => {
-      containers_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
-      })
-      nodes_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
-      })
-      this.checkAndUpdateAreaSize()
-    }
-    this.application_data.history.saveRedo(redo)
-  }
-
   // COPY METHODS =======================================================================
 
-  protected _copyAttrFrom(drawing_area_to_copy: ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+  protected _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea) {
     // Call heredited method
-    super._copyAttrFrom(drawing_area_to_copy)
+    super._copyAttrFrom(drawing_area_to_copy as Class_DrawingArea)
     // Name
     this.name = drawing_area_to_copy.name
-    // Attribute for background image
-    this._show_background_image = drawing_area_to_copy._show_background_image
-    this._background_image = drawing_area_to_copy._background_image
+
+    const drawing_area_osp = drawing_area_to_copy as unknown as Class_DrawingAreaOSP
     // Attr for views
-    this._heredited_attr = Object.assign([], drawing_area_to_copy._heredited_attr)
+    this._heredited_attr = Object.assign([], drawing_area_osp._heredited_attr)
   }
 
   // SAVING METHODS =====================================================================
@@ -248,14 +103,12 @@ export abstract class ClassTemplate_DrawingAreaOSP
    * @param {boolean} [only_visible_elements]
    * @param {boolean} [with_values]
    * @return {*}
-   * @memberof ClassTemplate_DrawingAreaOSP
+   * @memberof Class_DrawingAreaOSP
    */
   public toJSON(only_visible_elements?: boolean, with_values?: boolean) {
     // Herited toJSON
     const json_entry: Type_JSON = super.toJSON(only_visible_elements, with_values)
-    // Add new attributes
-    if (this._show_background_image) json_entry['show_background_image'] = this._show_background_image
-    if (this._show_background_image) json_entry['background_image'] = this._background_image
+
     if (this.name != default_main_sankey_id) json_entry['name'] = this.name
     if (Object.keys(this._heredited_attr).length>0) json_entry['heredited_attr'] = this._heredited_attr
     return json_entry
@@ -267,7 +120,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
    * @param {Type_JSON} json_object
    * @param {boolean} [redraw]
    * @param {boolean} [match_and_update]
-   * @memberof ClassTemplate_DrawingAreaOSP
+   * @memberof Class_DrawingAreaOSP
    */
   public fromJSON(json_object: Type_JSON, match_and_update?: boolean): void {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
@@ -279,143 +132,8 @@ export abstract class ClassTemplate_DrawingAreaOSP
     }
     super.fromJSON(json_object, match_and_update)
     // New attributes
-    this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
-    this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
     this.name = getStringFromJSON(json_object, 'name', this.name)
     this._heredited_attr = getArrayFromJSON(json_object, 'heredited_attr', []) as string[]
-  }
-
-  // PUBLIC METHODS =====================================================================
-
-
-  /**
-   * Override switchMode to setEvent listener when changing drawing area mode (in selection mode drag event are enabled)
-   *
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public override switchMode() {
-    super.switchMode()
-    this.sankey.containers_list.forEach(lab => lab.setEventsListeners())
-  }
-
-  /**
-   * Reinit d3 selections
-   * @protected
-   * @memberof ClassTemplate_DrawingArea
-   */
-  protected _initDraw() {
-    super._initDraw()
-    this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
-  }
-
-  /**
-   *
-   *
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public drawElements(): void {
-    super.drawElements()
-    this.drawBgImage()
-    this.sankey.containers_list.forEach(container => container.draw())
-  }
-
-  public override drawBackground() {
-    super.drawBackground()
-    this.drawBgImage()
-  }
-
-  /**
- * Functon that add an image in in the background of the svg,
- * the image is imported in the config menu
- *
- * @memberof ClassTemplate_DrawingAreaOSP
- */
-  public drawBgImage() {
-    this.d3_selection_bg?.select('#bg_image').remove()
-
-    if (this._show_background_image) {
-      this.d3_selection_bg
-        ?.append('image')
-        .attr('id', 'bg_image')
-        .attr('width', this.width)
-        .attr('height', this.height)
-        .attr('href', this._background_image)
-        .style('background-size', 'contain')
-        .style('background-repeat', 'no-repeat')
-    }
-  }
-
-  /**
-   * add a container from a selection set
-   *
-   * @param {Class_ContainerElement<any, any>} container
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public addContainerToSelection(container: Class_ContainerElement<any, any>) { // eslint-disable-line
-    this._selection[container.id] = container
-    container.setSelected()
-  }
-
-  /**
-     * Add all nodes to selection set
-     * Update menu accordingly
-     * @memberof ClassTemplate_DrawingArea
-     */
-  public addAllVisibleContainersToSelection() {
-    this.sankey.visible_containers_list
-      .forEach(container => this.addContainerToSelection(container))
-  }
-
-  /**
-   * remove a container from a selection set
-   * Update menu accordingly
-   * @param {Class_ContainerElement<any, any>} container
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public removeContainerFromSelection(container: Class_ContainerElement<any, any>) { // eslint-disable-line
-    if (this._selection[container.id] !== undefined) {
-      // Update selection list
-      delete this._selection[container.id]
-      // Update selection attribute on given container
-      container.setUnSelected()
-      // Update related menus
-      this.application_data.menu_configuration.updateComponentRelatedToContainers()
-    }
-  }
-
-
-  /**
-   * remove a container from a selection set
-   * @param {Class_ContainerElement<this, Type_GenericSankey>} node
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public removeFreeLabelFromSelection(container: Class_ContainerElement<this, Type_GenericSankey>) {
-    if (this._selection[container.id] !== undefined) {
-      delete this._selection[container.id]
-      container.setUnSelected()
-    }
-  }
-
-  /**
-   * override purgeSelection to include event for OSP DA
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public purgeSelection() {
-    super.purgeSelection()
-    this.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
-  }
-
-  /**
-   * Remove all container selected
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public purgeSelectionOfContainer() {
-    // Unselect elements
-    this.selected_containers_list
-      .forEach(zdt => {
-        this.removeContainerFromSelection(zdt)
-      })
-    this.application_data.menu_configuration.updateComponentRelatedToContainers()
   }
 
   /**
@@ -423,7 +141,7 @@ export abstract class ClassTemplate_DrawingAreaOSP
    * we created this function and moveSelectedContainerFromDragEvent to avoid recursive call of eventMouseDrag
    *
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof ClassTemplate_DrawingAreaOSP
+   * @memberof Class_DrawingAreaOSP
    */
   public moveSelectedNodesFromDragEvent(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
@@ -434,122 +152,10 @@ export abstract class ClassTemplate_DrawingAreaOSP
       })
   }
 
-  /**
-   * Function used to move selected containers from another element drag event,
-   * we created this function and moveSelectedNodesFromDragEvent to avoid recursive call of eventMouseDrag
-   *
-   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public moveSelectedContainerFromDragEvent(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    this.selected_containers_list
-      .forEach(n => {
-        if (!n.tied_to_nodes) {
-          n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-          n.drawDragHandlers()
-        }
-      })
-  }
-
-  /**
-   * Checks if it is possible to directly deal with events
-   * @return {boolean}
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public override eventsEnabled(): boolean {
-    // Deal with node events in priority
-    const mouse_over_nodes = this.isMouseOverAnExistingContainer()
-    if (mouse_over_nodes === true) {
-      return false
-    }
-
-    // super event
-    return super.eventsEnabled()
-  }
-
-  /**
-   * Context menus are directly diplayed in drawing area when deal with them directly here
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public override closeAllContextMenus() {
-    super.closeAllContextMenus()
-    // Reset contextualised elements
-    this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
-    // Update components
-    this.contextualised_container = undefined
-  }
-
-  /**
-   * Return element (node,flow,zdt) from id 
-   *
-   * @param {string} id
-   * @return {*} 
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  public elementFromId(id: string) {
-    if (id in this._sankey.containers_dict) {
-      const cont = this._sankey.containers_dict[id]
-      return { id: cont.id, name: cont.title, is_selected: cont.is_selected, is_visible: cont.is_visible }
-    }
-
-    return super.elementFromId(id)
-  }
-
-  // PRIVATE METHODS =====================================================================
-
-  /**
-   * Test if mouse is over some containers
-   *
-   * @private
-   * @return {*}
-   * @memberof ClassTemplate_DrawingAreaOSP
-   */
-  private isMouseOverAnExistingContainer(): boolean {
-    let cont_id: string
-    for (cont_id in this.sankey.containers_dict) {
-      if (this.sankey.containers_dict[cont_id].isMouseOver())
-        return true
-    }
-    return false
-  }
-
-  // /**
-  //  * Return height of the top nav bar + view banner if open
-  //  *
-  //  * @return {*}
-  //  * @memberof ClassTemplate_DrawingArea
-  //  */
-  // public override getNavBarHeight() {
-  //   let additional_height = 0
-  //   if (this.application_data.menu_configuration.ref_to_banner_views_opened.current)
-  //     additional_height = ((document.getElementsByClassName('BannerView')[0]?.getBoundingClientRect().height) ?? 0)
-
-  //   return super.getNavBarHeight() + additional_height
-  // }
-
-  // public originalGetNavBarHeight() {
-  //   return super.getNavBarHeight()
-  // }
   // GETTERS / SETTERS ==================================================================
   public get id() { return this._sankey.id }
   public get name() { return this._sankey.name }
   public set name(name: string) { this._sankey.name = name }
-
-  public get selected_containers_list(): Class_ContainerElement<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[] {
-    return this.sankey.containers_list.filter(container => container.is_selected) as Class_ContainerElement<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>[]
-  }
-  public get selected_containers_list_sorted() { return this.selected_containers_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
-
-  public get contextualised_container(): Class_ContainerElement<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined { return this._contextualised_free_label }
-  public set contextualised_container(value: Class_ContainerElement<ClassTemplate_DrawingAreaOSP<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> | undefined) { this._contextualised_free_label = value }
-
-  public get show_background_image(): boolean { return this._show_background_image }
-  public set show_background_image(value: boolean) { this._show_background_image = value }
-
-  public get background_image(): string { return this._background_image }
-  public set background_image(value: string) { this._background_image = value }
 
   public get heredited_attr(): string[] { return this._heredited_attr }
 }

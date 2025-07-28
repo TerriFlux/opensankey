@@ -1,15 +1,15 @@
 
 import { FType_DiagramSelector } from '../deps/OpenSankey/components/dialogs/types/SankeyMenuDialogsTypes'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 import { OSPApplicationDataType, OSPData } from '../types/LegacyTypes'
-import { Type_GenericApplicationDataOSP } from '../types/TypesOSP'
 
 export type FType_DiagramSelectorOSP = (
   applicationData: OSPApplicationDataType,
 ) => FType_DiagramSelector
 
 export type FCType_TransformationElementsOSP = {
-  new_data_plus: Type_GenericApplicationDataOSP,
+  new_data_plus: Class_ApplicationDataOSP,
 }
 
 export type FType_SankeyLayoutOSP = (

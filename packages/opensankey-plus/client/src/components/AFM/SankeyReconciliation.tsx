@@ -25,10 +25,10 @@ import {
   ModalOverlay,
   useDisclosure
 } from '@chakra-ui/react'
-import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 
 export interface IType_SupplyUseModelisationProd {
-  application_data_mfa: Type_GenericApplicationDataOSP,
+  application_data_mfa: Class_ApplicationDataOSP,
   launch: (path: string) => void
 }
 
@@ -47,13 +47,13 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
   launch
 }) => {
   const { t } = application_data_mfa
-  const { menu_configuration } = application_data_mfa
+  const { menu_configuration_osp } = application_data_mfa
   const [result, setResult] = useState('')
   const [processing, setProcessing] = useState(false)
   const [failure, setFailure] = useState(false)
   const [not_started, setNotStarted] = useState(true)
   const [value, setValue] = useState([1, 2])
-  const [regions, setRegions] = useState(false)
+  // const [, setRegions] = useState(false)
   const [uncertainty, setUncertainty] = useState(false)
   const [nb_realizations, setNbRealizations] = useState(100)
   const [input_file_name, setInputFileName] = useState('sankey.xlsx')
@@ -63,9 +63,9 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true })
 
   const [show_reconciliation, set_show_reconciliation] = useState(false)
-  application_data_mfa.menu_configuration.dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current = set_show_reconciliation
+  application_data_mfa.menu_configuration_osp.dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current = set_show_reconciliation
 
-  let upper_level_file_ = useRef<HTMLInputElement>(null)
+  const upper_level_file_ = useRef<HTMLInputElement>(null)
 
   const setNbRealisations = (e: ChangeEvent) => {
     setNbRealizations((e.target as HTMLFormElement).value)
@@ -85,9 +85,9 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
     setValue([...value])
   }
 
-  const regionChange = (evt: ChangeEvent) => {
-    setRegions((evt.target as HTMLFormElement).checked)
-  }
+  // const regionChange = (evt: ChangeEvent) => {
+  //   setRegions((evt.target as HTMLFormElement).checked)
+  // }
 
   const setInputFile = (evt: ChangeEvent) => {
     set_input_file((evt.target as HTMLFormElement).files[0])
@@ -97,9 +97,9 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
     set_layout_file((evt.target as HTMLFormElement).files[0])
   }
 
-  const setRegionFile = (evt: ChangeEvent) => {
-    upper_level_file_ = (evt.target as HTMLFormElement).files[0]
-  }
+  // const setRegionFile = (evt: ChangeEvent) => {
+  //   upper_level_file_ = (evt.target as HTMLFormElement).files[0]
+  // }
 
   // Define cleaning temporary dir function
   const CleanServer = () => {
@@ -139,10 +139,10 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
     function DownloadFile(blob: BlobPart) {
       const root_input_file_name = input_file_name.split('.')[0]
       let suffix = '_reconciled.xlsx'
-      if (menu_configuration.action_type === 'check_excel') {
+      if (menu_configuration_osp.action_type === 'check_excel') {
         suffix = '_corrected.xlsx'
       }
-      else if (menu_configuration.action_type === 'create_empty_ter') {
+      else if (menu_configuration_osp.action_type === 'create_empty_ter') {
         suffix = '_ter_created.xlsx'
       }
       const output_file_name = root_input_file_name + suffix
@@ -165,7 +165,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
     fetch(url_optimize_retrieves_results, fetchData).then(
       function (response) {
         if (response.ok) {
-          if (menu_configuration.action_type === 'check_excel') {
+          if (menu_configuration_osp.action_type === 'check_excel') {
             CleanServer()
           }
           else {
@@ -186,7 +186,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
               setResult(result + '\n ERROR: optimize_retrieves_result a retourné une erreur qui n\'est pas en format json')
               setFailure(true)
             })
-          menu_configuration.action_type = ''
+          menu_configuration_osp.action_type = ''
           setNotStarted(true)
         }
       }
@@ -199,7 +199,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
   const DisplayResults = () => {
     // Define Display Sankey function
     function DisplaySankey(value: Blob) {
-      if (menu_configuration.action_type == 'optim') {
+      if (menu_configuration_osp.action_type == 'optim') {
         launch((value as unknown as { [name: string]: string }).name)
         const root = window.location.origin
         const url = root + '/' + 'opensankey/excel/upload/launch'
@@ -265,7 +265,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
           return
         }
         // Reconcilliation from current Sankey -> Apply current layout
-        if (menu_configuration.action_type === 'optim_sankey') {
+        if (menu_configuration_osp.action_type === 'optim_sankey') {
           application_data_mfa.drawing_area.fromJSON(new_sankey_json_obj)
           application_data_mfa.sendWaitingToast(
             () => {
@@ -294,7 +294,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
     fetch(url_optimize_retrieves_results, fetchData).then(
       function (response) {
         if (response.ok) {
-          if (menu_configuration.action_type === 'check_excel') {
+          if (menu_configuration_osp.action_type === 'check_excel') {
             CleanServer()
           }
           else {
@@ -317,7 +317,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
               setResult(result + '\n ERROR: optimize_retrieves_result a retourné une erreur qui n\'est pas en format json')
               setFailure(true)
             })
-          menu_configuration.action_type = ''
+          menu_configuration_osp.action_type = ''
           setNotStarted(true)
         }
       }
@@ -333,19 +333,19 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
   }
 
   const launchReconciliation = () => {
-    if (!input_file && menu_configuration.action_type !== 'optim_sankey') {
+    if (!input_file && menu_configuration_osp.action_type !== 'optim_sankey') {
       return
     }
     // Optimisation params
     const data_server = new FormData()
     data_server.append('input_file', input_file as Blob)
-    data_server.append('optim_sankey', String(menu_configuration.action_type === 'optim_sankey'))
-    data_server.append('create_empty_ter', String(menu_configuration.action_type === 'create_empty_ter'))
-    data_server.append('check_excel', String(menu_configuration.action_type === 'check_excel'))
+    data_server.append('optim_sankey', String(menu_configuration_osp.action_type === 'optim_sankey'))
+    data_server.append('create_empty_ter', String(menu_configuration_osp.action_type === 'create_empty_ter'))
+    data_server.append('check_excel', String(menu_configuration_osp.action_type === 'check_excel'))
     data_server.append('uncertainty_analysis', String(uncertainty))
     data_server.append('nb_realizations', String(nb_realizations))
     data_server.append('upper_level_file', (upper_level_file_ as unknown as HTMLFormElement).name)
-    if (menu_configuration.action_type === 'optim_sankey') {
+    if (menu_configuration_osp.action_type === 'optim_sankey') {
       const new_sankey_json_obj = JSON.parse(JSON.stringify(application_data_mfa.drawing_area.toJSON()))
       new_sankey_json_obj.icon_catalog = {}
       data_server.append('sankey_data', JSON.stringify(application_data_mfa.drawing_area.toJSON()))
@@ -382,37 +382,37 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
 
   const infos = (result !== undefined) ? result.split('\n') : []
   let title = 'Réconciliation des données'
-  if (menu_configuration.action_type === 'check_excel') {
+  if (menu_configuration_osp.action_type === 'check_excel') {
     title = 'Vérification du fichier d\'entrée'
   }
-  else if (menu_configuration.action_type === 'create_empty_ter') {
+  else if (menu_configuration_osp.action_type === 'create_empty_ter') {
     title = 'Création de la table Ressources Emplois'
   }
 
   let success_status = t('ModalAFM.success_status_optim')
-  if (menu_configuration.action_type === 'check_excel') {
+  if (menu_configuration_osp.action_type === 'check_excel') {
     success_status = t('ModalAFM.success_status_check_excel')
-  } else if (menu_configuration.action_type === 'create_empty_ter') {
+  } else if (menu_configuration_osp.action_type === 'create_empty_ter') {
     success_status = t('ModalAFM.success_status_create_ter')
   }
 
   let failure_status = t('ModalAFM.fail_status_optim')
-  if (menu_configuration.action_type === 'check_excel') {
+  if (menu_configuration_osp.action_type === 'check_excel') {
     failure_status = t('ModalAFM.fail_status_check_excel')
   }
-  else if (menu_configuration.action_type === 'create_empty_ter') {
+  else if (menu_configuration_osp.action_type === 'create_empty_ter') {
     failure_status = t('ModalAFM.fail_status_create_ter')
   }
 
   useEffect(() => {
-    if (menu_configuration.action_type === '' && result !== '') {
+    if (menu_configuration_osp.action_type === '' && result !== '') {
       reset()
     }
   })
   if (show_reconciliation) {
-    if (not_started && menu_configuration.action_type === 'optim_sankey') {
+    if (not_started && menu_configuration_osp.action_type === 'optim_sankey') {
       launchReconciliation()
-    } else if (menu_configuration.action_type === '') {
+    } else if (menu_configuration_osp.action_type === '') {
       setResult('')
     }
   }
@@ -468,7 +468,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
       onClose={() => {
         CleanServer()
         set_show_reconciliation(false)
-        menu_configuration.action_type = ''
+        menu_configuration_osp.action_type = ''
       }}>
       <ModalOverlay />
       <ModalContent
@@ -481,9 +481,9 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
         <ModalBody>
           <Box layerStyle='menuconfigpanel_grid'>
 
-            {menu_configuration.action_type !== 'optim_sankey' ? (content_import_excel) : (<></>)}
+            {menu_configuration_osp.action_type !== 'optim_sankey' ? (content_import_excel) : (<></>)}
 
-            {menu_configuration.action_type === 'optim' ? (<>
+            {menu_configuration_osp.action_type === 'optim' ? (<>
               <Box layerStyle='menu_sub_section'>
                 <Box layerStyle='menu_sub_section_title'>
                   <Checkbox
@@ -522,7 +522,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
             <Box
               layerStyle='menuconfigpanel_grid'
             >
-              {input_file || menu_configuration.action_type === 'optim_sankey' ?
+              {input_file || menu_configuration_osp.action_type === 'optim_sankey' ?
                 (not_started ? (<Button variant="menuconfigpanel_option_button_primary_activated" onClick={launchReconciliation}>
                   {t('ModalAFM.launch')}
                 </Button>) :
@@ -547,7 +547,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
                   )) : (<Button variant="primary" disabled onClick={launchReconciliation} size='sizeButtonDialog'>{t('ModalAFM.launch')}</Button>)}
             </Box>
 
-            {input_file === undefined && menu_configuration.action_type !== 'optim_sankey' ? <Alert status='warning'>
+            {input_file === undefined && menu_configuration_osp.action_type !== 'optim_sankey' ? <Alert status='warning'>
               <AlertIcon />
               {t('ModalAFM.waiting_file')}
             </Alert> : <></>}

@@ -36,7 +36,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const [, set_show_menu_node_icon] = useState(false)
   const [, setForceUpdate] = useState(false)
   const selected_nodes = new_data_plus.drawing_area.selected_nodes_list
-  new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
+  new_data_plus.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_node_icon.current = set_show_menu_node_icon
   new_data_plus.menu_configuration.ref_to_menu_config_node_icon_updater.current = () => setForceUpdate(b => !b)
 
   // Update this component & component node appareance because we modify shape visibility
@@ -55,9 +55,9 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   let all_are_none = all_are_icons
   selected_nodes
     .forEach(d => {
-      all_are_icons = (all_are_icons && d.iconVisible)
+      all_are_icons = (all_are_icons && d.icon_visible)
       all_are_images = (all_are_images && d.is_image)
-      all_are_none = (all_are_none && (!d.iconVisible && !d.is_image))
+      all_are_none = (all_are_none && (!d.icon_visible && !d.is_image))
     })
 
 
@@ -81,12 +81,12 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const updateNodeIconVisibility = () => {
     const dict_old_value: { [x: string]: [boolean, boolean] } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = [n.is_image, n.iconVisible]
+      dict_old_value[n.id] = [n.is_image, n.icon_visible]
     })
     const _updateNodeIconVisibility = () => {
       selected_nodes.forEach(n => {
         n.is_image = false
-        n.iconVisible = true
+        n.icon_visible = true
 
       })
       redrawAndRefresh()
@@ -95,7 +95,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     const inv_updateNodeIconVisibility = () => {
       selected_nodes.forEach(n => {
         n.is_image = dict_old_value[n.id][0]
-        n.iconVisible = dict_old_value[n.id][1]
+        n.icon_visible = dict_old_value[n.id][1]
       })
       redrawAndRefresh()
     }
@@ -114,18 +114,18 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const updateNodeIconColor = (_: string) => {
     const dict_old_value: { [x: string]: string } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.iconColor!
+      dict_old_value[n.id] = n.icon_color!
     })
     const _updateNodeIconColor = () => {
       selected_nodes.forEach(n => {
-        n.iconColor = _
+        n.icon_color = _
       })
       redrawAndRefresh()
     }
 
     const inv_updateNodeIconColor = () => {
       selected_nodes.forEach(n => {
-        n.iconColor = dict_old_value[n.id]
+        n.icon_color = dict_old_value[n.id]
       })
       redrawAndRefresh()
     }
@@ -144,18 +144,18 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const updateNodeIconColorSustainable = (_: boolean) => {
     const dict_old_value: { [x: string]: boolean } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.iconColorSustainable
+      dict_old_value[n.id] = n.icon_color_sustainable
     })
     const _updateNodeIconColorSustainable = () => {
       selected_nodes.forEach(n => {
-        n.iconColorSustainable = _
+        n.icon_color_sustainable = _
       })
       redrawAndRefresh()
     }
 
     const inv_updateNodeIconColorSustainable = () => {
       selected_nodes.forEach(n => {
-        n.iconColorSustainable = dict_old_value[n.id]
+        n.icon_color_sustainable = dict_old_value[n.id]
       })
       redrawAndRefresh()
     }
@@ -174,12 +174,12 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const setIllustrationVisibilityToNone = () => {
     const dict_old_value: { [x: string]: [boolean, boolean] } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = [n.is_image, n.iconVisible]
+      dict_old_value[n.id] = [n.is_image, n.icon_visible]
     })
     const _setIllustrationVisibilityToNone = () => {
       selected_nodes.forEach(n => {
         n.is_image = false
-        n.iconVisible = false
+        n.icon_visible = false
 
       })
       redrawAndRefresh()
@@ -188,7 +188,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     const inv_setIllustrationVisibilityToNone = () => {
       selected_nodes.forEach(n => {
         n.is_image = dict_old_value[n.id][0]
-        n.iconVisible = dict_old_value[n.id][1]
+        n.icon_visible = dict_old_value[n.id][1]
       })
       redrawAndRefresh()
     }
@@ -207,12 +207,12 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   const updateNodeImageVisibility = () => {
     const dict_old_value: { [x: string]: [boolean, boolean] } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = [n.is_image, n.iconVisible]
+      dict_old_value[n.id] = [n.is_image, n.icon_visible]
     })
     const _updateNodeImageVisibility = () => {
       selected_nodes.forEach(n => {
         n.is_image = true
-        n.iconVisible = false
+        n.icon_visible = false
 
       })
       redrawAndRefresh()
@@ -221,7 +221,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
     const inv_updateNodeImageVisibility = () => {
       selected_nodes.forEach(n => {
         n.is_image = dict_old_value[n.id][0]
-        n.iconVisible = dict_old_value[n.id][1]
+        n.icon_visible = dict_old_value[n.id][1]
       })
       redrawAndRefresh()
     }
@@ -318,7 +318,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                 variant='menuconfigpanel_option_button'
                 disabled={!is_activated}
                 onClick={() => {
-                  new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_modal_import_icons.current!(true)
+                  new_data_plus.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_import_icons.current!(true)
                 }}
               >
                 {new_data_plus.icon_library.icon_open_modal_icon}
@@ -341,8 +341,8 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
                 <Box>
                   <OSColorPicker
                     isDisabled={new_data_plus.has_sankey_plus}
-                    initialColor={(selected_nodes.length === 1 && selected_nodes[0].iconColor) ?
-                      selected_nodes[0].iconColor :
+                    initialColor={(selected_nodes.length === 1 && selected_nodes[0].icon_color) ?
+                      selected_nodes[0].icon_color :
                       '#ffffff'}
                     functionOnBlur={(new_color) => {
                       updateNodeIconColor(new_color)
@@ -353,16 +353,16 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
               <Button
                 //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
                 variant={
-                  (selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ?
+                  (selected_nodes.length === 1 && selected_nodes[0].icon_color_sustainable) ?
                     'menuconfigpanel_option_button_activated' :
                     'menuconfigpanel_option_button'}
                 onClick={() => {
                   let value = false
-                  value = selected_nodes[0]?.iconColorSustainable ?? ''
+                  value = selected_nodes[0]?.icon_color_sustainable ?? ''
                   updateNodeIconColorSustainable(value)
                 }}
               >
-                {(selected_nodes.length === 1 && selected_nodes[0].iconColorSustainable) ? icon_locked : icon_unlocked}
+                {(selected_nodes.length === 1 && selected_nodes[0].icon_color_sustainable) ? icon_locked : icon_unlocked}
               </Button>
             </Box>
           </OSTooltip>
@@ -514,12 +514,12 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
 export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
   new_data_plus,
 }) => {
-  const { drawing_area, t, menu_configuration } = new_data_plus
+  const { drawing_area, t, menu_configuration_osp } = new_data_plus
   const selected_nodes = drawing_area.selected_nodes_list
   const is_activated = new_data_plus.has_sankey_plus
 
   const [, setCount] = useState(0)
-  menu_configuration.ref_to_node_hyperlink_updater.current = () => setCount(a => a + 1)
+  menu_configuration_osp.ref_to_node_hyperlink_updater.current = () => setCount(a => a + 1)
   if (selected_nodes.length == 0)
     return <></>
 
@@ -617,7 +617,7 @@ export const ButtonNodeContextCreateUnitaryView: FunctionComponent<FCType_Button
         () => {
           if (new_data.drawing_area.node_contextualised)
             new_data.createUnitaryNewView(new_data.drawing_area.node_contextualised)
-          new_data.menu_configuration.updateComponentRelatedToViews()
+          new_data.menu_configuration_osp.updateComponentRelatedToViews()
           new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
           closeContextMenu()
 
@@ -654,10 +654,10 @@ export const ButtonNodeContextCreateZDTAroundSelectedNode: FunctionComponent<FCT
       const cont = new_data.drawing_area.sankey.addNewDefaultFreeLabel()
       cont.tied_to_nodes = true
       new_data.drawing_area.selected_nodes_list.forEach(node => {
-          node.getListDescendantOfNode().forEach(n => {
-            new_data.drawing_area.sankey.attachNodeToCont(n, cont)
-            //new_data_plus.drawing_area.addNodeToSelection(node)
-          })
+        node.getListDescendantOfNode().forEach(n => {
+          new_data.drawing_area.sankey.attachNodeToCont(n, cont)
+          //new_data_plus.drawing_area.addNodeToSelection(node)
+        })
         new_data.drawing_area.sankey.attachNodeToCont(node,cont)
       })
       cont.draw()

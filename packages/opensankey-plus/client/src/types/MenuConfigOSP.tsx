@@ -63,11 +63,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   private _is_sequence_loop: boolean = false
   private _ref_to_config_DA_bg_image_updater: MutableRefObject<(() => void)>
 
-  /* ========================================
-    Updater of component for containers related menus
-    ========================================*/
-  private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
-  private _ref_to_menu_context_container_updater: MutableRefObject<(() => void)>
+
 
   /* ========================================
     Updater of component for toolbar tags related menus
@@ -93,17 +89,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   /* ========================================
   Updater of component for node plus related menus
   ========================================*/
-  private _ref_to_menu_config_node_name_label_bg_updater: MutableRefObject<(() => void)>
-  private _ref_to_menu_config_link_data_text_updater: MutableRefObject<(() => void)>
-  private _ref_to_menu_config_link_scientific_precision_updater: MutableRefObject<(() => void)>
 
-  // Updater of config node icon
-  private _ref_to_menu_config_node_icon_updater: MutableRefObject<(() => void)>
-
-  // config ref related to node FO elements
-  private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
-  private _r_editor_content_fo_node_updater: MutableRefObject<(() => void)>
-  private _ref_to_updater_modal_apply_layout_plus: MutableRefObject<(() => void)>
 
   // Timeout between steps in sequence (in ms)
   private _timeout_sequence: number = 2000
@@ -123,8 +109,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     // Init parent class
     super()
     // Init value for menu_config plus variable
-    this._ref_to_menu_config_container_updater = useRef(() => null)
-    this._ref_to_menu_context_container_updater = useRef(() => null)
+
     this._ref_to_banner_views_updater = useRef(() => null)
     this._ref_to_banner_views_opened=useRef(false)
     this._ref_to_views_config_updater = useRef(() => null)
@@ -133,35 +118,23 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
     this._ref_show_modal_unitary_view = useRef((_: boolean) => null)
     this._ref_update_modal_unitary_view = useRef(() => null)
-    this._r_setter_editor_content_fo_node = useRef(() => null)
-    this._r_editor_content_fo_node_updater = useRef(() => null)
-    this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
-    this._ref_to_menu_config_link_data_text_updater = useRef(() => null)
-    this._ref_to_menu_config_link_scientific_precision_updater = useRef(() => null)
+
     this._ref_to_toolbar_node_tag_updater = useRef(() => null)
     this._ref_to_toolbar_link_tag_updater = useRef(() => null)
     this._ref_to_toolbar_data_tag_updater = useRef(() => null)
     this._ref_to_toolbar_level_tag_filter_updater = useRef(() => null)
     this._ref_to_btn_top_pref_updater = useRef(() => null)
 
-
     this._ref_to_toolbar_link_visual_filter_updater = useRef(() => null)
     this._ref_to_node_hyperlink_updater = useRef(() => null)
     this._ref_to_config_DA_bg_image_updater = useRef(() => null)
-    this._ref_to_menu_config_node_icon_updater = useRef(() => null)
-
-    this._ref_to_updater_modal_apply_layout_plus = useRef(() => null)
 
     this._ref_close_filter_drawer = useRef(() => null)
 
     this._dict_setter_show_dialog_plus = {
-      ref_setter_show_menu_node_icon: useRef(() => null),
-      ref_setter_show_modal_import_icons: useRef(() => null),
-      ref_setter_show_menu_zdt: useRef(() => null),
       ref_setter_show_menu_view_not_saved: useRef(() => null)
     }
 
-    
     this._style_config.data.elements_configurable.push('data_tag')
     this._style_config.data.elements_configurable.push('level_tag')
 
@@ -190,16 +163,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_to_btn_top_pref_updater.current()
   }
 
-  public openConfigMenuElementsContainers() {
-    this.openConfigMenu()
-    // Leave enough time for menus to open
-    setTimeout(() => {
-      this._type_menu_configuration_selected='presentation' as keyTypeConfig
-      this._elements_configurable_selected.presentation=['object' as keyTypeElements]
-      this._ref_to_menu_config_updater.current()
-    }, 200)
-  }
-
   public override updateComponentPref() {
     super.updateComponentPref()
   }
@@ -218,20 +181,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this.ref_to_toolbar_level_tag_filter_updater.current()
   }
 
-  /**
-   * Update component with timeOut to avoid multiple refreshs
-   * @memberof Class_MenuConfig
-   */
-  public updateComponentRelatedToContainers() {
-    this._add_waiting_process(
-      'updateComponentRelatedToContainers',
-      (_this: Class_MenuConfigOSP) => {
-        _this._ref_to_menu_config_container_updater.current()
-        _this._ref_to_menu_context_container_updater.current()
-        _this._ref_to_GraphElementsOrdoner_updater.current()
-      }
-    )
-  }
+
 
   /**
    * Update Components related to views (BannerView, AccordionView,...)
@@ -281,8 +231,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   public override updateAllComponentsRelatedToNodesConfig() {
     super.updateAllComponentsRelatedToNodesConfig()
-    this._r_editor_content_fo_node_updater.current()
-    this._ref_to_menu_config_node_name_label_bg_updater.current()
+
     this._ref_to_node_hyperlink_updater.current()
   }
   public override updateComponentRelatedToLinksApparence() {
@@ -291,7 +240,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
       (_this: Class_MenuConfig) => {
         _this.ref_to_menu_config_links_apparence_visual_updater.current()
         _this.ref_to_menu_config_links_apparence_context_updater.current()
-        this._ref_to_menu_config_link_scientific_precision_updater.current()
+
       }
     )
   }
@@ -340,18 +289,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
         _this.ref_to_menu_config_links_data_updater.current()
         _this.ref_to_spreadsheet.current()
         _this.ref_to_menu_contextual_config_links_data_updater.current()
-        _this._ref_to_menu_config_link_data_text_updater.current()
       }
     )
-  }
-
-  public override updateMenuConfigComponent() {
-    super.updateMenuConfigComponent()
-  }
-
-  public override updateComponentApplyLayout() {
-    super.updateComponentApplyLayout()
-    this._ref_to_updater_modal_apply_layout_plus.current()
   }
 
   /**
@@ -402,17 +341,12 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   protected override _updateComponentRelatedToNodesApparence(): void {
     super._updateComponentRelatedToNodesApparence()
-    this._ref_to_menu_config_node_icon_updater.current()
+
   }
 
   // GETTERS / SETTERS ==================================================================
 
   public get dict_setter_show_dialog_plus(): OSPShowMenuComponentsVarType { return this._dict_setter_show_dialog_plus }
-
-  public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
-  public get ref_to_menu_context_container_updater(){return this._ref_to_menu_context_container_updater}
-  public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
-
   public get ref_to_banner_views_updater(): MutableRefObject<() => void> { return this._ref_to_banner_views_updater }
   public get ref_to_banner_views_opened(){return this._ref_to_banner_views_opened}
   public get ref_to_views_config_updater(): MutableRefObject<() => void> { return this._ref_to_views_config_updater }
@@ -421,14 +355,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_update_modal_unitary_view(): MutableRefObject<() => void> { return this._ref_update_modal_unitary_view }
 
   public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_save_diagram_only_view_updater }
-
-  public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> { return this._r_editor_content_fo_node_updater }
-
-  public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
-
-  public get ref_to_menu_config_link_data_text_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_link_data_text_updater }
-  public get ref_to_menu_config_link_scientific_precision_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_link_scientific_precision_updater }
-
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }
   public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_data_tag_updater }
@@ -438,10 +364,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_to_node_hyperlink_updater(): MutableRefObject<(() => void)> { return this._ref_to_node_hyperlink_updater }
 
   public get ref_to_config_DA_bg_image_updater() { return this._ref_to_config_DA_bg_image_updater }
-
-  public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
-
-  public get ref_to_updater_modal_apply_layout_plus(): MutableRefObject<(() => void)> { return this._ref_to_updater_modal_apply_layout_plus }
   public get ref_to_drawer_sequence_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_drawer_sequence_data_tag_updater }
 
   public get is_playing_sequence(): boolean { return this._is_playing_sequence }

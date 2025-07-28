@@ -21,14 +21,12 @@ import {
   FCType_MenuConfigurationFreeLabelsOSP,
   FCType_ContextZDTOSP,
 } from './types/SankeyPlusMenuConfigurationLabelsTypes'
-import { Class_ContainerElement } from '../../types/FreeLabel'
-import { ClassTemplate_SankeyOSP } from '../../types/SankeyOSP'
-import { Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP } from '../../types/TypesOSP'
+import { Class_ContainerElement } from '../../deps/OpenSankey/Elements/FreeLabel'
+
+
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 import { OSMultiSelect } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { listOptionSizeQuill } from '../UtilsOSP'
-
-type Type_GenericFreeLabelOSP = Class_ContainerElement<Type_GenericDrawingAreaOSP, ClassTemplate_SankeyOSP<Type_GenericDrawingAreaOSP, Type_GenericNodeElementOSP, Type_GenericLinkElementOSP>>
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -44,7 +42,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   new_data_plus,
 }) => {
   const { t, icon_library, OSColorPicker } = new_data_plus
-  const { icon_add_element, icon_remove_element, icon_order_up, icon_order_down, icon_to_the_left, icon_to_the_right, icon_text_vert_pos_top, icon_text_vert_pos_bottom } = icon_library
+  const { icon_add_element, icon_remove_element,  icon_to_the_left, icon_to_the_right, icon_text_vert_pos_top, icon_text_vert_pos_bottom } = icon_library
   const selected_zdt = new_data_plus.drawing_area.selected_containers_list
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
@@ -171,7 +169,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
   }
   const allLabelTiedToNodesAtExtremityPos = (_: 'top' | 'bottom' | 'left' | 'right') => {
     let display_value = false
-    let position = _
+    const position = _
     if (selected_zdt.length !== 0) {
       display_value = true
     }
@@ -214,8 +212,8 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 
   const valAllLabeTiedToNode = selected_zdt[0]?.tied_to_nodes ?? false
   const valAllLabelTiedToNodeIndeterminate = !selected_zdt.every(zdt => zdt.tied_to_nodes == valAllLabeTiedToNode)
-  const Size = ReactQuill.Quill.import('attributors/style/size');
-  Size.whitelist = listOptionSizeQuill;
+  const Size = ReactQuill.Quill.import('attributors/style/size')
+  Size.whitelist = listOptionSizeQuill
   ReactQuill.Quill.register(Size, true)
 
   const modules = {
@@ -253,7 +251,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
    *
    */
   const addFreeLAbel = () => {
-    let new_element: Type_GenericFreeLabelOSP
+    let new_element: Class_ContainerElement
 
     const _addFreeLAbel = () => {// Create default node
       new_element = new_data_plus.drawing_area.sankey.addNewDefaultFreeLabel()
@@ -961,7 +959,7 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
   let style_c_zdd = '0px 0px auto auto'
   let pos_x = new_data_plus.drawing_area.pointer_pos[0] + 10
   let pos_y = new_data_plus.drawing_area.pointer_pos[1] - 20
-  let is_top = true
+  //let is_top = true
   const size_context_menu = 6 * 40 // Get approx. height of context menu
 
   if (zdt_to_contextualise) {
@@ -971,7 +969,7 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
 
     if (new_data_plus.drawing_area.pointer_pos[1] + size_context_menu > window.innerHeight) {
       pos_y = new_data_plus.drawing_area.pointer_pos[1] - size_context_menu
-      is_top = false
+      //is_top = false
     }
     style_c_zdd = pos_y + 'px auto auto ' + pos_x + 'px'
   }
@@ -1058,11 +1056,11 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
 
 
   const button_open_layout = <Button onClick={() => {
-    new_data_plus.menu_configuration.dict_setter_show_dialog_plus.ref_setter_show_menu_zdt.current(true)
+    new_data_plus.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_zdt.current(true)
     closeContextMenu()
   }}
-    variant='contextmenu_button'
-    rightIcon={new_data_plus.icon_library.icon_popup_menu}
+  variant='contextmenu_button'
+  rightIcon={new_data_plus.icon_library.icon_popup_menu}
   >{t('Menu.LL')} </Button>
 
 
@@ -1076,7 +1074,7 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-    variant='contextmenu_button'
+  variant='contextmenu_button'
   >{t('Menu.detachTiedNodes')} </Button>
 
   // Select nodes 'inside' zdt
@@ -1086,16 +1084,16 @@ export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
     new_data_plus.drawing_area.purgeSelection()
     getNodeInsideContextZDT()
       .forEach(n => {
-          n.getListDescendantOfNode().forEach(node => {
-            sankey.attachNodeToCont(node, zdt_to_contextualise)
-            //new_data_plus.drawing_area.addNodeToSelection(node)
-          })
+        n.getListDescendantOfNode().forEach(node => {
+          sankey.attachNodeToCont(node, zdt_to_contextualise)
+          //new_data_plus.drawing_area.addNodeToSelection(node)
+        })
         sankey.attachNodeToCont(n,zdt_to_contextualise)
       })
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-    variant='contextmenu_button'
+  variant='contextmenu_button'
   >{t('Menu.SNI')}
   </Button>
 

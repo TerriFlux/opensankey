@@ -1,32 +1,33 @@
-import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+
 
 export type FCType_DataTagSelector = {
-    new_data: Type_GenericApplicationDataOSP,
+    new_data: Class_ApplicationDataOSP,
     in_popover: boolean
   }
   
 export type FCType_DataTagGroupFilter={
-    new_data:Type_GenericApplicationDataOSP
+    new_data:Class_ApplicationDataOSP
   }
   
 export type FCType_FlowValueFilter={
-    new_data:Type_GenericApplicationDataOSP
+    new_data:Class_ApplicationDataOSP
   }
 
 export type FCType_ToolbarFilter={
-    new_data:Type_GenericApplicationDataOSP
+    new_data:Class_ApplicationDataOSP
   }
 
 export type FCType_NodeTagGroupFilter = {
-    new_data: Type_GenericApplicationDataOSP,
+    new_data: Class_ApplicationDataOSP,
     level: boolean,
   }
 
 /**
    * Function that generate dropdown for each groupTag of linkTags
-   * @param {Type_GenericApplicationDataOSP} applicationData
+   * @param {Class_ApplicationDataOSP} applicationData
    */
 export type FCType_FlowTagGroupFilterFType = {
-    new_data: Type_GenericApplicationDataOSP
+    new_data: Class_ApplicationDataOSP
   }
   

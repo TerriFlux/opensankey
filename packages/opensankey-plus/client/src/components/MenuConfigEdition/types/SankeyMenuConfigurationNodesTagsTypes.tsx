@@ -1,4 +1,5 @@
-import { Type_GenericApplicationDataOSP } from '../../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../../types/ApplicationDataOSP'
+
 
 /**
    * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
@@ -8,5 +9,5 @@ import { Type_GenericApplicationDataOSP } from '../../../types/TypesOSP'
    * @type {*}
    */
 export type FCType_SankeyMenuConfigurationNodesTags = {
-  new_data: Type_GenericApplicationDataOSP,
+  new_data: Class_ApplicationDataOSP,
 }

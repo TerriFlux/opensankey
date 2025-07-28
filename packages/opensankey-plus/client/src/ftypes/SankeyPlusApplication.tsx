@@ -5,11 +5,7 @@ import type {
 import type {
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
-
-// Local imports
-import type {
-  Type_GenericApplicationDataOSP
-} from '../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 // Generic Type that with given argument return a functionType that return a given type,
 // Usefull when we want to only recast the returned value of OS function in submodule
@@ -22,7 +18,7 @@ type RecastReturnTypeOfFunction<T extends any[], R extends any> = (...args: T) =
 // Function components prototypes =================================================================
 
 export type FCType_ModalSelectionIconsOSP = {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }
 
 // Function prototypes =============================================================================
@@ -30,7 +26,7 @@ export type FCType_ModalSelectionIconsOSP = {
 // Application data initializer
 export type FType_InitializeApplicationDataOSP = (
   initial_data: Type_JSON | undefined
-) => Type_GenericApplicationDataOSP
+) => Class_ApplicationDataOSP
 
 // Special parameter for additionnalMenu
 // It take original AdditionalMenusType parameters but also its return object that contains array of additonal JSX.Element

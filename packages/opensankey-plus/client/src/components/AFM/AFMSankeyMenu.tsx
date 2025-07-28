@@ -24,10 +24,11 @@ import {
 } from '@chakra-ui/icons'
 
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
-import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+
 
 export type Ftype_AFMEditionMenu = {
-  application_data_mfa : Type_GenericApplicationDataOSP
+  application_data_mfa : Class_ApplicationDataOSP
 }
 
 export const AFMEditionMenu: FunctionComponent<Ftype_AFMEditionMenu> = ({
@@ -35,7 +36,7 @@ export const AFMEditionMenu: FunctionComponent<Ftype_AFMEditionMenu> = ({
 }) => {
 
   const { t } = application_data_mfa
-  const {ref_setter_show_reconciliation} = application_data_mfa.menu_configuration.dict_setter_show_dialog_afm
+  const {ref_setter_show_reconciliation} = application_data_mfa.menu_configuration_osp.dict_setter_show_dialog_afm
   const dd_tool_afm = <>
     <Menu
       variant='menu_button_subnav_style'
@@ -73,7 +74,7 @@ export const AFMEditionMenu: FunctionComponent<Ftype_AFMEditionMenu> = ({
       <MenuList>
         <MenuItem
           onClick={() => {
-            application_data_mfa.menu_configuration.action_type = 'check_excel'
+            application_data_mfa.menu_configuration_osp.action_type = 'check_excel'
             ref_setter_show_reconciliation.current(true)
           }}
         >
@@ -89,7 +90,7 @@ export const AFMEditionMenu: FunctionComponent<Ftype_AFMEditionMenu> = ({
 
         <MenuItem
           onClick={() => {
-            application_data_mfa.menu_configuration.action_type = 'create_empty_ter'
+            application_data_mfa.menu_configuration_osp.action_type = 'create_empty_ter'
             ref_setter_show_reconciliation.current(true)
           }}
         >
@@ -163,7 +164,7 @@ export const AFMEditionMenu: FunctionComponent<Ftype_AFMEditionMenu> = ({
         <MenuList>
           <MenuItem
             onClick={() => {
-              application_data_mfa.menu_configuration.action_type = 'optim_sankey'
+              application_data_mfa.menu_configuration_osp.action_type = 'optim_sankey'
               ref_setter_show_reconciliation.current(true)
             }} >
             <FontAwesomeIcon
@@ -177,7 +178,7 @@ export const AFMEditionMenu: FunctionComponent<Ftype_AFMEditionMenu> = ({
 
           <MenuItem
             onClick={() => {
-              application_data_mfa.menu_configuration.action_type = 'optim'
+              application_data_mfa.menu_configuration_osp.action_type = 'optim'
               ref_setter_show_reconciliation.current(true)
             }}>
             <FontAwesomeIcon

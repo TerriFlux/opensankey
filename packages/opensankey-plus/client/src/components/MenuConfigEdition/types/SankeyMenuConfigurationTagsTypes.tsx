@@ -1,7 +1,8 @@
 import { Type_MacroTagGroup } from '../../../deps/OpenSankey/types/Utils'
-import { Type_GenericApplicationDataOSP } from '../../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../../types/ApplicationDataOSP'
+
 
 export type FType_SankeySettingsEditionElementTags = {
-  new_data : Type_GenericApplicationDataOSP,
+  new_data : Class_ApplicationDataOSP,
   elementTagNameProp: Type_MacroTagGroup
 }

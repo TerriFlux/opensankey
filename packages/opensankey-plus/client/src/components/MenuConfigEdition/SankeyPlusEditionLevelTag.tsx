@@ -24,9 +24,9 @@ import {
 import { MultiSelect } from 'react-multi-select-component'
 import { Class_LevelTag, Class_LevelTagGroup } from '../../deps/OpenSankey/types/Tag'
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
-import { Type_GenericApplicationDataOSP } from '../../types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 
-export type FCType_SankeyPlusEditionLevelTag = { new_data: Type_GenericApplicationDataOSP }
+export type FCType_SankeyPlusEditionLevelTag = { new_data: Class_ApplicationDataOSP }
 
 export type Type_MenuSelectionEntry = { 'label': string; 'value': string }
 
@@ -286,29 +286,29 @@ export const MenuConfigurationLevelTags: FunctionComponent<FCType_SankeyPlusEdit
           </OSTooltip>
           {/* sibling selector to affect siblings to current group */}
           <OSTooltip label={t('Tags.tooltips.sibling')}>
-          <Box layerStyle='submenuconfig_droplist'>
-      {/* Position custom pour MultiSelect */}
-      <Box height='2rem' width='10rem'>
-        <MultiSelect
-          hasSelectAll={false}
-          valueRenderer={(entries: Type_MenuSelectionEntry[]) => entries.filter(d => d !== undefined).length ? entries.map(({ label }) => label + ', ') : 'Aucun groupe antagoniste'}
-          options={possible_sibling}
-          value={selected_sibling}
-          onChange={(options_selected: [{ label: string, value: string }]) => {
-            // Update selection list
-            const entries_values = options_selected.map(d => d.value)
-            tags_group_list.forEach(grp_sibling => {
-              if (entries_values.includes(grp_sibling.id)) {
-                tag_group.addSibling(grp_sibling)
-              }
-              else {
-                tag_group.removeSibling(grp_sibling)
-              }
-            })
-            // Update all menus
-            updateThisAndRelatedComponents()
-          }}
-        /></Box></Box>
+            <Box layerStyle='submenuconfig_droplist'>
+              {/* Position custom pour MultiSelect */}
+              <Box height='2rem' width='10rem'>
+                <MultiSelect
+                  hasSelectAll={false}
+                  valueRenderer={(entries: Type_MenuSelectionEntry[]) => entries.filter(d => d !== undefined).length ? entries.map(({ label }) => label + ', ') : 'Aucun groupe antagoniste'}
+                  options={possible_sibling}
+                  value={selected_sibling}
+                  onChange={(options_selected: [{ label: string, value: string }]) => {
+                    // Update selection list
+                    const entries_values = options_selected.map(d => d.value)
+                    tags_group_list.forEach(grp_sibling => {
+                      if (entries_values.includes(grp_sibling.id)) {
+                        tag_group.addSibling(grp_sibling)
+                      }
+                      else {
+                        tag_group.removeSibling(grp_sibling)
+                      }
+                    })
+                    // Update all menus
+                    updateThisAndRelatedComponents()
+                  }}
+                /></Box></Box>
           </OSTooltip>
         </Box>
       )

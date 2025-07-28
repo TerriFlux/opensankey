@@ -45,19 +45,19 @@ import { ConfigMenuNumberInput } from '../deps/OpenSankey/components/configmenus
 import {
   FCType_ImportImageAsSvgBg,
 } from '../ftypes/SankeyPlusUtilsTypes'
-import { default_container_content } from '../types/FreeLabel'
+import { default_container_content } from '../deps/OpenSankey/Elements/FreeLabel'
 import { OSPData, ViewType } from '../types/LegacyTypes'
-import { Type_GenericApplicationDataOSP } from '../types/TypesOSP'
 
 
 import { GetOldDataFromView } from './ConvertOSP'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
 }) => {
   const _load_image = useRef<HTMLInputElement>(null)
   const [, setCount] = useState(0)
-  new_data_plus.menu_configuration.ref_to_config_DA_bg_image_updater.current = () => setCount(a => a + 1)
+  new_data_plus.menu_configuration_osp.ref_to_config_DA_bg_image_updater.current = () => setCount(a => a + 1)
 
   const { drawing_area, t, has_sankey_plus, icon_library } = new_data_plus
   const { icon_import_file_image } = icon_library
@@ -217,13 +217,13 @@ export function getOldViewsFromJSON(
   return undefined
 }
 
-type FCType_DrawerSequenceDataTagg = { new_data: Type_GenericApplicationDataOSP }
+type FCType_DrawerSequenceDataTagg = { new_data: Class_ApplicationDataOSP }
 
 export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceDataTagg> = ({ new_data }) => {
   const { icon_library } = new_data
   const { icon_repeat_sequence, icon_play, icon_pause, icon_activated, icon_open_selector } = icon_library
   const [, setUpdate] = useState(0)
-  new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater.current = () => setUpdate(a => a + 1)
+  new_data.menu_configuration_osp.ref_to_drawer_sequence_data_tag_updater.current = () => setUpdate(a => a + 1)
   const [active_grp, setActiveGrp] = useState('')
 
   const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).is_sequence)
@@ -235,13 +235,13 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
     setActiveGrp(list_grp_seq_id[0])
   }
   const ref_set_number_input = useRef((_: string | null | undefined) => null)
-  ref_set_number_input.current(String(new_data.menu_configuration.timeout_sequence))
+  ref_set_number_input.current(String(new_data.menu_configuration_osp.timeout_sequence))
 
   // Create stepper of active groupe
   const stepper_sequence: JSX.Element = <StepperDataTagg new_data={new_data} DataGroup={dict_data_grp[active_grp] as Class_DataTagGroup} />
 
   // Logo of the button to start/pause the sequence
-  const logo_btn = !new_data.menu_configuration.is_playing_sequence ? icon_play : icon_pause
+  const logo_btn = !new_data.menu_configuration_osp.is_playing_sequence ? icon_play : icon_pause
   const setter_timeout = <Box layerStyle='config_timeout_sequence' >
     <Box layerStyle='menuconfigpanel_option_name'>
       {new_data.t('Tags.sequence_timeout')}
@@ -249,13 +249,13 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
 
     <ConfigMenuNumberInput
       t={new_data.t}
-      default_value={new_data.menu_configuration.timeout_sequence}
+      default_value={new_data.menu_configuration_osp.timeout_sequence}
       ref_to_set_value={ref_set_number_input}
       minimum_value={1}
       function_on_blur={(value) => {
         if (value) {
           if (value > 0) {
-            new_data.menu_configuration.timeout_sequence = value
+            new_data.menu_configuration_osp.timeout_sequence = value
           }
         }
       }}
@@ -282,8 +282,8 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
   const option_btn = <Menu>
     <MenuButton
       as={Button}
-      isDisabled={new_data.menu_configuration.is_playing_sequence}
-      variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_menu_play' : 'button_dataTagg_sequence_menu_pause'}
+      isDisabled={new_data.menu_configuration_osp.is_playing_sequence}
+      variant={new_data.menu_configuration_osp.is_playing_sequence ? 'button_dataTagg_sequence_menu_play' : 'button_dataTagg_sequence_menu_pause'}
     >
       {icon_open_selector}
     </MenuButton>
@@ -299,17 +299,17 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
     >
       <ButtonGroup isAttached>
         <Button
-          variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
+          variant={new_data.menu_configuration_osp.is_playing_sequence ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
           onClick={() => {
             // Either launch or stop data sequence
-            if (new_data.menu_configuration.is_playing_sequence) {
+            if (new_data.menu_configuration_osp.is_playing_sequence) {
               // Stop sequence
-              new_data.menu_configuration.is_playing_sequence = false
+              new_data.menu_configuration_osp.is_playing_sequence = false
             } else {
               // Start sequence
-              new_data.menu_configuration.is_playing_sequence = true
+              new_data.menu_configuration_osp.is_playing_sequence = true
               const curr_active_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')[active_grp] as Class_DataTagGroup
-              new_data.menu_configuration.launchDataSequence(curr_active_grp)
+              new_data.menu_configuration_osp.launchDataSequence(curr_active_grp)
             }
             setUpdate(a => a + 1)
           }}
@@ -317,10 +317,10 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
           {logo_btn}
         </Button>
         <Button
-          variant={new_data.menu_configuration.is_sequence_loop ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
+          variant={new_data.menu_configuration_osp.is_sequence_loop ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
           onClick={() => {
             // Switch 'is sequence loop' value
-            new_data.menu_configuration.is_sequence_loop = !new_data.menu_configuration.is_sequence_loop
+            new_data.menu_configuration_osp.is_sequence_loop = !new_data.menu_configuration_osp.is_sequence_loop
             setUpdate(a => a + 1)
           }}>
           {icon_repeat_sequence}
@@ -331,7 +331,7 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
     </Box>
   ) : <></>
 }
-type FCType_StepperDataTagg = { new_data: Type_GenericApplicationDataOSP, DataGroup: Class_DataTagGroup }
+type FCType_StepperDataTagg = { new_data: Class_ApplicationDataOSP, DataGroup: Class_DataTagGroup }
 
 // Compoenent returing a stepper of a dataTagg where each step is a tag of the group with visual indication to which tag is selected
 const StepperDataTagg: FunctionComponent<FCType_StepperDataTagg> = ({ new_data, DataGroup }) => {
@@ -430,7 +430,7 @@ const StepperDataTagg: FunctionComponent<FCType_StepperDataTagg> = ({ new_data, 
  * @param {number} stop
  * @param {number} step
  */
-const arrayRangePx = (start: number, stop: number, step: number) => Array.from({ length: (stop - start) / step + 1 }, (value, index) => (start + index * step) + 'px');
+const arrayRangePx = (start: number, stop: number, step: number) => Array.from({ length: (stop - start) / step + 1 }, (value, index) => (start + index * step) + 'px')
 
 // Exported variable for Quill editor
 export const listOptionSizeQuill = arrayRangePx(9, 120, 1)

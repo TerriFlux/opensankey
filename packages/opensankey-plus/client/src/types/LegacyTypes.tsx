@@ -3,9 +3,8 @@ import { Diff } from 'deep-diff'
 
 
 import type { IType_DictHookRefSetterShowDialogComponents } from '../deps/OpenSankey/types/MenuConfig'
-
-import type { Type_GenericApplicationDataOSP } from './TypesOSP'
 import { SankeyNodeStyle, SankeyLinkStyle, SankeyNode, SankeyLinkAttrLocal, SankeyLink, SankeyData } from '../deps/OpenSankey/Persistence/LegacyType'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 
 export type DiffType = {
@@ -96,15 +95,13 @@ export interface OSPLabel {
 export type OSPShowMenuComponentsType = IType_DictHookRefSetterShowDialogComponents & OSPShowMenuComponentsVarType
 
 export type OSPShowMenuComponentsVarType = {
-  ref_setter_show_menu_node_icon: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_show_modal_import_icons: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_show_menu_zdt: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+
   ref_setter_show_menu_view_not_saved: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
 // OSP type that overwrite or add variable to for applicationDataType
 interface OSPApplicationDataVarType {
-  new_data_plus: Type_GenericApplicationDataOSP
+  new_data_plus: Class_ApplicationDataOSP
 }
 
 export type OSPApplicationDataType = OSPApplicationDataVarType

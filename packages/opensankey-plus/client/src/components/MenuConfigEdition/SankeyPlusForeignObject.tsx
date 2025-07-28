@@ -14,8 +14,8 @@ import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/types/Uti
 
 // Local imports
 import type { FCType_NodeForeignObjectOSP } from './types/SankeyPlusForeignObjectTypes'
-import type { Type_GenericNodeElementOSP } from '../../types/TypesOSP'
 import { listOptionSizeQuill } from '../UtilsOSP'
+import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 
 export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP> = ({
   new_data_plus,
@@ -32,7 +32,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
 
   let s_tmp_editor_content_changed = false
   if (selected_nodes.length > 0) {
-    if (selected_nodes[0].FO_content !== s_editor_content_fo_node) {
+    if (selected_nodes[0].fo_content !== s_editor_content_fo_node) {
       s_tmp_editor_content_changed = true
     }
   }
@@ -63,8 +63,8 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     'align'
   ]
 
-  const has_FO = (selected_nodes[0]?.has_FO ?? false)
-  const is_FO_raw = (selected_nodes[0]?.is_FO_raw ?? false)
+  const has_FO = (selected_nodes[0]?.has_fo ?? false)
+  const is_FO_raw = (selected_nodes[0]?.is_fo_raw ?? false)
 
   /**
    *
@@ -75,7 +75,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
    * @return {*}
    */
 
-  const check_indeterminate = (curr: Type_GenericNodeElementOSP,) => {
+  const check_indeterminate = (curr: Class_NodeElement,) => {
     return (selected_nodes[0].isEqual(curr))
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
@@ -84,11 +84,11 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
   const updateFOVisibility = (_: boolean) => {
     const dict_old_value: { [x: string]: boolean } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.has_FO
+      dict_old_value[n.id] = n.has_fo
     })
     const _updateFOVisibility = () => {
       selected_nodes.forEach(n => {
-        n.has_FO = _
+        n.has_fo = _
         n.draw()
       })
       setCount(a => a + 1)
@@ -96,7 +96,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
 
     const inv_updateFOVisibility = () => {
       selected_nodes.forEach(n => {
-        n.has_FO = dict_old_value[n.id]
+        n.has_fo = dict_old_value[n.id]
         n.draw()
       })
       setCount(a => a + 1)
@@ -111,11 +111,11 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
   const updateFORaw = (_: boolean) => {
     const dict_old_value: { [x: string]: boolean } = {}
     selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.is_FO_raw
+      dict_old_value[n.id] = n.is_fo_raw
     })
     const _updateFORaw = () => {
       selected_nodes.forEach(n => {
-        n.is_FO_raw = _
+        n.is_fo_raw = _
         n.draw()
       })
       setCount(a => a + 1)
@@ -123,7 +123,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
 
     const inv_updateFORaw = () => {
       selected_nodes.forEach(n => {
-        n.is_FO_raw = dict_old_value[n.id]
+        n.is_fo_raw = dict_old_value[n.id]
         n.draw()
       })
       setCount(a => a + 1)
@@ -138,11 +138,11 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
 
   const applyEditor = () => {
     const dict_old_value: { [x: string]: string } = {}
-    selected_nodes.map(node => dict_old_value[node.id] = node.FO_content!)
+    selected_nodes.map(node => dict_old_value[node.id] = node.fo_content!)
 
     const _applyEditor = () => {
       selected_nodes.map(node => {
-        node.FO_content = s_tmp_editor_content_fo_node
+        node.fo_content = s_tmp_editor_content_fo_node
         node.drawFO()
       })
       sEditorContentFoNode(s_tmp_editor_content_fo_node)
@@ -151,10 +151,10 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     }
     const inv_applyEditor = () => {
       selected_nodes.map(node => {
-        node.FO_content = dict_old_value[node.id]
+        node.fo_content = dict_old_value[node.id]
         node.drawFO()
       })
-      sEditorContentFoNode(selected_nodes[0].FO_content??'')
+      sEditorContentFoNode(selected_nodes[0].fo_content??'')
     }
 
     new_data_plus.history.saveUndo(inv_applyEditor)
@@ -163,8 +163,8 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
     _applyEditor()
   }
 
-  const Size = ReactQuill.Quill.import('attributors/style/size');
-  Size.whitelist = listOptionSizeQuill;
+  const Size = ReactQuill.Quill.import('attributors/style/size')
+  Size.whitelist = listOptionSizeQuill
   ReactQuill.Quill.register(Size, true)
   //Create 2 editor :
   // - one in an editor when we can apply layout width buttons
@@ -172,7 +172,7 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
   const editor_fo = <Box>
     <ReactQuill
       className='quill_editor'
-      value={selected_nodes.length > 0 ? selected_nodes[0].FO_content : ''}
+      value={selected_nodes.length > 0 ? selected_nodes[0].fo_content : ''}
       onChange={(evt, _, s) => {
         if (s === 'user') {
           s_tmp_editor_content_fo_node = evt
@@ -267,15 +267,15 @@ export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP
           backgroundColor='red.200'
           onClick={() => {
             if (selected_nodes.length > 0) {
-              if (typeof selected_nodes[0].FO_content !== 'undefined') {
+              if (typeof selected_nodes[0].fo_content !== 'undefined') {
                 // Reset textaera
                 if (typeof inputRef.current !== 'undefined') {
                   if (inputRef.current !== null) {
-                    inputRef.current.value = selected_nodes[0].FO_content
+                    inputRef.current.value = selected_nodes[0].fo_content
                   }
                 }
                 // Reset state value
-                sEditorContentFoNode(selected_nodes[0].FO_content)
+                sEditorContentFoNode(selected_nodes[0].fo_content)
               }
               else {
                 // Reset textaera
