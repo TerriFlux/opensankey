@@ -46,7 +46,7 @@ import { Type_AnyContainerElement } from './FreeLabel'
 
 export function isAttributeOverloaded(
   nodes: Type_GenericNodeElementOSP[],
-  attr: keyof Class_NodeAttributeOSP
+  attr: keyof Class_NodeAttribute
 ) {
   let overloaded = false
   nodes.forEach(node => overloaded = (overloaded || node.isAttributeOverloaded(attr)))
@@ -79,8 +79,8 @@ export abstract class ClassTemplate_NodeElementOSP
     drawing_area: Type_GenericDrawingArea,
     sankey: Type_GenericSankey,
     position: Type_ElementPosition,
-    style: Class_NodeStyleOSP[],
-    attributes: Class_NodeAttributeOSP
+    style: Class_NodeStyle[],
+    attributes: Class_NodeAttribute
     position_x_label?: number// Relative x position of label when dragged (optionnal)
     position_y_label?: number// Relative y position of label when dragged (optionnal)
   }
@@ -230,9 +230,6 @@ export abstract class ClassTemplate_NodeElementOSP
 
   // Overrides --------------------------------------------------------------------------
 
-  public isAttributeOverloaded(attr: keyof Class_NodeAttributeOSP) {
-    return this._display.attributes[attr] !== undefined
-  }
 
   // public override isEqual(
   //   _: ClassTemplate_NodeElementOSP<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
@@ -655,63 +652,5 @@ export abstract class ClassTemplate_NodeElementOSP
 
 }
 
-// CLASS NODE ATTRIBUTES ****************************************************************
-
-/**
- * Define all attributes that can be applyied to a noe plus element
- * @export
- * @class Class_NodeAttributeOSP
- * @extends {Class_NodeAttribute}
- */
-export class Class_NodeAttributeOSP extends Class_NodeAttribute {
-
-  // PROTECTED ATTRIBUTES ===============================================================
 
 
-  // PUBLIC METHODES ====================================================================
-
-  // PROTECTED METHODS ==================================================================
-
-  // GETTERS ============================================================================
-
-
-  // SETTERS ============================================================================
-
-}
-
-// CLASS NODE STYLE *********************************************************************
-
-/**
- * Define node style for node plus
- *
- * @export
- * @class Class_NodeStyleOSP
- * @extends {Class_NodeStyle}
- */
-export class Class_NodeStyleOSP extends Class_NodeStyle {
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-
-  // CONSTRUCTOR ========================================================================
-
-  constructor(
-    id: string,
-    name: string,
-    is_deletable: boolean = true
-  ) {
-    // Instantiate super class
-    super(id, name, is_deletable)
-    // Update new attributes
-  }
-
-  // PUBLIC METHODS ======================================================================
-
-
-
-  // PROTECTED METHODS ==================================================================
-
-  // PRIVATE METHODS ====================================================================
-
-  // GETTERS ============================================================================
-}

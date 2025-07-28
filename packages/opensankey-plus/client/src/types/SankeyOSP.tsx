@@ -12,11 +12,12 @@ import { Type_JSON, default_main_sankey_id, default_style_id, getJSONFromJSON } 
 
 // Local imports
 import type { Class_MenuConfigOSP } from './MenuConfigOSP'
-import type { ClassTemplate_NodeElementOSP, Class_NodeStyleOSP } from './NodeOSP'
+import type { ClassTemplate_NodeElementOSP } from './NodeOSP'
 import type { ClassTemplate_LinkElementOSP, Class_LinkStyleOSP } from './LinkOSP'
 import { type ClassAbstract_DrawingAreaOSP, ClassAbstract_SankeyOSP } from './AbstractOSP'
 import { Class_ContainerElement } from './FreeLabel'
 import { Type_GenericContainerElement, Type_GenericNodeElementOSP } from './TypesOSP'
+import { Class_NodeStyle } from '../deps/OpenSankey/Elements/NodeAttributes'
 
 // CLASS SANKEY PLUS *********************************************************************
 
@@ -42,7 +43,7 @@ export abstract class ClassTemplate_SankeyOSP
   // ABSTRACT ATTRIBUTES ================================================================
 
   protected abstract _link_styles: { [_: string]: Class_LinkStyleOSP }
-  protected abstract _node_styles: { [_: string]: Class_NodeStyleOSP }
+  protected abstract _node_styles: { [_: string]: Class_NodeStyle }
 
   // PUBLIC ATTRIBUTES ==================================================================
 

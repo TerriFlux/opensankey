@@ -8,7 +8,6 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { Type_SaveDiagramOptions } from '../deps/OpenSankey/components/dialogs/types/SankeyPersistenceTypes'
 import { default_save_JSON_options, OSColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, OSTooltip, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { GetOldDataFromView } from '../components/ConvertOSP'
@@ -28,6 +27,7 @@ import { Type_GenericNodeElementOSP } from './TypesOSP'
 import { Box } from '@chakra-ui/react'
 import React, { CSSProperties, FunctionComponent, useState } from 'react'
 import { ColorResult, SketchPicker, SwatchesPicker } from 'react-color'
+import { Type_SaveDiagramOptions } from '../deps/OpenSankey/Persistence/SankeyPersistenceTypes'
 
 declare const window: Window &
   typeof globalThis & {

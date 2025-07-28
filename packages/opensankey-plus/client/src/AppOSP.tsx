@@ -25,7 +25,7 @@ import { ThemeOSP } from './chakra/ThemeOSP'
 // OpenSankey imports ===============================================================================
 
 import OpenSankeyApp from './deps/OpenSankey/App'
-import { ClickSaveDiagram } from './deps/OpenSankey/components/dialogs/SankeyPersistence'
+import { ClickSaveDiagram } from './deps/OpenSankey/Persistence/SankeyPersistence'
 
 // OpenSankeyApp for OpenSankey+ ========================================================================
 

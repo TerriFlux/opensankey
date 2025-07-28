@@ -12,11 +12,12 @@ import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { ClassTemplate_ApplicationDataOSP } from './ApplicationDataOSP'
 import { ClassTemplate_DrawingAreaOSP } from './DrawingAreaOSP'
 import { ClassTemplate_SankeyOSP } from './SankeyOSP'
-import { Class_NodeAttributeOSP, ClassTemplate_NodeElementOSP, Class_NodeStyleOSP } from './NodeOSP'
+import { ClassTemplate_NodeElementOSP } from './NodeOSP'
 import { Class_LinkAttributeOSP, ClassTemplate_LinkElementOSP, Class_LinkStyleOSP } from './LinkOSP'
 import { Class_ContainerElement } from './FreeLabel'
 import { ClassTemplate_ZoneSelectionOSP } from './SelectionZoneOSP'
 import { Class_IconLibraryOSP } from './IconLibrairieOSP'
+import { Class_NodeAttribute, Class_NodeStyle } from '../deps/OpenSankey/Elements/NodeAttributes'
 
 // STANDARD TYPES FOR OPENSANKEY+ AND MORE **********************************************
 
@@ -84,7 +85,7 @@ export class Class_SankeyOSP
   > {
 
   protected _link_styles: { [_: string]: Class_LinkStyleOSP } = {}
-  protected _node_styles: { [_: string]: Class_NodeStyleOSP } = {}
+  protected _node_styles: { [_: string]: Class_NodeStyle } = {}
 
   constructor(
     drawing_area: Class_DrawingAreaOSP,
@@ -104,10 +105,6 @@ export class Class_SankeyOSP
   protected createNewLink(id: string, source: Class_NodeElementOSP, target: Class_NodeElementOSP): Class_LinkElementOSP {
     const link = new Class_LinkElementOSP(id, source, target, this.drawing_area, this._menu_config)
     return link
-  }
-
-  protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyleOSP {
-    return new Class_NodeStyleOSP(id, name, is_deletable)
   }
 
   protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyleOSP {
@@ -131,8 +128,8 @@ export class Class_NodeElementOSP
     drawing_area: Class_DrawingAreaOSP,
     sankey: Class_SankeyOSP,
     position: Type_ElementPosition,
-    style: Class_NodeStyleOSP[],
-    attributes: Class_NodeAttributeOSP
+    style: Class_NodeStyle[],
+    attributes: Class_NodeAttribute
     position_x_label?: number// Relative x position of label when dragged (optionnal)
     position_y_label?: number// Relative y position of label when dragged (optionnal)
   }
@@ -147,7 +144,7 @@ export class Class_NodeElementOSP
       sankey: this.sankey,
       position: this.display.position,
       style: [drawing_area.sankey.default_node_style],
-      attributes: new Class_NodeAttributeOSP()
+      attributes: new Class_NodeAttribute()
     }
   }
 }

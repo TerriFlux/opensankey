@@ -1,17 +1,11 @@
 import { Dispatch, SetStateAction, MutableRefObject } from 'react'
 import { Diff } from 'deep-diff'
 
-import type {
-  SankeyData,
-  SankeyLink,
-  SankeyLinkAttrLocal,
-  SankeyLinkStyle,
-  SankeyNode,
-  SankeyNodeStyle
-} from '../deps/OpenSankey/types/LegacyType'
+
 import type { IType_DictHookRefSetterShowDialogComponents } from '../deps/OpenSankey/types/MenuConfig'
 
 import type { Type_GenericApplicationDataOSP } from './TypesOSP'
+import { SankeyNodeStyle, SankeyLinkStyle, SankeyNode, SankeyLinkAttrLocal, SankeyLink, SankeyData } from '../deps/OpenSankey/Persistence/LegacyType'
 
 
 export type DiffType = {
