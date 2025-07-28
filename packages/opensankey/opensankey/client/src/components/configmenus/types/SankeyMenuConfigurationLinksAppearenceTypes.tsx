@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import { MutableRefObject } from 'react'
-import { SankeyData } from '../../../types/LegacyType'
+import { SankeyData } from '../../../Persistence/LegacyType'
 import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
 
 export type FCType_MenuConfigurationLinksAppearence = {

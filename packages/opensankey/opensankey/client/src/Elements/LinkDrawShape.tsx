@@ -120,9 +120,9 @@ export class LinkDrawShape<
         this._link.d3_selection?.selectAll('.link_path')
           .attr('id', this._link.id)
           .attr('fill', this._link.shape_shape == 'bezier_outline' ? shape_color : 'none')
-          .attr('stroke', this._link.shape_shape == 'bezier_path' || this._link.shape_shape == 'arc_path' ? shape_color : 'none')
-          .attr('stroke-opacity', this._link.shape_shape == 'bezier_path' || this._link.shape_shape == 'arc_path' ? shape_opacity : '0')
-          .attr('stroke-width', this._link.shape_shape == 'bezier_path' || this._link.shape_shape == 'arc_path' ? thickness : '0')
+          .attr('stroke', this._link.shape_shape == 'bezier_path' ? shape_color : 'none')
+          .attr('stroke-opacity', this._link.shape_shape == 'bezier_path' ? shape_opacity : '0')
+          .attr('stroke-width', this._link.shape_shape == 'bezier_path' ? thickness : '0')
           .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
       }
     }

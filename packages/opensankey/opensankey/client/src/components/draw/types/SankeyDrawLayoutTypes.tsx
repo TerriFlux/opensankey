@@ -29,7 +29,7 @@ import {
   SankeyLink,
   SankeyNode,
   applicationDataType
-} from '../../../types/LegacyType'
+} from '../../../Persistence/LegacyType'
 
 export type FType_ComputeAutoSankey = (
   applicationData: applicationDataType,

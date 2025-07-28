@@ -55,7 +55,7 @@ import {
 
 /*************************************************************************************************/
 
-import SankeyLoad from '../dialogs/SankeyPersistence'
+import SankeyLoad from '../../Persistence/SankeyPersistence'
 import {
   ExcelModal,
   ApplyLayoutDialog,
@@ -63,10 +63,10 @@ import {
 } from '../dialogs/SankeyMenuDialogs'
 import {
   uploadExcelImpl
-} from '../dialogs/SankeyPersistence'
+} from '../../Persistence/SankeyPersistence'
 import {
   DownloadExamples
-} from '../dialogs/SankeyPersistence'
+} from '../../Persistence/SankeyPersistence'
 
 import { ToolBarBottom } from './MenuBottom'
 import { FCType_Menu } from '../../types/FunctionTypes'

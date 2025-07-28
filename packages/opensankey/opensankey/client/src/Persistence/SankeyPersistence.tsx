@@ -50,10 +50,10 @@ import type {
   FType_UploadExcelImpl,
   FType_UploadExemple,
   FType_JSONtoExcel
-} from './types/SankeyPersistenceTypes'
-import { GetRandomInt, list_palette_color, type Type_JSON } from '../../types/Utils'
-import type { Type_GenericApplicationData } from '../../types/Types'
-import type { FCType_SankeyLoad } from '../../types/FunctionTypes'
+} from './SankeyPersistenceTypes'
+import { GetRandomInt, list_palette_color, type Type_JSON } from '../types/Utils'
+import type { Type_GenericApplicationData } from '../types/Types'
+import type { FCType_SankeyLoad } from '../types/FunctionTypes'
 
 declare global {
   interface Window {
