@@ -31,55 +31,31 @@ import * as d3 from 'd3'
 import type {
   Class_MenuConfig
 } from '../types/MenuConfig'
-import type {
-  ClassAbstract_DrawingArea,
-  ClassAbstract_Sankey
-} from '../types/Abstract'
 
 // Local modules imports
 import {
   ClassTemplate_Element,
   ClassTemplate_ProtoElement
 } from '../Elements/Element'
-import { Type_ElementPosition } from '../types/Utils'
 import { default_element_position } from '../types/Utils'
-import { Type_GenericDrawingArea, Type_GenericSankey } from '../types/Types'
+import { Class_DrawingArea } from '../types/DrawingArea'
 
-// CLASS HANDLER ************************************************************************
-export type TypeGeneric_Handler = ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>
+
 /**
  * Class that define a handler used to manipulate a element
  * @export
  * @class ClassTemplate_Handler
  * @extends {ClassTemplate_Element}
  */
-export class ClassTemplate_Handler
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-    Type_GenericSankey extends ClassAbstract_Sankey
-  >
-  extends ClassTemplate_Element
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey
-  > {
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  protected _display: {
-    drawing_area: Type_GenericDrawingArea,
-    sankey: Type_GenericSankey,
-    position: Type_ElementPosition,
-  }
-
+export class ClassTemplate_Handler extends ClassTemplate_Element {
   // PRIVATE ATTRIBUTES =================================================================
 
   private _size: number = 5
   private _color: string = 'black'
   private _filled: boolean = true
   private _custom_class: string | undefined
-  private _ref_element: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>
-  private _ref_element_optional?: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined
+  private _ref_element: ClassTemplate_ProtoElement
+  private _ref_element_optional?: ClassTemplate_ProtoElement | undefined
   private _custom_html_grp: boolean
 
   // CONSTRUCTOR ========================================================================
@@ -87,7 +63,7 @@ export class ClassTemplate_Handler
   /**
   * Creates an instance of ClassTemplate_Handler.
   * @param {string} id
-  * @param {Type_GenericDrawingArea} drawing_area
+  * @param {Class_DrawingArea} drawing_area
   * @param {Class_MenuConfig} menu_config
   * @param {ClassTemplate_ProtoElement} ref
   * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragStart_function
@@ -99,25 +75,23 @@ export class ClassTemplate_Handler
   */
   constructor(
     id: string,
-    drawing_area: Type_GenericDrawingArea,
+    drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
-    ref: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
+    ref: ClassTemplate_ProtoElement,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     options?: { class?: string, size?: number, color?: string, filled?: boolean },
-    ref_optional?: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>,
+    ref_optional?: ClassTemplate_ProtoElement,
     custom_parent_grp?: string
   ) {
     // Init parent class attributes
-    super(id, menu_config, custom_parent_grp ? custom_parent_grp : 'g_handlers')
+    super(id, drawing_area, drawing_area.sankey, menu_config, custom_parent_grp ? custom_parent_grp : 'g_handlers')
     this._ref_element = ref
     this._ref_element_optional = ref_optional
     this._custom_html_grp = custom_parent_grp !== undefined
     // Init other class attributes
     this._display = {
-      drawing_area: drawing_area,
-      sankey: drawing_area.sankey as Type_GenericSankey,
       position: structuredClone(default_element_position),
     }
     // Drag handling functions -> defined by parent element
@@ -143,7 +117,7 @@ export class ClassTemplate_Handler
 
   // COPY METHODS =======================================================================
 
-  protected _copyFrom(element: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>) {
+  protected _copyFrom(element: ClassTemplate_Handler) {
     super._copyFrom(element)
     this._size = element._size
     this._color = element._color
@@ -235,11 +209,11 @@ export class ClassTemplate_Handler
       (this._ref_element_optional?.is_visible ?? true))
   }
 
-  public get ref_element(): ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {
+  public get ref_element(): ClassTemplate_ProtoElement {
     return this._ref_element
   }
 
-  public get ref_element_optional(): ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined {
+  public get ref_element_optional(): ClassTemplate_ProtoElement | undefined {
     return this._ref_element_optional
   }
 }

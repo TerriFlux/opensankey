@@ -29,11 +29,7 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import { MouseEvent } from 'react'
 
-// Local types imports
-import type {
-  ClassAbstract_DrawingArea,
-  ClassAbstract_Sankey
-} from '../types/Abstract'
+
 import type {
   Class_MenuConfig
 } from '../types/MenuConfig'
@@ -43,7 +39,6 @@ import {
   ClassTemplate_Element
 } from '../Elements/Element'
 import {
-  Type_ElementPosition,
   default_element_color,
   getBooleanFromJSON,
   getNumberFromJSON,
@@ -54,14 +49,14 @@ import {
   const_default_position_x,
   const_default_position_y,
 } from '../types/Utils'
-import {
-  Class_DrawingArea,
-  Type_GenericNodeElement
-} from '../types/Types'
+
 import {
   ClassTemplate_Handler
 } from './Handler'
-import { Class_DataTag } from '../types/Tag'
+import { Class_DataTag, Class_Tag } from '../types/Tag'
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_Sankey } from '../types/Sankey'
+import { Class_NodeElement } from './Node'
 
 const default_pos_from_legacy = false
 const default_stick_to_drawing = false
@@ -83,21 +78,13 @@ const default_info_link_value_void = false
  * @class ClassTemplate_Legend
  * @extends {ClassTemplate_Element}
  */
-export class ClassTemplate_Legend
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-    Type_GenericSankey extends ClassAbstract_Sankey
-  >
-  extends ClassTemplate_Element
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey
-  > {
+export class ClassTemplate_Legend extends ClassTemplate_Element
+{
 
   // PRIVATE ATTRIBUTES =================================================================
 
-  private _pos_from_legacy = default_pos_from_legacy;
-  private _stick_to_drawing = default_stick_to_drawing;
+  private _pos_from_legacy = default_pos_from_legacy
+  private _stick_to_drawing = default_stick_to_drawing
   private _masked: boolean = default_masked
   private _display_legend_scale: boolean = default_display_legend_scale
   private _legend_police: number = default_legend_police
@@ -109,8 +96,8 @@ export class ClassTemplate_Legend
   private _info_link_value_void: boolean = default_info_link_value_void
 
   private _drag_handler: {
-    left: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    right: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    left: ClassTemplate_Handler,
+    right: ClassTemplate_Handler,
   }
 
   /**
@@ -153,35 +140,34 @@ export class ClassTemplate_Legend
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  /**
-   * Display attributes for legend
-   * @protected
-   * @type {{
-   *     drawing_area: Type_GenericDrawingArea,
-   *     position: Type_ElementPosition,
-   *   }}
-   * @memberof ClassTemplate_Legend
-   */
-  protected _display: {
-    drawing_area: Type_GenericDrawingArea,
-    sankey: Type_GenericSankey,
-    position: Type_ElementPosition,
-  }
+  // /**
+  //  * Display attributes for legend
+  //  * @protected
+  //  * @type {{
+  //  *     drawing_area: Class_DrawingArea,
+  //  *     position: Type_ElementPosition,
+  //  *   }}
+  //  * @memberof ClassTemplate_Legend
+  //  */
+  // protected _display: {
+  //   drawing_area: Class_DrawingArea,
+  //   sankey: Class_Sankey,
+  //   position: Type_ElementPosition,
+  // }
 
   // CONSTRUCTOR ========================================================================
 
   constructor(
-    drawing_area: Type_GenericDrawingArea,
+    drawing_area: Class_DrawingArea,
+    sankey: Class_Sankey,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
 
     //TODO : rename grp_legend to g_legend when legacy code will be deleted as for now some legacy functions might be tirgered when interactiong with DA and look for g_legend
-    super('legend', menu_config, 'grp_legend')
+    super('legend',drawing_area,sankey, menu_config, 'grp_legend')
     // Init other class attributes
     this._display = {
-      drawing_area: drawing_area,
-      sankey: drawing_area.sankey as Type_GenericSankey,
       position: {
         x: const_default_position_x,
         y: const_default_position_y,
@@ -221,7 +207,7 @@ export class ClassTemplate_Legend
 
   // COPY METHODS =======================================================================
 
-  protected _copyFrom(_: ClassTemplate_Legend<Type_GenericDrawingArea, Type_GenericSankey>): void {
+  protected _copyFrom(_: ClassTemplate_Legend): void {
     super._copyFrom(_)
     this._masked = _._masked
     this._dx = _._dx
@@ -242,8 +228,7 @@ export class ClassTemplate_Legend
   // SAVING METHODS =====================================================================
 
   protected _toJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
+    json_object: Type_JSON
   ): void {
     json_object['legend'] = {}
     const json_legend = json_object['legend']
@@ -657,7 +642,7 @@ export class ClassTemplate_Legend
 
         tag_group.selected_tags_list.filter(tag => {
           // Filter tag that doens't have element visible on the drawing_area (or display them if it's a data_tag since if it's selected it is visible)
-          return node_list.filter(n => n.hasGivenTag(tag)).length !== 0 || flux_list.filter(f => f.hasGivenTag(tag)).length !== 0 || tag instanceof Class_DataTag
+          return node_list.filter(n => n.hasGivenTag(tag as Class_Tag)).length !== 0 || flux_list.filter(f => f.hasGivenTag(tag as Class_Tag)).length !== 0 || tag instanceof Class_DataTag
         })
           .forEach((tag) => {
             const tagElement = legendElements2?.append('g')
@@ -667,17 +652,17 @@ export class ClassTemplate_Legend
               .on('mouseover', () => {
                 //Add event on hovering tag in legend that allow to highlight elemnt of the sankey that have the tag we are hovering
 
-                const nodes_tied_to_link_with_tag_hovered = ([] as Type_GenericNodeElement[])
+                const nodes_tied_to_link_with_tag_hovered = ([] as Class_NodeElement[])
                 //Get nodes tied to links who have the tag we hovering & get the list of links that have the tag hovered
                 flux_list
                   .filter(l => {
-                    if (l.hasGivenTag(tag)) {
-                      nodes_tied_to_link_with_tag_hovered.push(l.source as Type_GenericNodeElement)
-                      nodes_tied_to_link_with_tag_hovered.push(l.target as Type_GenericNodeElement)
+                    if (l.hasGivenTag(tag as Class_Tag)) {
+                      nodes_tied_to_link_with_tag_hovered.push(l.source as Class_NodeElement)
+                      nodes_tied_to_link_with_tag_hovered.push(l.target as Class_NodeElement)
                       return true
-                    } else if (l.source.hasGivenTag(tag) && l.target.hasGivenTag(tag)) {
-                      nodes_tied_to_link_with_tag_hovered.push(l.source as Type_GenericNodeElement)
-                      nodes_tied_to_link_with_tag_hovered.push(l.target as Type_GenericNodeElement)
+                    } else if (l.source.hasGivenTag(tag as Class_Tag) && l.target.hasGivenTag(tag as Class_Tag)) {
+                      nodes_tied_to_link_with_tag_hovered.push(l.source as Class_NodeElement)
+                      nodes_tied_to_link_with_tag_hovered.push(l.target as Class_NodeElement)
                       return true
                     }
                     l.d3_selection?.attr('opacity', 0.1)
@@ -687,7 +672,7 @@ export class ClassTemplate_Legend
                 //Reduce opacity of all node that doesn't have the tag hovered or aren't tied to a link that have the tag hovered
                 node_list
                   .forEach(n => {
-                    if (!nodes_tied_to_link_with_tag_hovered.includes(n as Type_GenericNodeElement)) {
+                    if (!nodes_tied_to_link_with_tag_hovered.includes(n as Class_NodeElement)) {
                       n.d3_selection?.attr('opacity', 0.1)
                     }
                   })
@@ -896,13 +881,13 @@ export class ClassTemplate_Legend
 
   public get stick_to_drawing(): boolean { return this._stick_to_drawing }
   public set stick_to_drawing(_) {
-    this._stick_to_drawing = _;
+    this._stick_to_drawing = _
     const da = this.drawing_area as unknown as Class_DrawingArea
     if (this.stick_to_drawing) {
-      this.drawing_area.d3_selection_zoom_area?.select('#grp_legend').remove();
+      this.drawing_area.d3_selection_zoom_area?.select('#grp_legend').remove()
       da.d3_selection_legend = da.d3_selection!.append('g').attr('id', 'grp_legend')
     } else {
-      this.drawing_area.d3_selection?.select('#grp_legend').remove();
+      this.drawing_area.d3_selection?.select('#grp_legend').remove()
       da.d3_selection_legend = da.d3_selection_zoom_area!.append('g').attr('id', 'grp_legend')
       this.posIfFromLegacy(true)
     }

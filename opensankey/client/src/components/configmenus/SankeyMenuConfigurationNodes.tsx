@@ -31,12 +31,7 @@ import {
   Button
 } from '@chakra-ui/react'
 
-/*************************************************************************************************/
 
-import type {
-  Type_GenericApplicationData,
-  Type_GenericNodeElement
-} from '../../types/Types'
 
 /*************************************************************************************************/
 
@@ -45,12 +40,14 @@ import {
 } from '../../types/Utils'
 import { ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_NodeElement } from '../../Elements/Node'
 
 
 /*************************************************************************************************/
 
 type FCType_SankeyNodeEdition = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
 }
 
 /*************************************************************************************************/
@@ -68,8 +65,8 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
   const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible } = icon_library
   // Nodes to select --------------------------------------------------------------------
 
-  let nodes: Type_GenericNodeElement[]
-  let selected_nodes: Type_GenericNodeElement[]
+  let nodes: Class_NodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     nodes = new_data.drawing_area.sankey.nodes_list_sorted
@@ -216,7 +213,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
    *
    */
   const addNode = () => {
-    let new_node: Type_GenericNodeElement
+    let new_node: Class_NodeElement
 
     const _addNode = () => {
       // Create default node
@@ -392,8 +389,8 @@ export const SankeyNodeSelectionSimple: FunctionComponent<FCType_SankeyNodeEditi
 
   // Nodes to select --------------------------------------------------------------------
 
-  let nodes: Type_GenericNodeElement[]
-  let selected_nodes: Type_GenericNodeElement[]
+  let nodes: Class_NodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     nodes = new_data.drawing_area.sankey.nodes_list_sorted

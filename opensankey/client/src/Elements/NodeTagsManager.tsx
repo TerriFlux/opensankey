@@ -25,24 +25,18 @@
 // ==================================================================================================
 
 // Local modules
-import { ClassTemplate_NodeElement } from './Node'
-import { ClassAbstract_DrawingArea, ClassAbstract_Sankey } from '../types/Abstract'
-import { ClassTemplate_LinkElement } from './Link'
+import { Class_NodeElement } from './Node'
 import { Class_Tag } from '../types/Tag'
 import { Type_JSON } from '../types/Utils'
 
 /**
  * Class that handles all tag management operations for NodeElement
  */
-export class NodeTagsManager<
-  Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-  Type_GenericSankey extends ClassAbstract_Sankey,
-  Type_GenericLinkElement extends ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
-> {
+export class NodeTagsManager {
 
-  private _node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  private _node: Class_NodeElement
 
-  constructor(node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  constructor(node: Class_NodeElement) {
     this._node = node
   }
 
@@ -59,12 +53,12 @@ export class NodeTagsManager<
 
   // COPY METHODS =======================================================================
 
-  public copyTagsFrom(node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public copyTagsFrom(node_to_copy: Class_NodeElement) {
     this.addTagsReferencingFrom(node_to_copy)
   }
 
   public copyTagsReferencingFrom(
-    node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    node_to_copy: Class_NodeElement,
     matching_tagg: { [_: string]: string },
     matching_tags: { [_: string]: { [_: string]: string } }
   ) {
@@ -77,7 +71,7 @@ export class NodeTagsManager<
   }
 
   private addTagsReferencingFrom(
-    node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    node_to_copy: Class_NodeElement,
     matching_tagg: { [_: string]: string } = {},
     matching_tags: { [_: string]: { [_: string]: string } } = {}
   ) {

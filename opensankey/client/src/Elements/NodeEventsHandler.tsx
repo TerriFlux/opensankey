@@ -27,23 +27,17 @@
 import * as d3 from 'd3'
 
 // Local modules
-import { ClassTemplate_NodeElement, Type_AnyNodeElement } from './Node'
-import { ClassAbstract_DrawingArea, ClassAbstract_Sankey } from '../types/Abstract'
-import { ClassTemplate_LinkElement } from './Link'
-import { ClassTemplate_GhostLinkElement } from './ClassTemplate_GhostLinkElement'
+import { Class_NodeElement } from './Node'
+import { ClassTemplate_GhostLinkElement } from './LinkGhostElement'
 
 /**
  * Class that handles all event operations for NodeElement
  */
-export class NodeEventsHandler<
-  Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-  Type_GenericSankey extends ClassAbstract_Sankey,
-  Type_GenericLinkElement extends ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
-> {
+export class NodeEventsHandler {
 
-  private _node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  private _node: Class_NodeElement
 
-  constructor(node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  constructor(node: Class_NodeElement) {
     this._node = node
   }
 
@@ -126,7 +120,7 @@ export class NodeEventsHandler<
   public handleMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Get related drawing area
     const drawing_area = this._node.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list as ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[]
+    const nodes_selected = drawing_area.selected_nodes_list as Class_NodeElement[]
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
@@ -178,7 +172,7 @@ export class NodeEventsHandler<
     // If we moved 'this' node then we save nodes dragged previous pos in undo & current pos in redo
     // it is done here because we don't know in eventMouseDragStart & eventMouseDragEnd if we aren't simply selecting the node
     if (dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)) {
-      function undo(_: Type_AnyNodeElement) {
+      function undo(_: Class_NodeElement) {
         Object.keys(dict_old_pos).forEach(k => {
           const n = _.drawing_area.sankey.nodes_dict[k]
           n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
@@ -193,7 +187,6 @@ export class NodeEventsHandler<
 
     // Move all elements so none of them are outside the DA
     this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
-    // @ts-ignore
     this._node.drawing_area.nodePositioning.computeParametricV()
 
     const drawing_area = this._node.drawing_area
@@ -241,7 +234,7 @@ export class NodeEventsHandler<
       // Create default source node
       // Position center of source node to pointer pos
       // Create default target node
-      const target = this._node.sankey.addNewDefaultNode() as ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+      const target = this._node.sankey.addNewDefaultNode() as Class_NodeElement
       target.setPosXY(this._node.position_x, this._node.position_y)
       // Make target a 'ghost' node
       target.setInvisible()
@@ -249,7 +242,7 @@ export class NodeEventsHandler<
       this._node.drawing_area.closeAllMenus()
 
       // Ref newly created link this var to be used in other mouse event
-      this._node.drawing_area.ghost_link = new ClassTemplate_GhostLinkElement<Type_GenericDrawingArea, Type_GenericSankey, ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>(
+      this._node.drawing_area.ghost_link = new ClassTemplate_GhostLinkElement(
         'ghost_link',
         this._node,
         target,
@@ -302,7 +295,7 @@ export class NodeEventsHandler<
   /**
    * Define event when mouse leaves element
    */
-  public handleMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  public handleMouseOut() {
     // Clear tooltip
     d3.selectAll('.sankey-tooltip').remove()
     this._node.d3_selection?.classed('tooltip_shown', false)
@@ -328,7 +321,7 @@ export class NodeEventsHandler<
    */
   private moveMagneticNode(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>,
-    node_to_move: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[]
+    node_to_move: Class_NodeElement[]
   ) {
     const drawing_area = this._node.drawing_area
     const limit_magnetic_node = drawing_area.grid_size / 4
@@ -390,7 +383,7 @@ export class NodeEventsHandler<
       const old_x = this._node.display.position.x
       const old_y = this._node.display.position.y
       // Redo function
-      function redo(_: Type_AnyNodeElement) {
+      function redo(_: Class_NodeElement) {
         _.setPosXY(old_x, old_y)
         drawing_area.checkAndUpdateAreaSize()
       }

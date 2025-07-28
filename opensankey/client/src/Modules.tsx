@@ -31,12 +31,11 @@ import {
   FType_InitializeApplicationData,
   FType_ModuleDialogs,
 } from './types/FunctionTypes'
-import {
-  Class_ApplicationData} from './types/Types'
 
 import { FType_InitializeDiagrammSelector } from './components/dialogs/types/SankeyMenuDialogsTypes'
 import { OpenSankeyDiagramSelector } from './components/dialogs/SankeyMenuDialogs'
 import { checkForUrlToJSON } from './types/Utils'
+import { Class_ApplicationData } from './types/ApplicationData'
 
 
 declare const window: Window &

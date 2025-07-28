@@ -42,23 +42,13 @@ import {
 } from '@silevis/reactgrid'
 import '@silevis/reactgrid/styles.css'
 
-import {
-  Type_GenericApplicationData,
-  Type_GenericDrawingArea,
-  Type_GenericLinkElement,
-  Type_GenericNodeElement
-} from '../../types/Types'
-import { parseLocaleNumber, Type_JSON } from '../../types/Utils'
-import { ClassTemplate_Sankey } from '../../types/Sankey'
-import { ClassTemplate_NodeElement } from '../../Elements/Node'
-import { defaultLinkId } from '../../Elements/Link'
 
-// Define a type for generic abstract node elements
-type Type_AnyAbstractNodeElement = ClassTemplate_NodeElement<
-  Type_GenericDrawingArea,
-  ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericLinkElement
->;
+import { parseLocaleNumber, Type_JSON } from '../../types/Utils'
+import { Class_NodeElement } from '../../Elements/Node'
+import { defaultLinkId } from '../../Elements/Link'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+
+
 
 // Define the structure of a flux (flow) row in the spreadsheet
 interface IType_SpreadSheetFlux {
@@ -69,7 +59,7 @@ interface IType_SpreadSheetFlux {
 }
 
 // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
-const getFluxFromSankey = (new_data: Type_GenericApplicationData): IType_SpreadSheetFlux[] => {
+const getFluxFromSankey = (new_data: Class_ApplicationData): IType_SpreadSheetFlux[] => {
   const a: IType_SpreadSheetFlux[] = new_data.drawing_area.sankey.links_list
     .map((l) => {
       return {
@@ -85,8 +75,8 @@ const getFluxFromSankey = (new_data: Type_GenericApplicationData): IType_SpreadS
 }
 
 // Main SpreadSheet component
-export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationData }> = (
-  { new_data }: { new_data: Type_GenericApplicationData }
+export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }> = (
+  { new_data }: { new_data: Class_ApplicationData }
 ) => {
   const { menu_configuration } = new_data
 
@@ -160,7 +150,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     }
 
     // Retrieve or create the source node
-    let source_node: Type_AnyAbstractNodeElement | undefined
+    let source_node: Class_NodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]) {
       source_node = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
     }
@@ -171,7 +161,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     }
 
     // Retrieve or create the target node
-    let target_node: Type_AnyAbstractNodeElement | undefined
+    let target_node: Class_NodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]) {
       target_node = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
     }

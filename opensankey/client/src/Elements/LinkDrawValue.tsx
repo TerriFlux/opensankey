@@ -27,9 +27,7 @@
 import * as d3 from 'd3'
 
 // Local modules
-import { ClassTemplate_LinkElement } from './Link'
-import { ClassAbstract_DrawingArea, ClassAbstract_Sankey } from '../types/Abstract'
-import { ClassAbstract_NodeElement } from '../types/AbstractNode'
+import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { ClassTemplate_Handler } from './Handler'
 import { Type_PathLabelHPosition, Type_PathLabelVPosition } from './LinkAttributes'
@@ -37,32 +35,30 @@ import { Type_PathLabelHPosition, Type_PathLabelVPosition } from './LinkAttribut
 /**
  * Class that handles all drawing and rendering operations for LinkElement
  */
-export class LinkDrawValue<
-  Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-  Type_GenericSankey extends ClassAbstract_Sankey,
-  Type_GenericNodeElement extends ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey>
-> {
+export class LinkDrawValue {
 
-  private _link: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
-  private _link_control_points :LinkControlPoints<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+  private _link: Class_LinkElement
+  private _link_control_points :LinkControlPoints
   private _link_control_points_internal : {
     readonly controlPoints: {
-        starting_curve_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
-        ending_curve_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
-        starting_bezier_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
-        ending_bezier_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
-        middle_recycling_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
+        starting_curve_point: ClassTemplate_Handler;
+        ending_curve_point: ClassTemplate_Handler;
+        starting_bezier_point: ClassTemplate_Handler;
+        ending_bezier_point: ClassTemplate_Handler;
+        middle_recycling_point: ClassTemplate_Handler;
         is_dragged: boolean;
     };
   }
   
   constructor(
-    link: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>,
-    link_control_points :LinkControlPoints<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+    link: Class_LinkElement,
+    link_control_points :LinkControlPoints
   ) {
     this._link = link
     this._link_control_points = link_control_points
-    this._link_control_points_internal = link_control_points.createInternalAccess()
+    this._link_control_points_internal = {
+      controlPoints: link_control_points.createInternalAccess().controlPoints()
+    }
   }
 
   /**
@@ -70,7 +66,7 @@ export class LinkDrawValue<
    *
    * @private
    * @param {d3.D3DragEvent<SVGTextPathElement,Unknown,Unknown>} event
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private dragValuePathStart(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
 
@@ -89,7 +85,7 @@ export class LinkDrawValue<
       this._link.value_label_horiz = old_val[1]
     }
 
-    this._link.display.drawing_area.application_data.history.saveUndo(inv_dragValuePathStart)
+    this._link.drawing_area.application_data.history.saveUndo(inv_dragValuePathStart)
 
   }
 
@@ -98,7 +94,7 @@ export class LinkDrawValue<
    *
    * @private
    * @param {d3.D3DragEvent<SVGTextPathElement,unknown,unknown>} event
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private dragValuePathMove(event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     this._link.display.position_offset_value = ((this._link.display.position_offset_value !== undefined) ? this._link.display.position_offset_value : 0) + event.dx
@@ -118,7 +114,7 @@ export class LinkDrawValue<
 
     }
 
-    this._link.display.drawing_area.application_data.history.saveRedo(_dragValuePathEnd)
+    this._link.drawing_area.application_data.history.saveRedo(_dragValuePathEnd)
   }
 
   private getTextPathSide() {
@@ -133,7 +129,7 @@ export class LinkDrawValue<
   /**
    * Draw link label on d3 svg
    * @protected
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public drawValue() {
     // Speed-up computing
@@ -260,7 +256,7 @@ export class LinkDrawValue<
    *
    * @private
    * @return {*}  {[number, number, string]}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private getValueXYPos(): [number, number, string] {
     // Initialize value as if it link attributes were :
@@ -312,7 +308,7 @@ export class LinkDrawValue<
    * Function used to set link label offset on DA & other attribute linkd to it
    *
    * @private
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private updateValueTextPathOffset() {
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getValueTextPathOffset()
@@ -327,7 +323,7 @@ export class LinkDrawValue<
    *
    * @private
    * @return {*}  {[number, string, number, string]}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private getValueTextPathOffset(): [number, string, number, string] {
     // Initialize value as if it link attributes were :
@@ -378,7 +374,7 @@ export class LinkDrawValue<
    *
    * @private
    * @param {d3.D3DragEvent<SVGTextElement,unknown,unknown>} event
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private dragValueStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
 
@@ -406,15 +402,15 @@ export class LinkDrawValue<
       this._link.menu_config.updateAllComponentsRelatedToLinks()
     }
 
-    this._link.display.drawing_area.application_data.history.saveUndo(inv_dragValueStart)
+    this._link.drawing_area.application_data.history.saveUndo(inv_dragValueStart)
   }
 
   /**
    * Function triggered when we move the link value label, it update relative node position & redraw the value label
    *
    * @private
-   * @param {d3.D3DragEvent<SVGTextElement,ClassTemplate_LinkElement,ClassTemplate_LinkElement>} event
-   * @memberof ClassTemplate_LinkElement
+   * @param {d3.D3DragEvent<SVGTextElement,Class_LinkElement,Class_LinkElement>} event
+   * @memberof Class_LinkElement
    */
   private dragValueMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     this._link.display.position_x_value = ((this._link.display.position_x_value !== undefined) ? this._link.display.position_x_value : 0) + event.dx
@@ -436,6 +432,6 @@ export class LinkDrawValue<
       this._link.menu_config.updateAllComponentsRelatedToLinks()
     }
 
-    this._link.display.drawing_area.application_data.history.saveRedo(_dragValueEnd)
+    this._link.drawing_area.application_data.history.saveRedo(_dragValueEnd)
   }
 }

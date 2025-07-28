@@ -26,8 +26,8 @@
 
 import { MutableRefObject } from 'react'
 import { FType_SetDiagram } from '../components/topmenus/types/SankeyMenuBannerTypes'
-import { Type_GenericApplicationData } from '../types/Types'
 import { Type_JSON } from '../types/Utils'
+import { Class_ApplicationData } from '../types/ApplicationData'
 
 export type SankeyNodeAttrLocal = {
   local_aggregation?: boolean,
@@ -351,7 +351,7 @@ export type applicationDataType = {
   get_default_data: OSGetDefaultData,
   dataVarToUpdate: MutableRefObject<string[]>,
   setDiagram: FType_SetDiagram,
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 }
 
 /*****************************************************************************/

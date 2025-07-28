@@ -538,52 +538,49 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     // Change style if node has default style & 'Type de noeud' tags
     if (n.tags['type de noeud']) {
       if (n.tags['type de noeud'].includes('produit')) {
-        // @ts-ignore
+        ///@ts-expect-error xxx
         n.style = ['NodeProductStyle']
       } else if (n.tags['type de noeud'].includes('secteur')) {
-        // @ts-ignore
+        ///@ts-expect-error xxx
         n.style = ['NodeSectorStyle']
       } else if (n.tags['type de noeud'].includes('echange')) {
-        // @ts-ignore
         const close = data_to_convert.style_node['NodeImportStyle'].position === 'relative'
         if (close) {
-          // @ts-ignore
+          ///@ts-expect-error xxx
           n.style = ['NodeSectorStyle', 'NodeImportExportCloseStyle']
         } else {
-          // @ts-ignore
+          ///@ts-expect-error xxx
           n.style = ['NodeSectorStyle', 'NodeImportExportAboveBelowStyle']
         }
         if (n.inputLinksId.length > 0) {
-          // @ts-ignore
           if (close) {
-            // @ts-ignore
+            ///@ts-expect-error xxx
             data_to_convert.links[n.inputLinksId[0]].style = ['LinkImportExportCloseStyle', 'LinkExportCloseStyle']
-            // @ts-ignore
+            ///@ts-expect-error xxx
             n.style.push('NodeExportCloseStyle')
             delete data_to_convert.links[n.inputLinksId[0]].local!['left_horiz_shift']
             delete data_to_convert.links[n.inputLinksId[0]].local!['right_horiz_shift']
           } else {
-            // @ts-ignore
+            ///@ts-expect-error xxx
             data_to_convert.links[n.inputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkExportBelowStyle']
-            // @ts-ignore
+            ///@ts-expect-error xxx
             n.style.push('NodeExportBelowStyle')
           }
         } else {
           if (!data_to_convert.links[n.outputLinksId[0]]) {
             return
           }
-          // @ts-ignore
           if (close) {
-            // @ts-ignore
+            //@ts-expect-error xxx
             data_to_convert.links[n.outputLinksId[0]].style = ['LinkImportExportCloseStyle', 'LinkImportCloseStyle']
-            // @ts-ignore
+            //@ts-expect-error xxx
             n.style.push('NodeImportCloseStyle')
             delete data_to_convert.links[n.outputLinksId[0]].local!['left_horiz_shift']
             delete data_to_convert.links[n.outputLinksId[0]].local!['right_horiz_shift']
           } else {
-            // @ts-ignore
+            //@ts-expect-error xxx
             data_to_convert.links[n.outputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkImportAboveStyle']
-            // @ts-ignore
+            //@ts-expect-error xxx
             n.style.push('NodeImportAboveStyle')
           }
         }
@@ -1338,8 +1335,7 @@ const convert_nodes: convert_nodesFuncType = (
 
   const has_product = Object.values(data.nodes).filter(n => ((n as unknown) as ConvertSankeyNode).type === 'product').length > 0
   const list_key_nodes = Object.values(data.nodes).map(n => n.idNode)
-  // const list_links = Object.values(data.links)
-  let trade_set = false
+
   Object.values(data.nodes).forEach(n => {
     const n_depreciated = (n as unknown) as ConvertSankeyNode
 

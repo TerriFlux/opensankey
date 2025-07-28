@@ -26,9 +26,11 @@
 
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_LevelTagGroup, Class_Tag } from '../../types/Tag'
-import { Type_GenericNodeElement, Type_GenericApplicationData, Type_GenericLinkElement } from '../../types/Types'
 import { default_style_id } from '../../types/Utils'
 import { Class_NodeStyle } from '../../Elements/NodeAttributes'
+import { Class_NodeElement } from '../../Elements/Node'
+import { Class_LinkElement } from '../../Elements/Link'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 // ============================================================================
 // TYPES ET CONSTANTES
@@ -47,26 +49,26 @@ enum ContractContext {
 interface BaseOperationConfig {
   expand_left: boolean
   tagg: Class_LevelTagGroup
-  original_node: Type_GenericNodeElement
+  original_node: Class_NodeElement
   suffix: string
 }
 
 interface DisaggregationExpansionConfig extends BaseOperationConfig {
   parent_dim: Class_NodeDimension
-  children: Type_GenericNodeElement[]
-  contextualised_node: Type_GenericNodeElement
+  children: Class_NodeElement[]
+  contextualised_node: Class_NodeElement
 }
 
 interface AggregationExpansionConfig extends BaseOperationConfig {
-  parent: Type_GenericNodeElement
-  nodes_to_agregate: Type_GenericNodeElement[]
+  parent: Class_NodeElement
+  nodes_to_agregate: Class_NodeElement[]
   child_dim: Class_NodeDimension
-  contextualised_node: Type_GenericNodeElement
+  contextualised_node: Class_NodeElement
 }
 
 interface LinkProcessingResult {
-  original_links: Type_GenericLinkElement[]
-  border_nodes: Type_GenericNodeElement[]
+  original_links: Class_LinkElement[]
+  border_nodes: Class_NodeElement[]
   is_extremity: boolean
 }
 
@@ -85,32 +87,32 @@ const calculateOpacity = (currentOpacity: number): number => {
 }
 
 const createOperationConfig = (
-  contextualised_node: Type_GenericNodeElement,
+  contextualised_node: Class_NodeElement,
   expand_left: boolean,
   tagg: Class_LevelTagGroup
 ): BaseOperationConfig => ({
   expand_left,
   tagg,
-  original_node: contextualised_node.sibling as Type_GenericNodeElement ?? contextualised_node,
+  original_node: contextualised_node.sibling as Class_NodeElement ?? contextualised_node,
   suffix: expand_left ? EXPANSION_SUFFIXES.LEFT : EXPANSION_SUFFIXES.RIGHT
 })
 
 const updateNodeAppearance = (
-  newNode: Type_GenericNodeElement,
-  referenceNode: Type_GenericNodeElement
+  newNode: Class_NodeElement,
+  referenceNode: Class_NodeElement
 ) => {
   newNode.shape_color = referenceNode.shape_color
   newNode.shape_opacity = calculateOpacity(referenceNode.shape_opacity)
 }
 
-const calculateTotalHeight = (nodes: Type_GenericNodeElement[], vertical_spacing: number): number => {
+const calculateTotalHeight = (nodes: Class_NodeElement[], vertical_spacing: number): number => {
   return (nodes.length - 1) * vertical_spacing +
          nodes.reduce((total, node) => total + node.getShapeHeightToUse(), 0)
 }
 
 const finalizeOperation = (
-  new_data: Type_GenericApplicationData,
-  nodes: Type_GenericNodeElement[]
+  new_data: Class_ApplicationData,
+  nodes: Class_NodeElement[]
 ) => {
   new_data.drawing_area.nodePositioning.computeParametrization()
   nodes.forEach(n => n.resetPositionAttribute('dy'))
@@ -129,8 +131,8 @@ const finalizeOperation = (
 // ============================================================================
 
 const updateNodeDimensions = (
-  newNode: Type_GenericNodeElement,
-  contextualised_node: Type_GenericNodeElement,
+  newNode: Class_NodeElement,
+  contextualised_node: Class_NodeElement,
   tagg: Class_LevelTagGroup,
   isDisaggregationExpansion: boolean = true
 ) => {
@@ -142,8 +144,8 @@ const updateNodeDimensions = (
 }
 
 const updateDisaggregationExpansionDimensions = (
-  newNode: Type_GenericNodeElement,
-  contextualised_node: Type_GenericNodeElement,
+  newNode: Class_NodeElement,
+  contextualised_node: Class_NodeElement,
   tagg: Class_LevelTagGroup
 ) => {
   // Dimensions as child
@@ -177,8 +179,8 @@ const updateDisaggregationExpansionDimensions = (
 }
 
 const updateAggregationExpansionDimensions = (
-  newNode: Type_GenericNodeElement,
-  contextualised_node: Type_GenericNodeElement,
+  newNode: Class_NodeElement,
+  contextualised_node: Class_NodeElement,
   tagg: Class_LevelTagGroup
 ) => {
   // Dimensions as parent (devient child pour le nouveau nœud)
@@ -212,8 +214,8 @@ const updateAggregationExpansionDimensions = (
 }
 
 const updateForcedDimensions = (
-  newNode: Type_GenericNodeElement,
-  contextualised_node: Type_GenericNodeElement,
+  newNode: Class_NodeElement,
+  contextualised_node: Class_NodeElement,
   dimensionType: 'child' | 'parent'
 ) => {
   const dimensions = dimensionType === 'child'
@@ -241,9 +243,9 @@ const updateForcedDimensions = (
 // ============================================================================
 
 const updateNodePositioning = (
-  new_data: Type_GenericApplicationData,
-  nodes: Type_GenericNodeElement[],
-  contextualised_node: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  nodes: Class_NodeElement[],
+  contextualised_node: Class_NodeElement,
   expand_left: boolean
 ) => {
   // Mise à jour des positions U des autres nœuds
@@ -266,14 +268,14 @@ const updateNodePositioning = (
 }
 
 const updateAggregationExpansionPositioning = (
-  new_data: Type_GenericApplicationData,
-  aggregateNode: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  aggregateNode: Class_NodeElement,
   config: AggregationExpansionConfig
 ) => {
   // Mise à jour des positions U
   const filterCondition = config.expand_left
-    ? (n2: Type_GenericNodeElement) => n2.position_u <= config.contextualised_node.position_u - 1
-    : (n2: Type_GenericNodeElement) => n2.position_u >= config.contextualised_node.position_u + 1
+    ? (n2: Class_NodeElement) => n2.position_u <= config.contextualised_node.position_u - 1
+    : (n2: Class_NodeElement) => n2.position_u >= config.contextualised_node.position_u + 1
 
   new_data.drawing_area.sankey.nodes_list
     .filter(filterCondition)
@@ -282,7 +284,7 @@ const updateAggregationExpansionPositioning = (
   aggregateNode.position_u = config.contextualised_node.position_u + (config.expand_left ? -1 : 1)
   const vertical_spacing = aggregateNode.position_dy!
   // Calcul de la position Y
-  const total_height = calculateTotalHeight(config.nodes_to_agregate as Type_GenericNodeElement[], vertical_spacing)
+  const total_height = calculateTotalHeight(config.nodes_to_agregate as Class_NodeElement[], vertical_spacing)
   const center = total_height / 2
 
   if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position.type === 'parametric') {
@@ -297,7 +299,7 @@ const updateAggregationExpansionPositioning = (
 /**
  * Détecte si un nœud est à une extrémité du diagramme
  */
-const isAtExtremity = (node: Type_GenericNodeElement, direction: 'left' | 'right'): boolean => {
+const isAtExtremity = (node: Class_NodeElement, direction: 'left' | 'right'): boolean => {
   if (direction === 'left') {
     return node.input_links_list.length === 0 || node.input_links_list.every(l => !l.is_visible)
   } else {
@@ -311,7 +313,7 @@ const isAtExtremity = (node: Type_GenericNodeElement, direction: 'left' | 'right
 const processLinksForDisaggregationExpansion = (
   config: DisaggregationExpansionConfig
 ): LinkProcessingResult => {
-  let links_aggregate: Type_GenericLinkElement[] = []
+  let links_aggregate: Class_LinkElement[] = []
   let is_extremity = true
 
   // Vérifier si on est à une extrémité
@@ -362,33 +364,33 @@ const processLinksForDisaggregationExpansion = (
 const processLinksForAggregationExpansion = (
   config: AggregationExpansionConfig
 ): LinkProcessingResult => {
-  let original_links: Type_GenericLinkElement[] = []
-  const border_nodes: Type_GenericNodeElement[] = []
+  let original_links: Class_LinkElement[] = []
+  const border_nodes: Class_NodeElement[] = []
   let is_extremity = true
 
   // Vérifier si les nœuds à agréger sont à une extrémité
   const nodesAtLeftExtremity = config.nodes_to_agregate.every(n =>
-    isAtExtremity(n as Type_GenericNodeElement, 'left')
+    isAtExtremity(n as Class_NodeElement, 'left')
   )
   const nodesAtRightExtremity = config.nodes_to_agregate.every(n =>
-    isAtExtremity(n as Type_GenericNodeElement, 'right')
+    isAtExtremity(n as Class_NodeElement, 'right')
   )
 
   if (config.expand_left) {
     if (!nodesAtLeftExtremity) {
       // Cas normal : les nœuds ont des liens d'entrée
       config.nodes_to_agregate.forEach(c => {
-        const visibleLinks = (c as Type_GenericNodeElement).input_links_list.filter(l => l.source.is_visible)
+        const visibleLinks = (c as Class_NodeElement).input_links_list.filter(l => l.source.is_visible)
         original_links = [...original_links, ...visibleLinks];
-        (c as Type_GenericNodeElement).input_links_list.forEach(l => l.setInvisible())
+        (c as Class_NodeElement).input_links_list.forEach(l => l.setInvisible())
       })
       is_extremity = false
     } else {
       // Cas extrémité : utiliser les liens de sortie
       config.nodes_to_agregate.forEach(c => {
-        const visibleLinks = (c as Type_GenericNodeElement).output_links_list.filter(l => l.target.is_visible)
+        const visibleLinks = (c as Class_NodeElement).output_links_list.filter(l => l.target.is_visible)
         original_links = [...original_links, ...visibleLinks]
-        //(c as Type_GenericNodeElement).output_links_list.forEach(l => l.setInvisible())
+        //(c as Class_NodeElement).output_links_list.forEach(l => l.setInvisible())
       })
       is_extremity = true
     }
@@ -396,17 +398,17 @@ const processLinksForAggregationExpansion = (
     if (!nodesAtRightExtremity) {
       // Cas normal : les nœuds ont des liens de sortie
       config.nodes_to_agregate.forEach(c => {
-        const visibleLinks = (c as Type_GenericNodeElement).output_links_list.filter(l => l.target.is_visible)
+        const visibleLinks = (c as Class_NodeElement).output_links_list.filter(l => l.target.is_visible)
         original_links = [...original_links, ...visibleLinks];
-        (c as Type_GenericNodeElement).output_links_list.forEach(l => l.setInvisible())
+        (c as Class_NodeElement).output_links_list.forEach(l => l.setInvisible())
       })
       is_extremity = false
     } else {
       // Cas extrémité : utiliser les liens d'entrée
       config.nodes_to_agregate.forEach(c => {
-        const visibleLinks = (c as Type_GenericNodeElement).input_links_list.filter(l => l.source.is_visible)
+        const visibleLinks = (c as Class_NodeElement).input_links_list.filter(l => l.source.is_visible)
         original_links = [...original_links, ...visibleLinks]
-        //(c as Type_GenericNodeElement).input_links_list.forEach(l => l.setInvisible())
+        //(c as Class_NodeElement).input_links_list.forEach(l => l.setInvisible())
       })
       is_extremity = true
     }
@@ -424,11 +426,11 @@ const processLinksForAggregationExpansion = (
 }
 
 const createChildLinks = (
-  new_data: Type_GenericApplicationData,
-  newNodes: Type_GenericNodeElement[],
-  contextualised_node: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  newNodes: Class_NodeElement[],
+  contextualised_node: Class_NodeElement,
   expand_left: boolean
-): Type_GenericLinkElement[] => {
+): Class_LinkElement[] => {
   return newNodes.map(newNode => {
     const link = expand_left
       ? new_data.drawing_area.sankey.addNewLink(newNode, contextualised_node)
@@ -441,14 +443,14 @@ const createChildLinks = (
 }
 
 const createAggregationExpansionLinks = (
-  new_data: Type_GenericApplicationData,
-  aggregateNode: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  aggregateNode: Class_NodeElement,
   config: AggregationExpansionConfig
-): Type_GenericLinkElement[] => {
+): Class_LinkElement[] => {
   return config.nodes_to_agregate.map(nodeToAggregate => {
     const link = config.expand_left
-      ? new_data.drawing_area.sankey.addNewLink(aggregateNode, nodeToAggregate as Type_GenericNodeElement)
-      : new_data.drawing_area.sankey.addNewLink(nodeToAggregate as Type_GenericNodeElement, aggregateNode)
+      ? new_data.drawing_area.sankey.addNewLink(aggregateNode, nodeToAggregate as Class_NodeElement)
+      : new_data.drawing_area.sankey.addNewLink(nodeToAggregate as Class_NodeElement, aggregateNode)
 
     link.shape_color_rule = 'source'
     link.shape_opacity = aggregateNode.shape_opacity
@@ -460,10 +462,10 @@ const createAggregationExpansionLinks = (
  * Gestion améliorée des valeurs de liens pour les cas d'extrémité
  */
 const updateLinkValuesForDisaggregationExpansion = (
-  childLinks: Type_GenericLinkElement[],
-  newNodes: Type_GenericNodeElement[],
+  childLinks: Class_LinkElement[],
+  newNodes: Class_NodeElement[],
   linkResult: LinkProcessingResult,
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   expand_left: boolean
 ) => {
 
@@ -528,7 +530,7 @@ const updateLinkValuesForDisaggregationExpansion = (
 }
 
 const updateLinkValuesForAggregationExpansion = (
-  expandedLinks: Type_GenericLinkElement[],
+  expandedLinks: Class_LinkElement[],
   linkResult: LinkProcessingResult,
   expand_left: boolean
 ) => {
@@ -554,11 +556,11 @@ const updateLinkValuesForAggregationExpansion = (
 }
 
 const createBorderLinks = (
-  new_data: Type_GenericApplicationData,
-  aggregateNode: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  aggregateNode: Class_NodeElement,
   linkResult: LinkProcessingResult,
   expand_left: boolean
-): Type_GenericLinkElement[] => {
+): Class_LinkElement[] => {
   const logger = createLogger(false)
   logger.group('Creating extremity links (improved)')
 
@@ -601,9 +603,9 @@ const createBorderLinks = (
 // ============================================================================
 
 const createDisaggregationExpansionNodes = (
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   config: DisaggregationExpansionConfig
-): Type_GenericNodeElement[] => {
+): Class_NodeElement[] => {
   return config.children.map(child => {
     const newNode = new_data.drawing_area.sankey.addNewNode(
       child.id + config.suffix,
@@ -622,9 +624,9 @@ const createDisaggregationExpansionNodes = (
 }
 
 const createAggregationExpansionNode = (
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   config: AggregationExpansionConfig
-): Type_GenericNodeElement => {
+): Class_NodeElement => {
   const newNode = new_data.drawing_area.sankey.addNewNode(
     config.parent.id + config.suffix,
     config.parent.name
@@ -647,8 +649,8 @@ const createAggregationExpansionNode = (
  * Agrégation simple - remonte d'un niveau hiérarchique
  */
 export const aggregate = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement,
   tagg: Class_LevelTagGroup
 ) => {
   if (!contextualised_node.is_child) {
@@ -674,8 +676,8 @@ export const aggregate = (
  * Désagrégation simple - descend d'un niveau hiérarchique
  */
 export const disaggregate = (
-  new_data: Type_GenericApplicationData,
-  aggregateNode: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  aggregateNode: Class_NodeElement,
   tagg: Class_LevelTagGroup
 ) => {
   if (!aggregateNode.is_parent) {
@@ -689,7 +691,7 @@ export const disaggregate = (
   const current_height = aggregateNode.getShapeHeightToUse()
   parent_dim.setForceToShowChildren()
   const new_nodes = parent_dim.children
-  const total_height = calculateTotalHeight(new_nodes as Type_GenericNodeElement[], vertical_spacing)
+  const total_height = calculateTotalHeight(new_nodes as Class_NodeElement[], vertical_spacing)
   const shift_y = total_height / 2
 
   new_nodes.forEach((n, i) => {
@@ -707,8 +709,8 @@ export const disaggregate = (
  * DisaggregationExpansion latérale - développe un nœud sur le côté
  */
 export const disaggregationExpansion = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement,
   expand_left: boolean,
   tagg: Class_LevelTagGroup
 ) => {
@@ -722,7 +724,7 @@ export const disaggregationExpansion = (
   const config: DisaggregationExpansionConfig = {
     ...createOperationConfig(contextualised_node, expand_left, tagg),
     parent_dim,
-    children: parent_dim.children as Type_GenericNodeElement[],
+    children: parent_dim.children as Class_NodeElement[],
     contextualised_node
   }
 
@@ -744,8 +746,8 @@ export const disaggregationExpansion = (
  * Collection latérale - agrège des nœuds enfants vers leur parent sur le côté
  */
 export const aggregationExpansion = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement,
   expand_left: boolean,
   tagg: Class_LevelTagGroup
 ) => {
@@ -758,8 +760,8 @@ export const aggregationExpansion = (
 
   const config: AggregationExpansionConfig = {
     ...createOperationConfig(contextualised_node, expand_left, tagg),
-    parent: child_dim.parent as Type_GenericNodeElement,
-    nodes_to_agregate: child_dim.children as Type_GenericNodeElement[],
+    parent: child_dim.parent as Class_NodeElement,
+    nodes_to_agregate: child_dim.children as Class_NodeElement[],
     child_dim,
     contextualised_node
   }
@@ -783,8 +785,8 @@ export const aggregationExpansion = (
  * Contraction - annule une expansion ou collection précédente
  */
 export const contract = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement
 ) => {
   const expand_left = contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT)
 
@@ -811,8 +813,8 @@ export const contract = (
 // ============================================================================
 
 const handleExchangeNodes = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement,
   tagg: Class_LevelTagGroup,
   operation: 'aggregate' | 'disaggregate'
 ) => {
@@ -864,7 +866,7 @@ const handleExchangeNodes = (
 // DÉTECTION DU CONTEXTE DE CONTRACTION
 // ============================================================================
 
-const detectContractContext = (contextualised_node: Type_GenericNodeElement): ContractContext => {
+const detectContractContext = (contextualised_node: Class_NodeElement): ContractContext => {
   // Méthode 1: Analyser la structure des liens
   const hasExpandStructure = checkExpandStructure(contextualised_node)
   const hasAggregateStructure = checkAggregateStructure(contextualised_node)
@@ -886,7 +888,7 @@ const detectContractContext = (contextualised_node: Type_GenericNodeElement): Co
   return ContractContext.AFTER_EXPAND
 }
 
-const checkExpandStructure = (node: Type_GenericNodeElement): boolean => {
+const checkExpandStructure = (node: Class_NodeElement): boolean => {
   // Dans une expansion, le nœud contextualisé est un enfant temporaire
   // qui pointe vers un parent qui a d'autres enfants temporaires
   const expand_left = node.id.includes(EXPANSION_SUFFIXES.LEFT)
@@ -903,7 +905,7 @@ const checkExpandStructure = (node: Type_GenericNodeElement): boolean => {
   return siblings.length > 1 // Il y a plusieurs enfants de la même expansion
 }
 
-const checkAggregateStructure = (node: Type_GenericNodeElement): boolean => {
+const checkAggregateStructure = (node: Class_NodeElement): boolean => {
   // Dans une agrégation, le nœud contextualisé est un parent temporaire
   // qui a des liens vers plusieurs enfants originaux
   const expand_left = node.id.includes(EXPANSION_SUFFIXES.LEFT)
@@ -921,8 +923,8 @@ const checkAggregateStructure = (node: Type_GenericNodeElement): boolean => {
 // ============================================================================
 
 const contractAfterExpand = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement,
   expand_left: boolean
 ) => {
   const logger = createLogger(false)
@@ -954,8 +956,8 @@ const contractAfterExpand = (
 }
 
 const contractAfterAggregate = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement,
   expand_left: boolean
 ) => {
   const logger = createLogger(false)

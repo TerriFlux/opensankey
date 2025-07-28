@@ -25,24 +25,19 @@
 // ==================================================================================================
 
 // Local types
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_LinkValue } from '../Elements/LinkValues'
+import { Class_NodeElement } from '../Elements/Node'
 import {
   Class_NodeDimension
 } from '../Elements/NodeDimension'
 import {
-  ClassAbstract_DrawingArea,
   ClassAbstract_ProtoLevelTag,
   ClassAbstract_ProtoLevelTagGroup,
   ClassAbstract_Sankey,
   ClassAbstract_ProtoTag,
   ClassAbstract_ProtoTagGroup
 } from '../types/Abstract'
-import {
-  ClassAbstract_NodeElement
-} from '../types/AbstractNode'
-import {
-  ClassAbstract_LinkElement,
-  ClassAbstract_LinkValue
-} from './AbstractLink'
 import {
   Type_JSON,
   default_grey_color,
@@ -56,10 +51,6 @@ import colormap from 'colormap'
 // SPECIFIC TYPES ***********************************************************************
 
 export type tag_banner_type = 'none' | 'one' | 'multi' | 'level'
-
-type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
-export type TypeAbstract_TagReference = TypeAbstract_NodeElement | ClassAbstract_LinkValue | TypeAbstract_DataTagReference
-type TypeAbstract_DataTagReference = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS PROTO TAG ***********************************************************************
 
@@ -306,7 +297,7 @@ export abstract class Class_Tag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
   // List of elements that relates to this tag
-  protected _references: { [_: string]: TypeAbstract_TagReference } = {}
+  protected _references: { [_: string]: Class_NodeElement | Class_LinkElement | Class_LinkValue } = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -359,18 +350,18 @@ export abstract class Class_Tag extends Class_ProtoTag {
     this._ref_sankey.drawing_area.legend.draw()
   }
 
-  public hasGivenReference(_: TypeAbstract_TagReference) {
+  public hasGivenReference(_: Class_NodeElement | Class_LinkElement | Class_LinkValue) {
     return (this._references[_.id] !== undefined)
   }
 
-  public addReference(_: TypeAbstract_TagReference) {
+  public addReference(_: Class_NodeElement | Class_LinkElement | Class_LinkValue) {
     if (!this.hasGivenReference(_)) {
       this._references[_.id] = _
       _.addTag(this)
     }
   }
 
-  public removeReference(_: TypeAbstract_TagReference) {
+  public removeReference(_: Class_NodeElement | Class_LinkElement | Class_LinkValue) {
     if (this.hasGivenReference(_)) {
       delete this._references[_.id]
       _.removeTag(this)
@@ -470,7 +461,7 @@ export class Class_DataTag extends Class_ProtoTag {
   // PRIVATE ATTRIBUTES =================================================================
 
   // List of elements that relates to this tag
-  private _references: { [_: string]: TypeAbstract_DataTagReference } = {}
+  private _references: { [_: string]: Class_LinkElement } = {}
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -758,7 +749,7 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
 
   protected _group: Class_LevelTagGroup
 
-  private _references: { [_: string]: TypeAbstract_TagReference } = {}
+  private _references: { [_: string]: Class_NodeElement | Class_LinkElement | Class_LinkValue } = {}
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -977,8 +968,8 @@ export class Class_LevelTag extends Class_ProtoLevelTag {
   }
 
   public getOrCreateLowerDimension(
-    parent: TypeAbstract_NodeElement,
-    child: TypeAbstract_NodeElement,
+    parent: Class_NodeElement,
+    child: Class_NodeElement,
     child_tag: Class_LevelTag
   ) {
 
@@ -1468,7 +1459,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   // PUBLIC METHODS =====================================================================
 
   public updateTagsReferences(): void {
-    const ref_updated: TypeAbstract_TagReference[] = []
+    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_LinkValue)[] = []
     Object.values(this._tags)
       .forEach(tag => {
         tag.references
@@ -2114,7 +2105,7 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
 
   private _activated: boolean = false
   private _siblings: string[] = []
-  private _antitagged_refs: TypeAbstract_NodeElement[] = []
+  private _antitagged_refs: Class_NodeElement [] = []
 
   // CLEANING METHODS ===================================================================
 
@@ -2168,14 +2159,14 @@ export class Class_LevelTagGroup extends Class_ProtoLevelTagGroup {
     }).map(tagg => this._ref_sankey.level_taggs_dict[tagg])
   }
 
-  public addAntiTaggedRef(_: TypeAbstract_NodeElement) {
+  public addAntiTaggedRef(_: Class_NodeElement) {
     if (!this._antitagged_refs.includes(_)) {
       this._antitagged_refs.push(_)
       _.addAsAntiTagged(this)
     }
   }
 
-  public removeAntiTaggedRef(_: TypeAbstract_NodeElement) {
+  public removeAntiTaggedRef(_: Class_NodeElement) {
     if (this._antitagged_refs.includes(_)) {
       const idx = this._antitagged_refs.indexOf(_)
       this._antitagged_refs.splice(idx, 1)

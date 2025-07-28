@@ -25,8 +25,8 @@
 // ==================================================================================================
 
 import { SankeyData } from './LegacyType'
-import { Type_GenericApplicationData } from '../types/Types'
 import { Type_JSON } from '../types/Utils'
+import { Class_ApplicationData } from '../types/ApplicationData'
 
 /**
  * Description placeholder
@@ -43,12 +43,12 @@ export type FCType_Counter = {
 }
 
 export type FType_ProcessExample = (
-  applicationData: Type_GenericApplicationData,
+  applicationData: Class_ApplicationData,
   postProcessLoadExcel: (server_data: SankeyData) => void,
 ) => void
 
 export type FType_RetrieveExcelResults = (
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   text: string,
 ) => void
 
@@ -58,7 +58,7 @@ export type Type_SaveDiagramOptions = {
 }
 
 export type FType_ClickSaveDiagram = (
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ) => void
 
 export type FType_DownloadExamples = (
@@ -74,7 +74,7 @@ export type FType_UploadExcelImpl = (
 
 export type FType_UploadExemple = (
   file_name: string,
-  applicationData: Type_GenericApplicationData
+  applicationData: Class_ApplicationData
 ) => void
 
 export type FType_JSONtoExcel = (

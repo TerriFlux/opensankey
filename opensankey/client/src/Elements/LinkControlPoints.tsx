@@ -25,23 +25,17 @@
 // ==================================================================================================
 
 // Local modules
-import { ClassTemplate_LinkElement } from './Link'
-import { ClassAbstract_DrawingArea, ClassAbstract_Sankey } from '../types/Abstract'
-import { ClassAbstract_NodeElement } from '../types/AbstractNode'
+import { Class_LinkElement } from './Link'
 import { ClassTemplate_Handler } from './Handler'
-
+import { Class_DrawingArea } from '../types/DrawingArea'
 
 
 /**
  * Class that handles all drawing and rendering operations for LinkElement
  */
-export class LinkControlPoints<
-  Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-  Type_GenericSankey extends ClassAbstract_Sankey,
-  Type_GenericNodeElement extends ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey>
-> {
+export class LinkControlPoints {
 
-  private link: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+  private link: Class_LinkElement
 
   /**
    * Struct of all control points
@@ -54,20 +48,20 @@ export class LinkControlPoints<
    *     middle_recycling_point: ClassTemplate_Handler,
    *     is_dragged: boolean
    *   }}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private _control_points: {
-    starting_curve_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    ending_curve_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    starting_bezier_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    ending_bezier_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
-    middle_recycling_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>,
+    starting_curve_point: ClassTemplate_Handler,
+    ending_curve_point: ClassTemplate_Handler,
+    starting_bezier_point: ClassTemplate_Handler,
+    ending_bezier_point: ClassTemplate_Handler,
+    middle_recycling_point: ClassTemplate_Handler,
     is_dragged: boolean
   }
 
   constructor(
-    link: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>,
-    drawing_area: Type_GenericDrawingArea
+    link: Class_LinkElement,
+    drawing_area: Class_DrawingArea
   ) {
     this.link = link
     // Add control points
@@ -77,17 +71,16 @@ export class LinkControlPoints<
 
   // Création d'un proxy d'accès pour les classes "friend"
   public createInternalAccess()  {
-    const self = this
     return {
-      get controlPoints() { return self._control_points }
+      controlPoints : () => { return this._control_points }
     }
   }
 
   protected initControlPoints(
-    drawing_area: Type_GenericDrawingArea
+    drawing_area: Class_DrawingArea
   ) {
     return {
-      starting_curve_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      starting_curve_point: new ClassTemplate_Handler(
         'cp_start_' + this.link.id,
         drawing_area,
         this.link.menu_config,
@@ -96,7 +89,7 @@ export class LinkControlPoints<
         this.startCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_start' }),
-      ending_curve_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      ending_curve_point: new ClassTemplate_Handler(
         'cp_end_' + this.link.id,
         drawing_area,
         this.link.menu_config,
@@ -105,7 +98,7 @@ export class LinkControlPoints<
         this.endCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_end' }),
-      starting_bezier_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      starting_bezier_point: new ClassTemplate_Handler(
         'bz_start_' + this.link.id,
         drawing_area,
         this.link.menu_config,
@@ -114,7 +107,7 @@ export class LinkControlPoints<
         this.startTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_start' }),
-      ending_bezier_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      ending_bezier_point: new ClassTemplate_Handler(
         'bz_end_' + this.link.id,
         drawing_area,
         this.link.menu_config,
@@ -123,7 +116,7 @@ export class LinkControlPoints<
         this.endTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_end' }),
-      middle_recycling_point: new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+      middle_recycling_point: new ClassTemplate_Handler(
         'recy_middle_' + this.link.id,
         drawing_area,
         this.link.menu_config,
@@ -135,10 +128,10 @@ export class LinkControlPoints<
       is_dragged: false
     }
   }
-    /**
+  /**
    * Function that unDraw CP, in case we go throught link unDraw without erasing visible CP
    *
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public unDrawControlPoints() {
     this._control_points.starting_curve_point.unDraw()
@@ -234,9 +227,9 @@ export class LinkControlPoints<
     }
   }
 
- /**
+  /**
    * Define deletion behavior
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public cleanForDeletion() {
     // Delete control points
@@ -247,7 +240,7 @@ export class LinkControlPoints<
     this._control_points.middle_recycling_point.delete()
   }
 
-    public get control_points_position() {
+  public get control_points_position() {
     return {
       'starting_curve': [this._control_points.starting_curve_point.display.position.x, this._control_points.starting_curve_point.display.position.y],
       'ending_curve': [this._control_points.ending_curve_point.display.position.x, this._control_points.ending_curve_point.display.position.y],
@@ -262,7 +255,7 @@ export class LinkControlPoints<
    * Compute position of these points :
    * - Starting tangeant first & second point
    * - Ending tangeant first & second point
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public computeControlPoints() {
     this.computeStartingCurvePoint()
@@ -276,7 +269,7 @@ export class LinkControlPoints<
    * Function used to update starting curve point position value
    *
    * @private
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private computeStartingCurvePoint() {
     const x0 = this.link.position_x_start  // Shorter to write
@@ -318,7 +311,7 @@ export class LinkControlPoints<
   * Function used to update ending curve point position value
   *
   * @private
-  * @memberof ClassTemplate_LinkElement
+  * @memberof Class_LinkElement
   */
   private computeEndingCurvePoint() {
     const x0 = this.link.position_x_start  // Shorter to write
@@ -359,7 +352,7 @@ export class LinkControlPoints<
   * Function used to update starting tangeant point position value
   *
   * @private
-  * @memberof ClassTemplate_LinkElement
+  * @memberof Class_LinkElement
   */
   private computeStartingBezierPoint() {
     const x1 = this._control_points.starting_curve_point.position_x
@@ -398,7 +391,7 @@ export class LinkControlPoints<
   * Function used to update ending tangeant point position value
   *
   * @private
-  * @memberof ClassTemplate_LinkElement
+  * @memberof Class_LinkElement
   */
   private computeEndingBezierPoint() {
     const x1 = this._control_points.starting_curve_point.position_x
@@ -474,7 +467,7 @@ export class LinkControlPoints<
    *
    * @private
    * @return {*}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private dragHandleStart() {
     return () => {
@@ -488,7 +481,7 @@ export class LinkControlPoints<
         'shape_ending_tangeant': this.link.shape_ending_tangeant,
       }
       // Save undo to reposition handler to save pos
-      this.link.display.drawing_area.application_data.history.saveUndo(() => {
+      this.link.drawing_area.application_data.history.saveUndo(() => {
         this.link.shape_starting_curve = ghost['shape_starting_curve']
         this.link.shape_ending_curve = ghost['shape_ending_curve']
         this.link.shape_starting_tangeant = ghost['shape_starting_tangeant']
@@ -501,7 +494,7 @@ export class LinkControlPoints<
    * Deactivate the control points alignement guide
    * @private
    * @return {*}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private dragHandleEnd() {
     return () => {
@@ -518,7 +511,7 @@ export class LinkControlPoints<
         'shape_ending_tangeant': this.link.shape_ending_tangeant,
       }
       // Save redo to reposition handler to current pos
-      this.link.display.drawing_area.application_data.history.saveRedo(() => {
+      this.link.drawing_area.application_data.history.saveRedo(() => {
         this.link.display.attributes.shape_starting_curve = ghost['shape_starting_curve']
         this.link.display.attributes.shape_ending_curve = ghost['shape_ending_curve']
         this.link.display.attributes.shape_starting_tangeant = ghost['shape_starting_tangeant']
@@ -534,7 +527,7 @@ export class LinkControlPoints<
    *
    * @private
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private startCurvePointDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
@@ -566,7 +559,7 @@ export class LinkControlPoints<
    *
    * @private
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private endCurvePointDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
@@ -600,7 +593,7 @@ export class LinkControlPoints<
    *
    * @private
    * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private startTangeantDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
@@ -634,7 +627,7 @@ export class LinkControlPoints<
   *
   * @private
   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-  * @memberof ClassTemplate_LinkElement
+  * @memberof Class_LinkElement
   */
   private endTangeantDragEvent() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {

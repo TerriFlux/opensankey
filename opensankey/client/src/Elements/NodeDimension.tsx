@@ -27,18 +27,13 @@
 // Internal imports
 import {
   ClassAbstract_ProtoLevelTag,
-  ClassAbstract_DrawingArea,
-  ClassAbstract_Sankey
 } from '../types/Abstract'
 import {
-  ClassAbstract_NodeElement,
   ClassAbstract_NodeDimension
 } from '../types/AbstractNode'
 import { Class_LevelTag, Class_LevelTagGroup } from '../types/Tag'
+import { Class_NodeElement } from './Node'
 
-// SPECIFIC TYPES ***********************************************************************
-
-type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS NODE DIMENSION *****************************************************************
 
@@ -49,8 +44,8 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   private _id: string
 
   // Structure
-  private _parent: TypeAbstract_NodeElement
-  private _children: TypeAbstract_NodeElement[]
+  private _parent: Class_NodeElement
+  private _children: Class_NodeElement[]
 
   // Tags relations
   private _parent_level_tag: ClassAbstract_ProtoLevelTag
@@ -72,15 +67,15 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   // CONSTRUCTOR ========================================================================
   /**
    * Creates an instance of Class_NodeDimension.
-   * @param {ClassAbstract_NodeElement<Type_GenericDrawingArea>} parent
+   * @param {ClassAbstract_NodeElement<Class_DrawingArea>} parent
    * @param {ClassAbstract_NodeElement[]} children
    * @param {ClassAbstract_ProtoLevelTag} parent_level_tag
    * @param {ClassAbstract_ProtoLevelTag} children_level_tag
    * @memberof Class_NodeDimension
    */
   constructor(
-    parent: TypeAbstract_NodeElement,
-    children: TypeAbstract_NodeElement[],
+    parent: Class_NodeElement,
+    children: Class_NodeElement[],
     parent_level_tag: ClassAbstract_ProtoLevelTag,
     child_level_tag: ClassAbstract_ProtoLevelTag,
     id?: string
@@ -179,20 +174,20 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
 
   }
 
-  public removeNodeAsParent(_: TypeAbstract_NodeElement) {
+  public removeNodeAsParent(_: Class_NodeElement) {
     if (this._parent === _) {
       this.delete() // Simply delete because dimension can not exist without parent
     }
   }
 
-  public addNodeAsChild(_: TypeAbstract_NodeElement) {
+  public addNodeAsChild(_: Class_NodeElement) {
     if (!(this._children.includes(_))) {
       this._children.push(_)
       _.addNewDimensionAsChild(this)
     }
   }
 
-  public removeNodeFromChildren(_: TypeAbstract_NodeElement) {
+  public removeNodeFromChildren(_: Class_NodeElement) {
     const idx = this._children.indexOf(_)
     if (idx !== undefined) {
       this._children.splice(idx, 1)
@@ -458,7 +453,7 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   public get child_level_tagg() { return this._child_level_tag?.group ?? undefined }
 
   public get parent() { return this._parent }
-  public set parent(_: TypeAbstract_NodeElement) {
+  public set parent(_: Class_NodeElement) {
     if ((this._parent !== _) &&
       !(this._children.includes(_))) {
       const old_parent = this._parent

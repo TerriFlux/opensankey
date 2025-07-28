@@ -31,12 +31,14 @@ import {
 import React from 'react'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 import { Class_LevelTagGroup, Class_LevelTag } from '../../types/Tag'
-import { Type_GenericApplicationData, Type_GenericNodeElement, Type_GenericLinkElement } from '../../types/Types'
 import { aggregate, disaggregate, aggregationExpansion, disaggregationExpansion, EXPANSION_SUFFIXES, contract } from './Hierarchies'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_LinkElement } from '../../Elements/Link'
+import { Class_NodeElement } from '../../Elements/Node'
 
 // const contractLegacy = (
-//   new_data: Type_GenericApplicationData,
-//   contextualised_node: Type_GenericNodeElement
+//   new_data: Class_ApplicationData,
+//   contextualised_node: Class_NodeElement
 // ) => {
 //   const expand_left = contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT)
 //   const l = expand_left ? contextualised_node.output_links_list[0] : contextualised_node.input_links_list[0]
@@ -63,9 +65,9 @@ const sep = <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid 
 // ============================================================================
 
 export const hierarchyEditionMenu = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
-  selected_nodes: Type_GenericNodeElement[],
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement,
+  selected_nodes: Class_NodeElement[],
   refreshThisAndToggleSaving: () => void
 ) => {
   const { t } = new_data
@@ -79,18 +81,18 @@ export const hierarchyEditionMenu = (
     <Button
       variant='contextmenu_button'
       onClick={() => {
-        function addNewLinks(n: Type_GenericNodeElement) {
+        function addNewLinks(n: Class_NodeElement) {
           n.dimensions_as_parent.forEach(dim => {
             dim.children.forEach(c => {
               if (c.input_links_list.length === 0) {
-                n.input_links_list.forEach(l => sankey.addNewLink(l.source, c as Type_GenericNodeElement))
+                n.input_links_list.forEach(l => sankey.addNewLink(l.source, c as Class_NodeElement))
               }
               if (c.output_links_list.length === 0) {
-                n.output_links_list.forEach(l => sankey.addNewLink(c as Type_GenericNodeElement, l.target))
+                n.output_links_list.forEach(l => sankey.addNewLink(c as Class_NodeElement, l.target))
               }
             })
             dim.children.forEach(c => {
-              addNewLinks(c as Type_GenericNodeElement)
+              addNewLinks(c as Class_NodeElement)
             })
           })
         }
@@ -119,7 +121,7 @@ export const hierarchyEditionMenu = (
 
   const btn_set_child_ok = [...possible_root_nodes].length > 0 && contextualised_node
 
-  function addNewLinks(n: Type_GenericNodeElement, extremity_node: Type_GenericNodeElement, tagg: Class_LevelTagGroup) {
+  function addNewLinks(n: Class_NodeElement, extremity_node: Class_NodeElement, tagg: Class_LevelTagGroup) {
     const pdim = n.nodeDimensionAsParent(tagg)
     if (!pdim) {
       return
@@ -127,15 +129,15 @@ export const hierarchyEditionMenu = (
     if (pdim.children.includes(pdim.parent)) {
       return
     }
-    (pdim.children as Type_GenericNodeElement[]).forEach(c => {
-      const link2copy = (c as Type_GenericNodeElement)[input_or_output_attr][0]
+    (pdim.children as Class_NodeElement[]).forEach(c => {
+      const link2copy = (c as Class_NodeElement)[input_or_output_attr][0]
       const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
-      (child_link as Type_GenericLinkElement).copyValues(link2copy)
+      (child_link as Class_LinkElement).copyValues(link2copy)
       addNewLinks(c, extremity_node, tagg)
     })
   }
 
-  function removeLinks(n: Type_GenericNodeElement, tagg: Class_LevelTagGroup) {
+  function removeLinks(n: Class_NodeElement, tagg: Class_LevelTagGroup) {
     const pdim = n.nodeDimensionAsParent(tagg)
     if (!pdim) {
       return
@@ -143,15 +145,15 @@ export const hierarchyEditionMenu = (
     if (pdim.children.includes(pdim.parent)) {
       return
     }
-    (pdim.children as Type_GenericNodeElement[]).forEach(c => {
-      n.sankey.drawing_area.deleteLink((c as Type_GenericNodeElement)[input_or_output_attr][0])
+    (pdim.children as Class_NodeElement[]).forEach(c => {
+      n.sankey.drawing_area.deleteLink((c as Class_NodeElement)[input_or_output_attr][0])
       removeLinks(c, tagg)
     })
   }
 
   function applyDimension(
     parent_level_tag: Class_LevelTag,
-    root_node: Type_GenericNodeElement,
+    root_node: Class_NodeElement,
     child_level_tag: Class_LevelTag,
     tagg: Class_LevelTagGroup
   ) {
@@ -169,7 +171,7 @@ export const hierarchyEditionMenu = (
             return
           }
           const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
-          (new_link as Type_GenericLinkElement).copyValues(desagregation_link)
+          (new_link as Class_LinkElement).copyValues(desagregation_link)
           addNewLinks(n, expand_left ? supply_link.source : supply_link.target, tagg)
           supply_link[source_or_target_attr].reorganizeIOLinks()
         })
@@ -299,9 +301,9 @@ export const hierarchyEditionMenu = (
               selected_nodes.forEach(c => parent_level_tag.getOrCreateLowerDimension(parent, c, child_level_tag as Class_LevelTag))
               tagg.tags_list[0].setSelected()
               new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-              const source_nodes = new Set<Type_GenericNodeElement>()
+              const source_nodes = new Set<Class_NodeElement>()
               selected_nodes.forEach(c => c.input_links_list.forEach(l => source_nodes.add(l.source)))
-              const target_nodes = new Set<Type_GenericNodeElement>()
+              const target_nodes = new Set<Class_NodeElement>()
               selected_nodes.forEach(c => c.output_links_list.forEach(l => target_nodes.add(l.target)));
               [...source_nodes].forEach(source => {
                 const parent_link = sankey.addNewLink(source, parent)
@@ -317,9 +319,9 @@ export const hierarchyEditionMenu = (
 }
 
 export const hierarchyManipulationMenu = (
-  new_data: Type_GenericApplicationData,
-  contextualised_node: Type_GenericNodeElement,
-  selected_nodes: Type_GenericNodeElement[],
+  new_data: Class_ApplicationData,
+  contextualised_node: Class_NodeElement,
+  selected_nodes: Class_NodeElement[],
   refreshThisAndToggleSaving: () => void
 ) => {
   const { t } = new_data

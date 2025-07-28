@@ -30,17 +30,7 @@ import {
   Box,
   Checkbox,
   Button,
-  NumberInput,
   Input,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInputField,
-  NumberInputStepper,
-  TabList,
-  Tab,
-  Tabs,
-  TabPanels,
-  TabPanel,
   Modal,
   ModalContent,
   ModalHeader,
@@ -64,12 +54,11 @@ import {
   FCType_ApplySaveJSONDialog,
   FCType_ExcelModal
 } from '../../types/FunctionTypes'
-import { isPositionOverloaded } from '../../Elements/Node'
 
 import { MenuDraggable } from '../topmenus/SankeyMenus'
-import { Type_GenericApplicationData } from '../../types/Types'
 import { OSMultiSelect, typeElementSelectable, WrapperCheckBoxSubSectionMenu } from '../configmenus/SankeyMenuComponents'
 import { checked } from './SankeyMenuContextLink'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
 /**
@@ -83,13 +72,12 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   apply_transformation_additional_elements
 }: FCType_ApplyLayoutDialog) => {
   const { data_var_to_update, t, menu_configuration } = applicationData
-  const { node_styles_dict, link_styles_dict } = applicationData.drawing_area.sankey
+  const { node_styles_dict } = applicationData.drawing_area.sankey
   const { ref_to_updater_modal_apply_layout } = menu_configuration
 
-  const [forceUpdate, setForceUpdate] = useState(true)
+  const [, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
   const [auto_x, set_auto_x] = useState(node_styles_dict[default_style_id].position.auto_x)
-  const [trade_close, set_trade_close] = useState(true)
 
   ref_to_updater_modal_apply_layout.current = () => setForceUpdate(b => !b)
   if (auto_x !== (node_styles_dict[default_style_id].position.auto_x)) {
@@ -680,7 +668,7 @@ const default_otpion: excelOptionType = {
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
  * @returns
  */
-export const ExcelModalSaver: FunctionComponent<{ new_data: Type_GenericApplicationData }> = (
+export const ExcelModalSaver: FunctionComponent<{ new_data: Class_ApplicationData }> = (
   {
     new_data,
   }

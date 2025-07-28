@@ -24,28 +24,17 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
-import * as d3 from 'd3'
 
-// Local types
 import {
-  GetRandomInt,
-  list_palette_color
-} from '../types/Utils'
-import {
-  ClassTemplate_NodeElement
+  Class_NodeElement
 } from '../Elements/Node'
 import {
-  ClassTemplate_LinkElement
+  Class_LinkElement
 } from '../Elements/Link'
 import { Class_LevelTagGroup, Class_Tag } from '../types/Tag'
-import { ClassTemplate_Sankey } from '../types/Sankey'
-import { ClassTemplate_DrawingArea } from '../types/DrawingArea'
+import { Class_DrawingArea } from '../types/DrawingArea'
 
-type Type_AnyLinkElement = ClassTemplate_LinkElement<Type_AnyDrawingArea, Type_AnySankey, Type_AnyNodeElement>
-type Type_AnyNodeElement = ClassTemplate_NodeElement<Type_AnyDrawingArea, Type_AnySankey, Type_AnyLinkElement>
-type Type_AnySankey = ClassTemplate_Sankey<Type_AnyDrawingArea, Type_AnyNodeElement, Type_AnyLinkElement>
-type Type_AnyDrawingArea = ClassTemplate_DrawingArea<Type_AnySankey, Type_AnyNodeElement, Type_AnyLinkElement>
+
 
 
 /**
@@ -53,9 +42,9 @@ type Type_AnyDrawingArea = ClassTemplate_DrawingArea<Type_AnySankey, Type_AnyNod
  * Handles auto-sankey computation, parametrization, and trade arrangements
  */
 export class NodePositioning {
-  private drawingArea: Type_AnyDrawingArea
+  private drawingArea: Class_DrawingArea
 
-  constructor(drawingArea: Type_AnyDrawingArea) {
+  constructor(drawingArea: Class_DrawingArea) {
     this.drawingArea = drawingArea
   }
 
@@ -65,7 +54,7 @@ export class NodePositioning {
   /**
    * Algorithme hybride optimisé qui détecte les cycles ET repositionne les nœuds
    */
-  public detectAllCyclesAndOptimize(nodes_to_process: Type_AnyNodeElement[]): {
+  public detectAllCyclesAndOptimize(nodes_to_process: Class_NodeElement[]): {
     recycling_links: string[],
     horizontal_indexes: { [node_id: string]: number }
   } {
@@ -152,8 +141,8 @@ export class NodePositioning {
    * Retourne le nouveau lien de recyclage si une optimisation a eu lieu
    */
   private optimizeRecyclingLink(
-    nodes_to_process: Type_AnyNodeElement[],
-    link: Type_AnyLinkElement,
+    nodes_to_process: Class_NodeElement[],
+    link: Class_LinkElement,
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
   ): { wasOptimized: boolean, newRecyclingLink?: string } {
@@ -232,7 +221,7 @@ export class NodePositioning {
   /**
    * Calcule la profondeur (depth) de chaque nœud en ignorant les cycles potentiels
    */
-  private calculateNodeDepths(nodes_to_process: Type_AnyNodeElement[]): { [nodeId: string]: number } {
+  private calculateNodeDepths(nodes_to_process: Class_NodeElement[]): { [nodeId: string]: number } {
     const depths: { [nodeId: string]: number } = {}
     const visited = new Set<string>()
     const visiting = new Set<string>() // Pour détecter les cycles temporairement
@@ -302,7 +291,7 @@ export class NodePositioning {
   ) {
     // Use results from previous index computing
     let max_horizontal_index = 0
-    const nodes_per_horizontal_indexes: { [index: number]: Type_AnyNodeElement[] } = {}
+    const nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
 
     this.drawingArea.sankey.visible_nodes_list.forEach(node => {
       // Previously computed index for given node
@@ -345,7 +334,7 @@ export class NodePositioning {
 
     // NOUVEAU : Calculer automatiquement shape_middle_recycling après positionnement
     if (recycling_links_ids.length > 0) {
-      this.computeRecyclingMiddleShape(recycling_links_ids, horizontal_indexes_per_nodes_ids)
+      this.computeRecyclingMiddleShape(recycling_links_ids)
     }
   }
 
@@ -353,16 +342,16 @@ export class NodePositioning {
   /**
    * Explore all node's branches to compute all their nodes horizontal index
    *
-   * @param {Type_AnyNodeElement} node Node to start exploring from
-   * @param {Type_AnyNodeElement[]} nodes_to_process
+   * @param {Class_NodeElement} node Node to start exploring from
+   * @param {Class_NodeElement[]} nodes_to_process
    * @param {number} starting_index
    * @param {string[]} visited_nodes_ids List of nodes (by their id) that have been visited. Helps to find recycling flux
    * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
    * @param {object} horizontal_indexes_per_nodes_ids Current horizontal index for given node id
    */
   public computeHorizontalIndex(
-    node: Type_AnyNodeElement,
-    nodes_to_process: Type_AnyNodeElement[],
+    node: Class_NodeElement,
+    nodes_to_process: Class_NodeElement[],
     starting_index: number,
     visited_nodes_ids: string[],
     recycling_links_ids: string[],
@@ -384,7 +373,7 @@ export class NodePositioning {
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recycling flux
-      (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Type_AnyNodeElement) &&
+        (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -414,14 +403,14 @@ export class NodePositioning {
    * We need to recompute positioning of next_node,
    * because of recycling link, its position can be all wrong
    *
-   * @param {Type_AnyNodeElement[]} nodes_to_process
-   * @param {Type_AnyLinkElement} link Link that has been previously tagged as possible recycling link
+   * @param {Class_NodeElement[]} nodes_to_process
+   * @param {Class_LinkElement} link Link that has been previously tagged as possible recycling link
    * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
    * @param {object} horizontal_indexes_per_nodes_ids Current index for given node id
    */
   public computeRecyclingHorizontalIndex(
-    nodes_to_process: Type_AnyNodeElement[],
-    link: Type_AnyLinkElement,
+    nodes_to_process: Class_NodeElement[],
+    link: Class_LinkElement,
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
   ) {
@@ -540,7 +529,7 @@ export class NodePositioning {
    * @private
    */
   private adjustNodesWithoutInputs(
-    nodes_per_horizontal_indexes: { [index: number]: Type_AnyNodeElement[] },
+    nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] },
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
     max_horizontal_index: number
   ) {
@@ -549,7 +538,7 @@ export class NodePositioning {
         continue
       }
 
-      const to_splice: Type_AnyNodeElement[] = []
+      const to_splice: Class_NodeElement[] = []
       nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
         if (!node.hasInputLinks()) {
           let min_next_horizontal_index = max_horizontal_index + 1
@@ -571,7 +560,7 @@ export class NodePositioning {
           })
 
           if (horizontal_indexes_per_nodes_ids[node.id] < min_next_horizontal_index - 1) {
-            to_splice.push(node as Type_AnyNodeElement)
+            to_splice.push(node as Class_NodeElement)
             horizontal_indexes_per_nodes_ids[node.id] = min_next_horizontal_index - 1
             if (!nodes_per_horizontal_indexes[min_next_horizontal_index - 1]) {
               nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
@@ -594,7 +583,7 @@ export class NodePositioning {
    * @private
    */
   private positionNodesFromIndexes(
-    nodes_per_horizontal_indexes: { [index: number]: Type_AnyNodeElement[] },
+    nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] },
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
     max_horizontal_index: number,
     launched_from_process: boolean,
@@ -691,7 +680,7 @@ export class NodePositioning {
    * @private
    */
   private computeMargins(
-    node: Type_AnyNodeElement,
+    node: Class_NodeElement,
     h_index: number,
     max_horizontal_index: number,
     h_left_margin: number,
@@ -722,7 +711,7 @@ export class NodePositioning {
    * Set label positioning for nodes based on their connectivity
    * @private
    */
-  private setNodeLabelPositioning(node: Type_AnyNodeElement) {
+  private setNodeLabelPositioning(node: Class_NodeElement) {
     if (!node.hasInputLinks() && !node.hasOutputLinks()) {
       // Node is lone node
       node.name_label_horiz = 'middle'
@@ -767,7 +756,7 @@ export class NodePositioning {
         continue
       }
       const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
-      node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
+      node_id_per_hxv_indexes[horizontal_index].forEach((node_id) => {
         this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
       })
     }
@@ -1051,7 +1040,7 @@ export class NodePositioning {
       return
     }
 
-    let trade_nodes = this.drawingArea.sankey.nodes_list.filter(n =>
+    const trade_nodes = this.drawingArea.sankey.nodes_list.filter(n =>
       n.hasGivenTag(this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
     )
 
@@ -1062,10 +1051,10 @@ export class NodePositioning {
         this.drawingArea.sankey.node_styles_dict['NodeImportExportCloseStyle']
       ]
       if (node.output_links_list.length > 0) {
-        (node as Type_AnyNodeElement).SplitIOrE(true)
+        (node as Class_NodeElement).SplitIOrE(true)
       }
       if (node.input_links_list.length > 0) {
-        (node as Type_AnyNodeElement).SplitIOrE(false)
+        (node as Class_NodeElement).SplitIOrE(false)
       }
       node.setInvisible()
     })
@@ -1077,8 +1066,8 @@ export class NodePositioning {
     // set dimensions. It must be done after each trade node has been split
     split_trade_nodes.forEach(node => {
       if (!node.sibling) return
-      (node as Type_AnyNodeElement).setTradeDimensions(true);
-      (node as Type_AnyNodeElement).setTradeDimensions(false)
+      (node as Class_NodeElement).setTradeDimensions(true);
+      (node as Class_NodeElement).setTradeDimensions(false)
     })
   }
 
@@ -1164,7 +1153,7 @@ export class NodePositioning {
    * Computes v for nodes in the drawing area
    */
   public computeParametricV() {
-    const columns: { [_: number]: Type_AnyNodeElement[] } = {}
+    const columns: { [_: number]: Class_NodeElement[] } = {}
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ? this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     this.drawingArea.sankey.visible_nodes_list.forEach(n => {
       if (n.hasGivenTag(echangeTag!)) {
@@ -1217,7 +1206,7 @@ export class NodePositioning {
   /**
    * Apply v aggregation for nodes
    */
-  public applyVAgregate(node: Type_AnyNodeElement, tagGroup: Class_LevelTagGroup) {
+  public applyVAgregate(node: Class_NodeElement, tagGroup: Class_LevelTagGroup) {
     const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
     if (!nodeDimParent) {
       return
@@ -1229,14 +1218,14 @@ export class NodePositioning {
     nodeDimParent.parent.display.position.y = node.position_y
     nodeDimParent.parent.display.position.u = node.position_u
     nodeDimParent.parent.display.position.v = node.position_v
-    this.applyVAgregate(nodeDimParent.parent as Type_AnyNodeElement, tagGroup)
+    this.applyVAgregate(nodeDimParent.parent as Class_NodeElement, tagGroup)
   }
 
   /**
    * Apply v disaggregation for nodes
    */
   public applyVDesagregate(
-    node: Type_AnyNodeElement,
+    node: Class_NodeElement,
     current_v: number,
     tagGroup: Class_LevelTagGroup
   ) {
@@ -1248,12 +1237,12 @@ export class NodePositioning {
       node.display.position.v = current_v
     }
     let new_current_v = current_v
-    let desagregated_nodes: Type_AnyNodeElement[] = []
+    let desagregated_nodes: Class_NodeElement[] = []
     const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
     if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
       return new_current_v + 1
     }
-    desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_AnyNodeElement[])]
+    desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Class_NodeElement[])]
     desagregated_nodes = [...new Set(desagregated_nodes)]
     const shift_y = (desagregated_nodes.length - 1) / 2 * node.position_dy
     if (desagregated_nodes.length > 0) {
@@ -1312,7 +1301,7 @@ export class NodePositioning {
         }
 
         // Default color + auto reorg of links
-        this.drawingArea.sankey.visible_nodes_list.forEach((n, i, a) => {
+        this.drawingArea.sankey.visible_nodes_list.forEach(n => {
           //n.resetPositionAttribute('dy')
           n.reorganizeIOLinks()
         })
@@ -1382,8 +1371,7 @@ export class NodePositioning {
    * sont dessous et non connectés)
    */
   private computeRecyclingMiddleShape(
-    recycling_links_ids: string[],
-    horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
+    recycling_links_ids: string[]
   ) {
     console.log('🔄 Calcul automatique du shape_middle_recycling...')
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
@@ -1397,7 +1385,7 @@ export class NodePositioning {
       console.log(`🔧 Traitement du lien de recyclage: ${link_id} (${source_node.id} → ${target_node.id})`)
 
       // 1. Identifier les nœuds à gauche du nœud source
-      const nodes_to_avoid: Type_AnyNodeElement[] = []
+      const nodes_to_avoid: Class_NodeElement[] = []
 
       // 2. Calculer la position Y minimale pour passer sous ces nœuds
       let min_y_to_avoid = source_node.position_y // Position par défaut
@@ -1441,8 +1429,8 @@ export class NodePositioning {
 
         if (length > 0) {
           // Vecteur perpendiculaire normalisé
-          const perp_x = -dy / length
-          const perp_y = dx / length
+          // const perp_x = -dy / length
+          // const perp_y = dx / length
 
           // Distance nécessaire pour éviter les nœuds
           const distance_to_avoid = min_y_to_avoid - ref_y

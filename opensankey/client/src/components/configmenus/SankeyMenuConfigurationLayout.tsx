@@ -32,13 +32,12 @@ import {
 } from '@chakra-ui/react'
 import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput} from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
-import { Type_GenericApplicationData } from '../../types/Types'
 import { t } from 'i18next'
-import { Type_AnyElement } from '../../Elements/Element'
-import { Type_AnyLinkElement } from '../../Elements/Link'
+import { Class_LinkElement } from '../../Elements/Link'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -525,18 +524,18 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
         {t('Menu.Leg')}
       </Checkbox>
     </Box>
-      {/* Solidaire du diagramme */}
-      <Box layerStyle='menuconfigpanel_grid'>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={new_data.drawing_area.legend.stick_to_drawing}
-          onChange={eventLegendStickDrawing}
-        >
-          <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
-            {t('Menu.LegStickDrawing')}
-          </OSTooltip>
-        </Checkbox>
-      </Box>
+    {/* Solidaire du diagramme */}
+    <Box layerStyle='menuconfigpanel_grid'>
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={new_data.drawing_area.legend.stick_to_drawing}
+        onChange={eventLegendStickDrawing}
+      >
+        <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
+          {t('Menu.LegStickDrawing')}
+        </OSTooltip>
+      </Checkbox>
+    </Box>
 
     <Box
       layerStyle='menuconfigpanel_grid'
@@ -793,7 +792,7 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
   </>
 }
 
-export const GraphElementsOrdoner: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+export const GraphElementsOrdoner: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
   const [, setUpdate] = useState(0)
 
@@ -835,7 +834,7 @@ export const GraphElementsOrdoner: FunctionComponent<{ new_data: Type_GenericApp
                           {...provided.dragHandleProps}
                           style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
                         >
-                          <Box className='name_element'>{(element as Type_AnyLinkElement).name}</Box>
+                          <Box className='name_element'>{(element as Class_LinkElement).name}</Box>
                           <Box layerStyle="options_2cols">
                             <Button
                               variant='menuconfigpanel_move_order_node_io'

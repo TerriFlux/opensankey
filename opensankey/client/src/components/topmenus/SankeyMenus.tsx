@@ -73,7 +73,7 @@ import { FCType_Menu } from '../../types/FunctionTypes'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
-import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../types/Types'
+import { Type_AdditionalMenus } from '../../types/Types'
 import { keyTypeConfig, keyTypeElements } from '../../types/MenuConfig'
 import { DrawingAreaStyle, GraphElementsOrdoner, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigurationNodesIO'
@@ -81,6 +81,7 @@ import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurati
 import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationNodeContext, MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import { WrapperContentConfig } from '../configmenus/SankeyMenuComponents'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
 /*************************************************************************************************/
@@ -345,7 +346,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   )
 }
 
-const ConfigMenu: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigMenu: FunctionComponent<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { type_menu_configuration_selected, style_config } = new_data.menu_configuration
   const [, setUpdate] = useState(false)
 
@@ -374,7 +375,7 @@ const ConfigMenu: FunctionComponent<{ new_data: Type_GenericApplicationData, add
  * @param {*} { new_data, additional_menus }
  * @return {*}
  */
-const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, ref_to_menu_config_updater } = new_data.menu_configuration
   return <ButtonGroup className='buttonGroupTypeConfig' spacing='0.2rem' style={{
@@ -429,7 +430,7 @@ const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Type_GenericApplicatio
  * @param {*} { new_data, additional_menus }
  * @return {*}
  */
-const ConfigContent: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigContent: FunctionComponent<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, elements_configurable_selected } = new_data.menu_configuration
   const elements_in_menu_configuration = elements_configurable_selected[type_menu_configuration_selected]
@@ -520,7 +521,7 @@ export type typeButtonElementConfigurable = { [x: string]: { text: string, icon:
  * @param {*} { new_data }
  * @return {*}
  */
-const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Type_GenericApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, style_config, ref_to_menu_config_updater } = new_data.menu_configuration
   const elements_buttons = style_config[type_menu_configuration_selected].elements_configurable

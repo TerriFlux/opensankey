@@ -34,8 +34,8 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import * as d3 from 'd3'
 // Local type imports
 import type { OSTooltpFuncType } from '../components/configmenus/types/SankeyUtilsTypes'
-import { Type_GenericApplicationData } from './Types'
 import { FType_InitializeAdditionalMenus } from './FunctionTypes'
+import { Class_ApplicationData } from './ApplicationData'
 
 // SPECIFIC TYPES ************************************************************************
 
@@ -435,7 +435,7 @@ export const parseLocaleNumber = (stringNumber: string, locale = navigator.langu
 
 
 export const WrapperInitializeAdditionalMenus: FunctionComponent<{
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
 }> = ({ new_data, initializeAdditionalMenus }) => {
   const [, setUpdate] = useState(0)

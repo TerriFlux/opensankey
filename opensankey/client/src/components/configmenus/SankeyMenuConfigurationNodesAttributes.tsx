@@ -42,8 +42,8 @@ import {
 import type {
   FCType_MenuConfigurationNodeStyle
 } from './types/SankeyMenuConfigurationNodesAttributesTypes'
-import type { Type_GenericApplicationData, Type_GenericNodeElement } from '../../types/Types'
 import {
+  Class_NodeElement,
   isAttributeOverloaded,
 } from '../../Elements/Node'
 import {
@@ -68,6 +68,7 @@ import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfigur
 import { MenuResetAttrLocal, MenuUnit, OSMultiSelect, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, typeElementSelectable, WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { Draggable, DraggingStyle, DragDropContext, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 export const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
 export const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -79,8 +80,8 @@ export const svg_label_upper = <svg xmlns="http://www.w3.org/2000/svg" viewBox="
 
 type keyNodeStyle = keyof Class_NodeStyle
 type typeValNodeStyle = Class_NodeStyle[keyNodeStyle]
-type keyNodeAttr = keyof Type_GenericNodeElement
-type typeValNodeAttr = Type_GenericNodeElement[keyNodeAttr]
+type keyNodeAttr = keyof Class_NodeElement
+type typeValNodeAttr = Class_NodeElement[keyNodeAttr]
 
 /*************************************************************************************************/
 
@@ -118,7 +119,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   const { icon_direction_down, icon_direction_left, icon_direction_rift, icon_direction_up, icon_locked, icon_unlocked } = icon_library
   // Elements on which this menu applies ------------------------------------------------
 
-  let selected_nodes: Type_GenericNodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = drawing_area.selected_nodes_list_sorted
@@ -129,7 +130,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   }
 
   // Elements on which menu modification applies
-  let elements: Class_NodeStyle[] | Type_GenericNodeElement[]
+  let elements: Class_NodeStyle[] | Class_NodeElement[]
 
   const updateValueForListElements = <TModel, TKey extends keyof TModel>(
     model: TModel[],
@@ -202,13 +203,13 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
 
   /**
    *
-   * function that go throught all Type_GenericNodeElement of an array & check if they're all equals
+   * function that go throught all Class_NodeElement of an array & check if they're all equals
    * (to the first )
    *
-   * @param {Type_GenericNodeElement} curr
+   * @param {Class_NodeElement} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Type_GenericNodeElement,) => {
+  const check_indeterminate = (curr: Class_NodeElement,) => {
     return (selected_nodes[0].isEqual(curr))
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
@@ -227,16 +228,16 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
 
   const position_type = menu_for_style ?
     ((element_ref as Class_NodeStyle)?.position.type ?? default_position_type) :
-    ((element_ref as Type_GenericNodeElement)?.position_type ?? default_position_type)
+    ((element_ref as Class_NodeElement)?.position_type ?? default_position_type)
   const position_u = menu_for_style ?
     ((element_ref as Class_NodeStyle)?.position.dx ?? 0) :
-    ((element_ref as Type_GenericNodeElement)?.display.position.u ?? 0)
+    ((element_ref as Class_NodeElement)?.display.position.u ?? 0)
   const position_dy = menu_for_style ?
     ((element_ref as Class_NodeStyle)?.position.dy ?? default_dy) :
-    ((element_ref as Type_GenericNodeElement)?.display.position.dy ?? default_dy)
+    ((element_ref as Class_NodeElement)?.display.position.dy ?? default_dy)
   const position_dx = menu_for_style ?
     ((element_ref as Class_NodeStyle)?.position.dx ?? default_dx) :
-    ((element_ref as Type_GenericNodeElement)?.display.position.dx ?? default_dx)
+    ((element_ref as Class_NodeElement)?.display.position.dx ?? default_dx)
 
   // Components updaters ----------------------------------------------------------------
 
@@ -575,68 +576,68 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         </Box>
       </OSTooltip>
     </> : <></>}
-    </Box>
+  </Box>
 
   const content_geometry = <WrapperBoxSubSectionMenu collapse={false} new_data={new_data} title={t('Noeud.apparence.Geometry')}><>
-      <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-        {t('Noeud.size')}
-      </Box>
+    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+      {t('Noeud.size')}
+    </Box>
 
-      {/* Largeur minimale du noeud */}
-      <OSTooltip label={t('Noeud.apparence.tooltips.shape_min_width')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.shape_min_width')}
-            <TooltipElementOverloaded k='shape_min_width' />
-          </Box>
-          <ConfigMenuNumberInput
-            disabled={!disable_attr_props['shape_min_width']}
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[1]}
-            default_value={shape_min_width}
-            function_on_blur={(value) => {
-              updateElements('shape_min_width', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-            multiValue={is_shape_min_width_indeterminated}
-          />
+    {/* Largeur minimale du noeud */}
+    <OSTooltip label={t('Noeud.apparence.tooltips.shape_min_width')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.shape_min_width')}
+          <TooltipElementOverloaded k='shape_min_width' />
         </Box>
-      </OSTooltip>
-
-      {/* Hauteur minimale du noeud */}
-      <OSTooltip label={t('Noeud.apparence.tooltips.shape_min_height')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.shape_min_height')}
-            <TooltipElementOverloaded k='shape_min_height' />
-          </Box>
-          <ConfigMenuNumberInput
-            disabled={!disable_attr_props['shape_min_height']}
-            t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[0]}
-            default_value={shape_min_height}
-            function_on_blur={(value) => {
-              updateElements('shape_min_height', (value ?? undefined))
-            }}
-            menu_for_style={menu_for_style}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text='pixels'
-            multiValue={is_shape_min_height_indeterminated}
-          />
-        </Box>
-      </OSTooltip>
-      <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-        {t('Noeud.position')}
+        <ConfigMenuNumberInput
+          disabled={!disable_attr_props['shape_min_width']}
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs[1]}
+          default_value={shape_min_width}
+          function_on_blur={(value) => {
+            updateElements('shape_min_width', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+          multiValue={is_shape_min_width_indeterminated}
+        />
       </Box>
+    </OSTooltip>
 
-      {/* Position du noeud */}
-      <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
+    {/* Hauteur minimale du noeud */}
+    <OSTooltip label={t('Noeud.apparence.tooltips.shape_min_height')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.shape_min_height')}
+          <TooltipElementOverloaded k='shape_min_height' />
+        </Box>
+        <ConfigMenuNumberInput
+          disabled={!disable_attr_props['shape_min_height']}
+          t={new_data.t}
+          ref_to_set_value={ref_set_number_inputs[0]}
+          default_value={shape_min_height}
+          function_on_blur={(value) => {
+            updateElements('shape_min_height', (value ?? undefined))
+          }}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          step={1}
+          stepper={true}
+          unit_text='pixels'
+          multiValue={is_shape_min_height_indeterminated}
+        />
+      </Box>
+    </OSTooltip>
+    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
+      {t('Noeud.position')}
+    </Box>
+
+    {/* Position du noeud */}
+    <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
           {t('Noeud.apparence.geometry')}
@@ -649,8 +650,8 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
                 'menuconfigpanel_option_button_activated':
                 'menuconfigpanel_option_button'}
             onClick={() => {
-                elements.forEach(element =>  element.position_type = 'absolute')
-                refreshThisAndUpdateRelatedComponents()
+              elements.forEach(element =>  element.position_type = 'absolute')
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             {t('Noeud.apparence.geometry_absolute')}
@@ -662,8 +663,8 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
                 'menuconfigpanel_option_button_activated':
                 'menuconfigpanel_option_button'}
             onClick={() => {
-                elements.forEach(element =>  element.position_type = 'parametric')
-                refreshThisAndUpdateRelatedComponents()
+              elements.forEach(element =>  element.position_type = 'parametric')
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             {t('Noeud.apparence.geometry_parametric')}
@@ -677,9 +678,9 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
             }
             onClick={() => {
               elements.forEach(element =>  {
-                  element.position_type = 'relative'
-                })
-                refreshThisAndUpdateRelatedComponents()
+                element.position_type = 'relative'
+              })
+              refreshThisAndUpdateRelatedComponents()
             }}
           >
             {t('Noeud.apparence.geometry_relative')}
@@ -687,64 +688,64 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         </Box>
       </Box>
     </OSTooltip>
-      {!menu_for_style ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.geometry_u')}
-          </Box>
+    {!menu_for_style ? <OSTooltip label={t('Noeud.apparence.tooltips.geometry_u')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_u')}
+        </Box>
 
-          <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={position_u}
-            ref_to_set_value={ref_set_number_inputs[2]}
-            menu_for_style={menu_for_style}
-            function_on_blur={() => {
-              drawing_area.nodePositioning.computeParametricV()
-              refreshThisAndUpdateRelatedComponents()
-            }}
-            stepper={true}
-            minimum_value={1}
-            unit_text='pixels'
-          />
+        <ConfigMenuNumberInput
+          t={new_data.t}
+          default_value={position_u}
+          ref_to_set_value={ref_set_number_inputs[2]}
+          menu_for_style={menu_for_style}
+          function_on_blur={() => {
+            drawing_area.nodePositioning.computeParametricV()
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          stepper={true}
+          minimum_value={1}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip> : <></>}
+    <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dx')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_dx')}
         </Box>
-      </OSTooltip> : <></>}
-      <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dx')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.geometry_dx')}
-          </Box>
-          <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={position_dx}
-            ref_to_set_value={ref_set_number_inputs[4]}
-            menu_for_style={menu_for_style}
-            function_on_blur={() => {
-              refreshThisAndUpdateRelatedComponents()
-            }}
-            stepper={true}
-            unit_text='pixels'
-          />
+        <ConfigMenuNumberInput
+          t={new_data.t}
+          default_value={position_dx}
+          ref_to_set_value={ref_set_number_inputs[4]}
+          menu_for_style={menu_for_style}
+          function_on_blur={() => {
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          stepper={true}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip>
+    <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dy')}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name' >
+          {t('Noeud.apparence.geometry_dy')}
         </Box>
-      </OSTooltip>
-      <OSTooltip label={t('Noeud.apparence.tooltips.geometry_dy')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.geometry_dy')}
-          </Box>
-          <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={position_dy}
-            ref_to_set_value={ref_set_number_inputs[5]}
-            menu_for_style={menu_for_style}
-            function_on_blur={() => {
-              refreshThisAndUpdateRelatedComponents()
-            }}
-            stepper={true}
-            unit_text='pixels'
-          />
-        </Box>
-      </OSTooltip>
-      {/* Positionnement vertical automatique*/}
+        <ConfigMenuNumberInput
+          t={new_data.t}
+          default_value={position_dy}
+          ref_to_set_value={ref_set_number_inputs[5]}
+          menu_for_style={menu_for_style}
+          function_on_blur={() => {
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          stepper={true}
+          unit_text='pixels'
+        />
+      </Box>
+    </OSTooltip>
+    {/* Positionnement vertical automatique*/}
     {/* <Box as='span' >
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
@@ -758,7 +759,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
         </OSTooltip>
       </Checkbox>
     </Box> */}
-      {additional_menus.current.advanced_appearence_content}
+    {additional_menus.current.advanced_appearence_content}
   </></WrapperBoxSubSectionMenu>
 
 
@@ -784,7 +785,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
       return {
         value: style.id,
         label: style.name,
-        selected: (element_ref as Type_GenericNodeElement)?.style.includes(style) ?? false,
+        selected: (element_ref as Class_NodeElement)?.style.includes(style) ?? false,
         disabled:style.id==default_style_id,
       }
     })
@@ -862,7 +863,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   const { ref_setter_show_modal_styles_nodes_context } = dict_setter_show_dialog
 
   // Elements on which this menu applies ------------------------------------------------
-  let selected_nodes: Type_GenericNodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = drawing_area.selected_nodes_list_sorted
@@ -873,7 +874,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   }
 
   // Elements on which menu modification applies
-  let elements: Class_NodeStyle[] | Type_GenericNodeElement[]
+  let elements: Class_NodeStyle[] | Class_NodeElement[]
 
   const updateValueForListElements = <TModel, TKey extends keyof TModel>(
     model: TModel[],
@@ -952,13 +953,13 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
 
   /**
    *
-   * function that go throught all Type_GenericNodeElement of an array & check if they're all equals
+   * function that go throught all Class_NodeElement of an array & check if they're all equals
    * (to the first )
    *
-   * @param {Type_GenericNodeElement} curr
+   * @param {Class_NodeElement} curr
         * @return {*}
         */
-  const check_indeterminate = (curr: Type_GenericNodeElement,) => {
+  const check_indeterminate = (curr: Class_NodeElement,) => {
     return (selected_nodes[0].isEqual(curr))
   }
   const is_indeterminated = !selected_nodes.every(check_indeterminate)
@@ -975,9 +976,9 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   const name_label_horiz_shift = (element_ref?.name_label_horiz_shift ?? NODES_ATTRIBUTES_CONFIG.name_label_horiz_shift.default)
   const name_label_vert_shift = (element_ref?.name_label_vert_shift ?? NODES_ATTRIBUTES_CONFIG.name_label_vert_shift.default)
 
-  const position_type = (element_ref?.position_type ?? default_position_type)
-  const position_dx = (element_ref?.position_type ?? default_dx)
-  const position_dy = (element_ref?.position_type ?? default_dy)
+  // const position_type = (element_ref?.position_type ?? default_position_type)
+  // const position_dx = (element_ref?.position_type ?? default_dx)
+  // const position_dy = (element_ref?.position_type ?? default_dy)
   // Components updaters ----------------------------------------------------------------
 
   // Boolean used to force this component to reload
@@ -1056,7 +1057,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           ref_to_set_value={ref_set_text_value_input}
           function_get_value={() => { return element_ref?.name_label_separator }}
           function_on_blur={(_) => {
-            //@ts-ignore
+            ///@ts-expect-error xxx
             updateElements('name_label_separator', _)
           }}
         />
@@ -1382,7 +1383,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       return {
         value: style.id,
         label: style.name,
-        selected: (element_ref as Type_GenericNodeElement)?.style.includes(style) ?? false,
+        selected: (element_ref as Class_NodeElement)?.style.includes(style) ?? false,
         disabled:style.id==default_style_id
       }
     })
@@ -1451,7 +1452,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
  * @param {*} { new_data }
  * @return {*}
  */
-const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { drawing_area, t, icon_library } = new_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
   const elements = drawing_area.selected_nodes_list

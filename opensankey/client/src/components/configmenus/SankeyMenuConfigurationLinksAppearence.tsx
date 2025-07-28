@@ -37,6 +37,7 @@ import {
 /*************************************************************************************************/
 
 import {
+  Class_LinkElement,
   isAttributeOverloaded,
 } from '../../Elements/Link'
 import {
@@ -45,10 +46,6 @@ import {
   default_shape_local_scale
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
-import {
-  Type_GenericApplicationData,
-  Type_GenericLinkElement
-} from '../../types/Types'
 import {
   CustomFaEyeCheckIcon,
   default_style_id
@@ -64,6 +61,7 @@ import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './Sanke
 import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit, OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /*************************************************************************************************/
 // Declare custom logo used for some button
@@ -73,8 +71,8 @@ import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle 
 
 type keyStyle = keyof Class_LinkStyle
 type valStyle = Class_LinkStyle[keyStyle]
-type keyLink = keyof Type_GenericLinkElement
-type valLink = Type_GenericLinkElement[keyLink]
+type keyLink = keyof Class_LinkElement
+type valLink = Class_LinkElement[keyLink]
 
 
 /*************************************************************************************************/
@@ -117,7 +115,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   }
 
   // Elements on which menu modification applies
-  let elements: Class_LinkStyle[] | Type_GenericLinkElement[]
+  let elements: Class_LinkStyle[] | Class_LinkElement[]
 
   const updateValueForListElements = <TModel, TKey extends keyof TModel>(
     model: TModel[],
@@ -188,10 +186,10 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   /**
    * function that go throught all links of an array & check if they're all equals
    * (to the first )
-   * @param {Type_GenericLinkElement} curr
+   * @param {Class_LinkElement} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Type_GenericLinkElement) => {
+  const check_indeterminate = (curr: Class_LinkElement) => {
     return (selected_links[0].isEqual(curr))
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
@@ -692,7 +690,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       return {
         value: style.id,
         label: style.name,
-        selected: (element_ref as Type_GenericLinkElement)?.style.includes(style) ?? false,
+        selected: (element_ref as Class_LinkElement)?.style.includes(style) ?? false,
         disabled: style.id == default_style_id,
 
       }
@@ -792,7 +790,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   }
 
   // Elements on which menu modification applies
-  let elements: Class_LinkStyle[] | Type_GenericLinkElement[]
+  let elements: Class_LinkStyle[] | Class_LinkElement[]
 
   const updateValueForListElements = <TModel, TKey extends keyof TModel>(
     model: TModel[],
@@ -891,10 +889,10 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   /**
    * function that go throught all links of an array & check if they're all equals
    * (to the first )
-   * @param {Type_GenericLinkElement} curr
+   * @param {Class_LinkElement} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Type_GenericLinkElement) => {
+  const check_indeterminate = (curr: Class_LinkElement) => {
     return (selected_links[0].isEqual(curr))
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
@@ -1159,7 +1157,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
       return {
         value: style.id,
         label: style.name,
-        selected: (element_ref as Type_GenericLinkElement)?.style.includes(style) ?? false,
+        selected: (element_ref as Class_LinkElement)?.style.includes(style) ?? false,
         disabled: style.id == default_style_id,
 
       }
@@ -1228,7 +1226,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
  * @param {*} { new_data }
  * @return {*}
  */
-export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { drawing_area, t, icon_library } = new_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
   const elements = drawing_area.selected_links_list

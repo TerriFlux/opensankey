@@ -27,11 +27,6 @@
 // External imports
 import * as d3 from 'd3'
 
-// Local types imports
-import type {
-  ClassAbstract_DrawingArea,
-  ClassAbstract_Sankey
-} from '../types/Abstract'
 import type { Type_Side } from './LinkAttributes'
 import type { Class_LinkStyle } from './LinkAttributes'
 import type {
@@ -46,10 +41,9 @@ import type {
 
 // Local modules imports
 import {
-  ClassTemplate_LinkElement,
+  Class_LinkElement,
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
-import { ClassTemplate_GhostLinkElement } from './ClassTemplate_GhostLinkElement'
 import {
   ClassAbstract_NodeElement,
 } from '../types/AbstractNode'
@@ -57,15 +51,11 @@ import {
   Type_ElementPosition,
   Type_Position,
   default_element_position,
-  default_element_color,
   default_style_id,
-  getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
   getStringListFromJSON,
-  getStringListOrUndefinedFromJSON,
-  getStringOrUndefinedFromJSON,
   Type_JSON,
   Type_ElementPositionOptionnal,
 } from '../types/Utils'
@@ -74,7 +64,6 @@ import {
   default_position_type, NODES_ATTRIBUTES_CONFIG,
   default_auto_x
 } from './NodeAttributes'
-import { Class_DrawingArea } from '../types/Types'
 import { Class_NodeDimension } from './NodeDimension'
 import { ClassTemplate_Handler } from './Handler'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
@@ -87,9 +76,10 @@ import { NodeTooltip } from './NodeTooltip'
 import { NodeEventsHandler } from './NodeEventsHandler'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDimensionsManager } from './NodeDimensionsManager'
-
-type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyNodeElement>
-export type Type_AnyNodeElement = ClassTemplate_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyLinkElement>
+import { Class_ContainerElement } from './FreeLabel'
+import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_Sankey } from '../types/Sankey'
 
 export const default_selected_stroke_width = 3
 export const label_margin = 5
@@ -97,8 +87,8 @@ export const label_margin = 5
 // SPECIFIC FUNCTIONS *******************************************************************
 
 export function sortNodesElements(
-  a: Type_AnyNodeElement | Class_NodeStyle,
-  b: Type_AnyNodeElement | Class_NodeStyle
+  a: Class_NodeElement | Class_NodeStyle,
+  b: Class_NodeElement | Class_NodeStyle
 ) {
   if (a.name > b.name) return 1
   else if (a.name < b.name) return -1
@@ -106,7 +96,7 @@ export function sortNodesElements(
 }
 
 export function isAttributeOverloaded(
-  nodes: Type_AnyNodeElement[],
+  nodes: Class_NodeElement[],
   attr: keyof Class_NodeAttribute
 ) {
   let overloaded = false
@@ -115,7 +105,7 @@ export function isAttributeOverloaded(
 }
 
 export function isPositionOverloaded(
-  nodes: Type_AnyNodeElement[],
+  nodes: Class_NodeElement[],
   attr: keyof Type_ElementPosition
 ) {
   let overloaded = false
@@ -128,32 +118,23 @@ export function isPositionOverloaded(
 /**
  * Class that define a node element and how to interact with it
  *
- * @class ClassTemplate_NodeElement
+ * @class Class_NodeElement
  * @extends {ClassAbstract_NodeElement}
  */
-export abstract class ClassTemplate_NodeElement
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-    Type_GenericSankey extends ClassAbstract_Sankey,
-    Type_GenericLinkElement extends ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
-  >
-  extends ClassAbstract_NodeElement
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey
-  > {
+export class Class_NodeElement extends ClassAbstract_NodeElement {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+  public d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_FO_illustration: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_image: d3.Selection<SVGImageElement, unknown, SVGGElement, unknown> | null = null
+  protected d3_selection_g_icon: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown> | null = null
 
-  protected _sibling_node: ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined = undefined
+  protected _sibling_node: Class_NodeElement | undefined = undefined
 
   protected _display: {
-    drawing_area: Type_GenericDrawingArea,
-    sankey: Type_GenericSankey,
     position: Type_ElementPosition,
     style: Class_NodeStyle[],
     attributes: Class_NodeAttribute
@@ -173,23 +154,23 @@ export abstract class ClassTemplate_NodeElement
   private _name: string
 
   // Composants spécialisés (SAUF NodeLinksManager - réintégré directement)
-  private _nodeDrawShape: NodeDrawShape<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>  
-  private _nodeDrawNameLabel: NodeDrawNameLabel<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-  private _nodeDrawValueLabel: NodeDrawValueLabel<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-  private _nodeTooltip: NodeTooltip<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-  private _nodeEventsHandler: NodeEventsHandler<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-  private _nodeTagsManager: NodeTagsManager<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
-  private _nodeDimensionsManager: NodeDimensionsManager<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  private _nodeDrawShape: NodeDrawShape
+  private _nodeDrawNameLabel: NodeDrawNameLabel
+  private _nodeDrawValueLabel: NodeDrawValueLabel
+  private _nodeTooltip: NodeTooltip
+  private _nodeEventsHandler: NodeEventsHandler
+  private _nodeTagsManager: NodeTagsManager
+  private _nodeDimensionsManager: NodeDimensionsManager
 
   // 🔄 LINKS DATA - RÉINTÉGRÉS DIRECTEMENT (plus de manager)
-  private _input_links: { [id: string]: Type_GenericLinkElement } = {}
-  private _output_links: { [id: string]: Type_GenericLinkElement } = {}
-  private _links_order: Type_GenericLinkElement[] = []
+  private _input_links: { [id: string]: Class_LinkElement } = {}
+  private _output_links: { [id: string]: Class_LinkElement } = {}
+  private _links_order: Class_LinkElement[] = []
   private _input_links_ending_point: { [id: string]: { x: number, y: number } } = {}
   private _output_links_starting_point: { [id: string]: { x: number, y: number } } = {}
-  private _input_links_handle: { [x: string]: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
-  private _output_links_handle: { [x: string]: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey> } = {}
-  private _link_dragged: Type_GenericLinkElement | undefined
+  private _input_links_handle: { [x: string]: ClassTemplate_Handler } = {}
+  private _output_links_handle: { [x: string]: ClassTemplate_Handler } = {}
+  private _link_dragged: Class_LinkElement | undefined
 
   // Autres attributs privés
   private _tags: Class_Tag[] = []
@@ -205,27 +186,27 @@ export abstract class ClassTemplate_NodeElement
   private _node_current_dx = 0
   private _node_current_dy = 0
 
+  // Ajouter après les autres attributs privés
+  private _attached_container: Class_ContainerElement[] = []
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of ClassTemplate_NodeElement.
+   * Creates an instance of Class_NodeElement.
    */
   constructor(
     id: string,
     name: string,
-    drawing_area: Type_GenericDrawingArea,
+    drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super(id, menu_config, 'g_elements_sankey')
-    
+    super(id, drawing_area, drawing_area.sankey, menu_config, 'g_elements_sankey')
+
     // Init attributes
     this._name = name
     this._display = {
-      drawing_area: drawing_area,
-      sankey: drawing_area.sankey as Type_GenericSankey,
       position: structuredClone(default_element_position),
-      style: [drawing_area.sankey.default_node_style] as Class_NodeStyle[],
+      style: [drawing_area.sankey.default_node_style],
       attributes: new Class_NodeAttribute()
     }
     this._display.style[0].addReference(this)
@@ -276,7 +257,7 @@ export abstract class ClassTemplate_NodeElement
   /**
    * Full copy
    */
-  protected _copyFrom(_: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): void {
+  protected _copyFrom(_: Class_NodeElement): void {
     this.copyAttrFrom(_)
     this._tooltip_text = _._tooltip_text
     this._nodeTagsManager.copyTagsFrom(_)
@@ -286,7 +267,7 @@ export abstract class ClassTemplate_NodeElement
   /**
    * Copy attributes from a given node
    */
-  public copyAttrFrom(_: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>): void {
+  public copyAttrFrom(_: Class_NodeElement): void {
     super._copyFrom(_)
     this._name = _.name
     this._display.style = _._display.style
@@ -301,34 +282,34 @@ export abstract class ClassTemplate_NodeElement
 
   // 🔄 LINK COPY METHODS - RÉINTÉGRÉS DIRECTEMENT
   public keepLinkOrderingFrom(
-    node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    node_to_copy: Class_NodeElement,
     matching_link_id: { [_: string]: string; }
   ) {
     const prev_links_order = [...this._links_order]
     this._links_order = []
-    
+
     // Fill with link that exist in current sankey and avoid duplicates in link order list
     node_to_copy.links_order
       .forEach(link_to_copy => {
-        const link = this.drawing_area.sankey.links_dict[matching_link_id[link_to_copy.id] ?? link_to_copy.id] as Type_GenericLinkElement
+        const link = this.drawing_area.sankey.links_dict[matching_link_id[link_to_copy.id] ?? link_to_copy.id] as Class_LinkElement
         if ((link !== undefined) && (!this._links_order.includes(link)))
           this._links_order.push(link)
       })
-    
+
     // after copying node_to_copy._link_orders add the remaining links
     const to_keep = prev_links_order.filter(l => !this._links_order.includes(l))
     to_keep.forEach(l => this._links_order.push(l))
   }
 
   public copyTagsReferencingFrom(
-    node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
+    node_to_copy: Class_NodeElement,
     matching_tagg: { [_: string]: string },
     matching_tags: { [_: string]: { [_: string]: string } }
   ) {
     this._nodeTagsManager.copyTagsReferencingFrom(node_to_copy, matching_tagg, matching_tags)
   }
 
-  public copyDimensionsFrom(node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
     this._nodeDimensionsManager.copyDimensionsFrom(node_to_copy)
   }
 
@@ -340,7 +321,7 @@ export abstract class ClassTemplate_NodeElement
   protected _toJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     super._toJSON(json_object, kwargs)
     json_object['name'] = this._name
-    
+
     if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
     if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
 
@@ -351,11 +332,11 @@ export abstract class ClassTemplate_NodeElement
     if (this._display.position.dy) json_object['local']['dy'] = this._display.position.dy
 
     if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
-    
+
     // Délégation aux managers
     this._nodeTagsManager.toJSON(json_object)
     this._nodeDimensionsManager.toJSON(json_object)
-    
+
     // 🔄 LINKS JSON - RÉINTÉGRÉ DIRECTEMENT  
     json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
     json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
@@ -367,26 +348,27 @@ export abstract class ClassTemplate_NodeElement
    */
   protected _fromJSON(json_node_object: Type_JSON, kwargs?: Type_JSON) {
     super._fromJSON(json_node_object, kwargs)
-    
+
     const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
     const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
-    
+
     this._name = getStringFromJSON(json_node_object, 'name', this._name)
     this._display.position_x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
-    
+
     const style_id = getStringListFromJSON(json_node_object, 'style', [default_style_id])
     this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_NodeStyle[]
-    
+
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
       this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
       this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
     }
-    
+    this._display.attributes.convertFromOSPFormat(json_node_object)
+
     this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
-    
+
     // Délégation aux managers
     this._nodeTagsManager.fromJSON(json_node_object, matching_taggs_id, matching_tags_id)
   }
@@ -398,7 +380,7 @@ export abstract class ClassTemplate_NodeElement
       .forEach(l_id => {
         if (l_id !== 'ghost_link') {
           const link_id = matching_links_id[l_id] ?? l_id
-          this.addInputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
+          this.addInputLink(this.sankey.links_dict[link_id] as Class_LinkElement)
         }
       })
     // Output links
@@ -406,7 +388,7 @@ export abstract class ClassTemplate_NodeElement
       .forEach(l_id => {
         if (l_id !== 'ghost_link') {
           const link_id = matching_links_id[l_id] ?? l_id
-          this.addOutputLink(this.sankey.links_dict[link_id] as Type_GenericLinkElement)
+          this.addOutputLink(this.sankey.links_dict[link_id] as Class_LinkElement)
         }
       })
     // Ordering
@@ -416,7 +398,7 @@ export abstract class ClassTemplate_NodeElement
         .map(_ => {
           const link_id = matching_links_id[_] ?? _
           return this.sankey.links_dict[link_id]
-        }) as Type_GenericLinkElement[]
+        }) as Class_LinkElement[]
     }
   }
 
@@ -454,23 +436,23 @@ export abstract class ClassTemplate_NodeElement
   }
 
   public drawShape() {
-    this._process_or_bypass(() => { 
+    this._process_or_bypass(() => {
       this._nodeDrawShape.drawShape()
-      this._orderD3Elements() 
+      this._orderD3Elements()
     })
   }
 
   public drawNameLabel() {
-    this._process_or_bypass(() => { 
+    this._process_or_bypass(() => {
       this._nodeDrawNameLabel.drawNameLabel()
-      this._orderD3Elements() 
+      this._orderD3Elements()
     })
   }
 
   public drawValueLabel() {
-    this._process_or_bypass(() => { 
+    this._process_or_bypass(() => {
       this._nodeDrawValueLabel.drawValueLabel()
-      this._orderD3Elements() 
+      this._orderD3Elements()
     })
   }
 
@@ -481,9 +463,9 @@ export abstract class ClassTemplate_NodeElement
 
   // 🔄 DRAW LINKS ARROW - RÉINTÉGRÉ DIRECTEMENT
   public drawLinksArrow() {
-    this._process_or_bypass(() => { 
+    this._process_or_bypass(() => {
       this._drawLinksArrow()
-      this._orderD3Elements() 
+      this._orderD3Elements()
     })
   }
 
@@ -491,6 +473,60 @@ export abstract class ClassTemplate_NodeElement
     this._nodeTooltip.drawTooltip()
   }
 
+  // Ajouter ces méthodes dans la section PUBLIC DRAWING METHODS
+
+  /**
+   * Draw foreign object on node
+   */
+  public drawFO() {
+    this._process_or_bypass(() => this._drawFO())
+  }
+
+  /**
+   * Draw illustration on node
+   */
+  public drawIllustration() {
+    this._process_or_bypass(() => this._drawIllustration())
+  }
+
+  /**
+   * Draw image illustration on node
+   */
+  public drawIllustrationImage() {
+    this._process_or_bypass(() => this._drawIllustrationImage())
+  }
+
+  /**
+   * Draw icon illustration on node
+   */
+  public drawIllustrationIcon() {
+    this._process_or_bypass(() => this._drawIllustrationIcon())
+  }
+
+  /**
+   * Launch animation from this node
+   */
+  public launchAnimation() {
+    const animation = new SankeyAnimation(this.drawing_area as unknown as Class_DrawingArea, this as unknown as Class_NodeElement)
+    animation.launchAnimation()
+  }
+
+  /**
+   * Recursive function to return list of descendant nodes
+   */
+  public getListDescendantOfNode(): Class_NodeElement[] {
+    let nodeList: Class_NodeElement[] = []
+
+    this.dimensions_as_parent_pure.forEach(dim => {
+      nodeList = [...nodeList, ...(dim.children as Class_NodeElement[])]
+      dim.children.forEach(child => {
+        const castChild = child as Class_NodeElement
+        nodeList = [...nodeList, ...castChild.getListDescendantOfNode()]
+      })
+    })
+
+    return [...new Set(nodeList)]
+  }
   // STYLE / ATTRIBUTES METHODS =========================================================
 
   public useDefaultStyle() {
@@ -514,7 +550,7 @@ export abstract class ClassTemplate_NodeElement
     delete this._display.position[attr]
   }
 
-  public isEqual(_: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public isEqual(_: Class_NodeElement) {
     // Implementation de comparaison des attributs
     const compareAttrs = [
       'shape_visible', 'name_label_is_visible', 'shape_min_width', 'shape_min_height',
@@ -628,15 +664,15 @@ export abstract class ClassTemplate_NodeElement
 
   // 🔄 LINKS METHODS - RÉINTÉGRÉS DIRECTEMENT ========================================
 
-  public hasInputLinks() { 
-    return (this.input_links_list.length > 0) 
+  public hasInputLinks() {
+    return (this.input_links_list.length > 0)
   }
 
-  public hasOutputLinks() { 
-    return (this.output_links_list.length > 0) 
+  public hasOutputLinks() {
+    return (this.output_links_list.length > 0)
   }
 
-  public addInputLink(link: Type_GenericLinkElement) {
+  public addInputLink(link: Class_LinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
       this._links_order.push(link)
@@ -647,7 +683,7 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
-  public addOutputLink(link: Type_GenericLinkElement) {
+  public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
       this._links_order.push(link)
@@ -658,7 +694,7 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
-  public deleteInputLink(link: Type_GenericLinkElement) {
+  public deleteInputLink(link: Class_LinkElement) {
     if (this._input_links[link.id] !== undefined) {
       this.removeInputLink(link)
       link.delete()
@@ -666,7 +702,7 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
-  public deleteOutputLink(link: Type_GenericLinkElement) {
+  public deleteOutputLink(link: Class_LinkElement) {
     if (this._output_links[link.id] !== undefined) {
       this.removeOutputLink(link)
       link.delete()
@@ -674,7 +710,7 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
-  public deleteRecyclingLinkOnSameNode(link: Type_GenericLinkElement) {
+  public deleteRecyclingLinkOnSameNode(link: Class_LinkElement) {
     if (this._output_links[link.id] !== undefined && this._input_links[link.id] !== undefined) {
       this.removeOutputLink(link)
       this.removeInputLink(link)
@@ -683,7 +719,7 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
-  public removeInputLink(link: Type_GenericLinkElement) {
+  public removeInputLink(link: Class_LinkElement) {
     this._input_links_handle[link.id]?.delete()
     delete this._input_links_handle[link.id]
     delete this._input_links_ending_point[link.id]
@@ -691,7 +727,7 @@ export abstract class ClassTemplate_NodeElement
     this.removeLinkFromOrderingLinksList(link)
   }
 
-  public removeOutputLink(link: Type_GenericLinkElement) {
+  public removeOutputLink(link: Class_LinkElement) {
     this._output_links_handle[link.id]?.delete()
     delete this._output_links_handle[link.id]
     delete this._output_links_starting_point[link.id]
@@ -699,7 +735,7 @@ export abstract class ClassTemplate_NodeElement
     this.removeLinkFromOrderingLinksList(link)
   }
 
-  public swapInputLink(link: Type_GenericLinkElement, node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public swapInputLink(link: Class_LinkElement, node: Class_NodeElement) {
     if (this._input_links[link.id] !== undefined) {
       this.removeInputLink(link)
       node.addInputLink(link)
@@ -708,7 +744,7 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
-  public swapOutputLink(link: Type_GenericLinkElement, node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public swapOutputLink(link: Class_LinkElement, node: Class_NodeElement) {
     if (this._output_links[link.id] !== undefined) {
       this.removeOutputLink(link)
       node.addOutputLink(link)
@@ -742,17 +778,17 @@ export abstract class ClassTemplate_NodeElement
   }
 
   public getLinksOrdered(_: Type_Side) {
-    const doublon: Type_GenericLinkElement[] = []
+    const doublon: Class_LinkElement[] = []
     return this._links_order.filter(link => {
-      const check = !doublon.includes(link) && 
-        ((link.target === this && link.target_side === _) || 
-         (link.source === this && link.source_side === _))
+      const check = !doublon.includes(link) &&
+        ((link.target === this && link.target_side === _) ||
+          (link.source === this && link.source_side === _))
       doublon.push(link)
       return (check)
     })
   }
 
-  public getInputLinkEndingPoint(link: Type_GenericLinkElement) {
+  public getInputLinkEndingPoint(link: Class_LinkElement) {
     if (this._input_links[link.id] !== undefined) {
       if (!this._input_links_ending_point[link.id]) {
         this.drawLinks()
@@ -765,7 +801,7 @@ export abstract class ClassTemplate_NodeElement
     return undefined
   }
 
-  public getOutputLinkStartingPoint(link: Type_GenericLinkElement) {
+  public getOutputLinkStartingPoint(link: Class_LinkElement) {
     if (this._output_links[link.id] !== undefined) {
       if (!this._output_links_starting_point[link.id]) {
         this.drawLinks()
@@ -783,12 +819,12 @@ export abstract class ClassTemplate_NodeElement
     const import_links = this.input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag))
     const export_links = this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag))
     const recycling_links = this._links_order.filter(l => l.shape_is_recycling)
-    
+
     // Rebuild links_order array safely
     const newLinksOrder = this._links_order
       .filter(l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l))
       .sort((link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
-    
+
     this._links_order = [...import_links, ...newLinksOrder, ...recycling_links, ...export_links]
     this.draw()
   }
@@ -798,8 +834,8 @@ export abstract class ClassTemplate_NodeElement
   }
 
   public moveLinkToPositionInOrderBefore(
-    link_to_move: Type_GenericLinkElement,
-    link_target_pos: Type_GenericLinkElement
+    link_to_move: Class_LinkElement,
+    link_target_pos: Class_LinkElement
   ) {
     if (
       this._links_order.includes(link_to_move) &&
@@ -814,8 +850,8 @@ export abstract class ClassTemplate_NodeElement
   }
 
   public moveLinkToPositionInOrderAfter(
-    link_to_move: Type_GenericLinkElement,
-    link_target_pos: Type_GenericLinkElement
+    link_to_move: Class_LinkElement,
+    link_target_pos: Class_LinkElement
   ) {
     if (
       this._links_order.includes(link_to_move) &&
@@ -852,6 +888,8 @@ export abstract class ClassTemplate_NodeElement
     super._draw()
     this._nodeDrawNameLabel.drawNameLabel()
     this._nodeDrawValueLabel.drawValueLabel()
+    this._drawIllustration()  // Ajouter cette ligne
+    this._drawFO()           // Ajouter cette ligne
   }
 
   protected _initDraw() {
@@ -862,6 +900,56 @@ export abstract class ClassTemplate_NodeElement
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
   }
 
+  // Ajouter ces méthodes dans la section PROTECTED METHODS
+
+  protected _drawFO() {
+    if (!this.d3_selection) return
+    this.d3_selection?.select('.node_fo').remove()
+    if (!this.has_fo || !this.fo_content) return
+    this.d3_selection_g_FO_illustration = this.d3_selection?.append('foreignObject')
+      .attr('id', this.id + '_fo')
+      .attr('class', 'node_fo')
+      .attr('width', this.getShapeWidthToUse())
+      .attr('height', this.getShapeHeightToUse())
+    this.d3_selection_g_FO_illustration?.append('xhtml:div')
+      .attr('class', 'ql-editor')
+      .html(this.fo_content)
+  }
+
+  protected _drawIllustration() {
+    this.d3_selection?.select('.illustration').remove()
+    if (this.is_image) this._drawIllustrationImage()
+    if (this.icon_visible) this._drawIllustrationIcon()
+  }
+
+  protected _drawIllustrationImage() {
+    if (!this.d3_selection || !this.image_src) return
+    this.d3_selection_g_image = this.d3_selection?.append('image')
+      .attr('id', 'image_node_' + this.id)
+      .attr('class', 'illustration image')
+      .attr('xlink:href', this.image_src)
+      .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+      .attr('height', this.getShapeHeightToUse() + 'px')
+      .attr('width', this.getShapeWidthToUse() + 'px')
+      .style('height', this.getShapeHeightToUse() + 'px')
+      .style('width', this.getShapeWidthToUse() + 'px')
+  }
+
+  protected _drawIllustrationIcon() {
+    if (!this.d3_selection || !this.icon_name || !this.icon_color) return
+    this.d3_selection_g_icon = this.d3_selection?.append('svg')
+      .attr('id', 'icon_node_' + this.id)
+      .attr('class', 'illustration icon_node')
+      .attr('viewBox', this.icon_view_box ? this.icon_view_box : '0 0 1000 1000')
+      .attr('height', this.getShapeHeightToUse())
+      .attr('width', this.getShapeWidthToUse())
+      .attr('x', 0)
+      .append('g')
+      .append('path')
+      .style('fill', (this.shape_visible || this.icon_color_sustainable) ? this.icon_color : this.getShapeColorToUse())
+      .attr('d', this.sankey.getIconFromCatalog(this.icon_name))
+  }
+
   /**
    * Put d3 elements in correct display order
    */
@@ -869,6 +957,9 @@ export abstract class ClassTemplate_NodeElement
     this.d3_selection_g_shape?.raise()
     this.d3_selection_g_name_label?.raise()
     this.d3_selection_g_value_label?.raise()
+    this.d3_selection_g_FO_illustration?.raise()
+    this.d3_selection_g_image?.raise()
+    this.d3_selection_g_icon?.raise()
   }
 
   /**
@@ -905,9 +996,9 @@ export abstract class ClassTemplate_NodeElement
         else { // if (this.position_type === 'parametric')
           const process_nodes = this.sankey.visible_nodes_list
           const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-          let same_u_import = process_nodes.filter(n => n.output_links_list.length>0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
-          let same_u_export = process_nodes.filter(n => n.input_links_list.length>0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
-          let same_u_other = process_nodes.filter(n => !n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
+          const same_u_import = process_nodes.filter(n => n.output_links_list.length > 0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
+          const same_u_export = process_nodes.filter(n => n.input_links_list.length > 0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
+          const same_u_other = process_nodes.filter(n => !n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
           if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
             // Importations
             const firstNonEchangeNodeBelow = same_u_other.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
@@ -919,7 +1010,7 @@ export abstract class ClassTemplate_NodeElement
                 + this.position_dy
             } else {
               // position of the first import node
-              this._display.position.y = firstNonEchangeNodeBelow.position_y - 100 - this.getShapeHeightToUse()- (same_u_import.length-1)*this.position_dy
+              this._display.position.y = firstNonEchangeNodeBelow.position_y - 100 - this.getShapeHeightToUse() - (same_u_import.length - 1) * this.position_dy
             }
             // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
             //   // The import nodes must be above the rest of the diagram. It is pushed downward.
@@ -956,10 +1047,10 @@ export abstract class ClassTemplate_NodeElement
           }
         }
       }
-      
+
       this.input_links_list.filter(l => l.source.position_type == 'relative').forEach(l => l.source.applyPosition())
       this.output_links_list.filter(l => l.target.position_type == 'relative').forEach(l => l.target.applyPosition())
-      
+
       super._applyPosition()
     }
     // Redraw links
@@ -1144,6 +1235,10 @@ export abstract class ClassTemplate_NodeElement
   public eventSimpleLMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventSimpleLMBCLick(event)
     this._nodeEventsHandler.handleSimpleLMBClick(event)
+    // OSP Extension - Ajouter cette section
+    if (this.drawing_area.static && this.hyperlink) {
+      window.open(this.hyperlink)
+    }
   }
 
   protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
@@ -1153,11 +1248,18 @@ export abstract class ClassTemplate_NodeElement
 
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDrag(event)
+    if (this.drawing_area.isInSelectionMode()) {
+      this.drawing_area.moveSelectedContainerFromDragEvent(event)
+    }
     this._nodeEventsHandler.handleMouseDrag(event)
   }
 
   public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDragEnd(event)
+    if (this.drawing_area.isInSelectionMode()) {
+      this._attached_container.forEach(cont => cont.draw())
+      this.drawing_area.orderElementOnDA()
+    }
     this._nodeEventsHandler.handleMouseDragEnd(event)
   }
 
@@ -1183,16 +1285,16 @@ export abstract class ClassTemplate_NodeElement
 
   protected eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseOut(event)
-    this._nodeEventsHandler.handleMouseOut(event)
+    this._nodeEventsHandler.handleMouseOut()
   }
 
   // HISTORY METHODS ====================================================================
 
-  public saveUndo(f: (_: Type_AnyNodeElement) => void) {
+  public saveUndo(f: (_: Class_NodeElement) => void) {
     this.drawing_area.application_data.history.saveUndo(() => { f(this) })
   }
 
-  public saveRedo(f: (_: Type_AnyNodeElement) => void) {
+  public saveRedo(f: (_: Class_NodeElement) => void) {
     this.drawing_area.application_data.history.saveRedo(() => { f(this) })
   }
 
@@ -1227,7 +1329,7 @@ export abstract class ClassTemplate_NodeElement
     }
   }
 
-  private removeLinkFromOrderingLinksList(link: Type_GenericLinkElement) {
+  private removeLinkFromOrderingLinksList(link: Class_LinkElement) {
     const idx = this._links_order.indexOf(link)
     if (idx !== -1) {
       this._links_order.splice(idx, 1)
@@ -1235,10 +1337,10 @@ export abstract class ClassTemplate_NodeElement
   }
 
   private addMovingHandleForGivenLink(
-    link: Type_GenericLinkElement,
+    link: Class_LinkElement,
     type: 'input' | 'output'
   ) {
-    const handle = new ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>(
+    const handle = new ClassTemplate_Handler(
       ('handle_' + this.id + type + '_' + link.id),
       this.drawing_area,
       this.menu_config,
@@ -1272,9 +1374,9 @@ export abstract class ClassTemplate_NodeElement
     let dx_top = this.getLinksStartingPositionOffSet('top')
     let dx_bottom = this.getLinksStartingPositionOffSet('bottom')
     // List of links to redraw
-    const link_to_redraw: Type_GenericLinkElement[] = [] // avoid recomputation
+    const link_to_redraw: Class_LinkElement[] = [] // avoid recomputation
 
-    const doublon: Type_GenericLinkElement[] = []
+    const doublon: Class_LinkElement[] = []
 
     // Loop on all links to compute starting / ending position
     this._links_order
@@ -1420,7 +1522,7 @@ export abstract class ClassTemplate_NodeElement
   private dragHandlerMoveLink = (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
     if (this._link_dragged && (event.dy !== 0 || event.dx !== 0)) {
       // Get link currently dragged
-      const link_dragged = this._link_dragged as Type_GenericLinkElement
+      const link_dragged = this._link_dragged as Class_LinkElement
       // Search if handler is for a link incoming or outcoming from the node
       const handle_src_or_trgt = (link_dragged.target === this) ? 'target' : 'source'
       const dragged_side = (handle_src_or_trgt === 'target') ? link_dragged.target_side : link_dragged.source_side
@@ -1476,10 +1578,10 @@ export abstract class ClassTemplate_NodeElement
   }
 
   private dragStartHandlerMoveLink = (_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-    const handler = _event.subject as ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>
+    const handler = _event.subject as ClassTemplate_Handler
     const link_ref = handler.ref_element_optional
-    if (link_ref && link_ref instanceof ClassTemplate_LinkElement) {
-      this._link_dragged = link_ref as Type_GenericLinkElement
+    if (link_ref && link_ref instanceof Class_LinkElement) {
+      this._link_dragged = link_ref as Class_LinkElement
 
       const saveCurrOder = this._links_order.map(l => l.id)
       this.drawing_area.application_data.history.saveUndo(() => {
@@ -1529,11 +1631,11 @@ export abstract class ClassTemplate_NodeElement
     return this._name
   }
 
-  public get links_order_visible(): Type_GenericLinkElement[] {
+  public get links_order_visible(): Class_LinkElement[] {
     return this._links_order.filter(link => link.is_visible)
   }
 
-  public get links_order(): Type_GenericLinkElement[] {
+  public get links_order(): Class_LinkElement[] {
     return this._links_order
   }
 
@@ -1630,11 +1732,11 @@ export abstract class ClassTemplate_NodeElement
     return Object.values(this._output_links)
   }
 
-  public get link_dragged(): Type_GenericLinkElement | undefined { 
+  public get link_dragged(): Class_LinkElement | undefined {
     return this._link_dragged
   }
 
-  public set link_dragged(value: Type_GenericLinkElement | undefined) { 
+  public set link_dragged(value: Class_LinkElement | undefined) {
     this._link_dragged = value
   }
 
@@ -1715,7 +1817,7 @@ export abstract class ClassTemplate_NodeElement
     this.applyPosition()
   }
 
-  // SHAPE ATTRIBUTE GETTERS/SETTERS ===================================================
+  // GETTERS/SETTERS ===================================================
 
   private getStyleProperty(propertyName: keyof typeof NODES_ATTRIBUTES_CONFIG) {
     if (this._display.attributes[propertyName] !== undefined) {
@@ -1738,7 +1840,7 @@ export abstract class ClassTemplate_NodeElement
   public set shape_min_height(_: number) { this._display.attributes.shape_min_height = _; this.draw() }
 
   public get shape_color() { return this.getStyleProperty('shape_color') as string }
-  public set shape_color(_: string) { 
+  public set shape_color(_: string) {
     this._display.attributes.shape_color = _
     this.drawShape()
     this.updateLinksColor()
@@ -1746,7 +1848,7 @@ export abstract class ClassTemplate_NodeElement
   }
 
   public get shape_opacity() { return this.getStyleProperty('shape_opacity') as number }
-  public set shape_opacity(_: number) { 
+  public set shape_opacity(_: number) {
     this._display.attributes.shape_opacity = _
     this.drawShape()
     this.updateLinksColor()
@@ -1763,13 +1865,11 @@ export abstract class ClassTemplate_NodeElement
   public set shape_arrow_angle_direction(_: Type_Side) { this._display.attributes.shape_arrow_angle_direction = _; this.drawShape() }
 
   public get shape_color_sustainable() { return this.getStyleProperty('shape_color_sustainable') as boolean }
-  public set shape_color_sustainable(_: boolean) { 
+  public set shape_color_sustainable(_: boolean) {
     this._display.attributes.shape_color_sustainable = _
     this.drawShape()
     this.updateLinksColor()
   }
-
-  // NAME LABEL ATTRIBUTE GETTERS/SETTERS ==============================================
 
   public get name_label_is_visible() { return this.getStyleProperty('name_label_is_visible') as boolean }
   public set name_label_is_visible(_: boolean) { this._display.attributes.name_label_is_visible = _; this.drawNameLabel() }
@@ -1796,7 +1896,7 @@ export abstract class ClassTemplate_NodeElement
   public set name_label_color(_: string) { this._display.attributes.name_label_color = _; this.drawNameLabel() }
 
   public get name_label_vert() { return this.getStyleProperty('name_label_vert') as Type_TextVPos }
-  public set name_label_vert(_: Type_TextVPos) { 
+  public set name_label_vert(_: Type_TextVPos) {
     if (_ !== 'dragged') delete this._display.position_y_label
     this._display.attributes.name_label_vert = _
     this.drawNameLabel()
@@ -1806,7 +1906,7 @@ export abstract class ClassTemplate_NodeElement
   public set name_label_vert_shift(_: number) { this._display.attributes.name_label_vert_shift = _; this.drawNameLabel() }
 
   public get name_label_horiz() { return this.getStyleProperty('name_label_horiz') as Type_TextHPos }
-  public set name_label_horiz(_: Type_TextHPos) { 
+  public set name_label_horiz(_: Type_TextHPos) {
     if (_ !== 'dragged') delete this._display.position_x_label
     this._display.attributes.name_label_horiz = _
     this.drawNameLabel()
@@ -1821,18 +1921,16 @@ export abstract class ClassTemplate_NodeElement
   public get name_label_background_color() { return this.getStyleProperty('name_label_background_color') as string }
   public set name_label_background_color(_: string) { this._display.attributes.name_label_background_color = _; this.drawNameLabel() }
 
-  public get name_label_separator() { return this.getStyleProperty('name_label_separator') as string}
+  public get name_label_separator() { return this.getStyleProperty('name_label_separator') as string }
   public set name_label_separator(_: string) {
     this._display.attributes.name_label_separator = _
     this.drawNameLabel()
   }
-  public get name_label_separator_part() { return this.getStyleProperty('name_label_separator_part') as "after" | "before"}
-  public set name_label_separator_part(_:"after" | "before") {
+  public get name_label_separator_part() { return this.getStyleProperty('name_label_separator_part') as 'after' | 'before' }
+  public set name_label_separator_part(_: 'after' | 'before') {
     this._display.attributes.name_label_separator_part = _
     this.drawNameLabel()
   }
-  
-  // VALUE LABEL ATTRIBUTE GETTERS/SETTERS =============================================
 
   public get value_label_is_visible() { return this.getStyleProperty('value_label_is_visible') as boolean }
   public set value_label_is_visible(_: boolean) { this._display.attributes.value_label_is_visible = _; this.drawValueLabel() }
@@ -1897,23 +1995,46 @@ export abstract class ClassTemplate_NodeElement
   public get value_label_nb_digit() { return this.getStyleProperty('value_label_nb_digit') as number }
   public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawValueLabel() }
 
-  // TOOLTIP GETTERS/SETTERS ============================================================
+  public get tooltip_text() { return this._tooltip_text }
+  public set tooltip_text(_: string) { this._tooltip_text = _ }
 
-  public get tooltip_text() {
-    return this._tooltip_text
-  }
+  public get icon_name() { return this.getStyleProperty('icon_name') as string | undefined }
+  public set icon_name(_: string | undefined) { this._display.attributes.icon_name = _; this.drawIllustrationIcon() }
 
-  public set tooltip_text(_: string) {
-    this._tooltip_text = _
-  }
+  public get icon_color() { return this.getStyleProperty('icon_color') as string | undefined }
+  public set icon_color(_: string | undefined) { this._display.attributes.icon_color = _; this.drawIllustrationIcon() }
 
-  public get sibling() {
-    return this._sibling_node
-  }
+  public get icon_visible() { return this.getStyleProperty('icon_visible') as boolean }
+  public set icon_visible(_: boolean) { this._display.attributes.icon_visible = _; this.drawIllustration() }
 
-  public set sibling(_: ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey> | undefined) {
-    this._sibling_node = _
-  }
+  public get icon_view_box() { return this.getStyleProperty('icon_view_box') as string | undefined }
+  public set icon_view_box(_: string | undefined) { this._display.attributes.icon_view_box = _; this.drawIllustrationIcon() }
+
+  public get icon_color_sustainable() { return this.getStyleProperty('icon_color_sustainable') as boolean }
+  public set icon_color_sustainable(_: boolean) { this._display.attributes.icon_color_sustainable = _; this.drawIllustrationIcon() }
+
+  public get has_fo() { return this.getStyleProperty('has_fo') as boolean }
+  public set has_fo(_: boolean) { this._display.attributes.has_fo = _; this.drawFO() }
+
+  public get is_fo_raw() { return this.getStyleProperty('is_fo_raw') as boolean }
+  public set is_fo_raw(_: boolean) { this._display.attributes.is_fo_raw = _; this.drawFO() }
+
+  public get fo_content() { return this.getStyleProperty('fo_content') as string | undefined }
+  public set fo_content(_: string | undefined) { this._display.attributes.fo_content = _; this.drawFO() }
+
+  public get is_image() { return this.getStyleProperty('is_image') as boolean }
+  public set is_image(_: boolean) { this._display.attributes.is_image = _; this.drawIllustration() }
+
+  public get image_src() { return this.getStyleProperty('image_src') as string | undefined }
+  public set image_src(_: string | undefined) { this._display.attributes.image_src = _; this.drawIllustrationImage() }
+
+  public get hyperlink() { return this.getStyleProperty('hyperlink') as string | undefined }
+  public set hyperlink(_: string | undefined) { this._display.attributes.hyperlink = _ }
+
+  public get attached_container(): Class_ContainerElement[] { return this._attached_container }
+
+  public get sibling() {return this._sibling_node}
+  public set sibling(_) {this._sibling_node = _}
 
   // PRIVATE VISIBILITY GETTERS ========================================================
 
@@ -1933,11 +2054,11 @@ export abstract class ClassTemplate_NodeElement
       } else {
         are_related_node_tags_selected = true
       }
-      
+
       if (are_related_node_tags_selected !== this._are_related_node_tags_selected) {
         this.updateVisibilityFingerprint()
       }
-      
+
       this._are_related_node_tags_selected = are_related_node_tags_selected
       this._node_tags_fingerprint = this.sankey.node_tags_fingerprint
     }
@@ -1947,11 +2068,11 @@ export abstract class ClassTemplate_NodeElement
   public get are_related_dimensions_selected(): boolean {
     if (this._are_related_dimensions_selected === undefined) {
       const are_related_dimensions_selected = this._nodeDimensionsManager.checkIfRelatedDimensionsAreSelected()
-      
+
       if (are_related_dimensions_selected !== this._are_related_dimensions_selected) {
         this.updateVisibilityFingerprint()
       }
-      
+
       this._are_related_dimensions_selected = are_related_dimensions_selected
     }
     return this._are_related_dimensions_selected
@@ -1965,11 +2086,11 @@ export abstract class ClassTemplate_NodeElement
         links_visibilities_fingerprint !== this._links_visibilities_fingerprint)
     ) {
       const are_links_visibilities_ok = this.checkIfLinksVisibilitiesAreOK()
-      
+
       if (are_links_visibilities_ok !== this._are_links_visibilities_ok) {
         this.updateVisibilityFingerprint()
       }
-      
+
       this._are_links_visibilities_ok = are_links_visibilities_ok
       this._links_visibilities_fingerprint = links_visibilities_fingerprint
     }
@@ -2018,49 +2139,49 @@ export abstract class ClassTemplate_NodeElement
       let idTrade = extremity_node.id + '-' + this.id + (importation ? 'Importations' : 'Exportations')
       idTrade = idTrade.replaceAll(' ', '')
 
-      const new_node = (this.sankey as Type_GenericSankey).addNewNode(idTrade, le_nom)
+      const new_node = (this.sankey as Class_Sankey).addNewNode(idTrade, le_nom)
       new_node.sibling = this
-      
+
       // Handle dimensions and tags...
       Object.values(this.dimensions_as_child)
         .forEach(dim => {
           const node_parent = dim.parent
           const name = extremity_node.id + '-' + node_parent.id + (importation ? 'Importations' : 'Exportations');
-          (dim.parent_level_tag as any).getOrCreateLowerDimension(
+          (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
             this.sankey.nodes_dict[name],
             new_node,
-            dim.child_level_tag as any
+            dim.child_level_tag as Class_LevelTag
           )
         })
-      
+
       // Continue with rest of the implementation...
       this.tags_list.forEach(tag => {
         new_node.addTag(tag)
       })
-      
+
       // Style handling
-      const node_importation_style  = this.position_type !== 'parametric' ? 'NodeImportCloseStyle' : 'NodeImportAboveStyle'
-      const node_exportation_style  = this.position_type !== 'parametric' ? 'NodeExportCloseStyle' : 'NodeExportBelowStyle'
+      const node_importation_style = this.position_type !== 'parametric' ? 'NodeImportCloseStyle' : 'NodeImportAboveStyle'
+      const node_exportation_style = this.position_type !== 'parametric' ? 'NodeExportCloseStyle' : 'NodeExportBelowStyle'
       const node_importexport_style = this.position_type !== 'parametric' ? 'NodeImportExportCloseStyle' : 'NodeImportExportAboveBelowStyle'
-      const link_importation_style  = this.position_type !== 'parametric' ? 'LinkImportCloseStyle' : 'LinkImportAboveStyle'
-      const link_exportation_style  = this.position_type !== 'parametric' ? 'LinkExportCloseStyle' : 'LinkExportBelowStyle'
+      const link_importation_style = this.position_type !== 'parametric' ? 'LinkImportCloseStyle' : 'LinkImportAboveStyle'
+      const link_exportation_style = this.position_type !== 'parametric' ? 'LinkExportCloseStyle' : 'LinkExportBelowStyle'
       const link_importexport_style = this.position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
 
       new_node.style = [
-            new_node.sankey.node_styles_dict['NodeSectorStyle'] as Class_NodeStyle,
-            new_node.sankey.node_styles_dict[node_importexport_style] as Class_NodeStyle,
-            importation ? 
-              new_node.sankey.node_styles_dict[node_importation_style] as Class_NodeStyle : 
-              new_node.sankey.node_styles_dict[node_exportation_style] as Class_NodeStyle
-          ]
-      
+        new_node.sankey.node_styles_dict['NodeSectorStyle'] as Class_NodeStyle,
+        new_node.sankey.node_styles_dict[node_importexport_style] as Class_NodeStyle,
+        importation ?
+          new_node.sankey.node_styles_dict[node_importation_style] as Class_NodeStyle :
+          new_node.sankey.node_styles_dict[node_exportation_style] as Class_NodeStyle
+      ]
+
       input_or_output_link.style = [
         new_node.sankey.link_styles_dict[link_importexport_style] as Class_LinkStyle,
-        importation ? 
-          new_node.sankey.link_styles_dict[link_importation_style] as Class_LinkStyle : 
+        importation ?
+          new_node.sankey.link_styles_dict[link_importation_style] as Class_LinkStyle :
           new_node.sankey.link_styles_dict[link_exportation_style] as Class_LinkStyle
       ]
-      
+
       input_or_output_link.shape_is_recycling = false
 
       extremity_node.tags_list.forEach(tag => {
@@ -2071,10 +2192,10 @@ export abstract class ClassTemplate_NodeElement
       })
 
       if (importation) {
-        input_or_output_link.source = new_node as any
+        input_or_output_link.source = new_node
         new_node.addOutputLink(input_or_output_link)
       } else {
-        input_or_output_link.target = new_node as any
+        input_or_output_link.target = new_node
         new_node.addInputLink(input_or_output_link)
       }
     })
@@ -2108,12 +2229,12 @@ export abstract class ClassTemplate_NodeElement
   }
 
   /** Set link being dragged - Used by NodeLinksManager */
-  public setLinkDragged(link: Type_GenericLinkElement | undefined) {
+  public setLinkDragged(link: Class_LinkElement | undefined) {
     this._link_dragged = link
   }
 
   /** Get link being dragged - Used by managers */
-  public getLinkDragged(): Type_GenericLinkElement | undefined {
+  public getLinkDragged(): Class_LinkElement | undefined {
     return this._link_dragged
   }
 

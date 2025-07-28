@@ -38,12 +38,9 @@ import { useToast } from '@chakra-ui/react'
 
 // Local imports
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { ClassAbstract_ApplicationData } from '../types/Abstract'
-import { ClassTemplate_DrawingArea } from './DrawingArea'
+// import { ClassAbstract_ApplicationData } from '../types/Abstract'
 import { getStringFromJSON, randomId, Type_JSON } from './Utils'
-import { ClassTemplate_NodeElement } from '../Elements/Node'
-import { ClassTemplate_LinkElement } from '../Elements/Link'
-import { ClassTemplate_Sankey } from './Sankey'
+
 import { FType_ProcessFunctions } from './FunctionTypes'
 
 import { Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
@@ -51,6 +48,7 @@ import { JSONtoExcel, retrieveExcelResults } from '../Persistence/SankeyPersiste
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from './IconLibrairie'
 import { OSColorPicker } from '../components/configmenus/OSColorPicker'
+import { Class_DrawingArea } from './DrawingArea'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -99,18 +97,28 @@ const toast_bypass: boolean = window.sankey?.publish??false
 /**
  * Class that contains all elements to make the application work
  *
- * @class ClassTemplate_ApplicationData
+ * @class Class_ApplicationData
  */
-export abstract class ClassTemplate_ApplicationData
-  <
-    Type_GenericDrawingArea extends ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
-    Type_GenericSankey extends ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
-    Type_GenericNodeElement extends ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>,
-    Type_GenericLinkElement extends ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>,
-  >
-  extends ClassAbstract_ApplicationData {
+export class Class_ApplicationData {
 
   // PUBLIC ATTRIBUTES =================================================================
+  // PUBLIC METHODS ====================================================================
+
+  public createNewMenuConfiguration(): Class_MenuConfig {
+    return new Class_MenuConfig()
+  }
+
+  public createNewDrawingArea(id?: string): Class_DrawingArea {
+    const drawing_area = new Class_DrawingArea(
+      this,
+      id
+    )
+    return drawing_area
+  }
+
+  public createNewIconLibrary(): Class_IconLibrary {
+    return new Class_IconLibrary()
+  }
 
   // App
   public version: string = '0.91'
@@ -137,17 +145,17 @@ export abstract class ClassTemplate_ApplicationData
    * Drawing area
    *
    * @protected
-   * @type {ClassTemplate_DrawingArea}
-   * @memberof ClassTemplate_ApplicationData
+   * @type {Class_DrawingArea}
+   * @memberof Class_ApplicationData
    */
-  protected _drawing_area: Type_GenericDrawingArea
+  protected _drawing_area: Class_DrawingArea
 
   /**
    * History of all actions
    *
    * @protected
    * @type {Class_ApplicationHistory}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _history: Class_ApplicationHistory
 
@@ -156,7 +164,7 @@ export abstract class ClassTemplate_ApplicationData
    *
    * @protected
    * @type {Class_MenuConfig}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _menu_configuration: Class_MenuConfig
 
@@ -165,7 +173,7 @@ export abstract class ClassTemplate_ApplicationData
  *
  * @protected
  * @type {Class_MenuConfig}
- * @memberof ClassTemplate_ApplicationData
+ * @memberof Class_ApplicationData
  */
   protected _icon_library: Class_IconLibrary
 
@@ -173,7 +181,7 @@ export abstract class ClassTemplate_ApplicationData
    * All possible attr to update in copyFrom
    * @protected
    * @type {string[]}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _transform_layout_all_attr: string[] = [
     'addNode',
@@ -199,14 +207,14 @@ export abstract class ClassTemplate_ApplicationData
    * Traduction function
    * @private
    * @type {TFunction}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _t: TFunction = useTranslation('translation', { useSuspense: false }).t //traductor
 
   /**
    * i18n saved
    * @private
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _i18n = useTranslation('translation', { useSuspense: false }).i18n //traductor
 
@@ -214,7 +222,7 @@ export abstract class ClassTemplate_ApplicationData
    * Path to OpenSankey logo
    * @private
    * @type {string}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _logo_opensankey: string
 
@@ -222,7 +230,7 @@ export abstract class ClassTemplate_ApplicationData
    * Path to Terriflux logo
    * @private
    * @type {string}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _logo_terriflux: string
 
@@ -230,7 +238,7 @@ export abstract class ClassTemplate_ApplicationData
    * Width of logo
    * @private
    * @type {number}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _logo_width: number = 100
 
@@ -238,7 +246,7 @@ export abstract class ClassTemplate_ApplicationData
    * Application name
    * @private
    * @type {string}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _app_name: string = 'SankeySuite'
 
@@ -246,7 +254,7 @@ export abstract class ClassTemplate_ApplicationData
    * Path prefix for backend server requests
    * @private
    * @type {string}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _url_prefix: string = '/opensankey/'
 
@@ -254,7 +262,7 @@ export abstract class ClassTemplate_ApplicationData
    * Varaible to save language selected
    * @private
    * @type {(string | undefined)}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _language?: string | undefined
 
@@ -265,7 +273,7 @@ export abstract class ClassTemplate_ApplicationData
   /**
    * Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
    * @private
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _toast = useToast()
 
@@ -273,7 +281,7 @@ export abstract class ClassTemplate_ApplicationData
    * Queue of waiting processes for toast
    * @private
    * @type {string[]}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _toast_processes: string[] = []
 
@@ -281,7 +289,7 @@ export abstract class ClassTemplate_ApplicationData
    * Force bypassing waiting toast
    * @private
    * @type {boolean}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _toast_bypass: boolean = toast_bypass
 
@@ -289,22 +297,22 @@ export abstract class ClassTemplate_ApplicationData
    * Guided visite steps to show app
    * @private
    * @type {StepType[]}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   private _steps: StepType[] = []
 
   // CONSTRUCTOR ========================================================================
 
   /**
-    * Creates an instance of ClassTemplate_ApplicationData.
+    * Creates an instance of Class_ApplicationData.
     * @param {boolean} published_mode
-    * @memberof ClassTemplate_ApplicationData
+    * @memberof Class_ApplicationData
     */
   constructor(
     published_mode: boolean,
     options: { [_: string]: boolean | string } = {}
   ) {
-    super()
+    // super()
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications
@@ -348,17 +356,11 @@ export abstract class ClassTemplate_ApplicationData
     document.onkeydown = this._keyboardEventListener(this)
   }
 
-  // ABSTRACT METHODS ===================================================================
-
-  public abstract createNewDrawingArea(id?: string): Type_GenericDrawingArea
-  public abstract createNewMenuConfiguration(): Class_MenuConfig
-  public abstract createNewIconLibrary(): Class_IconLibrary
-
   // CLEANING METHODS ===================================================================
   /**
    * Reset drawing area -> clean data & undraw
    * Use a waiting spinner
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public reset() {
     this.sendWaitingToast(
@@ -381,7 +383,7 @@ export abstract class ClassTemplate_ApplicationData
   /**
    * Reset drawing area -> clean data & undraw
    * @protected
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _reset() {
     // Reset drawing area
@@ -402,7 +404,7 @@ export abstract class ClassTemplate_ApplicationData
   /**
    * Reset data & delete application data in navigator cache
    *
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public reinitialization(redraw: boolean = true) {
     localStorage.removeItem('diff')
@@ -428,7 +430,7 @@ export abstract class ClassTemplate_ApplicationData
    *
    * /!\ Add to waiting spinner queue
    *
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public saveInCache() {
     this.sendWaitingToast(
@@ -452,7 +454,7 @@ export abstract class ClassTemplate_ApplicationData
   /**
    * Save as JSON in browser cache
    * @protected
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _saveInCache() {
     // Push to storage
@@ -467,7 +469,7 @@ export abstract class ClassTemplate_ApplicationData
    *
    * /!\ Add to waiting spinner queue
    *
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public saveToJSON() {
     this.sendWaitingToast(
@@ -490,7 +492,7 @@ export abstract class ClassTemplate_ApplicationData
   /**
    * Save to JSON format
    * @protected
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _saveToJSON() {
     // Convert all datas as JSON
@@ -510,7 +512,7 @@ export abstract class ClassTemplate_ApplicationData
    *
    * @param {string} url_prefix
    * @param {string} [file_name='sankey']
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public saveToExcel(
     url_prefix: string,
@@ -541,7 +543,7 @@ export abstract class ClassTemplate_ApplicationData
    * @protected
    * @param {string} url_prefix
    * @param {string} [file_name='sankey']
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _saveToExcel(
     url_prefix: string,
@@ -557,7 +559,7 @@ export abstract class ClassTemplate_ApplicationData
 
   /**
    * Create json file that contains all application datas
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _toJSON() {
     // Create json struct
@@ -580,12 +582,12 @@ export abstract class ClassTemplate_ApplicationData
 
   /**
    * Reset value of drawing_area and substructur with data from JSON
-   * then assign newly created drawing_area as ClassTemplate_ApplicationData currentdrawing_area attribute
+   * then assign newly created drawing_area as Class_ApplicationData currentdrawing_area attribute
    *
    * /!\ Add to waiting spinner queue
    *
    * @param {Type_JSON} json_object
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public fromJSON(
     json_object: Type_JSON,
@@ -613,7 +615,7 @@ export abstract class ClassTemplate_ApplicationData
    * Overridable method to read JSON
    * @protected
    * @param {Type_JSON} json_object
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _fromJSON(
     json_object: Type_JSON
@@ -629,7 +631,7 @@ export abstract class ClassTemplate_ApplicationData
  * Function to that fetch json data from an url (the file has to be compressed with gzip)
  *
  * @param {string} url_data
- * @memberof ClassTemplate_ApplicationData
+ * @memberof Class_ApplicationData
  */
   public readUrlJSON(url_data: string) {
     if (url_data.includes('.gz')) {
@@ -661,7 +663,7 @@ export abstract class ClassTemplate_ApplicationData
   /**
    * Postprocessing drawing area after JSON affectation
    * @protected
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
@@ -683,7 +685,7 @@ export abstract class ClassTemplate_ApplicationData
    * /!\ Add to waiting spinner queue
    *
    * @param {Type_JSON} json_object
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public updateFromJSON(json_object: Type_JSON) {
     this.sendWaitingToast(
@@ -697,7 +699,7 @@ export abstract class ClassTemplate_ApplicationData
   /**
    * Update current drawing area data from a json_object
    * @param {Type_JSON} json_object
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _updateFromJSON(json_object: Type_JSON) {
     if (json_object['layout'] !== undefined) {
@@ -739,7 +741,7 @@ export abstract class ClassTemplate_ApplicationData
    *
    * /!\ Add to waiting spinner queue
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public computeAutoFullSankey() {
     this.sendWaitingToast(
@@ -761,7 +763,7 @@ export abstract class ClassTemplate_ApplicationData
    * Create a waiting toast and add function to waiting queue.
    * @param {() => void} funct
    * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public sendWaitingToast(
     funct: () => void,
@@ -841,7 +843,7 @@ export abstract class ClassTemplate_ApplicationData
    * @param {TKey} key
    * @param {TModel[TKey]} value
    * @param {(_:TModel[TKey])=>void} func
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   public setValueAndSaveHistory<TModel, TKey extends keyof TModel>(
     model: TModel,
@@ -908,12 +910,12 @@ export abstract class ClassTemplate_ApplicationData
    * Note : even if this is a class method we have to ref the curr class in parametter because 'this' take another scope when it is called in onkeydown
    *
    * @protected
-   * @param {ClassTemplate_ApplicationData} app_ref
+   * @param {Class_ApplicationData} app_ref
    * @return {*}
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _keyboardEventListener(
-    app_ref: ClassTemplate_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>
+    app_ref: Class_ApplicationData
   ) {
     return (evt: KeyboardEvent) => { this._keyboardEventProcessing(evt, app_ref) }
   }
@@ -925,7 +927,7 @@ export abstract class ClassTemplate_ApplicationData
    */
   protected _keyboardEventProcessing(
     evt: KeyboardEvent,
-    app_ref: ClassTemplate_ApplicationData<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+    app_ref: Class_ApplicationData) {
     // Events booleans ----------------------------------------------------------------
     const evtOnDrawingArea = this._isDrawingAreaActive() // Avoid using hotkeys in text-inputs
     const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
@@ -1091,7 +1093,7 @@ export abstract class ClassTemplate_ApplicationData
    * @param {() => void} funct
    * @param {string} funct_id
    * @param {Type_TextForToastPromise} [intake]
-   * @memberof ClassTemplate_ApplicationData
+   * @memberof Class_ApplicationData
    */
   protected _sendWaitingToast(
     funct: () => void,
@@ -1184,11 +1186,11 @@ export abstract class ClassTemplate_ApplicationData
 
   public get steps(): StepType[] { return this._steps }
 
-  public get drawing_area(): Type_GenericDrawingArea { return this._drawing_area }
-  protected set drawing_area(value: Type_GenericDrawingArea) { this._drawing_area = value } // Only extended ClassTemplate_ApplicationData instance can modify these parameter (for sub-module)
+  public get drawing_area(): Class_DrawingArea { return this._drawing_area }
+  protected set drawing_area(value: Class_DrawingArea) { this._drawing_area = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
   public get menu_configuration(): Class_MenuConfig { return this._menu_configuration }
-  protected set menu_configuration(value: Class_MenuConfig) { this._menu_configuration = value } // Only extended ClassTemplate_ApplicationData instance can modify these parameter (for sub-module)
+  protected set menu_configuration(value: Class_MenuConfig) { this._menu_configuration = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
   public get url_prefix(): string { return this._url_prefix }
 

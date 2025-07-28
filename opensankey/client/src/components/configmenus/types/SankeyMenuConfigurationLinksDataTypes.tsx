@@ -24,14 +24,14 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_GenericApplicationData } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FCType_MenuConfigurationLinksData = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   contextual:boolean
 }
 
 export type FCType_MenuContextLinkData = {
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 }
 
