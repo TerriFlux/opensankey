@@ -1,3 +1,5 @@
 LoginComponent.egg-info/**
 build/**
 client/src/deps/OpenSankey+
+**/dist/**
+**/node_modules/**

@@ -432,7 +432,7 @@ const Register: FunctionComponent<{
             onClick={() => { returnToApp(navigate) }}>
             {t('UserNav.to_app')}
           </Button> : <></>
-}
+          }
           <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/login')}>

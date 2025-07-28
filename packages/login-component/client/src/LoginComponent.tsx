@@ -16,10 +16,7 @@ export class LoginComponent {
    * @param {boolean} published_mode
    * @memberof Class_ApplicationDataSA
    */
-  constructor(
-    published_mode: boolean,
-    options: { [_: string]: boolean | string } = {}
-  ) {
+  constructor() {
     // Default config on creation
     this._has_licence = false
   }
@@ -82,7 +79,7 @@ let _loginComponent : LoginComponent | undefined = undefined
 
 export const loginComponent = () => {
   if (!_loginComponent) {
-    _loginComponent = new LoginComponent(false,{})
+    _loginComponent = new LoginComponent()
   }
   return _loginComponent
 }

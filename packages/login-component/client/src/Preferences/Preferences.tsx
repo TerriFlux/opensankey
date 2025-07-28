@@ -1,4 +1,4 @@
-import React, { useState, useRef, CSSProperties, Fragment, FunctionComponent, MutableRefObject, ChangeEvent } from 'react'
+import React, { useState, useRef, CSSProperties, Fragment, FunctionComponent, MutableRefObject, ChangeEvent, FC } from 'react'
 import { Box, TabList, TabPanels, TabPanel, Select, Editable, EditablePreview, EditableInput, Tabs, Text, Button, Tab, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader, ModalBody, Modal, Card, CardBody, Divider, CardHeader, Input, CardFooter } from '@chakra-ui/react'
 import { SketchPicker } from 'react-color'
 import { FaMinus, FaPlus } from 'react-icons/fa'
@@ -15,20 +15,15 @@ import { Class_NodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/No
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Tag'
 import { Type_AdditionalMenus } from '../deps/OpenSankey+/deps/OpenSankey/types/Types'
 import { getJSONFromJSON, Type_MacroTagGroup, OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/TypesOSP'
+import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
+
 
 const paddingBoxPreference = '0.6rem'
-// COMPONENTS ===========================================================================
-export type FCType_ModalPreference = {
+
+export const ModalPreference: FC<{
   new_data: Class_ApplicationDataOSP,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>
-}
-export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
-  {
-    new_data,
-    additionalMenus
-  }
-) => {
+}> = ({new_data, additionalMenus} ) => {
   // Component updater ------------------------------------------------------------------
   const [, setUpdate] = useState(0)
   const [show_preference, setShowPreference] = useState(false)
@@ -41,7 +36,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
   const list_palette: MutableRefObject<{ name: string, colors: string[] }[]> = useRef([])
 
   // user_data -------------------------------------------------------------------------------
-  const { t, menu_configuration, url_prefix } = new_data
+  const { t, menu_configuration } = new_data
   const { ref_setter_show_modal_preference } = menu_configuration.dict_setter_show_dialog
   ref_setter_show_modal_preference.current = setShowPreference
 
@@ -87,7 +82,6 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
   if (openingRender && show_preference && !new_data.drawing_area.static) {
     init_user_data()
   }
-
 
   // JSX Component ----------------------------------------------------------------------
 
@@ -174,7 +168,7 @@ export const ModalPreference: FunctionComponent<FCType_ModalPreference> = (
         body: JSON.stringify(user_pref)
 
       })
-        .then(response => {
+        .then(() => {
           //Nothing to do, we send data to server 
         }).catch((err) => {
           console.error('Error in fetchExamples - ' + err.toString())
@@ -730,7 +724,7 @@ const PaletteCreator: FunctionComponent<{ data_palette: TypeDataPalette, t: TFun
 
 export const ButtonOpenUSerPreference: FunctionComponent<{ new_data: Class_ApplicationDataOSP }> = ({ new_data }) => {
   const [, setUpdate] = useState(0)
-  new_data.menu_configuration.ref_to_btn_top_pref_updater.current = () => setUpdate(a => a + 1)
+  new_data.menu_configuration_osp.ref_to_btn_top_pref_updater.current = () => setUpdate(a => a + 1)
   const { t, menu_configuration } = new_data
   const { ref_setter_show_modal_preference } = menu_configuration.dict_setter_show_dialog
   return <OSTooltip

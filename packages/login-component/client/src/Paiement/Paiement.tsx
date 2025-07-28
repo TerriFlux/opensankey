@@ -134,10 +134,10 @@ export const PaiementPage: FunctionComponent<{
       <Box>
         {t('Paiement.win_content_buy')}
       </Box>
-    <Presentation
-      t={t}
-      logo_sankey_plus={logo_sankey_plus}
-    />,
+      <Presentation
+        t={t}
+        logo_sankey_plus={logo_sankey_plus}
+      />,
       <Box
         display="inline-grid"
       >
