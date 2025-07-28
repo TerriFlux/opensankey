@@ -63,7 +63,7 @@ import {
   default_style_name
 } from '../types/Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
-import { Class_ContainerElement } from '../Elements/FreeLabel'
+import { Class_ContainerElement } from '../Elements/TextZone'
 import { ClassAbstract_Sankey } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
 

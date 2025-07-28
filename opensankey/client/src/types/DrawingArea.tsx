@@ -64,7 +64,7 @@ import { NodePositioning } from '../Algorithms/NodePositioning'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
-import { Class_ContainerElement } from '../Elements/FreeLabel'
+import { Class_ContainerElement } from '../Elements/TextZone'
 import { ClassTemplate_Handler } from '../Elements/Handler'
 import { Class_ApplicationData } from './ApplicationData'
 
