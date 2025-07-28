@@ -31,7 +31,6 @@ import {
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
 import { checkForUrlToJSON, OSTooltip, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
-import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyPersistence'
 
 // OpenSankey+ imports
 import { initializeAdditionalMenusOSP, moduleDialogsOSP } from './deps/OpenSankey+/ModulesOSP'
@@ -44,6 +43,7 @@ import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import { returnToApp } from './AppSA'
 import { ButtonOpenUSerPreference, ModalPreference } from './deps/LoginComponent/Preferences/Preferences'
 import { Class_ApplicationDataOSP } from './deps/LoginComponent/deps/OpenSankey+/types/TypesOSP'
+import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'

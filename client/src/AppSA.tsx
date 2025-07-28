@@ -25,7 +25,6 @@ import TextLoop from 'react-text-loop'
 // OpenSankey imports ===============================================================================
 
 import OpenSankeyApp from './deps/OpenSankey+/deps/OpenSankey/App'
-import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyPersistence'
 
 // OpenSankey+ imports ===============================================================================
 
@@ -50,6 +49,7 @@ import { PaiementCheckout, PaiementPage, PaiementReturn } from './deps/LoginComp
 import { MetaTags } from './components/MetaTags'
 import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import i18next from 'i18next'
+import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 
 // Specific methods ==================================================================================
 
