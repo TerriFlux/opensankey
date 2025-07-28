@@ -52,8 +52,8 @@ import type {
   FType_JSONtoExcel
 } from './SankeyPersistenceTypes'
 import { GetRandomInt, list_palette_color, type Type_JSON } from '../types/Utils'
-import type { Type_GenericApplicationData } from '../types/Types'
 import type { FCType_SankeyLoad } from '../types/FunctionTypes'
+import { Class_ApplicationData } from '../types/ApplicationData'
 
 declare global {
   interface Window {
@@ -571,11 +571,11 @@ function getErrorDetails(error: unknown): { name: string; message: string; toStr
  *
  *
  * @param {string} file_name
- * @param {Type_GenericApplicationData} new_data
+ * @param {Class_ApplicationData} new_data
  */
 export const UploadExemple: FType_UploadExemple = (
   file_name: string,
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ): void => {
   let root = window.location.origin
   if (root.includes('dashboard')) {
@@ -636,7 +636,7 @@ export const UploadExemple: FType_UploadExemple = (
 async function handleCompressedFile(
   response: Response,
   file_name: string,
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ): Promise<void> {
   try {
     console.log('🔄 Traitement de la réponse compressée...')

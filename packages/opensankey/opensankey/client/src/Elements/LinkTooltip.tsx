@@ -25,32 +25,24 @@
 // ==================================================================================================
 
 import * as d3 from 'd3'
-
-// Local modules
-import { ClassTemplate_LinkElement } from './Link'
-import { ClassAbstract_DrawingArea, ClassAbstract_Sankey } from '../types/Abstract'
-import { ClassAbstract_NodeElement } from '../types/AbstractNode'
+import { Class_LinkElement } from './Link'
 
 /**
  * Class that handles all drawing and rendering operations for LinkElement
  */
-export class LinkTooltip<
-  Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-  Type_GenericSankey extends ClassAbstract_Sankey,
-  Type_GenericNodeElement extends ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey>
-> {
+export class LinkTooltip {
   /**
    * Value of tooltip text associated to link
    * @private
    * @type {string}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private _tooltip_text: string = ''
 
-  private _link: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+  private _link: Class_LinkElement
   
   constructor(
-    link: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+    link: Class_LinkElement
   ) {
     this._link = link
   }
@@ -59,7 +51,7 @@ export class LinkTooltip<
    * Display the tooltip on drawing area
    *
    * @private
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public drawTooltip() {
     // Clean previous label
@@ -80,7 +72,7 @@ export class LinkTooltip<
    *
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     d3.selectAll('.sankey-tooltip')
@@ -130,13 +122,13 @@ export class LinkTooltip<
 
   /**
    * Set tooltip text
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get tooltip_text() { return this._tooltip_text }
 
   /**
    * Get tooltip text
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public set tooltip_text(_: string) {
     this._tooltip_text = _

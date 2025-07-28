@@ -25,48 +25,44 @@
 // ==================================================================================================
 
 // Local modules
-import { ClassTemplate_LinkElement } from './Link'
-import { ClassAbstract_DrawingArea, ClassAbstract_Sankey } from '../types/Abstract'
-import { ClassAbstract_NodeElement } from '../types/AbstractNode'
+import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { ClassTemplate_Handler } from './Handler'
 
 /**
  * Class that handles all drawing and rendering operations for LinkElement
  */
-export class LinkDrawShape<
-  Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-  Type_GenericSankey extends ClassAbstract_Sankey,
-  Type_GenericNodeElement extends ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey>
-> {
+export class LinkDrawShape {
 
-  private _link: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
-  private _link_control_points: LinkControlPoints<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+  private _link: Class_LinkElement
+  private _link_control_points: LinkControlPoints
   private _link_control_points_internal: {
     readonly controlPoints: {
-      starting_curve_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
-      ending_curve_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
-      starting_bezier_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
-      ending_bezier_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
-      middle_recycling_point: ClassTemplate_Handler<Type_GenericDrawingArea, Type_GenericSankey>;
+      starting_curve_point: ClassTemplate_Handler;
+      ending_curve_point: ClassTemplate_Handler;
+      starting_bezier_point: ClassTemplate_Handler;
+      ending_bezier_point: ClassTemplate_Handler;
+      middle_recycling_point: ClassTemplate_Handler;
       is_dragged: boolean;
     };
   }
 
   constructor(
-    link: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>,
-    link_control_points: LinkControlPoints<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+    link: Class_LinkElement,
+    link_control_points: LinkControlPoints
   ) {
     this._link = link
     this._link_control_points = link_control_points
-    this._link_control_points_internal = link_control_points.createInternalAccess()
+    this._link_control_points_internal = {
+      controlPoints: link_control_points.createInternalAccess().controlPoints()
+    }
   }
 
   
   /**
  * Draw link shape on d3 svg
  * @protected
- * @memberof ClassTemplate_LinkElement
+ * @memberof Class_LinkElement
  */
   public drawPath() {
     // Speed-up computing
@@ -93,7 +89,7 @@ export class LinkDrawShape<
       // Show as full shape for specific shapes
       if (!show_as_path && this._link.shape_shape !== 'bezier_outline') {
         // Which shape to use
-        let shape = this.getBezierPath(true)
+        const shape = this.getBezierPath(true)
         this._link.d3_selection?.append('path')
           .classed('link', true)
           .classed('link_shape', true)
@@ -109,7 +105,7 @@ export class LinkDrawShape<
       }
       else {
         // Which path to use
-        let path = this.getBezierPath(this._link.shape_shape == 'bezier_outline')
+        const path = this.getBezierPath(this._link.shape_shape == 'bezier_outline')
 
         // Add new path
         this._link.d3_selection?.append('path')
@@ -270,7 +266,7 @@ export class LinkDrawShape<
    * Only used for short shapes.
    * @private
    * @return {*}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private getLineShape(): string {
     // Security
@@ -672,10 +668,10 @@ export class LinkDrawShape<
       // Get control points coordinates
       const x1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_x
       const y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y
-      const x2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_x
-      const y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
-      const x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x
-      const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y
+      // const x2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_x
+      // const y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
+      // const x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x
+      // const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y
       const x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
       const y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y
 
@@ -712,8 +708,8 @@ export class LinkDrawShape<
       // Upper part of shape
       let x0_fwd, y0_fwd
       let x1_fwd, y1_fwd
-      let x2_fwd, y2_fwd
-      let x4_fwd, y4_fwd
+      // let x2_fwd, y2_fwd
+      // let x4_fwd, y4_fwd
       let x5_fwd, y5_fwd
       let x6_fwd, y6_fwd
 
@@ -736,8 +732,8 @@ export class LinkDrawShape<
         x1_fwd = clamp(x1, dx_fwd, x0, x5)
         y1_fwd = y0_fwd
         // Bezier first tangent dir
-        x2_fwd = clamp(x2, dx_fwd, x1, x6)
-        y2_fwd = y0_fwd
+        // x2_fwd = clamp(x2, dx_fwd, x1, x6)
+        // y2_fwd = y0_fwd
       }
       else {
         // Coefs to help tranform path -> shape
@@ -767,8 +763,8 @@ export class LinkDrawShape<
         x1_fwd = x0_fwd
         y1_fwd = clamp(y1, dy_fwd, y0, y5)
         // Bezier first tangent dir
-        x2_fwd = x0_fwd
-        y2_fwd = clamp(y2, dy_fwd, y1, y6)
+        // x2_fwd = x0_fwd
+        // y2_fwd = clamp(y2, dy_fwd, y1, y6)
       }
 
       // Second part of path
@@ -790,8 +786,8 @@ export class LinkDrawShape<
         x5_fwd = x6_fwd
         y5_fwd = clamp(y5, dy_fwd, y1, y6)
         // Bezier second tangent dir
-        x4_fwd = clamp(x4, dx_fwd, x0, x5)
-        y4_fwd = y6_fwd
+        // x4_fwd = clamp(x4, dx_fwd, x0, x5)
+        // y4_fwd = y6_fwd
       }
       else {
         // Coefs to help tranform path -> shape
@@ -822,8 +818,8 @@ export class LinkDrawShape<
         x5_fwd = x6_fwd
         y5_fwd = clamp(y5, dy_fwd, y1, y6)
         // Bezier second tangent dir
-        x4_fwd = x6_fwd
-        y4_fwd = clamp(y4, dy_fwd, y0, y5)
+        // x4_fwd = x6_fwd
+        // y4_fwd = clamp(y4, dy_fwd, y0, y5)
       }
 
       // Rotating function

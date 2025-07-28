@@ -26,22 +26,16 @@
 
 // Local imports
 import { ClassAbstract_LinkStyle } from '../types/AbstractLink'
-import { Type_AnyLinkElement } from './Link'
+import { Class_LinkElement } from './Link'
 import {
   Type_TextVPos,
-  Type_TextHPos,
-  NODES_ATTRIBUTES_CONFIG
+  Type_TextHPos
 } from './NodeAttributes'
 import {
   Type_JSON,
-  getStringFromJSON,
-  getNumberFromJSON,
-  getBooleanFromJSON,
-  getNumberOrUndefinedFromJSON,
   default_element_color,
   default_font,
   default_element_color_source,
-  getJSONFromJSON
 } from '../types/Utils'
 
 
@@ -138,14 +132,14 @@ export const LINKS_ATTRIBUTES_CONFIG = {
 
 type AttributeKey = keyof typeof LINKS_ATTRIBUTES_CONFIG
 
-// GÉNÉRATION AUTOMATIQUE DES TYPES à partir de la config
+///GÉNÉRATION AUTOMATIQUE DES TYPES à partir de la config
 type AttributeTypes = {
   [K in AttributeKey]: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG[K]['type']>
 }
 
 // CLASSE DE BASE avec déclarations automatiques
 export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
-  protected _attributes: { [K in AttributeKey]?: any } = {}
+  protected _attributes: { [K in AttributeKey]?: AttributeTypes[K] } = {}
 
   // Déclarations automatiques générées à partir de la config (une ligne par attribut)
   shape_local_link_scale!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_local_link_scale']['type']>
@@ -209,14 +203,18 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     (Object.keys(LINKS_ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
       Object.defineProperty(this, key, {
         get: () => this._attributes[key],
-        set: (value: any) => {
-          const config = LINKS_ATTRIBUTES_CONFIG[key] as any
+        //@ts-expect-error xxx
+        set: (value: AttributeTypes[key]) => {
+          //@ts-expect-error xxx
+          const config = LINKS_ATTRIBUTES_CONFIG[key] as AttributeTypes[key]
           if (config.setter && typeof this[config.setter as keyof this] === 'function') {
-            (this[config.setter as keyof this] as Function).call(this, value)
+            //@ts-expect-error xxx
+            (this[config.setter as keyof this]).call(this, value)
           } else {
             this._attributes[key] = value
             if (config.callback) {
-              (this[config.callback as keyof this] as Function).call(this)
+              //@ts-expect-error xxx
+              (this[config.callback as keyof this]).call(this)
             } else {
               this.update()
             }
@@ -419,6 +417,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
       Object.entries(legacyMapping).forEach(([oldKey, newKey]) => {
         if (json_local_object[oldKey] !== undefined) {
+          //@ts-expect-error xxx
           this._attributes[newKey as AttributeKey] = json_local_object[oldKey]
         }
       })
@@ -451,6 +450,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
     Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
       if (json_local_object[jsonKey] !== undefined) {
+        //@ts-expect-error xxx
         this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
       }
     })
@@ -458,6 +458,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
     // Traitement des attributs directs (même nom)
     Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
       if (json_local_object[key] !== undefined) {
+        //@ts-expect-error xxx
         this._attributes[key as AttributeKey] = json_local_object[key]
       }
     })
@@ -465,6 +466,7 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
 
   public copyFrom(element: Class_LinkAttribute) {
     Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
+      //@ts-expect-error xxx
       this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
     })
   }
@@ -481,7 +483,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   private _id: string
   private _name: string
   private _is_deletable: boolean
-  private _references: { [_: string]: Type_AnyLinkElement; } = {}
+  private _references: { [_: string]: Class_LinkElement; } = {}
   private _customisable_attribute: { [K in AttributeKey]: boolean }
 
   constructor(id: string, name: string, is_deletable: boolean = true) {
@@ -499,6 +501,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     // Initialiser les valeurs par défaut si non deletable
     if (!is_deletable) {
       Object.entries(LINKS_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
+        //@ts-expect-error xxx
         this._attributes[key as AttributeKey] = config.default
       })
     }
@@ -511,13 +514,13 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     }
   }
 
-  public addReference(ref: Type_AnyLinkElement) {
+  public addReference(ref: Class_LinkElement) {
     if (!this._references[ref.id]) {
       this._references[ref.id] = ref
     }
   }
 
-  public removeReference(ref: Type_AnyLinkElement) {
+  public removeReference(ref: Class_LinkElement) {
     if (this._references[ref.id] !== undefined) {
       delete this._references[ref.id]
     }
@@ -575,6 +578,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
     Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
       if (json_local_object[jsonKey] !== undefined) {
+        //@ts-expect-error xxx
         this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
         this._customisable_attribute[attrKey as AttributeKey] = true
       }
@@ -583,6 +587,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     // Traitement des attributs directs (même nom)
     Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
       if (json_local_object[key] !== undefined) {
+        //@ts-expect-error xxx
         this._attributes[key as AttributeKey] = json_local_object[key]
         this._customisable_attribute[key as AttributeKey] = true
       }

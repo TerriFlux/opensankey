@@ -27,16 +27,13 @@
 import {
   default_element_color,
   default_font,
-  getBooleanFromJSON,
-  getJSONFromJSON,
   getNumberFromJSON,
-  getStringFromJSON,
   getStringOrUndefinedFromJSON,
   Type_ElementPositionOptionnal,
   Type_JSON,
   Type_Position,
 } from '../types/Utils'
-import { Type_AnyNodeElement } from './Node'
+import { Class_NodeElement } from './Node'
 
 // SPECIFIC CONSTANTS *******************************************************************
 
@@ -52,18 +49,21 @@ export type Type_TextHPos = 'left' | 'middle' | 'right' | 'dragged'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom' | 'dragged'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 
-export type Type_customisable_node_style_attr = 
-  'shape_visible' | 'shape_type' | 'shape_min_width' | 'shape_min_height' | 'shape_color' | 'shape_opacity' | 
-  'shape_color_sustainable' | 'shape_arrow_angle_factor' | 'shape_arrow_angle_direction' | 'name_label_is_visible' | 
-  'name_label_font_family' | 'name_label_font_size' | 'name_label_uppercase' | 'name_label_bold' | 'name_label_italic' | 
-  'name_label_color' | 'name_label_horiz' | 'name_label_vert' | 'name_label_background' | 'name_label_background_color' | 
-  'name_label_horiz_shift' | 'name_label_vert_shift' | 'name_label_box_width' | 'value_label_is_visible' | 
+export type Type_customisable_node_style_attr =
+  'shape_visible' | 'shape_type' | 'shape_min_width' | 'shape_min_height' | 'shape_color' | 'shape_opacity' |
+  'shape_color_sustainable' | 'shape_arrow_angle_factor' | 'shape_arrow_angle_direction' | 'name_label_is_visible' |
+  'name_label_font_family' | 'name_label_font_size' | 'name_label_uppercase' | 'name_label_bold' | 'name_label_italic' |
+  'name_label_color' | 'name_label_horiz' | 'name_label_vert' | 'name_label_background' | 'name_label_background_color' |
+  'name_label_horiz_shift' | 'name_label_vert_shift' | 'name_label_box_width' | 'value_label_is_visible' |
   'name_label_separator' | 'name_label_separator_part' |
-  'value_label_font_family' | 'value_label_font_size' | 'value_label_uppercase' | 'value_label_bold' | 'value_label_italic' | 
-  'value_label_color' | 'value_label_horiz' | 'value_label_vert' | 'value_label_background' | 'value_label_background_color' | 
-  'value_label_horiz_shift' | 'value_label_vert_shift' | 'value_label_box_width' | 'value_label_scientific_notation' | 
-  'value_label_significant_digits' | 'value_label_nb_significant_digits' | 'value_label_custom_digit' | 'value_label_nb_digit' | 
-  'value_label_unit_visible' | 'value_label_unit' | 'value_label_unit_factor'
+  'value_label_font_family' | 'value_label_font_size' | 'value_label_uppercase' | 'value_label_bold' | 'value_label_italic' |
+  'value_label_color' | 'value_label_horiz' | 'value_label_vert' | 'value_label_background' | 'value_label_background_color' |
+  'value_label_horiz_shift' | 'value_label_vert_shift' | 'value_label_box_width' | 'value_label_scientific_notation' |
+  'value_label_significant_digits' | 'value_label_nb_significant_digits' | 'value_label_custom_digit' | 'value_label_nb_digit' |
+  'value_label_unit_visible' | 'value_label_unit' | 'value_label_unit_factor' |
+  // OSP Extensions
+  'icon_name' | 'icon_color' | 'icon_visible' | 'icon_view_box' | 'icon_color_sustainable' |
+  'has_fo' | 'is_fo_raw' | 'fo_content' | 'is_image' | 'image_src' | 'hyperlink'
 
 // CONFIGURATION CENTRALISÉE - SOURCE UNIQUE DE VÉRITÉ
 export const NODES_ATTRIBUTES_CONFIG = {
@@ -77,7 +77,7 @@ export const NODES_ATTRIBUTES_CONFIG = {
   shape_color: { default: default_element_color, type: (() => default_element_color) as (() => string) },
   shape_opacity: { default: 0.85, type: (() => 0.85) as (() => number) },
   shape_color_sustainable: { default: false, type: (() => false) as (() => boolean) },
-  
+
   // Name label attributes
   name_label_is_visible: { default: true, type: (() => true) as (() => boolean) },
   name_label_font_family: { default: default_font, type: (() => default_font) as (() => string) },
@@ -119,6 +119,25 @@ export const NODES_ATTRIBUTES_CONFIG = {
   value_label_unit_visible: { default: false, type: (() => false) as (() => boolean) },
   value_label_unit: { default: '', type: (() => '') as (() => string) },
   value_label_unit_factor: { default: 1, type: (() => 1) as (() => number) },
+
+  // OSP Extensions - Icon attributes
+  icon_name: { default: undefined as string | undefined, type: (() => undefined) as (() => string | undefined) },
+  icon_color: { default: undefined as string | undefined, type: (() => undefined) as (() => string | undefined) },
+  icon_visible: { default: false, type: (() => false) as (() => boolean) },
+  icon_view_box: { default: undefined as string | undefined, type: (() => undefined) as (() => string | undefined) },
+  icon_color_sustainable: { default: false, type: (() => false) as (() => boolean) },
+
+  // OSP Extensions - Foreign Object attributes
+  has_fo: { default: false, type: (() => false) as (() => boolean) },
+  is_fo_raw: { default: false, type: (() => false) as (() => boolean) },
+  fo_content: { default: undefined as string | undefined, type: (() => undefined) as (() => string | undefined) },
+
+  // OSP Extensions - Image attributes
+  is_image: { default: false, type: (() => false) as (() => boolean) },
+  image_src: { default: undefined as string | undefined, type: (() => undefined) as (() => string | undefined) },
+
+  // OSP Extensions - Hyperlink attribute
+  hyperlink: { default: undefined as string | undefined, type: (() => undefined) as (() => string | undefined) },
 } as const
 
 type AttributeKey = keyof typeof NODES_ATTRIBUTES_CONFIG
@@ -130,9 +149,9 @@ type AttributeTypes = {
 
 // CLASSE DE BASE avec déclarations automatiques
 export class Class_NodeAttribute {
-  protected _attributes: { [K in AttributeKey]?: any } = {}
+  protected _attributes: { [K in AttributeKey]?: AttributeTypes[K] } = {}
 
-  // Déclarations automatiques générées à partir de la config
+  // Déclarations automatiques générées à partir de la config (base)
   shape_visible!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_visible']['type']>
   shape_type!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_type']['type']>
   shape_arrow_angle_factor!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['shape_arrow_angle_factor']['type']>
@@ -181,6 +200,19 @@ export class Class_NodeAttribute {
   value_label_unit!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit']['type']>
   value_label_unit_factor!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']>
 
+  // OSP Extensions - Déclarations automatiques
+  icon_name!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['icon_name']['type']>
+  icon_color!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['icon_color']['type']>
+  icon_visible!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['icon_visible']['type']>
+  icon_view_box!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['icon_view_box']['type']>
+  icon_color_sustainable!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['icon_color_sustainable']['type']>
+  has_fo!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['has_fo']['type']>
+  is_fo_raw!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['is_fo_raw']['type']>
+  fo_content!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['fo_content']['type']>
+  is_image!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['is_image']['type']>
+  image_src!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['image_src']['type']>
+  hyperlink!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['hyperlink']['type']>
+
   constructor() {
     this.createDynamicProperties()
   }
@@ -190,14 +222,18 @@ export class Class_NodeAttribute {
     (Object.keys(NODES_ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
       Object.defineProperty(this, key, {
         get: () => this._attributes[key],
-        set: (value: any) => {
-          const config = NODES_ATTRIBUTES_CONFIG[key] as any
+        //@ts-expect-error xxx
+        set: (value: AttributeTypes[key]) => {
+          //@ts-expect-error xxx
+          const config = NODES_ATTRIBUTES_CONFIG[key] as AttributeTypes[key]
           if (config.setter && typeof this[config.setter as keyof this] === 'function') {
-            (this[config.setter as keyof this] as Function).call(this, value)
+            //@ts-expect-error xxx
+            (this[config.setter as keyof this]).call(this, value)
           } else {
             this._attributes[key] = value
             if (config.callback) {
-              (this[config.callback as keyof this] as Function).call(this)
+              //@ts-expect-error xxx
+              (this[config.callback as keyof this]).call(this)
             } else {
               this.update()
             }
@@ -252,6 +288,18 @@ export class Class_NodeAttribute {
       shape_color: 'color',
       shape_opacity: 'opacity',
       shape_color_sustainable: 'colorSustainable',
+      // OSP Mappings
+      icon_name: 'iconName',
+      icon_color: 'iconColor',
+      icon_visible: 'iconVisible',
+      icon_view_box: 'iconViewBox',
+      icon_color_sustainable: 'iconColorSustainable',
+      has_fo: 'has_FO',
+      is_fo_raw: 'is_FO_raw',
+      fo_content: 'FO_content',
+      is_image: 'is_image',
+      image_src: 'image_src',
+      hyperlink: 'hyperlink',
     }
 
     Object.entries(this._attributes).forEach(([key, value]) => {
@@ -270,6 +318,7 @@ export class Class_NodeAttribute {
 
     Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
       if (json_local_object[jsonKey] !== undefined && json_local_object[jsonKey] != NODES_ATTRIBUTES_CONFIG[attrKey as AttributeKey].default) {
+        //@ts-expect-error xxx
         this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
       }
     })
@@ -277,7 +326,35 @@ export class Class_NodeAttribute {
     // Traitement des attributs directs (même nom)
     Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
       if (json_local_object[key] !== undefined && json_local_object[key] != NODES_ATTRIBUTES_CONFIG[key as AttributeKey].default) {
+        //@ts-expect-error xxx
         this._attributes[key as AttributeKey] = json_local_object[key]
+      }
+    })
+  }
+
+  /**
+   * Convertit les attributs de l'ancien format OSP vers le nouveau format
+   */
+  public convertFromOSPFormat(json_object: Type_JSON) {
+    // Conversion des attributs OSP qui étaient stockés en racine
+    const ospMappings = {
+      'iconName': 'icon_name',
+      'iconColor': 'icon_color',
+      'iconVisible': 'icon_visible',
+      'iconViewBox': 'icon_view_box',
+      'iconColorSustainable': 'icon_color_sustainable',
+      'has_FO': 'has_fo',
+      'is_FO_raw': 'is_fo_raw',
+      'FO_content': 'fo_content',
+      'is_image': 'is_image',
+      'image_src': 'image_src',
+      'hyperlink': 'hyperlink'
+    }
+
+    Object.entries(ospMappings).forEach(([oldKey, newKey]) => {
+      if (json_object[oldKey] !== undefined) {
+        //@ts-expect-error xxx
+        this._attributes[newKey as AttributeKey] = json_object[oldKey]
       }
     })
   }
@@ -316,11 +393,24 @@ export class Class_NodeAttribute {
       'color': 'shape_color',
       'opacity': 'shape_opacity',
       'colorSustainable': 'shape_color_sustainable',
+      // OSP Mappings
+      'iconName': 'icon_name',
+      'iconColor': 'icon_color',
+      'iconVisible': 'icon_visible',
+      'iconViewBox': 'icon_view_box',
+      'iconColorSustainable': 'icon_color_sustainable',
+      'has_FO': 'has_fo',
+      'is_FO_raw': 'is_fo_raw',
+      'FO_content': 'fo_content',
+      'is_image': 'is_image',
+      'image_src': 'image_src',
+      'hyperlink': 'hyperlink',
     }
   }
 
   public copyFrom(element: Class_NodeAttribute) {
     Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
+      //@ts-expect-error xxx
       this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
     })
   }
@@ -336,7 +426,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   private _id: string
   private _name: string
   private _is_deletable: boolean
-  private _references: { [_: string]: Type_AnyNodeElement } = {}
+  private _references: { [_: string]: Class_NodeElement } = {}
   private _customisable_attribute: { [K in AttributeKey]: boolean }
   private _position: Type_ElementPositionOptionnal = {}
 
@@ -365,6 +455,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
       }
 
       Object.entries(NODES_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
+        //@ts-expect-error xxx
         this._attributes[key as AttributeKey] = config.default
       })
     }
@@ -377,13 +468,13 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     }
   }
 
-  public addReference(ref: Type_AnyNodeElement) {
+  public addReference(ref: Class_NodeElement) {
     if (!this._references[ref.id]) {
       this._references[ref.id] = ref
     }
   }
 
-  public removeReference(ref: Type_AnyNodeElement) {
+  public removeReference(ref: Class_NodeElement) {
     if (this._references[ref.id] !== undefined) {
       delete this._references[ref.id]
     }
@@ -391,6 +482,10 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
   public fromJSON(json_local_object: Type_JSON): void {
     super.fromJSON(json_local_object)
+
+    // Conversion des attributs OSP de l'ancien format
+    super.convertFromOSPFormat(json_local_object)
+
     this._position.type = getStringOrUndefinedFromJSON(json_local_object, 'position') as Type_Position
     this._position.dx = getNumberFromJSON(json_local_object, 'dx', default_dx)
     this._position.dy = getNumberFromJSON(json_local_object, 'dy', default_dy)
@@ -428,6 +523,18 @@ export class Class_NodeStyle extends Class_NodeAttribute {
       shape_color: 'color',
       shape_opacity: 'opacity',
       shape_color_sustainable: 'colorSustainable',
+      // OSP Mappings
+      icon_name: 'iconName',
+      icon_color: 'iconColor',
+      icon_visible: 'iconVisible',
+      icon_view_box: 'iconViewBox',
+      icon_color_sustainable: 'iconColorSustainable',
+      has_fo: 'has_FO',
+      is_fo_raw: 'is_FO_raw',
+      fo_content: 'FO_content',
+      is_image: 'is_image',
+      image_src: 'image_src',
+      hyperlink: 'hyperlink',
     }
 
     Object.entries(this._attributes).forEach(([key, value]) => {

@@ -28,13 +28,10 @@
 // ==================================================================================================
 
 
+
 import {
-  ClassAbstract_LinkElement,
-} from './AbstractLink'
-import {
-  ClassAbstract_Sankey,
   ClassAbstract_ProtoTag,
-  ClassAbstract_DrawingArea,
+
   ClassAbstract_ProtoLevelTag,
   ClassAbstract_ProtoLevelTagGroup
 } from '../types/Abstract'
@@ -43,32 +40,23 @@ import { Class_LevelTagGroup } from '../types/Tag'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_Tag, Class_TagGroup } from '../types/Tag'
 import { Class_NodeStyle } from '../Elements/NodeAttributes'
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_NodeElement } from '../Elements/Node'
 
-type TypeAbstract_LinkElement = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
-type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
-export abstract class ClassAbstract_NodeElement
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-    Type_GenericSankey extends ClassAbstract_Sankey
-  >
-  extends ClassTemplate_Element
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey
-  > {
+export abstract class ClassAbstract_NodeElement extends ClassTemplate_Element {
   // Mandatory getters
   public abstract get name(): string
   public abstract get position_type(): string
-  public abstract get input_links_list(): TypeAbstract_LinkElement[]
-  public abstract get output_links_list(): TypeAbstract_LinkElement[]
+  public abstract get input_links_list(): Class_LinkElement[]
+  public abstract get output_links_list(): Class_LinkElement[]
   public abstract get taggs_list(): Class_TagGroup[]
   public abstract get grouped_taggs_dict(): { [x: string]: Class_Tag[] }
   public abstract get dimensions_as_parent(): ClassAbstract_NodeDimension[]
   public abstract get dimensions_as_parent_pure(): ClassAbstract_NodeDimension[]
   public abstract get dimensions_as_child(): ClassAbstract_NodeDimension[]
   public abstract get dimensions_as_child_pure(): ClassAbstract_NodeDimension[]
-  public abstract get sibling(): ClassAbstract_NodeElement<ClassAbstract_DrawingArea,ClassAbstract_Sankey>|undefined
+  public abstract get sibling(): Class_NodeElement|undefined
   public abstract set sibling(_)
   public abstract get style(): Class_NodeStyle[]
   public abstract set style(n:Class_NodeStyle[]) 
@@ -79,17 +67,17 @@ export abstract class ClassAbstract_NodeElement
   public abstract getShapeWidthToUse(): number
   public abstract getShapeHeightToUse(): number
   public abstract getShapeColorToUse(): string
-  public abstract addInputLink(_: TypeAbstract_LinkElement): void
-  public abstract addOutputLink(_: TypeAbstract_LinkElement): void
-  public abstract deleteInputLink(_: TypeAbstract_LinkElement): void
-  public abstract deleteOutputLink(_: TypeAbstract_LinkElement): void
-  public abstract deleteRecyclingLinkOnSameNode(_: TypeAbstract_LinkElement): void
-  public abstract removeInputLink(_: TypeAbstract_LinkElement): void
-  public abstract removeOutputLink(_: TypeAbstract_LinkElement): void
-  public abstract getOutputLinkStartingPoint(_: TypeAbstract_LinkElement): {x: number, y: number} | undefined
-  public abstract getInputLinkEndingPoint(_: TypeAbstract_LinkElement): {x: number, y: number} | undefined
-  public abstract swapInputLink(_: TypeAbstract_LinkElement, __: TypeAbstract_NodeElement): void
-  public abstract swapOutputLink(_: TypeAbstract_LinkElement, __: TypeAbstract_NodeElement): void
+  public abstract addInputLink(_: Class_LinkElement): void
+  public abstract addOutputLink(_: Class_LinkElement): void
+  public abstract deleteInputLink(_: Class_LinkElement): void
+  public abstract deleteOutputLink(_: Class_LinkElement): void
+  public abstract deleteRecyclingLinkOnSameNode(_: Class_LinkElement): void
+  public abstract removeInputLink(_: Class_LinkElement): void
+  public abstract removeOutputLink(_: Class_LinkElement): void
+  public abstract getOutputLinkStartingPoint(_: Class_LinkElement): {x: number, y: number} | undefined
+  public abstract getInputLinkEndingPoint(_: Class_LinkElement): {x: number, y: number} | undefined
+  public abstract swapInputLink(_: Class_LinkElement, __: Class_NodeElement): void
+  public abstract swapOutputLink(_: Class_LinkElement, __: Class_NodeElement): void
   public abstract drawLinksArrow(): void
   public abstract dimensionsUpdated(): void
   public abstract addNewDimensionAsParent(_: ClassAbstract_NodeDimension): void
@@ -109,13 +97,13 @@ export abstract class ClassAbstract_NodeDimension {
   public abstract getLevel(): number
   //public abstract removeTagFromChildrenLevelTag(_: ClassAbstract_ProtoLevelTag): void
   public abstract showAccordingToLevelTags(): void
-  protected abstract _unsetForcingToShow(): Set<TypeAbstract_NodeElement>
+  protected abstract _unsetForcingToShow(): Set<Class_NodeElement>
   // Mandatory getters
   public abstract get id(): string
   public abstract get parent_level_tag(): ClassAbstract_ProtoLevelTag
   public abstract get child_level_tag(): ClassAbstract_ProtoLevelTag
-  public abstract get parent(): TypeAbstract_NodeElement
-  public abstract get children(): TypeAbstract_NodeElement[]
+  public abstract get parent(): Class_NodeElement
+  public abstract get children(): Class_NodeElement[]
 }
 
 export abstract class ClassAbstract_NodeStyle {

@@ -29,12 +29,12 @@ import {
   IType_DictHookRefSetterShowDialogComponents
 } from '../../../types/MenuConfig'
 import {
-  Type_AdditionalMenus,
-  Type_GenericApplicationData
+  Type_AdditionalMenus
 } from '../../../types/Types'
 import {
   FType_SetDiagram
 } from './SankeyMenuBannerTypes'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FCType_MenuDraggable = {
   dict_hook_ref_setter_show_dialog_components: IType_DictHookRefSetterShowDialogComponents,
@@ -46,11 +46,11 @@ export type FCType_MenuDraggable = {
 }
 
 export type FCType_OpenSankeySaveButton = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
 }
 
 export type FType_OpenSankeyMenusDictBuilder = (
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
   setDiagram: FType_SetDiagram,
 ) => { [s: string]: JSX.Element | JSX.Element[] }

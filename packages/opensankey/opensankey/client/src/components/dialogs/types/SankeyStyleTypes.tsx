@@ -25,20 +25,21 @@
 // ==================================================================================================
 
 import { MutableRefObject } from 'react'
-import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
+import { Type_AdditionalMenus } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FCType_SankeyModalStyleNode = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   additionalMenus:MutableRefObject<Type_AdditionalMenus>,
 }
 
 //Modal et fonctions pour l'edition et affectation des style de flux
 export type FCType_SankeyModalStyleLink = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   additionalMenus:MutableRefObject<Type_AdditionalMenus>
 }
 export type FCType_WrapperLinkStyleSelector={
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   children:JSX.Element
 }
 

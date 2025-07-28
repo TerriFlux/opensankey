@@ -25,10 +25,11 @@
 // ==================================================================================================
 
 import { MutableRefObject } from 'react'
-import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
+import { Type_AdditionalMenus } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FCType_OpenSankeyConfigurationsMenus = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   menu_configuration_layout: JSX.Element,
   menu_configuration_nodes_attributes: JSX.Element,
   menu_config_link_data: JSX.Element,
