@@ -36,6 +36,7 @@ import {
   default_element_color,
   default_font,
   default_element_color_source,
+  getBooleanFromJSON,
 } from '../types/Utils'
 
 
@@ -414,7 +415,10 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
         'name_label_on_path': 'name_label_on_path',
         'name_label_pos_auto': 'name_label_pos_auto'
       }
-
+      const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', false) as boolean
+      if (was_gradient) {
+        this._attributes['shape_color_rule'] = 'gradient'
+      }
       Object.entries(legacyMapping).forEach(([oldKey, newKey]) => {
         if (json_local_object[oldKey] !== undefined) {
           //@ts-expect-error xxx
