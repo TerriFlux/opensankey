@@ -544,7 +544,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
         ///@ts-expect-error xxx
         n.style = ['NodeSectorStyle']
       } else if (n.tags['type de noeud'].includes('echange')) {
-        const close = data_to_convert.style_node['NodeImportStyle'].position === 'relative'
+        const close = n.trade_close || data_to_convert.style_node['NodeImportStyle'] && data_to_convert.style_node['NodeImportStyle'].position === 'relative'
         if (close) {
           ///@ts-expect-error xxx
           n.style = ['NodeSectorStyle', 'NodeImportExportCloseStyle']
