@@ -1,5 +1,5 @@
 import { Class_ZoneSelection } from '../deps/OpenSankey/Elements/SelectionZone'
-import { Class_ContainerElement } from '../deps/OpenSankey/Elements/FreeLabel'
+import { Class_ContainerElement } from '../deps/OpenSankey/Elements/TextZone'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 

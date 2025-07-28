@@ -45,7 +45,7 @@ import { ConfigMenuNumberInput } from '../deps/OpenSankey/components/configmenus
 import {
   FCType_ImportImageAsSvgBg,
 } from '../ftypes/SankeyPlusUtilsTypes'
-import { default_container_content } from '../deps/OpenSankey/Elements/FreeLabel'
+import { default_container_content } from '../deps/OpenSankey/Elements/TextZone'
 import { OSPData, ViewType } from '../types/LegacyTypes'
 
 

@@ -21,7 +21,7 @@ import {
   FCType_MenuConfigurationFreeLabelsOSP,
   FCType_ContextZDTOSP,
 } from './types/SankeyPlusMenuConfigurationLabelsTypes'
-import { Class_ContainerElement } from '../../deps/OpenSankey/Elements/FreeLabel'
+import { Class_ContainerElement } from '../../deps/OpenSankey/Elements/TextZone'
 
 
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
