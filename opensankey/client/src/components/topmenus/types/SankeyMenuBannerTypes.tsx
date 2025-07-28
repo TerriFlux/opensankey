@@ -25,32 +25,33 @@
 // ==================================================================================================
 
 import { MutableRefObject } from 'react'
-import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
+import { Type_AdditionalMenus } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FType_SetDiagram = (
   the_diagram: string,
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ) => void
 
 export type FCType_ToolBarBottom = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
 }
 
 /**
  * Fucntion to create the toolbar component, the toolbar is used to edit the sankey quicly
  */
 export type FCType_ToolbarBuilder = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   additionalMenu: MutableRefObject<Type_AdditionalMenus>,
 }
 
 export type FCType_ToolbarSubComponent = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   updateParentComponent:()=>void
 }
 
 export type FType_StretchButtons = (
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ) => JSX.Element
 
 

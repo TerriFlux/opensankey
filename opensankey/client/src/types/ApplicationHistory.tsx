@@ -40,7 +40,7 @@ export const history_size: number = 10
 /**
  * Class that contains all elements to make the application work
  *
- * @class ClassTemplate_ApplicationData
+ * @class Class_ApplicationData
  */
 export class Class_ApplicationHistory extends ClassAbstract_ApplicationHistory {
 

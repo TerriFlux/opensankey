@@ -29,37 +29,37 @@
 
 import * as d3 from 'd3'
 import type { TFunction } from 'i18next'
-import type { ClassAbstract_LinkElement, ClassAbstract_LinkStyle } from './AbstractLink'
-import type { ClassAbstract_NodeElement, ClassAbstract_NodeStyle, ClassAbstract_NodeDimension } from '../types/AbstractNode'
 import type { Class_MenuConfig } from '../types/MenuConfig'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { Type_GenericSankey } from './Types'
-import { Type_AnyProtoElement } from '../Elements/Element'
+import { ClassTemplate_ProtoElement } from '../Elements/Element'
+import { Class_LinkStyle } from '../Elements/LinkAttributes'
+import { Class_NodeStyle } from '../Elements/NodeAttributes'
+import { Class_NodeDimension } from '../Elements/NodeDimension'
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_NodeElement } from '../Elements/Node'
+import { Class_DrawingArea } from './DrawingArea'
+import { Class_ApplicationData } from './ApplicationData'
 
-type TypeAbstract_LinkElement = ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
-export type TypeAbstract_NodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
-type Type_GenericDrawingArea = ClassAbstract_DrawingArea
-
-export abstract class ClassAbstract_ApplicationData {
-  // MAndatory methods
-  public abstract sendWaitingToast(
-    funct: () => void,
-    intake?: object
-  ): void
-  public abstract _add_waiting_process(
-    process_id: string,
-    process_func: () => void,
-    timer?:number
-  ):void
-  // Mandatory attributes
-  public abstract version: string
-  // Mandatory getters
-  public abstract get t(): TFunction
-  public abstract get history(): ClassAbstract_ApplicationHistory
-  public abstract get menu_configuration(): Class_MenuConfig
-  public abstract set language(_: string | undefined)
-  public abstract get language(): string | undefined
-}
+// export abstract class ClassAbstract_ApplicationData {
+//   // MAndatory methods
+//   public abstract sendWaitingToast(
+//     funct: () => void,
+//     intake?: object
+//   ): void
+//   public abstract _add_waiting_process(
+//     process_id: string,
+//     process_func: () => void,
+//     timer?:number
+//   ):void
+//   // Mandatory attributes
+//   public abstract version: string
+//   // Mandatory getters
+//   public abstract get t(): TFunction
+//   public abstract get history(): ClassAbstract_ApplicationHistory
+//   public abstract get menu_configuration(): Class_MenuConfig
+//   public abstract set language(_: string | undefined)
+//   public abstract get language(): string | undefined
+// }
 
 export abstract class ClassAbstract_ApplicationHistory {
   public abstract saveUndo(f: () => void): void
@@ -68,7 +68,7 @@ export abstract class ClassAbstract_ApplicationHistory {
 
 export abstract class ClassAbstract_DrawingArea {
   // Mandatory attributes
-  public abstract application_data: ClassAbstract_ApplicationData
+  public abstract application_data: Class_ApplicationData
   public abstract d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null
   public abstract d3_selection_zoom_area: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null
   public abstract static: boolean
@@ -78,12 +78,12 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract isInEditionMode(): boolean
   //public abstract addElement(): number
   public abstract checkAndUpdateAreaSize(): void
-  public abstract deleteNode(_: TypeAbstract_NodeElement): void
-  public abstract deleteLink(_: TypeAbstract_LinkElement): void
-  public abstract addNodeToSelection(_: TypeAbstract_NodeElement): void
-  public abstract removeNodeFromSelection(_: TypeAbstract_NodeElement): void
-  public abstract addLinkToSelection(_: TypeAbstract_LinkElement): void
-  public abstract removeLinkFromSelection(_: TypeAbstract_LinkElement): void
+  public abstract deleteNode(_: Class_NodeElement): void
+  public abstract deleteLink(_: Class_LinkElement): void
+  public abstract addNodeToSelection(_: Class_NodeElement): void
+  public abstract removeNodeFromSelection(_: Class_NodeElement): void
+  public abstract addLinkToSelection(_: Class_LinkElement): void
+  public abstract removeLinkFromSelection(_: Class_LinkElement): void
   public abstract addLegendToSelection(): void
   public abstract removeLegendFromSelection(): void
   public abstract purgeSelection(): void
@@ -95,20 +95,20 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract getZoomScale():number
   // Mandatory getters
   public abstract get sankey(): ClassAbstract_Sankey
-  public abstract get legend(): ClassTemplate_Legend<Type_GenericDrawingArea, Type_GenericSankey>
+  public abstract get legend(): ClassTemplate_Legend
   public abstract get scale(): number
   public abstract get scaleValueToPx(): (_: number) => number
   public abstract get minimum_flux(): number | undefined
   public abstract get maximum_flux(): number | undefined
   public abstract get filter_link_value(): number
-  public abstract get selected_nodes_list(): TypeAbstract_NodeElement[]
-  public abstract get node_contextualised(): TypeAbstract_NodeElement | undefined
-  public abstract set node_contextualised(_: TypeAbstract_NodeElement | undefined)
-  public abstract get selected_links_list(): TypeAbstract_LinkElement[]
-  public abstract get link_contextualised(): TypeAbstract_LinkElement | undefined
-  public abstract set link_contextualised(_: TypeAbstract_LinkElement | undefined)
-  public abstract get ghost_link(): TypeAbstract_LinkElement | null
-  public abstract set ghost_link(_: TypeAbstract_LinkElement | null)
+  public abstract get selected_nodes_list(): Class_NodeElement[]
+  public abstract get node_contextualised(): Class_NodeElement | undefined
+  public abstract set node_contextualised(_: Class_NodeElement | undefined)
+  public abstract get selected_links_list(): Class_LinkElement[]
+  public abstract get link_contextualised(): Class_LinkElement | undefined
+  public abstract set link_contextualised(_: Class_LinkElement | undefined)
+  public abstract get ghost_link(): Class_LinkElement | null
+  public abstract set ghost_link(_: Class_LinkElement | null)
   public abstract get pointer_pos(): [number, number]
   public abstract set pointer_pos(_: [number, number])
   public abstract get filter_label(): number
@@ -119,32 +119,32 @@ export abstract class ClassAbstract_DrawingArea {
   public abstract set scale(_: number)
   public abstract get magnetic_nodes(): boolean
   public abstract set magnetic_nodes(b: boolean)
-  public abstract get list_g_element(): Type_AnyProtoElement[]
+  public abstract get list_g_element(): ClassTemplate_ProtoElement[]
 
 }
 
 export abstract class ClassAbstract_Sankey {
-  public abstract drawing_area: Type_GenericDrawingArea
+  public abstract drawing_area: Class_DrawingArea
   // Mandatory getters
   public abstract get is_visible(): boolean
-  public abstract get nodes_dict(): { [_: string]: TypeAbstract_NodeElement }
-  public abstract get nodes_list(): TypeAbstract_NodeElement[]
-  public abstract get nodes_list_sorted(): TypeAbstract_NodeElement[]
-  public abstract get visible_nodes_list(): TypeAbstract_NodeElement[]
-  public abstract get visible_nodes_list_sorted(): TypeAbstract_NodeElement[]
-  public abstract get links_dict(): { [_: string]: TypeAbstract_LinkElement }
-  public abstract get links_list(): TypeAbstract_LinkElement[]
-  public abstract get links_list_sorted(): TypeAbstract_LinkElement[]
-  public abstract get visible_links_list(): TypeAbstract_LinkElement[]
-  public abstract get visible_links_list_sorted(): TypeAbstract_LinkElement[]
-  public abstract get node_styles_dict(): { [id: string]: ClassAbstract_NodeStyle }
-  public abstract get default_node_style(): ClassAbstract_NodeStyle
-  public abstract get node_styles_list(): ClassAbstract_NodeStyle[]
-  public abstract get node_styles_list_sorted(): ClassAbstract_NodeStyle[]
-  public abstract get link_styles_dict(): { [id: string]: ClassAbstract_LinkStyle }
-  public abstract get default_link_style(): ClassAbstract_LinkStyle
-  public abstract get link_styles_list(): ClassAbstract_LinkStyle[]
-  public abstract get link_styles_list_sorted(): ClassAbstract_LinkStyle[]
+  public abstract get nodes_dict(): { [_: string]: Class_NodeElement }
+  public abstract get nodes_list(): Class_NodeElement[]
+  public abstract get nodes_list_sorted(): Class_NodeElement[]
+  public abstract get visible_nodes_list(): Class_NodeElement[]
+  public abstract get visible_nodes_list_sorted(): Class_NodeElement[]
+  public abstract get links_dict(): { [_: string]: Class_LinkElement }
+  public abstract get links_list(): Class_LinkElement[]
+  public abstract get links_list_sorted(): Class_LinkElement[]
+  public abstract get visible_links_list(): Class_LinkElement[]
+  public abstract get visible_links_list_sorted(): Class_LinkElement[]
+  public abstract get node_styles_dict(): { [id: string]: Class_NodeStyle }
+  public abstract get default_node_style(): Class_NodeStyle
+  public abstract get node_styles_list(): Class_NodeStyle[]
+  public abstract get node_styles_list_sorted(): Class_NodeStyle[]
+  public abstract get link_styles_dict(): { [id: string]: Class_LinkStyle }
+  public abstract get default_link_style(): Class_LinkStyle
+  public abstract get link_styles_list(): Class_LinkStyle[]
+  public abstract get link_styles_list_sorted(): Class_LinkStyle[]
   public abstract get node_taggs_dict(): { [id: string]: ClassAbstract_ProtoTagGroup }
   public abstract get node_taggs_list(): ClassAbstract_ProtoTagGroup[]
   public abstract get node_tags_fingerprint(): string
@@ -162,16 +162,24 @@ export abstract class ClassAbstract_Sankey {
   public abstract get level_taggs_list(): ClassAbstract_ProtoLevelTagGroup[]
   // Mandatory methods
   public abstract draw(): void
-  public abstract addNewDefaultNode(): TypeAbstract_NodeElement
-  public abstract addNewNode(id: string, name: string): TypeAbstract_NodeElement
-  public abstract addNewLink(s: TypeAbstract_NodeElement, t: TypeAbstract_NodeElement): TypeAbstract_LinkElement
-  public abstract addNewLinkWithId(i: string, s: TypeAbstract_NodeElement, t: TypeAbstract_NodeElement): TypeAbstract_LinkElement
-  public abstract addNewNodeStyle(id: string, name: string): ClassAbstract_NodeStyle
-  public abstract addNewLinkStyle(id: string, name: string): ClassAbstract_LinkStyle
+  public abstract addNewDefaultNode(): Class_NodeElement
+  public abstract addNewNode(id: string, name: string): Class_NodeElement
+  public abstract addNewLink(s: Class_NodeElement, t: Class_NodeElement): Class_LinkElement
+  public abstract addNewLinkWithId(i: string, s: Class_NodeElement, t: Class_NodeElement): Class_LinkElement
+  public abstract addNewNodeStyle(id: string, name: string): Class_NodeStyle
+  public abstract addNewLinkStyle(id: string, name: string): Class_LinkStyle
   public abstract nodeTagsUpdated(): void
   public abstract fluxTagsUpdated(): void
   public abstract dataTagsUpdated(): void
   public abstract addLevelTagGroup(id: string,name: string): ClassAbstract_ProtoLevelTagGroup
+
+  public abstract getIconFromCatalog(id_icon: string): string
+  public abstract get containers_list(): ClassAbstract_ContainerElement[]
+}
+
+export abstract class ClassAbstract_ContainerElement {
+  public abstract get label_width(): number
+  public abstract get label_height(): number
 }
 
 export abstract class ClassAbstract_ProtoTagGroup {
@@ -211,12 +219,12 @@ export abstract class ClassAbstract_ProtoLevelTag {
   public abstract get group(): ClassAbstract_ProtoLevelTagGroup
   public abstract get is_selected(): boolean
   public abstract get has_upper_dimensions(): boolean
-  public abstract get dimensions_list_as_tag_for_children(): ClassAbstract_NodeDimension[]
-  public abstract get dimensions_list_as_tag_for_parent(): ClassAbstract_NodeDimension[]
-  public abstract addAsParentLevel(_: ClassAbstract_NodeDimension): void
-  public abstract removeParentLevel(_: ClassAbstract_NodeDimension): void
-  public abstract addAsChildrenLevel(_: ClassAbstract_NodeDimension): void
-  public abstract removeChildrenLevel(_: ClassAbstract_NodeDimension): void
+  public abstract get dimensions_list_as_tag_for_children(): Class_NodeDimension[]
+  public abstract get dimensions_list_as_tag_for_parent(): Class_NodeDimension[]
+  public abstract addAsParentLevel(_: Class_NodeDimension): void
+  public abstract removeParentLevel(_: Class_NodeDimension): void
+  public abstract addAsChildrenLevel(_: Class_NodeDimension): void
+  public abstract removeChildrenLevel(_: Class_NodeDimension): void
 }
 
 

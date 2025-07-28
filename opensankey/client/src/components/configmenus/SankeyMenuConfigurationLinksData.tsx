@@ -37,9 +37,6 @@ import type {
   FCType_MenuContextLinkData,
   FCType_MenuConfigurationLinksData
 } from './types/SankeyMenuConfigurationLinksDataTypes'
-import type {
-  Type_GenericLinkElement
-} from '../../types/Types'
 
 // Local components or functions
 import {
@@ -48,7 +45,8 @@ import {
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributes'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
-import { ValueOptionType } from '../../Elements/Class_LinkValueTree'
+import { ValueOptionType } from '../../Elements/LinkValues'
+import { Class_LinkElement } from '../../Elements/Link'
 
 /*************************************************************************************************/
 export const default_value_option = 'value'
@@ -63,7 +61,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
   // Selected links --------------------------------------------------------------------
 
-  let selected_links: Type_GenericLinkElement[]
+  let selected_links: Class_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted
@@ -341,7 +339,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
 
   // Selected links --------------------------------------------------------------------
 
-  let selected_links: Type_GenericLinkElement[]
+  let selected_links: Class_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted

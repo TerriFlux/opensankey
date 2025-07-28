@@ -37,15 +37,10 @@ import type {
   Class_Tag,
 } from '../types/Tag'
 
-// Local modules
 import {
-  ClassAbstract_DrawingArea,
   ClassAbstract_ProtoTag,
-  ClassAbstract_Sankey,
 } from '../types/Abstract'
-import {
-  ClassAbstract_NodeElement
-} from '../types/AbstractNode'
+
 import {
   ClassAbstract_LinkElement} from '../types/AbstractLink'
 import {
@@ -54,7 +49,6 @@ import {
   Type_JSON,
   getJSONFromJSON,
   getJSONOrUndefinedFromJSON,
-  getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringListFromJSON
 } from '../types/Utils'
@@ -62,15 +56,16 @@ import {
   Class_LinkStyle, Class_LinkAttribute, LINKS_ATTRIBUTES_CONFIG,
   Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side
 } from './LinkAttributes'
-import { Class_LinkValueTree, Class_LinkValue } from './Class_LinkValueTree'
+import { Class_LinkValueTree, Class_LinkValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { LinkDrawLabel } from './LinkDrawLabel'
 import { LinkDrawValue } from './LinkDrawValue'
 import { LinkTooltip } from './LinkTooltip'
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_NodeElement } from './Node'
 
-export type Type_AnyLinkElement = ClassTemplate_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey, Type_AnyAbstractNodeElement>
-type Type_AnyAbstractNodeElement = ClassAbstract_NodeElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -82,16 +77,16 @@ const side_order: { [_ in Type_Side]: number } = {
 // SPECIFIC FUNCTIONS ********************************************************************
 
 export function defaultLinkId(
-  source: Type_AnyAbstractNodeElement,
-  target: Type_AnyAbstractNodeElement
+  source: Class_NodeElement,
+  target: Class_NodeElement
 ) {
   // coherent with code in python (Constructor of flux)
   return source.id + '---' + target.id
 }
 
 export function defaultLinkName(
-  source: Type_AnyAbstractNodeElement,
-  target: Type_AnyAbstractNodeElement
+  source: Class_NodeElement,
+  target: Class_NodeElement
 ) {
   // coherent with code in python (Constructor of flux)
   return source.name + '---' + target.name
@@ -100,13 +95,13 @@ export function defaultLinkName(
 /**
  * Allows to sort links alphabethically per id
  * @export
- * @param {(Type_AnyLinkElement | Class_LinkStyle)} a
- * @param {(Type_AnyLinkElement | Class_LinkStyle)} b
+ * @param {(Class_LinkElement | Class_LinkStyle)} a
+ * @param {(Class_LinkElement | Class_LinkStyle)} b
  * @return {*}
  */
 export function sortLinksElementsByIds(
-  a: Type_AnyLinkElement | Class_LinkStyle,
-  b: Type_AnyLinkElement | Class_LinkStyle
+  a: Class_LinkElement | Class_LinkStyle,
+  b: Class_LinkElement | Class_LinkStyle
 ) {
   if (a.id > b.id) return 1
   else if (a.id < b.id) return -1
@@ -116,15 +111,15 @@ export function sortLinksElementsByIds(
 /**
  * Allows to sort links of a given node by comparing their source / target relatives positions
  * @export
- * @param {Type_AnyLinkElement} link_a
- * @param {Type_AnyLinkElement} link_b
- * @param {Type_AnyAbstractNodeElement} node
+ * @param {Class_LinkElement} link_a
+ * @param {Class_LinkElement} link_b
+ * @param {Class_NodeElement} node
  * @return {*}
  */
 export function sortLinksElementsByRelativeNodesPositions(
-  link_a: Type_AnyLinkElement,
-  link_b: Type_AnyLinkElement,
-  node: Type_AnyAbstractNodeElement
+  link_a: Class_LinkElement,
+  link_b: Class_LinkElement,
+  node: Class_NodeElement
 ) {
   // Check relation between reference node and the two links
   const is_node_source_for_link_a = (link_a.source === node)
@@ -138,8 +133,8 @@ export function sortLinksElementsByRelativeNodesPositions(
   )
     return 0 // Dont move - somethings is wrong
   // Get nodes that we need to compare
-  let node_a: Type_AnyAbstractNodeElement
-  let node_b: Type_AnyAbstractNodeElement
+  let node_a: Class_NodeElement
+  let node_b: Class_NodeElement
   let side_a: Type_Side
   let side_b: Type_Side
   if (is_node_source_for_link_a) {
@@ -191,12 +186,12 @@ export function sortLinksElementsByRelativeNodesPositions(
 /**
  * Check if given attribute is overloaded in at least one link
  * @export
- * @param {Type_AnyLinkElement[]} links
+ * @param {Class_LinkElement[]} links
  * @param {keyof Class_LinkAttribute} attr
  * @return {*}
  */
 export function isAttributeOverloaded(
-  links: Type_AnyLinkElement[],
+  links: Class_LinkElement[],
   attr: keyof Class_LinkAttribute
 ) {
   let overloaded = false
@@ -209,52 +204,41 @@ type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 /**
  * Class that define how to display a link element and how to interact with it
  *
- * @class ClassTemplate_LinkElement
+ * @class Class_LinkElement
  */
-export abstract class ClassTemplate_LinkElement
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-    Type_GenericSankey extends ClassAbstract_Sankey,
-    Type_GenericNodeElement extends ClassAbstract_NodeElement<Type_GenericDrawingArea, Type_GenericSankey>
-  >
-  extends ClassAbstract_LinkElement
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey
-  > {
-
-  // ABSTRACT ATTRIBUTES ===============================================================
-
+export class Class_LinkElement extends ClassAbstract_LinkElement {
   /**
    * Display attributes for link
    * @protected
    * @type {{
-  *     drawing_area: Type_GenericDrawingArea,
+  *     drawing_area: Class_DrawingArea,
   *     position: Type_ElementPosition,
   *     local: Class_LinkAttribute,
   *     style: Class_LinkStyle[]
   *   }}
-  * @memberof ClassTemplate_LinkElement
+  * @memberof Class_LinkElement
   */
-  protected abstract _display: {
-    drawing_area: Type_GenericDrawingArea,
-    sankey: Type_GenericSankey,
+  protected  _display: {
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
+
     style: Class_LinkStyle[],
     attributes: Class_LinkAttribute
+
     position_x_value?: number // optional var used when value label is dragged (if label doesn't follow link path)
     position_y_value?: number // optional var used when value label is dragged (if label doesn't follow link path)
     position_offset_value?: number // optional var used when value label is dragged (if label follow link path)
-
     position_x_name?: number // optional var used when name label is dragged (if label doesn't follow link path)
     position_y_name?: number // optional var used when name label is dragged (if label doesn't follow link path)
     position_offset_name?: number // optional var used when name label is dragged (if label follow link path)
+    position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
+    position_offset_label?: number // optional var used when label is dragged (if label follow link path)
   }
 
-  public parallel_curve: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement> | undefined
+  public parallel_curve: Class_LinkElement | undefined
 
-  public sibling: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement> | undefined
+  public sibling: Class_LinkElement | undefined
 
   // Visibility memorized - source & target
   protected _source_visibility_fingerprint: string
@@ -270,33 +254,33 @@ export abstract class ClassTemplate_LinkElement
   protected _is_not_null: boolean | undefined = undefined
 
   // PRIVATE ATTRIBUTES =================================================================
-  private _link_shape : LinkDrawShape<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
-  protected _link_control_points : LinkControlPoints<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
-  protected _link_draw_label : LinkDrawLabel<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
-  protected _link_draw_value : LinkDrawValue<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
-  public _link_tooltip : LinkTooltip<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>
+  private _link_shape : LinkDrawShape
+  protected _link_control_points : LinkControlPoints
+  protected _link_draw_label : LinkDrawLabel
+  protected _link_draw_value : LinkDrawValue
+  public _link_tooltip : LinkTooltip
 
   /**
   * Node from which link starts
   * @private
-  * @type {Type_GenericNodeElement}
-  * @memberof ClassTemplate_LinkElement
+  * @type {Class_NodeElement}
+  * @memberof Class_LinkElement
   */
-  private _source: Type_GenericNodeElement
+  private _source: Class_NodeElement
 
   /**
    * Node to which link arrives
    * @private
-   * @type {Type_GenericNodeElement}
-   * @memberof ClassTemplate_LinkElement
+   * @type {Class_NodeElement}
+   * @memberof Class_LinkElement
    */
-  private _target: Type_GenericNodeElement
+  private _target: Class_NodeElement
 
   /**
    * Value of link
    * @private
    * @type {Class_LinkValueTree | Class_LinkValue}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private _values: Class_LinkValueTree | Class_LinkValue
 
@@ -304,7 +288,7 @@ export abstract class ClassTemplate_LinkElement
    * d3 shape for this link arrow
    * @private
    * @type {(string | undefined)}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private _arrow_shape: string | undefined
 
@@ -315,7 +299,7 @@ export abstract class ClassTemplate_LinkElement
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
    *
    * @private
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private _scaleValueToPx = d3.scaleLinear()
     .domain([0, 1])
@@ -324,27 +308,27 @@ export abstract class ClassTemplate_LinkElement
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of ClassTemplate_LinkElement.
+   * Creates an instance of Class_LinkElement.
    * @param {string} id
-   * @param {Type_GenericDrawingArea} drawing_area
-   * @memberof ClassTemplate_LinkElement
+   * @param {Class_DrawingArea} drawing_area
+   * @memberof Class_LinkElement
    */
   constructor(
     id: string,
-    source: Type_GenericNodeElement,
-    target: Type_GenericNodeElement,
-    drawing_area: Type_GenericDrawingArea,
+    source: Class_NodeElement,
+    target: Class_NodeElement,
+    drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super(id, menu_config, 'g_elements_sankey')
+    super(id, drawing_area, drawing_area.sankey, menu_config, 'g_elements_sankey')
 
-    this._link_control_points = new LinkControlPoints<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>(this,drawing_area)
+    this._link_control_points = new LinkControlPoints(this,drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()
-    this._link_shape = new LinkDrawShape<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>(this,this._link_control_points)
-    this._link_draw_label = new LinkDrawLabel<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>(this,this._link_control_points)
-    this._link_draw_value = new LinkDrawValue<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>(this,this._link_control_points)
-    this._link_tooltip = new LinkTooltip<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>(this)
+    this._link_shape = new LinkDrawShape(this,this._link_control_points)
+    this._link_draw_label = new LinkDrawLabel(this,this._link_control_points)
+    this._link_draw_value = new LinkDrawValue(this,this._link_control_points)
+    this._link_tooltip = new LinkTooltip(this)
 
     // Values
     this._values = this.createLinkValue(this)
@@ -359,19 +343,46 @@ export abstract class ClassTemplate_LinkElement
     this._target_visibility_fingerprint = target.visibility_fingerprint
 
     drawing_area.list_g_element.push(this)
+
+    // Display
+    this._display = {
+      position_starting: {
+        x: 0,
+        y: 0,
+        u: 0,
+        v: 0
+      },
+      position_ending: {
+        x: 0,
+        y: 0,
+        u: 0,
+        v: 0
+      },
+      style: [drawing_area.sankey.default_link_style as Class_LinkStyle],
+      attributes: new Class_LinkAttribute()
+    }
+    // Link with style
+    this._display.style[0].addReference(this)
+    this.source.addOutputLink(this)
+    this.target.addInputLink(this)// Target
+    // Instanciate display on svg
+    if (!this.sankey.drawing_area.bypass_redraws) {
+      this._link_control_points.computeControlPoints()
+    }
+    this.draw()
   }
 
   public createLinkValue(
-    parent: Class_LinkValueTree | ClassAbstract_LinkElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
+    parent: Class_LinkValueTree | ClassAbstract_LinkElement
   ) {
-    return new Class_LinkValue(parent as Type_AnyLinkElement)
+    return new Class_LinkValue(parent as Class_LinkElement)
   }
 
   // CLEANING ===========================================================================
 
   /**
    * Define deletion behavior
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   protected cleanForDeletion() {
     if (this._source !== this._target) {
@@ -395,10 +406,10 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Copy attributes from a given link
    *
-   * @param {ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>} link_to_copy
-   * @memberof ClassTemplate_LinkElement
+   * @param {Class_LinkElement} link_to_copy
+   * @memberof Class_LinkElement
    */
-  public copyAttrFrom(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+  public copyAttrFrom(_: Class_LinkElement) {
     super._copyFrom(_)
     // Update style
     this._display.style = _._display.style
@@ -415,24 +426,24 @@ export abstract class ClassTemplate_LinkElement
     this._display.position_y_name = _._display.position_y_name
     this._display.position_offset_name = _._display.position_offset_name
     // Tooltips
-    this._link_tooltip.tooltip_text = this._link_tooltip.tooltip_text
+    this._link_tooltip.tooltip_text = _._link_tooltip.tooltip_text
   }
 
-  protected _copyFrom(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+  protected _copyFrom(_: Class_LinkElement) {
     // Source relations
     if (this._source.id !== _._source.id) {
-      let source = this._display.sankey.nodes_dict[_._source.id] as Type_GenericNodeElement
+      let source = this.sankey.nodes_dict[_._source.id] as Class_NodeElement
       if (source === undefined) {
-        source = this._display.sankey.addNewNode(_._source.id, _._source.name) as Type_GenericNodeElement
+        source = this.sankey.addNewNode(_._source.id, _._source.name) as Class_NodeElement
         // source.copyFrom(_._source)
       }
       this.source = source
     }
     // target relations
     if (this._target.id !== _._target.id) {
-      let target = this._display.sankey.nodes_dict[_._target.id] as Type_GenericNodeElement
+      let target = this.sankey.nodes_dict[_._target.id] as Class_NodeElement
       if (target === undefined) {
-        target = this._display.sankey.addNewNode(_._target.id, _._target.name) as Type_GenericNodeElement
+        target = this.sankey.addNewNode(_._target.id, _._target.name) as Class_NodeElement
         // target.copyFrom(_._target)
       }
       this.target = target
@@ -455,7 +466,7 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
-  public copyValues(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+  public copyValues(_: Class_LinkElement) {
     // Values
     if (_._values instanceof Class_LinkValue) {
       this._values = this.createLinkValue(this)
@@ -470,7 +481,7 @@ export abstract class ClassTemplate_LinkElement
     }
   }
 
-  public addValues(_: ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericNodeElement>) {
+  public addValues(_: Class_LinkElement) {
     // Values
     if (_._values instanceof Class_LinkValue) {
       //this._values = this.createLinkValue(this)
@@ -522,7 +533,7 @@ export abstract class ClassTemplate_LinkElement
    * @protected
    * @param {Type_JSON} json_object
    * @param {Type_JSON} [kwargs]
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   protected _fromJSON(
     json_object: Type_JSON,
@@ -602,7 +613,7 @@ export abstract class ClassTemplate_LinkElement
 
   /**
    * Reset all attributes as defined by style
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public resetAttributes() {
     this._display.attributes = new Class_LinkAttribute()
@@ -612,7 +623,7 @@ export abstract class ClassTemplate_LinkElement
 
   /**
    * Reverse source with target
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public inverse() {
     // Save prev source & target + remove link/nodes relationships
@@ -648,7 +659,7 @@ export abstract class ClassTemplate_LinkElement
    * Check if given tag is referenced by link's data
    * @param {Class_Tag} tag
    * @return {*}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public hasGivenTag(tag: Class_Tag) {
     const value = this.value
@@ -664,7 +675,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Add and cross-reference a Tag with a link
    * @param {Class_Tag} tag
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public addTag(tag: Class_Tag) {
     const value = this.value
@@ -678,7 +689,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Remove given tag and cross-reference from link
    * @param {Class_Tag} tag
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public removeTag(tag: Class_Tag) {
     const value = this.value
@@ -862,7 +873,7 @@ export abstract class ClassTemplate_LinkElement
    * Return maximum value possible for this link
    *
    * @return {*}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public getMaxValue() {
     return this._values.getMaxValue()
@@ -893,7 +904,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Set up element on d3 svg area
    * @private
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   protected _draw() {
     // Heritance
@@ -928,7 +939,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Draw arrow shape on d3
    * @protected
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   protected _drawArrow() {
     // Speed-up computing
@@ -957,7 +968,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Draw all d3 elements on link d3 selection
    * @protected
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   protected _drawElements() {
     this._link_shape.drawPath()
@@ -969,7 +980,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Put d3 elements in correct display order
    * @protected
-   * @memberof ClassTemplate_NodeElement
+   * @memberof Class_NodeElement
    */
   protected _orderD3Elements() {
     this.d3_selection?.selectAll('.link_shape').raise()
@@ -1086,7 +1097,7 @@ export abstract class ClassTemplate_LinkElement
  *
  * @protected
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
- * @memberof ClassTemplate_LinkElement
+ * @memberof Class_LinkElement
  */
   protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
@@ -1153,7 +1164,7 @@ export abstract class ClassTemplate_LinkElement
    *
    * @param {keyof Class_NodeStyle} k
    * @return {*}
-   * @memberof ClassTemplate_NodeElement
+   * @memberof Class_NodeElement
    */
   public getStyleWithAttr(k: keyof Class_LinkStyle) {
     return this._display.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_link_style as Class_LinkStyle
@@ -1164,7 +1175,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Get name of link
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get name() {
     return defaultLinkName(this._source, this._target)
@@ -1189,17 +1200,17 @@ export abstract class ClassTemplate_LinkElement
 
   /**
    * Get source node
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
-  public get source(): Type_GenericNodeElement {
+  public get source(): Class_NodeElement {
     return this._source
   }
 
   /**
    * set source node
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
-  public set source(_: Type_GenericNodeElement) {
+  public set source(_: Class_NodeElement) {
     if (this.source !== _) {
       // Memorize old source
       const old_source = this._source
@@ -1221,7 +1232,7 @@ export abstract class ClassTemplate_LinkElement
    * Get starting node side for link
    * @readonly
    * @type {Type_Side}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get source_side(): Type_Side {
     // Failsafe : because of constructor
@@ -1262,17 +1273,17 @@ export abstract class ClassTemplate_LinkElement
 
   /**
    * get destination node
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
-  public get target(): Type_GenericNodeElement {
+  public get target(): Class_NodeElement {
     return this._target
   }
 
   /**
    * Set destination node
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
-  public set target(_: Type_GenericNodeElement) {
+  public set target(_: Class_NodeElement) {
     if (this.target !== _) {
       // Memorize old target for swapping
       const old_target = this._target
@@ -1293,7 +1304,7 @@ export abstract class ClassTemplate_LinkElement
    * Get starting node side for link
    * @readonly
    * @type {Type_Side}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get target_side(): Type_Side {
     // Failsafe : because of constructor
@@ -1344,7 +1355,7 @@ export abstract class ClassTemplate_LinkElement
    * Either search correct current value with data_taggs,
    * or return directly the value when there is no data_taggs
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get value() {
     if (this._values instanceof Class_LinkValue)
@@ -1356,7 +1367,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Either search correct current value with data_taggs,
    *  or return directly the value when there is no data_taggs
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get valueResult() {
     if (this.drawing_area.type_data === 'structure')
@@ -1371,7 +1382,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Either set correct current value with data_taggs,
    *  or set directly the value when there is no data_taggs
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public set valueResult(_: number | null) {
     const value = this.value
@@ -1385,7 +1396,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Either search correct current value with data_taggs,
    *  or return directly the value when there is no data_taggs
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get valueData() {
     const value = this.value
@@ -1397,7 +1408,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Either set correct current value with data_taggs,
    *  or set directly the value when there is no data_taggs
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public set valueData(_: number | null) {
     const value = this.value
@@ -1413,7 +1424,7 @@ export abstract class ClassTemplate_LinkElement
    * Either search correct current value with data_taggs,
    *  or return directly the value when there is no data_taggs
    * @return string
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get text_value() {
     const value = this.value
@@ -1425,7 +1436,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Either set correct current value with data_taggs,
    *  or set directly the value when there is no data_taggs
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public set text_value(_: string) {
     const value = this.value
@@ -1500,7 +1511,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Dict as [id: tag] of tags related to link
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get flux_tags_dict() {
     const value = this.value
@@ -1512,7 +1523,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Array of tags related to link
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get flux_tags_list() {
     const value = this.value
@@ -1524,7 +1535,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Dict as [id: tag group] of tag groups related to link
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get flux_taggs_dict() {
     const value = this.value
@@ -1536,7 +1547,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Array of tag groups related to link
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get flux_taggs_list() {
     return Object.values(this.flux_taggs_dict)
@@ -1569,7 +1580,7 @@ export abstract class ClassTemplate_LinkElement
   /**
    * Get thickness of stroke shape
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get thickness() {
     // Get link value for current dataTaggs selected
@@ -1637,7 +1648,7 @@ export abstract class ClassTemplate_LinkElement
     this.redrawNodesSourceTarget()
   }
 
-// ------------ Decorator about shape attribute -------------
+  // ------------ Decorator about shape attribute -------------
   private getStyleProperty(propertyName: StyleProperty) {
     // Vérifier d'abord dans les attributs
     if (this._display.attributes[propertyName] !== undefined) {
@@ -1645,13 +1656,13 @@ export abstract class ClassTemplate_LinkElement
     }
     
     // Ensuite dans le style
-    const valueOfStyle = this.getStyleWithAttr(propertyName);
+    const valueOfStyle = this.getStyleWithAttr(propertyName)
     if (valueOfStyle[propertyName] !== undefined) {
-      return valueOfStyle[propertyName];
+      return valueOfStyle[propertyName]
     }
     
     // Enfin la valeur par défaut
-    return LINKS_ATTRIBUTES_CONFIG[propertyName].default;
+    return LINKS_ATTRIBUTES_CONFIG[propertyName].default
   }
   
   public get shape_orientation() { return this.getStyleProperty('shape_orientation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_orientation']['type']> }
@@ -2010,7 +2021,7 @@ export abstract class ClassTemplate_LinkElement
    * - check for each tag group if the flow has at least one selected tag that isn't filtered out
    * else if the link doesn't have tag it isn't filtered by them
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get are_related_flux_tags_selected(): boolean {
     if (
@@ -2049,7 +2060,7 @@ export abstract class ClassTemplate_LinkElement
    * If link value for current dataTagg parameter is different of 0 then pass the check,
    *
    * @readonly
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   public get is_not_null(): boolean {
     if (
@@ -2080,7 +2091,7 @@ export abstract class ClassTemplate_LinkElement
    *
    * @private
    * @return {*}
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   private get are_source_and_target_displayed(): boolean {
     if (
@@ -2113,7 +2124,7 @@ export abstract class ClassTemplate_LinkElement
    *   if not don't display the link
    * @readonly
    * @private
-   * @memberof ClassTemplate_LinkElement
+   * @memberof Class_LinkElement
    */
   protected get is_value_above_threshold(): boolean {
     if (this.drawing_area.filter_link_value == 0) {

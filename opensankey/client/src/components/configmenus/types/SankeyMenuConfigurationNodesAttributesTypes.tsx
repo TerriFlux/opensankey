@@ -25,11 +25,12 @@
 // ==================================================================================================
 
 import { TFunction } from 'i18next'
-import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
+import { Type_AdditionalMenus } from '../../../types/Types'
 import { MutableRefObject } from 'react'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FCType_MenuConfigurationNodeStyle = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   menu_for_style: boolean,
   additional_menus:MutableRefObject<Type_AdditionalMenus>
 }

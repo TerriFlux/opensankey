@@ -384,9 +384,9 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       Object.values(new_data.drawing_area.sankey.nodes_dict)
         .filter(node => node.display.position.type !== 'relative')
         .forEach(node => {
-            node.resetPositionAttribute('dy')
-            node.applyPosition()
-          }
+          node.resetPositionAttribute('dy')
+          node.applyPosition()
+        }
         )
       new_data.drawing_area.nodePositioning.computeParametrization()
     }}>

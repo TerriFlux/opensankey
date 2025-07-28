@@ -27,7 +27,9 @@
 import { ReactNode } from 'react'
 import { Class_LinkStyle } from '../../../Elements/LinkAttributes'
 import { Class_NodeStyle } from '../../../Elements/NodeAttributes'
-import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
+import { Class_LinkElement } from '../../../Elements/Link'
+import { Class_NodeElement } from '../../../Elements/Node'
 
 
 export type possibleDecoratorName = 'value_label_horiz'
@@ -79,30 +81,30 @@ export type UnitAttributeType = {
 }
 
 export type FCType_MenuUnit = {
-    new_data: Type_GenericApplicationData,
-    elements: Class_LinkStyle[] | Type_GenericLinkElement[] | Type_GenericNodeElement[] | Class_NodeStyle[],
-    selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
+    new_data: Class_ApplicationData,
+    elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
+    selectedElements: Class_LinkElement[] | Class_NodeElement[],
     refreshParentComponent: () => void,
     dict_decorator_name: UnitAttributeType
 }
 
 export type FCType_SankeyMenuLabelComponent = {
-    new_data: Type_GenericApplicationData,
-    elements: Class_LinkStyle[] | Type_GenericLinkElement[] | Type_GenericNodeElement[] | Class_NodeStyle[],
-    selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
+    new_data: Class_ApplicationData,
+    elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
+    selectedElements: Class_LinkElement[] | Class_NodeElement[],
     refreshParentComponent: () => void,
     dict_decorator_name: labelAttributeType
 }
 
 export type FCType_SankeyMenuValueLabelComponent = {
-    new_data: Type_GenericApplicationData,
-    elements: Class_LinkStyle[] | Type_GenericLinkElement[] | Type_GenericNodeElement[] | Class_NodeStyle[],
-    selectedElements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
+    new_data: Class_ApplicationData,
+    elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
+    selectedElements: Class_LinkElement[] | Class_NodeElement[],
     refreshParentComponent: () => void,
     dict_decorator_name: labelValueAttribute
 }
 export type FCType_WrapperBoxSubSectionMenu = {
-    new_data: Type_GenericApplicationData,
+    new_data: Class_ApplicationData,
     title: string,
     collapse?: boolean,
     children: JSX.Element

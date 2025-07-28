@@ -40,10 +40,6 @@ import {
 } from '@chakra-ui/react'
 
 import type { Type_Side } from '../../Elements/LinkAttributes'
-import type {
-  Type_GenericNodeElement,
-  Type_GenericLinkElement
-} from '../../types/Types'
 import type { FCType_SankeyMenuConfigurationNodesIO } from './types/SankeyMenuConfigurationNodesIOTypes'
 
 /*************************************************************************************************/
@@ -51,6 +47,8 @@ import type { FCType_SankeyMenuConfigurationNodesIO } from './types/SankeyMenuCo
 import { OSTooltip } from '../../types/Utils'
 import { SankeyNodeSelection } from './SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
+import { Class_LinkElement } from '../../Elements/Link'
+import { Class_NodeElement } from '../../Elements/Node'
 
 /*************************************************************************************************/
 
@@ -74,7 +72,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
 
   // Nodes to modify --------------------------------------------------------------------
 
-  let selected_nodes: Type_GenericNodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
@@ -136,7 +134,7 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
 
   // Set list of links to reorganize ----------------------------------------------------
 
-  const links_to_reorganize: { [_ in Type_Side]: Type_GenericLinkElement[] } = {
+  const links_to_reorganize: { [_ in Type_Side]: Class_LinkElement[] } = {
     'right': [], 'left': [], 'top': [], 'bottom': []
   }
   if (unique_node_selected && direction_selected && side_selected) {
@@ -208,10 +206,10 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   /**
    * Move link order before node target
    *
-   * @param {Type_GenericLinkElement} link
-   * @param {Type_GenericLinkElement} link_target
+   * @param {Class_LinkElement} link
+   * @param {Class_LinkElement} link_target
    */
-  const moveLinkBefore = (link: Type_GenericLinkElement, link_target: Type_GenericLinkElement) => {
+  const moveLinkBefore = (link: Class_LinkElement, link_target: Class_LinkElement) => {
     // Save old value that can be used in undo
     const list_old_io: string[] = unique_node_selected?.links_order_visible.map(l => l.id) ?? []
     // Function undo
@@ -238,10 +236,10 @@ export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenu
   /**
    * Move link order after node target
    *
-   * @param {Type_GenericLinkElement} link
-   * @param {Type_GenericLinkElement} link_target
+   * @param {Class_LinkElement} link
+   * @param {Class_LinkElement} link_target
    */
-  const moveLinkAfter = (link: Type_GenericLinkElement, link_target: Type_GenericLinkElement) => {
+  const moveLinkAfter = (link: Class_LinkElement, link_target: Class_LinkElement) => {
     // Save old value that can be used in undo
     const list_old_io: string[] = unique_node_selected?.links_order_visible.map(l => l.id) ?? []
     // Function undo

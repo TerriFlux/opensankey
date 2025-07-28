@@ -28,24 +28,18 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 
 // Local modules
-import { ClassTemplate_NodeElement } from './Node'
-import { ClassAbstract_DrawingArea, ClassAbstract_Sankey } from '../types/Abstract'
-import { ClassTemplate_LinkElement } from './Link'
+import { Class_NodeElement } from './Node'
 import { Type_TextHPos, Type_TextVPos } from './NodeAttributes'
 import { label_margin, default_selected_stroke_width } from './Node'
 
 /**
  * Class that handles all drawing and rendering operations for NodeElement name labels
  */
-export class NodeDrawNameLabel<
-  Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-  Type_GenericSankey extends ClassAbstract_Sankey,
-  Type_GenericLinkElement extends ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
-> {
+export class NodeDrawNameLabel {
 
-  private _node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  private _node: Class_NodeElement
 
-  constructor(node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  constructor(node: Class_NodeElement) {
     this._node = node
   }
 
@@ -364,7 +358,7 @@ export class NodeDrawNameLabel<
     }
     
     // Save undo
-    this._node.display.drawing_area.application_data.history.saveUndo(inv_dragTextStart)
+    this._node.drawing_area.application_data.history.saveUndo(inv_dragTextStart)
   }
 
   /**
@@ -409,6 +403,6 @@ export class NodeDrawNameLabel<
     }
     
     // Save redo
-    this._node.display.drawing_area.application_data.history.saveRedo(_dragTextEnd)
+    this._node.drawing_area.application_data.history.saveRedo(_dragTextEnd)
   }
 }

@@ -24,8 +24,9 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_GenericApplicationData } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
+
 
 export type FType_ModalResolutionPNG = (
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ) => JSX.Element

@@ -26,16 +26,17 @@
 
 import { MutableRefObject } from 'react'
 import { FType_ProcessFunctions } from '../../../types/FunctionTypes'
-import { Type_GenericApplicationData, Type_AdditionalMenus } from '../../../types/Types'
+import { Type_AdditionalMenus } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 
 export type FCtype_ModalTemplate = {
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
   additionalMenu: MutableRefObject<Type_AdditionalMenus>
 }
 
 export type FCType_ModalTuto = {
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
   processFunctions: FType_ProcessFunctions
   show_tuto: boolean
   set_show_tuto: (b: boolean) => void

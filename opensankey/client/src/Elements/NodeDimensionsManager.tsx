@@ -25,9 +25,7 @@
 // ==================================================================================================
 
 // Local modules
-import { ClassTemplate_NodeElement } from './Node'
-import { ClassAbstract_DrawingArea, ClassAbstract_Sankey } from '../types/Abstract'
-import { ClassTemplate_LinkElement } from './Link'
+import { Class_NodeElement } from './Node'
 import { 
   Class_LevelTag, 
   Class_LevelTagGroup 
@@ -44,15 +42,11 @@ import {
 /**
  * Class that handles all dimension management operations for NodeElement
  */
-export class NodeDimensionsManager<
-  Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-  Type_GenericSankey extends ClassAbstract_Sankey,
-  Type_GenericLinkElement extends ClassTemplate_LinkElement<Type_GenericDrawingArea, Type_GenericSankey, ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>>
-> {
+export class NodeDimensionsManager{
 
-  private _node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>
+  private _node: Class_NodeElement
 
-  constructor(node: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  constructor(node: Class_NodeElement) {
     this._node = node
   }
 
@@ -70,7 +64,7 @@ export class NodeDimensionsManager<
 
   // COPY METHODS =======================================================================
 
-  public copyDimensionsFrom(node_to_copy: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>) {
+  public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
     // Create a dict of all existing dimensions in this related sankey
     const all_existing_dim: { [_: string]: Class_NodeDimension } = {}
     this.level_taggs_list
@@ -139,12 +133,12 @@ export class NodeDimensionsManager<
             const parent_tag = level_tagg.tags_dict[dim_to_copy.parent_level_tag.id]
             if (parent_tag !== undefined) {
               // Get possible childrens
-              const children: ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>[] = []
+              const children: Class_NodeElement[] = []
               dim_to_copy.children
                 .forEach(child_to_copy => {
                   const child = this._node.sankey.nodes_dict[child_to_copy.id]
                   if (child !== undefined)
-                    children.push(child as ClassTemplate_NodeElement<Type_GenericDrawingArea, Type_GenericSankey, Type_GenericLinkElement>)
+                    children.push(child as Class_NodeElement)
                 })
               // Get possible children tags
               const tag = level_tagg.tags_dict[dim_to_copy.child_level_tag.id]

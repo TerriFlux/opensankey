@@ -70,7 +70,6 @@ import { useTour } from '@reactour/tour'
 import { FCType_OpenSankeySaveButton } from './types/SankeyMenuTopTypes'
 import { FCType_MenuTop } from '../../types/FunctionTypes'
 import { OSTooltip, Type_JSON } from '../../types/Utils'
-import { Type_GenericApplicationData } from '../../types/Types'
 
 import { setDiagram } from './SankeyMenuBanner'
 import { clickSavePDF } from './SankeyExports'
@@ -79,6 +78,7 @@ import { ModalTuto } from './SankeyTutorials'
 import {
   decompressUploadedFileUniversal,
 } from '../dialogs/UniversalJSONCompression'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /*************************************************************************************************/
 
@@ -116,7 +116,7 @@ export const GoToUserDoc = () => {
  * Define cache saving function component,
  * not present in static
  * @param {*} {
- *   Type_GenericApplicationData
+ *   Class_ApplicationData
  * }
  * @return {*}
  */
@@ -882,10 +882,10 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
 /**
  * Button to launch tour of application
  *
- * @param {Type_GenericApplicationData} new_data
+ * @param {Class_ApplicationData} new_data
  * @return {*}  {JSX.Element}
  */
-export const ButtonLaunchGuide: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+export const ButtonLaunchGuide: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { setIsOpen } = useTour()
   return <OSTooltip
     label={new_data.t('guide.tooltip.guide')}

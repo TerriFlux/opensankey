@@ -30,7 +30,7 @@ import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } 
 // Local imports
 import { Type_MacroTagGroup } from '../types/Utils'
 import { Type_AdditionalMenus } from './Types'
-import { ValueOptionType } from '../Elements/Class_LinkValueTree'
+import { ValueOptionType } from '../Elements/LinkValues'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -62,6 +62,10 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_spreadsheet: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
+  ref_setter_show_menu_node_icon: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_modal_import_icons: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  ref_setter_show_menu_zdt: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
 // CLASS MENU CONFIG *******************************************************************/
@@ -473,8 +477,25 @@ export class Class_MenuConfig {
       // Other modals
       ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_templates_lib: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_spreadsheet: useRef<Dispatch<SetStateAction<boolean>>>(() => null)
+      ref_setter_show_spreadsheet: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+
+      ref_setter_show_menu_node_icon: useRef(() => null),
+      ref_setter_show_modal_import_icons: useRef(() => null),
+      ref_setter_show_menu_zdt: useRef(() => null),
     }
+
+    this._ref_to_menu_config_container_updater = useRef(() => null)
+    this._ref_to_menu_context_container_updater = useRef(() => null)
+
+    this._r_setter_editor_content_fo_node = useRef(() => null)
+    this._r_editor_content_fo_node_updater = useRef(() => null)
+    this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
+    this._ref_to_menu_config_link_data_text_updater = useRef(() => null)
+    this._ref_to_menu_config_link_scientific_precision_updater = useRef(() => null)
+
+    this._ref_to_menu_config_node_icon_updater = useRef(() => null)
+
+    this._ref_to_updater_modal_apply_layout_plus = useRef(() => null)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -503,6 +524,16 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
     this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
+  }
+
+  public openConfigMenuElementsContainers() {
+    this.openConfigMenu()
+    // Leave enough time for menus to open
+    setTimeout(() => {
+      this._type_menu_configuration_selected='presentation' as keyTypeConfig
+      this._elements_configurable_selected.presentation=['object' as keyTypeElements]
+      this._ref_to_menu_config_updater.current()
+    }, 200)
   }
 
   /**
@@ -739,6 +770,7 @@ export class Class_MenuConfig {
         _this._ref_to_menu_config_links_data_updater.current()
         _this._ref_to_spreadsheet.current()
         _this._ref_to_menu_contextual_config_links_data_updater.current()
+        _this._ref_to_menu_config_link_data_text_updater.current()
       }
     )
   }
@@ -1284,6 +1316,19 @@ export class Class_MenuConfig {
   }
   public get ref_to_GraphElementsOrdoner_updater(): MutableRefObject<() => void> { return this._ref_to_GraphElementsOrdoner_updater }
 
+  public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
+
+  public get ref_to_updater_modal_apply_layout_plus(): MutableRefObject<(() => void)> { return this._ref_to_updater_modal_apply_layout_plus }
+  
+  public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> { return this._r_editor_content_fo_node_updater }
+
+  public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
+
+  public get ref_to_menu_config_link_data_text_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_link_data_text_updater }
+  public get ref_to_menu_config_link_scientific_precision_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_link_scientific_precision_updater }
+  public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
+  public get ref_to_menu_context_container_updater(){return this._ref_to_menu_context_container_updater}
+  public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
   /**
    * Order of buttons in top menu
    *
@@ -1305,5 +1350,36 @@ export class Class_MenuConfig {
     return this._additionalMenus
   }
 
+  /* ========================================
+  Updater of component for containers related menus
+  ========================================*/
+  private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
+  private _ref_to_menu_context_container_updater: MutableRefObject<(() => void)>
+  private _ref_to_menu_config_node_name_label_bg_updater: MutableRefObject<(() => void)>
+  private _ref_to_menu_config_link_data_text_updater: MutableRefObject<(() => void)>
+  private _ref_to_menu_config_link_scientific_precision_updater: MutableRefObject<(() => void)>
+
+  // Updater of config node icon
+  private _ref_to_menu_config_node_icon_updater: MutableRefObject<(() => void)>
+
+  // config ref related to node FO elements
+  private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
+  private _r_editor_content_fo_node_updater: MutableRefObject<(() => void)>
+  private _ref_to_updater_modal_apply_layout_plus: MutableRefObject<(() => void)>
+
+  /**
+ * Update component with timeOut to avoid multiple refreshs
+ * @memberof Class_MenuConfig
+ */
+  public updateComponentRelatedToContainers() {
+    this._add_waiting_process(
+      'updateComponentRelatedToContainers',
+      (_this: Class_MenuConfig) => {
+        _this._ref_to_menu_config_container_updater.current()
+        _this._ref_to_menu_context_container_updater.current()
+        _this._ref_to_GraphElementsOrdoner_updater.current()
+      }
+    )
+  }
 }
 
