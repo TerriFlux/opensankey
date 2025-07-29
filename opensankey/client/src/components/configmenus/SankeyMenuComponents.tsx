@@ -246,17 +246,17 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
     get_label_horiz = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_horiz']) ?? NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
     get_label_vert = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_vert']) ?? NODES_ATTRIBUTES_CONFIG.value_label_vert.default
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_font_size = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_size']) ?? NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_color = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_color']) ?? NODES_ATTRIBUTES_CONFIG.value_label_color.default
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_font_family =getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_family']) ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_bold = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_bold']) ?? NODES_ATTRIBUTES_CONFIG.value_label_bold.default
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_italic = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_italic']) ?? NODES_ATTRIBUTES_CONFIG.value_label_italic.default
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_uppercase = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_uppercase']) ?? NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
   }
 
@@ -597,9 +597,9 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
     const element_ref = elements[0]
     // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_custom_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_custom_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default)
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_nb_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default)
   }
 
@@ -841,11 +841,11 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
     const element_ref = elements[0]
     // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_unit_visible = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_visible']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default)
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_unit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit.default)
-    ///@ts-expect-error xxx
+    //@ts-expect-error xxx
     get_label_unit_factor = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_factor']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default)
   }
 

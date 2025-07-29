@@ -28,7 +28,6 @@
 // Nothing ...
 
 // Local imports
-import { ClassAbstract_ApplicationHistory } from './Abstract'
 import { Class_MenuConfig } from './MenuConfig'
 
 // SPECIFIC CONSTANTS ******************************************************************/
@@ -42,7 +41,7 @@ export const history_size: number = 10
  *
  * @class Class_ApplicationData
  */
-export class Class_ApplicationHistory extends ClassAbstract_ApplicationHistory {
+export class Class_ApplicationHistory {
 
   // PROTECTED ATTRIBUTES ==============================================================
 
@@ -109,7 +108,6 @@ export class Class_ApplicationHistory extends ClassAbstract_ApplicationHistory {
    * @param application_data
    */
   constructor(menu_config: Class_MenuConfig) {
-    super()
     this._menu_config = menu_config
     // Init transition table
     for (let i=0; i<history_size; i=i+1) {

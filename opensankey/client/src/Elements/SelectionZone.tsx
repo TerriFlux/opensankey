@@ -36,7 +36,7 @@ import {
 import { Type_ElementPosition } from '../types/Utils'
 import { default_element_position } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { ClassAbstract_NodeElement } from '../types/AbstractNode'
+import { Class_NodeElement } from './Node'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -103,7 +103,7 @@ export class Class_ZoneSelection extends ClassTemplate_Element {
    * @memberof Class_ZoneSelection
    */
   public selectElementsInside() {
-    const newly_selected:ClassAbstract_NodeElement[]=[]
+    const newly_selected:Class_NodeElement[]=[]
     this.drawing_area.sankey.visible_nodes_list
       .filter(n => {
         // Check if node is horizontally in selection zone

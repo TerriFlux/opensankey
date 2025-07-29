@@ -53,10 +53,6 @@ import {
 import { ClassTemplate_GhostLinkElement } from '../Elements/LinkGhostElement'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
-import {
-  ClassAbstract_DrawingArea,
-  // ClassAbstract_ApplicationData,
-} from '../types/Abstract'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
 import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
 import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../Elements/LinkAttributes'
@@ -102,7 +98,7 @@ const default_DA_marging = 50
  *
  * @class Class_DrawingArea
  */
-export class Class_DrawingArea extends ClassAbstract_DrawingArea {
+export class Class_DrawingArea {
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, this.application_data.menu_configuration, id)
     return sankey
@@ -356,7 +352,6 @@ export class Class_DrawingArea extends ClassAbstract_DrawingArea {
     application_data: Class_ApplicationData,
     id: string = default_main_sankey_id
   ) {
-    super()
     this.application_data = application_data
     // Init attributes
     this._height = this.window_fitting_height

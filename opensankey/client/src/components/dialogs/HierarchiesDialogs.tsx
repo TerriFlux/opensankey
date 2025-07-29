@@ -30,7 +30,8 @@ import {
 // ==================================================================================================
 import React from 'react'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
-import { Class_LevelTagGroup, Class_LevelTag } from '../../types/Tag'
+import { Class_LevelTag } from '../../types/Tag'
+import { Class_LevelTagGroup } from '../../types/TagGroup'
 import { aggregate, disaggregate, aggregationExpansion, disaggregationExpansion, EXPANSION_SUFFIXES, contract } from './Hierarchies'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_LinkElement } from '../../Elements/Link'

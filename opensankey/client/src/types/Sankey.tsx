@@ -42,13 +42,14 @@ import {
 } from '../Elements/Node'
 import { Class_NodeAttribute, Class_NodeStyle,Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
 import {
-  Class_NodeTagGroup,
-  Class_FluxTagGroup,
   Class_DataTag,
-  Class_DataTagGroup,
-  Class_LevelTagGroup,
   Class_Tag,
 } from '../types/Tag'
+import {
+  Class_NodeTagGroup,
+  Class_FluxTagGroup, Class_DataTagGroup,
+  Class_LevelTagGroup
+} from './TagGroup'
 import {
   Type_JSON,
   getJSONFromJSON,
@@ -64,7 +65,6 @@ import {
 } from '../types/Utils'
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
 import { Class_ContainerElement } from '../Elements/TextZone'
-import { ClassAbstract_Sankey } from './Abstract'
 import { Class_DrawingArea } from './DrawingArea'
 
 
@@ -104,7 +104,7 @@ export function get_sync_lists(
  * @export
  * @class Class_Sankey
  */
-export class Class_Sankey extends ClassAbstract_Sankey {
+export class Class_Sankey {
   /**
    * Allows to toggle Sankey visibility
    * @protected
@@ -220,7 +220,6 @@ export class Class_Sankey extends ClassAbstract_Sankey {
     menu_config: Class_MenuConfig,
     id: string = default_main_sankey_id
   ) {
-    super()
     this.drawing_area = drawing_area
     this._menu_config = menu_config
     this._id = id
@@ -1103,13 +1102,13 @@ export class Class_Sankey extends ClassAbstract_Sankey {
           const new_style = this.createNewNodeStyle(id, id, true)
           Object.keys(config).forEach(key => {
             new_style.customisable_attribute[key as Type_customisable_node_style_attr] = true
-            ///@ts-expect-error xxx
+            //@ts-expect-error xxx
             new_style[key] = config[key]
           }
           )
           Object.keys(position).forEach(key => {
             // new_style.customisable_attribute[key as Type_customisable_node_style_attr] = true
-            ///@ts-expect-error xxx
+            //@ts-expect-error xxx
             new_style.position[key] = position[key]
           }
           )
@@ -1174,7 +1173,7 @@ export class Class_Sankey extends ClassAbstract_Sankey {
           const new_style = this.createNewLinkStyle(id, id, true)
           Object.keys(config).forEach(key => {
             new_style.customisable_attribute[key as Type_customisable_flow_style_attr] = true
-            ///@ts-expect-error xxx
+            //@ts-expect-error xxx
             new_style[key] = config[key]
           }
           )

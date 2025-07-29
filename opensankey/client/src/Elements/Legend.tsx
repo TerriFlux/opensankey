@@ -882,7 +882,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
   public get stick_to_drawing(): boolean { return this._stick_to_drawing }
   public set stick_to_drawing(_) {
     this._stick_to_drawing = _
-    const da = this.drawing_area as unknown as Class_DrawingArea
+    const da = this.drawing_area
     if (this.stick_to_drawing) {
       this.drawing_area.d3_selection_zoom_area?.select('#grp_legend').remove()
       da.d3_selection_legend = da.d3_selection!.append('g').attr('id', 'grp_legend')

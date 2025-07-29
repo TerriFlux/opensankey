@@ -1,6 +1,5 @@
-import { ClassAbstract_DrawingArea, ClassAbstract_ProtoTag } from '../types/Abstract'
-import { ClassAbstract_LinkValue } from '../types/AbstractLink'
-import type { Class_DataTagGroup, Class_DataTag, Class_Tag, Class_TagGroup } from '../types/Tag'
+import type { Class_DataTag, Class_ProtoTag, Class_Tag } from '../types/Tag'
+import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON } from '../types/Utils'
 import { Class_LinkElement } from './Link'
 
@@ -516,7 +515,7 @@ export type ValueOptionType = 'value' | 'ratio_input' | 'ratio_output' | 'ratio_
  * @export
  * @class Class_LinkValue
  */
-export class Class_LinkValue extends ClassAbstract_LinkValue {
+export class Class_LinkValue {
 
   // PUBLIC ATTRIBUTES ==================================================================
   public parent: Class_LinkValueTree | Class_LinkElement
@@ -556,7 +555,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
         return total_source * multiplier
       } else {
         const data_tags_id = this.data_tags_id
-        const data_tags: ClassAbstract_ProtoTag[] = []
+        const data_tags: Class_ProtoTag[] = []
         this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
         let total_source = 0
         this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueForTags(data_tags)?.valueResult ?? 0)
@@ -574,7 +573,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
         return total_target * multiplier
       } else {
         const data_tags_id = this.data_tags_id
-        const data_tags: ClassAbstract_ProtoTag[] = []
+        const data_tags: Class_ProtoTag[] = []
         this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
         let total_target = 0
         this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueForTags(data_tags)?.valueResult ?? 0)
@@ -648,7 +647,6 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
 
   // CONSTRUCTOR ========================================================================
   constructor(parent: Class_LinkValueTree | Class_LinkElement) {
-    super()
     // Parents / Children relations
     this.parent = parent
     // Id
@@ -781,7 +779,7 @@ export class Class_LinkValue extends ClassAbstract_LinkValue {
     // where 'key_grp_tag' represent the id of a flux tag group
     // &  '[key_tag, ...]' represent the array of id of tag selected
     // for that flux tag group
-    const flux_taggs_dict = ((this.link?.drawing_area as ClassAbstract_DrawingArea).sankey.flux_taggs_dict ?? {})
+    const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
       .filter(([_id_tagg, list]) => {
         if (matching_tags_id[_id_tagg] === undefined) //Sanity check, it is possible that json_object link have ref to tag that fluxTags doesn't have (it can occurs with legecy view)
