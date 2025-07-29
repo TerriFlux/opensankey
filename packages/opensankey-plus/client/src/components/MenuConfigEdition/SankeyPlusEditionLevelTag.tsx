@@ -22,9 +22,10 @@ import {
 
 // Local types
 import { MultiSelect } from 'react-multi-select-component'
-import { Class_LevelTag, Class_LevelTagGroup } from '../../deps/OpenSankey/types/Tag'
+import { Class_LevelTag } from '../../deps/OpenSankey/types/Tag'
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+import { Class_LevelTagGroup } from '../../deps/OpenSankey/types/TagGroup'
 
 export type FCType_SankeyPlusEditionLevelTag = { new_data: Class_ApplicationDataOSP }
 
@@ -290,6 +291,7 @@ export const MenuConfigurationLevelTags: FunctionComponent<FCType_SankeyPlusEdit
               {/* Position custom pour MultiSelect */}
               <Box height='2rem' width='10rem'>
                 <MultiSelect
+                  labelledBy="Select Siblings"
                   hasSelectAll={false}
                   valueRenderer={(entries: Type_MenuSelectionEntry[]) => entries.filter(d => d !== undefined).length ? entries.map(({ label }) => label + ', ') : 'Aucun groupe antagoniste'}
                   options={possible_sibling}

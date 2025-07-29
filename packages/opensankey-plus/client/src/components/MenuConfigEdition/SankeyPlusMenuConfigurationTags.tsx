@@ -24,17 +24,10 @@ import type {
 } from './types/SankeyMenuConfigurationTagsTypes'
 import {
   Class_Tag,
-  Class_TagGroup,
   tag_banner_type,
   Class_LevelTag,
   Class_DataTag,
-  Class_LevelTagGroup,
-  Class_DataTagGroup,
-  Class_NodeTagGroup,
-  Class_FluxTagGroup,
   Class_ProtoTag,
-  Class_ProtoLevelTag,
-  Class_ProtoTagGroup,
 } from '../../deps/OpenSankey/types/Tag'
 
 // Local functions / components
@@ -46,6 +39,7 @@ import {
 
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/LinkValues'
+import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../../deps/OpenSankey/types/TagGroup'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -134,7 +128,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
    */
   const handleAddTagButton = () => {
     // Create new default tag
-    let tag: Class_ProtoTag | Class_ProtoLevelTag
+    let tag: Class_ProtoTag | Class_LevelTag
     const _handleAddTagButton = () => {
       // Create default tag in current tag group
       tag = tags_group_entry.addDefaultTag()
@@ -340,8 +334,6 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
             new_data.drawing_area.sankey.links_dict[l.id].setValuesForDataTags(val_to_restor[0][1], val_to_restor[0][0])
         })
       }
-
-
 
       Object.values(old_val.dict_tag).forEach(tag => {
         const n_tag = clone_tagg.addTag(tag[1], tag[0])

@@ -15,7 +15,8 @@ import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../deps/OpenSa
 
 // Local imports
 import { OSPShowMenuComponentsVarType } from './LegacyTypes'
-import { Class_DataTag, Class_DataTagGroup } from '../deps/OpenSankey/types/Tag'
+import { Class_DataTag } from '../deps/OpenSankey/types/Tag'
+import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 
 
 

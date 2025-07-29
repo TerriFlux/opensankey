@@ -28,7 +28,6 @@ import {
 
 
 // OpenSankey imports
-import { Class_DataTagGroup } from '../deps/OpenSankey/types/Tag'
 import {
   CustomFaEyeCheckIcon,
   getBooleanFromJSON,
@@ -51,6 +50,7 @@ import { OSPData, ViewType } from '../types/LegacyTypes'
 
 import { GetOldDataFromView } from './ConvertOSP'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 
 export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
