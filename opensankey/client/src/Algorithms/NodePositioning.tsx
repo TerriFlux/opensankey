@@ -31,7 +31,8 @@ import {
 import {
   Class_LinkElement
 } from '../Elements/Link'
-import { Class_LevelTagGroup, Class_Tag } from '../types/Tag'
+import { Class_Tag } from '../types/Tag'
+import { Class_LevelTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
 
 

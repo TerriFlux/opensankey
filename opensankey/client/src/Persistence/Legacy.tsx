@@ -538,32 +538,32 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     // Change style if node has default style & 'Type de noeud' tags
     if (n.tags['type de noeud']) {
       if (n.tags['type de noeud'].includes('produit')) {
-        ///@ts-expect-error xxx
+        //@ts-expect-error xxx
         n.style = ['NodeProductStyle']
       } else if (n.tags['type de noeud'].includes('secteur')) {
-        ///@ts-expect-error xxx
+        //@ts-expect-error xxx
         n.style = ['NodeSectorStyle']
       } else if (n.tags['type de noeud'].includes('echange')) {
         const close = n.trade_close || data_to_convert.style_node['NodeImportStyle'] && data_to_convert.style_node['NodeImportStyle'].position === 'relative'
         if (close) {
-          ///@ts-expect-error xxx
+          //@ts-expect-error xxx
           n.style = ['NodeSectorStyle', 'NodeImportExportCloseStyle']
         } else {
-          ///@ts-expect-error xxx
+          //@ts-expect-error xxx
           n.style = ['NodeSectorStyle', 'NodeImportExportAboveBelowStyle']
         }
         if (n.inputLinksId.length > 0) {
           if (close) {
-            ///@ts-expect-error xxx
+            //@ts-expect-error xxx
             data_to_convert.links[n.inputLinksId[0]].style = ['LinkImportExportCloseStyle', 'LinkExportCloseStyle']
-            ///@ts-expect-error xxx
+            //@ts-expect-error xxx
             n.style.push('NodeExportCloseStyle')
             delete data_to_convert.links[n.inputLinksId[0]].local!['left_horiz_shift']
             delete data_to_convert.links[n.inputLinksId[0]].local!['right_horiz_shift']
           } else {
-            ///@ts-expect-error xxx
+            //@ts-expect-error xxx
             data_to_convert.links[n.inputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkExportBelowStyle']
-            ///@ts-expect-error xxx
+            //@ts-expect-error xxx
             n.style.push('NodeExportBelowStyle')
           }
         } else {

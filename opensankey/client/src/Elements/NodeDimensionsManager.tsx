@@ -27,9 +27,8 @@
 // Local modules
 import { Class_NodeElement } from './Node'
 import { 
-  Class_LevelTag, 
-  Class_LevelTagGroup 
-} from '../types/Tag'
+  Class_LevelTag} from '../types/Tag'
+import { Class_LevelTagGroup } from '../types/TagGroup'
 import { Class_NodeDimension } from './NodeDimension'
 import { 
   Type_JSON, 

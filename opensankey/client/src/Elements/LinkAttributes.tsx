@@ -25,7 +25,6 @@
 // ==================================================================================================
 
 // Local imports
-import { ClassAbstract_LinkStyle } from '../types/AbstractLink'
 import { Class_LinkElement } from './Link'
 import {
   Type_TextVPos,
@@ -139,7 +138,7 @@ type AttributeTypes = {
 }
 
 // CLASSE DE BASE avec déclarations automatiques
-export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
+export class Class_LinkAttribute {
   protected _attributes: { [K in AttributeKey]?: AttributeTypes[K] } = {}
 
   // Déclarations automatiques générées à partir de la config (une ligne par attribut)
@@ -195,7 +194,6 @@ export class Class_LinkAttribute extends ClassAbstract_LinkStyle {
   name_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']>
 
   constructor() {
-    super()
     this.createDynamicProperties()
   }
 
