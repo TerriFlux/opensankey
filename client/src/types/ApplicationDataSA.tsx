@@ -40,7 +40,7 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
     return new Class_IconLibrarySA()
   }
 
- // Overrride logo
+  // Overrride logo
   public get logo() {
     if ( this.is_static && window.sankey && window.sankey.logo) {
       return window.sankey.logo

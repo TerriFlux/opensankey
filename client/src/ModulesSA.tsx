@@ -41,7 +41,6 @@ import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import { returnToApp } from './AppSA'
 import { ButtonOpenUSerPreference, ModalPreference } from './deps/LoginComponent/Preferences/Preferences'
 import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
-import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -164,7 +163,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     if (idx_reg == -1) new_data_app.menu_configuration.menu_top_order.push(['setting'])
 
     additionalMenus.current.external_top_buttons_item['sankeytheque'] = (<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
-    //@ts-ignore
+    //@ts-expect-error xxx
     additionalMenus.current.external_top_buttons_item['setting'] = (<ButtonOpenUSerPreference new_data={new_data_app} />)
   } else {
     if (idx_st !== -1) {
@@ -272,7 +271,7 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
       <ModalSankeyTheque new_data={new_data_SA} />,
-      //@ts-ignore
+      //@ts-expect-error xxx
       <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
     )
   }

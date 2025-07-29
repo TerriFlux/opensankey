@@ -20,20 +20,13 @@ import './deps/OpenSankey+/css/react-quill.css'
 import './css/Login.css'
 import './css/Register.css'
 
-// External imports ===============================================================================
-
 import React, { FunctionComponent } from 'react'
 import { createRoot } from 'react-dom/client'
 import './traductions/traduction'
 import i18next from './traductions/traduction'
 
-// Local modules =================================================================================
-
 import { SankeyApp } from './AppSA'
 import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
-import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
-
-// Global variables ==============================================================================
 
 declare const window: Window &
   typeof globalThis & {
