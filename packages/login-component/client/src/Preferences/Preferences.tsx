@@ -12,10 +12,10 @@ import { MenuConfigurationNodeStyle, MenuConfigurationNodeContext } from '../dep
 import { WrapperNodeStyleSelector, WrapperLinkStyleSelector } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyStyle'
 import { Class_LinkStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/LinkAttributes'
 import { Class_NodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/NodeAttributes'
-import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Tag'
 import { Type_AdditionalMenus } from '../deps/OpenSankey+/deps/OpenSankey/types/Types'
 import { getJSONFromJSON, Type_MacroTagGroup, OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
+import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup } from '../../OpenSankey+/deps/OpenSankey/types/TagGroup'
 
 
 const paddingBoxPreference = '0.6rem'
@@ -286,8 +286,9 @@ const TansferTags: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app_
         variant='btn_create_color_palette'
         onClick={() => {
           // Insert select group
-          const grp_tag = app_data.drawing_area.sankey.createTagGroup(elementTagNameProp);
-          (grp_tag as Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup).copyFrom(tags_group_dict[tags_group_entry_id] as Class_NodeTagGroup | Class_FluxTagGroup | Class_DataTagGroup)
+          const grp_tag = app_data.drawing_area.sankey.createTagGroup(elementTagNameProp)
+          //@ts-expect-error xxx
+          grp_tag.copyFrom(tags_group_dict[tags_group_entry_id])
           // Update tags menu in application
           app_data.menu_configuration.updateAllComponentsRelatedToTags()
         }}>
