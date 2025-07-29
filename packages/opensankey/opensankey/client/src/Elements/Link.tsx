@@ -33,16 +33,11 @@ import type {
 } from '../types/MenuConfig'
 import type {
   Class_DataTag,
-  Class_DataTagGroup,
+  Class_ProtoTag,
   Class_Tag,
 } from '../types/Tag'
+import type { Class_DataTagGroup } from '../types/TagGroup'
 
-import {
-  ClassAbstract_ProtoTag,
-} from '../types/Abstract'
-
-import {
-  ClassAbstract_LinkElement} from '../types/AbstractLink'
 import {
   Type_ElementPosition,
   default_style_id,
@@ -64,7 +59,7 @@ import { LinkDrawValue } from './LinkDrawValue'
 import { LinkTooltip } from './LinkTooltip'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
-
+import { ClassTemplate_ProtoElement } from './Element'
 
 
 const side_order: { [_ in Type_Side]: number } = {
@@ -207,7 +202,7 @@ type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
  *
  * @class Class_LinkElement
  */
-export class Class_LinkElement extends ClassAbstract_LinkElement {
+export class Class_LinkElement extends ClassTemplate_ProtoElement {
   /**
    * Display attributes for link
    * @protected
@@ -219,7 +214,7 @@ export class Class_LinkElement extends ClassAbstract_LinkElement {
   *   }}
   * @memberof Class_LinkElement
   */
-  protected  _display: {
+  protected _display: {
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
 
@@ -374,7 +369,7 @@ export class Class_LinkElement extends ClassAbstract_LinkElement {
   }
 
   public createLinkValue(
-    parent: Class_LinkValueTree | ClassAbstract_LinkElement
+    parent: Class_LinkValueTree | Class_LinkElement
   ) {
     return new Class_LinkValue(parent as Class_LinkElement)
   }
@@ -836,7 +831,7 @@ export class Class_LinkElement extends ClassAbstract_LinkElement {
     if (this.sibling) {
       return this.sibling.getPathColorToUse()
     }
-     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
+    this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
     // Apply gradient if needed
     if (this.shape_color_rule == 'gradient') {
@@ -1524,7 +1519,7 @@ export class Class_LinkElement extends ClassAbstract_LinkElement {
     }
   }
 
-  public valueForTags(_: ClassAbstract_ProtoTag[]) {
+  public valueForTags(_: Class_ProtoTag[]) {
     if (this._values instanceof Class_LinkValue)
       return this._values
     else

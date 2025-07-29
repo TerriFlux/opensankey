@@ -56,7 +56,7 @@ export class OSPFormatConverter {
     Object.entries(this.OSP_ATTRIBUTE_MAPPING).forEach(([oldKey, newKey]) => {
       if (converted[oldKey] !== undefined) {
         // Déplace l'attribut vers local avec le nouveau nom
-        ///@ts-expect-error xxx
+        //@ts-expect-error xxx
         converted.local[newKey] = converted[oldKey]
         // Supprime l'ancien attribut de la racine
         delete converted[oldKey]
@@ -96,7 +96,7 @@ export class OSPFormatConverter {
 
     // Convertit les nodes si elles existent
     if (converted.nodes && Array.isArray(converted.nodes)) {
-      ///@ts-expect-error xxx
+      //@ts-expect-error xxx
       converted.nodes = this.convertNodesArrayFromOSPFormat(converted.nodes)
     }
 

@@ -25,19 +25,15 @@
 // ==================================================================================================
 
 // Internal imports
-import {
-  ClassAbstract_ProtoLevelTag,
-} from '../types/Abstract'
-import {
-  ClassAbstract_NodeDimension
-} from '../types/AbstractNode'
-import { Class_LevelTag, Class_LevelTagGroup } from '../types/Tag'
+
+import { Class_LevelTag } from '../types/Tag'
+import { Class_LevelTagGroup } from '../types/TagGroup'
 import { Class_NodeElement } from './Node'
 
 
 // CLASS NODE DIMENSION *****************************************************************
 
-export class Class_NodeDimension extends ClassAbstract_NodeDimension {
+export class Class_NodeDimension {
 
   // PRIVATE ATTRIBUTES =================================================================
   // Unique id
@@ -48,8 +44,8 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   private _children: Class_NodeElement[]
 
   // Tags relations
-  private _parent_level_tag: ClassAbstract_ProtoLevelTag
-  private _child_level_tag: ClassAbstract_ProtoLevelTag
+  private _parent_level_tag: Class_LevelTag
+  private _child_level_tag: Class_LevelTag
 
   // Forcing
   private _force_show_children: boolean = false
@@ -69,18 +65,17 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
    * Creates an instance of Class_NodeDimension.
    * @param {ClassAbstract_NodeElement<Class_DrawingArea>} parent
    * @param {ClassAbstract_NodeElement[]} children
-   * @param {ClassAbstract_ProtoLevelTag} parent_level_tag
-   * @param {ClassAbstract_ProtoLevelTag} children_level_tag
+   * @param {Class_LevelTag} parent_level_tag
+   * @param {Class_LevelTag} children_level_tag
    * @memberof Class_NodeDimension
    */
   constructor(
     parent: Class_NodeElement,
     children: Class_NodeElement[],
-    parent_level_tag: ClassAbstract_ProtoLevelTag,
-    child_level_tag: ClassAbstract_ProtoLevelTag,
+    parent_level_tag: Class_LevelTag,
+    child_level_tag: Class_LevelTag,
     id?: string
   ) {
-    super()
     // Create unique id
     if (id)
       this._id = id
@@ -420,7 +415,7 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   public get related_level_tagg() { return this.parent_level_tag.group }
 
   public get parent_level_tag() { return this._parent_level_tag }
-  public set parent_level_tag(_: ClassAbstract_ProtoLevelTag) {
+  public set parent_level_tag(_: Class_LevelTag) {
     // Do modification only if there is a change & if parent/children tag group are matching
     if ((_ !== this._parent_level_tag) &&
       (this.child_level_tagg === _.group)) {
@@ -432,15 +427,15 @@ export class Class_NodeDimension extends ClassAbstract_NodeDimension {
   }
 
   // Current "hack" to allow the mode expansion when desagregating
-  public force_parent_level_tag(_: ClassAbstract_ProtoLevelTag) {
+  public force_parent_level_tag(_: Class_LevelTag) {
     this._parent_level_tag = _
   }
-  public force_child_level_tag(_: ClassAbstract_ProtoLevelTag) {
+  public force_child_level_tag(_: Class_LevelTag) {
     this._child_level_tag = _
   }
 
   public get child_level_tag() { return this._child_level_tag }
-  public set child_level_tag(_: ClassAbstract_ProtoLevelTag) {
+  public set child_level_tag(_: Class_LevelTag) {
     // Do modification only if there is a change & if parent/children tag group are matching
     if ((_ !== this._child_level_tag) &&
       (this.child_level_tagg === _.group)) {

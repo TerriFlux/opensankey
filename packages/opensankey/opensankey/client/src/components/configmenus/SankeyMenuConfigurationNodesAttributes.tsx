@@ -1057,7 +1057,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           ref_to_set_value={ref_set_text_value_input}
           function_get_value={() => { return element_ref?.name_label_separator }}
           function_on_blur={(_) => {
-            ///@ts-expect-error xxx
+            //@ts-expect-error xxx
             updateElements('name_label_separator', _)
           }}
         />

@@ -31,10 +31,12 @@ import type { Type_Side } from './LinkAttributes'
 import type { Class_LinkStyle } from './LinkAttributes'
 import type {
   Class_Tag,
-  Class_TagGroup,
-  Class_LevelTagGroup,
   Class_LevelTag,
 } from '../types/Tag'
+import type {
+  Class_TagGroup,
+  Class_LevelTagGroup
+} from '../types/TagGroup'
 import type {
   Class_MenuConfig
 } from '../types/MenuConfig'
@@ -44,9 +46,6 @@ import {
   Class_LinkElement,
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
-import {
-  ClassAbstract_NodeElement,
-} from '../types/AbstractNode'
 import {
   Type_ElementPosition,
   Type_Position,
@@ -68,7 +67,6 @@ import { Class_NodeDimension } from './NodeDimension'
 import { ClassTemplate_Handler } from './Handler'
 import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
 
-// Import des classes spécialisées (SAUF NodeLinksManager)
 import { NodeDrawShape } from './NodeDrawShape'
 import { NodeDrawNameLabel } from './NodeDrawNameLabel'
 import { NodeDrawValueLabel } from './NodeDrawValueLabel'
@@ -80,6 +78,7 @@ import { Class_ContainerElement } from './TextZone'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_Sankey } from '../types/Sankey'
+import { ClassTemplate_Element } from './Element'
 
 export const default_selected_stroke_width = 3
 export const label_margin = 5
@@ -121,7 +120,7 @@ export function isPositionOverloaded(
  * @class Class_NodeElement
  * @extends {ClassAbstract_NodeElement}
  */
-export class Class_NodeElement extends ClassAbstract_NodeElement {
+export class Class_NodeElement extends ClassTemplate_Element {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -507,7 +506,7 @@ export class Class_NodeElement extends ClassAbstract_NodeElement {
    * Launch animation from this node
    */
   public launchAnimation() {
-    const animation = new SankeyAnimation(this.drawing_area as unknown as Class_DrawingArea, this as unknown as Class_NodeElement)
+    const animation = new SankeyAnimation(this.drawing_area, this)
     animation.launchAnimation()
   }
 
