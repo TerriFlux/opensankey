@@ -620,6 +620,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
     // Create the new sankey
     const new_drawing_area = this.createNewDrawingArea(makeId('unitary_view'))
+    new_drawing_area.bypass_redraws = true
     // Copy current sankey
     const name = 'Unitary view of ' + node_ref.name
     const id = new_drawing_area.id
