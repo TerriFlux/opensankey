@@ -93,7 +93,7 @@ export const NODES_ATTRIBUTES_CONFIG = {
   name_label_horiz_shift: { default: 0, type: (() => 0) as (() => number) },
   name_label_vert_shift: { default: 0, type: (() => 0) as (() => number) },
   name_label_box_width: { default: 150, type: (() => 150) as (() => number) },
-  name_label_separator: { default: ' - ', type: (() => ' - ') as (() => string) },
+  name_label_separator: { default: '', type: (() => '') as (() => string) },
   name_label_separator_part: { default: 'after' as 'before' | 'after', type: (() => 'after') as (() => 'before' | 'after') },
 
   // Value label attributes
