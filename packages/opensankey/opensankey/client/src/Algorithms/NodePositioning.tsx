@@ -749,7 +749,7 @@ export class NodePositioning {
     const v_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
     let prev_col_width = 0
     let shift = 0
-    const horizontal_spacing = this.drawingArea.sankey.node_styles_dict['default'].position.dx!
+    const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].position_dx
 
     // ÉTAPE 1: Calculer les positions X (inchangé)
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
