@@ -1046,6 +1046,7 @@ export class Class_Sankey {
               'value_label_is_visible': true,
               'value_label_vert' : 'middle',
               'name_label_vert': 'middle',
+              'name_label_separator': ' - '
             },
             position: {
               'type': 'parametric'
