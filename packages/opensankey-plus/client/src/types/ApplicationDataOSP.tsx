@@ -654,6 +654,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     InNodeStyle.shape_min_height = 1
     InNodeStyle.shape_visible = false
     InNodeStyle.name_label_box_width = 1000
+    InNodeStyle.position_dx = 300
 
     const OutNodeStyle = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeOutputStyle', 'Output node')
     OutNodeStyle.name_label_horiz = 'right'
@@ -663,6 +664,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     OutNodeStyle.shape_min_height = 1
     OutNodeStyle.shape_visible = false
     OutNodeStyle.name_label_box_width = 1000
+    OutNodeStyle.position_dx = 300
 
     const unitaryNode = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeStyle', 'Unitary node')
     unitaryNode.name_label_horiz = 'middle'
@@ -672,19 +674,19 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     unitaryNode.name_label_bold = true
     unitaryNode.name_label_uppercase = true
     unitaryNode.name_label_box_width = 1000
+    unitaryNode.position_dx = 300
 
     const InLink = new_drawing_area.sankey.addNewLinkStyle('LinkInUnitaryStyle', 'Link In Unitary')
     InLink.name_label_font_size = 40
     InLink.value_label_horiz = 'left'
     InLink.value_label_pos_auto = true
-    InLink.value_label_percent_input = true
+    InLink.value_label_percent_output = true
 
     const OutLink = new_drawing_area.sankey.addNewLinkStyle('LinkOutUnitaryStyle', 'Link Out Unitary')
     OutLink.name_label_font_size = 40
     OutLink.value_label_horiz = 'right'
     OutLink.value_label_pos_auto = true
-    OutLink.value_label_percent_output = true
-
+    OutLink.value_label_percent_input = true
 
     const visible_links = new_drawing_area.sankey.visible_links_list.map(l => l.id)
     let maxLinkValue = 1
@@ -699,9 +701,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style.push(InLink)
-          } else {
             link.style.push(OutLink)
+          } else {
+            link.style.push(InLink)
           }
           // Search for max link value in unitary sankey to re-scale sankey
           const link_val = link.getMaxValue() ?? 1
