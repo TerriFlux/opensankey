@@ -1628,9 +1628,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     let data_value = this.value?.valueData
     if (this.sankey.drawing_area.type_data == 'data') {
       if (this.value?.value_option == 'ratio_input' && this.value?.valueData) {
-        return this.value.valueData + '%s'
+        return this.value.valueData + '%'
       } else if (this.value?.value_option == 'ratio_output' && this.value?.valueData) {
-        return this.value?.valueData + '%d'
+        return this.value?.valueData + '%'
       } /*else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }*/

@@ -197,7 +197,7 @@ export class LinkDrawValue {
             } else {
               const suffix = this._link.value_label_percent_input ? 's' : 'd'
               // Add text directly on textpath object
-              d3_textpath_selection?.text(label_to_display.toFixed(this._link.value_label_nb_digit) + ' %' + suffix)
+              d3_textpath_selection?.text(label_to_display.toFixed(this._link.value_label_nb_digit) + ' %')
                 .attr('spacing', 'exact')
                 .attr('method', 'align')
             }
