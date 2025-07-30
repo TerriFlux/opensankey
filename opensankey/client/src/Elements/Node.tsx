@@ -674,7 +674,11 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public addInputLink(link: Class_LinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
-      this._links_order.push(link)
+      if ( this._links_order.includes(link)) {
+        console.log('this._links_order.includes(link)')
+      } else {
+        this._links_order.push(link)
+      }
       this.addMovingHandleForGivenLink(link, 'input')
       link.target = this
       this.drawLinks()
@@ -685,7 +689,11 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
-      this._links_order.push(link)
+      if ( this._links_order.includes(link)) {
+        console.log('this._links_order.includes(link)')
+      } else {
+        this._links_order.push(link)
+      }
       this.addMovingHandleForGivenLink(link, 'output')
       link.source = this
       this.drawLinks()
@@ -1329,10 +1337,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   }
 
   private removeLinkFromOrderingLinksList(link: Class_LinkElement) {
-    const idx = this._links_order.indexOf(link)
-    if (idx !== -1) {
-      this._links_order.splice(idx, 1)
-    }
+    this._links_order = this._links_order.filter(l => l.id !== link.id)
   }
 
   private addMovingHandleForGivenLink(
