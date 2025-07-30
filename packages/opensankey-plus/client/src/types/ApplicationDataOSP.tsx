@@ -706,7 +706,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           // Search for max link value in unitary sankey to re-scale sankey
           const link_val = link.getMaxValue() ?? 1
           maxLinkValue = (link_val > maxLinkValue) ? link_val : maxLinkValue
-
+          link.shape_is_recycling = false
         }
       })
     // Set new scale for unitary sankey
@@ -726,6 +726,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           } else if (node.output_links_list.length == 0) {
             node.style.push(OutNodeStyle)
           }
+          node.dimensions_as_child.forEach(dim=>node.removeDimensionAsChild(dim))
+          node.dimensions_as_parent.forEach(dim=>node.removeDimensionAsParent(dim))
         }
       })
     new_drawing_area.sankey.nodes_dict[node_ref.id].style = [unitaryNode]
