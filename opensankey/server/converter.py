@@ -1550,8 +1550,7 @@ class JsonToSankey(object):
                 else:
                     flux = self.sankey.get_or_create_flux(
                         orig_node.name,
-                        dest_node.name,
-                        tag
+                        dest_node.name
                     )
                     self._extract_data(flux_json["value"], flux)
 
