@@ -194,6 +194,37 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
     return
   }
 
+  // Fonction pour appliquer le JSON Sankey
+  const GetAndApplySankeyJson = (new_sankey_json_str: string) => {
+    try {
+      // Extract data as JSON
+      const new_sankey_json_obj = JSON.parse(new_sankey_json_str)
+      // Check if we got any error
+      const error = new_sankey_json_obj['error']
+      if (error && error.length != 0) {
+        alert(error)
+        return
+      }
+      // Reconcilliation from current Sankey -> Apply current layout
+      if (menu_configuration_osp.action_type === 'optim_sankey') {
+        application_data_mfa.drawing_area.fromJSON(new_sankey_json_obj)
+        application_data_mfa.drawing_area.setToModeEdition(false)
+        application_data_mfa.sendWaitingToast(
+          () => {
+            application_data_mfa.menu_configuration.ref_to_spreadsheet.current()
+          }
+        )
+      }
+      else {
+        application_data_mfa.fromJSON(new_sankey_json_obj)
+      }
+    }
+    catch (err) {
+      alert('Could not display optimized Sankey : ' + err)
+    }
+    return
+  }
+
   // Function called to display the excel file from the reconciliation,
   // it open the file like a normal excel file
   const DisplayResults = () => {
@@ -250,37 +281,6 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
               .then(GetAndApplySankeyJson)
           })
       }
-
-    }
-
-    // Define get results function
-    function GetAndApplySankeyJson(new_sankey_json_str: string) {
-      try {
-        // Extract data as JSON
-        const new_sankey_json_obj = JSON.parse(new_sankey_json_str)
-        // Check if we got any error
-        const error = new_sankey_json_obj['error']
-        if (error && error.length != 0) {
-          alert(error)
-          return
-        }
-        // Reconcilliation from current Sankey -> Apply current layout
-        if (menu_configuration_osp.action_type === 'optim_sankey') {
-          application_data_mfa.drawing_area.fromJSON(new_sankey_json_obj)
-          application_data_mfa.sendWaitingToast(
-            () => {
-              application_data_mfa.menu_configuration.ref_to_spreadsheet.current()
-            }
-          )
-        }
-        else {
-          application_data_mfa.fromJSON(new_sankey_json_obj)
-        }
-      }
-      catch (err) {
-        alert('Could not display optimized Sankey : ' + err)
-      }
-      return
     }
 
     // Fetching results
@@ -323,6 +323,66 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
       }
     )
     return
+  }
+
+  // Nouvelle fonction pour gérer le polling spécifique à optim_sankey
+  const startPollingForOptimSankey = () => {
+    const interval = setInterval(() => {
+      const path = window.location.origin
+      const url_optimize_prod_process = path + '/optimize/check_process'
+      const fetchData = {
+        method: 'POST',
+        body: ''
+      }
+
+      fetch(url_optimize_prod_process, fetchData).then(
+        function (response) {
+          if (response.ok) {
+            response.json().then(
+              function (data) {
+                setResult(data.output)
+
+                // Analyser le résultat pour détecter la fin du processus
+                const infos = data.output ? data.output.split('\n') : []
+                if (infos.length > 2) {
+                  const info = infos[infos.length - 2]
+
+                  if (info.includes('[COMPLETED]')) {
+                    clearInterval(interval)
+                    setProcessing(false)
+                    setFailure(false)
+                    // Récupérer et appliquer directement le JSON Sankey
+                    const path = window.location.origin
+                    const url_optimize_display_results = path + '/optimize/display_results'
+                    const form_data = new FormData()
+                    const fetchData = {
+                      method: 'POST',
+                      body: form_data
+                    }
+                    fetch(url_optimize_display_results, fetchData)
+                      .then(response => {
+                        response
+                          .text()
+                          .then(GetAndApplySankeyJson)
+                          .then(() => {
+                            // Fermer le dialogue après avoir appliqué les modifications
+                            set_show_reconciliation(false)
+                            menu_configuration_osp.action_type = ''
+                          })
+                      })
+
+                  } else if (info.includes('[FAILED]')) {
+                    clearInterval(interval)
+                    setProcessing(false)
+                    setFailure(true)
+                    // En cas d'erreur, laisser le dialogue ouvert pour afficher l'erreur
+                  }
+                }
+              }
+            )
+          }
+        })
+    }, 5000)
   }
 
   const reset = () => {
@@ -368,6 +428,11 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
     if (input_file) {
       setInputFileName((input_file as unknown as { name: string }).name)
     }
+
+    // Pour optim_sankey, démarrer le polling immédiatement
+    if (menu_configuration_osp.action_type === 'optim_sankey') {
+      startPollingForOptimSankey()
+    }
   }
 
   const FinishReconciliation = () => {
@@ -409,6 +474,7 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
       reset()
     }
   })
+  
   if (show_reconciliation) {
     if (not_started && menu_configuration_osp.action_type === 'optim_sankey') {
       launchReconciliation()
@@ -416,7 +482,6 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
       setResult('')
     }
   }
-
 
   const content_import_excel = <Box layerStyle='menu_sub_section'>
     <Box layerStyle='menu_sub_section_head'>
@@ -582,17 +647,21 @@ export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelis
                 setResult={setResult}
                 setProcessing={setProcessing}
                 setFailure={setFailure}
+                actionType={menu_configuration_osp.action_type}
               />
             ) : (
               <Box overflowY='auto' maxHeight='25vh'>
                 {infos.map(
-                  (info) => (
-                    value.includes(2) && info.includes('ERROR') ?
-                      (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
-                      : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-                        (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
-                        : value.includes(3) && (info.includes('DEBUG')) ?
-                          (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
+                  (info, index) => (
+                    <div key={index}>
+                      {value.includes(2) && info.includes('ERROR') ?
+                        (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
+                        : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
+                          (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
+                          : value.includes(3) && (info.includes('DEBUG')) ?
+                            (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
+                      }
+                    </div>
                   ))}
               </Box>
             )}
@@ -610,16 +679,23 @@ const Counter = (
     result,
     setResult,
     setProcessing,
-    setFailure
+    setFailure,
+    actionType
   }: {
     value: number[],
     result: string,
     setResult: (x: string) => void,
     setProcessing: (x: boolean) => void,
-    setFailure: (x: boolean) => void
+    setFailure: (x: boolean) => void,
+    actionType: string
   }
 ) => {
   useEffect(() => {
+    // Ne pas démarrer le polling si c'est optim_sankey (géré séparément)
+    if (actionType === 'optim_sankey') {
+      return
+    }
+
     // Get process status every 5ms ?
     const interval = setInterval(() => {
       const path = window.location.origin
@@ -654,14 +730,22 @@ const Counter = (
       setFailure(true)
     }
   }
-  return (<Box overflowY='auto' maxHeight='25vh'>
-    {infos.map(
-      info => (
-        value.includes(2) && info.includes('ERROR') ?
-          (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
-          : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-            (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
-            : value.includes(3) && (info.includes('DEBUG')) ?
-              (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)))}
-  </Box>)
+
+  return (
+    <Box overflowY='auto' maxHeight='25vh'>
+      {infos.map(
+        (info, index) => (
+          <div key={index}>
+            {value.includes(2) && info.includes('ERROR') ?
+              (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
+              : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
+                (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
+                : value.includes(3) && (info.includes('DEBUG')) ?
+                  (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
+            }
+          </div>
+        )
+      )}
+    </Box>
+  )
 }
