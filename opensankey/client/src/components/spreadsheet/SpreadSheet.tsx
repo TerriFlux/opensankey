@@ -45,7 +45,7 @@ import '@silevis/reactgrid/styles.css'
 
 import { parseLocaleNumber, Type_JSON } from '../../types/Utils'
 import { Class_NodeElement } from '../../Elements/Node'
-import { defaultLinkId } from '../../Elements/Link'
+import { Class_LinkElement, defaultLinkId } from '../../Elements/Link'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
@@ -58,27 +58,37 @@ interface IType_SpreadSheetFlux {
   value?: number // Value of the flow (optional)
 }
 
-// Extract flux data from the Sankey diagram and prepare it for the spreadsheet
-const getFluxFromSankey = (new_data: Class_ApplicationData): IType_SpreadSheetFlux[] => {
-  const a: IType_SpreadSheetFlux[] = new_data.drawing_area.sankey.links_list
-    .map((l) => {
-      return {
-        id: l.id, //Link id
-        source: l.source.name, // Get source node name
-        target: l.target.name, // Get target node name
-        value: l.value?.valueData as number|undefined  // Get the value of the link
-      }
-    })
-  // Add an empty row for new flux input
-  a.push({ id: 'empty', source: '', target: '' })
-  return a
-}
+
 
 // Main SpreadSheet component
 export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }> = (
   { new_data }: { new_data: Class_ApplicationData }
 ) => {
   const { menu_configuration } = new_data
+
+  const cellValue = (l: Class_LinkElement): number => {
+    if (new_data.drawing_area.type_data == 'data') {
+      return l.valueData!
+    } else {
+      return l.valueResult!
+    }
+  }
+
+  // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
+  const getFluxFromSankey = (new_data: Class_ApplicationData): IType_SpreadSheetFlux[] => {
+    const a: IType_SpreadSheetFlux[] = new_data.drawing_area.sankey.links_list
+      .map((l) => {
+        return {
+          id: l.id, //Link id
+          source: l.source.name,
+          target: l.target.name,
+          value: cellValue(l)
+        }
+      })
+    // Add an empty row for new flux input
+    a.push({ id: 'empty', source: '', target: '' })
+    return a
+  }
 
   // Table header
   const headerRow: Row = {
@@ -208,6 +218,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
     new_data.draw()
   }
 
+
   // Functions called in onCellChanges that can be undone ===============================================
 
   /**
@@ -232,7 +243,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
           synchronizeSpreadSheetWithSankey()
           return
         }
-        dict_old_val[l.id] = l.valueData //save old link value in dict for undo
+        dict_old_val[l.id] = cellValue(l) //save old link value in dict for undo
         if (l) {
           if (isNaN((change.newCell as NumberCell).value)) {
             l.value!.valueData = null
