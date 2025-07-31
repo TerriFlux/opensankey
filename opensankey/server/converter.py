@@ -1600,7 +1600,7 @@ class JsonToSankey(object):
         :type datatags_list: list[Tags]
         """
         # Check if we reach the bottom of datas_json
-        if "data_value" in datas_json.keys():
+        if "data_value" in datas_json.keys() or "result_value" in datas_json.keys():
             # Get corresponding data / datatags
             data = flux.get_corresponding_datas_from_tags(datatags_list)[0]
             # Get all fluxtags
@@ -1623,7 +1623,8 @@ class JsonToSankey(object):
             #     if "computed_data" in datas_json["tags"]["flux_types"]:
             #         data_is_computed = True
             # Update data OR result
-            data.value = datas_json["data_value"]
+            if 'data_value' in datas_json:
+                data.value = datas_json["data_value"]
             # Apply only flux-tags
             for tag in fluxtags_list:
                 data.add_tag(tag)
