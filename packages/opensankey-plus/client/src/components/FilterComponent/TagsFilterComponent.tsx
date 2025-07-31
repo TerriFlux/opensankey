@@ -253,7 +253,7 @@ export const FilterWrapperBox: FunctionComponent<FCType_FilterTagGroup> = ({
 export const FilterDataType: FunctionComponent<FCType_ToolbarFilter> = ({ new_data }) => {
   const { t } = new_data
   const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.drawing_area.type_data))
-  const data_type_not_reconcilied = ['data', 'structure', 'free_value', 'free_interval'].includes(new_data.drawing_area.type_data)
+  const data_type_not_reconcilied = ['data', 'structure'].includes(new_data.drawing_area.type_data)
   const [s_type_value, sTypeValue] = useState<'data' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.drawing_area.type_data as 'data' | 'structure' | 'reconciled') : 'reconciled')
   const [, setCount] = useState(0)
   new_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
