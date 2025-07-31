@@ -374,7 +374,7 @@ export class NodePositioning {
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recycling flux
-        (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
+      (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -576,9 +576,53 @@ export class NodePositioning {
           nodes_per_horizontal_indexes[horizontal_index].indexOf(node), 1
         )
       )
+
+      // Compacter les indices pour qu'ils commencent à 0
+      this.compactHorizontalIndexes(nodes_per_horizontal_indexes, horizontal_indexes_per_nodes_ids, max_horizontal_index)
     }
   }
+  /**
+   * Compact horizontal indexes to start from 0 and remove gaps
+   * @private
+   */
+  private compactHorizontalIndexes(
+    nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] },
+    horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
+    max_horizontal_index: number
+  ) {
+    // Trouver le premier index non vide
+    let first_non_empty_index = -1
+    for (let i = 0; i <= max_horizontal_index; i++) {
+      if (nodes_per_horizontal_indexes[i] && nodes_per_horizontal_indexes[i].length > 0) {
+        first_non_empty_index = i
+        break
+      }
+    }
 
+    // Si le premier index non vide n'est pas 0, décaler tout
+    if (first_non_empty_index > 0) {
+      const offset = first_non_empty_index
+
+      // Créer un nouveau mapping temporaire
+      const new_nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
+
+      // Décaler les indices dans nodes_per_horizontal_indexes
+      for (let i = first_non_empty_index; i <= max_horizontal_index; i++) {
+        if (nodes_per_horizontal_indexes[i] && nodes_per_horizontal_indexes[i].length > 0) {
+          new_nodes_per_horizontal_indexes[i - offset] = nodes_per_horizontal_indexes[i]
+          delete nodes_per_horizontal_indexes[i]
+        }
+      }
+
+      // Copier les nouveaux indices
+      Object.assign(nodes_per_horizontal_indexes, new_nodes_per_horizontal_indexes)
+
+      // Mettre à jour horizontal_indexes_per_nodes_ids
+      Object.keys(horizontal_indexes_per_nodes_ids).forEach(node_id => {
+        horizontal_indexes_per_nodes_ids[node_id] -= offset
+      })
+    }
+  }
   /**
    * Position nodes based on computed horizontal indexes
    * @private
@@ -989,7 +1033,7 @@ export class NodePositioning {
 
       if (crossings.length > 0) {
         // Ce nœud est traversé par des flux - le descendre
-        const crossing_penalty = crossings.length * v_margin*0.5
+        const crossing_penalty = crossings.length * v_margin * 0.5
         adjustments[node_id] = crossing_penalty
 
         console.log(`📍 Nœud ${node_id} traversé par ${crossings.length} flux -> descendre: +${crossing_penalty}`)
@@ -1000,7 +1044,7 @@ export class NodePositioning {
     crossing_analysis.crossing_flows.forEach(flow => {
       // Si le target de ce flux est dans la colonne actuelle
       if (column_node_ids.includes(flow.target_id)) {
-        const target_adjustment = -v_margin*0.5 * flow.crossed_nodes.length // Valeur négative = monter
+        const target_adjustment = -v_margin * 0.5 * flow.crossed_nodes.length // Valeur négative = monter
 
         // Cumuler les ajustements si le nœud est déjà ajusté
         if (adjustments[flow.target_id]) {
