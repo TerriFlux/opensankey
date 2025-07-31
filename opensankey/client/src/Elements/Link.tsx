@@ -1975,6 +1975,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this._link_control_points.drawControlPoint() }
 
   public get shape_is_structure() {
+      if (this.sankey.drawing_area.type_data == 'structure') {
+        return true
+      }
     if (this.sankey.drawing_area.type_data == 'data') {
       if (this.value?.value_option != 'value' || this.value?.valueData == null) {
         return true
