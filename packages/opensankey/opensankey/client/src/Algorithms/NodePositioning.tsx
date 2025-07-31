@@ -466,15 +466,13 @@ export class NodePositioning {
   }
 
   /**
- * Compute the position of the nodes which are not trade nodes
- * Version améliorée qui combine détection robuste et optimisation intelligente
- * 
- * @param {boolean} launched_from_process
- */
+   * Version améliorée de computeAutoSankey qui corrige le positionnement
+   * en gardant la logique existante
+   */
   public computeAutoSankey(launched_from_process: boolean) {
-    console.log('🔧 Calcul automatique des positions avec algorithme amélioré')
+    console.log('🔧 Calcul automatique des positions - version améliorée')
 
-    // Calculate max value of flows
+    // Calculate max value of flows (inchangé)
     let linksMaxValue = 0
     this.drawingArea.sankey.links_list.forEach(link => {
       const linkMaxValue = link.getMaxValue()
@@ -483,9 +481,8 @@ export class NodePositioning {
         linkMaxValue ? linkMaxValue : 0
       )
     })
-    linksMaxValue += 1 // Protection if all values are at 0
+    linksMaxValue += 1
 
-    // Get scale from max value
     if (launched_from_process) {
       this.drawingArea.scale = this.drawingArea.maximum_flux ?
         Math.max(this.drawingArea.maximum_flux, linksMaxValue) : linksMaxValue
@@ -496,31 +493,304 @@ export class NodePositioning {
     const nodes_to_process = this.drawingArea.sankey.visible_nodes_list.filter(n =>
       !echangeTag || !n.hasGivenTag(echangeTag))
 
-    // Algorithme amélioré : Détecter et optimiser les cycles
-    console.log('🔍 Détection et optimisation des cycles...')
-    const result = this.detectAllCyclesAndOptimize(nodes_to_process)
-    const recycling_links_ids = result.recycling_links
-    const horizontal_indexes_per_nodes_ids = result.horizontal_indexes
+    // ÉTAPE 1: Calcul des index horizontaux - VERSION AMÉLIORÉE
+    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
+    const possible_recycling_links_ids: string[] = []
 
-    // Marquer les liens de recyclage dans les objets
-    recycling_links_ids.forEach(linkId => {
-      this.drawingArea.sankey.links_dict[linkId].shape_is_recycling = true
+    // Initialiser tous les nœuds à index -1
+    nodes_to_process.forEach(node => {
+      horizontal_indexes_per_nodes_ids[node.id] = -1
     })
 
-    // Marquer les autres liens comme non-recyclage
-    this.drawingArea.sankey.links_list.forEach(link => {
-      if (!recycling_links_ids.includes(link.id)) {
-        link.shape_is_recycling = false
+    // Identifier et traiter les nœuds sources en priorité
+    const source_nodes = nodes_to_process.filter(node => !node.hasInputLinks() && node.hasOutputLinks())
+    const lone_nodes = nodes_to_process.filter(node => !node.hasInputLinks() && !node.hasOutputLinks())
+
+    console.log('🌱 Nœuds sources:', source_nodes.map(n => n.id))
+    console.log('🏝️ Nœuds isolés:', lone_nodes.map(n => n.id))
+
+    // Traiter les nœuds sources
+    source_nodes.forEach(node => {
+      if (horizontal_indexes_per_nodes_ids[node.id] === -1) {
+        console.log(`🚀 Traitement depuis le nœud source: ${node.id}`)
+        this.computeHorizontalIndexImproved(
+          node,
+          nodes_to_process,
+          0, // Commencer à 0 pour les sources
+          [],
+          possible_recycling_links_ids,
+          horizontal_indexes_per_nodes_ids
+        )
       }
     })
 
-    console.log('📊 Résultat final - Index horizontaux:', horizontal_indexes_per_nodes_ids)
-    console.log('📊 Résultat final - Liens recyclage:', recycling_links_ids)
+    // Traiter les nœuds isolés
+    lone_nodes.forEach(node => {
+      horizontal_indexes_per_nodes_ids[node.id] = 0
+    })
 
-    this._finishPositioning(
+    // Traiter les nœuds restants (composantes isolées avec cycles)
+    nodes_to_process.forEach(node => {
+      if (horizontal_indexes_per_nodes_ids[node.id] === -1) {
+        console.log(`🔄 Traitement composante isolée depuis: ${node.id}`)
+        this.computeHorizontalIndexImproved(
+          node,
+          nodes_to_process,
+          0,
+          [],
+          possible_recycling_links_ids,
+          horizontal_indexes_per_nodes_ids
+        )
+      }
+    })
+
+    // ÉTAPE 2: Double vérification des liens de recyclage (logique existante)
+    const checked_recycling_links_ids: string[] = []
+    possible_recycling_links_ids.forEach(link_id => {
+      this.computeRecyclingHorizontalIndex(
+        nodes_to_process,
+        this.drawingArea.sankey.links_dict[link_id],
+        checked_recycling_links_ids,
+        horizontal_indexes_per_nodes_ids
+      )
+    })
+
+    console.log('📊 Index horizontaux après calcul:', horizontal_indexes_per_nodes_ids)
+    console.log('♻️ Liens de recyclage détectés:', possible_recycling_links_ids)
+
+    // ÉTAPE 3: Construction des structures de données (logique existante)
+    let max_horizontal_index = 0
+    const nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
+
+    this.drawingArea.sankey.visible_nodes_list.forEach(node => {
+      const node_index = horizontal_indexes_per_nodes_ids[node.id]
+
+      if (node_index !== undefined && node_index >= 0) {
+        if (!nodes_per_horizontal_indexes[node_index]) {
+          nodes_per_horizontal_indexes[node_index] = []
+        }
+        nodes_per_horizontal_indexes[node_index].push(this.drawingArea.sankey.nodes_dict[node.id])
+
+        if (node_index > max_horizontal_index) {
+          max_horizontal_index = node_index
+        }
+
+        // Marquer les liens de recyclage
+        node.output_links_list.forEach(link => {
+          const target_node_id = this.drawingArea.sankey.links_dict[link.id].target.id
+          const target_index = horizontal_indexes_per_nodes_ids[target_node_id]
+
+          if (target_index !== undefined && node_index >= target_index) {
+            this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = true
+          } else {
+            this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = false
+          }
+        })
+      }
+    })
+
+    // ÉTAPE 4: Repositionnement des nœuds sans entrée (logique existante préservée)
+    this.repositionNodesWithoutInputs(
+      nodes_per_horizontal_indexes,
       horizontal_indexes_per_nodes_ids,
-      recycling_links_ids,
-      launched_from_process,
+      max_horizontal_index
+    )
+
+    // ÉTAPE 5: Calcul des positions finales (logique existante)
+    this.computeFinalPositions(
+      nodes_per_horizontal_indexes,
+      horizontal_indexes_per_nodes_ids,
+      max_horizontal_index,
+      launched_from_process
+    )
+  }
+
+  /**
+   * Version améliorée de computeHorizontalIndex qui évite les problèmes de positionnement
+   */
+  private computeHorizontalIndexImproved(
+    node: Class_NodeElement,
+    nodes_to_process: Class_NodeElement[],
+    starting_index: number,
+    visited_nodes_ids: string[],
+    recycling_links_ids: string[],
+    horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
+  ) {
+    // Mettre à jour l'index du nœud actuel
+    const current_index = Math.max(starting_index, horizontal_indexes_per_nodes_ids[node.id] || 0)
+    horizontal_indexes_per_nodes_ids[node.id] = current_index
+
+    console.log(`📍 Nœud ${node.id}: index ${current_index}`)
+
+    // Parcourir les liens sortants
+    node.output_links_list
+      .filter(link => {
+        const target = this.drawingArea.sankey.links_dict[link.id].target
+        return nodes_to_process.some(n => n.id === target.id) &&
+          !recycling_links_ids.includes(link.id)
+      })
+      .forEach(link => {
+        const next_node = this.drawingArea.sankey.nodes_dict[
+          this.drawingArea.sankey.links_dict[link.id].target.id
+        ]
+
+        if (!visited_nodes_ids.includes(next_node.id)) {
+          // Récursion normale
+          this.computeHorizontalIndexImproved(
+            next_node,
+            nodes_to_process,
+            current_index + 1,
+            [...visited_nodes_ids, node.id],
+            recycling_links_ids,
+            horizontal_indexes_per_nodes_ids
+          )
+        } else {
+          // Cycle détecté -> lien de recyclage
+          console.log(`♻️ Lien de recyclage détecté: ${link.id} (${node.id} → ${next_node.id})`)
+          recycling_links_ids.push(link.id)
+        }
+      })
+  }
+
+  /**
+   * Repositionnement des nœuds sans entrée (logique existante préservée)
+   */
+  private repositionNodesWithoutInputs(
+    nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] },
+    horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
+    max_horizontal_index: number
+  ) {
+    for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
+      if (!nodes_per_horizontal_indexes[horizontal_index]) {
+        continue
+      }
+
+      const to_splice: Class_NodeElement[] = []
+
+      nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
+        if (!node.hasInputLinks()) {
+          let min_next_horizontal_index = max_horizontal_index + 1
+
+          node.output_links_list.forEach(link => {
+            if (this.drawingArea.sankey.nodes_dict[this.drawingArea.sankey.links_dict[link.id].source.id].is_visible &&
+              this.drawingArea.sankey.nodes_dict[this.drawingArea.sankey.links_dict[link.id].target.id].is_visible) {
+
+              const target_node = this.drawingArea.sankey.nodes_dict[this.drawingArea.sankey.links_dict[link.id].target.id]
+              if (target_node === undefined) return
+
+              if (horizontal_indexes_per_nodes_ids[target_node.id] < horizontal_indexes_per_nodes_ids[node.id]) {
+                return
+              }
+
+              if (horizontal_indexes_per_nodes_ids[target_node.id] < min_next_horizontal_index) {
+                min_next_horizontal_index = horizontal_indexes_per_nodes_ids[target_node.id]
+              }
+            }
+          })
+
+          if (horizontal_indexes_per_nodes_ids[node.id] < min_next_horizontal_index - 1) {
+            to_splice.push(node)
+            horizontal_indexes_per_nodes_ids[node.id] = Math.max(0, min_next_horizontal_index - 1) // Éviter les index négatifs
+
+            if (!nodes_per_horizontal_indexes[min_next_horizontal_index - 1]) {
+              nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
+            }
+            nodes_per_horizontal_indexes[min_next_horizontal_index - 1].push(node)
+
+            console.log(`🔧 Repositionnement nœud sans entrée ${node.id}: index ${min_next_horizontal_index - 1}`)
+          }
+        }
+      })
+
+      to_splice.forEach(node => {
+        const index = nodes_per_horizontal_indexes[horizontal_index].indexOf(node)
+        if (index > -1) {
+          nodes_per_horizontal_indexes[horizontal_index].splice(index, 1)
+        }
+      })
+    }
+  }
+
+  /**
+   * Calcul des positions finales (extrait de la logique existante)
+   */
+  private computeFinalPositions(
+    nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] },
+    horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
+    max_horizontal_index: number,
+    launched_from_process: boolean
+  ) {
+    // Utiliser la logique existante de positionnement vertical
+    // mais avec les corrections de la méthode updateNodesPositions précédente
+
+    const height_per_nodes_ids: { [node_id: string]: number } = {}
+    const height_cumul_per_indexes: number[] = []
+    const node_id_per_hxv_indexes: string[][] = []
+    let max_height_cumul = 0
+
+    // Calcul des hauteurs et tri vertical (logique existante)
+    for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
+      if (!nodes_per_horizontal_indexes[h_index]) {
+        continue
+      }
+
+      let height_cumul_for_index = 0
+      let max_vertical_index = 0
+      const sortcoef_per_nodes_ids: { [node_id: string]: number } = {}
+      const vertical_indexes_per_node_id: { [node_id: string]: number } = {}
+      const nodes_ids_per_vertical_index: string[] = []
+
+      nodes_per_horizontal_indexes[h_index].forEach(node => {
+        const node_height = node.getShapeHeightToUse()
+        const node_sortcoef = node_height * (0.8 + 0.2 / (node.output_links_list.length + node.input_links_list.length))
+
+        height_per_nodes_ids[node.id] = node_height
+        sortcoef_per_nodes_ids[node.id] = node_sortcoef
+        vertical_indexes_per_node_id[node.id] = max_vertical_index
+        nodes_ids_per_vertical_index.push(node.id)
+
+        // Tri à bulles (logique existante)
+        if (max_vertical_index > 0) {
+          for (let v_index = max_vertical_index; v_index > 0; v_index--) {
+            const prev_v_index = v_index - 1
+            const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
+            const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
+
+            if (prev_node_sortcoef < node_sortcoef) {
+              vertical_indexes_per_node_id[node.id] = prev_v_index
+              nodes_ids_per_vertical_index[prev_v_index] = node.id
+              vertical_indexes_per_node_id[prev_node_id] = v_index
+              nodes_ids_per_vertical_index[v_index] = prev_node_id
+            } else {
+              break
+            }
+          }
+        }
+        max_vertical_index += 1
+        height_cumul_for_index += node_height
+
+        // Configuration des labels si lancé depuis le processus
+        if (launched_from_process) {
+          this.setNodeLabelPositioning(node)
+        }
+      })
+
+      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.node_styles_dict['default'].position.dy!
+      if (height_cumul_for_index > max_height_cumul) {
+        max_height_cumul = height_cumul_for_index
+      }
+      height_cumul_per_indexes.push(height_cumul_for_index)
+      node_id_per_hxv_indexes.push(nodes_ids_per_vertical_index)
+    }
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
+      this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    // Positionnement final avec la logique corrigée
+    this.updateNodesPositions(
+      node_id_per_hxv_indexes,
+      height_per_nodes_ids,
+      height_cumul_per_indexes,
+      max_height_cumul,
+      max_horizontal_index,
       echangeTag
     )
   }
@@ -780,8 +1050,8 @@ export class NodePositioning {
   }
 
   /**
- * Version améliorée de updateNodesPositions qui évite les croisements de flux
- */
+   * Version corrigée de updateNodesPositions avec la logique center_biggest_nodes restaurée
+   */
   private updateNodesPositions(
     node_id_per_hxv_indexes: string[][],
     height_per_nodes_ids: { [node_id: string]: number },
@@ -795,6 +1065,9 @@ export class NodePositioning {
     let shift = 0
     const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].position_dx
 
+    console.log('🔧 Début du positionnement des nœuds...')
+    console.log('📊 v_margin:', v_margin, 'max_height_cumul:', max_height_cumul)
+
     // ÉTAPE 1: Calculer les positions X (inchangé)
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
@@ -806,97 +1079,115 @@ export class NodePositioning {
       })
     }
 
-    // ÉTAPE 2: Analyser les flux qui traversent d'autres nœuds
-    const crossing_analysis = this.analyzeCrossingFlows(node_id_per_hxv_indexes, max_horizontal_index)
-    console.log('🔍 Analyse des croisements:', crossing_analysis)
-
-    // ÉTAPE 3: Calculer les positions Y avec évitement des croisements
+    // ÉTAPE 2: Calculer les positions Y avec la logique center_biggest_nodes
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
 
       let max_w_col = 0
+
+      // LOGIQUE CENTER_BIGGEST_NODES : Activer si plus de 2 nœuds dans la colonne
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true
+
       const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
-      let upper_node_height_and_margin = v_margin_for_index + shift
+      let upper_node_height_and_margin = Math.max(0, v_margin_for_index + shift) // Protection contre les valeurs négatives
 
-      // Appliquer les ajustements pour éviter les croisements
-      const column_adjustments = this.calculateColumnAdjustments(
-        horizontal_index,
-        node_id_per_hxv_indexes[horizontal_index],
-        crossing_analysis,
-        v_margin
-      )
+      console.log(`🏛️ Colonne ${horizontal_index}: center_biggest_nodes=${center_biggest_nodes}, position de départ Y = ${upper_node_height_and_margin}`)
 
       if (center_biggest_nodes === true) {
-        // Logique existante avec ajustements
+        // LOGIQUE ALTERNÉE : Du bas vers le haut, puis du haut vers le bas
+        console.log(`🎯 Application de la logique center_biggest_nodes pour la colonne ${horizontal_index}`)
+
+        // Du bas vers le haut : traiter les nœuds à index pair en partant de la fin
         let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
         for (let index = last_index; index >= 0; index -= 2) {
           const node_id = node_id_per_hxv_indexes[horizontal_index][index]
 
-          // Appliquer l'ajustement pour éviter les croisements
-          const adjustment = column_adjustments[node_id] || 0
-
+          // Position du nœud
           this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin + adjustment
+          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
+          console.log(`📍 Nœud ${node_id} (phase 1): Y = ${upper_node_height_and_margin}`)
+
+          // Préparer pour le nœud suivant
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
 
+          // Largeur de colonne
           const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
           if (node_w > max_w_col) max_w_col = node_w
 
           last_index = index
         }
 
-        // Suite de la logique existante...
-        if (last_index == 0) last_index = 1
-        else last_index = 0
+        // Du haut vers le bas : traiter les nœuds restants
+        if (last_index == 0) {
+          last_index = 1
+        } else {
+          last_index = 0
+        }
 
         for (let index = last_index; index < node_id_per_hxv_indexes[horizontal_index].length; index += 2) {
           const node_id = node_id_per_hxv_indexes[horizontal_index][index]
 
-          // Appliquer l'ajustement pour éviter les croisements
-          const adjustment = column_adjustments[node_id] || 0
-
+          // Position du nœud
           this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin + adjustment
+          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
+          console.log(`📍 Nœud ${node_id} (phase 2): Y = ${upper_node_height_and_margin}`)
+
+          // Préparer pour le nœud suivant
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
 
+          // Largeur de colonne
           const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
           if (node_w > max_w_col) max_w_col = node_w
         }
       } else {
-        // Logique principale avec ajustements pour éviter les croisements
+        // LOGIQUE SIMPLE : Positionnement séquentiel
+        console.log(`📍 Application de la logique séquentielle pour la colonne ${horizontal_index}`)
+
         node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
-          // Appliquer l'ajustement pour éviter les croisements
-          const adjustment = column_adjustments[node_id] || 0
+          // Position Y simple
+          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
-          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin + adjustment
+          console.log(`📍 Nœud ${node_id}: Y = ${upper_node_height_and_margin}`)
 
-          // Logique existante pour les liens d'import, etc.
-          const import_link = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag))
+          // Logique d'alignement pour les liens spéciaux (comme dans le code original)
+          const import_link = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
+            echangeTag && l.source.hasGivenTag(echangeTag)
+          )
+
           if (import_link.length > 0) {
+            // Ajustement pour les liens d'import
             this.drawingArea.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
             if (idx == 0) {
               shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
             }
           } else {
-            // Logique existante pour les liens de recyclage et alignement...
-            const non_recycling_input_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l => l.is_visible && !l.shape_is_recycling && !l.source.hasGivenTag(echangeTag as Class_Tag))
+            // Logique d'alignement pour les autres liens
+            const non_recycling_input_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
+              l.is_visible && !l.shape_is_recycling && !(echangeTag && l.source.hasGivenTag(echangeTag))
+            )
+
             if (non_recycling_input_links.length > 0) {
-              const recycling_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l => l.is_visible && l.shape_is_recycling)
+              const recycling_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
+                l.is_visible && l.shape_is_recycling
+              )
+
               if (recycling_links.length > 0) {
+                // Ajustement pour les liens de recyclage
                 this.drawingArea.sankey.nodes_dict[node_id].position_y += recycling_links[0].thickness
                 if (idx == 0) {
                   shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
                 }
-              } else if (non_recycling_input_links.filter(l => l.source.output_links_list.filter(l => l.is_visible).length == 1).length == 1) {
-                // Alignement des centres (logique existante)
+              } else if (non_recycling_input_links.filter(l =>
+                l.source.output_links_list.filter(ol => ol.is_visible).length == 1
+              ).length == 1) {
+                // Alignement des centres (logique du code original)
                 const source_node = non_recycling_input_links[0].source
                 const current_node = this.drawingArea.sankey.nodes_dict[node_id]
                 const source_center_y = source_node.position_y + source_node.getShapeHeightToUse() / 2
@@ -908,13 +1199,17 @@ export class NodePositioning {
                 if (idx == 0) {
                   shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
                 }
+
+                console.log(`🎯 Alignement des centres pour ${node_id}: Y = ${aligned_position_y}`)
               }
             }
           }
 
+          // Préparer pour le nœud suivant
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
 
+          // Largeur de colonne
           const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
           if (node_w > max_w_col) max_w_col = node_w
         })
@@ -923,12 +1218,19 @@ export class NodePositioning {
       prev_col_width += max_w_col
     }
 
-    // Reste de la logique existante (calcul des dimensions)...
+    // ÉTAPE 3: Calcul des dimensions finales (inchangé)
     const possible_width = (horizontal_spacing + max_horizontal_index * horizontal_spacing + horizontal_spacing)
     const possible_height = (v_margin * 2 + max_height_cumul)
 
     this.drawingArea.width = (this.drawingArea.window_fitting_width < possible_width) ? possible_width : this.drawingArea.window_fitting_width
     this.drawingArea.height = (this.drawingArea.window_fitting_height < possible_height) ? possible_height : this.drawingArea.window_fitting_height
+
+    console.log('📐 Dimensions finales:', {
+      width: this.drawingArea.width,
+      height: this.drawingArea.height,
+      possible_width,
+      possible_height
+    })
   }
 
   /**

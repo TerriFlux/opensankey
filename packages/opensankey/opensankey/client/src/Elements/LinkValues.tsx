@@ -866,7 +866,7 @@ export class Class_LinkValue {
    * @memberof Class_LinkValue
    */
   public getMaxValue() {
-    return this.data_value
+    return Math.max(this.data_value??0,this.result_value??0)
   }
 
   public getAllValues() {
