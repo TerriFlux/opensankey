@@ -98,7 +98,11 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
     const value_update = updated_selected_links[0]?.value
     // Update input data value
-    ref_set_data_value_input.current(String(value_update?.valueData ?? ''))
+    if (new_data.drawing_area.type_data == 'data') {
+      ref_set_data_value_input.current(String(value_update?.valueData ?? ''))
+    } else {
+      ref_set_data_value_input.current(String(value_update?.valueResult ?? ''))      
+    }
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
   }
