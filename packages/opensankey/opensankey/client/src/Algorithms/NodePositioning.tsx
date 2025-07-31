@@ -793,6 +793,7 @@ export class NodePositioning {
       max_horizontal_index,
       echangeTag
     )
+    this.optimizeCrossingsPositioning(true)
   }
 
   /**
@@ -1050,7 +1051,7 @@ export class NodePositioning {
   }
 
   /**
-   * Version corrigée de updateNodesPositions avec la logique center_biggest_nodes restaurée
+   * Version simplifiée de updateNodesPositions sans la logique de croisements
    */
   private updateNodesPositions(
     node_id_per_hxv_indexes: string[][],
@@ -1065,10 +1066,9 @@ export class NodePositioning {
     let shift = 0
     const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].position_dx
 
-    console.log('🔧 Début du positionnement des nœuds...')
-    console.log('📊 v_margin:', v_margin, 'max_height_cumul:', max_height_cumul)
+    console.log('🔧 Positionnement des nœuds (sans optimisation croisements)...')
 
-    // ÉTAPE 1: Calculer les positions X (inchangé)
+    // ÉTAPE 1: Calculer les positions X
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
@@ -1086,43 +1086,31 @@ export class NodePositioning {
       }
 
       let max_w_col = 0
-
-      // LOGIQUE CENTER_BIGGEST_NODES : Activer si plus de 2 nœuds dans la colonne
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true
-
       const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
-      let upper_node_height_and_margin = Math.max(0, v_margin_for_index + shift) // Protection contre les valeurs négatives
+      let upper_node_height_and_margin = Math.max(0, v_margin_for_index + shift)
 
-      console.log(`🏛️ Colonne ${horizontal_index}: center_biggest_nodes=${center_biggest_nodes}, position de départ Y = ${upper_node_height_and_margin}`)
+      console.log(`🏛️ Colonne ${horizontal_index}: center_biggest_nodes=${center_biggest_nodes}`)
 
       if (center_biggest_nodes === true) {
         // LOGIQUE ALTERNÉE : Du bas vers le haut, puis du haut vers le bas
-        console.log(`🎯 Application de la logique center_biggest_nodes pour la colonne ${horizontal_index}`)
-
-        // Du bas vers le haut : traiter les nœuds à index pair en partant de la fin
         let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
         for (let index = last_index; index >= 0; index -= 2) {
           const node_id = node_id_per_hxv_indexes[horizontal_index][index]
 
-          // Position du nœud
           this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
           this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
-          console.log(`📍 Nœud ${node_id} (phase 1): Y = ${upper_node_height_and_margin}`)
-
-          // Préparer pour le nœud suivant
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
 
-          // Largeur de colonne
           const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
           if (node_w > max_w_col) max_w_col = node_w
 
           last_index = index
         }
 
-        // Du haut vers le bas : traiter les nœuds restants
         if (last_index == 0) {
           last_index = 1
         } else {
@@ -1132,43 +1120,31 @@ export class NodePositioning {
         for (let index = last_index; index < node_id_per_hxv_indexes[horizontal_index].length; index += 2) {
           const node_id = node_id_per_hxv_indexes[horizontal_index][index]
 
-          // Position du nœud
           this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
           this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
-          console.log(`📍 Nœud ${node_id} (phase 2): Y = ${upper_node_height_and_margin}`)
-
-          // Préparer pour le nœud suivant
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
 
-          // Largeur de colonne
           const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
           if (node_w > max_w_col) max_w_col = node_w
         }
       } else {
-        // LOGIQUE SIMPLE : Positionnement séquentiel
-        console.log(`📍 Application de la logique séquentielle pour la colonne ${horizontal_index}`)
-
+        // LOGIQUE SIMPLE : Positionnement séquentiel avec alignements spéciaux
         node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
-          // Position Y simple
           this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
-          console.log(`📍 Nœud ${node_id}: Y = ${upper_node_height_and_margin}`)
-
-          // Logique d'alignement pour les liens spéciaux (comme dans le code original)
+          // Logique d'alignement pour les liens spéciaux
           const import_link = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
             echangeTag && l.source.hasGivenTag(echangeTag)
           )
 
           if (import_link.length > 0) {
-            // Ajustement pour les liens d'import
             this.drawingArea.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
             if (idx == 0) {
               shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
             }
           } else {
-            // Logique d'alignement pour les autres liens
             const non_recycling_input_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
               l.is_visible && !l.shape_is_recycling && !(echangeTag && l.source.hasGivenTag(echangeTag))
             )
@@ -1179,7 +1155,6 @@ export class NodePositioning {
               )
 
               if (recycling_links.length > 0) {
-                // Ajustement pour les liens de recyclage
                 this.drawingArea.sankey.nodes_dict[node_id].position_y += recycling_links[0].thickness
                 if (idx == 0) {
                   shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
@@ -1187,7 +1162,7 @@ export class NodePositioning {
               } else if (non_recycling_input_links.filter(l =>
                 l.source.output_links_list.filter(ol => ol.is_visible).length == 1
               ).length == 1) {
-                // Alignement des centres (logique du code original)
+                // Alignement des centres
                 const source_node = non_recycling_input_links[0].source
                 const current_node = this.drawingArea.sankey.nodes_dict[node_id]
                 const source_center_y = source_node.position_y + source_node.getShapeHeightToUse() / 2
@@ -1199,17 +1174,13 @@ export class NodePositioning {
                 if (idx == 0) {
                   shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
                 }
-
-                console.log(`🎯 Alignement des centres pour ${node_id}: Y = ${aligned_position_y}`)
               }
             }
           }
 
-          // Préparer pour le nœud suivant
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
 
-          // Largeur de colonne
           const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
           if (node_w > max_w_col) max_w_col = node_w
         })
@@ -1218,19 +1189,110 @@ export class NodePositioning {
       prev_col_width += max_w_col
     }
 
-    // ÉTAPE 3: Calcul des dimensions finales (inchangé)
+    // Calcul des dimensions finales
     const possible_width = (horizontal_spacing + max_horizontal_index * horizontal_spacing + horizontal_spacing)
     const possible_height = (v_margin * 2 + max_height_cumul)
 
     this.drawingArea.width = (this.drawingArea.window_fitting_width < possible_width) ? possible_width : this.drawingArea.window_fitting_width
     this.drawingArea.height = (this.drawingArea.window_fitting_height < possible_height) ? possible_height : this.drawingArea.window_fitting_height
+  }
 
-    console.log('📐 Dimensions finales:', {
-      width: this.drawingArea.width,
-      height: this.drawingArea.height,
-      possible_width,
-      possible_height
+  /**
+   * NOUVELLE ÉTAPE : Optimisation des croisements de flux
+   * À appeler APRÈS le positionnement initial des nœuds
+   * 
+   * @param {boolean} apply_optimization - Active/désactive l'optimisation
+   */
+  public optimizeCrossingsPositioning(apply_optimization: boolean = true) {
+    if (!apply_optimization) {
+      console.log('🔧 Optimisation des croisements désactivée')
+      return
+    }
+
+    console.log('🔍 Début de l\'optimisation des croisements de flux...')
+
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
+      this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const nodes_to_process = this.drawingArea.sankey.visible_nodes_list.filter(n =>
+      !echangeTag || !n.hasGivenTag(echangeTag))
+
+    // Créer la structure node_id_per_hxv_indexes à partir des positions actuelles
+    const horizontal_positions: { [node_id: string]: number } = {}
+    const nodes_per_horizontal_indexes: { [index: number]: string[] } = {}
+    let max_horizontal_index = 0
+
+    // Regrouper les nœuds par position X approximative
+    nodes_to_process.forEach(node => {
+      const h_index = Math.round(node.position_x / node.position_dx)
+      horizontal_positions[node.id] = h_index
+
+      if (!nodes_per_horizontal_indexes[h_index]) {
+        nodes_per_horizontal_indexes[h_index] = []
+      }
+      nodes_per_horizontal_indexes[h_index].push(node.id)
+
+      if (h_index > max_horizontal_index) {
+        max_horizontal_index = h_index
+      }
     })
+
+    // Trier les nœuds par position Y dans chaque colonne
+    Object.keys(nodes_per_horizontal_indexes).forEach(h_index_str => {
+      const h_index = parseInt(h_index_str)
+      nodes_per_horizontal_indexes[h_index].sort((a, b) => {
+        const node_a_y = this.drawingArea.sankey.nodes_dict[a].position_y
+        const node_b_y = this.drawingArea.sankey.nodes_dict[b].position_y
+        return node_a_y - node_b_y
+      })
+    })
+
+    // Convertir en format attendu par analyzeCrossingFlows
+    const node_id_per_hxv_indexes: string[][] = []
+    for (let i = 0; i <= max_horizontal_index; i++) {
+      node_id_per_hxv_indexes.push(nodes_per_horizontal_indexes[i] || [])
+    }
+
+    // Analyser les croisements
+    const crossing_analysis = this.analyzeCrossingFlows(node_id_per_hxv_indexes, max_horizontal_index)
+    console.log('🔍 Croisements détectés:', crossing_analysis.crossing_flows.length)
+
+    if (crossing_analysis.crossing_flows.length === 0) {
+      console.log('✅ Aucun croisement détecté, optimisation non nécessaire')
+      return
+    }
+
+    // Appliquer les ajustements pour chaque colonne
+    const v_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
+    let total_adjustments = 0
+
+    for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
+      if (!node_id_per_hxv_indexes[horizontal_index] || node_id_per_hxv_indexes[horizontal_index].length === 0) {
+        continue
+      }
+
+      const column_adjustments = this.calculateColumnAdjustments(
+        horizontal_index,
+        node_id_per_hxv_indexes[horizontal_index],
+        crossing_analysis,
+        v_margin
+      )
+
+      // Appliquer les ajustements
+      Object.keys(column_adjustments).forEach(node_id => {
+        const adjustment = column_adjustments[node_id]
+        if (Math.abs(adjustment) > 0.1) { // Seuil minimum pour éviter les micro-ajustements
+          const current_y = this.drawingArea.sankey.nodes_dict[node_id].position_y
+          const new_y = Math.max(0, current_y + adjustment) // Éviter les Y négatifs
+
+          this.drawingArea.sankey.nodes_dict[node_id].position_y = new_y
+          total_adjustments++
+
+          console.log(`📍 Ajustement ${node_id}: ${current_y.toFixed(1)} → ${new_y.toFixed(1)} (${adjustment > 0 ? '+' : ''}${adjustment.toFixed(1)})`)
+        }
+      })
+    }
+
+    console.log(`✅ Optimisation terminée: ${total_adjustments} nœuds ajustés`)
   }
 
   /**
