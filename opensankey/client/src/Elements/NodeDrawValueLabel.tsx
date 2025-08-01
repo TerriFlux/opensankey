@@ -158,7 +158,7 @@ export class NodeDrawValueLabel {
     // It's probably not the most optimized way to resolve this problem but it work for now
     let max_digit_in = 0 //var to stock the maximum number of digit after decimal in link value visible linked to node
     const link_in = this._node.input_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.valueResult).split('.')[1]
+      const decimal_digit = String(link.valueCurrent).split('.')[1]
       if (decimal_digit !== undefined) { // sometime link value are already integer so we don't count their decimal digit
         max_digit_in = Math.max(max_digit_in, decimal_digit.length)
       }
@@ -166,12 +166,12 @@ export class NodeDrawValueLabel {
     })
 
     const pow_in = Math.pow(10, max_digit_in) // get a power of 10 so we can multiply this number to each input link value to have an Integer value
-    link_in.forEach(link => input_val += (link.value?.valueResult ?? 0) * pow_in)
+    link_in.forEach(link => input_val += (link.valueCurrent ?? 0) * pow_in)
 
     // Do the same we did for input links to output links
     let max_digit_out = 0
     const link_out = this._node.output_links_list.filter(link => link.is_visible).map(link => {
-      const decimal_digit = String(link.value?.valueResult).split('.')[1]
+      const decimal_digit = String(link.valueCurrent).split('.')[1]
       if (decimal_digit !== undefined) {
         max_digit_out = Math.max(max_digit_out, decimal_digit.length)
       }
@@ -179,7 +179,7 @@ export class NodeDrawValueLabel {
     })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.value?.valueResult ?? 0) * pow_out)
+    link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
     
     const display_unit = this._node.value_label_unit_visible && this._node.value_label_unit != ''
     const factor_unit = display_unit && this._node.value_label_unit_factor > 1 ? this._node.value_label_unit_factor : 1
