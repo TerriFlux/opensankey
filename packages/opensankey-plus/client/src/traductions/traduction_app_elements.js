@@ -707,9 +707,11 @@ export const resources_app_elements = {
       'elements_sankey+_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de OpenSankey+ et votre compte ne possède pas ce module',
       'elements_mfa_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de MFASankey et votre compte ne possède pas ce module',
       Tags: {
+        unit: 'Unités',
         sequence: 'Séquence',
         sequence_timeout: 'Délai entre étapes',
         tooltips: {
+          unit: 'Unités',
           sequence: 'Active le mode séquence pour le groupe d\'étiquette de données, cela fait apparaitre un stepper pour afficher les tag du groupe à la suite'
         }
       },

@@ -784,6 +784,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
               <Th>{t('Tags.Nom')}</Th>
               {(elementTagNameProp !== 'level_taggs')&&(elementTagNameProp !== 'data_taggs') ? <Th>{t('Tags.Bannière')}</Th> : <></>}
               {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.sequence')}</Th> : <></>}
+              {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.unit')}</Th> : <></>}
             </Tr>
           </Thead>
           {/* Liste des groupes d'étiquettes  */}
@@ -794,7 +795,7 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                 let dataTagg_special_column = <></>
                 const tag_group_as_data_grp = tag_group as Class_DataTagGroup
                 if (elementTagNameProp == 'data_taggs') {
-                  dataTagg_special_column =
+                  dataTagg_special_column =<>
                     <OSTooltip label={t('Tags.tooltips.sequence')}>
                       <Td>
                         <Switch
@@ -811,6 +812,24 @@ const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEd
                         />
                       </Td>
                     </OSTooltip>
+                    <OSTooltip label={t('Tags.tooltips.unit')}>
+                      <Td>
+                        <Switch
+                          justifySelf='end'
+                          alignSelf='center'
+                          height='1.5rem'
+                          isChecked={tag_group_as_data_grp.is_unit}
+                          onChange={evt => {
+                            tag_group_as_data_grp.is_unit = evt.target.checked
+                            new_data.drawing_area.draw()
+                            // Update menus
+                            updateThisAndRelatedComponents()
+                          }}
+                        />
+                      </Td>
+                    </OSTooltip>
+                    </>
+
                 }
                 return (
                   <Tr
