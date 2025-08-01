@@ -1496,7 +1496,7 @@ export class NodePositioning {
 
     // set dimensions. It must be done after each trade node has been split
     split_trade_nodes.forEach(node => {
-      if (!node.sibling) return
+      if (!node.master) return
       (node as Class_NodeElement).setTradeDimensions(true);
       (node as Class_NodeElement).setTradeDimensions(false)
     })
@@ -1660,9 +1660,9 @@ export class NodePositioning {
     current_v: number,
     tagGroup: Class_LevelTagGroup
   ) {
-    if (node.sibling) {
-      return current_v
-    }
+    // if (node.master) {
+    //   return current_v
+    // }
     if (node.display.position.v == -1) {
       // v is computed at the first path
       node.display.position.v = current_v
@@ -1679,7 +1679,7 @@ export class NodePositioning {
     if (desagregated_nodes.length > 0) {
       let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
       desagregated_nodes.forEach(nn => {
-        if (nn.sibling) {
+        if (nn.master) {
           return
         }
         nn.display.position.x = node.position_x

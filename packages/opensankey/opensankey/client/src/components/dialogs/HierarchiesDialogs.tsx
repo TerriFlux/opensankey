@@ -332,7 +332,7 @@ export const hierarchyManipulationMenu = (
       (contextualised_node !== undefined) &&
       (selected_nodes.includes(contextualised_node)) &&
       (contextualised_node.is_child) &&
-      (contextualised_node.sibling == undefined)
+      (contextualised_node.master == undefined)
       ?
       <Button
         variant='contextmenu_button'
@@ -365,8 +365,8 @@ export const hierarchyManipulationMenu = (
     return b
   }
 
-  const parent_dims = contextualised_node.dimensions_as_parent_pure
-  let child_dims = contextualised_node.dimensions_as_child_pure
+  const parent_dims = (contextualised_node.master ? contextualised_node.master.dimensions_as_parent_pure : contextualised_node.dimensions_as_parent_pure) as Class_NodeDimension[]
+  let child_dims = (contextualised_node.master ? contextualised_node.master.dimensions_as_child_pure : contextualised_node.dimensions_as_child_pure) as Class_NodeDimension[]
   const forced_dim = child_dims.filter(dim => dim.force_show_children)
   if (forced_dim.length > 0) {
     child_dims = forced_dim
@@ -374,14 +374,14 @@ export const hierarchyManipulationMenu = (
 
   const menu_agregation = (dim: Class_NodeDimension) => <>
     {btn_aggregate(dim)}
-    {contextualised_node.sibling == undefined ?
+    {contextualised_node.master == undefined ?
       <Button
         variant='contextmenu_button'
         onClick={() => aggregationExpansion(new_data, contextualised_node, false, dim.related_level_tagg as Class_LevelTagGroup)}
       >
         {t('Noeud.context_agregate_right')}
       </Button> : <></>}
-    {contextualised_node.sibling == undefined ?
+    {contextualised_node.master == undefined ?
       <Button
         variant='contextmenu_button'
         onClick={() => aggregationExpansion(new_data, contextualised_node, true, dim.related_level_tagg as Class_LevelTagGroup)}
@@ -428,14 +428,14 @@ export const hierarchyManipulationMenu = (
               {'-> ' + dim.parent.name}
             </MenuButton><MenuList>{menu_agregation(dim)}</MenuList></Menu>
         })}</>}
-        {contextualised_node.sibling && contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT) ?
+        {contextualised_node.master && contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT) ?
           <Button
             variant='contextmenu_button'
             onClick={() => contract(new_data, contextualised_node)}
           >
             {t('Noeud.context_contract_right')}
           </Button> : <></>}
-        {contextualised_node.sibling && contextualised_node.id.includes(EXPANSION_SUFFIXES.RIGHT) ?
+        {contextualised_node.master && contextualised_node.id.includes(EXPANSION_SUFFIXES.RIGHT) ?
           <Button
             variant='contextmenu_button'
             onClick={() => contract(new_data, contextualised_node)}
