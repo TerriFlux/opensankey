@@ -1540,6 +1540,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return this._values.getValueForDataTags(this.sankey.selected_data_tags_list as Class_DataTag[])
   }
 
+
+  public get valueCurrent() {
+    if (this.drawing_area.type_data === 'data') return this.valueData
+    return this.valueResult
+  }
   /**
    * Either search correct current value with data_taggs,
    *  or return directly the value when there is no data_taggs
@@ -1643,7 +1648,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
     // Init
     if (this.sankey.drawing_area.type_data !== 'data') {
-      data_value = this.valueResult
+      data_value = this.valueResult??this.valueData
     }
     let text_value = '-'
     // Create data label
@@ -1666,7 +1671,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       else if (this.value_label_significant_digits == true) {
         // 12345.67 avec nb_sign = 4 devient 12340
         text_value = String(parseFloat(data_value.toPrecision(this.value_label_nb_significant_digits)))
-        if (text_value[text_value.length - 1] == '0' && text_value.length == this.value_label_nb_significant_digits && text_value == String(this.valueResult)) {
+        if (text_value[text_value.length - 1] == '0' && text_value.length == this.value_label_nb_significant_digits && text_value == String(data_value)) {
           text_value += '.'
         }
       } else if (this.value_label_custom_digit) {
@@ -1760,7 +1765,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    */
   public get thickness() {
     // Get link value for current dataTaggs selected
-    const data_value = this.valueResult
+    const data_value = this.valueResult ?? this.valueData
     // Scale this value for the drawing area
     const linkValueInPx = (data_value !== null && (!this.shape_is_structure)) ? this.scaleValueToPx(data_value) : 2
 

@@ -435,7 +435,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
       this._drawInfoDataType()
     }
     // Draw explication for dashed links
-    const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l => l.value!.valueResult == null).length > 0
+    const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l => l.valueCurrent == null).length > 0
     if (sankey_has_dashed_links && this._info_link_value_void) {
       this._drawInfoDashedLink()
     }
