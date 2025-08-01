@@ -542,9 +542,12 @@ export class Class_LinkValue {
             const multiplier = this_conv_factor/conv_factor
             return child_with_data.valueResult!*multiplier
           }
-        } else*/ if (this.value_option == 'value') {
-      return this.data_value
-    } else if (this.value_option == 'ratio_input') {
+        } else*/ 
+    //      if (this.value_option == 'value') {
+    //   return this.data_value
+    // } else 
+    // 
+    if (this.value_option == 'ratio_input') {
       if (this.data_value == null) {
         return null
       }

@@ -84,7 +84,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   let unit_text : string | undefined
-  let default_value = value?.valueData
+  let default_value = element_ref.valueCurrent
   if (value_option == 'ratio_input' || value_option == 'ratio_output') {
     unit_text = '%'
     default_value = default_value?default_value:null
@@ -98,11 +98,8 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
     const value_update = updated_selected_links[0]?.value
     // Update input data value
-    if (new_data.drawing_area.type_data == 'data') {
-      ref_set_data_value_input.current(String(value_update?.valueData ?? ''))
-    } else {
-      ref_set_data_value_input.current(String(value_update?.valueResult ?? ''))      
-    }
+    ref_set_data_value_input.current(String(updated_selected_links[0]?.valueCurrent ?? ''))
+
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
   }

@@ -1070,9 +1070,9 @@ export class Class_DrawingArea {
    */
   public updateScaleAtLinkValueSetting() {
     // Update scaling if only one link
-    const links = this.sankey.links_list.filter(l => l.value != null && l.value.valueResult != null && l.value.valueResult != 0)
+    const links = this.sankey.links_list.filter(l => l.valueCurrent )
     if (links.length == 1) {
-      this.scale = links[0].value!.valueResult! // will redraw everything // will redraw everything
+      this.scale = links[0].valueCurrent! // will redraw everything // will redraw everything
     }
   }
 

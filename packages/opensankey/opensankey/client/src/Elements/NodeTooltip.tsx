@@ -77,8 +77,8 @@ export class NodeTooltip {
   private getTooltipHTML() {
     let input_val = 0
     let output_val = 0
-    this._node.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.value?.valueResult ?? 0)
-    this._node.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.value?.valueResult ?? 0)
+    this._node.input_links_list.filter(link => link.is_visible).forEach(link => input_val += link.valueCurrent ?? 0)
+    this._node.output_links_list.filter(link => link.is_visible).forEach(link => output_val += link.valueCurrent ?? 0)
     
     // Title
     let tooltip_html = '<p class="title" style="margin-bottom: 5px;">' +
@@ -117,7 +117,7 @@ export class NodeTooltip {
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (input_val > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.valueResult ?? 0) / input_val) * 100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.valueCurrent ?? 0) / input_val) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values
@@ -166,7 +166,7 @@ export class NodeTooltip {
           // With values
           tooltip_html += '      <td>' + link.data_label + '</td>'
           if (output_val > 0)  // avoid div / 0
-            tooltip_html += '      <td>' + Math.round(((link.valueResult ?? 0) / output_val) * 100).toPrecision(3) + '%</td>'
+            tooltip_html += '      <td>' + Math.round(((link.valueCurrent ?? 0) / output_val) * 100).toPrecision(3) + '%</td>'
           else
             tooltip_html += '      <td></td>'
           // And flux tag for each values

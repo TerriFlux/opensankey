@@ -138,12 +138,12 @@ export class LinkDrawValue {
     // Clean previous label
     this._link.d3_selection?.selectAll('.link_value').remove()
     // Add value label
-    const link_val = this._link.valueResult
+    const link_val = this._link.valueResult ?? this._link.valueData
 
     let total_source = 0
-    this._link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueResult ?? 0)
+    this._link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     let total_target = 0
-    this._link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueResult ?? 0)
+    this._link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
 
     // =======================DRAW VALUE LABEL ============================
     if (
