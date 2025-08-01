@@ -1,2 +1,1 @@
-import opensankey.app
-opensankey.app  # silence linter
+from opensankey.app import app as application

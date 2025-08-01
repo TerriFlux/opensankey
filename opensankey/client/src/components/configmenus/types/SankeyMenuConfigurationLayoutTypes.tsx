@@ -24,20 +24,20 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_GenericApplicationData } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FType_OpenSankeyMenuConfigurationLayout ={
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   extra_background_element:JSX.Element,
   contextual:boolean
 }
 
 export type FCTpe_LayoutConfigDAScaleAndLimit={
-  new_data:Type_GenericApplicationData
+  new_data:Class_ApplicationData
 }
 
 export type FCType_DrawingAreaStyle={
-  new_data:Type_GenericApplicationData,
+  new_data:Class_ApplicationData,
   extra_background_element:JSX.Element,
 
 }

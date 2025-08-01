@@ -24,14 +24,14 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_GenericApplicationData } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FCType_ModalWelcome = {
-  new_data: Type_GenericApplicationData;
+  new_data: Class_ApplicationData;
   external_pagination: { [x: string]: JSX.Element; };
   external_content: { [x: string]: JSX.Element; };
 }
 
 export type FCType_ModalWelcomeBuilder = {
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 }

@@ -33,17 +33,7 @@ import {
   Menu,
   MenuButton,
   MenuItem,
-  MenuList,
-  useBoolean,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Select,
-  Text,
+  MenuList
 } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
@@ -51,7 +41,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
-import { hierarchyEditionMenu,hierarchyManipulationMenu } from './Hierarchies'
+import { hierarchyEditionMenu, hierarchyManipulationMenu } from './HierarchiesDialogs'
 
 
 /*************************************************************************************************/
@@ -215,7 +205,7 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
       dict_old_value[n.id] = n.style
     })
     const _updateStyle = () => {
-      let node_ref_has_style=selected_nodes[0].style.includes(sn)??false
+      const node_ref_has_style=selected_nodes[0].style.includes(sn)??false
       new_data.drawing_area.sankey.switchNodeStyle(sn,node_ref_has_style)
 
       refreshThisAndToggleSaving()
@@ -398,18 +388,20 @@ export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
 
   const moveToFirstPlan = () => {
     drawing_area.selected_nodes_list.forEach(node => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(node.id)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(node)
       drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
     })
     closeContextMenu()
   }
   const moveToLastPlan = () => {
     drawing_area.selected_nodes_list.forEach(node => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(node.id)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(node)
       drawing_area.moveOrderElementInDA(idx_to_shift, 0)
     })
     closeContextMenu()
   }
+
+
   // JSX Components ---------------------------------------------------------------------
 
   // Menu to change some pararmeter concerning the style of the node

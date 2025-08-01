@@ -1,0 +1,5 @@
+services:
+  opensankey:
+    image: opensankey:latest
+    ports:
+      - 8080:5000

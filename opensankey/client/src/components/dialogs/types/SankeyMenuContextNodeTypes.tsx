@@ -25,9 +25,10 @@
 // ==================================================================================================
 
 import { MutableRefObject } from 'react'
-import { Type_AdditionalMenus, Type_GenericApplicationData } from '../../../types/Types'
+import { Type_AdditionalMenus } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FCType_ContextMenuNode = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   additionalMenu:MutableRefObject<Type_AdditionalMenus>
 }

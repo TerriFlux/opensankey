@@ -29,7 +29,7 @@
 // Internal Types / Classes
 import {
   SankeyData
-} from '../../types/LegacyType'
+} from '../../Persistence/LegacyType'
 import {
   FType_SetDiagram,
 } from './types/SankeyMenuBannerTypes'

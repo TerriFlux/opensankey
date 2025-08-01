@@ -32,10 +32,6 @@ import { MouseEvent } from 'react'
 import type {
   Class_MenuConfig
 } from '../types/MenuConfig'
-import type {
-  ClassAbstract_DrawingArea,
-  ClassAbstract_Sankey
-} from '../types/Abstract'
 
 // LOcal constants
 import {
@@ -43,16 +39,16 @@ import {
   Type_JSON,
   const_default_position_x,
   const_default_position_y,
-  Type_ElementPosition,
   getStringFromJSON,
   getNumberFromJSON,
   Type_Position,
   getStringOrUndefinedFromJSON,
-  randomId
+  randomId,
+  Type_ElementPosition
 } from '../types/Utils'
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_Sankey } from '../types/Sankey'
 
-
-export type Type_AnyProtoElement = ClassTemplate_ProtoElement<ClassAbstract_DrawingArea, ClassAbstract_Sankey>
 
 // CLASS PROTO ELEMENT ******************************************************************
 
@@ -61,11 +57,7 @@ export type Type_AnyProtoElement = ClassTemplate_ProtoElement<ClassAbstract_Draw
  *
  * @class ClassTemplate_ProtoElement
  */
-export abstract class ClassTemplate_ProtoElement
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-    Type_GenericSankey extends ClassAbstract_Sankey
-  > {
+export abstract class ClassTemplate_ProtoElement {
 
   // PUBLIC ATTRIBUTES ==================================================================
 
@@ -76,22 +68,9 @@ export abstract class ClassTemplate_ProtoElement
    */
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  /**
-   * Display attributes for proto element
-   * @protected
-   * @abstract
-   * @type {{
-   *     drawing_area: Type_GenericDrawingArea,
-   *   }}
-   * @memberof ClassTemplate_ProtoElement
-   */
-  protected abstract _display: {
-    drawing_area: Type_GenericDrawingArea,
-    sankey: Type_GenericSankey
-  }
-
+ 
+  private _drawing_area: Class_DrawingArea
+  private _sankey: Class_Sankey
   /**
    * Parent svg group : where element belong
    * @protected
@@ -171,17 +150,21 @@ export abstract class ClassTemplate_ProtoElement
   /**
    * Creates an instance of ClassTemplate_Element.
    * @param {string} id
-   * @param {Type_GenericDrawingArea} drawing_area
+   * @param {Class_DrawingArea} drawing_area
    * @param {string} svg_parent_group
    * @memberof ClassTemplate_Element
    */
   constructor(
     id: string,
+    drawing_area: Class_DrawingArea,
+    sankey: Class_Sankey,
     menu_config: Class_MenuConfig,
     svg_parent_group: string,
   ) {
     // Set values
     this._id = id
+    this._drawing_area = drawing_area
+    this._sankey = sankey
     this._svg_parent_group = svg_parent_group
     this._menu_config = menu_config
     // Init visibility id
@@ -224,7 +207,7 @@ export abstract class ClassTemplate_ProtoElement
    * @param {ClassTemplate_ProtoElement} element_to_copy
    * @memberof ClassTemplate_ProtoElement
    */
-  public copyFrom(element_to_copy: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
+  public copyFrom(element_to_copy: ClassTemplate_ProtoElement) {
     // Remove from drawing area
     this.unDraw()
     // Copy intrasect values
@@ -239,7 +222,7 @@ export abstract class ClassTemplate_ProtoElement
    * @param {ClassTemplate_ProtoElement} element_to_copy
    * @memberof ClassTemplate_ProtoElement
    */
-  protected _copyFrom(element_to_copy: ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey>) {
+  protected _copyFrom(element_to_copy: ClassTemplate_ProtoElement) {
     this._is_visible = element_to_copy._is_visible
     this._is_selected = element_to_copy._is_selected
     this._svg_parent_group = element_to_copy._svg_parent_group
@@ -250,7 +233,7 @@ export abstract class ClassTemplate_ProtoElement
   /**
    * Convert element to JSON
    * @return {*}
-   * @memberof ClassTemplate_NodeElement
+   * @memberof Class_NodeElement
    */
   public toJSON(
     kwargs?: Type_JSON
@@ -268,13 +251,13 @@ export abstract class ClassTemplate_ProtoElement
     _kwargs?: Type_JSON
   ) {
     json_object['id'] = this._id
-    json_object['is_visible'] = this._is_visible
+    if (!this._is_visible) json_object['is_visible'] = this._is_visible
   }
 
   /**
    * Apply json to element
    * @param {Type_JSON} json_object
-   * @memberof ClassTemplate_NodeElement
+   * @memberof Class_NodeElement
    */
   public fromJSON(
     json_object: Type_JSON,
@@ -340,7 +323,7 @@ export abstract class ClassTemplate_ProtoElement
    * @memberof ClassTemplate_Element
    */
   public setEventsListeners() {
-    if (!this._display.drawing_area.static) {
+    if (!this._drawing_area.static) {
       // Right mouse button clicks
       this.d3_selection?.on(
         'click',
@@ -418,7 +401,7 @@ export abstract class ClassTemplate_ProtoElement
   protected _process_or_bypass(
     process_func: () => void
   ) {
-    if (this._display.drawing_area.bypass_redraws)
+    if (this._drawing_area.bypass_redraws)
       return
     process_func()
   }
@@ -447,7 +430,7 @@ export abstract class ClassTemplate_ProtoElement
    * History saving
    * @param f
    */
-  protected saveUndo(f: (_: Type_AnyProtoElement) => void) {
+  protected saveUndo(f: (_: ClassTemplate_ProtoElement) => void) {
     this.drawing_area.application_data.history.saveUndo(() => {f(this)})
   }
 
@@ -455,7 +438,7 @@ export abstract class ClassTemplate_ProtoElement
   * History saving
   * @param f
   */
-  protected saveRedo(f: (_: Type_AnyProtoElement) => void) {
+  protected saveRedo(f: (_: ClassTemplate_ProtoElement) => void) {
     this.drawing_area.application_data.history.saveRedo(() => {f(this)})
   }
 
@@ -602,7 +585,7 @@ export abstract class ClassTemplate_ProtoElement
   // GETTERS / SETTERS ==================================================================
 
   // DrawingArea
-  public get drawing_area() { return this._display.drawing_area }
+  public get drawing_area() { return this._drawing_area }
 
   // Svg Group
   public get svg_parent_group() { return this._svg_parent_group }
@@ -631,10 +614,10 @@ export abstract class ClassTemplate_ProtoElement
   public get id() { return this._id }
 
   // Sankey
-  public get sankey() { return this._display.sankey }
+  public get sankey() { return this._sankey }
 
   // Get application config menu
-  protected get menu_config(): Class_MenuConfig { return this._menu_config }
+  public get menu_config(): Class_MenuConfig { return this._menu_config }
 }
 
 // CLASS ELEMENT ************************************************************************
@@ -645,12 +628,7 @@ export abstract class ClassTemplate_ProtoElement
  *
  * @class ClassTemplate_Element
  */
-export abstract class ClassTemplate_Element
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-    Type_GenericSankey extends ClassAbstract_Sankey
-  >
-  extends ClassTemplate_ProtoElement<Type_GenericDrawingArea, Type_GenericSankey> {
+export class ClassTemplate_Element extends ClassTemplate_ProtoElement {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -658,14 +636,12 @@ export abstract class ClassTemplate_Element
    * Display attributes for element
    * @protected
    * @type {{
-   *     drawing_area: Type_GenericDrawingArea,
+   *     drawing_area: Class_DrawingArea,
    *     position: Type_ElementPosition,
    *   }}
    * @memberof ClassTemplate_Element
    */
-  protected abstract _display: {
-    drawing_area: Type_GenericDrawingArea,
-    sankey: Type_GenericSankey,
+  protected _display: {
     position: Type_ElementPosition,
   }
 
@@ -674,16 +650,27 @@ export abstract class ClassTemplate_Element
   /**
    * Creates an instance of ClassTemplate_Element.
    * @param {string} id
-   * @param {Type_GenericDrawingArea} drawing_area
+   * @param {Class_DrawingArea} drawing_area
    * @param {string} svg_parent_group
    * @memberof ClassTemplate_Element
    */
   constructor(
     id: string,
+    drawing_area: Class_DrawingArea,
+    sankey: Class_Sankey,
     menu_config: Class_MenuConfig,
     svg_parent_group: string,
   ) {
-    super(id, menu_config, svg_parent_group)
+    super(id, drawing_area, sankey, menu_config, svg_parent_group)
+    this._display = {
+      position : {
+        type: 'absolute', // Default position type
+        x: const_default_position_x, // Default position x    
+        y: const_default_position_y, // Default position y
+        u: 0, // Default position u
+        v: 0, // Default position v
+      }
+    }
   }
 
   // COPY METHODS =======================================================================
@@ -694,7 +681,7 @@ export abstract class ClassTemplate_Element
    * @param {ClassTemplate_ProtoElement} _
    * @memberof ClassTemplate_ProtoElement
    */
-  protected _copyFrom(_: ClassTemplate_Element<Type_GenericDrawingArea, Type_GenericSankey>): void {
+  protected _copyFrom(_: ClassTemplate_Element): void {
     super._copyFrom(_)
     this._display.position.type = _._display.position.type
     this._display.position.x = _._display.position.x
@@ -703,8 +690,6 @@ export abstract class ClassTemplate_Element
     this._display.position.v = _._display.position.v
     this._display.position.dx = _._display.position.dx
     this._display.position.dy = _._display.position.dy
-    this._display.position.relative_dx = _._display.position.relative_dx
-    this._display.position.relative_dy = _._display.position.relative_dy
   }
 
   // SAVING METHODS =====================================================================
@@ -794,20 +779,18 @@ export abstract class ClassTemplate_Element
 
   // Position 
   public get position_x() { return this._display.position.x }
-  public set position_x(_: number) { this._display.position.x = _ /*this.applyPosition()*/ }
+  public set position_x(_: number) { this._display.position.x = _ }
   public get position_y() { return this._display.position.y }
-  public set position_y(_: number) { this._display.position.y = _ /*this.applyPosition()*/ }
+  public set position_y(_: number) { this._display.position.y = _ }
   public get position_u() { return this._display.position.u }
-  public set position_u(_: number) { this._display.position.u = _ /*this.applyPosition()*/ }
+  public set position_u(_: number) { this._display.position.u = _ }
   public get position_v() { return this._display.position.v }
-  public set position_v(_: number) { this._display.position.v = _ /*this.applyPosition()*/ }
+  public set position_v(_: number) { this._display.position.v = _ }
   public get position_dx() { return this._display.position.dx }
-  public set position_dx(_) { this._display.position.dx = _ /*this.applyPosition()*/ }
-  public get position_relative_dx() { return this._display.position.relative_dx }
-  public set position_relative_dx(_) { this._display.position.relative_dx = _ /*this.applyPosition()*/ }
+  public set position_dx(_) { this._display.position.dx = _ }
   public get position_dy() { return this._display.position.dy }
-  public set position_dy(_) { this._display.position.dy = _ /*this.applyPosition()*/ }
-  public get position_relative_dy() { return this._display.position.relative_dy }
-  public set position_relative_dy(_) { this._display.position.relative_dy = _ /*this.applyPosition()*/ }
+  public set position_dy(_) { this._display.position.dy = _ }
+  public get position_auto_x() { return this._display.position.auto_x }
+  public set position_auto_x(_) { this._display.position.auto_x = _ }
   public get display() { return this._display }
 }

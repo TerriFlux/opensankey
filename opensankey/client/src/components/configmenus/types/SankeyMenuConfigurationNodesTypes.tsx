@@ -29,7 +29,7 @@ import {
   SankeyData,
   SankeyNode,
   treeFolderType
-} from '../../../types/LegacyType'
+} from '../../../Persistence/LegacyType'
 
 export type tree_data_nodesFType = (t: TFunction<'translation', undefined>, data: SankeyData, multi_selected_nodes: { current: SankeyNode[] }, node_visible: string[],
   filter_node_selector: string[]
