@@ -32,7 +32,7 @@ import {
   Class_LinkElement
 } from '../Elements/Link'
 import { Class_Tag } from '../types/Tag'
-import { Class_LevelTagGroup } from '../types/TagGroup'
+import { Class_DataTagGroup, Class_LevelTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
 
 
@@ -473,6 +473,28 @@ export class NodePositioning {
     console.log('🔧 Calcul automatique des positions - version améliorée')
 
     // Calculate max value of flows (inchangé)
+    const unit_taggs = this.drawingArea.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    if (unit_taggs.length > 0) {
+      const selectedTag = unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0]
+      unit_taggs[0].tags_list.forEach(tag => {
+        unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
+        tag.setSelected()
+        let linksMaxValue = 0
+        this.drawingArea.sankey.links_list.forEach(link => {
+          const linkMaxValue = link.getMaxValue()
+          linksMaxValue = Math.max(
+            linksMaxValue,
+            linkMaxValue ? linkMaxValue : 0
+          )
+        })
+        linksMaxValue += 1
+        if (launched_from_process) {
+          tag.scale = linksMaxValue
+        }
+      })
+      unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
+      selectedTag.setSelected()
+    }
     let linksMaxValue = 0
     this.drawingArea.sankey.links_list.forEach(link => {
       const linkMaxValue = link.getMaxValue()
