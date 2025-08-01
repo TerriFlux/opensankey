@@ -88,6 +88,9 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   if (value_option == 'ratio_input' || value_option == 'ratio_output') {
     unit_text = '%'
     default_value = default_value?default_value:null
+  } else {
+      unit_text= selected_links[0]?.value_label_unit_visible ? selected_links[0]?.value_label_unit :
+      undefined
   }
 
   const updateInputsValues = () => {
