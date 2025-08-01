@@ -130,8 +130,10 @@ export class Class_NodeElement extends ClassTemplate_Element {
   protected d3_selection_g_FO_illustration: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_image: d3.Selection<SVGImageElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_icon: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown> | null = null
-
   protected _sibling_node: Class_NodeElement | undefined = undefined
+  protected _master_node: Class_NodeElement | undefined = undefined
+  protected _slave_nodes: Class_NodeElement[] = []
+
 
   protected _display: {
     position: Type_ElementPosition,
@@ -674,7 +676,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public addInputLink(link: Class_LinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
-      if ( this._links_order.includes(link)) {
+      if (this._links_order.includes(link)) {
         console.log('this._links_order.includes(link)')
       } else {
         this._links_order.push(link)
@@ -689,7 +691,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
-      if ( this._links_order.includes(link)) {
+      if (this._links_order.includes(link)) {
         console.log('this._links_order.includes(link)')
       } else {
         this._links_order.push(link)
@@ -1128,29 +1130,29 @@ export class Class_NodeElement extends ClassTemplate_Element {
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -2037,8 +2039,17 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   public get attached_container(): Class_ContainerElement[] { return this._attached_container }
 
-  public get sibling() {return this._sibling_node}
-  public set sibling(_) {this._sibling_node = _}
+  public get master() { return this._master_node }
+  public set master(_) { this._master_node = _ }
+  public get slave_nodes() {
+    return this._slave_nodes
+  }
+  public add_slave_nodes(_: Class_NodeElement) {
+    this._slave_nodes.push(_)
+  }
+
+  public get sibling() { return this._sibling_node }
+  public set sibling(_) { this._sibling_node = _ }
 
   // PRIVATE VISIBILITY GETTERS ========================================================
 
@@ -2144,7 +2155,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
       idTrade = idTrade.replaceAll(' ', '')
 
       const new_node = (this.sankey as Class_Sankey).addNewNode(idTrade, le_nom)
-      new_node.sibling = this
+      new_node.master = this
 
       // Handle dimensions and tags...
       Object.values(this.dimensions_as_child)

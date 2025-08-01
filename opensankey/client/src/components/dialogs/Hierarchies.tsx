@@ -94,7 +94,7 @@ const createOperationConfig = (
 ): BaseOperationConfig => ({
   expand_left,
   tagg,
-  original_node: contextualised_node.sibling as Class_NodeElement ?? contextualised_node,
+  original_node: contextualised_node.master as Class_NodeElement ?? contextualised_node,
   suffix: expand_left ? EXPANSION_SUFFIXES.LEFT : EXPANSION_SUFFIXES.RIGHT
 })
 
@@ -318,8 +318,8 @@ const processLinksForDisaggregationExpansion = (
   let is_extremity = true
 
   // Vérifier si on est à une extrémité
-  const isLeftExtremity = isAtExtremity(config.original_node, 'left')
-  const isRightExtremity = isAtExtremity(config.original_node, 'right')
+  const isLeftExtremity = isAtExtremity(config.contextualised_node, 'left')
+  const isRightExtremity = isAtExtremity(config.contextualised_node, 'right')
 
   if (config.expand_left) {
     if (!isLeftExtremity && config.original_node.input_links_list.length > 0) {
@@ -477,8 +477,8 @@ const updateLinkValuesForDisaggregationExpansion = (
 
       if (expand_left) {
         if (!linkResult.is_extremity) {
-          const laggregate_child = laggregate.source.output_links_list.find(l =>
-            l.target === newNode.sibling || l.target === newNode
+          let laggregate_child = laggregate.source.output_links_list.find(l => 
+            l.target === newNode.master || l.target === newNode
           )
 
           if (laggregate_child) {
@@ -489,8 +489,8 @@ const updateLinkValuesForDisaggregationExpansion = (
           laggregate.setInvisible()
         } else {
           // Cas extrémité : les liens viennent de la direction opposée
-          const laggregate_child = laggregate.target.input_links_list.find(l =>
-            l.source === newNode.sibling || l.source === newNode
+          let laggregate_child = laggregate.target.input_links_list.find(l => 
+            l.source === newNode.master || l.source === newNode
           )
 
           if (laggregate_child) {
@@ -502,8 +502,8 @@ const updateLinkValuesForDisaggregationExpansion = (
         }
       } else {
         if (!linkResult.is_extremity) {
-          const laggregate_child = laggregate.target.input_links_list.find(l =>
-            l.source === newNode.sibling || l.source === newNode
+          let laggregate_child = laggregate.target.input_links_list.find(l => 
+            l.source === newNode.master || l.source === newNode
           )
 
           if (laggregate_child) {
@@ -514,8 +514,8 @@ const updateLinkValuesForDisaggregationExpansion = (
           laggregate.setInvisible()
         } else {
           // Cas extrémité : les liens viennent de la direction opposée
-          const laggregate_child = laggregate.source.output_links_list.find(l =>
-            l.target === newNode.sibling || l.target === newNode
+          let laggregate_child = laggregate.source.output_links_list.find(l => 
+            l.target === newNode.master || l.target === newNode
           )
 
           if (laggregate_child) {
@@ -536,23 +536,39 @@ const updateLinkValuesForAggregationExpansion = (
   expand_left: boolean
 ) => {
   const logger = createLogger(false)
-
+  
   logger.group('Updating aggregation link values')
-
-  linkResult.original_links.forEach(original_link => {
-    logger.log(`Treating: ${original_link.source.name} -> ${original_link.target.name}`)
-
-    const targetLink = expand_left
-      ? expandedLinks.find(l => l.target === original_link.target)
-      : expandedLinks.find(l => l.source === original_link.source)
-
-    if (targetLink) {
-      logger.log(`Adding value to: ${targetLink.source.name} -> ${targetLink.target.name}`)
-      targetLink.addValues(original_link)
-      original_link.setInvisible()
-    }
-  })
-
+  
+  if (!linkResult.is_extremity) {
+    linkResult.original_links.forEach(original_link => {
+      logger.log(`Treating: ${original_link.source.name} -> ${original_link.target.name}`)
+      
+      const targetLink = expand_left 
+        ? expandedLinks.find(l => l.target === original_link.target)
+        : expandedLinks.find(l => l.source === original_link.source)
+      
+      if (targetLink) {
+        logger.log(`Adding value to: ${targetLink.source.name} -> ${targetLink.target.name}`)
+        targetLink.addValues(original_link)
+        original_link.setInvisible()
+      }
+    })
+  } else {
+    linkResult.original_links.forEach(original_link => {
+      logger.log(`Treating: ${original_link.source.name} -> ${original_link.target.name}`)
+      
+      const targetLink = expand_left 
+        ? expandedLinks.find(l => l.target === original_link.source)
+        : expandedLinks.find(l => l.source === original_link.target)
+      
+      if (targetLink) {
+        logger.log(`Adding value to: ${targetLink.source.name} -> ${targetLink.target.name}`)
+        targetLink.addValues(original_link)
+        //original_link.setInvisible()
+      }
+    })    
+  }
+  
   logger.groupEnd()
 }
 
@@ -612,8 +628,8 @@ const createDisaggregationExpansionNodes = (
       child.id + config.suffix,
       child.name
     )
-
-    newNode.sibling = child
+    
+    newNode.master = child
     newNode.copyFrom(child)
     updateNodeAppearance(newNode, config.contextualised_node)
     updateNodeDimensions(newNode, config.contextualised_node, config.tagg, true)
@@ -629,11 +645,11 @@ const createAggregationExpansionNode = (
   config: AggregationExpansionConfig
 ): Class_NodeElement => {
   const newNode = new_data.drawing_area.sankey.addNewNode(
-    config.parent.id + config.suffix,
+    config.parent.id + config.suffix, 
     config.parent.name
   )
-
-  newNode.sibling = config.parent
+  
+  newNode.master = config.parent
   newNode.copyFrom(config.parent)
   updateNodeAppearance(newNode, config.contextualised_node)
   updateNodeDimensions(newNode, config.contextualised_node, config.tagg, false)
@@ -716,12 +732,12 @@ export const disaggregationExpansion = (
   tagg: Class_LevelTagGroup
 ) => {
   new_data.drawing_area.bypass_redraws = true
-
-  const parent_dim = contextualised_node.nodeDimensionAsParent(tagg)
+  
+  const parent_dim = contextualised_node.master ? contextualised_node.master.nodeDimensionAsParent(tagg) : contextualised_node.nodeDimensionAsParent(tagg)
   if (!parent_dim) {
     return
   }
-
+  
   const config: DisaggregationExpansionConfig = {
     ...createOperationConfig(contextualised_node, expand_left, tagg),
     parent_dim,
@@ -753,30 +769,31 @@ export const aggregationExpansion = (
   tagg: Class_LevelTagGroup
 ) => {
   new_data.drawing_area.bypass_redraws = true
-
-  const child_dim = contextualised_node.nodeDimensionAsChild(tagg)
+  
+  const child_dim = contextualised_node.master ? contextualised_node.master.nodeDimensionAsChild(tagg) : contextualised_node.nodeDimensionAsChild(tagg)
   if (!child_dim) {
     return
   }
-
+  
   const config: AggregationExpansionConfig = {
     ...createOperationConfig(contextualised_node, expand_left, tagg),
     parent: child_dim.parent as Class_NodeElement,
-    nodes_to_agregate: child_dim.children as Class_NodeElement[],
+    nodes_to_agregate: (contextualised_node.master ? child_dim.children.map(c=>(c as Class_NodeElement).slave_nodes[0]) : child_dim.children) as Class_NodeElement[],
     child_dim,
     contextualised_node
   }
-
+  
   // Création du nœud agrégé
   const aggregateNode = createAggregationExpansionNode(new_data, config)
-
+  
   // Traitement des liens
   const linkResult = processLinksForAggregationExpansion(config)
   const expandedLinks = createAggregationExpansionLinks(new_data, aggregateNode, config)
   updateLinkValuesForAggregationExpansion(expandedLinks, linkResult, expand_left)
-
-  createBorderLinks(new_data, aggregateNode, linkResult, expand_left)
-
+  if (!linkResult.is_extremity) {
+    createBorderLinks(new_data, aggregateNode, linkResult, expand_left)
+  }
+  
   // Positionnement et finalisation
   updateAggregationExpansionPositioning(new_data, aggregateNode, config)
   finalizeOperation(new_data, [aggregateNode])
@@ -877,14 +894,14 @@ const detectContractContext = (contextualised_node: Class_NodeElement): Contract
   } else if (hasAggregateStructure) {
     return ContractContext.AFTER_AGGREGATE
   }
-
+  
   // Méthode 2: Analyser les siblings et les dimensions
-  if (contextualised_node.sibling && contextualised_node.dimensions_as_parent.length > 0) {
+  if (contextualised_node.master && contextualised_node.dimensions_as_parent.length > 0) {
     return ContractContext.AFTER_EXPAND
-  } else if (contextualised_node.sibling && contextualised_node.dimensions_as_child.length > 0) {
+  } else if (contextualised_node.master && contextualised_node.dimensions_as_child.length > 0) {
     return ContractContext.AFTER_AGGREGATE
   }
-
+  
   // Par défaut, supposer EXPAND (comportement original)
   return ContractContext.AFTER_EXPAND
 }

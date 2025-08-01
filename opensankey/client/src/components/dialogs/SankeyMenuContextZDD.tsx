@@ -392,6 +392,21 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     }}>
     {t('MEP.parametricMode')}
   </Button>
+  const button_auto_x = <Button variant='contextmenu_button'
+    onClick={() => {
+      new_data.drawing_area.sankey.node_styles_dict['default'].position.auto_x = true 
+      // new_data.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      // Object.values(new_data.drawing_area.sankey.nodes_dict)
+      //   .filter(node => node.display.position.type !== 'relative')
+      //   .forEach(node => {
+      //     node.resetPositionAttribute('dy')
+      //     node.applyPosition()
+      //   }
+      //   )
+      // new_data.drawing_area.nodePositioning.computeParametrization()
+    }}>
+    {'Auto x'}
+  </Button>
 
   let full = t('fullscreen')
   if (!document.fullscreenElement) {
@@ -427,6 +442,7 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
       {button_trade_close}
       {button_trade_open}
       {button_parametric}
+      {button_auto_x}
       {sep}
       {button_assgn_rand_node_color}
       {sep}
