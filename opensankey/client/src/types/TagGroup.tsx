@@ -539,6 +539,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   private _show_legend: boolean = false
 
   private _is_sequence: boolean = false
+  private _is_unit = false
 
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
@@ -572,6 +573,8 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   ) {
     super._copyFrom(tagg_to_copy)
     this._show_legend = tagg_to_copy.show_legend
+    this._is_sequence = tagg_to_copy._is_sequence
+    this._is_unit = tagg_to_copy._is_unit
   }
 
   protected _toJSON(
@@ -581,6 +584,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     super._toJSON(json_object, kwargs)
     json_object['show_legend'] = this._show_legend
     json_object['is_sequence'] = this._is_sequence
+    json_object['is_unit'] = this._is_unit
   }
 
   protected _fromJSON(
@@ -590,6 +594,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     super._fromJSON(json_object, kwargs)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
     this._is_sequence = getBooleanFromJSON(json_object, 'is_sequence', this._is_sequence)
+    this._is_unit = getBooleanFromJSON(json_object, 'is_unit', this._is_unit)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -683,6 +688,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   public get show_legend(): boolean { return this._show_legend }
   public get is_sequence(): boolean { return this._is_sequence }
+  public get is_unit(): boolean { return this._is_unit }
 
   // SETTER ==============================================================================
   public set show_legend(value: boolean) {
@@ -693,6 +699,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     }
   }
   public set is_sequence(value: boolean) { this._is_sequence = value }
+  public set is_unit(value: boolean) { this._is_unit = value }
 }
 // CLASS LEVEL TAGGROUP *****************************************************************
 /**
