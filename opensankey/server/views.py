@@ -79,11 +79,22 @@ converter_funct = {
 }
 
 template_folder = os.path.join(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'),
+    os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.abspath(
+                    __file__))),
+        'client'),
     'build'
 )
+
 static_folder = os.path.join(
-    os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'client'), 'build'),
+    os.path.join(
+        os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__))),
+            'client'),
+        'build'),
     'static'
 )
 
@@ -139,20 +150,23 @@ def save_excel():
         - 402 : Error when saving mfa data
     '''
     # Extract Sankey structure from JSON
-    try:
-        sankey_as_data = request.get_data().decode("utf-8")
-        sankey_as_json = json.loads(sankey_as_data)
-        sankey = converter_funct['extract_sankey_from_json'](sankey_as_json)
-    except Exception as excpt:
-        return Response(
-            response='save_excel: ' + str(excpt),
-            status=500)
+    # try:
+    data = request.form['data']
+    sankey_as_data = data
+    sankey_as_json = json.loads(sankey_as_data)
+    sankey = converter_funct['extract_sankey_from_json'](sankey_as_json)
+    options = request.form['options']
+    options_save_excel = json.loads(options)
+    # except Exception as excpt:
+    #     return Response(
+    #         response='save_excel: ' + str(excpt),
+    #         status=500)
     # Save Sankey structure in Excel
     try:
         cwd = os.getcwd()
         excel_filename = os.path.join(cwd, "tutu.xlsx")
         io_excel = IOExcel()
-        io_excel.write_excel_from_sankey(excel_filename, sankey, mode='w')
+        io_excel.write_excel_from_sankey(excel_filename, sankey, mode='w', **options_save_excel)
         # Ajoute le fichier json dans un onglet layout
         wb = openpyxl.load_workbook(excel_filename)
         layout_sheet = wb.create_sheet()
@@ -685,6 +699,7 @@ def parse_folder(current_dir, menus, key=None):
 
     extension_to_avoid = [
         '.gitkeep',
+        '.vscode',
         'mfadata',
         'not_tested',
         'sankeylayout',
@@ -697,7 +712,9 @@ def parse_folder(current_dir, menus, key=None):
         'Old',
         'old',
         'Matériaux',
-        'Documents'
+        'Documents',
+        'Clients',
+        'public'
         ]
 
     for file_or_folder in folder_content:
@@ -1107,7 +1124,7 @@ def url_load_json():
 
     Input : None
 
-    Output : data (json) from url as string 
+    Output : data (json) from url as string
 
     '''
     try:

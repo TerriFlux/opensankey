@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,12 +31,7 @@ import {
   Button
 } from '@chakra-ui/react'
 
-/*************************************************************************************************/
 
-import type {
-  Type_GenericApplicationData,
-  Type_GenericNodeElement
-} from '../../types/Types'
 
 /*************************************************************************************************/
 
@@ -45,12 +40,14 @@ import {
 } from '../../types/Utils'
 import { ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_NodeElement } from '../../Elements/Node'
 
 
 /*************************************************************************************************/
 
 type FCType_SankeyNodeEdition = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
 }
 
 /*************************************************************************************************/
@@ -68,8 +65,8 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
   const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible } = icon_library
   // Nodes to select --------------------------------------------------------------------
 
-  let nodes: Type_GenericNodeElement[]
-  let selected_nodes: Type_GenericNodeElement[]
+  let nodes: Class_NodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     nodes = new_data.drawing_area.sankey.nodes_list_sorted
@@ -81,7 +78,6 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
   const entries_for_nodes: typeElementSelectable = nodes.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_nodes.includes(d) } })
-
   // Menu updaters ----------------------------------------------------------------------
 
   // Boolean used to force this component to reload
@@ -217,7 +213,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
    *
    */
   const addNode = () => {
-    let new_node: Type_GenericNodeElement
+    let new_node: Class_NodeElement
 
     const _addNode = () => {
       // Create default node
@@ -393,8 +389,8 @@ export const SankeyNodeSelectionSimple: FunctionComponent<FCType_SankeyNodeEditi
 
   // Nodes to select --------------------------------------------------------------------
 
-  let nodes: Type_GenericNodeElement[]
-  let selected_nodes: Type_GenericNodeElement[]
+  let nodes: Class_NodeElement[]
+  let selected_nodes: Class_NodeElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
     nodes = new_data.drawing_area.sankey.nodes_list_sorted

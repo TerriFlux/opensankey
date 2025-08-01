@@ -25,8 +25,8 @@
 // ==================================================================================================
 
 import {
-  applicationDataType } from '../../../types/LegacyType'
-import { Type_GenericApplicationData } from '../../../types/Types'
+  applicationDataType } from '../../../Persistence/LegacyType'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 
 export type MenuConfigurationLinksFType = (
@@ -37,5 +37,5 @@ export type MenuConfigurationLinksFType = (
 ) => { [s: string]: JSX.Element; }
 
 export type FCType_SankeyMenuConfigurationLinks = {
-  new_data:Type_GenericApplicationData,
+  new_data:Class_ApplicationData,
 }

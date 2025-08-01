@@ -32,11 +32,12 @@ import {
 } from '@chakra-ui/react'
 import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput} from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
-import { Type_GenericApplicationData } from '../../types/Types'
 import { t } from 'i18next'
+import { Class_LinkElement } from '../../Elements/Link'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -461,6 +462,13 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
       new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_bg_opacity', evt, f)
     }
   }
+  const eventLegendStickDrawing = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.legend.stick_to_drawing = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'stick_to_drawing', evt.target.checked, f)
+  }
 
   const eventLegendBorder = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
@@ -471,7 +479,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
   }
 
   const eventLegendPosX = (evt: number | undefined | null) => {
-    if (evt) {
+    if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
         new_data.drawing_area.legend.position_x = _
         new_data.drawing_area.legend.applyPosition()
@@ -482,7 +490,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
   }
 
   const eventLegendPosY = (evt: number | undefined | null) => {
-    if (evt) {
+    if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
         new_data.drawing_area.legend.position_y = _
         new_data.drawing_area.legend.applyPosition()
@@ -514,6 +522,18 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
         onChange={eventLegendMasked}
       >
         {t('Menu.Leg')}
+      </Checkbox>
+    </Box>
+    {/* Solidaire du diagramme */}
+    <Box layerStyle='menuconfigpanel_grid'>
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={new_data.drawing_area.legend.stick_to_drawing}
+        onChange={eventLegendStickDrawing}
+      >
+        <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
+          {t('Menu.LegStickDrawing')}
+        </OSTooltip>
       </Checkbox>
     </Box>
 
@@ -675,12 +695,6 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
   const { t } = new_data
   const [, setCount] = useState(0)
 
-
-  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
-
-  // Update input data value
-  ref_set_text_value_input.current(new_data.node_label_separator)
-
   /**
    * Function used to reset menu UI
    */
@@ -732,50 +746,6 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
   }
 
   return <>
-    {/* Masquer une partie des noms des noeuds */}
-    <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
-      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
-        <ConfigMenuTextInput
-          ref_to_set_value={ref_set_text_value_input}
-          function_get_value={() => { return new_data.node_label_separator }}
-          function_on_blur={(_) => {
-            const tmp = _ ? _ : ''
-            new_data.node_label_separator = tmp
-            new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-          }}
-        />
-      </Box>
-    </OSTooltip>
-
-    <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
-      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
-        <Box layerStyle='options_2cols'>
-          <Button variant={new_data.node_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-            onClick={() => {
-              new_data.node_label_separator_part = 'before'
-              new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-              setCount(a => a + 1)
-            }
-            }
-          >
-            {t('Menu.before')}
-          </Button>
-          <Button variant={new_data.node_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-            onClick={() => {
-              new_data.node_label_separator_part = 'after'
-              new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-              setCount(a => a + 1)
-            }
-            }
-          >
-            {t('Menu.after')}
-          </Button>
-        </Box>
-      </Box>
-    </OSTooltip>
-
     <Box
       as='span'
       layerStyle='menu_sub_section_title'
@@ -819,14 +789,10 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
     >
       {t('MEP.leg_show_info_link_void')}
     </Checkbox>
-
-
-
-
   </>
 }
 
-export const GraphElementsOrdoner: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+export const GraphElementsOrdoner: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
   const [, setUpdate] = useState(0)
 
@@ -856,19 +822,19 @@ export const GraphElementsOrdoner: FunctionComponent<{ new_data: Type_GenericApp
           >
             {
               new_data.drawing_area.list_g_element
-                .map((id_element, element_idx) => {
-                  const element = new_data.drawing_area.elementFromId(id_element)
+                .map((element, element_idx) => {
+                  //const element = new_data.drawing_area.elementFromId(id_element)
                   if (!element.is_visible)
                     return <></>
                   return (
-                    <Draggable key={id_element} index={element_idx} draggableId={'line_drag_' + id_element}>
+                    <Draggable key={element.id} index={element_idx} draggableId={'line_drag_' + element.id}>
                       {(provided, snapshot) => (
-                        <Box key={id_element} layerStyle='drag_line_element_order' ref={provided.innerRef}
+                        <Box key={element.id} layerStyle='drag_line_element_order' ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
                           style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
                         >
-                          <Box className='name_element'>{element.name}</Box>
+                          <Box className='name_element'>{(element as Class_LinkElement).name}</Box>
                           <Box layerStyle="options_2cols">
                             <Button
                               variant='menuconfigpanel_move_order_node_io'

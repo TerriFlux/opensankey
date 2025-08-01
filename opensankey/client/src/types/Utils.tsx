@@ -34,8 +34,8 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import * as d3 from 'd3'
 // Local type imports
 import type { OSTooltpFuncType } from '../components/configmenus/types/SankeyUtilsTypes'
-import { Type_GenericApplicationData } from './Types'
 import { FType_InitializeAdditionalMenus } from './FunctionTypes'
+import { Class_ApplicationData } from './ApplicationData'
 
 // SPECIFIC TYPES ************************************************************************
 
@@ -53,6 +53,7 @@ export type Type_ElementPosition = {
   dy?: number
   relative_dx?: number
   relative_dy?: number
+  auto_x?: boolean
 }
 
 export type Type_ElementPositionOptionnal = {
@@ -65,6 +66,7 @@ export type Type_ElementPositionOptionnal = {
   dy?: number
   relative_dx?: number
   relative_dy?: number
+  auto_x?: boolean
 }
 export type Type_Position = 'absolute' | 'relative' | 'parametric'
 
@@ -397,9 +399,9 @@ export const GetRandomInt = (max: number) => {
 
 
 export const list_palette_color = [d3.interpolateBlues, d3.interpolateBrBG, d3.interpolateBuGn, d3.interpolatePiYG, d3.interpolatePuOr,
-d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
-d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
-d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
+  d3.interpolatePuBu, d3.interpolateRdBu, d3.interpolateRdGy, d3.interpolateRdYlBu, d3.interpolateRdYlGn, d3.interpolateSpectral,
+  d3.interpolateTurbo, d3.interpolateViridis, d3.interpolateInferno, d3.interpolateMagma, d3.interpolatePlasma, d3.interpolateCividis,
+  d3.interpolateWarm, d3.interpolateCool, d3.interpolateCubehelixDefault, d3.interpolateRainbow, d3.interpolateSinebow]
 
 // COMPONENTS ===========================================================================
 // ! Won't work with locales using characters different than Arabic numerals (e.g. *Eastern* Arabic numerals: ١٢٣٬٤٥٦٫٧٨٩)
@@ -433,7 +435,7 @@ export const parseLocaleNumber = (stringNumber: string, locale = navigator.langu
 
 
 export const WrapperInitializeAdditionalMenus: FunctionComponent<{
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
 }> = ({ new_data, initializeAdditionalMenus }) => {
   const [, setUpdate] = useState(0)

@@ -56,9 +56,9 @@ import {
 } from '@chakra-ui/react'
 
 import { FCType_ModalWelcome, FCType_ModalWelcomeBuilder } from './types/ModalWelcome'
-import { Type_GenericApplicationData } from '../../types/Types'
 
 import resources from './resources.json'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
 export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
@@ -148,7 +148,7 @@ export const ModalWelcomeBuilder: FunctionComponent<FCType_ModalWelcomeBuilder> 
 }
 
 export const ModalWelcomeContent = (
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
 ) => {
   const { t, static_path } = new_data
   const welcome_text = (new_data.options?.welcome_text as string) ?? ''

@@ -835,6 +835,7 @@ class SankeyToJson(object):
 
         # Create data structure
         data_json = self._init_data_struct(sankey, data, default_data_strct)
+        _update_dict_if_value(data_json, "data_value", data.value)
         # Reference data struct from data tags
         tags = [
             tag for tag in data.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)
@@ -874,8 +875,6 @@ class SankeyToJson(object):
         :rtype: dict
         """
         data_json = copy.deepcopy(default_data_strct)
-        data_json["data_value"] = data.value if (data.value is not None) else ""
-        data_json["text_value"] = ""
         # Update flux tags to data structure
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
             # TODO : Checker si len(tags) > 1 -> normalement ça ne devrait pas arriver
@@ -1235,8 +1234,8 @@ class SankeyToJson(object):
                 else:
                     # Node does not exist in given dim
                     node_json["dimensions"][id] = {}
-                    if node._dimensions_as_child or node._dimensions_as_parent:
-                        node_json["dimensions"][id]["antitag"] = True
+                    # if node._dimensions_as_child or node._dimensions_as_parent:
+                    #     node_json["dimensions"][id]["antitag"] = True
         return node_json
 
 
@@ -1444,14 +1443,17 @@ class JsonToSankey(object):
             # self._nodes_id_corresp[node_json['id']] = node
             self._nodes_id_corresp[node_id] = node
             # Apply node tags
-            for tagg_id in node_json["tags"].keys():
-                if tagg_id in self._nodetags_id_corresp.keys():
-                    # Get corresponding tags
-                    for tag_id in node_json["tags"][tagg_id]:
-                        if tag_id in self._nodetags_id_corresp[tagg_id].keys():
-                            tag = self._nodetags_id_corresp[tagg_id][tag_id]
-                            node.add_tag(tag)
+            if "tags" in node_json:
+                for tagg_id in node_json["tags"].keys():
+                    if tagg_id in self._nodetags_id_corresp.keys():
+                        # Get corresponding tags
+                        for tag_id in node_json["tags"][tagg_id]:
+                            if tag_id in self._nodetags_id_corresp[tagg_id].keys():
+                                tag = self._nodetags_id_corresp[tagg_id][tag_id]
+                                node.add_tag(tag)
             # Save dimensions
+            if "dimensions" not in node_json:
+                continue
             for dimension_id, dimension in node_json["dimensions"].items():
                 if "parent_name" in dimension.keys():
                     all_dim_parent_child.append(
@@ -1516,13 +1518,41 @@ class JsonToSankey(object):
         ----------
         None
         """
+        # Grouper les flux par paire source-destination
+        flux_groups = {}
         for flux_id, flux_json in self.json["links"].items():
-            # Create flux
-            orig_node = self._nodes_id_corresp[flux_json["idSource"]]
-            dest_node = self._nodes_id_corresp[flux_json["idTarget"]]
-            flux = self.sankey.get_or_create_flux(orig_node.name, dest_node.name)
-            # Get data
-            self._extract_data(flux_json["value"], flux)
+            source_id = flux_json["idSource"]
+            target_id = flux_json["idTarget"]
+            key = (source_id, target_id)
+
+            if key not in flux_groups:
+                flux_groups[key] = []
+            flux_groups[key].append(flux_json)
+        # Créer un flux unique par paire avec tous les flux tags
+        for (source_id, target_id), flux_list in flux_groups.items():
+            # Obtenir les nœuds
+            orig_node = self._nodes_id_corresp[source_id]
+            dest_node = self._nodes_id_corresp[target_id]
+            for flux_json in flux_list:
+                if "tags" in flux_json["value"]:
+                    for tagg_id in flux_json["value"]["tags"].keys():
+                        if tagg_id in self._fluxtags_id_corresp.keys():
+                            # Get corresponding tags
+                            for tag_id in flux_json["value"]["tags"][tagg_id]:
+                                if tag_id in self._fluxtags_id_corresp[tagg_id].keys():
+                                    tag = self._fluxtags_id_corresp[tagg_id][tag_id]
+                                    flux = self.sankey.get_or_create_flux(
+                                        orig_node.name,
+                                        dest_node.name,
+                                        tag
+                                    )
+                                    self._extract_data(flux_json["value"], flux)
+                else:
+                    flux = self.sankey.get_or_create_flux(
+                        orig_node.name,
+                        dest_node.name
+                    )
+                    self._extract_data(flux_json["value"], flux)
 
     def _extract_data(self, datas_json, flux, datatags_list=[], datataggs_list=None):
         """
@@ -1570,29 +1600,31 @@ class JsonToSankey(object):
         :type datatags_list: list[Tags]
         """
         # Check if we reach the bottom of datas_json
-        if "data_value" in datas_json.keys():
+        if "data_value" in datas_json.keys() or "result_value" in datas_json.keys():
             # Get corresponding data / datatags
             data = flux.get_corresponding_datas_from_tags(datatags_list)[0]
             # Get all fluxtags
             fluxtags_list = []
-            for fluxtagg_id in datas_json["tags"].keys():
-                # Get all tags related to this taggroup and to this flux
-                for fluxtag_id in datas_json["tags"][fluxtagg_id]:
-                    if fluxtag_id == "initial_data" or fluxtag_id == "computed_data":
-                        continue
-                    if fluxtag_id not in self._fluxtags_id_corresp[fluxtagg_id].keys():
-                        # sanity check
-                        continue
-                    fluxtags_list.append(
-                        self._fluxtags_id_corresp[fluxtagg_id][fluxtag_id]
-                    )
+            if "tags" in datas_json:
+                for fluxtagg_id in datas_json["tags"].keys():
+                    # Get all tags related to this taggroup and to this flux
+                    for fluxtag_id in datas_json["tags"][fluxtagg_id]:
+                        if fluxtag_id == "initial_data" or fluxtag_id == "computed_data":
+                            continue
+                        if fluxtag_id not in self._fluxtags_id_corresp[fluxtagg_id].keys():
+                            # sanity check
+                            continue
+                        fluxtags_list.append(
+                            self._fluxtags_id_corresp[fluxtagg_id][fluxtag_id]
+                        )
             # Check if data is result or not
             # data_is_computed = False
             # if "flux_types" in datas_json["tags"].keys():
             #     if "computed_data" in datas_json["tags"]["flux_types"]:
             #         data_is_computed = True
             # Update data OR result
-            data.value = datas_json["data_value"]
+            if 'data_value' in datas_json:
+                data.value = datas_json["data_value"]
             # Apply only flux-tags
             for tag in fluxtags_list:
                 data.add_tag(tag)

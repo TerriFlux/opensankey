@@ -31,46 +31,21 @@ import {
   Button,
   Checkbox,
   InputGroup,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
   Select,
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
 
 import {
+  Class_LinkElement,
   isAttributeOverloaded,
 } from '../../Elements/Link'
 import {
-  default_shape_arrow_size,
-  default_shape_color,
-  default_shape_ending_curve,
-  default_shape_ending_tangeant,
-  default_shape_is_arrow,
-  default_shape_is_curved,
-  default_shape_is_recycling,
-  default_shape_is_structure,
-  default_shape_local_scale,
-  default_shape_opacity,
-  default_shape_orientation,
-  default_shape_starting_curve,
-  default_shape_starting_tangeant,
-  default_link_value_label_is_visible,
-  default_link_value_label_on_path,
-  default_link_value_label_pos_auto,
-  default_link_name_label_is_visible,
-  default_shape_color_rule,
   Class_LinkAttribute,
-  default_link_value_label_percent_input,
-  default_link_value_label_percent_output
+  LINKS_ATTRIBUTES_CONFIG,
+  default_shape_local_scale
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
-import {
-  Type_GenericApplicationData,
-  Type_GenericLinkElement
-} from '../../types/Types'
 import {
   CustomFaEyeCheckIcon,
   default_style_id
@@ -83,10 +58,10 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
-import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit } from './SankeyMenuComponents'
+import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit, OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
-import { FaCheck } from 'react-icons/fa'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /*************************************************************************************************/
 // Declare custom logo used for some button
@@ -96,8 +71,8 @@ import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle 
 
 type keyStyle = keyof Class_LinkStyle
 type valStyle = Class_LinkStyle[keyStyle]
-type keyLink = keyof Type_GenericLinkElement
-type valLink = Type_GenericLinkElement[keyLink]
+type keyLink = keyof Class_LinkElement
+type valLink = Class_LinkElement[keyLink]
 
 
 /*************************************************************************************************/
@@ -121,7 +96,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const { t, icon_library, OSColorPicker, drawing_area } = new_data
   const { sankey } = drawing_area
 
-  const { icon_redo, icon_open_selector, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
+  const { icon_redo, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_links } = dict_setter_show_dialog
@@ -140,7 +115,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   }
 
   // Elements on which menu modification applies
-  let elements: Class_LinkStyle[] | Type_GenericLinkElement[]
+  let elements: Class_LinkStyle[] | Class_LinkElement[]
 
   const updateValueForListElements = <TModel, TKey extends keyof TModel>(
     model: TModel[],
@@ -211,30 +186,30 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   /**
    * function that go throught all links of an array & check if they're all equals
    * (to the first )
-   * @param {Type_GenericLinkElement} curr
+   * @param {Class_LinkElement} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Type_GenericLinkElement) => {
+  const check_indeterminate = (curr: Class_LinkElement) => {
     return (selected_links[0].isEqual(curr))
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
 
   const element_ref = elements[0]
-  const shape_orientation = (element_ref?.shape_orientation ?? default_shape_orientation)
-  const shape_starting_curve = (element_ref?.shape_starting_curve ?? default_shape_starting_curve)
-  const shape_ending_curve = (element_ref?.shape_ending_curve ?? default_shape_ending_curve)
-  const shape_starting_tangeant = (element_ref?.shape_starting_tangeant ?? default_shape_starting_tangeant)
-  const shape_ending_tangeant = (element_ref?.shape_ending_tangeant ?? default_shape_ending_tangeant)
-  const shape_is_curved = (element_ref?.shape_is_curved ?? default_shape_is_curved)
-  const shape_is_recycling = (element_ref?.shape_is_recycling ?? default_shape_is_recycling)
-  const shape_arrow_size = (element_ref?.shape_arrow_size ?? default_shape_arrow_size)
-  const shape_is_arrow = (element_ref?.shape_is_arrow ?? default_shape_is_arrow)
-  const shape_color = (element_ref?.shape_color ?? default_shape_color)
-  const shape_color_rule = (element_ref?.shape_color_rule ?? default_shape_color_rule)
-  const shape_opacity = (element_ref?.shape_opacity ?? default_shape_opacity)
-  const shape_is_structure = (element_ref?.shape_is_structure ?? default_shape_is_structure)
-  const shape_local_scale = (element_ref?.local_link_scale ?? default_shape_local_scale)
-
+  const shape_orientation = (element_ref?.shape_orientation ?? LINKS_ATTRIBUTES_CONFIG.shape_orientation.default)
+  const shape_starting_curve = (element_ref?.shape_starting_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_curve.default)
+  const shape_ending_curve = (element_ref?.shape_ending_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_curve.default)
+  const shape_starting_tangeant = (element_ref?.shape_starting_tangeant ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_tangeant.default)
+  const shape_ending_tangeant = (element_ref?.shape_ending_tangeant ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_tangeant.default)
+  const shape_is_curved = (element_ref?.shape_is_curved ?? LINKS_ATTRIBUTES_CONFIG.shape_is_curved.default)
+  const shape_shape = (element_ref?.shape_shape ?? LINKS_ATTRIBUTES_CONFIG.shape_shape.default)
+  const shape_is_recycling = (element_ref?.shape_is_recycling ?? LINKS_ATTRIBUTES_CONFIG.shape_is_recycling.default)
+  const shape_arrow_size = (element_ref?.shape_arrow_size ?? LINKS_ATTRIBUTES_CONFIG.shape_arrow_size.default)
+  const shape_is_arrow = (element_ref?.shape_is_arrow ?? LINKS_ATTRIBUTES_CONFIG.shape_is_arrow.default)
+  const shape_color = (element_ref?.shape_color ?? LINKS_ATTRIBUTES_CONFIG.shape_color.default)
+  const shape_color_rule = (element_ref?.shape_color_rule ?? LINKS_ATTRIBUTES_CONFIG.shape_color_rule.default)
+  const shape_opacity = (element_ref?.shape_opacity ?? LINKS_ATTRIBUTES_CONFIG.shape_opacity.default)
+  const shape_is_structure = (element_ref?.shape_is_structure ?? LINKS_ATTRIBUTES_CONFIG.shape_is_structure.default)
+  const shape_local_scale = (element_ref?.shape_local_link_scale ?? default_shape_local_scale)
 
 
   // Components updaters ----------------------------------------------------------------
@@ -244,7 +219,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const [, setCountStyle] = useState(0)
   // Link this menu's update function
   if (!menu_for_style) {
-    new_data.menu_configuration.ref_to_menu_config_nodes_apparence_visual_updater.current = () => setCount(a => a + 1)
+    new_data.menu_configuration.ref_to_menu_config_links_apparence_visual_updater.current = () => setCount(a => a + 1)
   } else {
     new_data.menu_configuration.ref_to_menu_config_links_styles_updater.current = () => setCountStyle(a => a + 1)
   }
@@ -264,7 +239,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   ref_set_number_inputs[5].current(String(shape_opacity))
 
   const ref_set_link_scale_inputs = useRef((_: string | null | undefined) => null)
-  ref_set_link_scale_inputs.current(shape_local_scale as string | null |undefined)
+  ref_set_link_scale_inputs.current(shape_local_scale as string | null | undefined)
   /**
    * Function used to reset menu UI
    */
@@ -377,7 +352,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
     </>
   </WrapperBoxSubSectionMenu>
 
-  const content_shape_detail = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.apparence.Forme')}>
+  const content_shape_detail = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.apparence.shape_visible')}>
     <>
 
       {/* Orientation du flux */}
@@ -468,17 +443,38 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
       </Box>
 
       {/* Forme courbée  */}
-      <Checkbox
-        isDisabled={!disable_attr_props['shape_is_curved']}
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminate}
-        isChecked={shape_is_curved}
-        onChange={(evt) => { updateElements('shape_is_curved', evt.target.checked) }}>
-        <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
-          {t('Flux.apparence.shape_is_curved')}
-          <TooltipElementOverloaded k={'shape_is_curved'} />
-        </OSTooltip>
-      </Checkbox>
+      {/* Choix de la forme du flux */}
+      <Box as='span' layerStyle='menuconfigpanel_row_3colsbis' >
+        <Checkbox
+          isDisabled={!disable_attr_props['shape_is_curved']}
+          variant='menuconfigpanel_option_checkbox'
+          isIndeterminate={is_indeterminate}
+          isChecked={shape_is_curved}
+          onChange={(evt) => { updateElements('shape_is_curved', evt.target.checked) }}>
+          <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
+            {t('Flux.apparence.shape_is_curved')}
+            <TooltipElementOverloaded k={'shape_is_curved'} />
+          </OSTooltip>
+        </Checkbox>
+        {shape_is_curved?<><Box layerStyle='menuconfigpanel_option_name'>
+          {t('Flux.apparence.shape_shape')}
+          <TooltipElementOverloaded k={'shape_shape'} />
+        </Box>
+        <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
+          <Select
+            //isDisabled={!disable_attr_props['shape_shape']}
+            value={shape_shape}
+            onChange={(evt) => {
+              updateElements('shape_shape', evt.target.value)
+            }}
+          >
+            {new_data.menu_configuration.shape_shape.map(el => {
+              return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+            })}
+          </Select>
+        </OSTooltip></>:<></>}
+      </Box>
+
       <Box layerStyle='menuconfigpanel_row_2cols'>
         {/* Forme fleche droite  */}
         <Checkbox
@@ -536,14 +532,14 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
           <>
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
-                {t('Flux.apparence.local_link_scale')}
-                <TooltipElementOverloaded k={'local_link_scale'} />
+                {t('Flux.apparence.shape_local_link_scale')}
+                <TooltipElementOverloaded k={'shape_local_link_scale'} />
               </Box>
               <ConfigMenuNumberOrUndefinedInput
-                disabled={!disable_attr_props['local_link_scale']}
+                disabled={!disable_attr_props['shape_local_link_scale']}
                 ref_to_set_value={ref_set_link_scale_inputs}
-                default_value={selected_links[0]?.local_link_scale ?? undefined}
-                function_on_blur={(_) => { updateElements('local_link_scale', (_ !== undefined ) ? undefined : _) }}
+                default_value={selected_links[0]?.shape_local_link_scale ?? undefined}
+                function_on_blur={(_) => { updateElements('shape_local_link_scale', _ as number) }}
                 minimum_value={0}
                 stepper={true}
                 step={1}
@@ -673,21 +669,32 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   if (!menu_for_style) {
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      _shape_orientation: { overloaded: isAttributeOverloaded(selected_links, 'shape_orientation'), name: t('Flux.apparence.of') },
-      _shape_starting_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_curve'), name: t('Flux.apparence.shape_starting_curve') },
-      _shape_ending_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_curve'), name: t('Flux.apparence.shape_ending_curve') },
-      _shape_starting_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_tangeant'), name: t('Flux.apparence.shape_starting_tangeant') },
-      _shape_ending_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_tangeant'), name: t('Flux.apparence.shape_ending_tangeant') },
-      _shape_is_curved: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_curved'), name: t('Flux.apparence.shape_is_curved') },
-      _shape_is_recycling: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_recycling'), name: t('Flux.apparence.shape_is_recycling') },
-      _shape_arrow_size: { overloaded: isAttributeOverloaded(selected_links, 'shape_arrow_size'), name: t('Flux.apparence.shape_arrow_size') },
-      _shape_is_arrow: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_arrow'), name: t('Flux.apparence.shape_is_arrow') },
-      _shape_color: { overloaded: isAttributeOverloaded(selected_links, 'shape_color'), name: t('Flux.apparence.shape_color') },
-      _shape_color_rule: { overloaded: isAttributeOverloaded(selected_links, 'shape_color_rule'), name: t('Flux.apparence.shape_color_rule') },
-      _shape_opacity: { overloaded: isAttributeOverloaded(selected_links, 'shape_opacity'), name: t('Flux.apparence.shape_opacity') },
-      _shape_is_structure: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_structure'), name: t('Flux.apparence.shape_is_structure') },
-      _local_link_scale: { overloaded: isAttributeOverloaded(selected_links, 'local_link_scale'), name: t('Flux.apparence.local_link_scale') },
+      shape_orientation: { overloaded: isAttributeOverloaded(selected_links, 'shape_orientation'), name: t('Flux.apparence.of') },
+      shape_starting_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_curve'), name: t('Flux.apparence.shape_starting_curve') },
+      shape_ending_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_curve'), name: t('Flux.apparence.shape_ending_curve') },
+      shape_starting_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_tangeant'), name: t('Flux.apparence.shape_starting_tangeant') },
+      shape_ending_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_tangeant'), name: t('Flux.apparence.shape_ending_tangeant') },
+      shape_is_curved: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_curved'), name: t('Flux.apparence.shape_is_curved') },
+      shape_shape: { overloaded: isAttributeOverloaded(selected_links, 'shape_shape'), name: t('Flux.apparence.shape_shape') },
+      shape_is_recycling: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_recycling'), name: t('Flux.apparence.shape_is_recycling') },
+      shape_arrow_size: { overloaded: isAttributeOverloaded(selected_links, 'shape_arrow_size'), name: t('Flux.apparence.shape_arrow_size') },
+      shape_is_arrow: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_arrow'), name: t('Flux.apparence.shape_is_arrow') },
+      shape_color: { overloaded: isAttributeOverloaded(selected_links, 'shape_color'), name: t('Flux.apparence.shape_color') },
+      shape_color_rule: { overloaded: isAttributeOverloaded(selected_links, 'shape_color_rule'), name: t('Flux.apparence.shape_color_rule') },
+      shape_opacity: { overloaded: isAttributeOverloaded(selected_links, 'shape_opacity'), name: t('Flux.apparence.shape_opacity') },
+      shape_is_structure: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_structure'), name: t('Flux.apparence.shape_is_structure') },
+      shape_local_link_scale: { overloaded: isAttributeOverloaded(selected_links, 'shape_local_link_scale'), name: t('Flux.apparence.shape_local_link_scale') },
     }
+
+    const options_selector: typeElementSelectable = sankey.link_styles_list.map(style => {
+      return {
+        value: style.id,
+        label: style.name,
+        selected: (element_ref as Class_LinkElement)?.style.includes(style) ?? false,
+        disabled: style.id == default_style_id,
+
+      }
+    })
 
     content_style = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} ><>
       <Box layerStyle='menuconfigpanel_row_stylechoice' >
@@ -716,38 +723,18 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
         >
           {icon_library.icon_edit_style}
         </Button>
-        <Menu>
-          <MenuButton
-            as={Button}
-            variant='menuconfigpanel_option_button'
-            rightIcon={icon_open_selector}
-          >
-            {sankey.getStyleOfSelectedLinks()}
-          </MenuButton>
-          <MenuList>
-            {
+        <OSMultiSelect
+          t={t}
+          elements={options_selector}
+          onClick={(entries) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            sankey.link_styles_list.forEach(style => {
+              sankey.switchLinkStyle(style, entries_values.includes(style.id))
+            })
 
-              sankey.link_styles_list
-                .map(style => {
-                  const flow_ref_has_style = (element_ref as Type_GenericLinkElement)?.style.includes(style) ?? false
-
-                  return (<React.Fragment key={style.id}>
-                    <MenuItem
-                      display='flex'
-
-                      key={style.id}
-                      onClick={() => {
-                        sankey.switchLinkStyle(style, !flow_ref_has_style)
-                      }}
-                    >
-                      {style.name}
-                      {flow_ref_has_style ? <FaCheck /> : <></>}
-                    </MenuItem></React.Fragment>
-                  )
-                })
-            }
-          </MenuList>
-        </Menu>
+          }}
+        />
       </Box>
       <MenuOrderStylesOfSelectedFlows new_data={new_data} />
     </>
@@ -760,8 +747,8 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
 
   const content = <Box layerStyle='menuconfigpanel_grid'>
     {selection_link}
+    {content_style}
     {elements.length > 0 ? <>
-      {content_style}
       {content_config}</> : <></>}
   </Box>
 
@@ -776,7 +763,6 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   // Get traduction function
   const { t, icon_library, drawing_area } = new_data
   const { sankey } = drawing_area
-  const { icon_open_selector } = icon_library
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_links_context } = dict_setter_show_dialog
@@ -804,7 +790,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   }
 
   // Elements on which menu modification applies
-  let elements: Class_LinkStyle[] | Type_GenericLinkElement[]
+  let elements: Class_LinkStyle[] | Class_LinkElement[]
 
   const updateValueForListElements = <TModel, TKey extends keyof TModel>(
     model: TModel[],
@@ -891,22 +877,22 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
   // Elements attributes ----------------------------------------------------------------
   const element_ref = elements[0]
-  const value_label_on_path = (element_ref?.value_label_on_path ?? default_link_value_label_on_path)
-  const value_label_pos_auto = (element_ref?.value_label_pos_auto ?? default_link_value_label_pos_auto)
-  const value_label_is_visible = (element_ref?.value_label_is_visible ?? default_link_value_label_is_visible)
-  const name_label_is_visible = (element_ref?.name_label_is_visible ?? default_link_name_label_is_visible)
-  const name_label_on_path = (element_ref?.name_label_on_path ?? default_link_value_label_on_path)
-  const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? default_link_value_label_pos_auto)
-  const value_label_percent_input = (element_ref?.value_label_percent_input ?? default_link_value_label_percent_input)
-  const value_label_percent_output = (element_ref?.value_label_percent_output ?? default_link_value_label_percent_output)
+  const value_label_on_path = (element_ref?.value_label_on_path ?? LINKS_ATTRIBUTES_CONFIG.value_label_on_path.default)
+  const value_label_pos_auto = (element_ref?.value_label_pos_auto ?? LINKS_ATTRIBUTES_CONFIG.value_label_pos_auto.default)
+  const value_label_is_visible = (element_ref?.value_label_is_visible ?? LINKS_ATTRIBUTES_CONFIG.value_label_is_visible.default)
+  const name_label_is_visible = (element_ref?.name_label_is_visible ?? LINKS_ATTRIBUTES_CONFIG.name_label_is_visible.default)
+  const name_label_on_path = (element_ref?.name_label_on_path ?? LINKS_ATTRIBUTES_CONFIG.value_label_on_path.default)
+  const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? LINKS_ATTRIBUTES_CONFIG.value_label_pos_auto.default)
+  const value_label_percent_input = (element_ref?.value_label_percent_input ?? LINKS_ATTRIBUTES_CONFIG.value_label_percent_input.default)
+  const value_label_percent_output = (element_ref?.value_label_percent_output ?? LINKS_ATTRIBUTES_CONFIG.value_label_percent_output.default)
 
   /**
    * function that go throught all links of an array & check if they're all equals
    * (to the first )
-   * @param {Type_GenericLinkElement} curr
+   * @param {Class_LinkElement} curr
    * @return {*}
    */
-  const check_indeterminate = (curr: Type_GenericLinkElement) => {
+  const check_indeterminate = (curr: Class_LinkElement) => {
     return (selected_links[0].isEqual(curr))
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
@@ -1136,37 +1122,46 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   if (!menu_for_style) {
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      _name_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'name_label_is_visible'), name: t('Noeud.labels.name_label_is_visible') },
-      _value_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_is_visible'), name: t('Flux.labels.value_label_is_visible') },
-      _value_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'value_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
-      _value_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'value_label_pos_auto'), name: '' },
-      _name_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'name_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
-      _name_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'name_label_pos_auto'), name: '' },
+      name_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'name_label_is_visible'), name: t('Noeud.labels.name_label_is_visible') },
+      value_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_is_visible'), name: t('Flux.labels.value_label_is_visible') },
+      value_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'value_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
+      value_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'value_label_pos_auto'), name: '' },
+      name_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'name_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
+      name_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'name_label_pos_auto'), name: '' },
 
-      _value_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'value_label_horiz'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_horiz') },
-      _value_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'value_label_vert'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_vert') },
-      _value_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_size'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_size') },
-      _value_label_color: { overloaded: isAttributeOverloaded(selected_links, 'value_label_color'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_color') },
-      _value_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_family'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_family') },
-      _value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_visible'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_visible') },
-      _value_label_unit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit') },
-      _value_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'value_label_bold'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_bold') },
-      _value_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'value_label_uppercase'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_uppercase') },
-      _value_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'value_label_italic'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_italic') },
-      _value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_factor'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_factor') },
-      _value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_custom_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_custom_digit') },
-      _value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_nb_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_nb_digit') },
+      value_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'value_label_horiz'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_horiz') },
+      value_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'value_label_vert'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_vert') },
+      value_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_size'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_size') },
+      value_label_color: { overloaded: isAttributeOverloaded(selected_links, 'value_label_color'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_color') },
+      value_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_family'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_family') },
+      value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_visible'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_visible') },
+      value_label_unit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit') },
+      value_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'value_label_bold'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_bold') },
+      value_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'value_label_uppercase'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_uppercase') },
+      value_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'value_label_italic'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_italic') },
+      value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_factor'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_factor') },
+      value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_custom_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_custom_digit') },
+      value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_nb_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_nb_digit') },
 
-      _name_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_horiz') },
-      _name_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_vert') },
-      _name_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_size') },
-      _name_label_color: { overloaded: isAttributeOverloaded(selected_links, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_color') },
-      _name_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_family') },
-      _name_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_bold') },
-      _name_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Label.uppercase') },
-      _name_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_italic') },
+      name_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_horiz') },
+      name_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_vert') },
+      name_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_size') },
+      name_label_color: { overloaded: isAttributeOverloaded(selected_links, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_color') },
+      name_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_family') },
+      name_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_bold') },
+      name_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Label.uppercase') },
+      name_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_italic') },
     }
 
+    const options_selector: typeElementSelectable = sankey.link_styles_list.map(style => {
+      return {
+        value: style.id,
+        label: style.name,
+        selected: (element_ref as Class_LinkElement)?.style.includes(style) ?? false,
+        disabled: style.id == default_style_id,
+
+      }
+    })
     content_style = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Style')} ><>
       <Box layerStyle='menuconfigpanel_row_stylechoice' >
         <OSTooltip label={t('Noeud.tooltips.AS')}>
@@ -1193,35 +1188,18 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
         >
           {icon_library.icon_edit_style}
         </Button>
-        <Menu>
-          <MenuButton
-            as={Button}
-            variant='menuconfigpanel_option_button'
-            rightIcon={icon_open_selector}
-          >
-            {sankey.getStyleOfSelectedLinks()}
-          </MenuButton>
-          <MenuList>
-            {
-              sankey.link_styles_list
-                .map(style => {
-                  const flow_ref_has_style = (element_ref as Type_GenericLinkElement)?.style.includes(style) ?? false
+        <OSMultiSelect
+          t={t}
+          elements={options_selector}
+          onClick={(entries) => {
+            // Update selection list
+            const entries_values = entries.map(d => d.value)
+            sankey.link_styles_list.forEach(style => {
+              sankey.switchLinkStyle(style, entries_values.includes(style.id))
+            })
 
-                  return (<React.Fragment key={style.id}>
-                    <MenuItem
-                      key={style.id}
-                      onClick={() => {
-                        sankey.switchLinkStyle(style, !flow_ref_has_style)
-                      }}
-                    >
-                      {style.name}
-                      {flow_ref_has_style ? <FaCheck /> : <></>}
-                    </MenuItem></React.Fragment>
-                  )
-                })
-            }
-          </MenuList>
-        </Menu>
+          }}
+        />
       </Box>
       <MenuOrderStylesOfSelectedFlows new_data={new_data} />
     </>
@@ -1241,14 +1219,14 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
 
 /**
- * Component to modify order of style in selected elements, 
+ * Component to modify order of style in selected elements,
  * it take first selected flow has reference to which style must go before/after which style
  * (because order of style can be different between flow)
  *
  * @param {*} { new_data }
- * @return {*} 
+ * @return {*}
  */
-export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Type_GenericApplicationData }> = ({ new_data }) => {
+export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { drawing_area, t, icon_library } = new_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
   const elements = drawing_area.selected_links_list
@@ -1283,7 +1261,7 @@ export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Type_
 
                   return (
                     <Draggable isDragDisabled={draggDisabled} key={node_style.id} index={element_idx} draggableId={'line_drag_' + node_style.id}>
-                      {(provided, snapshot) => (
+                      {(provided, _) => (
                         <Box key={node_style.id} layerStyle='drag_line_element_order' ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}

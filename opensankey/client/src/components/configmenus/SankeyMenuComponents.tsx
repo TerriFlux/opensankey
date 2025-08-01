@@ -39,46 +39,34 @@ import {
 } from '@chakra-ui/react'
 import { t, TFunction } from 'i18next'
 import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
-import { ClassTemplate_LinkElement } from '../../Elements/Link'
-import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
+import { Class_LinkElement } from '../../Elements/Link'
+import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, default_style_id, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
-import { FCType_WrapperBoxSubSectionMenu, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName, FCType_MenuUnit, UnitAttributeType } from './types/SankeyMenuComponentsType'
-import { Type_GenericApplicationData, Type_GenericLinkElement, Type_GenericNodeElement } from '../../types/Types'
-import { ClassTemplate_NodeElement } from '../../Elements/Node'
+import { FCType_WrapperBoxSubSectionMenu, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName, FCType_MenuUnit, UnitAttributeType, FCType_WrapperCheckBoxSubSectionMenu } from './types/SankeyMenuComponentsType'
 import {
   Class_NodeAttribute,
   Class_NodeStyle,
-  default_node_value_label_bold,
-  default_node_value_label_color,
-  default_node_value_label_custom_digit,
-  default_node_value_label_font_family,
-  default_node_value_label_font_size,
-  default_node_value_label_horiz,
-  default_node_value_label_italic,
-  default_node_value_label_nb_digit,
-  default_node_value_label_unit,
-  default_node_value_label_unit_factor,
-  default_node_value_label_unit_visible,
-  default_node_value_label_uppercase,
-  default_node_value_label_vert,
+  NODES_ATTRIBUTES_CONFIG
 } from '../../Elements/NodeAttributes'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
+import { Class_NodeElement } from '../../Elements/Node'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
 /**
  * Check if element attribute is from local attr
  *
- * @param {(Type_GenericLinkElement[] | Type_GenericNodeElement[])} elements
+ * @param {(Class_LinkElement[] | Class_NodeElement[])} elements
  * @param {possibleDecoratorName} attr
  * @return {boolean} 
  */
 function isElementAttributeOverloaded(
-  elements: Type_GenericLinkElement[] | Type_GenericNodeElement[],
+  elements: Class_LinkElement[] | Class_NodeElement[],
   attr: possibleDecoratorName) {
   let overloaded = false
   elements.forEach(el => overloaded = (overloaded || el.isAttributeOverloaded(attr)))
@@ -101,10 +89,10 @@ function getValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
   return model[key]
 }
 
-type elementsType = Class_LinkStyle | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
+type elementsType = Class_LinkStyle | Class_LinkElement | Class_NodeElement | Class_NodeStyle
 type valueType = labelValueAttribute[valueKeu]
 type valueKeu = keyof labelValueAttribute
-type valueElementsType = elementsType[valueType]
+type valueElementsType = elementsType[valueType] | undefined
 
 
 /**
@@ -120,22 +108,23 @@ type valueElementsType = elementsType[valueType]
 function setValueWithDecoratorRetriever<TModel, TKey extends keyof TModel, Tvalue extends TModel[TKey]>(
   model: TModel,
   key: TKey,
-  value: Tvalue
+  value: Tvalue | undefined
 ) {
-  model[key] = value
+  model[key] = value as TModel[TKey]
 }
 
 /**
  * Upate attribute value via it's decorator & save it's possible undoing in data history
  *
- * @param {Type_GenericApplicationData} data
+ * @param {Class_ApplicationData} data
  * @param {elementsType[]} elements
  * @param {(labelValueAttribute | labelAttributeType)} _dict_decorator_name
  * @param {keyof labelValueAttribute} k
  * @param {valueElementsType} val
  * @param {() => void} refreshParentComponent
  */
-const updateElements = (data: Type_GenericApplicationData,
+const updateElements = (
+  data: Class_ApplicationData,
   elements: elementsType[],
   _dict_decorator_name: labelValueAttribute | labelAttributeType, // declare var can be both type so we can use the function in SankeyMenuLabelComponent & SankeyMenuValueLabelComponent 
   k: keyof labelValueAttribute, // key of labelValueAttribute also contain key of labelAttributeType (since labelValueAttribute is a composite type with labelAttributeType)
@@ -170,14 +159,14 @@ const updateElements = (data: Type_GenericApplicationData,
 /**
  * Upate attribute value via it's decorator & save it's possible undoing in data history
  *
- * @param {Type_GenericApplicationData} data
+ * @param {Class_ApplicationData} data
  * @param {elementsType[]} elements
  * @param {(labelValueAttribute | labelAttributeType)} _dict_decorator_name
  * @param {keyof labelValueAttribute} k
  * @param {valueElementsType} val
  * @param {() => void} refreshParentComponent
  */
-const updateElementsUnit = (data: Type_GenericApplicationData,
+const updateElementsUnit = (data: Class_ApplicationData,
   elements: elementsType[],
   _dict_decorator_name: UnitAttributeType, // declare var can be both type so we can use the function in SankeyMenuLabelComponent & SankeyMenuValueLabelComponent 
   k: keyof UnitAttributeType, // key of labelValueAttribute also contain key of labelAttributeType (since labelValueAttribute is a composite type with labelAttributeType)
@@ -221,7 +210,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
 
 
   const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle)
-  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof ClassTemplate_NodeElement)
+  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement)
 
   const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
   const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
@@ -229,11 +218,11 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
   // By combining the different variable correct_ref_style_to_use can only be used when MenuUnit is used with style element (instead of normal element)
   const disable_attr_props = menu_for_style ? correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute : correct_dict_style_to_use[default_style_id].customisable_attribute
 
-  const check_indeterminate = (curr: Type_GenericLinkElement | Type_GenericNodeElement) => {
+  const check_indeterminate = (curr: Class_LinkElement | Class_NodeElement) => {
     const ref_element = selectedElements[0]
-    if (curr instanceof ClassTemplate_LinkElement && ref_element instanceof ClassTemplate_LinkElement) {
+    if (curr instanceof Class_LinkElement && ref_element instanceof Class_LinkElement) {
       return (ref_element.isEqual(curr))
-    } else if (curr instanceof ClassTemplate_NodeElement && ref_element instanceof ClassTemplate_NodeElement) {
+    } else if (curr instanceof Class_NodeElement && ref_element instanceof Class_NodeElement) {
       return (ref_element.isEqual(curr))
     } else {
       return false
@@ -241,28 +230,34 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
   }
   const is_indeterminate = !selectedElements.every(check_indeterminate)
   // Declare var used to set default attribute value in inputs 
-  let get_label_horiz = default_node_value_label_horiz
-  let get_label_vert = default_node_value_label_vert
-  let get_label_font_size = default_node_value_label_font_size
-  let get_label_color = default_node_value_label_color
-  let get_label_bold = default_node_value_label_bold
-  let get_label_italic = default_node_value_label_italic
-  let get_label_uppercase = default_node_value_label_uppercase
-  let get_label_font_family = default_node_value_label_font_family
+  let get_label_horiz = NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
+  let get_label_vert = NODES_ATTRIBUTES_CONFIG.value_label_vert.default
+  let get_label_font_size = NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
+  let get_label_color = NODES_ATTRIBUTES_CONFIG.value_label_color.default
+  let get_label_bold = NODES_ATTRIBUTES_CONFIG.value_label_bold.default
+  let get_label_italic = NODES_ATTRIBUTES_CONFIG.value_label_italic.default
+  let get_label_uppercase = NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
+  let get_label_font_family = NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
 
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0]
-    // Since element_ref can be LinkAttributes | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
+    // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    get_label_horiz = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_horiz']) ?? default_node_value_label_horiz)
-    get_label_vert = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_vert']) ?? default_node_value_label_vert)
-    get_label_font_size = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_size']) ?? default_node_value_label_font_size)
-    get_label_color = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_color']) ?? default_node_value_label_color)
-    get_label_font_family = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_family']) ?? default_node_value_label_font_family)
-    get_label_bold = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_bold'])) ?? default_node_value_label_bold
-    get_label_italic = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_italic'])) ?? default_node_value_label_italic
-    get_label_uppercase = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_uppercase'])) ?? default_node_value_label_uppercase
+    get_label_horiz = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_horiz']) ?? NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
+    get_label_vert = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_vert']) ?? NODES_ATTRIBUTES_CONFIG.value_label_vert.default
+    //@ts-expect-error xxx
+    get_label_font_size = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_size']) ?? NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
+    //@ts-expect-error xxx
+    get_label_color = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_color']) ?? NODES_ATTRIBUTES_CONFIG.value_label_color.default
+    //@ts-expect-error xxx
+    get_label_font_family =getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_family']) ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
+    //@ts-expect-error xxx
+    get_label_bold = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_bold']) ?? NODES_ATTRIBUTES_CONFIG.value_label_bold.default
+    //@ts-expect-error xxx
+    get_label_italic = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_italic']) ?? NODES_ATTRIBUTES_CONFIG.value_label_italic.default
+    //@ts-expect-error xxx
+    get_label_uppercase = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_uppercase']) ?? NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
   }
 
 
@@ -574,7 +569,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
 
 
   const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle)
-  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof ClassTemplate_NodeElement)
+  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement)
 
   const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
   const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
@@ -582,11 +577,11 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
   // By combining the different variable correct_ref_style_to_use can only be used when MenuUnit is used with style element (instead of normal element)
   const disable_attr_props = menu_for_style ? correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute : correct_dict_style_to_use[default_style_id].customisable_attribute
 
-  const check_indeterminate = (curr: Type_GenericLinkElement | Type_GenericNodeElement) => {
+  const check_indeterminate = (curr: Class_LinkElement | Class_NodeElement) => {
     const ref_element = selectedElements[0]
-    if (curr instanceof ClassTemplate_LinkElement && ref_element instanceof ClassTemplate_LinkElement) {
+    if (curr instanceof Class_LinkElement && ref_element instanceof Class_LinkElement) {
       return (ref_element.isEqual(curr))
-    } else if (curr instanceof ClassTemplate_NodeElement && ref_element instanceof ClassTemplate_NodeElement) {
+    } else if (curr instanceof Class_NodeElement && ref_element instanceof Class_NodeElement) {
       return (ref_element.isEqual(curr))
     } else {
       return false
@@ -594,16 +589,18 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
   }
   const is_indeterminate = !selectedElements.every(check_indeterminate)
   // Declare var used to set default attribute value in inputs 
-  let get_label_custom_digit = default_node_value_label_custom_digit
-  let get_label_nb_digit = default_node_value_label_nb_digit
+  let get_label_custom_digit = NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default
+  let get_label_nb_digit = NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default
 
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0]
-    // Since element_ref can be LinkAttributes | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
+    // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    get_label_custom_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_custom_digit']) ?? default_node_value_label_custom_digit)
-    get_label_nb_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_digit']) ?? default_node_value_label_nb_digit)
+    //@ts-expect-error xxx
+    get_label_custom_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_custom_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default)
+    //@ts-expect-error xxx
+    get_label_nb_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default)
   }
 
   // Link to ConfigMenuNumberInput state variable
@@ -715,6 +712,50 @@ export const WrapperBoxSubSectionMenu: FunctionComponent<FCType_WrapperBoxSubSec
 }
 
 /**
+ * Wrapper to create a box collapsable to reduce size of sub-section in configuration sub-menus 
+ *
+ * @param {*} {
+ *   new_data,
+ *   title,
+ *   children
+ * }
+ * @return {*} 
+ */
+export const WrapperCheckBoxSubSectionMenu: FunctionComponent<FCType_WrapperCheckBoxSubSectionMenu> = ({
+  title,
+  open = true,
+  onClick,
+  children
+}) => {
+  // Hooks controlling collapse opening, initiallised at true
+  const { isOpen, onToggle } = useDisclosure({ isOpen: open })
+  return<> <Box layerStyle='menu_sub_section_title'>
+    <Checkbox
+      variant='menuconfigpanel_part_title_1_checkbox'
+      isChecked={isOpen}
+      onChange={()=>{
+        onClick(!isOpen)
+        onToggle()
+        
+      }}
+    >
+      {title}
+    </Checkbox>
+  </Box>
+  <Collapse in={isOpen} animateOpacity>
+    <Box
+      layerStyle='menuconfigpanel_grid'
+      marginLeft='1rem'
+      borderLeft='lightgray 1px solid'
+      paddingLeft='0.2rem'
+    >
+      {children}
+    </Box>
+  </Collapse>
+  </>
+}
+
+/**
  * Wrapper for content of each sub-menus  
  *
  * @param {*} { new_data, title, children, hide = false }
@@ -737,7 +778,7 @@ export const WrapperContentConfig: FunctionComponent<{ title: string; hide?: boo
  * @param {*} { new_data, nodesOrLinks, dict_overwritted_attr }
  * @return {*} 
  */
-export const MenuResetAttrLocal: FunctionComponent<{ new_data: Type_GenericApplicationData, nodesOrLinks: 'nodes' | 'links', dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } } }> = (
+export const MenuResetAttrLocal: FunctionComponent<{ new_data: Class_ApplicationData, nodesOrLinks: 'nodes' | 'links', dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } } }> = (
   {
     new_data,
     nodesOrLinks,
@@ -749,7 +790,7 @@ export const MenuResetAttrLocal: FunctionComponent<{ new_data: Type_GenericAppli
   // Delete all local attributes of selected elements
   const resetAll = () => nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
   // Delete local attributes 'k' of selected elements
-  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as keyof Class_LinkAttribute)
+  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG))
 
   return <Menu direction='rtl' placement='left' closeOnSelect={false}>
     <MenuButton as={Button} variant='menuconfigpanel_option_button'>
@@ -782,7 +823,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
 
   const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle)
-  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof ClassTemplate_NodeElement)
+  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement)
 
   const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
   const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
@@ -790,19 +831,22 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
   // By combining the different variable correct_ref_style_to_use can only be used when MenuUnit is used with style element (instead of normal element)
   const disable_attr_props = menu_for_style ? correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute : correct_dict_style_to_use[default_style_id].customisable_attribute
   // Declare var used to set default attribute value in inputs 
-  let get_label_unit_visible = default_node_value_label_unit_visible
-  let get_label_unit = default_node_value_label_unit
-  let get_label_unit_factor = default_node_value_label_unit_factor
+  let get_label_unit_visible = NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default
+  let get_label_unit = NODES_ATTRIBUTES_CONFIG.value_label_unit.default
+  let get_label_unit_factor = NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default
 
 
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0]
-    // Since element_ref can be LinkAttributes | Type_GenericLinkElement | Type_GenericNodeElement | Class_NodeStyle
+    // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    get_label_unit_visible = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_visible']) ?? default_node_value_label_unit_visible)
-    get_label_unit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit']) ?? default_node_value_label_unit)
-    get_label_unit_factor = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_factor']) ?? default_node_value_label_unit_factor)
+    //@ts-expect-error xxx
+    get_label_unit_visible = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_visible']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default)
+    //@ts-expect-error xxx
+    get_label_unit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit.default)
+    //@ts-expect-error xxx
+    get_label_unit_factor = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_factor']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default)
   }
 
   /**
@@ -921,7 +965,8 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
 export type typeElementSelectable = {
   label: string,
   value: string,
-  selected: boolean
+  selected: boolean,
+  disabled?:boolean
 }[]
 
 
@@ -948,7 +993,6 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
     <MenuItem
       icon={(selected_elements.length == elements.length) ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
       onClick={() => {
-
         const new_sel = selected_elements.length == elements.length ? [] : elements //select or deselect all
         onClick(new_sel)
       }}>{t('Noeud.TS')}</MenuItem>
@@ -960,6 +1004,7 @@ export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElem
 
     return <MenuItem
       key={'elements_' + i}
+      isDisabled={el.disabled}
       icon={el.selected ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
       onClick={() => {
         // Update list of selected element before letting parent decide what to do with it (via onClick)

@@ -27,8 +27,7 @@
 import { Dispatch, MutableRefObject, SetStateAction, FunctionComponent } from 'react'
 
 import {
-  Type_AdditionalMenus,
-  Type_GenericApplicationData
+  Type_AdditionalMenus
 } from './Types'
 import {
   Type_JSON
@@ -37,7 +36,7 @@ import {
   FType_ClickSaveDiagram,
   FType_RetrieveExcelResults,
   FType_UploadExcelImpl
-} from '../components/dialogs/types/SankeyPersistenceTypes'
+} from '../Persistence/SankeyPersistenceTypes'
 import {
   FType_DiagramSelector,
   FType_InitializeDiagrammSelector
@@ -45,6 +44,7 @@ import {
 import {
   FCType_ModalWelcomeBuilder
 } from '../components/welcome/types/ModalWelcome'
+import { Class_ApplicationData } from './ApplicationData'
 
 // Function components prototypes =================================================================
 
@@ -58,19 +58,19 @@ export type FCType_OpenSankeyApp = {
 }
 
 export type FCType_ExcelModal = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   uploadExcelImpl: FType_UploadExcelImpl,
   launch: (path: string) => void,
 }
 
 export type FCType_SankeyLoad = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   successAction: () => void,
   processFunctions: FType_ProcessFunctions
 }
 
 export type FCType_Menu = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   diagramSelector: FType_DiagramSelector,
   external_modal: JSX.Element[],
   apply_transformation_additional_elements: JSX.Element[],
@@ -78,7 +78,7 @@ export type FCType_Menu = {
 }
 
 export type FCType_MenuTop = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }
 
@@ -87,7 +87,7 @@ export type FCType_MenuTop = {
  * @type {{ ref_setter_show_modal_json_saver: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
  */
 export type FCType_ApplySaveJSONDialog = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   ClickSaveDiagram: FType_ClickSaveDiagram
 }
 
@@ -95,16 +95,16 @@ export type FCType_ApplySaveJSONDialog = {
 
 export type FType_InitializeApplicationData = (
   initial_data: Type_JSON | undefined
-) => Type_GenericApplicationData
+) => Class_ApplicationData
 
 export type FType_InitializeAdditionalMenus = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ) => void
 
 
 export type FType_ModuleDialogs = (
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
   menu_configuration_nodes_attributes: JSX.Element,
   processFunctions: FType_ProcessFunctions
