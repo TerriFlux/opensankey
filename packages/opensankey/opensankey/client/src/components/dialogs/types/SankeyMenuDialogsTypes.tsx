@@ -24,14 +24,14 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_GenericApplicationData } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FType_DiagramSelector = (
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ) => JSX.Element
 
 export type FType_InitializeDiagrammSelector = (
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ) => FType_DiagramSelector
 
 /**
@@ -40,7 +40,7 @@ export type FType_InitializeDiagrammSelector = (
  * @type {{ ref_setter_show_modal_apply_layout: any; set_show_apply_layout: any; sankey_data: any; set_sankey_data: any; }}
  */
 export type FCType_ApplyLayoutDialog = {
-  applicationData: Type_GenericApplicationData,
+  applicationData: Class_ApplicationData,
   diagramSelector: FType_DiagramSelector,
   apply_transformation_additional_elements: JSX.Element[],
 }

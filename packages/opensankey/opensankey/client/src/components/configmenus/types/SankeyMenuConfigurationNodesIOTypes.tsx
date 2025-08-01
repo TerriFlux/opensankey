@@ -24,10 +24,10 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Type_GenericApplicationData } from '../../../types/Types'
+import { Class_ApplicationData } from '../../../types/ApplicationData'
 
 export type FCType_SankeyMenuConfigurationNodesIO = {
-  new_data : Type_GenericApplicationData
+  new_data : Class_ApplicationData
 }
 
 

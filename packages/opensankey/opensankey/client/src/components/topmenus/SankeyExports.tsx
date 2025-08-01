@@ -41,10 +41,10 @@ import {
 import FileSaver from 'file-saver'
 
 // Local libs
-import { Type_GenericApplicationData } from '../../types/Types'
 import { FType_ModalResolutionPNG } from './types/SankeyExportsTypes'
 import * as d3 from 'd3'
 import { MenuDraggable } from './SankeyMenus'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
 // COMPONENTS ===========================================================================
@@ -158,12 +158,12 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
  *
  * @param {(number | undefined)} h
  * @param {(number | undefined)} v
- * @param {Type_GenericApplicationData} new_data
+ * @param {Class_ApplicationData} new_data
  */
 const clickSavePNG = (
   h: number | undefined,
   v: number | undefined,
-  new_data: Type_GenericApplicationData
+  new_data: Class_ApplicationData
 ) => {
   const svg = new_data.pre_process_export_svg()
   const blob = new Blob([svg], { type: 'image/svg+xml' })
@@ -209,9 +209,9 @@ const clickSavePNG = (
 /**
  * Save sankey as PDF
  *
- * @param {Type_GenericApplicationData} new_data
+ * @param {Class_ApplicationData} new_data
  */
-export const clickSavePDF = (new_data: Type_GenericApplicationData) => {
+export const clickSavePDF = (new_data: Class_ApplicationData) => {
   const svg = new_data.pre_process_export_svg()
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()

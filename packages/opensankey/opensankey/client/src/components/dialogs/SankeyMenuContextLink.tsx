@@ -2,17 +2,17 @@
 // The MIT License (MIT)
 // ==================================================================================================
 // Copyright (c) 2025 TerriFlux
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -120,7 +120,7 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
       dict_old_value[l.id] = l.style
     })
     const _updateStyle = () => {
-      selected_links.forEach(l => {
+      selected_links.forEach(_ => {
         const flow_ref_has_style = selected_links[0].style.includes(sl) ?? false
         new_data.drawing_area.sankey.switchLinkStyle(sl, flow_ref_has_style)
       })
@@ -229,14 +229,14 @@ export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
 
   const moveToFirstPlan = () => {
     drawing_area.selected_links_list.forEach(link => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(link)
       drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
     })
     closeContextMenu()
   }
   const moveToLastPlan = () => {
     drawing_area.selected_links_list.forEach(link => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(link)
       drawing_area.moveOrderElementInDA(idx_to_shift, 0)
     })
     closeContextMenu()

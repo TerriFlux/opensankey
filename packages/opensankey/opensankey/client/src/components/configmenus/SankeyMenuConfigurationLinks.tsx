@@ -41,13 +41,12 @@ import {
 import {
   OSTooltip
 } from '../../types/Utils'
-import {
-  Type_GenericLinkElement,
-  Type_GenericNodeElement
-} from '../../types/Types'
+
 
 /*************************************************************************************************/
 import { OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
+import { Class_LinkElement } from '../../Elements/Link'
+import { Class_NodeElement } from '../../Elements/Node'
 
 
 /*************************************************************************************************/
@@ -64,8 +63,8 @@ export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurati
   const { icon_add_element, icon_remove_element, icon_repeat, icon_element_visible, icon_element_invisible } = icon_library
   // Links to display in selection menus ------------------------------------------------
 
-  let links: Type_GenericLinkElement[]
-  let selected_links: Type_GenericLinkElement[]
+  let links: Class_LinkElement[]
+  let selected_links: Class_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     links = new_data.drawing_area.sankey.links_list
@@ -133,7 +132,7 @@ export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurati
    */
   const addLinkConfig = () => {
     const sankey = new_data.drawing_area.sankey
-    const nodeToDel: { list: Type_GenericNodeElement[] } = { list: [] }
+    const nodeToDel: { list: Class_NodeElement[] } = { list: [] }
     let presentNode = 0
     const _addLinkConfig = () => {
       presentNode = sankey.nodes_list.length
@@ -335,8 +334,8 @@ export const SankeyLinkSelectionSimple: FunctionComponent<FCType_SankeyMenuConfi
   const { icon_element_visible, icon_element_invisible } = icon_library
   // Links to display in selection menus ------------------------------------------------
 
-  let links: Type_GenericLinkElement[]
-  let selected_links: Type_GenericLinkElement[]
+  let links: Class_LinkElement[]
+  let selected_links: Class_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
     // All availables links
     links = new_data.drawing_area.sankey.links_list

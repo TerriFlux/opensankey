@@ -31,63 +31,63 @@ export const detectCompressionType = (filename: string): CompressionType => {
 export const decompressData = async (data: ArrayBuffer, type: CompressionType, filename?: string): Promise<string> => {
   try {
     switch (type) {
-      case 'gzip': {
-        console.log('🗜️ Décompression GZIP...')
-        return pako.ungzip(new Uint8Array(data), { to: 'string' })
+    case 'gzip': {
+      console.log('🗜️ Décompression GZIP...')
+      return pako.ungzip(new Uint8Array(data), { to: 'string' })
+    }
+        
+    case 'deflate': {
+      console.log('🗜️ Décompression DEFLATE...')
+      return pako.inflate(new Uint8Array(data), { to: 'string' })
+    }
+        
+    case 'zip': {
+      console.log('🗜️ Décompression ZIP...')
+      const zip = await JSZip.loadAsync(data)
+        
+      // Chercher le fichier JSON dans le ZIP
+      let jsonFile = null
+        
+      // Méthode 1: Chercher par nom de fichier si fourni
+      if (filename) {
+        const baseName = filename.replace(/\.(zip|gz|br|deflate)$/i, '')
+        jsonFile = zip.file(`${baseName}.json`)
       }
         
-      case 'deflate': {
-        console.log('🗜️ Décompression DEFLATE...')
-        return pako.inflate(new Uint8Array(data), { to: 'string' })
-      }
-        
-      case 'zip': {
-        console.log('🗜️ Décompression ZIP...')
-        const zip = await JSZip.loadAsync(data)
-        
-        // Chercher le fichier JSON dans le ZIP
-        let jsonFile = null
-        
-        // Méthode 1: Chercher par nom de fichier si fourni
-        if (filename) {
-          const baseName = filename.replace(/\.(zip|gz|br|deflate)$/i, '')
-          jsonFile = zip.file(`${baseName}.json`)
-        }
-        
-        // Méthode 2: Chercher le premier .json
-        if (!jsonFile) {
-          const jsonFiles = Object.keys(zip.files).filter(name => name.endsWith('.json'))
-          if (jsonFiles.length > 0) {
-            jsonFile = zip.file(jsonFiles[0])
-            console.log(`📄 Fichier JSON trouvé dans ZIP: ${jsonFiles[0]}`)
-          }
-        }
-        
-        if (!jsonFile) {
-          throw new Error('Aucun fichier JSON trouvé dans l\'archive ZIP')
-        }
-        
-        return await jsonFile.async('string')
-      }
-        
-      case 'brotli': {
-        console.log('🗜️ Décompression BROTLI...')
-        // Utiliser l'API native du navigateur si disponible
-        if ('DecompressionStream' in window) {
-          const stream = new Response(data).body!.pipeThrough(new DecompressionStream('gzip'))
-          return await new Response(stream).text()
-        } else {
-          throw new Error('Décompression Brotli non supportée par ce navigateur')
+      // Méthode 2: Chercher le premier .json
+      if (!jsonFile) {
+        const jsonFiles = Object.keys(zip.files).filter(name => name.endsWith('.json'))
+        if (jsonFiles.length > 0) {
+          jsonFile = zip.file(jsonFiles[0])
+          console.log(`📄 Fichier JSON trouvé dans ZIP: ${jsonFiles[0]}`)
         }
       }
         
-      case 'none': {
-        console.log('📄 Pas de compression détectée')
-        return new TextDecoder('utf-8').decode(data)
+      if (!jsonFile) {
+        throw new Error('Aucun fichier JSON trouvé dans l\'archive ZIP')
       }
         
-      default:
-        throw new Error(`Type de compression non supporté: ${type}`)
+      return await jsonFile.async('string')
+    }
+        
+    case 'brotli': {
+      console.log('🗜️ Décompression BROTLI...')
+      // Utiliser l'API native du navigateur si disponible
+      if ('DecompressionStream' in window) {
+        const stream = new Response(data).body!.pipeThrough(new DecompressionStream('gzip'))
+        return await new Response(stream).text()
+      } else {
+        throw new Error('Décompression Brotli non supportée par ce navigateur')
+      }
+    }
+        
+    case 'none': {
+      console.log('📄 Pas de compression détectée')
+      return new TextDecoder('utf-8').decode(data)
+    }
+        
+    default:
+      throw new Error(`Type de compression non supporté: ${type}`)
     }
   } catch (error) {
     console.error(`❌ Erreur lors de la décompression ${type}:`, error)
@@ -128,7 +128,7 @@ export const loadUniversalJSON = async (url: string): Promise<DecompressedJSONDa
     
     // Parser le JSON
     const jsonData = JSON.parse(decompressed) as DecompressedJSONData
-    console.log(`✅ JSON chargé avec succès`)
+    console.log('✅ JSON chargé avec succès')
     
     return jsonData
     
@@ -178,7 +178,7 @@ export const decompressUploadedFileUniversal = (file: File): Promise<Decompresse
         const decompressed = await decompressData(data, compressionType, file.name)
         const jsonData = JSON.parse(decompressed) as DecompressedJSONData
         
-        console.log(`✅ Fichier uploadé traité avec succès`)
+        console.log('✅ Fichier uploadé traité avec succès')
         resolve(jsonData)
         
       } catch (error) {
@@ -251,13 +251,13 @@ export const compressJSON = (data: DecompressedJSONData, type: CompressionType =
   const jsonString = JSON.stringify(data, null, 0) // JSON compact
   
   switch (type) {
-    case 'gzip':
-      return pako.gzip(jsonString)
+  case 'gzip':
+    return pako.gzip(jsonString)
       
-    case 'deflate':
-      return pako.deflate(jsonString)
+  case 'deflate':
+    return pako.deflate(jsonString)
       
-    default:
-      throw new Error(`Compression ${type} non implémentée côté client`)
+  default:
+    throw new Error(`Compression ${type} non implémentée côté client`)
   }
 }

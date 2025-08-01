@@ -28,7 +28,7 @@ import React from 'react'
 import { ChakraProvider } from '@chakra-ui/react'
 import { opensankey_theme } from './chakra/Theme'
 import { initializeAdditionalMenus, initializeApplicationData, initializeDiagrammSelector, moduleDialogs } from './Modules'
-import { ClickSaveDiagram } from './components/dialogs/SankeyPersistence'
+import { ClickSaveDiagram } from './Persistence/SankeyPersistence'
 import { ModalWelcomeBuilder } from './components/welcome/ModalWelcome'
 import OpenSankeyApp from './App'
 

@@ -42,63 +42,70 @@ import {
 } from '@silevis/reactgrid'
 import '@silevis/reactgrid/styles.css'
 
-import {
-  Type_GenericApplicationData,
-  Type_GenericDrawingArea,
-  Type_GenericLinkElement,
-  Type_GenericNodeElement
-} from '../../types/Types'
-import { parseLocaleNumber, Type_JSON } from '../../types/Utils'
-import { ClassTemplate_Sankey } from '../../types/Sankey'
-import { ClassTemplate_NodeElement } from '../../Elements/Node'
-import { defaultLinkId } from '../../Elements/Link'
 
-// Define a type for generic abstract node elements
-type Type_AnyAbstractNodeElement = ClassTemplate_NodeElement<
-  Type_GenericDrawingArea,
-  ClassTemplate_Sankey<Type_GenericDrawingArea, Type_GenericNodeElement, Type_GenericLinkElement>,
-  Type_GenericLinkElement
->;
+import { parseLocaleNumber, Type_JSON } from '../../types/Utils'
+import { Class_NodeElement } from '../../Elements/Node'
+import { Class_LinkElement, defaultLinkId } from '../../Elements/Link'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+
+
 
 // Define the structure of a flux (flow) row in the spreadsheet
 interface IType_SpreadSheetFlux {
   id: string, // Link id
   source: string // Source node of the flow
   target: string // Target node of the flow
-  value?: number // Value of the flow (optional)
-  type?: string
+  valueData?: number // Collected value (valueData)
+  valueResult?: number // Calculated value (valueResult)
 }
 
-const type_map={
-  'value':'v',
-  'ratio_input':'%s',
-  'ratio_output':'%d',
-  'ratio_source_parent':'%sp',
-  'ratio_target_parent':'%dp'
-  // 'unit_conversion':'uc'
-}
 
-// Extract flux data from the Sankey diagram and prepare it for the spreadsheet
-const getFluxFromSankey = (new_data: Type_GenericApplicationData): IType_SpreadSheetFlux[] => {
-  const a: IType_SpreadSheetFlux[] = new_data.drawing_area.sankey.links_list
-    .map((l) => {
-      return {
-        id: l.id, //Link id
-        source: l.source.name, // Get source node name
-        target: l.target.name, // Get target node name
-        value: l.data_value!,  // Get the value of the link
-      }
-    })
-  // Add an empty row for new flux input
-  a.push({ id: 'empty', source: '', target: '' })
-  return a
-}
 
 // Main SpreadSheet component
-export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationData }> = (
-  { new_data }: { new_data: Type_GenericApplicationData }
+export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }> = (
+  { new_data }: { new_data: Class_ApplicationData }
 ) => {
   const { menu_configuration } = new_data
+
+  // // Fonction pour déterminer si on doit afficher la colonne "Valeurs calculées"
+  // const shouldShowCalculatedValues = (): boolean => {
+  //   return new_data.drawing_area.sankey.links_list.some(l => l.valueResult !== null && l.valueResult !== undefined)
+  // }
+
+  // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
+  const getFluxFromSankey = (new_data: Class_ApplicationData): IType_SpreadSheetFlux[] => {
+    const a: IType_SpreadSheetFlux[] = new_data.drawing_area.sankey.links_list
+      .map((l) => {
+        return {
+          id: l.id, //Link id
+          source: l.source.name,
+          target: l.target.name,
+          valueData: l.valueData!, // Valeurs collectées
+          valueResult: l.valueResult! // Valeurs calculées
+        }
+      })
+    // Add an empty row for new flux input
+    a.push({ id: 'empty', source: '', target: '' })
+    return a
+  }
+
+  // Générer les colonnes dynamiquement
+  const getColumns = (): Column[] => {
+    const innerW = window.innerWidth
+    const baseColumns: Column[] = [
+      { columnId: 'source', width: innerW * 0.050, resizable: true },
+      { columnId: 'target', width: innerW * 0.050, resizable: true },
+      { columnId: 'valueData', width: innerW * 0.030, resizable: true },
+      { columnId: 'valueResult', width: innerW * 0.030, resizable: true } // Valeurs collectées
+    ]
+    
+    // Ajouter la colonne "Valeurs calculées" si nécessaire
+    // if (shouldShowCalculatedValues()) {
+    //   baseColumns.push({ columnId: 'valueResult', width: innerW * 0.045, resizable: true })
+    // }
+    
+    return baseColumns
+  }
 
   // Table header
   const headerRow: Row = {
@@ -107,10 +114,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       { type: 'header', text: new_data.t('Flux.src') },
       { type: 'header', text: new_data.t('Flux.trgt') },
       { type: 'header', text: new_data.t('Flux.value') },
+      { type: 'header', text: 'Val. Calculée' }
     ]
   }
 
-  // Get all table rows
+    // Get all table rows
   const getRows = (all_flux: IType_SpreadSheetFlux[]): Row[] => [
     headerRow as Row,
     ...all_flux.map<Row>((flux, idx) => {
@@ -119,22 +127,47 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         cells: [
           { type: 'text', text: flux.source },
           { type: 'text', text: flux.target },
-          { type: 'number', value: flux.value as number }
+          { type: 'number', value: flux.valueData as number },
+          { type: 'number', value: flux.valueResult as number }
         ]
       }
     })
   ]
+  // // Get all table rows
+  // const getRows = (all_flux: IType_SpreadSheetFlux[]): Row[] => {
+  //   const headerRow = getHeaderRow()
+  //   const showCalculated = shouldShowCalculatedValues()
+    
+  //   const dataRows = all_flux.map<Row>((flux, idx) => {
+  //     const baseCells = [
+  //       { type: 'text', text: flux.source },
+  //       { type: 'text', text: flux.target },
+  //       { type: 'number', value: flux.valueData as number }
+  //     ]
+      
+  //     // Ajouter la cellule "Valeurs calculées" si nécessaire
+  //     if (showCalculated) {
+  //       baseCells.push({ type: 'number', value: flux.valueResult as number })
+  //     }
+      
+  //     return {
+  //       rowId: idx,
+  //       cells: baseCells
+  //     }
+  //   })
+    
+  //   return [headerRow as Row, ...dataRows]
+  // }
 
-  // Define the spreadsheet rows
+// Define the spreadsheet rows and columns
   const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey(new_data))
   const rows = getRows(spreadSheetFlux)
-  const innerW = window.innerWidth
-  // Define the spreadsheet columns and their properties
-  const [columns, setColumns] = useState<Column[]>([
-    { columnId: 'source', width: innerW * 0.055, resizable: true },
-    { columnId: 'target', width: innerW * 0.055, resizable: true },
-    { columnId: 'value', width: innerW * 0.045, resizable: true }
-  ])
+  const [columns, setColumns] = useState<Column[]>(getColumns())
+
+  // Fonction pour mettre à jour les colonnes quand les données changent
+  const updateColumns = () => {
+    setColumns(getColumns())
+  }
 
   // Map node and link names to their IDs for quick lookups
   const name2id: { [_: string]: string } = {}
@@ -142,7 +175,16 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   new_data.drawing_area.sankey.links_list.forEach(l => { name2id[defaultLinkId(l.source, l.target)] = l.id })
 
   // Function to synchronize spreadsheet data with Sankey data
-  const synchronizeSpreadSheetWithSankey = () => setSpreadSheetFlux(getFluxFromSankey(new_data))
+  const synchronizeSpreadSheetWithSankey = () => {
+    setSpreadSheetFlux(getFluxFromSankey(new_data))
+    updateColumns() // Mettre à jour les colonnes aussi
+  }
+
+  // Provide a reference to update the spreadsheet externally
+  new_data.menu_configuration.ref_to_spreadsheet.current = () => {
+    synchronizeSpreadSheetWithSankey()
+  }
+
 
   // Provide a reference to update the spreadsheet externally
   new_data.menu_configuration.ref_to_spreadsheet.current = () => {
@@ -151,11 +193,10 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
   // Function to add a new node to the Sankey diagram
   const addNode = (name: string) => {
-    const new_node = new_data.drawing_area.addNewDefaultNodeToSankey()
+    const new_node = new_data.drawing_area.sankey.addNewNodeWithName(name)
     new_node.name = name // Set the name of the new node
     return new_node
   }
-
 
   type typeCreatedNode = { name: string, id: string }
   type typeCreatedLink = { id: string; idSrc: string, idTrgt: string }
@@ -171,7 +212,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     }
 
     // Retrieve or create the source node
-    let source_node: Type_AnyAbstractNodeElement | undefined
+    let source_node: Class_NodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]) {
       source_node = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
     }
@@ -182,7 +223,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     }
 
     // Retrieve or create the target node
-    let target_node: Type_AnyAbstractNodeElement | undefined
+    let target_node: Class_NodeElement | undefined
     if (new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]) {
       target_node = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
     }
@@ -199,8 +240,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         target_node
       )
       // Set the value of the link, if provided
-      if (cur_flux.value) {
-        l.data_value = +cur_flux.value
+      if (cur_flux.valueData) {
+        l.value!.valueData = +cur_flux.valueData
+      }
+      if (cur_flux.valueResult) {
+        l.value!.valueResult = +cur_flux.valueResult
       }
 
       return [{ id: l.id, idSrc: l.source.id, idTrgt: l.target.id }, createdNodes]
@@ -225,16 +269,16 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   }
 
   const redraw = () => {
-    new_data.drawing_area.computeAutoSankey(true)
+    new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
     new_data.draw()
   }
 
 
-
   // Functions called in onCellChanges that can be undone ===============================================
 
-  /**
+/**
    * Function called in onChanges of Spreadsheet to change value of link
+   * MODIFIÉE pour gérer les deux types de valeurs
    *
    * @param {CellChange[]} changes
    */
@@ -242,50 +286,83 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
     const valueChanged = changes.filter(change => change.type === 'number')
     // Only excecute function & save undo if we have changed value cell
     if (valueChanged.length > 0) {
-      const dict_old_val: { [x: string]: number | null } = {}
-      const dict_new_val: { [x: string]: number | null } = {}
+      const dict_old_val: { [x: string]: { valueData?: number | null, valueResult?: number | null } } = {}
+      const dict_new_val: { [x: string]: { valueData?: number | null, valueResult?: number | null } } = {}
+      
       // Execute original function ----------------------------
       valueChanged.forEach(change => {
         const fluxIndex = change.rowId as number
-        const fieldName = change.columnId as 'value'
+        const fieldName = change.columnId as 'valueData' | 'valueResult'
         const l = new_data.drawing_area.sankey.links_list[fluxIndex]
-        // Error can't find link (possible when we enter value without source & target)
+        
+        // Error can't find link
         if (l == undefined) {
-          // Reset spreadsheet without taking into account entered value
           synchronizeSpreadSheetWithSankey()
           return
         }
-        dict_old_val[l.id] = l.data_value //save old link value in dict for undo
-        if (l) {
-          if (isNaN((change.newCell as NumberCell).value)) {
-            l.data_value = null
-            dict_new_val[l.id] = null //save new link value in dict for redo
-          } else {
-            l.data_value = (change.newCell as NumberCell).value
-            dict_new_val[l.id] = (change.newCell as NumberCell).value //save new link value in dict for redo
-          }
-          new_data.drawing_area.updateScaleAtLinkValueSetting()
+
+        // Sauvegarder les anciennes valeurs
+        if (!dict_old_val[l.id]) {
+          dict_old_val[l.id] = {}
         }
-        spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as NumberCell).value
+        if (!dict_new_val[l.id]) {
+          dict_new_val[l.id] = {}
+        }
+
+        if (fieldName === 'valueData') {
+          dict_old_val[l.id].valueData = l.valueData
+          if (isNaN((change.newCell as NumberCell).value)) {
+            l.valueData = null
+            dict_new_val[l.id].valueData = null
+          } else {
+            l.valueData = (change.newCell as NumberCell).value
+            dict_new_val[l.id].valueData = (change.newCell as NumberCell).value
+          }
+          spreadSheetFlux[fluxIndex].valueData = (change.newCell as NumberCell).value
+        } else if (fieldName === 'valueResult') {
+          dict_old_val[l.id].valueResult = l.valueResult
+          if (isNaN((change.newCell as NumberCell).value)) {
+            l.valueResult = null
+            dict_new_val[l.id].valueResult = null
+          } else {
+            l.valueResult = (change.newCell as NumberCell).value
+            dict_new_val[l.id].valueResult = (change.newCell as NumberCell).value
+          }
+          spreadSheetFlux[fluxIndex].valueResult = (change.newCell as NumberCell).value
+        }
+        
+        new_data.drawing_area.updateScaleAtLinkValueSetting()
       })
 
       // Create undo of original function ----------------------------
       const undoUpdateLinksValues = () => {
-        Object.entries(dict_old_val).forEach(ent_l => {
-          new_data.drawing_area.sankey.links_dict[ent_l[0]].data_value = ent_l[1]
+        Object.entries(dict_old_val).forEach(([linkId, values]) => {
+          const link = new_data.drawing_area.sankey.links_dict[linkId]
+          if (values.valueData !== undefined) {
+            link.valueData = values.valueData
+          }
+          if (values.valueResult !== undefined) {
+            link.valueResult = values.valueResult
+          }
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
-        setSpreadSheetFlux([...spreadSheetFlux])//Update Table
+        synchronizeSpreadSheetWithSankey() // Utiliser la fonction complète pour mettre à jour les colonnes
         menu_configuration.updateComponentRelatedToLinksData()
       }
 
       // Create redo of original function ----------------------------
       const redoUpdateLinksValues = () => {
-        Object.entries(dict_new_val).forEach(ent_l => {
-          new_data.drawing_area.sankey.links_dict[ent_l[0]].data_value = ent_l[1]
+        Object.entries(dict_new_val).forEach(([linkId, values]) => {
+          const link = new_data.drawing_area.sankey.links_dict[linkId]
+          if (values.valueData !== undefined) {
+            link.valueData = values.valueData
+          }
+          if (values.valueResult !== undefined) {
+            link.valueResult = values.valueResult
+          }
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
-        setSpreadSheetFlux([...spreadSheetFlux])//Update Table
+        synchronizeSpreadSheetWithSankey() // Utiliser la fonction complète pour mettre à jour les colonnes
         menu_configuration.updateComponentRelatedToLinksData()
       }
 
@@ -293,27 +370,22 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       new_data.history.saveUndo(undoUpdateLinksValues)
       new_data.history.saveRedo(redoUpdateLinksValues)
 
-      setSpreadSheetFlux([...spreadSheetFlux])//Update Table
+      synchronizeSpreadSheetWithSankey() // Mettre à jour complètement (colonnes + données)
       menu_configuration.updateComponentRelatedToLinksData()
     }
-
   }
 
-  /**
-   * Function called in onChanges of Spreadsheet to create a new links when the bottom line of the spreadsheet have a source & target
-   * 
-   * @param {CellChange[]} changes
-   */
+// Dans la fonction newFlux, modifier la partie value :
   const newFlux = (changes: CellChange[]) => {
     const new_flux = changes.filter(change => change.type === 'text' && change.rowId == spreadSheetFlux.length - 1)
     const createdElements: [typeCreatedLink, typeCreatedNode[]][] = []
-    // Only excecute function & save undo if we have to create a new flux
+    
     if (new_flux.length > 0) {
-      // Execute original function ----------------------------
       new_flux.forEach(change => {
         const fluxIndex = change.rowId as number
         const fieldName = change.columnId as 'source' | 'target'
         spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as TextCell).text
+        
         if (
           (spreadSheetFlux[fluxIndex]['target'] !== '') &&
           (spreadSheetFlux[fluxIndex]['source'] !== '')
@@ -325,10 +397,9 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
           redraw()
           menu_configuration.updateComponentRelatedToLinksData()
         } else {
-          setSpreadSheetFlux([...spreadSheetFlux])//Update Table
+          synchronizeSpreadSheetWithSankey() // Mettre à jour complètement
         }
       })
-
 
       // Create undo of original function ----------------------------
       const undoNewFlux = () => {
@@ -347,13 +418,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         } else {
           setSpreadSheetFlux([...spreadSheetFlux])//Update Table
         }
-
       }
 
       // Create redo of original function ----------------------------
       const redoNewFlux = () => {
         if (createdElements.length > 0) {
-
           // Delete created elements 
           createdElements.forEach(line => {
             line[1].forEach(n => {
@@ -374,7 +443,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       new_data.history.saveRedo(redoNewFlux)
     }
   }
-
 
   /**
    * Function called in onChanges of Spreadsheet to change source/target of existing links,
@@ -415,7 +483,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         menu_configuration.updateComponentRelatedToLinksData()
       })
 
-
       // Create undo of original function ----------------------------
       const undoModifyFlux = () => {
         const dict_l = new_data.drawing_area.sankey.links_dict
@@ -453,7 +520,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
         const dict_n = new_data.drawing_area.sankey.nodes_dict
 
         Object.entries(dict_new_id).forEach(ent_l => {
-
           if (ent_l[1].source !== undefined) {
             const prevSrc = dict_l[ent_l[0]].source
             dict_l[ent_l[0]].source = dict_n[ent_l[1].source]
@@ -548,7 +614,6 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
       new_data.history.saveRedo(redoChangeNodeName)
     }
   }
-
 
   // Render the ReactGrid component
   return <ReactGrid
@@ -662,11 +727,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
               let synchronizeSpreadSheet = false
               const elementCreated: ([typeCreatedLink, typeCreatedNode[]] | undefined)[] = []
               spreadSheetFlux.forEach(flux => {
-                if (flux.value && isNaN(flux.value)) {
-                  flux.value = (flux.value as unknown as string).replace(' ', '').replace('\r', '') as unknown as number
+                if (flux.valueData && isNaN(flux.valueData)) {
+                  flux.valueData = (flux.valueData as unknown as string).replace(' ', '').replace('\r', '') as unknown as number
                 }
-                if (flux.value) {
-                  flux.value = +flux.value
+                if (flux.valueData) {
+                  flux.valueData = +flux.valueData
                 }
                 if (!((flux.id) in new_data.drawing_area.sankey.links_dict)) {
                   elementCreated.push(addLink(flux)) //add created element in list for undo
@@ -679,8 +744,9 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
               // Post-paste functions ====================================
               if (redraw) {
-                new_data.drawing_area.computeAutoSankey(true)
+                new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
                 new_data.draw()
+                new_data.drawing_area.setToModeEdition(false)
                 menu_configuration.updateComponentRelatedToLinksData()
               }
               if (synchronizeSpreadSheet) {
@@ -707,7 +773,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
               const redoPaste = () => {
                 new_data.drawing_area.fromJSON(nextSankey, false)
-                new_data.drawing_area.computeAutoSankey(true)
+                new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
                 new_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()
               }

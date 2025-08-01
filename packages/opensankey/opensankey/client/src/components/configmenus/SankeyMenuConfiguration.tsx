@@ -248,7 +248,7 @@ export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMe
           if (!menu_for_style) {
             clearTimeout(is_modifying.current)
           }
-          let new_value = value === undefined ? value : Number(value)
+          const new_value = value === undefined ? value : Number(value)
           // Update selected elements value
           function_on_blur(new_value)
 
@@ -348,7 +348,7 @@ export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> 
       }}
     />
   </InputGroup>
-    <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
+  <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
   </FormControl>
 }
 

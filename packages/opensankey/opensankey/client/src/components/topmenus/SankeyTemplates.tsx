@@ -54,7 +54,7 @@ import {
 } from '@chakra-ui/react'
 
 // Local libs
-import { UploadExemple } from '../dialogs/SankeyPersistence'
+import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { FCtype_ModalTemplate } from './types/SankeyTemplatesTypes'
 import { OSTooltip } from '../../types/Utils'
 

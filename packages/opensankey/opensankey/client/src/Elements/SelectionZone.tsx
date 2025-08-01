@@ -28,11 +28,6 @@
 import type {
   Class_MenuConfig
 } from '../types/MenuConfig'
-import type {
-  ClassAbstract_DrawingArea,
-  ClassAbstract_Sankey,
-  TypeAbstract_NodeElement
-} from '../types/Abstract'
 
 // Local modules imports
 import {
@@ -40,6 +35,8 @@ import {
 } from '../Elements/Element'
 import { Type_ElementPosition } from '../types/Utils'
 import { default_element_position } from '../types/Utils'
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_NodeElement } from './Node'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -48,25 +45,11 @@ import { default_element_position } from '../types/Utils'
 /**
  * Class that helps to create a selection zone for elements on the drawing area
  * @export
- * @class ClassTemplate_ZoneSelection
+ * @class Class_ZoneSelection
  * @extends {ClassTemplate_Element}
  */
-export abstract class ClassTemplate_ZoneSelection
-  <
-    Type_GenericDrawingArea extends ClassAbstract_DrawingArea,
-    Type_GenericSankey extends ClassAbstract_Sankey
-  >
-  extends ClassTemplate_Element
-  <
-    Type_GenericDrawingArea,
-    Type_GenericSankey
-  > {
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
+export class Class_ZoneSelection extends ClassTemplate_Element {
   protected _display: {
-    drawing_area: Type_GenericDrawingArea,
-    sankey: Type_GenericSankey,
     position: Type_ElementPosition,
   }
 
@@ -80,22 +63,20 @@ export abstract class ClassTemplate_ZoneSelection
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of ClassTemplate_ZoneSelection.
-   * @param {Type_GenericDrawingArea} drawing_area
+   * Creates an instance of Class_ZoneSelection.
+   * @param {Class_DrawingArea} drawing_area
    * @param {Class_MenuConfig} menu_config
-   * @memberof ClassTemplate_ZoneSelection
+   * @memberof Class_ZoneSelection
    */
   constructor(
-    drawing_area: Type_GenericDrawingArea,
+    drawing_area: Class_DrawingArea,
     menu_config: Class_MenuConfig,
   ) {
     // Init parent class attributes
-    super('selection_zone', menu_config, 'g_select_zone')
+    super('selection_zone',drawing_area,drawing_area.sankey, menu_config, 'g_select_zone')
     this._is_visible = false  // Invisible by default
     // Init other class attributes
     this._display = {
-      drawing_area: drawing_area,
-      sankey: drawing_area.sankey as Type_GenericSankey,
       position: structuredClone(default_element_position),
     }
   }
@@ -107,7 +88,7 @@ export abstract class ClassTemplate_ZoneSelection
    *
    * @param {number} width
    * @param {number} height
-   * @memberof ClassTemplate_ZoneSelection
+   * @memberof Class_ZoneSelection
    */
   public setSize() {
     this.d3_selection
@@ -119,10 +100,10 @@ export abstract class ClassTemplate_ZoneSelection
   /**
    * Function to select elements present in the selection zone
    * (nodes has to be fully inside the zone to be selected)
-   * @memberof ClassTemplate_ZoneSelection
+   * @memberof Class_ZoneSelection
    */
   public selectElementsInside() {
-    const newly_selected:TypeAbstract_NodeElement[]=[]
+    const newly_selected:Class_NodeElement[]=[]
     this.drawing_area.sankey.visible_nodes_list
       .filter(n => {
         // Check if node is horizontally in selection zone
@@ -166,7 +147,7 @@ export abstract class ClassTemplate_ZoneSelection
 
   /**
    * Reset selection zone by invisibilizing it and resetting it position & size
-   * @memberof ClassTemplate_ZoneSelection
+   * @memberof Class_ZoneSelection
    */
   public reset() {
     this.setPosXY(0, 0)
@@ -182,7 +163,7 @@ export abstract class ClassTemplate_ZoneSelection
 
   /**
    * Draw the element if visible
-   * @memberof ClassTemplate_ZoneSelection
+   * @memberof Class_ZoneSelection
    */
   protected _draw() {
     // Heritance

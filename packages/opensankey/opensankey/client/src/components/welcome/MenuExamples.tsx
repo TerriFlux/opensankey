@@ -28,8 +28,8 @@
 import React from 'react'
 import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
-import { Type_GenericApplicationData } from '../../types/Types'
-import { UploadExemple } from '../dialogs/SankeyPersistence'
+import { UploadExemple } from '../../Persistence/SankeyPersistence'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /**
  * Description placeholder
@@ -47,7 +47,7 @@ type subtypeObjectList = { [_: string]: ExempleMenuTypes }
  * @type {{ exemple_menu: any; url_prefix: any; data: any; set_data: any; current_path: any; multi_selected_nodes: any; multi_selected_links: any; multi_selected_label: any; launch: any; }}
  */
 type ExempleItemTypes = {
-  new_data: Type_GenericApplicationData,
+  new_data: Class_ApplicationData,
   exemple_menu: JSX.Element | ExempleMenuTypes,
   current_path: string,
   launch: (s: string) => void,

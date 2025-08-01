@@ -30,7 +30,6 @@ import { MouseEvent } from 'react'
 
 // Local types
 import {
-  GetRandomInt,
   Type_JSON,
   Type_Structure,
   default_background_color,
@@ -41,34 +40,30 @@ import {
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
-  getStringListFromJSON,
   getStringOrUndefinedFromJSON,
-  list_palette_color
 } from '../types/Utils'
 import {
-  ClassTemplate_Sankey
-} from './Sankey'
-import {
-  ClassTemplate_NodeElement,
+  Class_NodeElement,
   sortNodesElements
 } from '../Elements/Node'
 import {
-  ClassTemplate_GhostLinkElement,
-  ClassTemplate_LinkElement,
+  Class_LinkElement,
   sortLinksElementsByIds
 } from '../Elements/Link'
+import { ClassTemplate_GhostLinkElement } from '../Elements/LinkGhostElement'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { ClassTemplate_ZoneSelection } from '../Elements/SelectionZone'
-import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
-import {
-  ClassAbstract_DrawingArea,
-  ClassAbstract_ApplicationData,
-} from '../types/Abstract'
-import { ClassTemplate_ProtoElement, Type_AnyProtoElement } from '../Elements/Element'
-import { Class_LevelTagGroup, Class_Tag } from './Tag'
-import { Class_NodeAttribute, Class_NodeStyle, default_dx } from '../Elements/NodeAttributes'
-import { Class_LinkAttribute, Class_LinkStyle } from '../Elements/LinkAttributes'
-import { TypeGeneric_Handler } from '../Elements/Handler'
+import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
+import { ClassTemplate_ProtoElement } from '../Elements/Element'
+import { Class_NodeAttribute, Class_NodeStyle } from '../Elements/NodeAttributes'
+import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../Elements/LinkAttributes'
+import { NodePositioning } from '../Algorithms/NodePositioning'
+import { Class_Sankey } from './Sankey'
+import { Class_ZoneSelection } from '../Elements/SelectionZone'
+import { Class_Tag } from './Tag'
+import { Class_ContainerElement } from '../Elements/TextZone'
+import { ClassTemplate_Handler } from '../Elements/Handler'
+import { Class_ApplicationData } from './ApplicationData'
+
 
 declare const window: Window &
   typeof globalThis & {
@@ -76,128 +71,125 @@ declare const window: Window &
       publish: boolean
       recenter: boolean
       topbar: boolean
+      embedded: boolean
     }
   }
 
 function sortElementByIdOrder(
-  el_a: Type_AnyProtoElement,
-  el_b: Type_AnyProtoElement,
+  el_a: ClassTemplate_ProtoElement,
+  el_b: ClassTemplate_ProtoElement,
   list: string[]) {
   return list.indexOf(el_a.id) - list.indexOf(el_b.id)
 }
 // CONSTANTS ****************************************************************************
 
-const initial_show_structure = 'data'
+const initial_show_structure = 'free_value'
 const default_grid_size = 50
 const default_grid_visible = true
-const default_horizontal_spacing = 200
-const default_vertical_spacing = 50
 const default_scale = 50
 const default_DA_marging = 50
 
 // CONSTANTS ****************************************************************************
 
-type Type_AnyLinkElement = ClassTemplate_LinkElement<Type_AnyDrawingArea, Type_AnySankey, Type_AnyNodeElement>
-type Type_AnyNodeElement = ClassTemplate_NodeElement<Type_AnyDrawingArea, Type_AnySankey, Type_AnyLinkElement>
-type Type_AnySankey = ClassTemplate_Sankey<Type_AnyDrawingArea, Type_AnyNodeElement, Type_AnyLinkElement>
-type Type_AnyDrawingArea = ClassTemplate_DrawingArea<Type_AnySankey, Type_AnyNodeElement, Type_AnyLinkElement>
 
 // CLASS DRAWING AREA *******************************************************************
 /**
  * Class to deal with drawing area properties and display
  *
- * @class ClassTemplate_DrawingArea
+ * @class Class_DrawingArea
  */
-export abstract class ClassTemplate_DrawingArea
-  <
-    Type_GenericSankey extends ClassTemplate_Sankey<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericNodeElement, Type_GenericLinkElement>,
-    Type_GenericNodeElement extends ClassTemplate_NodeElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericLinkElement>,
-    Type_GenericLinkElement extends ClassTemplate_LinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>,
-  >
-  extends ClassAbstract_DrawingArea {
+export class Class_DrawingArea {
+  protected createNewSankey(id: string = default_main_sankey_id) {
+    const sankey = new Class_Sankey(this, this.application_data.menu_configuration, id)
+    return sankey
+  }
 
-  // PUBLIC ATTRIBUTES ==================================================================
+  protected createNewSelectionZone() {
+    return new Class_ZoneSelection(this, this.application_data.menu_configuration)
+  }
+
 
   /**
    * Application object which relates to this drawing area
    * @type {ClassAbstract_ApplicationData}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
-  public application_data: ClassAbstract_ApplicationData
-
+  public application_data: Class_ApplicationData
+  // Node positioning system
+  public nodePositioning: NodePositioning
   /**
  * d3 svg element containing all sub svg elements, it is also wher we can zoom with scroll wheel
  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
- * @memberof ClassTemplate_DrawingArea
+ * @memberof Class_DrawingArea
  */
   public d3_selection_zoom_area: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 svg groups for drawing area
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area background
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public d3_selection_bg_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
  * d3 selection of svg group that contains drawing area background
  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
- * @memberof ClassTemplate_DrawingArea
+ * @memberof Class_DrawingArea
  */
   public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area grid
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area elements
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   /**
   * d3 selection of svg group that contains sankey elements (nodes,flows)
   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-  * @memberof ClassTemplate_DrawingArea
+  * @memberof Class_DrawingArea
   */
   public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area legend elements
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area legend elements
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * d3 selection of svg group that contains drawing area zone of selection element
    * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
   /**
    * Is drawing area in publish _mode or not. If so, blocks all interactions with it
    * @type {boolean}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public static: boolean = !!window.sankey?.publish
 
@@ -211,7 +203,7 @@ export abstract class ClassTemplate_DrawingArea
    * Height in px of drawing area in application
    * @private
    * @type {number}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   protected _height: number
 
@@ -219,7 +211,7 @@ export abstract class ClassTemplate_DrawingArea
    * Width in px of drawing area in application
    * @private
    * @type {number}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   protected _width: number
 
@@ -235,8 +227,8 @@ export abstract class ClassTemplate_DrawingArea
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  protected _sankey: Type_GenericSankey
-  protected _legend: ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
+  protected _sankey: Class_Sankey
+  protected _legend: ClassTemplate_Legend
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -247,7 +239,7 @@ export abstract class ClassTemplate_DrawingArea
    * when calling window fit
    * @private
    * @type {number}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private _fit_margin: number = 10
 
@@ -255,7 +247,7 @@ export abstract class ClassTemplate_DrawingArea
    * Scaling factor as value = scale * value in pixel
    * @private
    * @type {number}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private _scale: number = default_scale
 
@@ -263,15 +255,11 @@ export abstract class ClassTemplate_DrawingArea
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
    *
    * @private
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private _scaleValueToPx = d3.scaleLinear()
     .domain([0, this._scale])
     .range([0, 100])
-
-  // Positionning
-  private _horizontal_spacing: number = default_horizontal_spacing
-  private _vertical_spacing: number = default_vertical_spacing
 
   // Shifting of d3 elements
   private _elements_d3_groups_shift_x: number = 0
@@ -294,12 +282,11 @@ export abstract class ClassTemplate_DrawingArea
 
   // Objects containeds in drawing area -------------------------------------------------
 
-  public _selection_zone: ClassTemplate_ZoneSelection<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
-  private _number_of_elements: number = 0
+  public _selection_zone: Class_ZoneSelection
 
   // Context attributes for drawing area ------------------------------------------------
 
-  private _list_g_element: string[] = []
+  private _list_g_element: ClassTemplate_ProtoElement[] = []
 
   protected _group_to_select: string = '.gg_nodes,.gg_links'
 
@@ -307,7 +294,7 @@ export abstract class ClassTemplate_DrawingArea
    * Interaction mode with drawing area
    * @private
    * @type {('edition' | 'selection')}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private _mode: 'edition' | 'selection' = 'edition'
 
@@ -316,25 +303,25 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @private
    * @type {boolean}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
-  private _ghost_link: ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null = null
-  private _ghost_link_source: Type_GenericNodeElement | null = null
-  private _ghost_link_target: Type_GenericNodeElement | null = null
+  private _ghost_link: Class_LinkElement | null = null
+  private _ghost_link_source: Class_NodeElement | null = null
+  private _ghost_link_target: Class_NodeElement | null = null
 
   /**
    *Elements that are selected in this area
    *
    * @protected
    * @type {{ [id: string]: ClassTemplate_ProtoElement }}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
-  protected _selection: { [id: string]: ClassTemplate_ProtoElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> } = {}
+  protected _selection: { [id: string]: ClassTemplate_ProtoElement } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
-  private _node_contextualied: Type_GenericNodeElement | undefined = undefined
-  private _link_contextualied: Type_GenericLinkElement | undefined = undefined
+  private _node_contextualied: Class_NodeElement | undefined = undefined
+  private _link_contextualied: Class_LinkElement | undefined = undefined
   private _is_drawing_area_contextualised: boolean = false
 
   /**
@@ -342,7 +329,7 @@ export abstract class ClassTemplate_DrawingArea
    * if we want to move manually the drawing_area, we should use this variable
    * (see areaFitHorizontally && areaFitVertically)
    * @private
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private zoomListener = d3.zoom<SVGSVGElement, unknown>()
     // only trigger zoom event when we scroll (which == 0) &&
@@ -357,22 +344,23 @@ export abstract class ClassTemplate_DrawingArea
   // CONSTRUCTOR ========================================================================
 
   /**
-   * Creates an instance of ClassTemplate_DrawingArea.
+   * Creates an instance of Class_DrawingArea.
    * @param {ClassAbstract_ApplicationData} application_data
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   constructor(
-    application_data: ClassAbstract_ApplicationData,
+    application_data: Class_ApplicationData,
     id: string = default_main_sankey_id
   ) {
-    super()
     this.application_data = application_data
     // Init attributes
     this._height = this.window_fitting_height
     this._width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
-    this._legend = new ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
+    this._legend = new ClassTemplate_Legend(this, this._sankey, this.application_data.menu_configuration)
     this._selection_zone = this.createNewSelectionZone()
+    this.nodePositioning = new NodePositioning(this)
+    this._group_to_select += ',.gg_labels'
   }
 
   // CLEANING METHODS ===================================================================
@@ -396,7 +384,7 @@ export abstract class ClassTemplate_DrawingArea
 
   // COPY METHODS ======================================================================
 
-  public copyFrom(drawing_area_to_copy: ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+  public copyFrom(drawing_area_to_copy: Class_DrawingArea) {
     // Delete everything
     this.delete()
     // Copy All attributes
@@ -405,7 +393,7 @@ export abstract class ClassTemplate_DrawingArea
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
 
     //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
-    this._legend = new ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>(this, this.application_data.menu_configuration)
+    this._legend = new ClassTemplate_Legend(this,this._sankey, this.application_data.menu_configuration)
     // Copy Legend
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
@@ -413,7 +401,7 @@ export abstract class ClassTemplate_DrawingArea
     this._selection_zone = this.createNewSelectionZone()
   }
 
-  protected _copyAttrFrom(drawing_area_to_copy: ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>) {
+  protected _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea) {
     // Copy All attributes
     this.static = drawing_area_to_copy.static
     this._color = drawing_area_to_copy._color
@@ -424,19 +412,19 @@ export abstract class ClassTemplate_DrawingArea
     this._grid_size = drawing_area_to_copy._grid_size
     this._grid_visible = drawing_area_to_copy._grid_visible
     this._height = drawing_area_to_copy._height
-    this._horizontal_spacing = drawing_area_to_copy._horizontal_spacing
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
-    this._number_of_elements = drawing_area_to_copy._number_of_elements
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
-    this._vertical_spacing = drawing_area_to_copy._vertical_spacing
     this._width = drawing_area_to_copy._width
+
+    this._show_background_image = drawing_area_to_copy._show_background_image
+    this._background_image = drawing_area_to_copy._background_image
   }
 
   public updateFrom(
-    other_drawing_area: ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>,
+    other_drawing_area: Class_DrawingArea,
     mode: string[]
   ) {
     // Transfert all attributes = Copy everything from other drawing area
@@ -457,7 +445,7 @@ export abstract class ClassTemplate_DrawingArea
    * @param {boolean} [only_visible_elements=false]
    * @param {boolean} [with_values=true]
    * @return {*}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public toJSON(
     only_visible_elements: boolean = false,
@@ -470,20 +458,22 @@ export abstract class ClassTemplate_DrawingArea
     // Dump DA attributes
     json_object['height'] = this._height
     json_object['width'] = this._width
-    json_object['grid_visible'] = this._grid_visible
-    json_object['grid_square_size'] = this._grid_size
-    json_object['h_space'] = this._horizontal_spacing
-    json_object['v_space'] = this._vertical_spacing
-    json_object['user_scale'] = this._scale
-    json_object['couleur_fond_sankey'] = this._color
+
+    if (this._grid_visible != default_grid_visible) json_object['grid_visible'] = this._grid_visible
+    if (this._grid_size != default_grid_size) json_object['grid_square_size'] = this._grid_size
+    if (this._scale != default_scale)  json_object['user_scale'] = this._scale
+    if (this._color != default_background_color) json_object['couleur_fond_sankey'] = this._color
+    if (this._grid_color != default_grid_color) json_object['default_grid_color'] = this._grid_color
     if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
     if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
-    json_object['filter_label'] = this._filter_label
-    json_object['filter_link_value'] = this._filter_link_value
-    json_object['show_structure'] = this._type_data
-    json_object['number_of_elements'] = this._number_of_elements
-    json_object['magnetic_nodes'] = this._magnetic_nodes
-    json_object['order_g_elements'] = this._list_g_element
+    if (this._filter_label>0) json_object['filter_label'] = this._filter_label
+    if (this._filter_link_value>0) json_object['filter_link_value'] = this._filter_link_value
+    if (this._type_data != initial_show_structure) json_object['show_structure'] = this._type_data
+    if (this._magnetic_nodes) json_object['magnetic_nodes'] = this._magnetic_nodes
+
+    if (this._show_background_image) json_object['show_background_image'] = this._show_background_image
+    if (this._show_background_image) json_object['background_image'] = this._background_image
+
     // Dump with json of contained elements
     const out = {
       ...json_object,
@@ -493,6 +483,7 @@ export abstract class ClassTemplate_DrawingArea
         with_values
       )
     }
+    out['order_g_elements'] = this._list_g_element.map(el => el.id) // Order elements by id 
     return out
   }
 
@@ -500,7 +491,7 @@ export abstract class ClassTemplate_DrawingArea
    * Export current drawing area & its contents as json struct
    *
    * @param {Type_JSON} json_object
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public fromJSON(
     json_object: Type_JSON,
@@ -513,7 +504,8 @@ export abstract class ClassTemplate_DrawingArea
       (Number(version) < 0.9)
     ) {
       console.log('convert_data_legacy')
-      convert_data_legacy(json_object) // FIXME
+      convert_data_legacy(json_object) 
+      this.sankey.link_styles_dict['default'].shape_color_rule = 'auto'
       console.log(json_object.version)
     }
 
@@ -526,11 +518,6 @@ export abstract class ClassTemplate_DrawingArea
       console.log(json_object.version)
     }
 
-
-    // Set node label separator attribute from json
-    this.application_data.node_label_separator = getStringFromJSON(json_object, 'node_label_separator', ' - ')
-    this.application_data.node_label_separator_part = getStringFromJSON(json_object, 'node_label_separator_part', 'before') as 'before' | 'after'
-
     this.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
 
     // Update direct attributes
@@ -540,37 +527,35 @@ export abstract class ClassTemplate_DrawingArea
     this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
     this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
     this._height = getNumberFromJSON(json_object, 'height', this._height)
-    this._horizontal_spacing = getNumberFromJSON(json_object, 'h_space', this._horizontal_spacing)
     this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
     this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
-    this._number_of_elements = getNumberFromJSON(json_object, 'number_of_elements', this._number_of_elements)
     this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = getStringFromJSON(json_object, 'show_structure', this._type_data) as Type_Structure
-    this._vertical_spacing = getNumberFromJSON(json_object, 'v_space', this._vertical_spacing)
     this._width = getNumberFromJSON(json_object, 'width', this._width)
     this._magnetic_nodes = getBooleanFromJSON(json_object, 'magnetic_nodes', this._magnetic_nodes)
 
+    this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
+    this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
     // Update legend
     this._legend.fromJSON(json_object)
 
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
 
-    this._list_g_element = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element)
+    //this._list_g_element = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element.map(el=>el.id)).map(id=>)
+
+    this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
+    this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
+    this.name = getStringFromJSON(json_object, 'name', this.name)
 
   }
-
-  // ABSTRACT METHODS ==================================================================
-
-  protected abstract createNewSankey(id?: string): Type_GenericSankey
-  protected abstract createNewSelectionZone(): ClassTemplate_ZoneSelection<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>
 
   // PUBLIC METHODS ====================================================================
 
   /**
    * Reset drawing area & add waiting toast
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public draw(
   ) {
@@ -601,15 +586,16 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Reinit d3 selections
    * @protected
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   protected _initDraw() {
+    const height = window.sankey?.embedded ? '100%' : window.innerHeight
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
       .attr('id', 'draw_zoom')
-      .attr('width', "100%")
-      .attr('height', window.innerHeight)
+      .attr('width', '100%')
+      .attr('height', height)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
 
     // Init drawing area
@@ -626,19 +612,28 @@ export abstract class ClassTemplate_DrawingArea
     this.d3_selection_grid = this.d3_selection_bg_group.append('g').attr('id', 'g_grid')
 
     // Since legend can't be affected by zoom, it outside g_drawing
-    this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
+
+
 
     // Add specific groups for nodes, link and others
     this.d3_selection_elements_group = this.d3_selection.append('g').attr('id', 'g_elements')
     this.d3_selection_elements_sankey_group = this.d3_selection_elements_group.append('g').attr('id', 'g_elements_sankey')
     this.d3_selection_handlers = this.d3_selection_elements_group.append('g').attr('id', 'g_handlers')
     this.d3_selection_zone_select = this.d3_selection_elements_group.append('g').attr('id', 'g_select_zone')
+
+    if (this._legend.stick_to_drawing) {
+      this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
+    } else {
+      this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
+    }
+
+    this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
   }
 
   /**
    * Draw grid for drawing area
    * @public
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public drawGrid() {
     // Clean if needed
@@ -677,7 +672,7 @@ export abstract class ClassTemplate_DrawingArea
 
   /**
    * Draw all elements inside drawing area
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public drawElements() {
     // Draw grid
@@ -689,6 +684,8 @@ export abstract class ClassTemplate_DrawingArea
     this._sankey.draw()
     // Draw legend
     this._legend.draw()
+    this.drawBgImage()
+    this.sankey.containers_list.forEach(container => container.draw())
   }
 
   public drawSelected() {
@@ -713,7 +710,7 @@ export abstract class ClassTemplate_DrawingArea
 
   /**
    * Context menus are directly diplayed in drawing area when deal with them directly here
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public closeAllContextMenus() {
     // Reset contextulised elements
@@ -724,28 +721,21 @@ export abstract class ClassTemplate_DrawingArea
     this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
     this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
     this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-  }
-
-  public addElement() {
-    // We increase by two, in order to easyly swap elements
-    // ie : element0 order = 0, element1 order = 2, element3 order = 4
-    // to increase element 0 order, juste add 3
-    // then : element0 order = 3, element1 order = 2, element3 order = 4
-    // then orderElement() method will display elements as wanted + update their order value
-    // ie : element1 order = 0, element0 order = 2, element3 order = 4
-    this._number_of_elements = this._number_of_elements + 2
-    return this._number_of_elements
+    // Reset contextualised elements
+    this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
+    // Update components
+    this.contextualised_container = undefined
   }
 
 
   /**
    * Checks if it is possible to directly deal with events
    * @return {boolean}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public eventsEnabled(): boolean {
     // Deal with node events in priority
-    const mouse_over_nodes = this.isMouseOverAnExistingNode()
+    let mouse_over_nodes = this.isMouseOverAnExistingNode()
     if (mouse_over_nodes === true) {
       return false
     }
@@ -758,35 +748,39 @@ export abstract class ClassTemplate_DrawingArea
     if (this._legend.isMouseOver()) {
       return false
     }
+    mouse_over_nodes = this.isMouseOverAnExistingContainer()
+    if (mouse_over_nodes === true) {
+      return false
+    }
     // Ok event
     return true
   }
 
   /**
    * Add a new default node to drawing area sankey
-   * @return {ClassTemplate_NodeElement}
-   * @memberof ClassTemplate_DrawingArea
+   * @return {Class_NodeElement}
+   * @memberof Class_DrawingArea
    */
-  public addNewDefaultNodeToSankey(): Type_GenericNodeElement {
+  public addNewDefaultNodeToSankey(): Class_NodeElement {
     return this.sankey.addNewDefaultNode()
   }
 
   /**
    * Retrieve node by id from sankey struct
    * @param {string} id
-   * @return {ClassTemplate_NodeElement | null}
-   * @memberof ClassTemplate_DrawingArea
+   * @return {Class_NodeElement | null}
+   * @memberof Class_DrawingArea
    */
-  public getNodeFromSankey(id: string): Type_GenericNodeElement | null {
+  public getNodeFromSankey(id: string): Class_NodeElement | null {
     return this.sankey.getNode(id)
   }
 
   /**
    * Delete a given node -> node will not exist anymore
-   * @param {ClassTemplate_NodeElement} node
-   * @memberof ClassTemplate_DrawingArea
+   * @param {Class_NodeElement} node
+   * @memberof Class_DrawingArea
    */
-  public deleteNode(node: Type_GenericNodeElement) {
+  public deleteNode(node: Class_NodeElement) {
     // Remove from selection if necessary
     this.removeNodeFromSelection(node)
     // Remove node from sankey
@@ -799,27 +793,27 @@ export abstract class ClassTemplate_DrawingArea
 
   /**
    * Add a new default link to drawing area sankey
-   * @return {Type_GenericLinkElement}
-   * @memberof ClassTemplate_DrawingArea
+   * @return {Class_LinkElement}
+   * @memberof Class_DrawingArea
    */
-  public addNewDefaultLinkToSankey(): Type_GenericLinkElement {
+  public addNewDefaultLinkToSankey(): Class_LinkElement {
     return this.sankey.addNewDefaultLink()
   }
 
   /**
    * Retrieve node by id from sankey struct
    * @param {string} id
-   * @return {Type_GenericLinkElement | null}
-   * @memberof ClassTemplate_DrawingArea
+   * @return {Class_LinkElement | null}
+   * @memberof Class_DrawingArea
    */
-  public getLinkFromSankey(id: string): Type_GenericLinkElement | null { return this.sankey.getLink(id) }
+  public getLinkFromSankey(id: string): Class_LinkElement | null { return this.sankey.getLink(id) }
 
   /**
    * Delete a given link -> link will not exist anymore
-   * @param {ClassTemplate_NodeElement} node
-   * @memberof ClassTemplate_DrawingArea
+   * @param {Class_NodeElement} node
+   * @memberof Class_DrawingArea
    */
-  public deleteLink(link: Type_GenericLinkElement) {
+  public deleteLink(link: Class_LinkElement) {
     // Remove link from selection if necessary
     this.removeLinkFromSelection(link)
     // Remove link from sankey
@@ -833,10 +827,10 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Add a node to selection set
    * Update menu accordingly
-   * @param {ClassTemplate_NodeElement} node
-   * @memberof ClassTemplate_DrawingArea
+   * @param {Class_NodeElement} node
+   * @memberof Class_DrawingArea
    */
-  public addNodeToSelection(node: Type_GenericNodeElement) {
+  public addNodeToSelection(node: Class_NodeElement) {
     // Update selection list
     this._selection[node.id] = node
     // Update selection attribute on given node
@@ -854,7 +848,7 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Add all nodes to selection set
    * Update menu accordingly
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public addAllVisibleNodesToSelection() {
     this.sankey.visible_nodes_list
@@ -864,10 +858,10 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * remove a node from a selection set
    * Update menu accordingly
-   * @param {Type_GenericNodeElement} node
-   * @memberof ClassTemplate_DrawingArea
+   * @param {Class_NodeElement} node
+   * @memberof Class_DrawingArea
    */
-  public removeNodeFromSelection(node: Type_GenericNodeElement) {
+  public removeNodeFromSelection(node: Class_NodeElement) {
     if (this._selection[node.id] !== undefined) {
       // Update selection list
       delete this._selection[node.id]
@@ -880,7 +874,7 @@ export abstract class ClassTemplate_DrawingArea
 
   /**
    * remove a legend from a selection set
-   * @param {Type_GenericNodeElement} node
+   * @param {Class_NodeElement} node
    * @memberof Class_DrawingArea
    */
   public removeLegendFromSelection() {
@@ -895,19 +889,20 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Permanently delete selected nodes
    * Update menu accordingly
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public deleteSelectedNodes() {
     this.deleteSelection(true, false)
+    this.deleteSelectedContainers()
   }
 
   /**
    * Add a link to selection set
    * Update menu accordingly
-   * @param {Type_GenericLinkElement} link
-   * @memberof ClassTemplate_DrawingArea
+   * @param {Class_LinkElement} link
+   * @memberof Class_DrawingArea
    */
-  public addLinkToSelection(link: Type_GenericLinkElement) {
+  public addLinkToSelection(link: Class_LinkElement) {
     // Update selection list
     this._selection[link.id] = link
     // Update selection attribute on given link
@@ -919,7 +914,7 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Add all links to selection set
    * Update menu accordingly
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public addAllVisibleLinksToSelection() {
     this.sankey.visible_links_list
@@ -928,10 +923,10 @@ export abstract class ClassTemplate_DrawingArea
 
   /**
    * Remove given link from selection set
-   * @param {ClassTemplate_LinkElement} link
-   * @memberof ClassTemplate_DrawingArea
+   * @param {Class_LinkElement} link
+   * @memberof Class_DrawingArea
    */
-  public removeLinkFromSelection(link: Type_GenericLinkElement) {
+  public removeLinkFromSelection(link: Class_LinkElement) {
     if (this._selection[link.id] !== undefined) {
       // Update selection list
       delete this._selection[link.id]
@@ -944,7 +939,7 @@ export abstract class ClassTemplate_DrawingArea
 
   /**
    * Remove all link selected
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public purgeSelectionOfLinks(reset = true) {
     // Unselect elements
@@ -961,7 +956,7 @@ export abstract class ClassTemplate_DrawingArea
 
   /**
  * Remove all node selected
- * @memberof ClassTemplate_DrawingArea
+ * @memberof Class_DrawingArea
  */
   public purgeSelectionOfNode(reset = true) {
     // Unselect elements
@@ -979,7 +974,7 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Delete all selected links -> link will not exist anymore
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public deleteSelectedLinks() {
     this.deleteSelection(false, true)
@@ -987,7 +982,7 @@ export abstract class ClassTemplate_DrawingArea
 
   /**
    * Clean selection set of sankey elements
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public purgeSelection() {
     // Unselect everything
@@ -1000,12 +995,13 @@ export abstract class ClassTemplate_DrawingArea
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     // Clean selection dict
     this._selection = {}
+    this.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
   }
 
   /**
    * Delete all selected elements
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public deleteSelection(deleteSelectedNodes: boolean, deleteSelectedLinks: boolean) {
 
@@ -1039,7 +1035,7 @@ export abstract class ClassTemplate_DrawingArea
     }
 
     // --- Undo function
-    function undo(_: Type_AnyDrawingArea) {
+    function undo(_: Class_DrawingArea) {
       const json_hist: Type_JSON = {
         'nodes': json_hist_nodes,
         'links': json_hist_links
@@ -1054,10 +1050,10 @@ export abstract class ClassTemplate_DrawingArea
 
     if (deleteSelectedLinks) this.selected_links_list.forEach(link => { this.deleteLink(link) })
     if (deleteSelectedNodes) this.selected_nodes_list.forEach(node => this.deleteNode(node))
-
+    this.deleteSelectedContainers()
     // Save Redo ---------------------------------------
     // -- Redo function
-    function redo(_: Type_AnyDrawingArea) {
+    function redo(_: Class_DrawingArea) {
       Object.keys(json_hist_links)
         .forEach(link_id => _.deleteLink(_.sankey.links_dict[link_id]))
       Object.keys(json_hist_nodes)
@@ -1070,20 +1066,20 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Function to use after setting link value, it check if there is only 1 link and if so update DA scale
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public updateScaleAtLinkValueSetting() {
     // Update scaling if only one link
-    const links = this.sankey.links_list.filter(l => l.value != null && l.value.data_value != null && l.value.data_value != 0)
+    const links = this.sankey.links_list.filter(l => l.valueCurrent )
     if (links.length == 1) {
-      this.scale = links[0].value!.data_value! // will redraw everything // will redraw everything
+      this.scale = links[0].valueCurrent! // will redraw everything // will redraw everything
     }
   }
 
   /**
    * Function to check if element are near drawing area border & update it size in consequence
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public checkAndUpdateAreaSize(
     recenter: boolean = false
@@ -1155,7 +1151,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * (not recommended for vertical sankey)
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public areaFitHorizontally(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
@@ -1178,7 +1174,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * (not recommended for horizontal sankey)
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public areaFitVertically(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
@@ -1193,205 +1189,15 @@ export abstract class ClassTemplate_DrawingArea
         [x0, y0])
     }
   }
-
   /**
-   * Explore all node's branches to compute all their nodes horizontal index
-   *
-   * @param {SankeyNode} node Node to start exploring from
-   * @param {number} starting_index
-   * @param {string[]} visited_nodes_ids List of nodes (by their id) that have been visited. Helps to find recycling flux
-   * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
-   * @param {object} horizontal_indexes_per_nodes_ids Current horizontal index for given node id
-   */
-  public computeHorizontalIndex(
-    node: Type_GenericNodeElement,
-    nodes_to_process: Type_GenericNodeElement[],
-    starting_index: number,
-    visited_nodes_ids: string[],
-    recycling_links_ids: string[],
-    horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
-  ) {
-    // Update node index
-    if (!horizontal_indexes_per_nodes_ids[node.id]) {
-      horizontal_indexes_per_nodes_ids[node.id] = starting_index
-    }
-    else {
-      if (starting_index > horizontal_indexes_per_nodes_ids[node.id]) {
-        horizontal_indexes_per_nodes_ids[node.id] = starting_index
-      }
-    }
-    // From current node, use output links to
-    // recurse on following node
-    node
-      .output_links_list
-      .filter(link =>
-      // Computes only for link to visible nodes
-      // and not for nodes related to recyling flux
-      (nodes_to_process.includes(this.sankey.links_dict[link.id].target as Type_GenericNodeElement) &&
-        !recycling_links_ids.includes(link.id)))
-      .forEach(link => {
-        // Next node to recurse on
-        const next_node = this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id]
-        // But first we check if next node has not been already visited
-        if (!visited_nodes_ids.includes(next_node.id)) {
-          // Recursive calling
-          this.computeHorizontalIndex(
-            next_node,
-            nodes_to_process,
-            starting_index + 1,
-            [...visited_nodes_ids, node.id],
-            recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        }
-        else {
-          // If next node has already been visited then this means
-          // that link between current node and next node
-          // is a recycling flux
-          //
-          // To illustrate :
-          // -> This example count as recycling flux :
-          //    N0 - N11 - N21 - N3
-          //       \ N12 - N22 -
-          //          |         |
-          //           ---------
-          // -> But not this one :
-          //    N0 - N11 - N21 - N3
-          //       \ N12 - N22 \
-          //          |         |
-          //           ---------
-          recycling_links_ids.push(link.id)
-        }
-      })
-  }
+ * Version corrigée de l'algorithme computeAutoSankey avec meilleure détection des flux de recyclage
+ */
 
-  /**
-   * Recompte index for link taggued as recyling links
-   * We need to recompute positionning of next_node,
-   * because of recycling link, its position can be all wrong
-   * -> exemple
-   *
-   *     N0 - N11 - N21 - N3
-   *       \     \
-   *        N12 - N22 \
-   *         |         |
-   *          ---------
-   *
-   *    So we got N0->N11->N22->N12->N22 stop
-   *               0   1    2    3
-   *    And the link N12->N22 will be considered as
-   *    recycled link and we will get
-   *
-   *      N0 - N11 - N21 - N3
-   *        \      \
-   *         \       N22
-   *          \    /
-   *           \   -------------
-   *            \              |
-   *             --------- N12 -
-   *    So we need to recompute N12 index
-   *
-   * @param {SankeyLink} link Link that has been previoulsy taggued ass possible recyling link
-   * @param {string[]} visible_nodes_ids List of nodes (by their id) that are currently visible on Sankey diagram
-   * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
-   * @param {object} horizontal_indexes_per_nodes_ids Current index for given node id
-   * @param {object} links
-   * @param {object} nodes
-   */
-  public computeRecyclingHorizontalIndex(
-    nodes_to_process: Type_GenericNodeElement[],
-    link: Type_GenericLinkElement,
-    recycling_links_ids: string[],
-    horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
-  ) {
-    // Get id for source and target
-    const target_node_id = link.id
-    const source_node_id = link.id
-    // Compute only if horizontal indexes for source >= horizontal index for target
-    // which can not be the case if these nodes' indexes have been reprocessed
-    // by this same function
-    if (horizontal_indexes_per_nodes_ids[source_node_id] >=
-      horizontal_indexes_per_nodes_ids[target_node_id]) {
-      // For source node, check if there is a gap
-      // between its horizontal index and all the horizontal
-      // indexes of nodes that are sources of its own inputs links
-      const indexes_before_source_node: number[] = []
-      let min_index = -1
-      this.sankey.nodes_dict[source_node_id]
-        .input_links_list
-        .forEach(input_link => {
-          const index = horizontal_indexes_per_nodes_ids[this.sankey.links_dict[input_link.id].id]
-          if (min_index >= 0) {
-            if (index < min_index) {
-              min_index = index
-            }
-          }
-          else {
-            min_index = index
-          }
-          indexes_before_source_node.push(index)
-        })
-      // If there is a gap, we recompute source node horizontal indexing
-      const horizontal_index_of_source_node = horizontal_indexes_per_nodes_ids[source_node_id] // memorize value for loop
-      for (let index = min_index + 1; index < horizontal_index_of_source_node; index++) {
-        // Gap check here
-        if (!indexes_before_source_node.includes(index)) {
-          horizontal_indexes_per_nodes_ids[source_node_id] = index
-          // TODO faut un forçage des indexs à suivre.
-          this.computeHorizontalIndex(
-            this.sankey.nodes_dict[source_node_id],
-            nodes_to_process,
-            index,
-            [],
-            recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-          break
-        }
-      }
-    }
-  }
-
-  /**
-   * Initially there is only one node per type of exchanges.
-   * it must be splitted to have one import and one export per product
-   * International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public splitTrade(
-  ) {
-    if (!this.sankey.node_taggs_dict['type de noeud']) {
-      return
-    }
-
-    let trade_nodes = this.sankey.nodes_list.filter(n =>
-      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
-    )
-    // first split the nodes
-    trade_nodes.forEach(node => {
-      if (node.output_links_list.length > 0) {
-        (node as Type_GenericNodeElement).SplitIOrE(true)
-      }
-      if (node.input_links_list.length > 0) {
-        (node as Type_GenericNodeElement).SplitIOrE(false)
-      }
-      this.sankey.deleteNode(node)
-    })
-    trade_nodes = this.sankey.nodes_list.filter(n =>
-      n.hasGivenTag(this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'])
-    )
-    // the set dimensions. It must be done after each trade node has been split
-    trade_nodes.forEach(node => {
-      (node as Type_GenericNodeElement).setTradeDimensions(true);
-      (node as Type_GenericNodeElement).setTradeDimensions(false)
-    })
-  }
 
   /**
    *Inverse selected links and save undoing
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public inverseSelectedLinks = () => {
     const _inverseSelectedLinks = () => {
@@ -1495,670 +1301,17 @@ export abstract class ClassTemplate_DrawingArea
     _updateSelectedNodesTagAssignation()
   }
 
-  /**
-   * Compute the position of the nodes which are not trade nodes
-   *
-   * /!\ Add to waiting spinner queue
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public computeAutoSankey(
-    launched_from_process: boolean,
-  ) {
-    this.application_data.sendWaitingToast(
-      () => {
-        // If it's not launched_from_process then we assume it's user input so we save it undoing
-        if (!launched_from_process) {
-          const node_pos = Object.fromEntries(this._sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
-          const link_recy = Object.fromEntries(this._sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
-          const inv_computeAutoSankey = () => {
-            this._sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
-            // Reposition node to old pos
-            this._sankey.visible_nodes_list.forEach(n => {
-              n.display.position.x = node_pos[n.id].x
-              n.display.position.y = node_pos[n.id].y
-              // Reset old node IO order
-              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
-              n.draw()
-            })
-            this.areaAutoFit(true)
-
-          }
-          this.saveUndo(inv_computeAutoSankey)
-        }
-        // Compute auto pos of nodes
-        this._computeAutoSankey(launched_from_process)
-        this.computeParametrization()
-        if (launched_from_process) {
-          // Initially there is only one node per type of exchanges.
-          // it must be splitted to have one import and one export per product
-          // International will be split to give InternationalProduct1Importation InternationalProduc1Exportation
-          this.splitTrade()
-          // Computes u v,x and initial y for trade nodes
-          this.arrangeTrade(true)
-        }
-
-        // Defaut color + auto reorg of links
-        const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-        this.sankey.visible_nodes_list.forEach((n, i, a) => {
-          n.reorganizeIOLinks()
-          if (launched_from_process) {
-            this.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
-          }
-        })
-        if (launched_from_process) {
-          // Update defaut data on recycling mode
-          this.sankey.links_list.forEach(l => {
-            if (l.shape_is_recycling) {
-              l.shape_starting_tangeant = 0.01
-              l.shape_ending_tangeant = 0.01
-            }
-          })
-        }
-        // Update area
-        this.areaAutoFit(true)
-        // Toggle saving indicator
-        this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-        // If it's not launched_from_process then we assume it's user input so we save it undoing
-        if (!launched_from_process) {
-          const node_pos = Object.fromEntries(this._sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
-          const link_recy = Object.fromEntries(this._sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
-
-          const _computeAutoSankey = () => {
-            this._sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
-
-            // Reposition node to old pos
-            this._sankey.visible_nodes_list.forEach(n => {
-              n.display.position.x = node_pos[n.id].x
-              n.display.position.y = node_pos[n.id].y
-              // Reset old node IO order
-              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
-              n.draw()
-            })
-            this.areaAutoFit(true)
-
-          }
-          this.saveRedo(_computeAutoSankey)
-        }
-      },
-      {
-        success: {
-          title: this.application_data.t('toast.compute_auto_sankey.success.title')
-        },
-        loading: {
-          title: this.application_data.t('toast.compute_auto_sankey.loading.title')
-        }
-      }
-    )
-  }
   public callComputeAutoSankey(
     launched_from_process: boolean,
   ) {
-    this._computeAutoSankey(launched_from_process)
-  }
-
-  /**
-   * Compute the position of the nodes which are not trade nodes
-   * @protected
-   * @param {boolean} launched_from_process
-   * @memberof ClassTemplate_DrawingArea
-   */
-  protected _computeAutoSankey(
-    launched_from_process: boolean
-  ) {
-    // Calcul de la valeur max des flux
-    let linksMaxValue = 0
-    this.sankey.links_list.forEach(link => {
-      // We use a function to max value for each link because
-      // each link can have multiple values
-      const linkMaxValue = link.getMaxValue()
-      linksMaxValue = Math.max(
-        linksMaxValue,
-        linkMaxValue ? linkMaxValue : 0
-      )
-    })
-    linksMaxValue += 1 // Protection if all values are at 0
-
-    // Get scale from max value
-    if (launched_from_process) {
-      this.scale = this._maximum_flux ? Math.max(this._maximum_flux, linksMaxValue) : linksMaxValue
-    }
-
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
-    const nodes_to_process = this.sankey.visible_nodes_list.filter(n => !echangeTag || !n.hasGivenTag(echangeTag))
-
-    // Compute positionning indexes
-    const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-    const possible_recycling_links_ids: string[] = []
-    nodes_to_process
-      .forEach(node => {
-        //     const node = data.nodes[node_id]
-        if (!node.hasInputLinks() && node.hasOutputLinks()) {
-          // get current node horizontal index (eg longest branch length)
-          const starting_index = 0
-          this.computeHorizontalIndex(
-            node,
-            nodes_to_process,
-            starting_index,
-            [],
-            possible_recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        }
-        else {
-          // Lone node case
-          if (!node.hasInputLinks() && !node.hasOutputLinks()) {
-            horizontal_indexes_per_nodes_ids[node.id] = 0
-          }
-        }
-      })
-
-    // Double check recycling links
-    const checked_recycling_links_ids: string[] = []
-    Object.values(possible_recycling_links_ids)
-      .forEach(link_id =>
-        this.computeRecyclingHorizontalIndex(
-          nodes_to_process,
-          this.sankey.links_dict[link_id],
-          checked_recycling_links_ids,
-          horizontal_indexes_per_nodes_ids
-        ))
-
-    // Use results from previous index computing
-    // TODO : maybe possible to speed up here overall computing with getting
-    //        max_horizontal_index and nodes_per_horizontal_indexes from another loop
-    let max_horizontal_index = 0
-    const nodes_per_horizontal_indexes: { [index: number]: Type_GenericNodeElement[] } = {}
-    this.sankey.visible_nodes_list.forEach(node => {
-      // Previously computed index for given node
-      const node_index = horizontal_indexes_per_nodes_ids[node.id]
-      // Update reversed dict index-> nodes
-      if (!nodes_per_horizontal_indexes[node_index]) {
-        nodes_per_horizontal_indexes[node_index] = []
-      }
-      nodes_per_horizontal_indexes[node_index].push(this.sankey.nodes_dict[node.id])
-      // Update max horizontal index
-      if (node_index > max_horizontal_index) {
-        max_horizontal_index = node_index
-      }
-      // Set recycling links
-      Object.values(this.sankey.nodes_dict[node.id].output_links_list)
-        .forEach(link => {
-          // Get id for source and target
-          const target_node_id = this.sankey.links_dict[link.id].target.id
-          // Compute only if indexes for source >= index for target
-          // which can not be the case if these nodes have been reprocessed
-          // by this same function
-          if (node_index >= horizontal_indexes_per_nodes_ids[target_node_id]) {
-            this.sankey.links_dict[link.id].shape_is_recycling = true
-          }
-          else {
-            this.sankey.links_dict[link.id].shape_is_recycling = false
-          }
-        })
-    })
-    // for the node which have no input links they should stick to the next output node and
-    // have an horizontal index equal to output node horizontal index minus one
-    for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
-      // Pass if no nodes for this horizontal_index
-      // TODO : if it is the case -> something was wrong before
-      if (!nodes_per_horizontal_indexes[horizontal_index]) {
-        continue
-      }
-      const to_splice: Type_GenericNodeElement[] = []
-      nodes_per_horizontal_indexes[horizontal_index].forEach(node => {
-        if (!node.hasInputLinks()) {
-          let min_next_horizontal_index = max_horizontal_index + 1
-          node.output_links_list.forEach(
-            (link) => {
-              if (this.sankey.nodes_dict[this.sankey.links_dict[link.id].source.id].is_visible &&
-                this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id].is_visible
-              ) {
-                const target_node = this.sankey.nodes_dict[this.sankey.links_dict[link.id].target.id]
-                if (target_node === undefined) {
-                  return
-                }
-                if (horizontal_indexes_per_nodes_ids[target_node.id] < horizontal_indexes_per_nodes_ids[node.id]) {
-                  return
-                }
-                if (horizontal_indexes_per_nodes_ids[target_node.id] < min_next_horizontal_index) {
-                  min_next_horizontal_index = horizontal_indexes_per_nodes_ids[target_node.id]
-                }
-              }
-            })
-          if (horizontal_indexes_per_nodes_ids[node.id] < min_next_horizontal_index - 1) {
-            to_splice.push(node as Type_GenericNodeElement)
-            // Il semblerait que dans certains cas nodes2horizontal_indices de certains noeuds peuvent devenir négatif
-            // ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
-            horizontal_indexes_per_nodes_ids[node.id] = min_next_horizontal_index - 1
-            if (!nodes_per_horizontal_indexes[min_next_horizontal_index - 1]) {
-              nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
-            }
-            nodes_per_horizontal_indexes[min_next_horizontal_index - 1].push(node)
-          }
-        }
-      })
-      to_splice.forEach(node => nodes_per_horizontal_indexes[horizontal_index].splice(nodes_per_horizontal_indexes[horizontal_index].indexOf(node), 1))
-    }
-
-    // Loop on all index "columns"
-    let h_left_margin = this._horizontal_spacing
-    let h_right_margin = this._horizontal_spacing
-    const height_cumul_per_indexes: number[] = []
-    const height_per_nodes_ids: { [node_id: string]: number } = {}
-    const node_id_per_hxv_indexes: string[][] = []
-    let max_height_cumul = 0
-    for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
-      // Pass if no nodes for this index
-      if (!nodes_per_horizontal_indexes[h_index]) {
-        continue
-      }
-
-      // Loop on nodes from computed horizontal index
-      let height_cumul_for_index = 0
-      let max_vertical_index = 0
-      const sortcoef_per_nodes_ids: { [node_id: string]: number } = {}
-      const vertical_indexes_per_node_id: { [node_id: string]: number } = {}
-      const nodes_ids_per_vertical_index: string[] = []
-      nodes_per_horizontal_indexes[h_index]
-        .forEach(node => {
-          // Node height
-          const node_height = node.getShapeHeightToUse()
-          // Coef to verticaly sort nodes - highest coef is upper
-          // - Empirique : prend en considération taille du neoud et taille du noeud normalisée
-          const node_sortcoef = node_height * (0.8 + 0.2 / (node.output_links_list.length + node.input_links_list.length))
-
-          // Verticaly sort nodes accordingly to their height
-          height_per_nodes_ids[node.id] = node_height
-          sortcoef_per_nodes_ids[node.id] = node_sortcoef
-          vertical_indexes_per_node_id[node.id] = max_vertical_index
-          nodes_ids_per_vertical_index.push(node.id)
-          if (max_vertical_index > 0) {
-            // Bubble sort algo
-            for (let v_index = max_vertical_index; v_index > 0; v_index--) {
-              // Prev node infos
-              const prev_v_index = v_index - 1
-              const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
-              const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
-              if (prev_node_sortcoef < node_sortcoef) {
-                // Update referencing for bubble node
-                vertical_indexes_per_node_id[node.id] = prev_v_index
-                nodes_ids_per_vertical_index[prev_v_index] = node.id
-                // Update referencing for prev node
-                vertical_indexes_per_node_id[prev_node_id] = v_index
-                nodes_ids_per_vertical_index[v_index] = prev_node_id
-              }
-              else {
-                break
-              }
-            }
-          }
-          max_vertical_index += 1
-
-          // Compute cumulative height for given index
-          height_cumul_for_index += node_height
-
-          // Compute left horizontal margin
-          if (h_index == 0) {
-            const style_node = node.getStyleWithAttr('name_label_box_width')
-            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
-            const needed_margin = this.grid_size + node_label_width
-            if (needed_margin > h_left_margin) {
-              h_left_margin = needed_margin
-            }
-          }
-
-          // Compute right horizontal margin
-          // if (h_index == (max_horizontal_index - cumul_shifting_value)) {
-          if (h_index == max_horizontal_index) {
-            const style_node = node.getStyleWithAttr('name_label_box_width')
-            const node_label_width = this.sankey.node_styles_dict[style_node.id].name_label_box_width!
-            const needed_margin = this.grid_size + node_label_width
-            if (needed_margin > h_right_margin) {
-              h_right_margin = needed_margin
-            }
-          }
-
-          // If we launched the function from process example
-          // then we assume we need to place node label according to some parameters
-          if (launched_from_process) {
-            // Place labels accordingly
-            // If node is lone, source, sink or in the middle
-            if (!node.hasInputLinks() && !node.hasOutputLinks()) {
-              // Node is lone node
-              node.name_label_horiz = 'middle'
-              node.name_label_vert = 'middle'
-              // node.name_label_background = true
-            }
-            else if (node.input_links_list.length === 0) {
-              // Node is a source : no input link
-              node.name_label_horiz = 'left'
-              node.name_label_vert = 'middle'
-            }
-            else if (node.output_links_list.length === 0) {
-              // Node is a sink : no output link
-              node.name_label_horiz = 'right'
-              node.name_label_vert = 'middle'
-            }
-            else {
-              // Node is in the middle of the sankey
-              node.name_label_horiz = 'left'
-              node.name_label_vert = 'middle'
-              // node.name_label_background = true
-            }
-          }
-
-        })
-
-      // Get horizontal index that need the most of vertical space
-      // with vertical spacing between nodes in account
-      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * (this.vertical_spacing)
-      if (height_cumul_for_index > max_height_cumul) {
-        max_height_cumul = height_cumul_for_index
-      }
-      height_cumul_per_indexes.push(height_cumul_for_index)
-
-      // Update global indexing table
-      node_id_per_hxv_indexes.push(nodes_ids_per_vertical_index)
-    }
-    max_horizontal_index = (node_id_per_hxv_indexes.length - 1)
-
-
-    // Update horizontal and vertical position of nodes
-    // compute total height of nodes that belong to the same column,
-    // then compute the spaces between them and their positions.
-    const v_margin = this.vertical_spacing
-
-    let prev_col_width = 0
-
-    for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
-      // Pass if no nodes for this horizontal_index
-      // TODO : if it is the case -> something was wrong before
-      if (!node_id_per_hxv_indexes[horizontal_index]) {
-        continue
-      }
-      let max_w_col = 0
-
-      // Loop on horizontal_index node
-      const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true // TODO put function arg instead of true
-      const h_position_for_index = prev_col_width + h_left_margin + horizontal_index * this.horizontal_spacing
-      const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
-      let upper_node_height_and_margin = v_margin_for_index
-
-      if (center_biggest_nodes === true) {
-        // From the bottom to the top : plot node every two index
-        let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
-        for (let index = last_index; index >= 0; index -= 2) {
-          const node_id = node_id_per_hxv_indexes[horizontal_index][index]
-          // Node position
-          this.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-          // Update upper margin for next node
-          const node_height = height_per_nodes_ids[node_id]
-          upper_node_height_and_margin += node_height + v_margin
-          // Test if node width is the largest of column
-          const node_w = this.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > max_w_col)
-            max_w_col = node_w
-          // Update last index
-          last_index = index
-        }
-        // From the top to the bottom : remaining index
-        if (last_index == 0)
-          last_index = 1
-        else
-          last_index = 0
-        for (let index = last_index; index < node_id_per_hxv_indexes[horizontal_index].length; index += 2) {
-          const node_id = node_id_per_hxv_indexes[horizontal_index][index]
-          // Node position
-          this.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-          // Update upper margin for next node
-          const node_height = height_per_nodes_ids[node_id]
-          upper_node_height_and_margin += node_height + v_margin
-          // Test if node width is the largest of column
-          const node_w = this.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > max_w_col)
-            max_w_col = node_w
-        }
-      }
-      else {
-        node_id_per_hxv_indexes[horizontal_index]
-          .forEach(node_id => {
-            // Node position
-            this.sankey.nodes_dict[node_id].position_x = h_position_for_index
-            this.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-            // Update upper margin for next node
-            const node_height = height_per_nodes_ids[node_id]
-            upper_node_height_and_margin += node_height + v_margin
-            // Test if node width is the largest of column
-            const node_w = this.sankey.nodes_dict[node_id].shape_min_width
-            if (node_w > max_w_col)
-              max_w_col = node_w
-          })
-      }
-      // Add colmun width to horiz shift for next col pos x
-      prev_col_width += max_w_col
-    }
-
-    const possible_witdh = (h_left_margin + max_horizontal_index * this.horizontal_spacing + h_right_margin)
-    const possible_height = (v_margin * 2 + max_height_cumul)
-
-    this.width = (this.window_fitting_width < possible_witdh) ? possible_witdh : this.window_fitting_width
-    this.height = (this.window_fitting_height < possible_height) ? possible_height : this.window_fitting_height
-  }
-
-  /**
-   * Computes u,v,x and initial y for trade nodes
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public arrangeTrade(
-    compute_xy: boolean
-  ) {
-    if (!this.sankey.node_taggs_dict['type de noeud']) {
-      return
-    }
-    const process_nodes = this.sankey.nodes_list
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
-    const import_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
-    )
-    const export_nodes = process_nodes.filter(n =>
-      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
-    )
-    const other_nodes = process_nodes.filter(n => !n.hasGivenTag(echangeTag))
-
-    let max_vertical_offset = 0
-    other_nodes.forEach(n =>
-      max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
-    )
-    max_vertical_offset = max_vertical_offset + 200
-    // const firstNonEchangeNodeBelow = other_nodes.sort((n1,n2)=> n1.position_y-n2.position_y)[0]
-
-    import_nodes.forEach(node => {
-      const output_link = node.output_links_list[0]
-      const target_node = output_link.target
-      node.position_u = target_node.position_u
-      node.position_v = target_node.position_v
-      if (compute_xy) {
-        const x = target_node.position_x - this.horizontal_spacing
-        node.position_x = x
-        node.position_y = 50
-      }
-    })
-
-    export_nodes.forEach(node => {
-      const input_link = node.input_links_list[0]
-      const source_node = input_link.source
-      node.position_u = source_node.position_u
-      node.position_v = source_node.position_v
-      if (node.position_x < source_node.position_x) {
-        node.position_x = source_node.position_x + 1
-      }
-      if (compute_xy) {
-        const x = source_node.position_x + this.horizontal_spacing
-        node.position_x = x
-        node.position_y = max_vertical_offset
-      }
-    })
-  }
-
-  /**
-   * Computes u,v for nodes in the drawing area
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public computeParametrization() {
-
-    let smaller_x: number
-    this.sankey.visible_nodes_list.forEach(n => {
-      if (smaller_x === undefined) {
-        smaller_x = n.position_x
-      }
-      if (n.position_x < smaller_x) {
-        smaller_x = n.position_x
-      }
-    })
-
-    this.sankey.visible_nodes_list.forEach(n => {
-      if (n.position_type === 'relative') {
-        return
-      }
-      n.display.position.u = Math.floor((n.position_x - smaller_x / 3) / (this.sankey.default_node_style.position?.dx ?? default_dx))
-    })
-
-    this.computeParametricV()
-  }
-
-  /**
-   * Computes v for nodes in the drawing area
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public computeParametricV() {
-    const columns: { [_: number]: Type_AnyNodeElement[] } = {}
-    this.sankey.visible_nodes_list.forEach(n => {
-      if (n.position_type === 'relative') {
-        return
-      }
-      if (!(n.position_u in columns)) {
-        columns[n.position_u] = [n]
-      } else {
-        columns[n.position_u].push(n)
-      }
-    })
-    Object.values(columns).forEach(column => {
-      column.sort((n1, n2) => n1.position_y - n2.position_y)
-      column.forEach((n, i) => {
-        if (i == 0) {
-          return
-        }
-        const dy = n.position_y - column[i - 1].position_y - column[i - 1].getShapeHeightToUse()
-        if (dy !== 0) {
-          n.position_dy = dy
-        } else {
-          //delete n.local!.dy
-        }
-      })
-    })
-    this.sankey.level_taggs_list.forEach(tagGroup => {
-      Object.values(columns).forEach(column => {
-        column.sort((n1, n2) => n1.position_y - n2.position_y)
-        let current_v = 0
-        column.forEach(n => current_v = this.apply_v_desagregate(n, current_v, tagGroup))
-      })
-      Object.values(columns).forEach(column => {
-        column.forEach(n => this.apply_v_agregate(n, tagGroup))
-      })
-    })
-    this.sankey.sortNodes()
-  }
-
-  /**
-   * Computes v for nodes in the drawing area
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public apply_v_agregate(
-    node: Type_AnyNodeElement,
-    tagGroup: Class_LevelTagGroup
-  ) {
-    const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
-    if (!nodeDimParent) {
-      return
-    }
-    if (nodeDimParent.parent.display.position.v != -1) {
-      // v is computed at the first path
-      return
-    }
-    nodeDimParent.parent.display.position.y = node.position_y
-    nodeDimParent.parent.display.position.u = node.position_u
-    nodeDimParent.parent.display.position.v = node.position_v
-    this.apply_v_agregate(nodeDimParent.parent as Type_AnyNodeElement, tagGroup)
-  }
-
-  /**
-   * Computes v for nodes in the drawing area
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public apply_v_desagregate(
-    node: Type_AnyNodeElement,
-    current_v: number,
-    tagGroup: Class_LevelTagGroup
-  ) {
-    if (node.sibling) {
-      return current_v
-    }
-    if (node.display.position.v == -1) {
-      // v is computed at the first path
-      node.display.position.v = current_v
-    }
-    let new_current_v = current_v
-    let desagregated_nodes: Type_GenericNodeElement[] = []
-      const nodeDimParent = node.nodeDimensionAsParent(tagGroup)
-      if (!nodeDimParent || nodeDimParent.children.includes(nodeDimParent.parent)) {
-      return new_current_v+1
-    }
-    desagregated_nodes = [...desagregated_nodes, ...(nodeDimParent.children as Type_GenericNodeElement[])]
-    desagregated_nodes = [...new Set(desagregated_nodes)]
-    const shift_y = (desagregated_nodes.length - 1) / 2 * this.vertical_spacing
-    if (desagregated_nodes.length > 0) {
-      let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
-      desagregated_nodes.forEach(nn => {
-        if (nn.sibling) {
-          return
-        }
-        nn.display.position.x = node.position_x
-        nn.display.position.u = node.position_u
-        nn.display.position.y = current_y
-        current_y += 20
-        new_current_v = this.apply_v_desagregate(nn, new_current_v, tagGroup)
-      })
-    }
-    return new_current_v + 1
-  }
-
-  /**
-   * Reposition visible nodes so that their left/top side is close to a grid line
-   *
-   * @memberof ClassTemplate_DrawingArea
-   */
-  public arrangeNodesToGrid() {
-    this._sankey.visible_nodes_list.forEach(node => {
-      const shift_x = node.position_x - (node.position_x % this.grid_size)// get position so that the node position_x is set to previous horizontal grid line
-      const shift_y = node.position_y - (node.position_y % this.grid_size)// get position so that the node position_y is set to previous vertical grid line
-      node.setPosXY(shift_x, shift_y)
-    })
+    this.nodePositioning.computeAutoSankeyWithToast(launched_from_process)
   }
 
   /**
    * Function to delete attr _minimum_flux
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public removeMinimumLinkThickness() {
     delete this._minimum_flux
@@ -2167,7 +1320,7 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Function to delete attr _maximum_flux
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public removeMaximumLinkThickness() {
     delete this._maximum_flux
@@ -2199,7 +1352,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * Function generally use at opening of file to automatically fit sankey on screen
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public areaAutoFit(autocenter: boolean) {
     this._process_or_bypass(() => {
@@ -2220,7 +1373,7 @@ export abstract class ClassTemplate_DrawingArea
    * Remove a single attribute from local Class_NodeAttribute
    *
    * @param {keyof Class_NodeAttribute} k
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public deleteLocalAttrSelectedNode(k: keyof Class_NodeAttribute) {
     const list_node = this.selected_nodes_list
@@ -2238,14 +1391,14 @@ export abstract class ClassTemplate_DrawingArea
    * Remove a single attribute from local Class_LinkAttribute
    *
    * @param {keyof Class_LinkAttribute} k
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
-  public deleteLocalAttrSelectedLinks(k: keyof Class_LinkAttribute) {
+  public deleteLocalAttrSelectedLinks(k: keyof typeof LINKS_ATTRIBUTES_CONFIG) {
     const list_links = this.selected_links_list
 
     list_links.forEach(link => {
-      if (k in link.display.attributes) {
-        delete link.display.attributes[k]
+      if (k in LINKS_ATTRIBUTES_CONFIG) {
+        link.display.attributes.delete_attribute(k)
         link.drawWithNodes()
       }
     })
@@ -2256,8 +1409,8 @@ export abstract class ClassTemplate_DrawingArea
    * Return an element (node,flow) given an id
    *
    * @param {string} id
-   * @return {*} 
-   * @memberof ClassTemplate_DrawingArea
+   * @return {*}
+   * @memberof Class_DrawingArea
    */
   public elementFromId(id: string) {
     if (id in this._sankey.nodes_dict) {
@@ -2265,6 +1418,10 @@ export abstract class ClassTemplate_DrawingArea
     }
     if (id in this._sankey.links_dict) {
       return this._sankey.links_dict[id]
+    }
+    if (id in this._sankey.containers_dict) {
+      const cont = this._sankey.containers_dict[id]
+      return { id: cont.id, name: cont.title, is_selected: cont.is_selected, is_visible: cont.is_visible }
     }
 
     return { name: id, is_selected: false, is_visible: false }
@@ -2275,11 +1432,11 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @param {number} idx_src
    * @param {number} idx_trgt
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
     // Save old value that can be used in undo
-    const list_old_io: string[] = this.list_g_element ?? []
+    const list_old_io: ClassTemplate_ProtoElement[] = this.list_g_element ?? []
     // Function undo
     const inv_moveElement = () => {
       this.list_g_element = list_old_io
@@ -2303,9 +1460,10 @@ export abstract class ClassTemplate_DrawingArea
   }
 
   public orderElementOnDA() {
+    const list_element_id = this._list_g_element.map(e=>e.id)
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
-      ?.sort((a, b) => { return sortElementByIdOrder(a as Type_AnyProtoElement, b as Type_AnyProtoElement, [...this._list_g_element].reverse()) })
+      ?.sort((a, b) => { return sortElementByIdOrder(a as ClassTemplate_ProtoElement, b as ClassTemplate_ProtoElement, [...list_element_id].reverse()) })
       .order()
   }
 
@@ -2314,7 +1472,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @param {number} idx_src
    * @param {number} idx_trgt
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public moveOrderStyleInSelectedNodes = (style_src: Class_NodeStyle, style_trgt: Class_NodeStyle) => {
     // Save old value that can be used in undo
@@ -2361,7 +1519,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @param {number} idx_src
    * @param {number} idx_trgt
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public moveOrderStyleInSelectedFlows = (style_src: Class_LinkStyle, style_trgt: Class_LinkStyle) => {
     // Save old value that can be used in undo
@@ -2408,7 +1566,7 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Delete html element SVG containing drawing area
    * @private
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public unDraw() {
     if (this.d3_selection_zoom_area) {
@@ -2423,6 +1581,7 @@ export abstract class ClassTemplate_DrawingArea
    * @param {*} drawing_area
    */
   protected drawBackground() {
+    const height = window.sankey?.embedded ? '100%' : this.height
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
     // Draw background
@@ -2431,19 +1590,20 @@ export abstract class ClassTemplate_DrawingArea
       .attr('id', 'bg_drawing_area')
       .attr('fill', this.color)
       .attr('width', this.width)
-      .attr('height', this.height)
+      .attr('height', height)
     if (!this.static) {
       this.d3_selection_bg?.select('rect').style('stroke-width', 5)
       this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
     }
     this.drawCursor()
+    this.drawBgImage()
   }
 
   /**
    * History saving
    * @param f
    */
-  protected saveUndo(f: (_: Type_AnyDrawingArea) => void) {
+  public saveUndo(f: (_: Class_DrawingArea) => void) {
     this.application_data.history.saveUndo(() => { f(this) })
   }
 
@@ -2451,7 +1611,7 @@ export abstract class ClassTemplate_DrawingArea
   * History saving
   * @param f
   */
-  protected saveRedo(f: (_: Type_AnyDrawingArea) => void) {
+  public saveRedo(f: (_: Class_DrawingArea) => void) {
     this.application_data.history.saveRedo(() => { f(this) })
   }
 
@@ -2460,7 +1620,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @private
    * @return {*}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private isMouseOverAnExistingNode(): boolean {
     let node_id: string
@@ -2474,7 +1634,7 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Set up events related to element d3_element
    * @private
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private setEventsListeners() {
     if (
@@ -2533,7 +1693,7 @@ export abstract class ClassTemplate_DrawingArea
    * Deal with simple left Mouse Button (LMB) click on given element
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2549,7 +1709,7 @@ export abstract class ClassTemplate_DrawingArea
    * Deal with double left Mouse Button (LMB) click on given element
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventDoubleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2561,7 +1721,7 @@ export abstract class ClassTemplate_DrawingArea
    * Deal with simple right Mouse Button (RMB) click on given element
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2583,7 +1743,7 @@ export abstract class ClassTemplate_DrawingArea
    * Define maintained left mouse button click for drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventMaintainedClick(
     event: MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2616,7 +1776,7 @@ export abstract class ClassTemplate_DrawingArea
         // Make target a 'ghost' node
         target.setInvisible()
         // Ref newly created link this var to be used in other mouse event
-        this._ghost_link = new ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement>(
+        this._ghost_link = new ClassTemplate_GhostLinkElement(
           'ghost_link',
           source,
           target,
@@ -2634,7 +1794,7 @@ export abstract class ClassTemplate_DrawingArea
           // If we release the mouse on the source of the link
           // then delete the link & target to keep only the source
           // So we only created 1 node
-          this.deleteNode(this._ghost_link.target as Type_GenericNodeElement)
+          this.deleteNode(this._ghost_link.target as Class_NodeElement)
         }
         else if (this.isMouseOverAnExistingNode() === true) {
           let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
@@ -2644,14 +1804,14 @@ export abstract class ClassTemplate_DrawingArea
           }
           // Create new link
           this.sankey.addNewLink(
-            this._ghost_link.source as Type_GenericNodeElement,
+            this._ghost_link.source as Class_NodeElement,
             this.sankey.nodes_dict[node_id]
           )
           this.purgeSelectionOfLinks(false)
           this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
-          this.deleteNode(this._ghost_link?.target as Type_GenericNodeElement)
+          this.deleteNode(this._ghost_link?.target as Class_NodeElement)
         }
         else {
           // Make ghost target visible
@@ -2659,8 +1819,8 @@ export abstract class ClassTemplate_DrawingArea
 
           // Create new link
           this.sankey.addNewLink(
-            this._ghost_link.source as Type_GenericNodeElement,
-            this._ghost_link.target as Type_GenericNodeElement
+            this._ghost_link.source as Class_NodeElement,
+            this._ghost_link.target as Class_NodeElement
           )
           this.purgeSelectionOfLinks(false)
           this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
@@ -2696,7 +1856,7 @@ export abstract class ClassTemplate_DrawingArea
    * Define released left mouse button click for drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventReleasedClick(
     event: MouseEvent
@@ -2715,7 +1875,7 @@ export abstract class ClassTemplate_DrawingArea
           // If we release the mouse on the source of the link
           // then delete the link & target to keep only the source
           // So we only created 1 node
-          this.deleteNode(this._ghost_link.target as Type_GenericNodeElement)
+          this.deleteNode(this._ghost_link.target as Class_NodeElement)
 
         }
         else if (this.isMouseOverAnExistingNode() === true) {
@@ -2726,7 +1886,7 @@ export abstract class ClassTemplate_DrawingArea
           }
           // Create new link
           const l = this.sankey.addNewLink(
-            this._ghost_link.source as Type_GenericNodeElement,
+            this._ghost_link.source as Class_NodeElement,
             this.sankey.nodes_dict[node_id]
           )
           ghost_link_json = l.toJSON() //For undo/redo
@@ -2734,7 +1894,7 @@ export abstract class ClassTemplate_DrawingArea
           this.addLinkToSelection(l)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
-          this.deleteNode(this._ghost_link?.target as Type_GenericNodeElement)
+          this.deleteNode(this._ghost_link?.target as Class_NodeElement)
         }
         else {
           // Make ghost target visible
@@ -2742,8 +1902,8 @@ export abstract class ClassTemplate_DrawingArea
 
           // Create new link
           const l = this.sankey.addNewLink(
-            this._ghost_link.source as Type_GenericNodeElement,
-            this._ghost_link.target as Type_GenericNodeElement
+            this._ghost_link.source as Class_NodeElement,
+            this._ghost_link.target as Class_NodeElement
           )
           ghost_link_json = l.toJSON() //For undo/redo
           this._ghost_link_target = l.target //For undo/redo
@@ -2826,7 +1986,7 @@ export abstract class ClassTemplate_DrawingArea
         if (this.sankey.default_node_style.position && this.sankey.default_node_style.position.type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
-              this.computeParametrization()
+              this.nodePositioning.computeParametrization()
             })
         }
       }
@@ -2841,7 +2001,7 @@ export abstract class ClassTemplate_DrawingArea
         if (nb_type_el_sel == 2) {
           this.application_data.menu_configuration.openConfigMenuElementsNodesLinks()
         } else if (nb_type_el_sel == 1) {
-          // else if 1 type of element was selected, open config for nodes 
+          // else if 1 type of element was selected, open config for nodes
           // (can't select flow without selecting nodes so if we have 1 type of element selected it's the nodes)
           this.application_data.menu_configuration.openConfigMenuElementsNodes()
         }
@@ -2855,7 +2015,7 @@ export abstract class ClassTemplate_DrawingArea
    * Define event when mouse moves over drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventMouseOver(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2867,7 +2027,7 @@ export abstract class ClassTemplate_DrawingArea
    * Define event when mouse moves out of drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventMouseOut(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2879,7 +2039,7 @@ export abstract class ClassTemplate_DrawingArea
    * Define event when mouse moves in drawing area
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventMouseMove(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -2938,7 +2098,7 @@ export abstract class ClassTemplate_DrawingArea
    * Note : Under the hood, this calls eventZoom method throught this.zoomListener
    * @private
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventMouseScroll(
     event: WheelEvent
@@ -2976,7 +2136,7 @@ export abstract class ClassTemplate_DrawingArea
    *
    * @private
    * @param {*} e
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   private eventZoom(
     event: d3.D3ZoomEvent<SVGSVGElement, unknown>
@@ -2990,7 +2150,7 @@ export abstract class ClassTemplate_DrawingArea
       // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
       this.application_data._add_waiting_process('redraw_handler', () => {
         this.d3_selection_handlers?.selectAll('.gg_handler').each((evt) => {
-          const handle = evt as TypeGeneric_Handler
+          const handle = evt as ClassTemplate_Handler
           handle.draw()
         })
       }, 500)
@@ -3011,6 +2171,7 @@ export abstract class ClassTemplate_DrawingArea
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
     this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
+    this.sankey.containers_list.forEach(lab => lab.setEventsListeners())
   }
 
   public setToModeEdition(_: boolean) {
@@ -3024,7 +2185,7 @@ export abstract class ClassTemplate_DrawingArea
   /**
    * Technically don't draw a cursor but add a class & then css use it to modify cursor
    *
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public drawCursor() {
     const mode_edition = this.isInEditionMode()
@@ -3036,56 +2197,56 @@ export abstract class ClassTemplate_DrawingArea
    * return sankey
    *
    * @readonly
-   * @return {ClassTemplate_Sankey<any, Type_GenericNodeElement, Type_GenericLinkElement>}
-   * @memberof ClassTemplate_DrawingArea
+   * @return {Class_Sankey<any, Class_NodeElement, Class_LinkElement>}
+   * @memberof Class_DrawingArea
    */
   public get sankey() { return this._sankey }
 
   // Legend
-  public get legend(): ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._legend }
-  public set legend(value: ClassTemplate_Legend<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey>) { this._legend = value }
+  public get legend(): ClassTemplate_Legend { return this._legend }
+  public set legend(value: ClassTemplate_Legend) { this._legend = value }
 
   // Ghost link
   public get ghost_link() { return this._ghost_link }
-  public set ghost_link(value: ClassTemplate_GhostLinkElement<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey, Type_GenericNodeElement> | null) { this._ghost_link = value }
+  public set ghost_link(value) { this._ghost_link = value }
 
   // Selections
-  public get selected_nodes_list(): Type_GenericNodeElement[] {
+  public get selected_nodes_list(): Class_NodeElement[] {
     return Object.values(this._selection)
-      .filter(element => element instanceof ClassTemplate_NodeElement) as Type_GenericNodeElement[]
+      .filter(element => element instanceof Class_NodeElement) as Class_NodeElement[]
   }
 
-  public get selected_nodes_list_sorted(): Type_GenericNodeElement[] {
+  public get selected_nodes_list_sorted(): Class_NodeElement[] {
     return this.selected_nodes_list
       .sort((a, b) => sortNodesElements(a, b))
   }
 
-  public get visible_and_selected_nodes_list(): Type_GenericNodeElement[] {
+  public get visible_and_selected_nodes_list(): Class_NodeElement[] {
     return this.selected_nodes_list
       .filter(node => node.is_visible)
   }
 
-  public get visible_and_selected_nodes_list_sorted(): Type_GenericNodeElement[] {
+  public get visible_and_selected_nodes_list_sorted(): Class_NodeElement[] {
     return this.visible_and_selected_nodes_list
       .sort((a, b) => sortNodesElements(a, b))
   }
 
-  public get selected_links_list(): Type_GenericLinkElement[] {
+  public get selected_links_list(): Class_LinkElement[] {
     return Object.values(this._selection)
-      .filter(element => element instanceof ClassTemplate_LinkElement) as Type_GenericLinkElement[]
+      .filter(element => element instanceof Class_LinkElement) as Class_LinkElement[]
   }
 
-  public get selected_links_list_sorted(): Type_GenericLinkElement[] {
+  public get selected_links_list_sorted(): Class_LinkElement[] {
     return this.selected_links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
 
-  public get visible_and_selected_links_list(): Type_GenericLinkElement[] {
+  public get visible_and_selected_links_list(): Class_LinkElement[] {
     return this.selected_links_list
       .filter(link => link.is_visible)
   }
 
-  public get visible_and_selected_links_list_sorted(): Type_GenericLinkElement[] {
+  public get visible_and_selected_links_list_sorted(): Class_LinkElement[] {
     return this.visible_and_selected_links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
@@ -3098,14 +2259,11 @@ export abstract class ClassTemplate_DrawingArea
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
   public get window_fitting_width(): number { return window.innerWidth - this._fit_margin }
 
-  // Number of element
-  public get number_of_element() { return this._number_of_elements }
-
   /**
    * Return height of the top nav bar
    *
    * @return {*}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
     if (this.static && window.sankey?.topbar == false) {
@@ -3118,7 +2276,7 @@ export abstract class ClassTemplate_DrawingArea
    * Return height of the top nav bar
    *
    * @return {*}
-   * @memberof ClassTemplate_DrawingArea
+   * @memberof Class_DrawingArea
    */
   public getBottomBarHeight() {
     return (document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height) ?? 2 * parseFloat(getComputedStyle(document.documentElement).fontSize)
@@ -3156,21 +2314,15 @@ export abstract class ClassTemplate_DrawingArea
   public get grid_size() { return this._grid_size }
   public set grid_size(_: number) { this._grid_size = _; this.drawGrid() }
 
-  // Horizontal spacing
-  public get horizontal_spacing() { return this._horizontal_spacing }
-  public set horizontal_spacing(_: number) { this._horizontal_spacing = _ }
-  public get vertical_spacing() { return this._vertical_spacing }
-  public set vertical_spacing(_: number) { this._vertical_spacing = _ }
-
-  public get selection_zone(): ClassTemplate_ZoneSelection<ClassTemplate_DrawingArea<Type_GenericSankey, Type_GenericNodeElement, Type_GenericLinkElement>, Type_GenericSankey> { return this._selection_zone }
+  public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
 
   // Node Context menu
-  public get node_contextualised(): Type_GenericNodeElement | undefined { return this._node_contextualied }
-  public set node_contextualised(value: Type_GenericNodeElement | undefined) { this._node_contextualied = value }
+  public get node_contextualised(): Class_NodeElement | undefined { return this._node_contextualied }
+  public set node_contextualised(value: Class_NodeElement | undefined) { this._node_contextualied = value }
 
   // Link Context menu
-  public get link_contextualised(): Type_GenericLinkElement | undefined { return this._link_contextualied }
-  public set link_contextualised(value: Type_GenericLinkElement | undefined) { this._link_contextualied = value }
+  public get link_contextualised(): Class_LinkElement | undefined { return this._link_contextualied }
+  public set link_contextualised(value: Class_LinkElement | undefined) { this._link_contextualied = value }
 
   // Mouve pos when we right click an element
   public get pointer_pos(): [number, number] { return this._pointer_pos }
@@ -3212,5 +2364,283 @@ export abstract class ClassTemplate_DrawingArea
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
 
   public get list_g_element() { return this._list_g_element }
-  public set list_g_element(list: string[]) { this._list_g_element = list }
+  public set list_g_element(list) { this._list_g_element = list }
+
+  /**
+     * d3 selection of svg group that contains drawing area container
+     * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
+     * @memberof Class_DrawingArea
+     */
+  public d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  // PROTECTED ATTRIBUTES ===============================================================
+
+  // PRIVATE ATTRIBUTES =================================================================
+
+  private _contextualised_free_label: Class_ContainerElement | undefined = undefined
+
+  // Attribute for background image
+  private _show_background_image: boolean = false
+  private _background_image: string = ''
+
+  private _number_of_containers: number = 0
+
+  /**
+   * Delete a given container -> container will not exist anymore
+   * @param {Class_ContainerElement} container
+   * @memberof Class_DrawingAreaOSP
+   */
+  public deleteContainer(container: Class_ContainerElement) { // eslint-disable-line
+    // Remove from selection if necessary
+    this.removeContainerFromSelection(container)
+    // Remove container from sankey
+    this.sankey.deleteContainer(container)
+    // Self delete container
+    container.delete()
+    // Update related menus
+    this.application_data.menu_configuration.updateComponentRelatedToContainers()
+  }
+
+  public addContainerElement() {
+    // We increase by two, in order to easyly swap elements
+    // ie : element0 order = 0, element1 order = 2, element3 order = 4
+    // to increase element 0 order, juste add 3
+    // then : element0 order = 3, element1 order = 2, element3 order = 4
+    // then orderElement() method will display elements as wanted + update their order value
+    // ie : element1 order = 0, element0 order = 2, element3 order = 4
+    this._number_of_containers = this._number_of_containers + 2
+    return this._number_of_containers
+  }
+
+
+  /**
+   * Permanently delete selected containers
+   * Update menu accordingly
+   * @memberof Class_DrawingAreaOSP
+   */
+  public deleteSelectedContainers() {
+    // Get copy of selected nodes
+    const selected_containers = this.selected_containers_list
+    // Delete each one of them
+    selected_containers.forEach(container => { this.deleteContainer(container) })
+    // Then let garbage collector do the rest...
+  }
+
+  /**
+   *Function that save in history the undo of dragging free label
+   *
+   * @memberof Class_DrawingAreaOSP
+   */
+  public saveUndoLabelSelectedPos() {
+    const containers_selected = this.selected_containers_list.filter(cont => !cont.tied_to_nodes) // desn't keep track of tied to nodes containers
+    const nodes_selected = this.selected_nodes_list
+    const dict_old_pos_label: { [x: string]: [number, number] } = {}
+    const dict_old_pos_node: { [x: string]: [number, number] } = {}
+    // Memorize for undo
+    containers_selected.forEach(n => {
+      dict_old_pos_label[n.id] = [n.display.position.x, n.display.position.y]
+    })
+    nodes_selected.forEach(n => {
+      dict_old_pos_node[n.id] = [n.display.position.x, n.display.position.y]
+    })
+    // undo function
+    const undo = () => {
+      containers_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
+      })
+      nodes_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
+      })
+      this.checkAndUpdateAreaSize()
+    }
+    this.application_data.history.saveUndo(undo)
+  }
+
+  /**
+   *Function that save in history the redo of dragging free label
+   *
+   * @memberof Class_DrawingAreaOSP
+   */
+  public saveRedoLabelSelectedPos() {
+    const containers_selected = this.selected_containers_list.filter(zdt => !zdt.tied_to_nodes) // desn't keep track of tied to nodes containers
+    const nodes_selected = this.selected_nodes_list
+    const dict_old_pos_label: { [x: string]: [number, number] } = {}
+    const dict_old_pos_node: { [x: string]: [number, number] } = {}
+    // Memorize for redo
+    containers_selected.forEach(n => {
+      dict_old_pos_label[n.id] = [n.display.position.x, n.display.position.y]
+    })
+    nodes_selected.forEach(n => {
+      dict_old_pos_node[n.id] = [n.display.position.x, n.display.position.y]
+    })
+    // redo function
+    const redo = () => {
+      containers_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
+      })
+      nodes_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
+      })
+      this.checkAndUpdateAreaSize()
+    }
+    this.application_data.history.saveRedo(redo)
+  }
+
+  // SAVING METHODS =====================================================================
+
+  /**
+ * Functon that add an image in in the background of the svg,
+ * the image is imported in the config menu
+ *
+ * @memberof Class_DrawingAreaOSP
+ */
+  public drawBgImage() {
+    this.d3_selection_bg?.select('#bg_image').remove()
+
+    if (this._show_background_image) {
+      this.d3_selection_bg
+        ?.append('image')
+        .attr('id', 'bg_image')
+        .attr('width', this.width)
+        .attr('height', this.height)
+        .attr('href', this._background_image)
+        .style('background-size', 'contain')
+        .style('background-repeat', 'no-repeat')
+    }
+  }
+
+  /**
+   * add a container from a selection set
+   *
+   * @param {Class_ContainerElement} container
+   * @memberof Class_DrawingAreaOSP
+   */
+  public addContainerToSelection(container: Class_ContainerElement) { // eslint-disable-line
+    this._selection[container.id] = container
+    container.setSelected()
+  }
+
+  /**
+     * Add all nodes to selection set
+     * Update menu accordingly
+     * @memberof Class_DrawingArea
+     */
+  public addAllVisibleContainersToSelection() {
+    this.sankey.visible_containers_list
+      .forEach(container => this.addContainerToSelection(container))
+  }
+
+  /**
+   * remove a container from a selection set
+   * Update menu accordingly
+   * @param {Class_ContainerElement} container
+   * @memberof Class_DrawingAreaOSP
+   */
+  public removeContainerFromSelection(container: Class_ContainerElement) { // eslint-disable-line
+    if (this._selection[container.id] !== undefined) {
+      // Update selection list
+      delete this._selection[container.id]
+      // Update selection attribute on given container
+      container.setUnSelected()
+      // Update related menus
+      this.application_data.menu_configuration.updateComponentRelatedToContainers()
+    }
+  }
+
+
+  /**
+   * remove a container from a selection set
+   * @param {Class_ContainerElement<this, Class_Sankey>} node
+   * @memberof Class_DrawingAreaOSP
+   */
+  public removeFreeLabelFromSelection(container: Class_ContainerElement) {
+    if (this._selection[container.id] !== undefined) {
+      delete this._selection[container.id]
+      container.setUnSelected()
+    }
+  }
+
+  /**
+   * Remove all container selected
+   * @memberof Class_DrawingArea
+   */
+  public purgeSelectionOfContainer() {
+    // Unselect elements
+    this.selected_containers_list
+      .forEach(zdt => {
+        this.removeContainerFromSelection(zdt)
+      })
+    this.application_data.menu_configuration.updateComponentRelatedToContainers()
+  }
+
+  /**
+   * Function used to move selected nodes from another element drag event,
+   * we created this function and moveSelectedContainerFromDragEvent to avoid recursive call of eventMouseDrag
+   *
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_DrawingAreaOSP
+   */
+  public moveSelectedNodesFromDragEvent(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    this.selected_nodes_list
+      .forEach(n => {
+        n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+      })
+  }
+
+  /**
+   * Function used to move selected containers from another element drag event,
+   * we created this function and moveSelectedNodesFromDragEvent to avoid recursive call of eventMouseDrag
+   *
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_DrawingAreaOSP
+   */
+  public moveSelectedContainerFromDragEvent(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    this.selected_containers_list
+      .forEach(n => {
+        if (!n.tied_to_nodes) {
+          n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          n.drawDragHandlers()
+        }
+      })
+  }
+
+  // PRIVATE METHODS =====================================================================
+
+  /**
+   * Test if mouse is over some containers
+   *
+   * @private
+   * @return {*}
+   * @memberof Class_DrawingAreaOSP
+   */
+  private isMouseOverAnExistingContainer(): boolean {
+    let cont_id: string
+    for (cont_id in this.sankey.containers_dict) {
+      if (this.sankey.containers_dict[cont_id].isMouseOver())
+        return true
+    }
+    return false
+  }
+
+  public get id() { return this._sankey.id }
+  public get name() { return this._sankey.name }
+  public set name(name: string) { this._sankey.name = name }
+
+  public get selected_containers_list(): Class_ContainerElement[] {
+    return this.sankey.containers_list.filter(container => container.is_selected) as Class_ContainerElement[]
+  }
+  public get selected_containers_list_sorted() { return this.selected_containers_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
+
+  public get contextualised_container(): Class_ContainerElement | undefined { return this._contextualised_free_label }
+  public set contextualised_container(value: Class_ContainerElement | undefined) { this._contextualised_free_label = value }
+
+  public get show_background_image(): boolean { return this._show_background_image }
+  public set show_background_image(value: boolean) { this._show_background_image = value }
+
+  public get background_image(): string { return this._background_image }
+  public set background_image(value: string) { this._background_image = value }
 }
