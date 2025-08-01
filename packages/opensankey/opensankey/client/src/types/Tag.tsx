@@ -35,6 +35,7 @@ import {
   Type_JSON,
   default_grey_color,
   getBooleanFromJSON,
+  getNumberFromJSON,
   getStringFromJSON,
   makeId
 } from '../types/Utils'
@@ -315,8 +316,6 @@ export abstract class Class_Tag extends Class_ProtoTag {
     this._group = group
   }
 
-  // CLEANING METHODS ===================================================================
-
   /**
    * Define deletion behavior
    * @memberof Class_Tag
@@ -458,6 +457,7 @@ export class Class_DataTag extends Class_ProtoTag {
   // Group where it belong
   protected _group: Class_DataTagGroup
 
+  private _scale: number
   // CONSTRUCTOR ========================================================================
 
   /**
@@ -482,9 +482,44 @@ export class Class_DataTag extends Class_ProtoTag {
     // Update all links
     Object.values(this._references)
       .forEach(ref => ref.addDataTag(this))
+    this._scale = 10
   }
 
-  // PUBLIC METHODS =====================================================================
+
+protected _toJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    super._toJSON(json_object,_kwargs)
+    json_object['scale'] = this._scale
+  }
+
+  /**
+   * Overridable method to copy a given tag
+   * @protected
+   * @param {Class_ProtoTag} tag_to_copy
+   * @memberof Class_ProtoTag
+   */
+  protected _copyFrom(tag_to_copy: Class_ProtoTag) {
+    super._copyFrom(tag_to_copy)
+    this._scale = (tag_to_copy as Class_DataTag)._scale
+  }
+
+  /**
+   * Set Tag value from JSON
+   * @protected
+   * @param {Type_JSON} json_object
+   * @param {Type_JSON} [_kwargs]
+   * @memberof Class_ProtoTag
+   */
+  protected _fromJSON(
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ): void {
+    super._fromJSON(json_object,_kwargs)
+    this._scale = getNumberFromJSON(json_object, 'scale', this._scale)
+  }
+
 
   public update() { } // Does nothing - never called
 
@@ -541,6 +576,12 @@ export class Class_DataTag extends Class_ProtoTag {
   public get group() { return this._group }
 
   public get references() { return Object.values(this._references) }
+
+  public get scale() {
+    if (this.group.is_unit) return this._scale
+    return this._ref_sankey.drawing_area.scale
+  }
+  public set scale(_) { this._scale = _}
 }
 
 // CLASS LEVELTAG ***********************************************************************

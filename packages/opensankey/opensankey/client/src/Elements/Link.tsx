@@ -1049,7 +1049,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @memberof Class_LinkElement
    */
   public getMaxValue() {
-    return this._values.getMaxValue()
+    return Math.max(this.valueData??0,this.valueResult??0)
+    //return this._values.getMaxValue()
   }
 
   public getAllValues() {
@@ -1306,6 +1307,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   protected scaleValueToPx(_: number) {
+    if (this.value?.data_tag && this.value?.data_tag.group.is_unit) {
+      this.setDomainLocalScale(this.value?.data_tag.scale)
+      return this._scaleValueToPx(_)      
+    }
     if (this.shape_local_link_scale !== undefined) {
       return this._scaleValueToPx(_)
     } else {
@@ -1683,7 +1688,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
       text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
       // Add unit suffix
-      if (text_value && this.value_label_unit_visible)
+      const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg=>tagg.is_unit) as Class_DataTagGroup[]
+      if (text_value && unit_taggs.length > 0 ) {
+        const label_unit = unit_taggs[0].first_selected_tags!.name
+        text_value = text_value + ' ' + label_unit
+      } else if (text_value && this.value_label_unit_visible)
         text_value = text_value + ' ' + this.value_label_unit
     }
     return text_value

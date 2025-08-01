@@ -300,6 +300,7 @@ class SankeyToJson(object):
             data_tags_json[tagg.name] = {
                 "name": tagg.name_unformatted,
                 "show_legend": tagg.has_palette,
+                "is_unit": tagg.is_unit,
                 "tags": tags,
                 "banner": "one",
                 "activated": True,
