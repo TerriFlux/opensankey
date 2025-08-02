@@ -173,18 +173,18 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
   }
 
-  public createNewMenuConfiguration(): Class_MenuConfig {
+  public createNewMenuConfiguration() {
     return new Class_MenuConfigOSP() as Class_MenuConfig
   }
 
-  public createNewDrawingArea(id?: string): Class_DrawingAreaOSP {
+  public createNewDrawingArea(id?: string) {
     const drawing_area = new Class_DrawingAreaOSP(
       this,
       id
     )
     return drawing_area
   }
-  public createNewIconLibrary(): Class_IconLibraryOSP {
+  public createNewIconLibrary() {
     return new Class_IconLibraryOSP()
   }
 
