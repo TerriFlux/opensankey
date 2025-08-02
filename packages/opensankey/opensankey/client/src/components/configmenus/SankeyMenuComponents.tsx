@@ -38,13 +38,12 @@ import {
   useDisclosure,
 } from '@chakra-ui/react'
 import { t, TFunction } from 'i18next'
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FC, MutableRefObject, useRef, useState } from 'react'
 import { Class_LinkElement } from '../../Elements/Link'
 import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, default_style_id, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
-import { FCType_WrapperBoxSubSectionMenu, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, labelAttributeType, labelValueAttribute, possibleDecoratorName, FCType_MenuUnit, UnitAttributeType, FCType_WrapperCheckBoxSubSectionMenu } from './types/SankeyMenuComponentsType'
 import {
   Class_NodeAttribute,
   Class_NodeStyle,
@@ -56,6 +55,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FCType_MenuUnit, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu, labelAttributeType, labelValueAttribute, possibleDecoratorName, UnitAttributeType } from '../SankeyMenuTypes'
 
 
 /**
@@ -196,7 +196,7 @@ const updateElementsUnit = (data: Class_ApplicationData,
   _updateElements() // execute function
 }
 
-export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelComponent> = ({
+export const SankeyMenuLabelComponent: FC<FCType_SankeyMenuLabelComponent> = ({
   new_data,
   elements,
   selectedElements,
@@ -267,7 +267,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
      * @param {*} {k}
      * @return {*} 
      */
-  const TooltipElementOverloaded: FunctionComponent<{ k: possibleDecoratorName }> = ({ k }) => {
+  const TooltipElementOverloaded: FC<{ k: possibleDecoratorName }> = ({ k }) => {
     if (menu_for_style)
       return <></>
 
@@ -556,7 +556,7 @@ export const SankeyMenuLabelComponent: FunctionComponent<FCType_SankeyMenuLabelC
  * }
  * @return {*} 
  */
-export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuValueLabelComponent> = ({
+export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelComponent> = ({
   new_data,
   elements,
   selectedElements,
@@ -682,7 +682,7 @@ export const SankeyMenuValueLabelComponent: FunctionComponent<FCType_SankeyMenuV
  * }
  * @return {*} 
  */
-export const WrapperBoxSubSectionMenu: FunctionComponent<FCType_WrapperBoxSubSectionMenu> = ({
+export const WrapperBoxSubSectionMenu: FC<FCType_WrapperBoxSubSectionMenu> = ({
   new_data,
   title,
   collapse = true,
@@ -721,7 +721,7 @@ export const WrapperBoxSubSectionMenu: FunctionComponent<FCType_WrapperBoxSubSec
  * }
  * @return {*} 
  */
-export const WrapperCheckBoxSubSectionMenu: FunctionComponent<FCType_WrapperCheckBoxSubSectionMenu> = ({
+export const WrapperCheckBoxSubSectionMenu: FC<FCType_WrapperCheckBoxSubSectionMenu> = ({
   title,
   open = true,
   onClick,
@@ -761,7 +761,7 @@ export const WrapperCheckBoxSubSectionMenu: FunctionComponent<FCType_WrapperChec
  * @param {*} { new_data, title, children, hide = false }
  * @return {*} 
  */
-export const WrapperContentConfig: FunctionComponent<{ title: string; hide?: boolean; children: JSX.Element }> = ({ title, children, hide = false }) => {
+export const WrapperContentConfig: FC<{ title: string; hide?: boolean; children: JSX.Element }> = ({ title, children, hide = false }) => {
   // If var hide is at true then return 'nothing'
   if (hide)
     return <></>
@@ -778,7 +778,7 @@ export const WrapperContentConfig: FunctionComponent<{ title: string; hide?: boo
  * @param {*} { new_data, nodesOrLinks, dict_overwritted_attr }
  * @return {*} 
  */
-export const MenuResetAttrLocal: FunctionComponent<{ new_data: Class_ApplicationData, nodesOrLinks: 'nodes' | 'links', dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } } }> = (
+export const MenuResetAttrLocal: FC<{ new_data: Class_ApplicationData, nodesOrLinks: 'nodes' | 'links', dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } } }> = (
   {
     new_data,
     nodesOrLinks,
@@ -810,7 +810,7 @@ export const MenuResetAttrLocal: FunctionComponent<{ new_data: Class_Application
   </Menu>
 }
 
-export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
+export const MenuUnit: FC<FCType_MenuUnit> = ({
   new_data,
   elements,
   selectedElements,
@@ -855,7 +855,7 @@ export const MenuUnit: FunctionComponent<FCType_MenuUnit> = ({
    * @param {*} {k}
    * @return {*} 
    */
-  const TooltipElementOverloaded: FunctionComponent<{ k: possibleDecoratorName }> = ({ k }) => {
+  const TooltipElementOverloaded: FC<{ k: possibleDecoratorName }> = ({ k }) => {
     if (menu_for_style)
       return <></>
 
@@ -980,7 +980,7 @@ export type typeElementSelectable = {
  * }
  * @return {*} 
  */
-export const OSMultiSelect: FunctionComponent<{ t: TFunction, elements: typeElementSelectable, onClick: (entries: typeElementSelectable) => void }> = ({
+export const OSMultiSelect: FC<{ t: TFunction, elements: typeElementSelectable, onClick: (entries: typeElementSelectable) => void }> = ({
   elements,
   onClick
 }) => {

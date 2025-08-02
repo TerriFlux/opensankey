@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { ChangeEvent, FunctionComponent, MutableRefObject, useRef, useState, } from 'react'
+import React, { ChangeEvent, FC, MutableRefObject, useRef, useState, } from 'react'
 
 import {
   Box,
@@ -45,10 +45,7 @@ import {
   Select
 } from '@chakra-ui/react'
 
-import {
-  FCType_ApplyLayoutDialog,
-  FType_DiagramSelector
-} from './types/SankeyMenuDialogsTypes'
+
 import { default_style_id, OSTooltip } from '../../types/Utils'
 import {
   FCType_ApplySaveJSONDialog,
@@ -59,6 +56,7 @@ import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { OSMultiSelect, typeElementSelectable, WrapperCheckBoxSubSectionMenu } from '../configmenus/SankeyMenuComponents'
 import { checked } from './SankeyMenuContextLink'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FCType_ApplyLayoutDialog, FType_DiagramSelector } from '../SankeyMenuTypes'
 
 
 /**
@@ -66,13 +64,13 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
  * @param {FCType_ApplyLayoutDialog} { ref_setter_show_modal_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
-export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
-  applicationData,
+export const ApplyLayoutDialog: FC<FCType_ApplyLayoutDialog> = ({
+  new_data,
   diagramSelector,
   apply_transformation_additional_elements
 }: FCType_ApplyLayoutDialog) => {
-  const { data_var_to_update, t, menu_configuration } = applicationData
-  const { node_styles_dict } = applicationData.drawing_area.sankey
+  const { data_var_to_update, t, menu_configuration } = new_data
+  const { node_styles_dict } = new_data.drawing_area.sankey
   const { ref_to_updater_modal_apply_layout } = menu_configuration
 
   const [, setForceUpdate] = useState(true)
@@ -98,7 +96,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
 
 
   const content_modal_layout = <Box layerStyle='menuconfigpanel_grid' >
-    {diagramSelector(applicationData)}
+    {diagramSelector(new_data)}
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -107,8 +105,8 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
         {t('Menu.choseTransforDifficulty')}
       </Box>
       <Box layerStyle='options_3cols' >
-        <Button variant={mode_trans == 'simple' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('simple'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Basiques</Button>
-        <Button variant={mode_trans == 'expert' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('expert'); applicationData.menu_configuration.ref_to_menu_updater.current() }}>Tous</Button>
+        <Button variant={mode_trans == 'simple' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('simple'); new_data.menu_configuration.ref_to_menu_updater.current() }}>Basiques</Button>
+        <Button variant={mode_trans == 'expert' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'} onClick={() => { set_mode_trans('expert'); new_data.menu_configuration.ref_to_menu_updater.current() }}>Tous</Button>
       </Box>
     </Box>
 
@@ -131,7 +129,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
               if (mode_trans === 'simple') {
                 simple_element_to_transform.forEach(el => data_var_to_update.current.push(el))
               } else {
-                applicationData.transform_layout_all_attr.forEach(el => data_var_to_update.current.push(el))
+                new_data.transform_layout_all_attr.forEach(el => data_var_to_update.current.push(el))
               }
               menu_configuration.updateComponentApplyLayout()
             }}
@@ -264,7 +262,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 }
               }
               }
-            >{data_var_to_update.current.includes('Values') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
+            >{data_var_to_update.current.includes('Values') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
           </Box>
         </Box></OSTooltip> : <></>}
 
@@ -368,7 +366,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
                 }
               }
               }
-            >{data_var_to_update.current.includes('tagLevel') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
+            >{data_var_to_update.current.includes('tagLevel') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
           </Box>
         </Box></OSTooltip> : <></>}
 
@@ -388,7 +386,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
               }
             }
             }
-          >{data_var_to_update.current.includes('attrDrawingArea') ? applicationData.icon_library.icon_activated : applicationData.icon_library.icon_unactivated}</Button>
+          >{data_var_to_update.current.includes('attrDrawingArea') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
         </Box>
       </Box></OSTooltip>
     {mode_trans == 'expert' ? apply_transformation_additional_elements.map((c: JSX.Element, i: number) => {
@@ -397,7 +395,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
   </Box>
 
   const dragLayout = <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={applicationData.menu_configuration.dict_setter_show_dialog}
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_apply_layout'}
     content={content_modal_layout}
     title={t('Menu.Transformation.title')}
@@ -411,7 +409,7 @@ export const ApplyLayoutDialog: FunctionComponent<FCType_ApplyLayoutDialog> = ({
  * @param {FCType_ApplySaveJSONDialog}
  * @returns {*}
  */
-export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> = (
+export const ApplySaveJSONDialog: FC<FCType_ApplySaveJSONDialog> = (
   {
     new_data,
     ClickSaveDiagram
@@ -484,7 +482,7 @@ export const ApplySaveJSONDialog: FunctionComponent<FCType_ApplySaveJSONDialog> 
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
  * @returns
  */
-export const ExcelModal: FunctionComponent<FCType_ExcelModal> = (
+export const ExcelModal: FC<FCType_ExcelModal> = (
   {
     new_data,
     uploadExcelImpl,
@@ -590,23 +588,23 @@ export const OpenSankeyDiagramSelector: FType_DiagramSelector = (
   </Box>
 }
 
-// export const PopoverSelectorDetailNodes:FunctionComponent<popoverSelectorDetailNodesFType>=({
+// export const PopoverSelectorDetailNodes:FC<popoverSelectorDetailNodesFType>=({
 //   applicationContext,
-//   applicationData,
+//   new_data,
 //   applicationDraw,
 //   node_function,
 //   link_function
 // }
 // )=>{
-//   const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(applicationData.display_nodes))
-//   const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(applicationData.display_links))
+//   const redrawAllNodes=()=>node_function.RedrawNodes(Object.values(new_data.display_nodes))
+//   const redrawAllLinks=()=>link_function.RedrawLinks(Object.values(new_data.display_links))
 
 //   return <Popover id='popover-details-level' style={{maxWidth:'100%'}}>
 //     <Popover.Header as="h3">{applicationContext.t('Banner.ndd')}</Popover.Header>
 //     <Popover.Body style={{  marginLeft: '5px', width: '350px' }}>
-//       <>{(Object.entries(applicationData.data.levelTags).length > 0) ? (<>
+//       <>{(Object.entries(new_data.data.levelTags).length > 0) ? (<>
 //         {addSimpleLevelDropDown(
-//           applicationData,applicationDraw.reDrawLegend,redrawAllNodes,redrawAllLinks,node_function.recomputeDisplayedElement
+//           new_data,applicationDraw.reDrawLegend,redrawAllNodes,redrawAllLinks,node_function.recomputeDisplayedElement
 //         )}</>
 //       ) : (<>
 //         <Form.Control placeholder="Pas de filtrage" style={{ opacity: !new_data.is_static ? '0.3' : '0', color: '#6c757d' }} disabled /></>)}</>
@@ -668,7 +666,7 @@ const default_otpion: excelOptionType = {
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
  * @returns
  */
-export const ExcelModalSaver: FunctionComponent<{ new_data: Class_ApplicationData }> = (
+export const ExcelModalSaver: FC<{ new_data: Class_ApplicationData }> = (
   {
     new_data,
   }

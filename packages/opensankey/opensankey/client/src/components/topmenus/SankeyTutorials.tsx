@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // Standard libs
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 
 // Imported libs
 import {
@@ -54,7 +54,7 @@ import {
 // Local libs
 import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { ExempleMenuTypes } from '../welcome/MenuExamples'
-import { FCType_ModalTuto } from './types/SankeyTemplatesTypes'
+import { FCType_ModalTuto } from '../SankeyMenuTypes'
 
 
 // COMPONENTS ===========================================================================
@@ -73,7 +73,7 @@ export declare const window: Window & typeof globalThis
  * @return {*}
  */
 
-export const ModalTuto: FunctionComponent<FCType_ModalTuto> = ({
+export const ModalTuto: FC<FCType_ModalTuto> = ({
   new_data, processFunctions, show_tuto, set_show_tuto,
 }) => {
   const [firstRender, setFirstRender] = useState(true)

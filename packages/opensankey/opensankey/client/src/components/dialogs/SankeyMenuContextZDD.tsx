@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FC, MutableRefObject, useRef, useState } from 'react'
 
 import {
   Box,
@@ -36,9 +36,9 @@ import {
 } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 
-import { FCType_ContextMenuZdd } from './types/SankeyMenuContextZDDTypes'
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 import { applyRandomColors } from '../../Algorithms/Colors'
+import { BaseComponentProps } from '../SankeyMenuTypes'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto' }}>{b ? '✓' : ''}</span>
@@ -47,7 +47,7 @@ interface ContextMenuButtonProps {
   children: React.ReactNode
 }
 
-export const ContextMenuButton: React.FunctionComponent<ContextMenuButtonProps> = ({
+export const ContextMenuButton: React.FC<ContextMenuButtonProps> = ({
   children
 }) => {
   return (
@@ -62,7 +62,7 @@ export const ContextMenuButton: React.FunctionComponent<ContextMenuButtonProps> 
   )
 }
 
-export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
+export const ContextMenuZdd: FC<BaseComponentProps> = ({
   new_data,
 }) => {
 

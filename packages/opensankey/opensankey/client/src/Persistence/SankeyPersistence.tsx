@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useEffect, useState, } from 'react'
+import React, { FC, useEffect, useState, } from 'react'
 import * as d3 from 'd3'
 import FileSaver from 'file-saver'
 
@@ -121,7 +121,7 @@ interface PakoInflate {
  * }
  * @return {*}
  */
-const SankeyLoad: FunctionComponent<FCType_SankeyLoad> = ({
+const SankeyLoad: FC<FCType_SankeyLoad> = ({
   new_data,
   successAction,
   processFunctions,
@@ -295,7 +295,7 @@ export default SankeyLoad
  * }
  * @return {*}
  */
-export const Counter: FunctionComponent<FCType_Counter> = ({
+export const Counter: FC<FCType_Counter> = ({
   url_prefix,
   finishReconciliation,
   value,

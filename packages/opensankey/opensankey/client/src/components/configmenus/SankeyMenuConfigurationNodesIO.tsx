@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd'
 
 import {
@@ -40,7 +40,6 @@ import {
 } from '@chakra-ui/react'
 
 import type { Type_Side } from '../../Elements/LinkAttributes'
-import type { FCType_SankeyMenuConfigurationNodesIO } from './types/SankeyMenuConfigurationNodesIOTypes'
 
 /*************************************************************************************************/
 
@@ -49,6 +48,7 @@ import { SankeyNodeSelection } from './SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
+import { BaseApplicationDataType } from '../SankeyMenuTypes'
 
 /*************************************************************************************************/
 
@@ -61,7 +61,7 @@ import { Class_NodeElement } from '../../Elements/Node'
   * }
   * @return {*}
   */
-export const SankeyMenuConfigurationNodesIO: FunctionComponent<FCType_SankeyMenuConfigurationNodesIO> = ({
+export const SankeyMenuConfigurationNodesIO: FC<BaseApplicationDataType> = ({
   new_data
 }) => {
 

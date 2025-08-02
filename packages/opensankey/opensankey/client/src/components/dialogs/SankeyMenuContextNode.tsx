@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 
 import {
   Box,
@@ -39,9 +39,9 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 /*************************************************************************************************/
 
-import { FCType_ContextMenuNode } from './types/SankeyMenuContextNodeTypes'
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
 import { hierarchyEditionMenu, hierarchyManipulationMenu } from './HierarchiesDialogs'
+import { FCType_ContextMenuNode } from '../SankeyMenuTypes'
 
 
 /*************************************************************************************************/
@@ -50,7 +50,7 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 
 // MENU COMPONENT ***********************************************************************
 
-export const ContextMenuNode: FunctionComponent<FCType_ContextMenuNode> = (
+export const ContextMenuNode: FC<FCType_ContextMenuNode> = (
   {
     new_data,
     additionalMenu
