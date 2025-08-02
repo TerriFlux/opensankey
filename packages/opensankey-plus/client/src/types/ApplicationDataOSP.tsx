@@ -390,8 +390,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
      * @param {ColorResult} color
      * @memberof OSColorPicker
      */
-    const handleChange = (color: ColorResult) => {
-      setColor(color.hex)
+    const handleChange = (_: ColorResult) => {
+      setColor(_.hex)
+      functionOnBlur(_.hex)
     }
 
     // Style of button to open picker, popover containing picker & 'backgroung overlay' that close picker when clicked
