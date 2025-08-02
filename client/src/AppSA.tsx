@@ -25,7 +25,7 @@ import TextLoop from 'react-text-loop'
 
 // OpenSankey imports ===============================================================================
 
-import OpenSankeyApp from './deps/OpenSankey+/deps/OpenSankey/App'
+import OpenSankeyApp from './deps/LoginComponent//deps/OpenSankey+/deps/OpenSankey/App'
 
 // OpenSankey+ imports ===============================================================================
 
@@ -33,8 +33,8 @@ import {
   initializeAdditionalMenusOSP,
   initializeDiagrammSelectorOSP,
   moduleDialogsOSP,
-} from './deps/OpenSankey+/ModulesOSP'
-import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/components/welcome/ModalWelcomeOSP'
+} from './deps/LoginComponent//deps/OpenSankey+/ModulesOSP'
+import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/welcome/ModalWelcomeOSP'
 
 // Local imports ====================================================================================
 
@@ -51,13 +51,16 @@ import { PaiementCheckout, PaiementPage, PaiementReturn } from './deps/LoginComp
 import { MetaTags } from './components/MetaTags'
 import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import i18next from 'i18next'
-import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
+import { ClickSaveDiagram } from './deps/LoginComponent//deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
-import { UserPagesButtons } from './components/UserPages'
-import { DrawerSequenceDataTagg } from './deps/OpenSankey+/components/UtilsOSP'
-import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
-import { Type_JSON, checkForUrlToJSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
+import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
+import { DrawerSequenceDataTagg } from './deps/LoginComponent/deps/OpenSankey+/components/UtilsOSP'
+import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
+import { Type_JSON, checkForUrlToJSON } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { Type_AdditionalMenus } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Types'
+import { Class_ApplicationData } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
+import { Class_ApplicationDataOSP } from './deps/LoginComponent/deps/OpenSankey+/types/ApplicationDataOSP'
+import { Class_ApplicationDataLoginComponent } from './deps/LoginComponent/ApplicationDataLoginComponent'
 
 // Specific methods ==================================================================================
 
@@ -106,7 +109,7 @@ export const initializeApplicationDataSA = (
 
 type FType_InitializeAdditionalMenusSA = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
-  new_data: Class_ApplicationDataSA,
+  new_data: Class_ApplicationDataLoginComponent,
   setUpdate: React.MutableRefObject<() => void>
 ) => void
 /**
@@ -146,6 +149,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     <UserPagesButtons
       new_data_app={new_data_app}
       setUpdate={setUpdate}
+      returnToApp={returnToApp}
     />
   )
 
@@ -157,8 +161,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     if (idx_st == -1) new_data_app.menu_configuration.menu_top_order.push(['sankeytheque'])
     if (idx_reg == -1) new_data_app.menu_configuration.menu_top_order.push(['setting'])
 
-    additionalMenus.current.external_top_buttons_item['sankeytheque'] = (<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
-    //@ts-expect-error xxx
+    additionalMenus.current.external_top_buttons_item['sankeytheque'] = (<ButtonOpenModalSankeyTheque new_data={new_data_app as Class_ApplicationDataSA} />)
     additionalMenus.current.external_top_buttons_item['setting'] = (<ButtonOpenUSerPreference new_data={new_data_app} />)
   } else {
     if (idx_st !== -1) {
@@ -188,14 +191,13 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   )
 
   // Cast type
-  const new_data_SA = new_data as Class_ApplicationDataSA
+  const new_data_SA = new_data as unknown as Class_ApplicationDataSA
 
   const moduleDialogsSA: JSX.Element[] = []
 
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
       <ModalSankeyTheque new_data={new_data_SA} />,
-      //@ts-expect-error xxx
       <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
     )
   }

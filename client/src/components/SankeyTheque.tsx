@@ -23,8 +23,8 @@ import {
   ModalOverlay,
 } from '@chakra-ui/react'
 import { Class_ApplicationDataSA } from '../ApplicationDataSA'
-import { UploadExemple } from '../deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
-import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { UploadExemple } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
+import { Type_JSON } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 
 

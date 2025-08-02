@@ -1,8 +1,7 @@
 
-import { Class_MenuConfig } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
-import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
-import { Class_IconLibrarySA } from './IconLibrarySA'
 import { Class_MenuConfigSA } from './MenuConfigSA'
+import { Class_ApplicationDataLoginComponent} from './deps/LoginComponent/ApplicationDataLoginComponent'
+import { Class_MenuConfig } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 
 declare const window: Window &
   typeof globalThis & {
@@ -10,7 +9,7 @@ declare const window: Window &
       logo: string
     }
   }
-export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
+export class Class_ApplicationDataSA extends Class_ApplicationDataLoginComponent {
   /**
    * Creates an instance of Class_ApplicationDataSA.
    * @param {boolean} published_mode
@@ -32,12 +31,8 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
 
   // PUBLIC METHODS =====================================================================
 
-  public createNewMenuConfiguration(): Class_MenuConfig {
+  public createNewMenuConfiguration() {
     return new Class_MenuConfigSA() as Class_MenuConfig
-  }
-
-  public createNewIconLibrary(): Class_IconLibrarySA {
-    return new Class_IconLibrarySA()
   }
 
   // Overrride logo
@@ -57,9 +52,7 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   // GETTERS / SETTERS ==================================================================
 
   // Override getter & setter so we can get new type
-  public get menu_configuration_sa(): Class_MenuConfigSA { return this._menu_configuration  as Class_MenuConfigSA }
+  public get menu_configuration_sa() { return this._menu_configuration as Class_MenuConfigSA }
   public set menu_configuration_sa(_) { this._menu_configuration = _ }
-
-  public get icon_library(): Class_IconLibrarySA { return this._icon_library as Class_IconLibrarySA }
 
 }
