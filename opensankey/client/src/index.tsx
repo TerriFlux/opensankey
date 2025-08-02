@@ -51,7 +51,7 @@ import {
 import {
   ModalWelcomeBuilder
 } from './components/welcome/ModalWelcome'
-import { opensankey_theme } from './chakra/Theme'
+import { opensankey_theme } from './css/Theme'
 
 // CONSTANTS =========================================================================================
 

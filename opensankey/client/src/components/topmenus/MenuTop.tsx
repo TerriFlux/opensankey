@@ -76,7 +76,7 @@ import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
 import {
   decompressUploadedFileUniversal,
-} from '../dialogs/UniversalJSONCompression'
+} from '../../Persistence/UniversalJSONCompression'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_OpenSankeySaveButton } from '../SankeyMenuTypes'
 

@@ -208,65 +208,6 @@ export class SankeyAnimation {
   }
 
   /**
-   * Gère la fin d'animation d'un lien
-   */
-  // private handleAnimationEnd(
-  //   linkData: Class_LinkElement,
-  //   nodeDisplay: Class_NodeElement[],
-  //   nodeVisible: Class_NodeElement[]
-  // ): void {
-  //   try {
-  //     // Récupère l'ID du lien depuis l'élément DOM
-  //     const linkElement = d3.select('.link_path').node() as SVGElement
-  //     const linkId = linkElement?.id?.replace('path_', '') || ''
-
-  //     const animatedLink = this.drawingArea?.sankey?.links_dict?.[linkId]
-  //     if (!animatedLink) return
-
-  //     const targetNode = animatedLink.target
-
-  //     // Remet la couleur originale du nœud cible
-  //     if (targetNode?.d3_selection_g_shape && typeof targetNode.getShapeColorToUse === 'function') {
-  //       targetNode.d3_selection_g_shape.select('.node_shape')
-  //         .attr('fill', targetNode.getShapeColorToUse())
-  //     }
-
-  //     // Gère les flèches
-  //     const arrow = animatedLink.d3_selection?.selectAll('.link_arrow')
-  //     if (arrow && targetNode) {
-  //       const colorTarget = targetNode.shape_visible
-  //         ? (targetNode.getShapeColorToUse?.() || '#999')
-  //         : (targetNode.icon_visible ? targetNode.icon_color : 'grey')
-
-  //       const isGradient = animatedLink.shape_color_rule === 'gradient'
-  //       const color = isGradient ? colorTarget : (animatedLink.getPathColorToUse?.() || '#999')
-
-  //       if (color) {
-  //         arrow.attr('fill', color)
-  //         arrow.attr('opacity', animatedLink.shape_opacity || 0.8)
-  //       }
-  //     }
-
-  //     // Réaffiche les labels des liens
-  //     animatedLink.d3_selection?.selectAll('.link_label').attr('display', '')
-
-  //     // Propage l'animation aux nœuds suivants
-  //     if (targetNode && !nodeDisplay.includes(targetNode)) {
-  //       nodeDisplay.push(targetNode)
-
-  //       const delay = this.calculateSiblingDelay(targetNode, 0, [animatedLink], nodeVisible)
-
-  //       setTimeout(() => {
-  //         const targetAnimation = new SankeyAnimation(this.drawingArea, targetNode)
-  //         targetAnimation.branchAnimate(nodeDisplay, nodeVisible)
-  //       }, delay * 2000)
-  //     }
-  //   } catch (error) {
-  //     console.warn('Erreur lors de la gestion de fin d\'animation:', error)
-  //   }
-  // }
-
-  /**
    * Programme la réinitialisation du diagramme
    */
   private scheduleReset(): void {
