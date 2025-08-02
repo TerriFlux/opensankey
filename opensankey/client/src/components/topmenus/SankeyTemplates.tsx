@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // Standard libs
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 
 // Imported libs
 import {
@@ -55,8 +55,8 @@ import {
 
 // Local libs
 import { UploadExemple } from '../../Persistence/SankeyPersistence'
-import { FCtype_ModalTemplate } from './types/SankeyTemplatesTypes'
 import { OSTooltip } from '../../types/Utils'
+import { FCtype_ModalTemplate } from '../SankeyMenuTypes'
 
 // CONSTANTS
 
@@ -75,7 +75,7 @@ export declare const window: Window & typeof globalThis
  * @param {*} { new_data, additionalMenu, Reinitialization }
  * @return {*}
  */
-export const ModalTemplate: FunctionComponent<FCtype_ModalTemplate> = ({ new_data, additionalMenu }) => {
+export const ModalTemplate: FC<FCtype_ModalTemplate> = ({ new_data, additionalMenu }) => {
 
   type Type_TemplateInfos = {
     'file_path': string;

@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Dispatch, MutableRefObject, SetStateAction, FunctionComponent } from 'react'
+import { Dispatch, MutableRefObject, SetStateAction, FC } from 'react'
 
 import {
   Type_AdditionalMenus
@@ -37,14 +37,9 @@ import {
   FType_RetrieveExcelResults,
   FType_UploadExcelImpl
 } from '../Persistence/SankeyPersistenceTypes'
-import {
-  FType_DiagramSelector,
-  FType_InitializeDiagrammSelector
-} from '../components/dialogs/types/SankeyMenuDialogsTypes'
-import {
-  FCType_ModalWelcomeBuilder
-} from '../components/welcome/types/ModalWelcome'
+
 import { Class_ApplicationData } from './ApplicationData'
+import { FType_InitializeDiagrammSelector, FCType_ModalWelcomeBuilder, FType_DiagramSelector } from '../components/SankeyMenuTypes'
 
 // Function components prototypes =================================================================
 
@@ -53,7 +48,7 @@ export type FCType_OpenSankeyApp = {
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   initializeDiagrammSelector: FType_InitializeDiagrammSelector,
   moduleDialogs: FType_ModuleDialogs,
-  ModalWelcome: FunctionComponent<FCType_ModalWelcomeBuilder>,
+  ModalWelcome: FC<FCType_ModalWelcomeBuilder>,
   ClickSaveDiagram: FType_ClickSaveDiagram,
 }
 

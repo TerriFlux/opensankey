@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, {
-  FunctionComponent,
+  FC,
   useEffect
 } from 'react'
 import * as d3 from 'd3'
@@ -36,7 +36,7 @@ import { initializeApplicationData } from './Modules'
 
 /*************************************************************************************************/
 
-export const ViewerOpenSankeyApp: FunctionComponent<{initial_data:Type_JSON}> = (
+export const ViewerOpenSankeyApp: FC<{initial_data:Type_JSON}> = (
   {initial_data}
 ) => {
   // Initialize data

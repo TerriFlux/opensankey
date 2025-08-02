@@ -41,10 +41,10 @@ import {
 import FileSaver from 'file-saver'
 
 // Local libs
-import { FType_ModalResolutionPNG } from './types/SankeyExportsTypes'
 import * as d3 from 'd3'
 import { MenuDraggable } from './SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FType_ModalResolutionPNG } from '../SankeyMenuTypes'
 
 
 // COMPONENTS ===========================================================================
