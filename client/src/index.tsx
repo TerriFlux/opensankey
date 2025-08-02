@@ -12,7 +12,6 @@
 // CSS ============================================================================================
 
 import './deps/OpenSankey+/deps/OpenSankey/css/main.css'
-import './deps/OpenSankey+/deps/OpenSankey/css/bootstrap.css'
 import './deps/OpenSankey+/css/main.css'
 import './deps/OpenSankey+/css/colors/red.css'
 import './deps/OpenSankey+/css/style_elements_sankey.css'
