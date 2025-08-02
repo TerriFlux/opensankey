@@ -37,78 +37,6 @@ export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
 
   const { t } = application_data_mfa
   const {ref_setter_show_reconciliation} = application_data_mfa.menu_configuration_osp.dict_setter_show_dialog_afm
-  const dd_tool_afm = <>
-    <Menu
-      variant='menu_button_subnav_style'
-      placement='bottom-start'
-    >
-      <MenuButton>
-        <Box
-          gridColumn='1'
-          gridColumnEnd="span 2"
-          gridRow="1"
-        >
-          <FontAwesomeIcon
-            style={{'height':'2rem', 'width':'2rem'}}
-            icon={faToolbox}
-          />
-        </Box>
-        <Box
-          gridColumn="1"
-          gridRow="2"
-        >
-          {t('Menu.afm_tools')}
-        </Box>
-        <Box
-          gridColumn="2"
-          gridRow="2"
-          height="1rem"
-          width="1rem"
-        >
-          <ChevronDownIcon
-            style={{'height':'1rem', 'width':'1rem'}}
-          />
-        </Box>
-      </MenuButton>
-
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            application_data_mfa.menu_configuration_osp.action_type = 'check_excel'
-            ref_setter_show_reconciliation.current(true)
-          }}
-        >
-          <FontAwesomeIcon
-            style={{'height':'1rem', 'width':'1rem'}}
-            icon={faFileCsv}
-          />
-          <Box>
-            {t('Menu.xl_check')}
-            <Badge>{t('Menu.featureBeta')}</Badge>
-          </Box>
-        </MenuItem>
-
-        <MenuItem
-          onClick={() => {
-            application_data_mfa.menu_configuration_osp.action_type = 'create_empty_ter'
-            ref_setter_show_reconciliation.current(true)
-          }}
-        >
-          <FontAwesomeIcon
-            style={{'height':'1rem', 'width':'1rem'}}
-            icon={faTable}
-          />
-          <Box>
-            {t('Menu.ter_gen')}
-            <Badge>
-              {t('Menu.featureBeta')}
-            </Badge>
-          </Box>
-        </MenuItem>
-
-      </MenuList>
-    </Menu>
-  </>
 
   const svg_reconcile = <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -125,10 +53,6 @@ export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
   </svg>
 
   return <>
-    <OSTooltip placement='bottom' label={t('Menu.tooltips.tool_afm')}>
-      {dd_tool_afm}
-    </OSTooltip>
-
     <OSTooltip
       placement='bottom' label={t('Menu.tooltips.reconcil')}>
       <Menu
