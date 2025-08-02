@@ -27,8 +27,8 @@
 import { extendTheme } from '@chakra-ui/react'
 import { defineStyle } from '@chakra-ui/react'
 import { createMultiStyleConfigHelpers } from '@chakra-ui/react'
-import { menutop_button } from '../deps/OpenSankey/chakra/Theme'
-import { opensankey_theme } from '../deps/OpenSankey/chakra/Theme'
+import { buttonStyles } from '../deps/OpenSankey/css/Theme'
+import { opensankey_theme } from '../deps/OpenSankey/css/Theme'
 import { modalAnatomy } from '@chakra-ui/anatomy'
 import { selectAnatomy } from '@chakra-ui/anatomy'
 import { tabsAnatomy } from '@chakra-ui/anatomy'
@@ -396,9 +396,9 @@ export const button_banner_view = defineStyle({
 })
 
 export const menutop_button_view_activated = defineStyle({
-  ...menutop_button,
+  ...buttonStyles.menutop_button,
   svg: {
-    ...menutop_button['svg'],
+    ...buttonStyles.menutop_button['svg'],
     color: 'primaire.2',
     stroke: 'primaire.2',
   }

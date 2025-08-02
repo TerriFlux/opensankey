@@ -20,7 +20,7 @@ import {
   moduleDialogsOSP,
 } from './ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './components/welcome/ModalWelcomeOSP'
-import { ThemeOSP } from './chakra/ThemeOSP'
+import { ThemeOSP } from './css/ThemeOSP'
 
 // OpenSankey imports ===============================================================================
 
