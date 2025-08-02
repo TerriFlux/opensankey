@@ -115,7 +115,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
   const { t, icon_library, OSColorPicker, drawing_area } = new_data
   const { sankey } = drawing_area
   const { ref_selected_style_node } = new_data.menu_configuration
-  const { ref_setter_show_modal_styles_nodes } = new_data.menu_configuration.dict_setter_show_dialog
+  const { ref_setter_show_modal_styles_nodes_labels } = new_data.menu_configuration.dict_setter_show_dialog
   const { icon_direction_down, icon_direction_left, icon_direction_rift, icon_direction_up, icon_locked, icon_unlocked } = icon_library
   // Elements on which this menu applies ------------------------------------------------
 
@@ -809,7 +809,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
               }
             }
             new_data.menu_configuration.updateComponentRelatedToNodesStyles()
-            ref_setter_show_modal_styles_nodes.current(true)
+            ref_setter_show_modal_styles_nodes_labels.current(true)
 
           }}
         >
@@ -860,7 +860,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   const { sankey } = drawing_area
   const { icon_edit_style } = icon_library
   const { ref_selected_style_node, dict_setter_show_dialog } = menu_configuration
-  const { ref_setter_show_modal_styles_nodes_context } = dict_setter_show_dialog
+  const { ref_setter_show_modal_styles_nodes_labels } = dict_setter_show_dialog
 
   // Elements on which this menu applies ------------------------------------------------
   let selected_nodes: Class_NodeElement[]
@@ -1044,44 +1044,6 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
         <TooltipElementOverloaded k='name_label_is_visible' />
       </Checkbox>
     </Box>
-    {/* Masquer une partie des noms des noeuds */}
-    <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
-      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
-        <ConfigMenuTextInput
-          ref_to_set_value={ref_name_label_separator}
-          function_get_value={() => { return element_ref?.name_label_separator }}
-          function_on_blur={(_) => {
-            //@ts-expect-error xxx
-            updateElements('name_label_separator', _)
-          }}
-        />
-      </Box>
-    </OSTooltip>
-
-    <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
-      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
-        <Box layerStyle='options_2cols'>
-          <Button variant={element_ref?.name_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-            onClick={() => {
-              updateElements('name_label_separator_part', 'before')
-            }
-            }
-          >
-            {t('Menu.before')}
-          </Button>
-          <Button variant={element_ref?.name_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-            onClick={() => {
-              updateElements('name_label_separator_part', 'after')
-            }
-            }
-          >
-            {t('Menu.after')}
-          </Button>
-        </Box>
-      </Box>
-    </OSTooltip>
     {name_label_is_visible ? <><SankeyMenuLabelComponent
       new_data={new_data}
       elements={elements}
@@ -1173,10 +1135,10 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
     </OSTooltip>
 
     {/* Position vertical du label par rapport à l'ancre*/}
-    <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+    <OSTooltip label={t('Noeud.labels.tooltips.name_label_vert_shift')}>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Noeud.labels.anchor_dy')}
+          {t('Noeud.labels.name_label_vert_shift')}
           <TooltipElementOverloaded k='name_label_vert_shift' />
         </Box>
 
@@ -1195,6 +1157,45 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           unit_text='pixels'
           multiValue={is_name_label_vert_shift_indeterminated}
         />
+      </Box>
+    </OSTooltip>
+
+    {/* Masquer une partie des noms des noeuds */}
+    <OSTooltip label={t('Menu.tooltips.node_label_sep')}>
+      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
+        <ConfigMenuTextInput
+          ref_to_set_value={ref_name_label_separator}
+          function_get_value={() => { return element_ref?.name_label_separator }}
+          function_on_blur={(_) => {
+            //@ts-expect-error xxx
+            updateElements('name_label_separator', _)
+          }}
+        />
+      </Box>
+    </OSTooltip>
+
+    <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
+      <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
+        <Box layerStyle='options_2cols'>
+          <Button variant={element_ref?.name_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            onClick={() => {
+              updateElements('name_label_separator_part', 'before')
+            }
+            }
+          >
+            {t('Menu.before')}
+          </Button>
+          <Button variant={element_ref?.name_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+            onClick={() => {
+              updateElements('name_label_separator_part', 'after')
+            }
+            }
+          >
+            {t('Menu.after')}
+          </Button>
+        </Box>
       </Box>
     </OSTooltip>
     </> : <></>}
@@ -1290,10 +1291,10 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       </OSTooltip>
 
       {/* Position vertical du label par rapport à l'ancre*/}
-      <OSTooltip label={t('Noeud.labels.tooltips.anchor_dy')}>
+      <OSTooltip label={t('Noeud.labels.tooltips.value_label_vert_shift')}>
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
           <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.labels.anchor_dy')}
+            {t('Noeud.labels.value_label_vert_shift')}
             <TooltipElementOverloaded k='value_label_vert_shift' />
           </Box>
 
@@ -1345,9 +1346,9 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       value_label_background_color: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_background_color'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_background_color') },
       name_label_box_width: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_box_width'), name: t('Noeud.labels.name_label_box_width') },
       value_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_horiz_shift') },
-      value_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.anchor_dy') },
+      value_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert_shift'), name: t('Flux.labels.vbd') + ' ' + t('Noeud.labels.name_label_vert_shift') },
       name_label_horiz_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_horiz_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_horiz_shift') },
-      name_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.anchor_dy') },
+      name_label_vert_shift: { overloaded: isAttributeOverloaded(selected_nodes, 'name_label_vert_shift'), name: t('Noeud.labels.name_label_is_visible') + ' ' + t('Noeud.labels.name_label_vert_shift') },
 
       value_label_horiz: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_horiz'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_horiz') },
       value_label_vert: { overloaded: isAttributeOverloaded(selected_nodes, 'value_label_vert'), name: t('Noeud.labels.value_label_is_visible') + ' ' + t('Noeud.labels.value_label_vert') },
@@ -1402,7 +1403,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
               }
             }
             new_data.menu_configuration.updateComponentRelatedToNodesStyles()
-            ref_setter_show_modal_styles_nodes_context.current(true)
+            ref_setter_show_modal_styles_nodes_labels.current(true)
           }}
         >
           {icon_edit_style}

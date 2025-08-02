@@ -99,7 +99,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const { icon_redo, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
-  const { ref_setter_show_modal_styles_links } = dict_setter_show_dialog
+  const { ref_setter_show_modal_styles_links_visual } = dict_setter_show_dialog
 
   // Elements on which this menu applies ------------------------------------------------
 
@@ -717,7 +717,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
               }
             }
             new_data.menu_configuration.updateComponentRelatedToLinksStyles()
-            ref_setter_show_modal_styles_links.current(true)
+            ref_setter_show_modal_styles_links_visual.current(true)
 
           }}
         >
@@ -765,7 +765,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   const { sankey } = drawing_area
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
-  const { ref_setter_show_modal_styles_links_context } = dict_setter_show_dialog
+  const { ref_setter_show_modal_styles_links_labels } = dict_setter_show_dialog
 
   // Elements on which this menu applies ------------------------------------------------
   // State variable to trigger this menu refreshing
@@ -1183,7 +1183,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
             }
 
             new_data.menu_configuration.updateComponentRelatedToLinksStyles()
-            ref_setter_show_modal_styles_links_context.current(true)
+            ref_setter_show_modal_styles_links_labels.current(true)
           }}
         >
           {icon_library.icon_edit_style}
@@ -1209,8 +1209,8 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
   return <>
     {selection_link}
+    {content_style}
     <>{elements.length > 0 ? <>
-      {content_style}
       {content_label_value}
       {content_label_text}
     </> : <></>}</>
