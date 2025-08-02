@@ -1850,7 +1850,7 @@ export const resources_app_elements = {
           bezier_outline: 'Contour Bezier',
           shape_curvature: 'Courbure',
           shape_is_recycling: 'Recyclage',
-          shape_arrow_size: 'Taille flêche',
+          shape_arrow_size: 'Taille flèche',
           shape_is_arrow: 'Flèche',
           shape_color: 'Couleur',
           shape_color_rule: 'Règle couleur',
