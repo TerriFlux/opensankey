@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { useNavigate, NavigateFunction,useParams } from 'react-router-dom'
 import i18next from 'i18next'
 import { TFunction } from 'i18next'
@@ -36,7 +36,7 @@ type FCType_PasswordResetFromToken = {
 }
 
 // Password resetin page
-export const PasswordResetFromToken: FunctionComponent<FCType_PasswordResetFromToken> = ({
+export const PasswordResetFromToken: FC<FCType_PasswordResetFromToken> = ({
   t,logo,returnToApp
 }) => {
 
@@ -204,7 +204,7 @@ type PasswordResetFromMail = {
 }
 
 // Password resetin page
-export const PasswordResetFromMail: FunctionComponent<PasswordResetFromMail> = ({
+export const PasswordResetFromMail: FC<PasswordResetFromMail> = ({
   t,logo,returnToApp
 }) => {
 

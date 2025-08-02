@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FC } from 'react'
 import { Navigate } from 'react-router-dom'
 import { loginComponent } from '../LoginComponent'
 
@@ -6,7 +6,7 @@ type FCType_PrivateRoute = {
     component: JSX.Element,
 }
 
-export const PrivateRoute: FunctionComponent<FCType_PrivateRoute> = ({
+export const PrivateRoute: FC<FCType_PrivateRoute> = ({
   component,
 }) => {
   if (loginComponent().has_account) {
@@ -15,7 +15,7 @@ export const PrivateRoute: FunctionComponent<FCType_PrivateRoute> = ({
   return <Navigate to="/" />
 }
 
-export const LoginRoute: FunctionComponent<FCType_PrivateRoute> = ({
+export const LoginRoute: FC<FCType_PrivateRoute> = ({
   component,
 }) => {
   if (loginComponent().has_account) {

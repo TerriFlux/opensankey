@@ -1,4 +1,4 @@
-import React, { FunctionComponent } from 'react'
+import React, { FC } from 'react'
 import { useNavigate, NavigateFunction } from 'react-router-dom'
 import { TFunction } from 'i18next'
 import {
@@ -44,7 +44,7 @@ export type DashboardTypes = {
 }
 
 // Dashboard, Register or Buy License
-const Dashboard: FunctionComponent<DashboardTypes> = ({
+const Dashboard: FC<DashboardTypes> = ({
   t,logo,
   returnToApp,
   loginComponent,

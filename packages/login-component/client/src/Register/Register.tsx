@@ -1,5 +1,5 @@
 
-import React, { FunctionComponent, useState, useRef } from 'react'
+import React, { FC, useState, useRef } from 'react'
 
 import ReCAPTCHA from 'react-google-recaptcha'
 import { useNavigate,NavigateFunction, useSearchParams } from 'react-router-dom'
@@ -46,7 +46,7 @@ export const lic_regex_str = '^([a-zA-Z0-9- ]{2,})$'
  * }
  * @return {*}
  */
-const Register: FunctionComponent<{
+const Register: FC<{
   t: TFunction,
   logo: string,
   logo_sankey_plus: string,

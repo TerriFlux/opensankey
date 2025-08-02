@@ -1,4 +1,4 @@
-import React, { useState, useRef, CSSProperties, Fragment, FunctionComponent, MutableRefObject, ChangeEvent, FC } from 'react'
+import React, { useState, useRef, CSSProperties, Fragment, MutableRefObject, ChangeEvent, FC } from 'react'
 import { Box, TabList, TabPanels, TabPanel, Select, Editable, EditablePreview, EditableInput, Tabs, Text, Button, Tab, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader, ModalBody, Modal, Card, CardBody, Divider, CardHeader, Input, CardFooter } from '@chakra-ui/react'
 import { SketchPicker } from 'react-color'
 import { FaMinus, FaPlus } from 'react-icons/fa'
@@ -15,7 +15,6 @@ import { Class_NodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/No
 import { Type_AdditionalMenus } from '../deps/OpenSankey+/deps/OpenSankey/types/Types'
 import { getJSONFromJSON, Type_MacroTagGroup, OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
-import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup } from '../../OpenSankey+/deps/OpenSankey/types/TagGroup'
 
 
 const paddingBoxPreference = '0.6rem'
@@ -198,7 +197,7 @@ export const ModalPreference: FC<{
  * @param {*} { user_data, app_data }
  * @return {*} 
  */
-const TabsUserTags: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP }> = ({ user_data, app_data }) => {
+const TabsUserTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP }> = ({ user_data, app_data }) => {
   const { t, menu_configuration } = user_data
   const { ref_to_menu_config_nodes_selection_updater } = menu_configuration
   // Change ref of updater of node selection (not in use user_data) so SankeySettingsEditionElementTags update this composant and children
@@ -242,7 +241,7 @@ const TabsUserTags: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app
  * @param {*} { user_data, app_data, elementTagNameProp }
  * @return {*} 
  */
-const TansferTags: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, elementTagNameProp: Type_MacroTagGroup }> = ({ user_data, app_data, elementTagNameProp }) => {
+const TansferTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, elementTagNameProp: Type_MacroTagGroup }> = ({ user_data, app_data, elementTagNameProp }) => {
   const { t } = app_data
   const tags_group_dict = user_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
   const tags_group_list = user_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)
@@ -298,7 +297,7 @@ const TansferTags: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app_
   </WrapperBoxSubSectionMenu>
 }
 
-const TabUserStyle: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, additionalMenus: MutableRefObject<Type_AdditionalMenus> }> = ({ user_data, app_data, additionalMenus }) => {
+const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, additionalMenus: MutableRefObject<Type_AdditionalMenus> }> = ({ user_data, app_data, additionalMenus }) => {
   const { t } = user_data
   const [, setUpdate] = useState(0)
   user_data.menu_configuration.ref_to_menu_config_nodes_styles_editor_updater.current = () => setUpdate(a => a + 1)
@@ -382,7 +381,7 @@ const TabUserStyle: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app
  * @param {*} { user_data, app_data, elementStyleType: elementTagNameProp }
  * @return {*} 
  */
-const TansferStyle: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, elementStyleType: '_node_styles' | '_link_styles' }> = ({ user_data, app_data, elementStyleType: elementTagNameProp }) => {
+const TansferStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, elementStyleType: '_node_styles' | '_link_styles' }> = ({ user_data, app_data, elementStyleType: elementTagNameProp }) => {
   const { t } = app_data
   const style_dict = user_data.drawing_area.sankey[elementTagNameProp]
   const app_style_dict = app_data.drawing_area.sankey[elementTagNameProp]
@@ -462,7 +461,7 @@ const TansferStyle: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app
   </>
 }
 
-const TabUserIcon: FunctionComponent<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP }> = ({ user_data, app_data }) => {
+const TabUserIcon: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP }> = ({ user_data, app_data }) => {
   const { t, icon_library } = app_data
   const { icon_new_da } = icon_library
   const _load_svg = useRef<HTMLInputElement>(null)
@@ -594,7 +593,7 @@ type TypeDataPalette = {
  * @param {*} { name, colors }
  * @return {*} 
  */
-const PaletteCreator: FunctionComponent<{ data_palette: TypeDataPalette, t: TFunction, deletePalette: () => void }> = ({ data_palette, t, deletePalette }) => {
+const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePalette: () => void }> = ({ data_palette, t, deletePalette }) => {
   const [, setUpdate] = useState(0)
   const [colorToEdit, setColorToEdit] = useState(0)
   const [displayColorPicker, setDisplayColorPicker] = useState(false)
@@ -723,7 +722,7 @@ const PaletteCreator: FunctionComponent<{ data_palette: TypeDataPalette, t: TFun
   </Box>
 }
 
-export const ButtonOpenUSerPreference: FunctionComponent<{ new_data: Class_ApplicationDataOSP }> = ({ new_data }) => {
+export const ButtonOpenUSerPreference: FC<{ new_data: Class_ApplicationDataOSP }> = ({ new_data }) => {
   const [, setUpdate] = useState(0)
   new_data.menu_configuration_osp.ref_to_btn_top_pref_updater.current = () => setUpdate(a => a + 1)
   const { t, menu_configuration } = new_data

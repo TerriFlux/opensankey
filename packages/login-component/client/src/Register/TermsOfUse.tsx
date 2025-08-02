@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import i18next from 'i18next'
 import { useTranslation } from 'react-i18next'
 
@@ -24,7 +24,7 @@ import {
  * }
  * @return {*}
  */
-const TermsOfUse: FunctionComponent<{
+const TermsOfUse: FC<{
   isOpen: boolean,
   onClose: () => void,
   setOk: (value: boolean) => void

@@ -1,5 +1,5 @@
 
-import React, { FunctionComponent, useState, useEffect, useCallback } from 'react'
+import React, { FC, useState, useEffect, useCallback } from 'react'
 import { Navigate, NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
 import { TFunction } from 'i18next'
 import { loadStripe } from '@stripe/stripe-js'
@@ -110,7 +110,7 @@ export const PaiementReturn = () => {
  * }
  * @return {*}
  */
-export const PaiementPage: FunctionComponent<{
+export const PaiementPage: FC<{
   t: TFunction,
   logo: string,
   logo_sankey_plus:string,

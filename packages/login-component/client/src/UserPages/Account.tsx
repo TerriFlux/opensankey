@@ -1,6 +1,6 @@
 
 import * as d3 from 'd3'
-import React, { FunctionComponent, useState, useEffect } from 'react'
+import React, { FC, useState, useEffect } from 'react'
 import { useNavigate, NavigateFunction } from 'react-router-dom'
 import i18next from 'i18next'
 import { TFunction } from 'i18next'
@@ -112,7 +112,7 @@ export type AccountTypes = {
   setUpdate:React.MutableRefObject<() => void>
 }
 
-const Account: FunctionComponent<AccountTypes> = ({
+const Account: FC<AccountTypes> = ({
   t,
   logo,
   logo_sankey_plus,

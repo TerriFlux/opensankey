@@ -1,4 +1,4 @@
-import React, { FunctionComponent} from 'react'
+import React, { FC} from 'react'
 import parse from 'html-react-parser'
 import { TFunction } from 'i18next'
 
@@ -7,7 +7,7 @@ import {
 } from '@chakra-ui/react'
 
 // Register : Modal for terms of use
-export const Presentation: FunctionComponent<{
+export const Presentation: FC<{
   t: TFunction,
   logo_sankey_plus: string
 }> = ({

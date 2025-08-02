@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useRef, useState } from 'react'
+import React, { FC, useRef, useState } from 'react'
 import { useNavigate, NavigateFunction } from 'react-router-dom'
 import { FaPowerOff } from 'react-icons/fa'
 import { TFunction } from 'i18next'
@@ -31,7 +31,7 @@ export type LoginTypes = {
 }
 
 // Login
-export const Login: FunctionComponent<LoginTypes> = ({
+export const Login: FC<LoginTypes> = ({
   t,
   logo,
   returnToApp,
@@ -230,7 +230,7 @@ export const Login: FunctionComponent<LoginTypes> = ({
   )
 }
 
-export const LoginOutButton: FunctionComponent<LoginTypes> = (
+export const LoginOutButton: FC<LoginTypes> = (
   { t, logo, returnToApp, loginComponent, setUpdate }
 ) => {
   const navigate = useNavigate()
