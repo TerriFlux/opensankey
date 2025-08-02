@@ -26,13 +26,13 @@
 
 
 import { Switch, Checkbox, Select, Box } from '@chakra-ui/react'
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { FilterWrapperBox, title_filter_column } from './TagsFilterComponent'
-import { FCType_NodeTagGroupFilter } from './type'
 import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { Class_Tag } from '../../deps/OpenSankey/types/Tag'
 import { Class_TagGroup, Class_LevelTagGroup, Class_NodeTagGroup } from '../../deps/OpenSankey/types/TagGroup'
+import { BaseLevelProps } from '../ComponentTypes'
 
 /**
  *
@@ -45,11 +45,7 @@ import { Class_TagGroup, Class_LevelTagGroup, Class_NodeTagGroup } from '../../d
  * @return {*}
  */
 
-export const NodeTagGroupFilter: FunctionComponent<FCType_NodeTagGroupFilter> = (
-  {
-    new_data, level
-  }
-) => {
+export const NodeTagGroupFilter: FC<BaseLevelProps> = ({new_data, level}) => {
   // Data -------------------------------------------------------------------------------
   const { t } = new_data
 

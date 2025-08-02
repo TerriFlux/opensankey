@@ -36,9 +36,6 @@ import {
   OpenSankeyDiagramSelector
 } from './deps/OpenSankey/components/dialogs/SankeyMenuDialogs'
 import {
-  FType_InitializeDiagrammSelector
-} from './deps/OpenSankey/components/dialogs/types/SankeyMenuDialogsTypes'
-import {
   FType_ModuleDialogs
 } from './deps/OpenSankey/types/FunctionTypes'
 import {
@@ -48,12 +45,6 @@ import {
   initializeAdditionalMenus,
   moduleDialogs
 } from './deps/OpenSankey/Modules'
-
-// Local imports
-import {
-  FType_InitializeAdditionalMenusOSP,
-  FType_InitializeApplicationDataOSP
-} from './ftypes/SankeyPlusApplication'
 
 
 import {
@@ -118,6 +109,8 @@ import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { checkForUrlToJSON } from './deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
+import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/components/SankeyMenuTypes'
+import { FType_InitializeApplicationDataOSP, FType_InitializeAdditionalMenusOSP } from './components/ComponentTypes'
 
 declare const window: Window &
   typeof globalThis & {

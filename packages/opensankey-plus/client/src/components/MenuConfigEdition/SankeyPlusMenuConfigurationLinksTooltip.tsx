@@ -1,19 +1,17 @@
 // External imports
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FC, MutableRefObject, useRef, useState } from 'react'
 import {
   Box,
   Button,
   Textarea
 } from '@chakra-ui/react'
 
-// Local types
-import type { FCType_MenuConfigurationLinksTooltip } from './types/SankeyMenuConfigurationLinksTooltipTypes'
-
 // Local functions
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { SankeyLinkSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { Class_LinkElement } from '../../deps/OpenSankey/Elements/Link'
+import { BaseComponentProps } from '../ComponentTypes'
 
 // MENU COMPONENT ***********************************************************************
 
@@ -26,7 +24,7 @@ import { Class_LinkElement } from '../../deps/OpenSankey/Elements/Link'
  * }
  * @return {*}
  */
-export const MenuConfigurationLinksTooltip: FunctionComponent<FCType_MenuConfigurationLinksTooltip> = ({
+export const MenuConfigurationLinksTooltip: FC<BaseComponentProps> = ({
   new_data,
 }) => {
 

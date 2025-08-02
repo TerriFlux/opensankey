@@ -1,5 +1,5 @@
 // External lib
-import React, { ChangeEvent, useState, useRef, FunctionComponent } from 'react'
+import React, { ChangeEvent, useState, useRef, FC } from 'react'
 
 import {
   Box,
@@ -11,22 +11,16 @@ import {
   MenuItem
 } from '@chakra-ui/react'
 
-// Local imports
-import {
-  FCType_ButtonNodeContextShowTagMenu,
-  FCType_NodeHyperLinkOSP,
-  FCType_NodeIconOSP
-} from './types/SankeyPlusNodesTypes'
-
 // OpenSankey ts-code
 import {
   CustomFaEyeCheckIcon,
   OSTooltip
 } from '../../deps/OpenSankey/types/Utils'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { BaseComponentProps, BaseComponentPropsPlus} from '../ComponentTypes'
 
 
-export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
+export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
   const { t, icon_library, OSColorPicker } = new_data_plus
@@ -511,7 +505,7 @@ export const NodeIconOSP: FunctionComponent<FCType_NodeIconOSP> = ({
   return content_component
 }
 
-export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
+export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
   const { drawing_area, t, menu_configuration_osp } = new_data_plus
@@ -600,7 +594,7 @@ export const NodeHyperLinkOSP: FunctionComponent<FCType_NodeHyperLinkOSP> = ({
 }
 
 
-export const ButtonNodeContextCreateUnitaryView: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+export const ButtonNodeContextCreateUnitaryView: FC<BaseComponentProps> = ({ new_data }) => {
   const { t } = new_data
 
   const closeContextMenu = () => {
@@ -638,7 +632,7 @@ export const ButtonNodeContextCreateUnitaryView: FunctionComponent<FCType_Button
   </Button>
 }
 
-export const ButtonNodeContextCreateZDTAroundSelectedNode: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+export const ButtonNodeContextCreateZDTAroundSelectedNode: FC<BaseComponentProps> = ({ new_data }) => {
   const { t } = new_data
 
   const closeContextMenu = () => {
@@ -669,7 +663,7 @@ export const ButtonNodeContextCreateZDTAroundSelectedNode: FunctionComponent<FCT
   </Button>
 }
 
-export const ButtonNodeContextStartAnimation: FunctionComponent<FCType_ButtonNodeContextShowTagMenu> = ({ new_data }) => {
+export const ButtonNodeContextStartAnimation: FC<BaseComponentProps> = ({ new_data }) => {
   const { t } = new_data
 
   const closeContextMenu = () => {

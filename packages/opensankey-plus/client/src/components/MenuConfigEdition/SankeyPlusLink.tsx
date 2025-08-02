@@ -1,6 +1,6 @@
 // External imports
 import React, {
-  FunctionComponent,
+  FC,
   MutableRefObject,
   useRef,
   useState
@@ -39,17 +39,13 @@ import {
   sep
 } from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextLink'
 
-// Local imports
-import type {
-  FCType_MenuConfLinkApparenceDashedOSP,
-  FCType_MenuConfLinkScientificPrecision,
-  FCType_MenuContextLink
-} from './types/SankeyPlusGradientTypes'
-
 import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
+import { BaseMenuStylePropsPlus, BaseComponentProps } from '../ComponentTypes'
 
-export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLinkApparenceDashedOSP> = ({ new_data_plus,
-  menu_for_style }) => {
+export const MenuConfLinkApparenceDashedOSP: FC<BaseMenuStylePropsPlus> = ({
+  new_data_plus,
+  menu_for_style 
+}) => {
   {/* Flux hachuré */ }
   // Get data
   const { ref_selected_style_link } = new_data_plus.menu_configuration
@@ -124,7 +120,7 @@ export const MenuConfLinkApparenceDashedOSP: FunctionComponent<FCType_MenuConfLi
   </Checkbox>
 }
 
-export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfLinkScientificPrecision> = ({ new_data_plus, menu_for_style }) => {
+export const MenuConfLinkScientificPrecision: FC<BaseMenuStylePropsPlus> = ({ new_data_plus, menu_for_style }) => {
   {/* Afficher ou non les donnée sur le Sankey  */ }
   const { drawing_area, menu_configuration, t } = new_data_plus
   const { ref_selected_style_link } = new_data_plus.menu_configuration
@@ -269,7 +265,7 @@ export const MenuConfLinkScientificPrecision: FunctionComponent<FCType_MenuConfL
 }
 
 
-export const ButtonLinkContextAssignTag: FunctionComponent<FCType_MenuContextLink> = ({ new_data }) => {
+export const ButtonLinkContextAssignTag: FC<BaseComponentProps> = ({ new_data }) => {
   const { t } = new_data
   const [, setUpdate] = useState(0)
   const contextualised_link = new_data.drawing_area.link_contextualised

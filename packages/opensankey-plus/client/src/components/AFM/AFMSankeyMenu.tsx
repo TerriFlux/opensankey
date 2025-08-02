@@ -1,5 +1,5 @@
 import React, {
-  FunctionComponent,
+  FC,
 } from 'react'
 
 import {
@@ -31,7 +31,7 @@ export type Ftype_AFMEditionMenu = {
   application_data_mfa : Class_ApplicationDataOSP
 }
 
-export const AFMEditionMenu: FunctionComponent<Ftype_AFMEditionMenu> = ({
+export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
   application_data_mfa
 }) => {
 

@@ -4,7 +4,7 @@ import React, {
   useState,
   useRef,
   ChangeEvent,
-  FunctionComponent
+  FC
 } from 'react'
 import FileSaver from 'file-saver'
 
@@ -42,7 +42,7 @@ export interface IType_SupplyUseModelisationProd {
  * }
  * @return {*}
  */
-export const SupplyUseModelisationProd: FunctionComponent<IType_SupplyUseModelisationProd> = ({
+export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
   application_data_mfa,
   launch
 }) => {

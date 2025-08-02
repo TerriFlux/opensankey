@@ -1,6 +1,6 @@
 // External imports
 import * as d3 from 'd3'
-import React, { useState, FunctionComponent } from 'react'
+import React, { useState, FC } from 'react'
 import colormap from 'colormap'
 import {
   Box,
@@ -18,10 +18,6 @@ import {
   Tr,
 } from '@chakra-ui/react'
 
-// Local types
-import type {
-  FType_SankeySettingsEditionElementTags
-} from './types/SankeyMenuConfigurationTagsTypes'
 import {
   Class_Tag,
   tag_banner_type,
@@ -40,6 +36,7 @@ import {
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/LinkValues'
 import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../../deps/OpenSankey/types/TagGroup'
+import { FType_SankeySettingsEditionElementTags } from '../ComponentTypes'
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -66,7 +63,7 @@ const list_palette_color = [
   d3.interpolateSinebow
 ]
 
-const SankeySettingsEditionElementTags: FunctionComponent<FType_SankeySettingsEditionElementTags> = ({
+const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTags> = ({
   new_data,
   elementTagNameProp,
 }) => {

@@ -1,19 +1,19 @@
 // // External imports
-// import React, { FunctionComponent, MutableRefObject, useState } from 'react'
+// import React, { FC, MutableRefObject, useState } from 'react'
 // import { Box, Button, Input, Select } from '@chakra-ui/react'
 
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 
 import { Box, Button } from '@chakra-ui/react'
 
-import type { FCType_TransformationElementsOSP } from '../ftypes/SankeyPlusConvertTypes'
 import { OSTooltip, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { DiffType, OSPData } from '../types/LegacyTypes'
 import { applyChange } from 'deep-diff'
+import { BaseComponentPropsPlus } from './ComponentTypes'
 
 
 
-export const TransformationElementsOSP: FunctionComponent<FCType_TransformationElementsOSP> = ({
+export const TransformationElementsOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
 

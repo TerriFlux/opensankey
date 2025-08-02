@@ -1,10 +1,10 @@
 import { Select, Box, Switch } from '@chakra-ui/react'
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
-import { FCType_FlowTagGroupFilterFType } from './type'
 import { FilterWrapperBox, title_filter_column } from './TagsFilterComponent'
 import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { Class_FluxTagGroup } from '../../deps/OpenSankey/types/TagGroup'
+import { BaseComponentProps } from '../ComponentTypes'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags
@@ -12,11 +12,7 @@ import { Class_FluxTagGroup } from '../../deps/OpenSankey/types/TagGroup'
  * @return {*}
  */
 
-export const FlowTagGroupFilter: FunctionComponent<FCType_FlowTagGroupFilterFType> = (
-  {
-    new_data
-  }
-) => {
+export const FlowTagGroupFilter: FC<BaseComponentProps> = ({new_data}) => {
   // Data -------------------------------------------------------------------------------
   const { t } = new_data
   // Tag group dicts

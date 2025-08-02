@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, useState, useRef, MutableRefObject } from 'react'
+import React, { FC, useState, useRef, MutableRefObject } from 'react'
 import ReactQuill from 'react-quill' // 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
 
 import {
@@ -12,12 +12,11 @@ import {
 // OpenSankey imports
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/types/Utils'
 
-// Local imports
-import type { FCType_NodeForeignObjectOSP } from './types/SankeyPlusForeignObjectTypes'
 import { listOptionSizeQuill } from '../UtilsOSP'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
+import { BaseComponentPropsPlus } from '../ComponentTypes'
 
-export const NodeForeignObjectOSP: FunctionComponent<FCType_NodeForeignObjectOSP> = ({
+export const NodeForeignObjectOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
   const { drawing_area, t } = new_data_plus

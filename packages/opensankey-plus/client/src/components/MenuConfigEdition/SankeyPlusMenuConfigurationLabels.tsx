@@ -1,5 +1,5 @@
 // Standard libs
-import React, { useState, ChangeEvent, FunctionComponent, useRef, MutableRefObject } from 'react'
+import React, { useState, ChangeEvent, FC, useRef, MutableRefObject } from 'react'
 import ReactQuill from 'react-quill'
 // 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console
 // to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
@@ -15,18 +15,13 @@ import {
 
 // OpenSankey ts-code
 import { OSTooltip, Type_JSON } from '../../deps/OpenSankey/types/Utils'
-
-// Local libs
-import {
-  FCType_MenuConfigurationFreeLabelsOSP,
-  FCType_ContextZDTOSP,
-} from './types/SankeyPlusMenuConfigurationLabelsTypes'
 import { Class_ContainerElement } from '../../deps/OpenSankey/Elements/TextZone'
 
 
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 import { OSMultiSelect } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { listOptionSizeQuill } from '../UtilsOSP'
+import { BaseComponentPropsPlus} from '../ComponentTypes'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -38,7 +33,7 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
  */
 export interface selected_type { 'label': string; 'value': string }
 
-export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfigurationFreeLabelsOSP> = ({
+export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
   const { t, icon_library, OSColorPicker } = new_data_plus
@@ -946,7 +941,7 @@ export const MenuConfigurationFreeLabelsOSP: FunctionComponent<FCType_MenuConfig
 }
 
 
-export const ContextZDTOSP: FunctionComponent<FCType_ContextZDTOSP> = (
+export const ContextZDTOSP: FC<BaseComponentPropsPlus> = (
   { new_data_plus }
 ) => {
   const { t, OSColorPicker, drawing_area } = new_data_plus

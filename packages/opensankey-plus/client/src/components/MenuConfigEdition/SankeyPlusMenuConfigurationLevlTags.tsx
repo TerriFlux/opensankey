@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import {
   Box,
   Checkbox,
@@ -28,7 +28,7 @@ type FCType_SankeyMenuConfigurationLevelTags = {
  *
  * @type {*}
  */
-export const SankeyMenuConfigurationLevelTags: FunctionComponent<FCType_SankeyMenuConfigurationLevelTags> = ({
+export const SankeyMenuConfigurationLevelTags: FC<FCType_SankeyMenuConfigurationLevelTags> = ({
   new_data,
 }) => {
 

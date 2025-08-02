@@ -1,8 +1,8 @@
 import { Select, Box, Switch } from '@chakra-ui/react'
-import React, { FunctionComponent, useState } from 'react'
-import { FCType_DataTagGroupFilter } from './type'
+import React, { FC, useState } from 'react'
 import { FilterWrapperBox, title_filter_column } from './TagsFilterComponent'
 import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { BaseComponentProps } from '../ComponentTypes'
 
 /**
  * Function that return a simple or multiple dropdown of groupTag of data and links
@@ -12,7 +12,7 @@ import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/comp
  * }
  * @return {*} 
  */
-export const DataTagGroupFilter: FunctionComponent<FCType_DataTagGroupFilter> = ({
+export const DataTagGroupFilter: FC<BaseComponentProps> = ({
   new_data
 }) => {
   // Data -------------------------------------------------------------------------------

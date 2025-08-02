@@ -1,6 +1,6 @@
 
 import * as d3 from 'd3'
-import React, { FunctionComponent, useState, useRef, ChangeEvent } from 'react'
+import React, { FC, useState, useRef, ChangeEvent } from 'react'
 import {
   Box,
   Card,
@@ -20,13 +20,12 @@ import {
   Tabs
 } from '@chakra-ui/react'
 
-import type { FCType_ModalSelectionIconsOSP } from '../../ftypes/SankeyPlusApplication'
-
 import SankeyListIcons from '../../icons/lib_of_icons.json'
+import { BaseComponentPropsPlus } from '../ComponentTypes'
 
 type KeysOfIcon = keyof typeof SankeyListIcons
 
-export const ModalSelectionIconsOSP: FunctionComponent<FCType_ModalSelectionIconsOSP> = (
+export const ModalSelectionIconsOSP: FC<BaseComponentPropsPlus> = (
   { new_data_plus }
 ) => {
   const list_nodes_selected = new_data_plus.drawing_area.selected_nodes_list

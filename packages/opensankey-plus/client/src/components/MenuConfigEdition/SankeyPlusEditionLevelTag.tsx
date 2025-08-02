@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import {
   FaMinus,
   FaPlus,
@@ -31,7 +31,7 @@ export type FCType_SankeyPlusEditionLevelTag = { new_data: Class_ApplicationData
 
 export type Type_MenuSelectionEntry = { 'label': string; 'value': string }
 
-export const MenuConfigurationLevelTags: FunctionComponent<FCType_SankeyPlusEditionLevelTag> = ({ new_data }) => {
+export const MenuConfigurationLevelTags: FC<FCType_SankeyPlusEditionLevelTag> = ({ new_data }) => {
   const { t } = new_data
 
   const tags_group_list = new_data.drawing_area.sankey.level_taggs_list

@@ -1,15 +1,15 @@
-import React, { FunctionComponent, useState, RefObject, useRef, MutableRefObject, ReactNode } from 'react'
+import React, { FC, useState, RefObject, useRef, MutableRefObject, ReactNode } from 'react'
 import { Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure, Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select } from '@chakra-ui/react'
 import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
-import { FCType_ToolbarFilter, FCType_FlowValueFilter } from './type'
 import { NodeTagGroupFilter } from './NodeTagGroupFilter'
 import { FlowTagGroupFilter } from './FlowTagGroupFilter'
 import { DataTagGroupFilter } from './DataTagGroupFilter'
 import { LevelTagFilter } from './LevelTagFilter'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+import { BaseComponentProps } from '../ComponentTypes'
 
 
-// Types for FunctionComponent ==========================================
+// Types for FC ==========================================
 
 type FCType_CollapseButton = { new_data: Class_ApplicationDataOSP, isOpen: boolean, onToggle: () => void }
 
@@ -41,7 +41,7 @@ export const title_filter_column = (new_data: Class_ApplicationDataOSP) => <Box
  * @param {*} { new_data }
  * @return {*} 
  */
-export const ToolbarFilter: FunctionComponent<FCType_ToolbarFilter> = ({ new_data }) => {
+export const ToolbarFilter: FC<BaseComponentProps> = ({ new_data }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const width_drawer = (drawerOpen ? width_fitler_drawer + new_data.drawing_area.fit_margin / 2 : 0) + new_data.drawing_area.fit_margin / 2
   new_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
@@ -104,7 +104,7 @@ export const ToolbarFilter: FunctionComponent<FCType_ToolbarFilter> = ({ new_dat
     </Drawer></>
 }
 
-const FlowValueFilter: FunctionComponent<FCType_FlowValueFilter> = ({ new_data }) => {
+const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
   const { t } = new_data
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
@@ -223,7 +223,7 @@ const FlowValueFilter: FunctionComponent<FCType_FlowValueFilter> = ({ new_data }
   </FilterWrapperBox>
 }
 
-export const CollapseButton: FunctionComponent<FCType_CollapseButton> = ({ new_data, isOpen, onToggle }) => {
+export const CollapseButton: FC<FCType_CollapseButton> = ({ new_data, isOpen, onToggle }) => {
   return <Button variant='collapse_filter'
     size='sizeBtnCollapseFilter'
     onClick={onToggle}>
@@ -231,7 +231,7 @@ export const CollapseButton: FunctionComponent<FCType_CollapseButton> = ({ new_d
   </Button>
 }
 
-export const FilterWrapperBox: FunctionComponent<FCType_FilterTagGroup> = ({
+export const FilterWrapperBox: FC<FCType_FilterTagGroup> = ({
   new_data,
   title,
   children
@@ -250,7 +250,7 @@ export const FilterWrapperBox: FunctionComponent<FCType_FilterTagGroup> = ({
   </Box>
 }
 
-export const FilterDataType: FunctionComponent<FCType_ToolbarFilter> = ({ new_data }) => {
+export const FilterDataType: FC<BaseComponentProps> = ({ new_data }) => {
   const { t } = new_data
   const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.drawing_area.type_data))
   const data_type_not_reconcilied = ['data', 'structure'].includes(new_data.drawing_area.type_data)

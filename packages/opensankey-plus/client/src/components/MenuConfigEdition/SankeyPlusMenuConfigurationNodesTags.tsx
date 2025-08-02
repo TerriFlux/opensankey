@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import {
   Box,
   Checkbox,
@@ -8,13 +8,11 @@ import {
 
 // Local types
 import type { Class_Tag } from '../../deps/OpenSankey/types/Tag'
-import type {
-  FCType_SankeyMenuConfigurationNodesTags
-} from './types/SankeyMenuConfigurationNodesTagsTypes'
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { SankeyNodeSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
+import { BaseComponentProps } from '../ComponentTypes'
 
 // Component definition =================================================================
 
@@ -25,7 +23,7 @@ import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
  *
  * @type {*}
  */
-export const SankeyMenuConfigurationNodesTags: FunctionComponent<FCType_SankeyMenuConfigurationNodesTags> = ({
+export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
   new_data,
 }) => {
 

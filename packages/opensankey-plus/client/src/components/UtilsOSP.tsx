@@ -1,7 +1,7 @@
 // External libs
 import React, {
   ChangeEvent,
-  FunctionComponent,
+  FC,
   useRef,
   useState
 } from 'react'
@@ -40,10 +40,6 @@ import {
 
 import { ConfigMenuNumberInput } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
-// Internal imports
-import {
-  FCType_ImportImageAsSvgBg,
-} from '../ftypes/SankeyPlusUtilsTypes'
 import { default_container_content } from '../deps/OpenSankey/Elements/TextZone'
 import { OSPData, ViewType } from '../types/LegacyTypes'
 
@@ -51,8 +47,9 @@ import { OSPData, ViewType } from '../types/LegacyTypes'
 import { GetOldDataFromView } from './ConvertOSP'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
+import { FCType_ImportImageAsSvgBg } from './ComponentTypes'
 
-export const ImportImageAsSvgBg: FunctionComponent<FCType_ImportImageAsSvgBg> = ({
+export const ImportImageAsSvgBg: FC<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
 }) => {
   const _load_image = useRef<HTMLInputElement>(null)
@@ -219,7 +216,7 @@ export function getOldViewsFromJSON(
 
 type FCType_DrawerSequenceDataTagg = { new_data: Class_ApplicationDataOSP }
 
-export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceDataTagg> = ({ new_data }) => {
+export const DrawerSequenceDataTagg: FC<FCType_DrawerSequenceDataTagg> = ({ new_data }) => {
   const { icon_library } = new_data
   const { icon_repeat_sequence, icon_play, icon_pause, icon_activated, icon_open_selector } = icon_library
   const [, setUpdate] = useState(0)
@@ -334,7 +331,7 @@ export const DrawerSequenceDataTagg: FunctionComponent<FCType_DrawerSequenceData
 type FCType_StepperDataTagg = { new_data: Class_ApplicationDataOSP, DataGroup: Class_DataTagGroup }
 
 // Compoenent returing a stepper of a dataTagg where each step is a tag of the group with visual indication to which tag is selected
-const StepperDataTagg: FunctionComponent<FCType_StepperDataTagg> = ({ new_data, DataGroup }) => {
+const StepperDataTagg: FC<FCType_StepperDataTagg> = ({ new_data, DataGroup }) => {
   const stepper_sequence = DataGroup.tags_list.map((tag, idx) => { return { id_tag: tag.id, title: tag.name, selected: tag.is_selected, id: idx } })
   const selected_id = stepper_sequence.find(el => el.selected)?.id ?? -1
   const { activeStep, setActiveStep } = useSteps({

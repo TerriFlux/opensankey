@@ -1,5 +1,5 @@
 // Standard libs
-import React, { ChangeEvent, FunctionComponent, useEffect, useRef, useState } from 'react'
+import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 
 // Imported libs
 import {
@@ -45,22 +45,13 @@ import {
   ConfigMenuTextInput
 } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
-// Local libs
-import {
-  FCType_BannerViewsOSP,
-  FCType_SelecteurView,
-  FCType_ViewAccordion,
-  FCType_MenuEnregistrerViewOSP,
-  FCType_ModalViewNotSavedOSP,
-  FCType_ModalTransparentViewAttrOSP
-} from './types/SankeyPlusViewsTypes'
-
 import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { LevelTagFilter } from '../FilterComponent/LevelTagFilter'
 import { FilterWrapperBox } from '../FilterComponent/TagsFilterComponent'
 import { Class_DrawingAreaOSP } from '../../types/DrawingAreaOSP'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+import { BaseComponentPropsPlus } from '../ComponentTypes'
 
 
 export const logo_view = <svg
@@ -94,7 +85,7 @@ export const logo_view = <svg
  * }
  * @return {*}
  */
-export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
+export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus
 }) => {
 
@@ -583,7 +574,7 @@ export const BannerViewsOSP: FunctionComponent<FCType_BannerViewsOSP> = ({
  * }
  * @return {*}
  */
-export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
+export const SelecteurView: FC<BaseComponentPropsPlus> = (
   { new_data_plus }
 ) => {
 
@@ -664,7 +655,7 @@ export const SelecteurView: FunctionComponent<FCType_SelecteurView> = (
  * }
  * @return {*}
  */
-export const ViewsConfig: FunctionComponent<FCType_ViewAccordion> = (
+export const ViewsConfig: FC<BaseComponentPropsPlus> = (
   { new_data_plus }
 ) => {
 
@@ -825,7 +816,7 @@ export const ViewsConfig: FunctionComponent<FCType_ViewAccordion> = (
 //   }
 // }
 
-// export const MenuPreferenceViewOSP: FunctionComponent<FCType_MenuPreferenceViewOSP> = (
+// export const MenuPreferenceViewOSP: FC<BaseComponentPropsPlus> = (
 //   { new_data_plus }
 // ) => {
 //   const [, setCount] = useState(0)
@@ -850,7 +841,7 @@ export const ViewsConfig: FunctionComponent<FCType_ViewAccordion> = (
  * @param {*} {new_data_plus}
  * @return {*}
  */
-export const ModalViewNotSavedOSP: FunctionComponent<FCType_ModalViewNotSavedOSP> = (
+export const ModalViewNotSavedOSP: FC<BaseComponentPropsPlus> = (
   { new_data_plus }
 ) => {
 
@@ -903,7 +894,7 @@ export const ModalViewNotSavedOSP: FunctionComponent<FCType_ModalViewNotSavedOSP
     </Modal>)
 }
 
-export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTransparentViewAttrOSP> = (
+export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
   { new_data_plus }
 ): JSX.Element => {
 
@@ -1215,7 +1206,7 @@ export const ModalTransparentViewAttrOSP: FunctionComponent<FCType_ModalTranspar
  * @param {*} { new_data_plus }
  * @return {*}  {JSX.Element}
  */
-export const ModalCreateUnitaryViewOSP: FunctionComponent<FCType_ModalTransparentViewAttrOSP> = (
+export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
   { new_data_plus }
 ): JSX.Element => {
 
@@ -1275,7 +1266,7 @@ export const ModalCreateUnitaryViewOSP: FunctionComponent<FCType_ModalTransparen
  * @param {*} { new_data_plus }
  * @return {*} 
  */
-const TabLocalDataForUnitary: FunctionComponent<{ new_data_plus: Class_ApplicationDataOSP }> = ({ new_data_plus }) => {
+const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = ({ new_data_plus }) => {
   const { t } = new_data_plus
   const drawing_area_plus = new_data_plus.drawing_area as Class_DrawingAreaOSP
 
@@ -1357,7 +1348,7 @@ const TabLocalDataForUnitary: FunctionComponent<{ new_data_plus: Class_Applicati
  * @param {*} { new_data_plus }
  * @return {*} 
  */
-const TabImportExcelDataForUnitary: FunctionComponent<{ new_data_plus: Class_ApplicationDataOSP }> = ({ new_data_plus }) => {
+const TabImportExcelDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = ({ new_data_plus }) => {
   const { t, url_prefix } = new_data_plus
   const [input_file_blob, set_input_file_blob] = useState<Blob | undefined>(undefined)
   const [checkStatus, setCheckStatus] = useState(false)
@@ -1542,7 +1533,7 @@ const TabImportExcelDataForUnitary: FunctionComponent<{ new_data_plus: Class_App
  * @param {*} { new_data_plus, setCheckStatus, setLaunchRetriveResult }
  * @return {*} 
  */
-const CheckLoad: FunctionComponent<{
+const CheckLoad: FC<{
   new_data_plus: Class_ApplicationDataOSP
   setCheckStatus: (b: boolean) => void,
   setLaunchRetriveResult: (b: boolean) => void
@@ -1578,7 +1569,7 @@ const CheckLoad: FunctionComponent<{
   return <></>
 }
 
-export const MenuEnregistrerViewOSP: FunctionComponent<FCType_MenuEnregistrerViewOSP> = ({
+export const MenuEnregistrerViewOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus
 }) => {
   const [, setCount] = useState(0)

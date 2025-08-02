@@ -1,5 +1,5 @@
 // External imports
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FC, MutableRefObject, useRef, useState } from 'react'
 import {
   Box,
   Button,
@@ -7,10 +7,10 @@ import {
 } from '@chakra-ui/react'
 
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
-import { FCType_SankeyMenuConfigurationNodesTooltip } from './types/SankeyMenuConfigurationNodesTooltipTypes'
 import { SankeyNodeSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
+import { BaseComponentProps } from '../ComponentTypes'
 
 
 
@@ -25,7 +25,7 @@ import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
  * }
  * @return {*}
  */
-export const SankeyMenuConfigurationNodesTooltip: FunctionComponent<FCType_SankeyMenuConfigurationNodesTooltip> = ({
+export const SankeyMenuConfigurationNodesTooltip: FC<BaseComponentProps> = ({
   new_data,
 }) => {
   // Data -------------------------------------------------------------------------------

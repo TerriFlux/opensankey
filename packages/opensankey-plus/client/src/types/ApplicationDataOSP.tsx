@@ -14,7 +14,7 @@ import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_IconLibraryOSP } from './IconLibrairieOSP'
 import { Box } from '@chakra-ui/react'
-import React, { CSSProperties, FunctionComponent, useState } from 'react'
+import React, { CSSProperties, FC, useState } from 'react'
 import { ColorResult, SketchPicker, SwatchesPicker } from 'react-color'
 import { Type_SaveDiagramOptions } from '../deps/OpenSankey/Persistence/SankeyPersistenceTypes'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
@@ -349,10 +349,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
  * Function to get a color picker, it override the one from OS by adding user custom palette
  *
  * @param {*} { initialColor, functionOnBlur, isDisabled, textDisabled = '' }
- * @type {FunctionComponent<OSColorPickerProps>}
+ * @type {FC<OSColorPickerProps>}
  * @memberof Class_ApplicationDataSA
  */
-  public override OSColorPicker: FunctionComponent<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }) => {
+  public override OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }) => {
     const [displayColorPicker, setDisplayColorPicker] = useState(false)
     const [color, setColor] = useState(initialColor)
 

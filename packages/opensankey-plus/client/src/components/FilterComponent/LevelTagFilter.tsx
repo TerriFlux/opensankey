@@ -1,6 +1,6 @@
-import React, { FunctionComponent, useState } from 'react'
-import { FCType_ToolBarTagFilter } from '../../ftypes/SankeyPlusUtilsTypes'
+import React, { FC, useState } from 'react'
 import { NodeTagGroupFilter } from './NodeTagGroupFilter'
+import { BaseComponentPropsPlus } from '../ComponentTypes'
 
 /**
  * Component return either simple levelTag filter (when there is only primary level group) or a selector for each level group
@@ -8,7 +8,7 @@ import { NodeTagGroupFilter } from './NodeTagGroupFilter'
  * @param {*} { new_data_plus }
  * @return {*}
  */
-export const LevelTagFilter: FunctionComponent<FCType_ToolBarTagFilter> = ({ new_data_plus }) => {
+export const LevelTagFilter: FC<BaseComponentPropsPlus> = ({ new_data_plus }) => {
   const [, setCount] = useState(0)
   new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
 
