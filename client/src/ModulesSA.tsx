@@ -1,5 +1,5 @@
 
-import React, { Dispatch, FunctionComponent, MutableRefObject, SetStateAction, useState } from 'react'
+import React, { Dispatch, FC, MutableRefObject, SetStateAction, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import {
@@ -175,7 +175,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   }
 }
 
-const UserPagesButtons: FunctionComponent<FCType_UserPagesButtons> = (
+const UserPagesButtons: FC<FCType_UserPagesButtons> = (
   { new_data_app, setUpdate }
 ) => {
   // Traduction
@@ -282,7 +282,7 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   ]
 }
 
-const ButtonOpenModalSankeyTheque: FunctionComponent<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
+const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
   const [, setUpdate] = useState(0)
   new_data.menu_configuration_sa.ref_to_btn_top_sankeytheque_updater.current = () => setUpdate(a => a + 1)
 
@@ -319,7 +319,7 @@ const ButtonOpenModalSankeyTheque: FunctionComponent<{ new_data: Class_Applicati
  * @param {*} { new_data, additionalMenu }
  * @return {*}
  */
-export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({ new_data }) => {
+export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data }) => {
   const [show_sankeytheque, set_show_sankeytheque] = useState(false)
   const [firstRender, setFirstRender] = useState(true)
   const [sankeytheque, setSankeyTheque] = useState({})
@@ -392,7 +392,7 @@ export const ModalSankeyTheque: FunctionComponent<FCType_ModalSankeyTheque> = ({
  * @param {*} { new_data, theque_tree, path, setPathToCard }
  * @return {*}
  */
-const SankeyThequeAccordionGenerator: FunctionComponent<FCType_SankeyThequeAccordionGenerator> = ({ new_data, theque_tree, path, setPathToCard }) => {
+const SankeyThequeAccordionGenerator: FC<FCType_SankeyThequeAccordionGenerator> = ({ new_data, theque_tree, path, setPathToCard }) => {
   const { icon_popup_menu } = new_data.icon_library
   const entries_tree = Object.entries(theque_tree)
   const sub_acc_item = entries_tree.filter(ent => ent[0] !== 'Files').map(ent => {
@@ -512,7 +512,7 @@ const FileToCardsStructur = (files: string[]) => {
  * @param {*} { new_data, theque_tree, path }
  * @return {*}
  */
-const SankeyThequeCardsGenerator: FunctionComponent<FCType_SankeyThequeCardsGenerator> = ({ new_data, theque_tree, path }) => {
+const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new_data, theque_tree, path }) => {
   const folder = getFilesFromkeys(theque_tree as Type_JSON, path)
   const files: string[] | undefined = folder.Files as string[] | undefined
   if (files !== undefined) {

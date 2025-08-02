@@ -8,7 +8,7 @@
 
 // External imports =================================================================================
 
-import React, { FunctionComponent, useEffect, useRef, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
@@ -77,7 +77,7 @@ type FCType_SankeyApp = {
   new_data_app: Class_ApplicationDataSA
 }
 
-export const SankeyApp: FunctionComponent<FCType_SankeyApp> = (
+export const SankeyApp: FC<FCType_SankeyApp> = (
   { new_data_app }
 ) => {
 

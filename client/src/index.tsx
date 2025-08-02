@@ -20,7 +20,7 @@ import './deps/OpenSankey+/css/react-quill.css'
 import './css/Login.css'
 import './css/Register.css'
 
-import React, { FunctionComponent } from 'react'
+import React, { FC } from 'react'
 import { createRoot } from 'react-dom/client'
 import './traductions/traduction'
 import i18next from './traductions/traduction'
@@ -51,7 +51,7 @@ const root = createRoot(container)
 let initialRender: boolean = true
 let dataApp: Class_ApplicationDataSA
 
-const App: FunctionComponent = () => {
+const App: FC = () => {
   if (initialRender) {
     initialRender = false
     dataApp = new Class_ApplicationDataSA(!!window.sankey?.publish)

@@ -1,5 +1,5 @@
 
-import React, { FunctionComponent } from 'react'
+import React, { FC } from 'react'
 import { Helmet } from 'react-helmet-async'
 
 import { Class_ApplicationDataSA } from '../types/ApplicationDataSA'
@@ -8,7 +8,7 @@ type FCType_MetaTags = {
   new_data_app: Class_ApplicationDataSA
 }
 // You can have more props. In my case, these are enough.
-export const MetaTags: FunctionComponent<FCType_MetaTags> = (
+export const MetaTags: FC<FCType_MetaTags> = (
   {new_data_app}
 ) => {
   return (
