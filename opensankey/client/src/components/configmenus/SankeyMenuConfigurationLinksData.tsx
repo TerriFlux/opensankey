@@ -25,18 +25,12 @@
 // ==================================================================================================
 
 // External imports
-import React, { FunctionComponent, useRef, useState } from 'react'
+import React, { FC, useRef, useState } from 'react'
 
 import {
   Box,
   Select,
 } from '@chakra-ui/react'
-
-// Local types imports
-import type {
-  FCType_MenuContextLinkData,
-  FCType_MenuConfigurationLinksData
-} from './types/SankeyMenuConfigurationLinksDataTypes'
 
 // Local components or functions
 import {
@@ -47,11 +41,12 @@ import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuText
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 import { ValueOptionType } from '../../Elements/LinkValues'
 import { Class_LinkElement } from '../../Elements/Link'
+import { BaseApplicationDataType, BaseContextualType } from '../SankeyMenuTypes'
 
 /*************************************************************************************************/
 export const default_value_option = 'value'
 
-export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurationLinksData> = ({
+export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
   new_data,
   contextual
 }) => {
@@ -337,7 +332,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
  * @param {new_data}
  * @return {JSX.Elmement}
  */
-export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData> = ({
+export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
   new_data,
 }) => {
 

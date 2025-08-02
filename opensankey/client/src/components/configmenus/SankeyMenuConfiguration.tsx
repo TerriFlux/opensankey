@@ -26,7 +26,7 @@
 
 // Standard libs
 import React, {
-  FunctionComponent,
+  FC,
   MutableRefObject,
   useRef,
   useState,
@@ -62,7 +62,7 @@ export type ConfigurationMenuTypes = {
   configuration_menus: JSX.Element[],
 }
 
-export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> = (
+export const SankeyConfigurationMenu: FC<ConfigurationMenuTypes> = (
   {
     configuration_menus
   }
@@ -91,7 +91,7 @@ export const SankeyConfigurationMenu: FunctionComponent<ConfigurationMenuTypes> 
   * }
   * @return {*}
   */
-export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInput> = ({
+export const ConfigMenuNumberInput: FC<FCType_ConfigMenuNumberInput> = ({
   t,
   default_value,
   ref_to_set_value,
@@ -183,7 +183,7 @@ export const ConfigMenuNumberInput: FunctionComponent<FCType_ConfigMenuNumberInp
   </FormControl>
 }
 
-export const ConfigMenuNumberOrUndefinedInput: FunctionComponent<FCType_ConfigMenuNumberOrUndefinedInput> = ({
+export const ConfigMenuNumberOrUndefinedInput: FC<FCType_ConfigMenuNumberOrUndefinedInput> = ({
   default_value,
   ref_to_set_value,
   function_on_blur,
@@ -299,7 +299,7 @@ export type FCType_ConfigMenuNumberOrUndefinedInput = {
  * }
  * @return {*}
  */
-export const ConfigMenuTextInput: FunctionComponent<FCType_ConfigMenuTextInput> = ({
+export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
   ref_to_set_value,
   function_get_value,
   function_on_blur,

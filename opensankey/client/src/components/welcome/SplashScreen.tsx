@@ -26,7 +26,7 @@
 
 // Standard lib
 import React, {
-  FunctionComponent,
+  FC,
   useState,
 } from 'react'
 import {
@@ -54,7 +54,7 @@ type FCType_ModalDocumentation = {
  * @param {*} { new_data, additionalMenu, Reinitialization }
  * @return {*}
  */
-export const ModalDocumentation: FunctionComponent<FCType_ModalDocumentation> = (
+export const ModalDocumentation: FC<FCType_ModalDocumentation> = (
   {
     app_data
   }

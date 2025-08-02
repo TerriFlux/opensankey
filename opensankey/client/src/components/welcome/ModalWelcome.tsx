@@ -26,7 +26,7 @@
 
 // Standard lib
 import React, {
-  FunctionComponent,
+  FC,
   useState
 } from 'react'
 import { Carousel } from 'react-bootstrap'
@@ -55,13 +55,13 @@ import {
   ModalHeader
 } from '@chakra-ui/react'
 
-import { FCType_ModalWelcome, FCType_ModalWelcomeBuilder } from './types/ModalWelcome'
 
 import resources from './resources.json'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FCType_ModalWelcome, FCType_ModalWelcomeBuilder } from '../SankeyMenuTypes'
 
 
-export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
+export const ModalWelcome: FC<FCType_ModalWelcome> = ({
   new_data,
   external_pagination,
   external_content
@@ -130,7 +130,7 @@ export const ModalWelcome: FunctionComponent<FCType_ModalWelcome> = ({
   return content
 }
 
-export const ModalWelcomeBuilder: FunctionComponent<FCType_ModalWelcomeBuilder> = (
+export const ModalWelcomeBuilder: FC<FCType_ModalWelcomeBuilder> = (
   { new_data }
 ) => {
   const [, setCount] = useState(0)

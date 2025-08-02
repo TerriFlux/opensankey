@@ -24,9 +24,8 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import {
-  draw_arrow_partFType,
-} from './types/SankeyShapesTypes'
+import { draw_arrow_partFType } from "../SankeyMenuTypes"
+
 
 /**
  * Function that return the path used to draw the arrow part corresponding to the

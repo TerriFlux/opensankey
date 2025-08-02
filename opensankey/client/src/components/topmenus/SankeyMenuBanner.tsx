@@ -30,9 +30,8 @@
 import {
   SankeyData
 } from '../../Persistence/LegacyType'
-import {
-  FType_SetDiagram,
-} from './types/SankeyMenuBannerTypes'
+import { FType_SetDiagram } from '../SankeyMenuTypes'
+
 
 // Internal functions / Components
 

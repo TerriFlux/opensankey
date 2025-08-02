@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, {
-  FunctionComponent,
+  FC,
   useEffect
 } from 'react'
 import LZString from 'lz-string'
@@ -63,7 +63,7 @@ declare const window: Window &
   }
 /*************************************************************************************************/
 
-export const OpenSankeyApp: FunctionComponent<FCType_OpenSankeyApp> = ({
+export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
   initializeApplicationData,
   initializeAdditionalMenus,
   initializeDiagrammSelector,

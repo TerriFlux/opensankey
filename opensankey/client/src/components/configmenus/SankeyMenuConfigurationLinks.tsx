@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 
 import {
   Box,
@@ -34,10 +34,6 @@ import {
   Select,
 } from '@chakra-ui/react'
 
-/*************************************************************************************************/
-import {
-  FCType_SankeyMenuConfigurationLinks
-} from './types/SankeyMenuConfigurationLinksTypes'
 import {
   OSTooltip
 } from '../../types/Utils'
@@ -47,10 +43,11 @@ import {
 import { OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
+import { BaseApplicationDataType } from '../SankeyMenuTypes'
 
 
 /*************************************************************************************************/
-export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurationLinks> = (
+export const SankeyLinkSelection: FC<BaseApplicationDataType> = (
   {
     new_data,
   }
@@ -321,7 +318,7 @@ export const SankeyLinkSelection: FunctionComponent<FCType_SankeyMenuConfigurati
     </Box>
   </Box>)
 }
-export const SankeyLinkSelectionSimple: FunctionComponent<FCType_SankeyMenuConfigurationLinks> = (
+export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
   {
     new_data,
   }

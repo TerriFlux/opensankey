@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 
 import {
   Box,
@@ -43,7 +43,7 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
-import { FCType_SankeyModalStyleLink, FCType_SankeyModalStyleNode, FCType_WrapperLinkStyleSelector } from './types/SankeyStyleTypes'
+
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { default_style_id } from '../../types/Utils'
 import { MenuConfigurationNodeContext, MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
@@ -51,9 +51,10 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import { checked } from './SankeyMenuContextZDD'
 import { Type_customisable_node_style_attr } from '../../Elements/NodeAttributes'
 import { Type_customisable_flow_style_attr } from '../../Elements/LinkAttributes'
+import { FCType_SankeyModalStyle, FCType_WrapperLinkStyleSelector } from '../SankeyMenuTypes'
 
 
-export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode> = ({
+export const SankeyModalStyleNode: FC<FCType_SankeyModalStyle> = ({
   new_data,
   additionalMenus
 }) => {
@@ -189,7 +190,7 @@ export const SankeyModalStyleNode: FunctionComponent<FCType_SankeyModalStyleNode
   </>
 }
 
-export const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
+export const WrapperNodeStyleSelector: FC<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 
@@ -318,7 +319,7 @@ export const WrapperNodeStyleSelector: FunctionComponent<FCType_WrapperLinkStyle
 
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink> = ({
+export const SankeyModalStyleLink: FC<FCType_SankeyModalStyle> = ({
   new_data,
   additionalMenus
 }) => {
@@ -456,7 +457,7 @@ export const SankeyModalStyleLink: FunctionComponent<FCType_SankeyModalStyleLink
   </>
 }
 
-export const WrapperLinkStyleSelector: FunctionComponent<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
+export const WrapperLinkStyleSelector: FC<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 

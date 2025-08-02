@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import {
   ReactGrid,
   Column,
@@ -62,7 +62,7 @@ interface IType_SpreadSheetFlux {
 
 
 // Main SpreadSheet component
-export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }> = (
+export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
   { new_data }: { new_data: Class_ApplicationData }
 ) => {
   const { menu_configuration } = new_data

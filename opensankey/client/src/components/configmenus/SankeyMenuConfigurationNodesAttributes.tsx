@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External libs
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FC, MutableRefObject, useRef, useState } from 'react'
 
 import {
   Box,
@@ -38,10 +38,7 @@ import {
   SliderTrack,
 } from '@chakra-ui/react'
 
-// Local types
-import type {
-  FCType_MenuConfigurationNodeStyle
-} from './types/SankeyMenuConfigurationNodesAttributesTypes'
+
 import {
   Class_NodeElement,
   isAttributeOverloaded,
@@ -69,6 +66,7 @@ import { MenuResetAttrLocal, MenuUnit, OSMultiSelect, SankeyMenuLabelComponent, 
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { Draggable, DraggingStyle, DragDropContext, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FCType_MenuConfigurationNodeStyle } from '../SankeyMenuTypes'
 
 export const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
 export const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -103,7 +101,7 @@ const style_TableLineDragging = (isDisabled: boolean, draggableStyle: DraggingSt
  * }
  * @return {*}
  */
-export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurationNodeStyle> = ({
+export const MenuConfigurationNodeStyle: FC<FCType_MenuConfigurationNodeStyle> = ({
   new_data,
   menu_for_style,
   additional_menus,
@@ -292,7 +290,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
    * @param {*} {k}
    * @return {*}
    */
-  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
+  const TooltipElementOverloaded: FC<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
     if (menu_for_style)
       return <></>
 
@@ -851,7 +849,7 @@ export const MenuConfigurationNodeStyle: FunctionComponent<FCType_MenuConfigurat
 }
 
 
-export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigurationNodeStyle> = ({ new_data, menu_for_style }) => {
+export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle> = ({ new_data, menu_for_style }) => {
 
   // Datas ------------------------------------------------------------------------------
 
@@ -942,7 +940,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
  * @param {*} {k}
  * @return {*}
  */
-  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
+  const TooltipElementOverloaded: FC<{ k: keyof Class_NodeAttribute }> = ({ k }) => {
     if (menu_for_style)
       return <></>
 
@@ -1448,7 +1446,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
  * @param {*} { new_data }
  * @return {*}
  */
-const MenuOrderStylesOfSelectedNodes: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
+const MenuOrderStylesOfSelectedNodes: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { drawing_area, t, icon_library } = new_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
   const elements = drawing_area.selected_nodes_list

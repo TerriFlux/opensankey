@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { Fragment, FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { Fragment, FC, MutableRefObject, useRef, useState } from 'react'
 
 import {
   Box,
@@ -50,9 +50,7 @@ import {
   CustomFaEyeCheckIcon,
   default_style_id
 } from '../../types/Utils'
-import {
-  FCType_MenuConfigurationLinksAppearence,
-} from './types/SankeyMenuConfigurationLinksAppearenceTypes'
+
 import {
   TooltipValueSurcharge,
   OSTooltip
@@ -62,6 +60,7 @@ import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabe
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FCType_MenuConfigurationLinksAppearence } from '../SankeyMenuTypes'
 
 /*************************************************************************************************/
 // Declare custom logo used for some button
@@ -84,7 +83,7 @@ const style_TableLineDragging = (isDisabled: boolean, draggableStyle: DraggingSt
   ...draggableStyle
 })
 
-export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigurationLinksAppearence> = ({
+export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppearence> = ({
   new_data,
   additionMenus,
   menu_for_style
@@ -263,7 +262,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
    * @param {*} {k}
    * @return {*}
    */
-  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
+  const TooltipElementOverloaded: FC<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
     if (menu_for_style)
       return <></>
 
@@ -756,7 +755,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   return content
 }
 
-export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigurationLinksAppearence> = ({ new_data, menu_for_style, additionMenus }) => {
+export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppearence> = ({ new_data, menu_for_style, additionMenus }) => {
 
   // Datas ------------------------------------------------------------------------------
 
@@ -903,7 +902,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
    * @param {*} {k}
    * @return {*}
    */
-  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
+  const TooltipElementOverloaded: FC<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
     if (menu_for_style)
       return <></>
 
@@ -1226,7 +1225,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
  * @param {*} { new_data }
  * @return {*}
  */
-export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
+export const MenuOrderStylesOfSelectedFlows: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { drawing_area, t, icon_library } = new_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
   const elements = drawing_area.selected_links_list

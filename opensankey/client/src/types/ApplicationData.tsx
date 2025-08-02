@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { Dispatch, FunctionComponent, MutableRefObject, SetStateAction, useRef } from 'react'
+import React, { Dispatch, FC, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import i18next, { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -857,7 +857,7 @@ export class Class_ApplicationData {
     func(value)
   }
 
-  public OSColorPicker: FunctionComponent<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled }) => {
+  public OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled }) => {
     return <OSColorPicker
       isDisabled={isDisabled}
       initialColor={initialColor}

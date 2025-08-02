@@ -24,13 +24,12 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FC, MutableRefObject, useRef, useState } from 'react'
 import {
   Box,
   Button,
   Checkbox,
 } from '@chakra-ui/react'
-import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
 import { ConfigMenuNumberInput} from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
@@ -38,6 +37,7 @@ import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle 
 import { t } from 'i18next'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FType_OpenSankeyMenuConfigurationLayout, FCType_DrawingAreaStyle, BaseApplicationDataType } from '../SankeyMenuTypes'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -51,7 +51,7 @@ const right_addon_pixel = (val: number) => {
 
 // MENU COMPONENT ***********************************************************************
 
-export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSankeyMenuConfigurationLayout> = ({
+export const OpenSankeyMenuConfigurationLayout: FC<FType_OpenSankeyMenuConfigurationLayout> = ({
   new_data,
   extra_background_element,
 }) => {
@@ -68,7 +68,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
 }
 
 
-export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ new_data, extra_background_element }) => {
+export const DrawingAreaStyle: FC<FCType_DrawingAreaStyle> = ({ new_data, extra_background_element }) => {
 
   // Data -------------------------------------------------------------------------------
 
@@ -211,7 +211,7 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
  * @param {*} { new_data }
  * @return {*} 
  */
-export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_data }) => {
   const { t } = new_data
   const [, setCount] = useState(0)
 
@@ -391,7 +391,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
  * @param {*} { new_data }
  * @return {*} 
  */
-export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => {
 
   const { t, OSColorPicker } = new_data
   const [, setCount] = useState(0)
@@ -690,7 +690,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
 }
 
 
-export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+export const LegendContextConfig: FC<BaseApplicationDataType> = ({ new_data }) => {
 
   const { t } = new_data
   const [, setCount] = useState(0)
@@ -792,7 +792,7 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
   </>
 }
 
-export const GraphElementsOrdoner: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
+export const GraphElementsOrdoner: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
   const [, setUpdate] = useState(0)
 
