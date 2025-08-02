@@ -79,7 +79,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   let unit_text : string | undefined
-  let default_value = element_ref.valueCurrent
+  let default_value = element_ref?.valueCurrent
   if (value_option == 'ratio_input' || value_option == 'ratio_output') {
     unit_text = '%'
     default_value = default_value?default_value:null
