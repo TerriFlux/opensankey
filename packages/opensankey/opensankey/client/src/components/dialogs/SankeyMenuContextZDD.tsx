@@ -47,14 +47,14 @@ interface ContextMenuButtonProps {
   children: React.ReactNode
 }
 
-export const ContextMenuButton: React.FunctionComponent<ContextMenuButtonProps> = ({ 
-  children 
+export const ContextMenuButton: React.FunctionComponent<ContextMenuButtonProps> = ({
+  children
 }) => {
   return (
-    <MenuButton 
-      variant='contextmenu_button' 
-      as={Button} 
-      rightIcon={<ChevronRightIcon />} 
+    <MenuButton
+      variant='contextmenu_button'
+      as={Button}
+      rightIcon={<ChevronRightIcon />}
       className="dropdown-basic"
     >
       {children}
@@ -71,6 +71,11 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
   ref_set_number_inputs.current(String(new_data.drawing_area.scale))
   new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current = () => setForceUpdate(a => a + 1)
+  const { dict_setter_show_dialog } = new_data.menu_configuration
+  const {
+    ref_setter_show_modal_styles_links_visual, ref_setter_show_modal_styles_links_labels,
+    ref_setter_show_modal_styles_nodes_visual, ref_setter_show_modal_styles_nodes_labels
+  } = dict_setter_show_dialog
 
   const indicateSankeyToSaveInCache = () => new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -275,13 +280,13 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
 
   const button_bg_grid = <Button variant='contextmenu_button' onClick={bgGrid}>{t('MEP.TCG')}{checked(new_data.drawing_area.grid_visible)}</Button>
 
-  const button_assgn_rand_node_color = <Button variant='contextmenu_button' onClick={()=>{
-    applyRandomColors(new_data,new_data.drawing_area.sankey.nodes_list)
+  const button_assgn_rand_node_color = <Button variant='contextmenu_button' onClick={() => {
+    applyRandomColors(new_data, new_data.drawing_area.sankey.nodes_list)
     indicateSankeyToSaveInCache()
     closeContextMenu()
   }}>{t('Menu.rand_node_color')}</Button>
-  const button_assgn_rand_link_color = <Button variant='contextmenu_button' onClick={()=>{
-    applyRandomColors(new_data,new_data.drawing_area.sankey.links_list)
+  const button_assgn_rand_link_color = <Button variant='contextmenu_button' onClick={() => {
+    applyRandomColors(new_data, new_data.drawing_area.sankey.links_list)
     indicateSankeyToSaveInCache()
     closeContextMenu()
   }}>{t('Menu.rand_link_color')}</Button>
@@ -336,8 +341,8 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
   const button_parametric = <Button variant='contextmenu_button'
     onClick={() => {
       if (default_style.position_type = 'parametric')
-        default_style.position_type = 'absolute' 
-      else 
+        default_style.position_type = 'absolute'
+      else
         default_style.position_type = 'parametric'
 
       new_data.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
@@ -355,25 +360,35 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     {default_style.position_type == 'parametric' ? t('MEP.parametricMode') : t('MEP.absoluteMode')}
   </Button>
 
-  let full = t('fullscreen')
-  if (!document.fullscreenElement) {
-    full = t('fullscreen')
-  } else {
-    full = t('exitFullscreen')
-  }
-
-  const button_fullscreen = <Button variant='contextmenu_button'
+  const style_links_visual = <Button
+    variant='contextmenu_button'
     onClick={() => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen()
-      } else if (document.exitFullscreen) {
-        document.exitFullscreen()
-      }
-      new_data.drawing_area.is_drawing_area_contextualised = false
-    }}
-  >
-    {full}
+      ref_setter_show_modal_styles_links_visual.current(true)
+    }}>
+    {t('MEP.linkStyleVisual')}
   </Button>
+  const style_links_labels = <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      ref_setter_show_modal_styles_links_labels.current(true)
+    }}>
+    {t('MEP.linkStyleLabels')}
+  </Button>
+  const style_nodes_visual = <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      ref_setter_show_modal_styles_nodes_visual.current(true)
+    }}>
+    {t('MEP.nodeStyleVisual')}
+  </Button>
+  const style_nodes_labels = <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      ref_setter_show_modal_styles_nodes_labels.current(true)
+    }}>
+    {t('MEP.nodeStyleLabels')}
+  </Button>
+
 
   const button_reset = <Button
     variant='contextmenu_button'
@@ -398,19 +413,43 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     </MenuList>
   </Menu>
 
- // Créer le sous-menu de gestion des couleurs
+  // Créer le sous-menu de gestion des couleurs
   const button_colors = <Menu placement='end'>
     <ContextMenuButton>
       {t('MEP.GestionCouleurs')}
     </ContextMenuButton>
     <MenuList as={Box} layerStyle='context_menu'>
-      {button_bg_color}
       {button_assgn_rand_node_color}
       {button_assgn_rand_link_color}
     </MenuList>
   </Menu>
 
-  // Dans le return principal, remplacer la section actuelle par :
+  // Créer le sous-menu Zone de dessin
+  const button_drawing_area = <Menu placement='end'>
+    <ContextMenuButton>
+      {t('MEP.ZoneDessin')} {/* ou MEP.Affichage, MEP.Visualisation, MEP.Interface */}
+    </ContextMenuButton>
+    <MenuList as={Box} layerStyle='context_menu'>
+      {button_bg_grid}
+      {dropdown_c_zdd_scale}
+      {button_mask_leg}
+      {button_bg_color}
+    </MenuList>
+  </Menu>
+  const style_menu = <Menu placement='end'>
+    <ContextMenuButton>
+      {t('MEP.Style')} {/* ou MEP.Affichage, MEP.Visualisation, MEP.Interface */}
+    </ContextMenuButton>
+    <MenuList as={Box} layerStyle='context_menu'>
+      {style_nodes_visual}
+      {style_nodes_labels}
+      {style_links_visual}
+      {style_links_labels}
+    </MenuList>
+  </Menu>
+
+
+  // Dans le return principal :
   return new_data.drawing_area.is_drawing_area_contextualised ? <Box
     id="context_zdd_pop_over"
     layerStyle='context_menu'
@@ -418,16 +457,10 @@ export const ContextMenuZdd: FunctionComponent<FCType_ContextMenuZdd> = ({
     style={{ maxWidth: '100%', position: 'absolute', zIndex: '1', inset: style_c_zdd }}>
     <ButtonGroup isAttached orientation='vertical'>
       {button_reset}
+      {button_drawing_area}
       {button_positioning}
-      {sep}
       {button_colors}
-      {sep}
-      {button_bg_grid}
-      {dropdown_c_zdd_scale}
-      {button_mask_leg}
-      {sep}
-      {button_fullscreen}
+      {style_menu}
     </ButtonGroup>
   </Box> : <></>
-
 }
