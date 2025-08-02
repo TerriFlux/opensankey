@@ -976,11 +976,6 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   const name_label_horiz_shift = (element_ref?.name_label_horiz_shift ?? NODES_ATTRIBUTES_CONFIG.name_label_horiz_shift.default)
   const name_label_vert_shift = (element_ref?.name_label_vert_shift ?? NODES_ATTRIBUTES_CONFIG.name_label_vert_shift.default)
 
-  // const position_type = (element_ref?.position_type ?? default_position_type)
-  // const position_dx = (element_ref?.position_type ?? default_dx)
-  // const position_dy = (element_ref?.position_type ?? default_dy)
-  // Components updaters ----------------------------------------------------------------
-
   // Boolean used to force this component to reload
   const [, setCount] = useState(0)
   const [, setCountStyle] = useState(0)
@@ -1026,8 +1021,8 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
   const is_value_label_horiz_shift_indeterminated = !elements.every(el => el.value_label_horiz_shift == element_ref.value_label_horiz_shift)
   const is_value_label_vert_shift_indeterminated = !elements.every(el => el.value_label_vert_shift == element_ref.value_label_vert_shift)
 
-  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
-  ref_set_text_value_input.current(element_ref?.name_label_separator)
+  const ref_name_label_separator = useRef((_: string | null | undefined) => null)
+  ref_name_label_separator.current(element_ref?.name_label_separator)
 
   const content_label = <Box layerStyle='menu_sub_section' >
     {/* Checkbox visibilité noeud */}
@@ -1054,7 +1049,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep')}</Box>
         <ConfigMenuTextInput
-          ref_to_set_value={ref_set_text_value_input}
+          ref_to_set_value={ref_name_label_separator}
           function_get_value={() => { return element_ref?.name_label_separator }}
           function_on_blur={(_) => {
             //@ts-expect-error xxx
@@ -1068,7 +1063,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
       <Box layerStyle='menuconfigpanel_row_2cols_little_input' >
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
         <Box layerStyle='options_2cols'>
-          <Button variant={element_ref.name_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+          <Button variant={element_ref?.name_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
             onClick={() => {
               updateElements('name_label_separator_part', 'before')
             }
@@ -1076,7 +1071,7 @@ export const MenuConfigurationNodeContext: FunctionComponent<FCType_MenuConfigur
           >
             {t('Menu.before')}
           </Button>
-          <Button variant={element_ref.name_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+          <Button variant={element_ref?.name_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
             onClick={() => {
               updateElements('name_label_separator_part', 'after')
             }

@@ -51,9 +51,10 @@ import type {
   FType_UploadExemple,
   FType_JSONtoExcel
 } from './SankeyPersistenceTypes'
-import { GetRandomInt, list_palette_color, type Type_JSON } from '../types/Utils'
+import { type Type_JSON } from '../types/Utils'
 import type { FCType_SankeyLoad } from '../types/FunctionTypes'
 import { Class_ApplicationData } from '../types/ApplicationData'
+import { applyRandomColors } from '../Algorithms/Colors'
 
 declare global {
   interface Window {
@@ -461,11 +462,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
       if (new_data.drawing_area.sankey.flux_taggs_list.length > 0) {
         new_data.drawing_area.sankey.flux_taggs_list[0].show_legend = true
       } else if (new_data.drawing_area.sankey.node_taggs_list.length == 0) {
-        // Default color + auto reorg of links
-        const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
-        new_data.drawing_area.sankey.visible_nodes_list.forEach((n, i, a) => {
-          new_data.drawing_area.sankey.nodes_list[i].shape_color = (d3.color(color_selected(+i / a.length))?.formatHex() as string)
-        })
+        applyRandomColors(new_data, new_data.drawing_area.sankey.links_list)
       }
     })
   // Case 1 : Apply extracted layout if present -> contains positions
