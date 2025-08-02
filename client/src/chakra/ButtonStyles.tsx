@@ -1,5 +1,5 @@
 import { defineStyle } from '@chakra-ui/react'
-import { sizeMenuTopButton } from '../deps/OpenSankey+/deps/OpenSankey/chakra/ButtonStyles'
+import { sizeMenuTopButton } from '../deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
 
 
 const _btn_lone_navigation = {
