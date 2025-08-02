@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React from 'react'
-import { Class_IconLibraryOSP } from '../deps/OpenSankey+/types/IconLibrairieOSP'
+import { Class_IconLibraryOSP } from './deps/OpenSankey+/types/IconLibrairieOSP'
 import { FaPowerOff, FaUser } from 'react-icons/fa'
 
 // Class ===========================================================================

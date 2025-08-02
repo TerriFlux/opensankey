@@ -8,9 +8,10 @@
 
 // External imports =================================================================================
 
-import React, { FC, useEffect, useRef, useState } from 'react'
+import React, { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
 import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+import { ButtonOpenUSerPreference, ModalPreference } from './deps/LoginComponent/Preferences/Preferences'
 
 import {
   Box,
@@ -29,15 +30,16 @@ import OpenSankeyApp from './deps/OpenSankey+/deps/OpenSankey/App'
 // OpenSankey+ imports ===============================================================================
 
 import {
+  initializeAdditionalMenusOSP,
   initializeDiagrammSelectorOSP,
+  moduleDialogsOSP,
 } from './deps/OpenSankey+/ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/components/welcome/ModalWelcomeOSP'
 
 // Local imports ====================================================================================
 
-import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
+import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { Theme_SankeyApplication } from './chakra/Theme'
-import { initializeAdditionalMenusSA, initializeApplicationDataSA, moduleDialogsSA } from './ModulesSA'
 import Account from './deps/LoginComponent/UserPages/Account'
 import Dashboard from './deps/LoginComponent/UserPages/Dashboard'
 import Register from './deps/LoginComponent/Register/Register'
@@ -50,6 +52,12 @@ import { MetaTags } from './components/MetaTags'
 import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import i18next from 'i18next'
 import { ClickSaveDiagram } from './deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
+import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
+import { UserPagesButtons } from './components/UserPages'
+import { DrawerSequenceDataTagg } from './deps/OpenSankey+/components/UtilsOSP'
+import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
+import { Type_JSON, checkForUrlToJSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
 
 // Specific methods ==================================================================================
 
@@ -71,6 +79,132 @@ function shuffle(array: number[]) {
   return array
 }
 
+
+/**
+ * Overrides : OS initializeApplicationData
+ * Init user_data with JSON cache user_data if present.
+ *
+ * @param {Class_ApplicationDataSA} new_data_app
+ * @param {(Type_JSON | undefined)} initial_data
+ * @return {*}
+ */
+export const initializeApplicationDataSA = (
+  new_data_app: Class_ApplicationDataSA,
+  initial_data: Type_JSON | undefined,
+
+) => {
+  console.log('initializeApplicationDataSA')
+  // Read user_data from cache if it exist
+  const url_info = checkForUrlToJSON()
+  if (url_info) {
+    new_data_app.readUrlJSON(url_info)
+  } else if (initial_data !== undefined) {
+    new_data_app.fromJSON(initial_data)
+  }
+  return new_data_app
+}
+
+type FType_InitializeAdditionalMenusSA = (
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
+  new_data: Class_ApplicationDataSA,
+  setUpdate: React.MutableRefObject<() => void>
+) => void
+/**
+ * Since AdditionalMenus is an OS var specially created to add external element in menus
+ * we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
+ * @param {*} additionalMenus
+ * @param {*} new_data_app
+ */
+export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
+  additionalMenus,
+  new_data_app,
+  setUpdate
+) => {
+
+  // No initialisation if static --------------------------------------------------------
+
+  //Add user_data sequence in footer
+  additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
+
+  // OpenSankey+ initialisation ----------------------------------------------------------
+
+  initializeAdditionalMenusOSP(
+    additionalMenus,
+    new_data_app
+  )
+  if (new_data_app.is_static) {
+    return
+  }
+
+  // Check if user is connected ----------------------------------------------------------
+
+  loginComponent().checkTokens(setUpdate)
+
+  // New modules -------------------------------------------------------------------------
+
+  additionalMenus.current.additional_nav_item.push(
+    <UserPagesButtons
+      new_data_app={new_data_app}
+      setUpdate={setUpdate}
+    />
+  )
+
+  // Index sankeytheque key in menu top order
+  const idx_st = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('sankeytheque'))
+  const idx_reg = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('setting'))
+  if (new_data_app.has_sankey_plus) {
+    // Check if sankeytheque is not already in menu top order
+    if (idx_st == -1) new_data_app.menu_configuration.menu_top_order.push(['sankeytheque'])
+    if (idx_reg == -1) new_data_app.menu_configuration.menu_top_order.push(['setting'])
+
+    additionalMenus.current.external_top_buttons_item['sankeytheque'] = (<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
+    //@ts-expect-error xxx
+    additionalMenus.current.external_top_buttons_item['setting'] = (<ButtonOpenUSerPreference new_data={new_data_app} />)
+  } else {
+    if (idx_st !== -1) {
+      new_data_app.menu_configuration.menu_top_order.splice(idx_st, 1)
+    }
+    if (idx_reg !== -1) {
+      new_data_app.menu_configuration.menu_top_order.splice(idx_reg, 1)
+    }
+  }
+}
+
+export const moduleDialogsSA: FType_ModuleDialogs = (
+  new_data,
+  additional_menus,
+  menu_configuration_nodes_attributes,
+  processFunctions
+) => {
+  if (new_data.is_static) {
+    return []
+  }
+  // OpenSankey Menu
+  const dialogDialogsOSP = moduleDialogsOSP(
+    new_data,
+    additional_menus,
+    menu_configuration_nodes_attributes,
+    processFunctions
+  )
+
+  // Cast type
+  const new_data_SA = new_data as Class_ApplicationDataSA
+
+  const moduleDialogsSA: JSX.Element[] = []
+
+  if (new_data_SA.has_sankey_plus) {
+    moduleDialogsSA.push(
+      <ModalSankeyTheque new_data={new_data_SA} />,
+      //@ts-expect-error xxx
+      <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
+    )
+  }
+
+  return [
+    ...dialogDialogsOSP,
+    ...moduleDialogsSA
+  ]
+}
 // OpenSankeyApp for OpenSankey+ ========================================================================
 
 type FCType_SankeyApp = {

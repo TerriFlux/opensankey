@@ -25,7 +25,7 @@ import './traductions/traduction'
 import i18next from './traductions/traduction'
 
 import { SankeyApp } from './AppSA'
-import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
+import { Class_ApplicationDataSA } from './ApplicationDataSA'
 
 declare const window: Window &
   typeof globalThis & {

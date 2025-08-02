@@ -1,5 +1,5 @@
 import { defineStyle } from '@chakra-ui/react'
-import { sizeMenuTopButton } from '../deps/OpenSankey+/deps/OpenSankey/chakra/Theme'
+import { sizes } from '../deps/OpenSankey+/deps/OpenSankey/css/Theme'
 
 
 const _btn_lone_navigation = {
@@ -163,7 +163,7 @@ export const btn_lone_navigation_primary = defineStyle({
 })
 
 export const sizeBtnTextLogin=defineStyle({
-  ...sizeMenuTopButton,
+  ...sizes.sizeMenuTopButton,
   width:'unset',
   minW:'4rem',
   minWidth:'4rem',

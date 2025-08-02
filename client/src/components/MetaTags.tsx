@@ -2,7 +2,7 @@
 import React, { FC } from 'react'
 import { Helmet } from 'react-helmet-async'
 
-import { Class_ApplicationDataSA } from '../types/ApplicationDataSA'
+import { Class_ApplicationDataSA } from '../ApplicationDataSA'
 
 type FCType_MetaTags = {
   new_data_app: Class_ApplicationDataSA

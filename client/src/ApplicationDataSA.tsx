@@ -1,6 +1,6 @@
 
-import { Class_MenuConfig } from '../deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
-import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
+import { Class_MenuConfig } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
+import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
 import { Class_IconLibrarySA } from './IconLibrarySA'
 import { Class_MenuConfigSA } from './MenuConfigSA'
 

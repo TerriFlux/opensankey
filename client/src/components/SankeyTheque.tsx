@@ -1,6 +1,5 @@
 
-import React, { Dispatch, FC, MutableRefObject, SetStateAction, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { Dispatch, FC, SetStateAction, useState } from 'react'
 
 import {
   Accordion,
@@ -23,24 +22,11 @@ import {
   ModalHeader,
   ModalOverlay,
 } from '@chakra-ui/react'
+import { Class_ApplicationDataSA } from '../ApplicationDataSA'
+import { UploadExemple } from '../deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
+import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 
-// OpenSankey imports
-import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/Types'
-import { checkForUrlToJSON, OSTooltip, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
-
-// OpenSankey+ imports
-import { initializeAdditionalMenusOSP, moduleDialogsOSP } from './deps/OpenSankey+/ModulesOSP'
-import { DrawerSequenceDataTagg } from './deps/OpenSankey+/components/UtilsOSP'
-
-// Local imports
-import { Class_ApplicationDataSA } from './types/ApplicationDataSA'
-import { LoginOutButton } from './deps/LoginComponent/Login/Login'
-import { loginComponent } from './deps/LoginComponent/LoginComponent'
-import { returnToApp } from './AppSA'
-import { ButtonOpenUSerPreference, ModalPreference } from './deps/LoginComponent/Preferences/Preferences'
-import { UploadExemple } from './deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -53,16 +39,6 @@ const logo_sankeytheque = <svg
   />
 </svg>
 
-
-// TYPES FUNCTIONCOMPONENT =============================================================
-
-export type ExempleMenuTypes = { [_: string]: ExempleMenuTypes | string[] }
-
-type FType_InitializeAdditionalMenusSA = (
-  additional_menus: MutableRefObject<Type_AdditionalMenus>,
-  new_data: Class_ApplicationDataSA,
-  setUpdate: React.MutableRefObject<() => void>
-) => void
 
 type FCType_ModalSankeyTheque = {
   new_data: Class_ApplicationDataSA
@@ -81,208 +57,8 @@ type FCType_SankeyThequeCardsGenerator = {
   path: string[],
 }
 
-type FCType_UserPagesButtons = {
-  new_data_app: Class_ApplicationDataSA
-  setUpdate: React.MutableRefObject<() => void>
-}
 
-
-// FUNCTIONCOMPONENT =============================================================
-
-/**
- * Overrides : OS initializeApplicationData
- * Init user_data with JSON cache user_data if present.
- *
- * @param {Class_ApplicationDataSA} new_data_app
- * @param {(Type_JSON | undefined)} initial_data
- * @return {*}
- */
-export const initializeApplicationDataSA = (
-  new_data_app: Class_ApplicationDataSA,
-  initial_data: Type_JSON | undefined,
-
-) => {
-  console.log('initializeApplicationDataSA')
-  // Read user_data from cache if it exist
-  const url_info = checkForUrlToJSON()
-  if (url_info) {
-    new_data_app.readUrlJSON(url_info)
-  } else if (initial_data !== undefined) {
-    new_data_app.fromJSON(initial_data)
-  }
-  return new_data_app
-}
-
-
-/**
- * Since AdditionalMenus is an OS var specially created to add external element in menus
- * we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
- * @param {*} additionalMenus
- * @param {*} new_data_app
- */
-export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
-  additionalMenus,
-  new_data_app,
-  setUpdate
-) => {
-
-  // No initialisation if static --------------------------------------------------------
-
-  //Add user_data sequence in footer
-  additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
-
-  // OpenSankey+ initialisation ----------------------------------------------------------
-
-  initializeAdditionalMenusOSP(
-    additionalMenus,
-    new_data_app
-  )
-  if (new_data_app.is_static) {
-    return
-  }
-
-  // Check if user is connected ----------------------------------------------------------
-
-  loginComponent().checkTokens(setUpdate)
-
-  // New modules -------------------------------------------------------------------------
-
-  additionalMenus.current.additional_nav_item.push(
-    <UserPagesButtons
-      new_data_app={new_data_app}
-      setUpdate={setUpdate}
-    />
-  )
-
-  // Index sankeytheque key in menu top order
-  const idx_st = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('sankeytheque'))
-  const idx_reg = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('setting'))
-  if (new_data_app.has_sankey_plus) {
-    // Check if sankeytheque is not already in menu top order
-    if (idx_st == -1) new_data_app.menu_configuration.menu_top_order.push(['sankeytheque'])
-    if (idx_reg == -1) new_data_app.menu_configuration.menu_top_order.push(['setting'])
-
-    additionalMenus.current.external_top_buttons_item['sankeytheque'] = (<ButtonOpenModalSankeyTheque new_data={new_data_app} />)
-    //@ts-expect-error xxx
-    additionalMenus.current.external_top_buttons_item['setting'] = (<ButtonOpenUSerPreference new_data={new_data_app} />)
-  } else {
-    if (idx_st !== -1) {
-      new_data_app.menu_configuration.menu_top_order.splice(idx_st, 1)
-    }
-    if (idx_reg !== -1) {
-      new_data_app.menu_configuration.menu_top_order.splice(idx_reg, 1)
-    }
-  }
-}
-
-const UserPagesButtons: FC<FCType_UserPagesButtons> = (
-  { new_data_app, setUpdate }
-) => {
-  // Traduction
-  const { t } = new_data_app
-
-  // If window.sankey.publish is at true : we don't use the function useNavigate because we can't it use this function outside BrowserRouter
-  // and if the app is in publication mode we aren't in one
-  const navigate = useNavigate()
-
-  const [count, setCount] = useState(0)
-  const refreshThis = () => { setCount(count + 1) }
-  new_data_app.menu_configuration_sa.ref_to_additional_menus_updater.current = refreshThis
-
-  // Either create a menu to select where we navigate to (login or register account)
-  // or add a button to navigate to
-  const user_navigation_bar_free = <ButtonGroup
-    // layerStyle='menutop_layout_style'
-    // height='5rem'
-    // gridTemplateColumns='11rem 11rem'
-    isAttached
-  >
-    <OSTooltip
-      label={t('UserNav.tooltip.to_buy')}
-      isAlwaysOpen={new_data_app.menu_configuration.show_splashscreen}>
-      <Button
-        variant='btn_lone_navigation_primary'
-        size='sizeBtnTextLogin'
-        onClick={() => navigate('/register')}
-      >
-        {t('UserNav.to_buy')}
-      </Button></OSTooltip>
-    <Button
-      variant='btn_lone_navigation_secondary'
-      size='sizeBtnTextLogin'
-      onClick={() => navigate('/login')}
-    >
-      {t('UserNav.to_con')}
-    </Button>
-  </ButtonGroup>
-
-  const user_navigation_bar_connected = <ButtonGroup
-    isAttached
-  >
-    <Button
-      variant={'menutop_button_goto_dashboard'}
-      size='sizeBtnTextLogin'
-      onClick={() => {
-        navigate('/account')
-        // Save current json before moving to login page
-        const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp)
-        }
-      }}>
-      {new_data_app.icon_library.icon_user}
-    </Button>
-    <LoginOutButton
-      t={new_data_app.t}
-      logo={new_data_app.logo}
-      returnToApp={returnToApp}
-      loginComponent={loginComponent}
-      setUpdate={setUpdate}
-    />
-  </ButtonGroup>
-
-
-  return (!loginComponent().has_account ? user_navigation_bar_free : user_navigation_bar_connected)
-}
-
-
-export const moduleDialogsSA: FType_ModuleDialogs = (
-  new_data,
-  additional_menus,
-  menu_configuration_nodes_attributes,
-  processFunctions
-) => {
-  if (new_data.is_static) {
-    return []
-  }
-  // OpenSankey Menu
-  const dialogDialogsOSP = moduleDialogsOSP(
-    new_data,
-    additional_menus,
-    menu_configuration_nodes_attributes,
-    processFunctions
-  )
-
-  // Cast type
-  const new_data_SA = new_data as Class_ApplicationDataSA
-
-  const moduleDialogsSA: JSX.Element[] = []
-
-  if (new_data_SA.has_sankey_plus) {
-    moduleDialogsSA.push(
-      <ModalSankeyTheque new_data={new_data_SA} />,
-      //@ts-expect-error xxx
-      <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
-    )
-  }
-
-  return [
-    ...dialogDialogsOSP,
-    ...moduleDialogsSA
-  ]
-}
-
-const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
+export const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA }> = ({ new_data }) => {
   const [, setUpdate] = useState(0)
   new_data.menu_configuration_sa.ref_to_btn_top_sankeytheque_updater.current = () => setUpdate(a => a + 1)
 
