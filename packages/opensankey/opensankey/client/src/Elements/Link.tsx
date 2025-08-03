@@ -197,50 +197,81 @@ export function isAttributeOverloaded(
 
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
-export const format_value = (data_value: number|undefined|null,element:Class_LinkElement|Class_NodeElement) => {
-    let text_value = ''
-    // Create data label
-    if (data_value !== null && data_value !== undefined && element.value_label_is_visible) {
-      // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
-      if (element.value_label_unit_visible && element.value_label_unit != '' && element.value_label_unit_factor > 1) {
-        data_value /= element.value_label_unit_factor
-      }
+export const format_value = (data_value: number | undefined | null, element: Class_LinkElement | Class_NodeElement) => {
+  const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+    const tag = unit_taggs[0].tags_dict[element.value_label_unit]
+    const data_tags : Class_DataTag[] = []
+    element.sankey.data_taggs_list.forEach((tagg) => {
+      if (tagg == tag.group) data_tags.push(tag)
+      else data_tags.push(tagg.selected_tags_list[0])
+    })
+    const link = element as Class_LinkElement
+    const new_value = link.valueForTags(data_tags)
+    data_value = new_value?.valueResult??new_value?.valueData
+  }
 
-      // Convert
-      if (element.value_label_scientific_notation) {
-        // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-        if (element.value_label_significant_digits) {
-          text_value = data_value.toExponential(element.value_label_nb_significant_digits! - 1)
-        } else {
-          text_value = data_value.toExponential()
-        }
-      }
+  let text_value = ''
+  // Create data label
+  if (data_value !== null && data_value !== undefined && element.value_label_is_visible) {
+    // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
+    if (element.value_label_unit_visible && element.value_label_unit != '' && element.value_label_unit_factor > 1) {
+      data_value /= element.value_label_unit_factor
+    }
 
-      // Do we need to keep only N significant numbers ?
-      else if (element.value_label_significant_digits == true) {
-        // 12345.67 avec nb_sign = 4 devient 12340
-        text_value = String(parseFloat(data_value.toPrecision(element.value_label_nb_significant_digits)))
-        if (text_value[text_value.length - 1] == '0' && text_value.length == element.value_label_nb_significant_digits && text_value == String(data_value)) {
-          text_value += '.'
-        }
-      } else if (element.value_label_custom_digit) {
-        text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
-      }
-      else {
-        text_value = String(data_value)
+    // Convert
+    if (element.value_label_scientific_notation) {
+      // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+      if (element.value_label_significant_digits) {
+        text_value = data_value.toExponential(element.value_label_nb_significant_digits! - 1)
+      } else {
+        text_value = data_value.toExponential()
       }
     }
-    text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
-    // Add unit suffix
-    const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-    if (text_value && unit_taggs.length > 0) {
-      const label_unit = unit_taggs[0].first_selected_tags!.name
-      text_value = text_value + ' ' + label_unit
-    } else if (element.value_label_unit_visible)
-      text_value = text_value + ' ' + element.value_label_unit
 
+    // Do we need to keep only N significant numbers ?
+    else if (element.value_label_significant_digits == true) {
+      // 12345.67 avec nb_sign = 4 devient 12340
+      text_value = String(parseFloat(data_value.toPrecision(element.value_label_nb_significant_digits)))
+      if (text_value[text_value.length - 1] == '0' && text_value.length == element.value_label_nb_significant_digits && text_value == String(data_value)) {
+        text_value += '.'
+      }
+    } else if (element.value_label_custom_digit) {
+      text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
+    }
+    else {
+      text_value = String(data_value)
+    }
+  }
+  text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+  if (!element.value_label_unit_visible) {
     return text_value
   }
+  // Add unit suffix
+
+  if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
+  else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
+    const label_unit = unit_taggs[0].first_selected_tags!.name
+    text_value = text_value + ' ' + label_unit
+  } else if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+    const label_unit = unit_taggs[0].tags_dict[element.value_label_unit]!.name
+    text_value = text_value + ' ' + label_unit
+  } else if (['%_input_source','%_input_target','%_output_source','%_output_target'].filter(s=>element.value_label_unit_type==s).length>0) {
+    text_value = text_value + ' %'     
+  } else if (element.value_label_unit_type == 'normalized') return text_value
+
+  // 'unit_name', 'unit_tag', 'other_unit_tag','%_input_source','%_input_target','%_output_source','%_output_target','normalized'
+  //       let total_source = 0
+  // this._link.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+  // let total_target = 0
+  // this._link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+  //       if (this._link.value_label_unit_type == '%_input_source') {
+  //   label_to_display = label_to_display! / total_source * 100
+  // } else if (this._link.value_label_unit_type == '%_output_target') {
+  //   label_to_display = label_to_display! / total_target * 100
+  // }
+  return text_value
+}
 
 /**
  * Class that define how to display a link element and how to interact with it
@@ -1658,7 +1689,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this.sankey.drawing_area.type_data !== 'data') {
       data_value = this.valueCurrent
     }
-    return format_value(data_value!,this)
+    return format_value(data_value!, this)
   }
 
   /**
