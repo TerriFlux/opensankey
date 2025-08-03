@@ -79,7 +79,6 @@ import {
 import {
   ButtonLinkContextAssignTag,
   MenuConfLinkApparenceDashedOSP,
-  MenuConfLinkScientificPrecision
 } from './components/MenuConfigEdition/SankeyPlusLink'
 import {
   SankeyMenuConfigurationNodesTags
@@ -211,12 +210,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       new_data_plus={new_data_plus}
       menu_for_style={menu_for_style}
     />)
-
-  additionalMenus.current.additional_link_appearence_value.push((menu_for_style: boolean) => <MenuConfLinkScientificPrecision
-    new_data_plus={new_data_plus}
-    menu_for_style={menu_for_style}
-  />)
-
 
 
   additionalMenus.current.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
