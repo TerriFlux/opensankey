@@ -53,10 +53,10 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
   ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
   // Modal - Style & Layout
-  ref_setter_show_modal_styles_nodes: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_styles_nodes_context: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_styles_links: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_styles_links_context: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_styles_nodes_visual: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_styles_nodes_labels: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_styles_links_visual: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_styles_links_labels: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -469,10 +469,10 @@ export class Class_MenuConfig {
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
       ref_setter_png_saver_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
       // Modal - Style & Layout
-      ref_setter_show_modal_styles_nodes: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_styles_nodes_context: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_styles_links: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_styles_links_context: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles_nodes_visual: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles_nodes_labels: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles_links_visual: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_styles_links_labels: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_apply_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Other modals
       ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -515,10 +515,10 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_json_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     // -- Style & Layout
-    this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes_context.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_styles_links.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_styles_links_context.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes_visual.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes_labels.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_links_visual.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_links_labels.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_apply_layout.current(false)
     // -- Other modals
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)

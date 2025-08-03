@@ -40,10 +40,10 @@ export class SankeyAnimation {
   public launchAnimation(): void {
     // Prépare l'animation en grisant tous les nœuds sauf celui de départ
     this.prepareAnimation()
-    
+
     // Lance l'animation récursive
     this.branchAnimate([], this.drawingArea.sankey.visible_nodes_list)
-    
+
     // Programme la réinitialisation
     this.scheduleReset()
   }
@@ -79,13 +79,13 @@ export class SankeyAnimation {
     // Cherche à savoir si un nœud qui reçoit directement le flux de nodeData
     // a aussi un chemin indirect vers ce même nœud
     // exemple : n0 -> n1 et n0 -> n2 -> n1
-    
-    const nextLinks = nodeData.output_links_list?.filter((link: Class_LinkElement) => 
-      link.shape_is_recycling && 
-      !linksToAvoid.includes(link) && 
+
+    const nextLinks = nodeData.output_links_list?.filter((link: Class_LinkElement) =>
+      link.shape_is_recycling &&
+      !linksToAvoid.includes(link) &&
       displayNodes.includes(link.target)
     ) || []
-    
+
     let max = 0
 
     if (nodeData.id === this.startNode.id) {
@@ -98,7 +98,7 @@ export class SankeyAnimation {
         max = Math.max(max, delay)
       })
     }
-    
+
     return max
   }
 
@@ -107,7 +107,7 @@ export class SankeyAnimation {
    */
   public getDescendantNodes(node: Class_NodeElement): Class_NodeElement[] {
     let nodeList: Class_NodeElement[] = []
-    
+
     const dimensionsAsParentPure = node.dimensions_as_parent_pure || []
     dimensionsAsParentPure.forEach((dimension: Class_NodeDimension) => {
       // Récupère les enfants directs
@@ -131,23 +131,22 @@ export class SankeyAnimation {
     nodeDisplay: Class_NodeElement[],
     nodeVisible: Class_NodeElement[]
   ): void {
-    // Sélectionne tous les liens visibles ayant ce nœud comme source
+    const self = this // Capture de l'instance
+
     const glinks = this.drawingArea.d3_selection_elements_group?.selectAll('.gg_links')
       .filter((d) => {
         const cast_d = d as Class_LinkElement
         return cast_d.source?.id === this.startNode.id
       })
 
-    // Remet l'opacité des liens qu'on va animer
     glinks?.select('.link_path').attr('stroke-opacity', (l) => (l as Class_LinkElement).shape_opacity || 0.8)
 
-    // Lance l'animation des liens sortants
     glinks?.selectAll('.link_path').each((d, i, nodes) => {
       const element = nodes[i] as SVGGeometryElement
       const totalLength = element.getTotalLength()
       const linkId = d3.select(element).attr('id')
-      const linkClass = this.drawingArea?.sankey?.links_dict?.[linkId]
-      
+      const linkClass = self.drawingArea?.sankey?.links_dict?.[linkId]
+
       d3.select(element)
         .attr('stroke-dasharray', `${totalLength} ${totalLength}`)
         .attr('stroke-dashoffset', totalLength)
@@ -156,69 +155,56 @@ export class SankeyAnimation {
       .transition()
       .duration(2000)
       .attr('stroke-dashoffset', 0)
-      .on('end', (d) => {
-        const cast_d = d as Class_LinkElement
-        this.handleAnimationEnd(cast_d, nodeDisplay, nodeVisible)
-      })
-  }
+      .on('end', function (d) {
+        // 'this' = élément SVG, 'self' = instance SankeyAnimation
+        const linkId = d3.select(this).attr('id')?.replace('path_', '') || ''
 
-  /**
-   * Gère la fin d'animation d'un lien
-   */
-  private handleAnimationEnd(
-    linkData: Class_LinkElement,
-    nodeDisplay: Class_NodeElement[],
-    nodeVisible: Class_NodeElement[]
-  ): void {
-    try {
-      // Récupère l'ID du lien depuis l'élément DOM
-      const linkElement = d3.select('.link_path').node() as SVGElement
-      const linkId = linkElement?.id?.replace('path_', '') || ''
-      
-      const animatedLink = this.drawingArea?.sankey?.links_dict?.[linkId]
-      if (!animatedLink) return
+        const animatedLink = self.drawingArea?.sankey?.links_dict?.[linkId]
+        if (!animatedLink) return
 
-      const targetNode = animatedLink.target
+        const targetNode = animatedLink.target
 
-      // Remet la couleur originale du nœud cible
-      if (targetNode?.d3_selection_g_shape && typeof targetNode.getShapeColorToUse === 'function') {
-        targetNode.d3_selection_g_shape.select('.node_shape')
-          .attr('fill', targetNode.getShapeColorToUse())
-      }
-
-      // Gère les flèches
-      const arrow = animatedLink.d3_selection?.selectAll('.link_arrow')
-      if (arrow && targetNode) {
-        const colorTarget = targetNode.shape_visible 
-          ? (targetNode.getShapeColorToUse?.() || '#999')
-          : (targetNode.icon_visible ? targetNode.icon_color : 'grey')
-
-        const isGradient = animatedLink.shape_color_rule === 'gradient'
-        const color = isGradient ? colorTarget : (animatedLink.getPathColorToUse?.() || '#999')
-        
-        if (color) {
-          arrow.attr('fill', color)
-          arrow.attr('opacity', animatedLink.shape_opacity || 0.8)
+        // Remet la couleur originale du nœud cible
+        if (targetNode?.d3_selection_g_shape && typeof targetNode.getShapeColorToUse === 'function') {
+          targetNode.d3_selection_g_shape.select('.node_shape')
+            .attr('fill', targetNode.getShapeColorToUse())
         }
-      }
 
-      // Réaffiche les labels des liens
-      animatedLink.d3_selection?.selectAll('.link_label').attr('display', '')
+        // Gère les flèches - CORRECTION: toujours rendre visible
+        const arrow = animatedLink.d3_selection?.selectAll('.link_arrow')
+        if (arrow) {
+          // D'abord rendre visible
+          arrow.attr('opacity', animatedLink.shape_opacity || 0.8)
 
-      // Propage l'animation aux nœuds suivants
-      if (targetNode && !nodeDisplay.includes(targetNode)) {
-        nodeDisplay.push(targetNode)
-        
-        const delay = this.calculateSiblingDelay(targetNode, 0, [animatedLink], nodeVisible)
-        
-        setTimeout(() => {
-          const targetAnimation = new SankeyAnimation(this.drawingArea, targetNode)
-          targetAnimation.branchAnimate(nodeDisplay, nodeVisible)
-        }, delay * 2000)
-      }
-    } catch (error) {
-      console.warn('Erreur lors de la gestion de fin d\'animation:', error)
-    }
+          // Puis définir la couleur si possible
+          if (targetNode) {
+            const colorTarget = targetNode.shape_visible
+              ? (targetNode.getShapeColorToUse?.() || '#999')
+              : (targetNode.icon_visible ? targetNode.icon_color : 'grey')
+
+            const isGradient = animatedLink.shape_color_rule === 'gradient'
+            const color = isGradient ? colorTarget : (animatedLink.getPathColorToUse?.() || '#999')
+
+            if (color) {
+              arrow.attr('fill', color)
+            }
+          }
+        }
+
+        // Réaffiche les labels des liens
+        animatedLink.d3_selection?.selectAll('.link_label').attr('display', '')
+
+        if (targetNode && !nodeDisplay.includes(targetNode)) {
+          nodeDisplay.push(targetNode)
+
+          const delay = self.calculateSiblingDelay(targetNode, 0, [animatedLink], nodeVisible)
+
+          setTimeout(() => {
+            const targetAnimation = new SankeyAnimation(self.drawingArea, targetNode)
+            targetAnimation.branchAnimate(nodeDisplay, nodeVisible)
+          }, delay * 2000)
+        }
+      })
   }
 
   /**
@@ -227,20 +213,20 @@ export class SankeyAnimation {
   private scheduleReset(): void {
     try {
       const echangeTag = this.drawingArea?.sankey?.node_taggs_dict?.['type de noeud']?.tags_dict?.['echange']
-      const nodesToProcess = this.drawingArea?.sankey?.visible_nodes_list?.filter((node: Class_NodeElement) => 
+      const nodesToProcess = this.drawingArea?.sankey?.visible_nodes_list?.filter((node: Class_NodeElement) =>
         !echangeTag || !node.hasGivenTag?.(echangeTag)
       ) || []
 
       // Calcule l'index horizontal maximum pour déterminer la durée totale
       const horizontalIndexes: { [node_id: string]: number } = {}
-      
+
       if (this.drawingArea?.nodePositioning?.computeHorizontalIndex) {
         this.drawingArea.nodePositioning.computeHorizontalIndex(
-          this.startNode, 
-          nodesToProcess, 
-          0, 
-          [], 
-          [], 
+          this.startNode,
+          nodesToProcess,
+          0,
+          [],
+          [],
           horizontalIndexes
         )
       }
@@ -252,7 +238,7 @@ export class SankeyAnimation {
 
       // Programme la réinitialisation (minimum 3 secondes)
       const resetTime = Math.max(totalAnimationTime, 3000)
-      
+
       setTimeout(() => {
         if (this.drawingArea?.draw && typeof this.drawingArea.draw === 'function') {
           this.drawingArea.draw()

@@ -38,21 +38,21 @@ import { Type_PathLabelHPosition, Type_PathLabelVPosition } from './LinkAttribut
 export class LinkDrawValue {
 
   private _link: Class_LinkElement
-  private _link_control_points :LinkControlPoints
-  private _link_control_points_internal : {
+  private _link_control_points: LinkControlPoints
+  private _link_control_points_internal: {
     readonly controlPoints: {
-        starting_curve_point: ClassTemplate_Handler;
-        ending_curve_point: ClassTemplate_Handler;
-        starting_bezier_point: ClassTemplate_Handler;
-        ending_bezier_point: ClassTemplate_Handler;
-        middle_recycling_point: ClassTemplate_Handler;
-        is_dragged: boolean;
+      starting_curve_point: ClassTemplate_Handler;
+      ending_curve_point: ClassTemplate_Handler;
+      starting_bezier_point: ClassTemplate_Handler;
+      ending_bezier_point: ClassTemplate_Handler;
+      middle_recycling_point: ClassTemplate_Handler;
+      is_dragged: boolean;
     };
   }
-  
+
   constructor(
     link: Class_LinkElement,
-    link_control_points :LinkControlPoints
+    link_control_points: LinkControlPoints
   ) {
     this._link = link
     this._link_control_points = link_control_points
@@ -125,7 +125,7 @@ export class LinkDrawValue {
     }
     return 'left'
   }
-  
+
   /**
    * Draw link label on d3 svg
    * @protected
@@ -138,28 +138,19 @@ export class LinkDrawValue {
     // Clean previous label
     this._link.d3_selection?.selectAll('.link_value').remove()
     // Add value label
-    const link_val = this._link.valueResult ?? this._link.valueData
-
-    let total_source = 0
-    this._link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-    let total_target = 0
-    this._link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    const link_val = this._link.valueCurrent
 
     // =======================DRAW VALUE LABEL ============================
     if (
       (this._link.drawing_area.type_data !== 'structure') &&
-      (this._link.value_label_is_visible) &&
+      // (this._link.value_label_is_visible) &&
       ((link_val ?? 0) >= this._link.drawing_area.filter_label)
     ) {
       // Failsafe
       if (this._link.source && this._link.target) {
         // Compute label to display
         let label_to_display = link_val
-        if (this._link.value_label_percent_input) {
-          label_to_display = label_to_display! / total_source * 100
-        } else if (this._link.value_label_percent_output) {
-          label_to_display = label_to_display! / total_target * 100
-        }
+
 
         // If label is undefined or null, do nothing
         if (label_to_display) {
@@ -189,18 +180,9 @@ export class LinkDrawValue {
               .attr('href', '#' + this._link.id)
               .attr('side', this.getTextPathSide())
 
-            if (!this._link.value_label_percent_input && !this._link.value_label_percent_output) {
-              // Add text directly on textpath object
-              d3_textpath_selection?.text(this._link.data_label)
-                .attr('spacing', 'exact')
-                .attr('method', 'align')
-            } else {
-              const suffix = this._link.value_label_percent_input ? 's' : 'd'
-              // Add text directly on textpath object
-              d3_textpath_selection?.text(label_to_display.toFixed(this._link.value_label_nb_digit) + ' %')
-                .attr('spacing', 'exact')
-                .attr('method', 'align')
-            }
+            d3_textpath_selection?.text(this._link.data_label)
+              .attr('spacing', 'exact')
+              .attr('method', 'align')
             // Add styling text attributes directly on text object
             // Relative position from starting point of path
             this.updateValueTextPathOffset()
@@ -216,16 +198,9 @@ export class LinkDrawValue {
           }
           else {
             this.updateValueXYPosition()
-            if (!this._link.value_label_percent_input && !this._link.value_label_percent_output) {
-              d3_text_selection?.text(this._link.data_label)
-                .attr('spacing', 'exact')
-                .attr('method', 'align')
-            } else {
-              const suffix = this._link.value_label_percent_input ? 's' : 'd'
-              d3_text_selection?.text(label_to_display.toFixed(this._link.value_label_nb_digit) + ' %' + suffix)
-                .attr('spacing', 'exact')
-                .attr('method', 'align')
-            }
+            d3_text_selection?.text(this._link.data_label)
+              .attr('spacing', 'exact')
+              .attr('method', 'align')
             if (!this._link.drawing_area.static) {
               d3_text_selection?.call(d3.drag<SVGTextElement, unknown>()
                 .filter(evt => (evt.which == 1) && this._link.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection

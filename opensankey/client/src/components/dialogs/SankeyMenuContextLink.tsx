@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 
 
 import {
@@ -39,10 +39,10 @@ import {
 
 /*************************************************************************************************/
 
-import { FCType_ContextMenuLink } from './types/SankeyMenuContextLinkTypes'
 import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { ChevronRightIcon } from '@chakra-ui/icons'
+import { FCType_ContextMenuLink } from '../SankeyMenuTypes'
 
 /*************************************************************************************************/
 
@@ -51,7 +51,7 @@ export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto'
 
 // MENU COMPONENT ***********************************************************************
 
-export const ContextMenuLink: FunctionComponent<FCType_ContextMenuLink> = ({
+export const ContextMenuLink: FC<FCType_ContextMenuLink> = ({
   new_data,
   additionalMenus
 }) => {

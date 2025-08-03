@@ -315,6 +315,11 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       .attr('stroke-opacity', (this._transparent_border) ? 0 : 1)
   }
 
+  private unescapeHtml = (html: string): string => {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return doc.documentElement.textContent || "";
+  }
+
   /**
    * Draw the content of the ZDT wich can be formated text or image
    *
@@ -378,7 +383,7 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       .attr('id', this.id + '_text')
       .append('xhtml:div')
       .attr('class', 'ql-editor')
-      .html(this._content)
+      .html(this.unescapeHtml(this._content))
   }
 
   /**
