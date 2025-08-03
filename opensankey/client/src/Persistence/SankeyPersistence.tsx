@@ -55,6 +55,7 @@ import { type Type_JSON } from '../types/Utils'
 import type { FCType_SankeyLoad } from '../types/FunctionTypes'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { applyRandomColors } from '../Algorithms/Colors'
+import { Class_DataTagGroup } from '../types/TagGroup'
 
 declare global {
   interface Window {
@@ -463,6 +464,11 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
         new_data.drawing_area.sankey.flux_taggs_list[0].show_legend = true
       } else if (new_data.drawing_area.sankey.node_taggs_list.length == 0) {
         applyRandomColors(new_data, new_data.drawing_area.sankey.links_list)
+      }
+      const unit_taggs = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+      if (unit_taggs.length>0) {
+        new_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_type = 'unit_tag'
+        new_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_visible = true
       }
     })
   // Case 1 : Apply extracted layout if present -> contains positions
