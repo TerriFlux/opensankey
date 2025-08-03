@@ -55,10 +55,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { 
-  FCType_MenuUnit, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, 
-  FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu, 
-  labelAttributeType, labelValueAttribute, possibleDecoratorName, UnitAttributeType 
+import {
+  FCType_MenuUnit, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent,
+  FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu,
+  labelAttributeType, labelValueAttribute, possibleDecoratorName, UnitAttributeType
 } from '../SankeyMenuTypes'
 
 
@@ -595,6 +595,9 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
   // Declare var used to set default attribute value in inputs 
   let get_label_custom_digit = NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default
   let get_label_nb_digit = NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default
+  let get_label_significant_digits = NODES_ATTRIBUTES_CONFIG.value_label_significant_digits.default
+  let get_label_nb_significant_digits = NODES_ATTRIBUTES_CONFIG.value_label_nb_significant_digits.default
+  let get_label_scientific_notation = NODES_ATTRIBUTES_CONFIG.value_label_scientific_notation.default
 
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
@@ -605,14 +608,19 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
     get_label_custom_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_custom_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default)
     //@ts-expect-error xxx
     get_label_nb_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default)
+    //@ts-expect-error xxx
+    get_label_significant_digits = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_significant_digits']) ?? NODES_ATTRIBUTES_CONFIG.value_labelvalue_label_significant_digits.default)
+    //@ts-expect-error xxx
+    get_label_nb_significant_digits = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_significant_digits']) ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_significant_digits.default)
+    //@ts-expect-error xxx
+    get_label_scientific_notation = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_scientific_notation']) ?? NODES_ATTRIBUTES_CONFIG.value_label_scientific_notation.default)
   }
 
-  // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 1
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-  ref_set_number_inputs[0].current(String(get_label_nb_digit))
+
+  const ref_label_nb_digit = useRef((_: string | null | undefined) => null)
+  ref_label_nb_digit.current(String(get_label_nb_digit))
+  const ref_label_nb_significant_digit = useRef((_: string | null | undefined) => null)
+  ref_label_nb_significant_digit.current(String(get_label_nb_significant_digits))
 
   const is_cstm_digit_indetermined = !elements.every(el => getValueWithDecoratorRetriever(el, dict_decorator_name['label_nb_digit']) == get_label_nb_digit)
 
@@ -621,15 +629,6 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
   return <Box
     layerStyle='menuconfigpanel_grid'
   >
-    {/* Common component with label component */}
-    <SankeyMenuLabelComponent
-      new_data={new_data}
-      elements={elements}
-      selectedElements={selectedElements}
-      refreshParentComponent={refreshParentComponent}
-      dict_decorator_name={dict_decorator_name} />
-
-
     {/* Input for specific attr on value label */}
 
     <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
@@ -642,8 +641,8 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
         onChange={(evt) => {
           updateElements(new_data, elements, dict_decorator_name, 'label_custom_digit', evt.target.checked, refreshParentComponent)
         }}>
-        <OSTooltip label={t('Flux.labels.tooltips.custom_digit')}>
-          {t('Flux.labels.custom_digit') + ' '}
+        <OSTooltip label={t('Flux.labels.tooltips.value_label_custom_digit')}>
+          {t('Flux.labels.value_label_custom_digit') + ' '}
         </OSTooltip>
         {
           (!menu_for_style) &&
@@ -658,7 +657,7 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
           <ConfigMenuNumberInput
             disabled={!disable_attr_props[dict_decorator_name['label_nb_digit']]}
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[0]}
+            ref_to_set_value={ref_label_nb_digit}
             default_value={get_label_nb_digit}
             menu_for_style={menu_for_style}
             minimum_value={0}
@@ -672,6 +671,66 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
         : <></>
       }
     </Box>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols_little_input' >
+      {/* Choix d'affichage du nombre de chiffre significatifs  */}
+      <Checkbox
+        isDisabled={!disable_attr_props['value_label_significant_digits']}
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={get_label_significant_digits}
+        onChange={(evt) => {
+          updateElements(new_data, elements, dict_decorator_name, 'label_significant_digits', evt.target.checked ?? undefined, refreshParentComponent)
+        }}>
+        <OSTooltip label={t('Flux.labels.tooltips.significantDigits')}>
+          {t('Flux.labels.significantDigits') + ' '}
+        </OSTooltip>
+        {
+          (!menu_for_style) &&
+            isElementAttributeOverloaded(selectedElements, 'value_label_significant_digits') ?
+            TooltipValueSurcharge('link_var_', t) :
+            <></>
+        }
+      </Checkbox>
+      {get_label_significant_digits ?
+        /* Choose number of custom digit */
+
+        /* <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Flux.labels.NbDigit')}
+              </Box> */
+        <OSTooltip label={t('Flux.labels.tooltips.significantDigits')}>
+          <ConfigMenuNumberInput
+            disabled={!disable_attr_props['value_label_nb_significant_digits']}
+            t={new_data.t}
+            ref_to_set_value={ref_label_nb_significant_digit}
+            default_value={get_label_nb_significant_digits}
+            menu_for_style={/*menu_for_style*/false}
+            minimum_value={0}
+            stepper={true}
+            function_on_blur={(value) => {
+              updateElements(new_data, elements, dict_decorator_name, 'label_nb_significant_digits', value ?? undefined, refreshParentComponent)
+            }}
+          />
+        </OSTooltip>
+        : <></>
+      }
+    </Box>
+    <Checkbox
+      isDisabled={!disable_attr_props['value_label_scientific_notation']}
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={get_label_scientific_notation}
+      onChange={(evt) => {
+        updateElements(new_data, elements, dict_decorator_name, 'label_scientific_notation', evt.target.checked ?? undefined, refreshParentComponent)
+      }}>
+      <OSTooltip label={t('Flux.labels.tooltips.scientificNotation')}>
+        {t('Flux.labels.scientificNotation') + ' '}
+      </OSTooltip>
+      {
+        (!menu_for_style) &&
+          isElementAttributeOverloaded(selectedElements, 'value_label_scientific_notation') ?
+          TooltipValueSurcharge('link_var_', t) :
+          <></>
+      }
+
+    </Checkbox>
 
   </Box>
 }
@@ -875,13 +934,8 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
     ) : <></>
   }
 
-  // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 2
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-  ref_set_number_inputs[0].current(String(get_label_unit))
-  ref_set_number_inputs[1].current(String(get_label_unit_factor))
+  const ref_label_unit = useRef((_: string | null | undefined) => null)
+  const ref_label_unit_factor = useRef((_: string | null | undefined) => null)
 
   const is_unit_name_indetermined = get_label_unit != undefined && !elements.every(el => {
     const valEl = getValueWithDecoratorRetriever(el, dict_decorator_name['label_unit'])
@@ -920,9 +974,8 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
       </Box>
       {/* Modifie l'unité du label de flux */}
       {
-        get_label_unit_visible && is_link ? <>
-          {/* Choix de la source de la couleur */}
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        get_label_unit_visible ? <>
+          {is_link ? < Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box layerStyle='menuconfigpanel_option_name'>
               {t('Flux.labels.unit_type')}
               <TooltipElementOverloaded k={'value_label_unit_type'} />
@@ -940,55 +993,55 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
                 })}
               </Select>
             </OSTooltip>
-          </Box>
+          </Box> : <></>}
           {get_label_unit_type == 'unit_name' ? <>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Flux.labels.l_u')}
-              <TooltipElementOverloaded k='value_label_unit' />
-            </Box>
-            <OSTooltip label={t('Flux.labels.tooltips.l_u')}>
-              <ConfigMenuTextInput
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Flux.labels.l_u')}
+                <TooltipElementOverloaded k='value_label_unit' />
+              </Box>
+              <OSTooltip label={t('Flux.labels.tooltips.l_u')}>
+                <ConfigMenuTextInput
 
-                disabled={!disable_attr_props['value_label_unit']}
-                ref_to_set_value={ref_set_number_inputs[0]}
-                function_get_value={() => get_label_unit}
-                function_on_blur={(value) => {
-                  updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit', value ? value : undefined, refreshParentComponent)
-                }}
-                menu_for_style={menu_for_style}
-                multiValue={is_unit_name_indetermined}
-              />
-            </OSTooltip>
-          </Box>
-          {/* Change unit factor*/}
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Flux.labels.unit_factor')}
-              <TooltipElementOverloaded k='value_label_unit_factor' />
+                  disabled={!disable_attr_props['value_label_unit']}
+                  ref_to_set_value={ref_label_unit}
+                  function_get_value={() => get_label_unit}
+                  function_on_blur={(value) => {
+                    updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit', value ? value : undefined, refreshParentComponent)
+                  }}
+                  menu_for_style={menu_for_style}
+                  multiValue={is_unit_name_indetermined}
+                />
+              </OSTooltip>
             </Box>
-            <OSTooltip label={t('Flux.labels.tooltips.unit_factor')}>
-              <ConfigMenuNumberInput
-                disabled={!disable_attr_props['value_label_unit_factor']}
-                t={new_data.t}
-                ref_to_set_value={ref_set_number_inputs[1]}
-                default_value={get_label_unit_factor}
-                function_on_blur={(value) => {
-                  updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit_factor', (value ? value : undefined), refreshParentComponent)
-                }}
-                menu_for_style={menu_for_style}
-                minimum_value={1}
-                maximum_value={get_label_unit_factor}
-                step={1}
-                stepper={true}
-                multiValue={is_unit_factor_indetermined}
-              />
-            </OSTooltip>
-          </Box></>:<></>}
+            {/* Change unit factor*/}
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Flux.labels.unit_factor')}
+                <TooltipElementOverloaded k='value_label_unit_factor' />
+              </Box>
+              <OSTooltip label={t('Flux.labels.tooltips.unit_factor')}>
+                <ConfigMenuNumberInput
+                  disabled={!disable_attr_props['value_label_unit_factor']}
+                  t={new_data.t}
+                  ref_to_set_value={ref_label_unit_factor}
+                  default_value={get_label_unit_factor}
+                  function_on_blur={(value) => {
+                    updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit_factor', (value ? value : undefined), refreshParentComponent)
+                  }}
+                  menu_for_style={menu_for_style}
+                  minimum_value={1}
+                  maximum_value={get_label_unit_factor}
+                  step={1}
+                  stepper={true}
+                  multiValue={is_unit_factor_indetermined}
+                />
+              </OSTooltip>
+            </Box></> : <></>}
         </> :
           <></>
       }
-    </Box>  </>
+    </Box >  </>
 }
 
 export type typeElementSelectable = {
