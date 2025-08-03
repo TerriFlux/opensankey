@@ -141,9 +141,9 @@ export class LinkDrawValue {
     const link_val = this._link.valueCurrent
 
     let total_source = 0
-    this._link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    this._link.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     let total_target = 0
-    this._link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    this._link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
 
     // =======================DRAW VALUE LABEL ============================
     if (
@@ -155,9 +155,9 @@ export class LinkDrawValue {
       if (this._link.source && this._link.target) {
         // Compute label to display
         let label_to_display = link_val
-        if (this._link.value_label_percent_input) {
+        if (this._link.value_label_unit_type == '%_input_source') {
           label_to_display = label_to_display! / total_source * 100
-        } else if (this._link.value_label_percent_output) {
+        } else if (this._link.value_label_unit_type == '%_output_target') {
           label_to_display = label_to_display! / total_target * 100
         }
 
@@ -189,7 +189,7 @@ export class LinkDrawValue {
               .attr('href', '#' + this._link.id)
               .attr('side', this.getTextPathSide())
 
-            if (!this._link.value_label_percent_input && !this._link.value_label_percent_output) {
+            if (this._link.value_label_unit_type == 'unit_name') {
               // Add text directly on textpath object
               d3_textpath_selection?.text(this._link.data_label)
                 .attr('spacing', 'exact')
@@ -215,13 +215,12 @@ export class LinkDrawValue {
           }
           else {
             this.updateValueXYPosition()
-            if (!this._link.value_label_percent_input && !this._link.value_label_percent_output) {
+            if (this._link.value_label_unit_type == 'unit_name') {
               d3_text_selection?.text(this._link.data_label)
                 .attr('spacing', 'exact')
                 .attr('method', 'align')
             } else {
-              const suffix = this._link.value_label_percent_input ? 's' : 'd'
-              d3_text_selection?.text(label_to_display.toFixed(this._link.value_label_nb_digit) + ' %' + suffix)
+              d3_text_selection?.text(label_to_display.toFixed(this._link.value_label_nb_digit) + ' %')
                 .attr('spacing', 'exact')
                 .attr('method', 'align')
             }

@@ -2065,11 +2065,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get value_label_color() { return this.getStyleProperty('value_label_color') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']> }
   public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawValue() }
 
-  public get value_label_percent_input() { return this.getStyleProperty('value_label_percent_input') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_input']['type']> }
-  public set value_label_percent_input(_: boolean) { this._display.attributes.value_label_percent_input = _; this.drawValue() }
-
-  public get value_label_percent_output() { return this.getStyleProperty('value_label_percent_output') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_output']['type']> }
-  public set value_label_percent_output(_: boolean) { this._display.attributes.value_label_percent_output = _; this.drawValue() }
+  public get value_label_unit_type() { return this.getStyleProperty('value_label_unit_type') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_type']['type']> }
+  public set value_label_unit_type(_) { this._display.attributes.value_label_unit_type = _; this.drawValue() }
 
   public get value_label_scientific_notation() { return this.getStyleProperty('value_label_scientific_notation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']> }
   public set value_label_scientific_notation(_: boolean) { this._display.attributes.value_label_scientific_notation = _; this.drawValue() }

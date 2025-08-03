@@ -163,6 +163,7 @@ export type possibleDecoratorName = 'value_label_horiz'
     | 'value_label_font_family'
     | 'value_label_unit_visible'
     | 'value_label_unit'
+    | 'value_label_unit_type'
     | 'value_label_unit_factor'
     | 'value_label_custom_digit'
     | 'value_label_nb_digit'
@@ -198,6 +199,7 @@ export type UnitAttributeType = {
     label_unit_visible: 'value_label_unit_visible',
     label_unit: 'value_label_unit',
     label_unit_factor: 'value_label_unit_factor',
+    label_unit_type: 'value_label_unit_type',    
 }
 
 // ==================================================================================================

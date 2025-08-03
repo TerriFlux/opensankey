@@ -882,8 +882,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
   const name_label_is_visible = (element_ref?.name_label_is_visible ?? LINKS_ATTRIBUTES_CONFIG.name_label_is_visible.default)
   const name_label_on_path = (element_ref?.name_label_on_path ?? LINKS_ATTRIBUTES_CONFIG.value_label_on_path.default)
   const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? LINKS_ATTRIBUTES_CONFIG.value_label_pos_auto.default)
-  const value_label_percent_input = (element_ref?.value_label_percent_input ?? LINKS_ATTRIBUTES_CONFIG.value_label_percent_input.default)
-  const value_label_percent_output = (element_ref?.value_label_percent_output ?? LINKS_ATTRIBUTES_CONFIG.value_label_percent_output.default)
+
 
   /**
    * function that go throught all links of an array & check if they're all equals
@@ -982,54 +981,6 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
         />
         {content_value_specific_flow}
         {additionMenus.current.additional_link_appearence_value.map((el, idx) => <Fragment key={'additional_apparence_' + idx}>{el(menu_for_style)}</Fragment>)}
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isDisabled={!disable_attr_props['value_label_percent_input']}
-          isChecked={value_label_percent_input}
-          onChange={(evt) => {
-            elements.forEach(element => {
-              if (evt.target.checked) {
-                element.value_label_percent_output = false
-              }
-              element.value_label_percent_input = evt.target.checked
-            })
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          <OSTooltip label={t('Flux.labels.tooltips.percentInput')}>
-            {t('Flux.labels.percentInput') + ' '}
-          </OSTooltip>
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'value_label_percent_input') ?
-              TooltipValueSurcharge('link_var_', t) :
-              <></>
-          }
-        </Checkbox>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isDisabled={!disable_attr_props['value_label_percent_output']}
-          isChecked={value_label_percent_output}
-          onChange={(evt) => {
-            elements.forEach(element => {
-              if (evt.target.checked) {
-                element.value_label_percent_input = false
-              }
-              element.value_label_percent_output = evt.target.checked
-            })
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          <OSTooltip label={t('Flux.labels.tooltips.percentOutput')}>
-            {t('Flux.labels.percentOutput') + ' '}
-          </OSTooltip>
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'value_label_percent_output') ?
-              TooltipValueSurcharge('link_var_', t) :
-              <></>
-          }
-        </Checkbox>
-
-
       </> :
       <></>}
   </Box>
@@ -1042,6 +993,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
     dict_decorator_name={{
       label_unit_visible: 'value_label_unit_visible',
       label_unit: 'value_label_unit',
+      label_unit_type: 'value_label_unit_type',
       label_unit_factor: 'value_label_unit_factor',
     }}
   />
