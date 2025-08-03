@@ -51,15 +51,19 @@ export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'dragged' | 'top' | 'middle' | 'bottom'
 
+export const unit_type = ['unit_name','%_input_source','%_input_target','%_output_source','%_output_target'] as const
+export type UnitType = typeof unit_type[number]
+
 export type Type_customisable_flow_style_attr =
   'shape_local_link_scale' | 'shape_is_curved' | 'shape_shape' | 'shape_curvature' | 'shape_is_recycling' | 'shape_is_structure' |
   'shape_orientation' | 'shape_starting_curve' | 'shape_ending_curve' | 'shape_starting_tangeant' | 'shape_ending_tangeant' |
   'shape_middle_recycling' | 'shape_is_arrow' | 'shape_arrow_size' | 'shape_is_dashed' | 'shape_color' | 'shape_color_rule' |
   'shape_opacity' | 'value_label_is_visible' | 'value_label_font_family' | 'value_label_font_size' | 'value_label_uppercase' |
   'value_label_bold' | 'value_label_italic' | 'value_label_color' | 'value_label_horiz' | 'value_label_vert' | 'value_label_on_path' |
-  'value_label_pos_auto' | 'value_label_percent_input' | 'value_label_percent_output' | 'value_label_scientific_notation' |
+  'value_label_pos_auto' | 'value_label_scientific_notation' |
   'value_label_significant_digits' | 'value_label_nb_significant_digits' | 'value_label_custom_digit' | 'value_label_nb_digit' |
-  'value_label_unit_visible' | 'value_label_unit' | 'value_label_unit_factor' | 'name_label_is_visible' | 'name_label_font_family' |
+  'value_label_unit_type' | 'value_label_unit_visible' | 'value_label_unit' | 'value_label_unit_factor' |
+  'name_label_is_visible' | 'name_label_font_family' |
   'name_label_font_size' | 'name_label_uppercase' | 'name_label_bold' | 'name_label_italic' | 'name_label_color' | 'name_label_horiz' |
   'name_label_vert' | 'name_label_on_path' | 'name_label_pos_auto'
 
@@ -105,14 +109,17 @@ export const LINKS_ATTRIBUTES_CONFIG = {
   value_label_vert: { default: 'middle' as Type_PathLabelVPosition, type: (() => 'middle') as (() => Type_PathLabelVPosition), setter: 'customValueLabelVert' },
   value_label_on_path: { default: true, type: (() => true) as (() => boolean), setter: 'customValueLabelOnPath' },
   value_label_pos_auto: { default: false, type: (() => false) as (() => boolean), setter: 'customValueLabelPosAuto' },
-  value_label_percent_input: { default: false, type: (() => false) as (() => boolean) },
-  value_label_percent_output: { default: false, type: (() => false) as (() => boolean) },
   value_label_scientific_notation: { default: false, type: (() => false) as (() => boolean) },
   value_label_significant_digits: { default: false, type: (() => false) as (() => boolean) },
   value_label_nb_significant_digits: { default: 3, type: (() => 3) as (() => number) },
   value_label_custom_digit: { default: true, type: (() => true) as (() => boolean) },
   value_label_nb_digit: { default: 2, type: (() => 2) as (() => number) },
+
   value_label_unit_visible: { default: false, type: (() => false) as (() => boolean) },
+  value_label_unit_type: { 
+    default: 'unit_name', 
+    type: (() => 'unit_name') as (() => UnitType ) 
+  },
   value_label_unit: { default: '', type: (() => '') as (() => string) },
   value_label_unit_factor: { default: 1, type: (() => 1) as (() => number) },
 
@@ -133,13 +140,13 @@ export const LINKS_ATTRIBUTES_CONFIG = {
 type AttributeKey = keyof typeof LINKS_ATTRIBUTES_CONFIG
 
 ///GÉNÉRATION AUTOMATIQUE DES TYPES à partir de la config
-type AttributeTypes = {
+export type LinkAttributeTypes = {
   [K in AttributeKey]: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG[K]['type']>
 }
 
 // CLASSE DE BASE avec déclarations automatiques
 export class Class_LinkAttribute {
-  protected _attributes: { [K in AttributeKey]?: AttributeTypes[K] } = {}
+  protected _attributes: { [K in AttributeKey]?: LinkAttributeTypes[K] } = {}
 
   // Déclarations automatiques générées à partir de la config (une ligne par attribut)
   shape_local_link_scale!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_local_link_scale']['type']>
@@ -171,14 +178,13 @@ export class Class_LinkAttribute {
   value_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_vert']['type']>
   value_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_on_path']['type']>
   value_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_pos_auto']['type']>
-  value_label_percent_input!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_input']['type']>
-  value_label_percent_output!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_output']['type']>
   value_label_scientific_notation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']>
   value_label_significant_digits!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_significant_digits']['type']>
   value_label_nb_significant_digits!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']>
   value_label_custom_digit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']>
   value_label_nb_digit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_digit']['type']>
   value_label_unit_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_visible']['type']>
+  value_label_unit_type!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_type']['type']>
   value_label_unit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit']['type']>
   value_label_unit_factor!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']>
   name_label_is_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_is_visible']['type']>

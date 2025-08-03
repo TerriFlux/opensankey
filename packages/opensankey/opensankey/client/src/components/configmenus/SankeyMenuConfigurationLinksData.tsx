@@ -82,7 +82,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
   let default_value = element_ref?.valueCurrent
   if (value_option == 'ratio_input' || value_option == 'ratio_output') {
     unit_text = '%'
-    default_value = default_value?default_value:null
+    default_value = element_ref?.value?.valueData??null
   } else {
       unit_text= selected_links[0]?.value_label_unit_visible ? selected_links[0]?.value_label_unit :
       undefined
@@ -96,8 +96,11 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
 
     const value_update = updated_selected_links[0]?.value
     // Update input data value
-    ref_set_data_value_input.current(String(updated_selected_links[0]?.valueCurrent ?? ''))
-
+    if (value_option == 'ratio_input' || value_option == 'ratio_output') {
+      ref_set_data_value_input.current(String(updated_selected_links[0]?.value?.valueData ?? ''))
+    } else {
+      ref_set_data_value_input.current(String(updated_selected_links[0]?.valueCurrent ?? ''))
+    }
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
   }
