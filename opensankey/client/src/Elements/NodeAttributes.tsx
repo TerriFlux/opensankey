@@ -60,7 +60,7 @@ export type Type_customisable_node_style_attr =
   'value_label_color' | 'value_label_horiz' | 'value_label_vert' | 'value_label_background' | 'value_label_background_color' |
   'value_label_horiz_shift' | 'value_label_vert_shift' | 'value_label_box_width' | 'value_label_scientific_notation' |
   'value_label_significant_digits' | 'value_label_nb_significant_digits' | 'value_label_custom_digit' | 'value_label_nb_digit' |
-  'value_label_unit_visible' | 'value_label_unit' | 'value_label_unit_factor' |
+  'value_label_unit_type' | 'value_label_unit_visible' | 'value_label_unit' | 'value_label_unit_factor' |
   // OSP Extensions
   'icon_name' | 'icon_color' | 'icon_visible' | 'icon_view_box' | 'icon_color_sustainable' |
   'has_fo' | 'is_fo_raw' | 'fo_content' | 'is_image' | 'image_src' | 'hyperlink'
@@ -119,6 +119,7 @@ export const NODES_ATTRIBUTES_CONFIG = {
   value_label_unit_visible: { default: false, type: (() => false) as (() => boolean) },
   value_label_unit: { default: '', type: (() => '') as (() => string) },
   value_label_unit_factor: { default: 1, type: (() => 1) as (() => number) },
+  value_label_unit_type: { default: 'unit_name', type: (() => 'unit_name') as (() => string) },
 
   // OSP Extensions - Icon attributes
   icon_name: { default: undefined as string | undefined, type: (() => undefined) as (() => string | undefined) },
@@ -196,6 +197,7 @@ export class Class_NodeAttribute {
   value_label_nb_significant_digits!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']>
   value_label_custom_digit!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']>
   value_label_nb_digit!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_nb_digit']['type']>
+  value_label_unit_type!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit_type']['type']>
   value_label_unit_visible!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit_visible']['type']>
   value_label_unit!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit']['type']>
   value_label_unit_factor!: ReturnType<typeof NODES_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']>

@@ -1323,6 +1323,7 @@ export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle>
         dict_decorator_name={{
           label_unit_visible: 'value_label_unit_visible',
           label_unit: 'value_label_unit',
+          label_unit_type: 'value_label_unit_type',
           label_unit_factor: 'value_label_unit_factor',
         }}
       />

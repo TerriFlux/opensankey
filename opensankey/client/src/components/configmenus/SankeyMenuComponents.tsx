@@ -40,7 +40,7 @@ import {
 import { t, TFunction } from 'i18next'
 import React, { FC, MutableRefObject, useRef, useState } from 'react'
 import { Class_LinkElement } from '../../Elements/Link'
-import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../../Elements/LinkAttributes'
+import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle, unit_type, UnitType } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, default_style_id, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
@@ -55,7 +55,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FCType_MenuUnit, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu, labelAttributeType, labelValueAttribute, possibleDecoratorName, UnitAttributeType } from '../SankeyMenuTypes'
+import { 
+  FCType_MenuUnit, FCType_SankeyMenuLabelComponent, FCType_SankeyMenuValueLabelComponent, 
+  FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu, 
+  labelAttributeType, labelValueAttribute, possibleDecoratorName, UnitAttributeType 
+} from '../SankeyMenuTypes'
 
 
 /**
@@ -251,7 +255,7 @@ export const SankeyMenuLabelComponent: FC<FCType_SankeyMenuLabelComponent> = ({
     //@ts-expect-error xxx
     get_label_color = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_color']) ?? NODES_ATTRIBUTES_CONFIG.value_label_color.default
     //@ts-expect-error xxx
-    get_label_font_family =getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_family']) ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
+    get_label_font_family = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_font_family']) ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
     //@ts-expect-error xxx
     get_label_bold = getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_bold']) ?? NODES_ATTRIBUTES_CONFIG.value_label_bold.default
     //@ts-expect-error xxx
@@ -729,29 +733,29 @@ export const WrapperCheckBoxSubSectionMenu: FC<FCType_WrapperCheckBoxSubSectionM
 }) => {
   // Hooks controlling collapse opening, initiallised at true
   const { isOpen, onToggle } = useDisclosure({ isOpen: open })
-  return<> <Box layerStyle='menu_sub_section_title'>
+  return <> <Box layerStyle='menu_sub_section_title'>
     <Checkbox
       variant='menuconfigpanel_part_title_1_checkbox'
       isChecked={isOpen}
-      onChange={()=>{
+      onChange={() => {
         onClick(!isOpen)
         onToggle()
-        
+
       }}
     >
       {title}
     </Checkbox>
   </Box>
-  <Collapse in={isOpen} animateOpacity>
-    <Box
-      layerStyle='menuconfigpanel_grid'
-      marginLeft='1rem'
-      borderLeft='lightgray 1px solid'
-      paddingLeft='0.2rem'
-    >
-      {children}
-    </Box>
-  </Collapse>
+    <Collapse in={isOpen} animateOpacity>
+      <Box
+        layerStyle='menuconfigpanel_grid'
+        marginLeft='1rem'
+        borderLeft='lightgray 1px solid'
+        paddingLeft='0.2rem'
+      >
+        {children}
+      </Box>
+    </Collapse>
   </>
 }
 
@@ -828,14 +832,18 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
   const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
   const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
 
+  const is_link = elements.length > 0 && (elements[0] instanceof Class_LinkElement || elements[0] instanceof Class_LinkStyle)
+  const link_ref = elements.length > 0 && is_link ? elements[0] as Class_LinkElement : null
+
   // By combining the different variable correct_ref_style_to_use can only be used when MenuUnit is used with style element (instead of normal element)
-  const disable_attr_props = menu_for_style ? correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute : correct_dict_style_to_use[default_style_id].customisable_attribute
+  const disable_attr_props = menu_for_style ?
+    correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute :
+    correct_dict_style_to_use[default_style_id].customisable_attribute
   // Declare var used to set default attribute value in inputs 
   let get_label_unit_visible = NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default
   let get_label_unit = NODES_ATTRIBUTES_CONFIG.value_label_unit.default
   let get_label_unit_factor = NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default
-
-
+  let get_label_unit_type = NODES_ATTRIBUTES_CONFIG.value_label_unit_type.default
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0]
@@ -845,6 +853,8 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
     get_label_unit_visible = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_visible']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default)
     //@ts-expect-error xxx
     get_label_unit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit.default)
+    //@ts-expect-error xxx
+    get_label_unit_type = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_type']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_type.default)
     //@ts-expect-error xxx
     get_label_unit_factor = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_factor']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default)
   }
@@ -910,54 +920,73 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
       </Box>
       {/* Modifie l'unité du label de flux */}
       {
-        get_label_unit_visible ?
-          <>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Flux.labels.l_u')}
-                <TooltipElementOverloaded k='value_label_unit' />
-              </Box>
-              <OSTooltip label={t('Flux.labels.tooltips.l_u')}>
-                <ConfigMenuTextInput
-                  disabled={!disable_attr_props['value_label_unit']}
-                  ref_to_set_value={ref_set_number_inputs[0]}
-                  function_get_value={() => get_label_unit}
-                  function_on_blur={(value) => {
-                    updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit', value ? value : undefined, refreshParentComponent)
-                  }}
-                  menu_for_style={menu_for_style}
-                  multiValue={is_unit_name_indetermined}
-                />
-              </OSTooltip>
+        get_label_unit_visible && is_link ? <>
+          {/* Choix de la source de la couleur */}
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Flux.labels.unit_type')}
+              <TooltipElementOverloaded k={'value_label_unit_type'} />
             </Box>
-            {/* Change unit factor*/}
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Flux.labels.unit_factor')}
-                <TooltipElementOverloaded k='value_label_unit_factor' />
-              </Box>
-              <OSTooltip label={t('Flux.labels.tooltips.unit_factor')}>
-                <ConfigMenuNumberInput
-                  disabled={!disable_attr_props['value_label_unit_factor']}
-                  t={new_data.t}
-                  ref_to_set_value={ref_set_number_inputs[1]}
-                  default_value={get_label_unit_factor}
-                  function_on_blur={(value) => {
-                    updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit_factor', (value ? value : undefined), refreshParentComponent)
-                  }}
-                  menu_for_style={menu_for_style}
-                  minimum_value={1}
-                  maximum_value={get_label_unit_factor}
-                  step={1}
-                  stepper={true}
-                  multiValue={is_unit_factor_indetermined}
-                />
-              </OSTooltip>
+            <OSTooltip label={t('Flux.labels.tooltips.value_label_unit_type')}>
+              <Select
+                isDisabled={!disable_attr_props['value_label_unit_type']}
+                value={get_label_unit_type}
+                onChange={(evt) => {
+                  updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit_type', evt.target.value, refreshParentComponent)
+                }}
+              >
+                {(unit_type).map(el => {
+                  return <option key={'value_' + el} value={el}>{t('Flux.labels.' + el)}</option>
+                })}
+              </Select>
+            </OSTooltip>
+          </Box>
+          {get_label_unit_type == 'unit_name' ? <>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Flux.labels.l_u')}
+              <TooltipElementOverloaded k='value_label_unit' />
             </Box>
+            <OSTooltip label={t('Flux.labels.tooltips.l_u')}>
+              <ConfigMenuTextInput
 
-          </> :
+                disabled={!disable_attr_props['value_label_unit']}
+                ref_to_set_value={ref_set_number_inputs[0]}
+                function_get_value={() => get_label_unit}
+                function_on_blur={(value) => {
+                  updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit', value ? value : undefined, refreshParentComponent)
+                }}
+                menu_for_style={menu_for_style}
+                multiValue={is_unit_name_indetermined}
+              />
+            </OSTooltip>
+          </Box>
+          {/* Change unit factor*/}
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Flux.labels.unit_factor')}
+              <TooltipElementOverloaded k='value_label_unit_factor' />
+            </Box>
+            <OSTooltip label={t('Flux.labels.tooltips.unit_factor')}>
+              <ConfigMenuNumberInput
+                disabled={!disable_attr_props['value_label_unit_factor']}
+                t={new_data.t}
+                ref_to_set_value={ref_set_number_inputs[1]}
+                default_value={get_label_unit_factor}
+                function_on_blur={(value) => {
+                  updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit_factor', (value ? value : undefined), refreshParentComponent)
+                }}
+                menu_for_style={menu_for_style}
+                minimum_value={1}
+                maximum_value={get_label_unit_factor}
+                step={1}
+                stepper={true}
+                multiValue={is_unit_factor_indetermined}
+              />
+            </OSTooltip>
+          </Box></>:<></>}
+        </> :
           <></>
-
       }
     </Box>  </>
 }
@@ -966,7 +995,7 @@ export type typeElementSelectable = {
   label: string,
   value: string,
   selected: boolean,
-  disabled?:boolean
+  disabled?: boolean
 }[]
 
 

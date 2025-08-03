@@ -1986,6 +1986,9 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public get value_label_unit_visible() { return this.getStyleProperty('value_label_unit_visible') as boolean }
   public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawValueLabel() }
 
+  public get value_label_unit_type() : string { return this.getStyleProperty('value_label_unit_type') as string }
+  public set value_label_unit_type(_:string) { this._display.attributes.value_label_unit_type = _; this.drawValueLabel() }
+
   public get value_label_unit() { return this.getStyleProperty('value_label_unit') as string }
   public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawValueLabel() }
 
