@@ -529,14 +529,14 @@ export class Class_LinkValue {
       const multiplier = this.data_value / 100
       if (this.parent == this.link) {
         let total_source = 0
-        this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.value?.valueResult ?? 0)
+        this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
         return total_source * multiplier
       } else {
         const data_tags_id = this.data_tags_id
         const data_tags: Class_ProtoTag[] = []
         this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
         let total_source = 0
-        this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueForTags(data_tags)?.valueResult ?? 0)
+        this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
         return total_source * multiplier
       }
 
@@ -547,14 +547,14 @@ export class Class_LinkValue {
       const multiplier = this.data_value / 100
       if (this.parent == this.link) {
         let total_target = 0
-        this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.value?.valueResult ?? 0)
+        this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
         return total_target * multiplier
       } else {
         const data_tags_id = this.data_tags_id
         const data_tags: Class_ProtoTag[] = []
         this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
         let total_target = 0
-        this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueForTags(data_tags)?.valueResult ?? 0)
+        this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
         return total_target * multiplier
       }
     } else if (this.value_option == 'ratio_source_parent') {
@@ -563,7 +563,7 @@ export class Class_LinkValue {
       if (!parent_link || parent_link.value?.valueResult == null) {
         return null
       }
-      return parent_link?.value?.valueResult * this.data_value!
+      return parent_link?.valueCurrent??0 * this.data_value!
     }
     return null
   }
