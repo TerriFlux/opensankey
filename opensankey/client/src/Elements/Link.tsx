@@ -224,7 +224,7 @@ export const format_value = (data_value: number | undefined | null, element: Cla
     let total_target = 0
     link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
     data_value = data_value?data_value / total_target * 100:null    
-  } else if (element.value_label_unit_type == '%_output_target') {
+  } else if (element.value_label_unit_type == '%_output_source') {
     let total_source = 0
     link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value?data_value / total_source * 100:null      
