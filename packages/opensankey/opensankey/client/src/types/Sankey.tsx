@@ -76,7 +76,9 @@ export function get_sync_lists(
   matching_id: { [id: string]: string }
 ) {
   const revert_matching_id: { [id: string]: string } = {}
-  Object.entries(matching_id).forEach(([k, v]) => revert_matching_id[v] = k)
+  if (matching_id) {
+    Object.entries(matching_id).forEach(([k, v]) => revert_matching_id[v] = k)
+  }
   // Transfer node style from new_layout style node  to corresponding style in current
   const to_sync_ids = Object.keys(to_sync)
   const as_ref_ids = Object.keys(as_ref)

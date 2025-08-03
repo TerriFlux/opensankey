@@ -692,6 +692,7 @@ export class Class_ApplicationData {
       () => {
         // Processing
         this._updateFromJSON(json_object)
+        this.drawing_area.draw()
         this._menu_configuration.updateAllMenuComponents()
       })
   }

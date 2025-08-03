@@ -1632,6 +1632,8 @@ class JsonToSankey(object):
             if 'result_value' in datas_json:
                 # Create result
                 result = SankeyData(value=datas_json["result_value"])
+                for tag in data.tags:
+                    result.add_tag(tag)
                 # Update result value
                 flux.add_result(result)
                 # Link with data

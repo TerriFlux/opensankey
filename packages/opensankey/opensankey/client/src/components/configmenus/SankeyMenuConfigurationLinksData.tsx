@@ -133,12 +133,12 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
   const updateValueAndHistory = (_: number | null | undefined) => {
     // Save old values in dict so the undo reset value for previous value of each link
     const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.valueData)
+    selected_links.forEach(l => dict_old_val[l.id] = l.valueCurrent)
     // Undo link value
     const inv_updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.valueData = dict_old_val[link.id]
+        link.valueCurrent = dict_old_val[link.id]
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -149,7 +149,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
     const _updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.valueData = (_ ?? null)
+        link.valueCurrent = (_ ?? null)
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -347,7 +347,6 @@ export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
     // Only visible links
     selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
   }
-  const value = selected_links[0]?.value
 
   // Components updaters ---------------------------------------------------------------
 
@@ -355,7 +354,7 @@ export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Update input data value
-    ref_set_data_value_input.current(String(value?.valueData ?? ''))
+    ref_set_data_value_input.current(String(selected_links[0]?.valueCurrent ?? ''))
   }
 
   // Function used to force this component to reload
@@ -373,12 +372,12 @@ export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
   const updateDataLinks = (_: number | null | undefined) => {
     // Save old values in dict so the undo reset value for previous value of each link
     const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.valueData)
+    selected_links.forEach(l => dict_old_val[l.id] = l.valueCurrent)
     // Undo link value
     const inv_updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.valueData = dict_old_val[link.id]
+        link.valueCurrent = dict_old_val[link.id]
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -389,7 +388,7 @@ export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
     const _updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.valueData = (_ ?? null)
+        link.valueCurrent = (_ ?? null)
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -406,7 +405,7 @@ export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
   return <ConfigMenuNumberInput
     t={new_data.t}
     ref_to_set_value={ref_set_data_value_input}
-    default_value={value?.valueData ?? null}
+    default_value={selected_links[0]?.valueCurrent}
     function_on_blur={updateDataLinks}
     minimum_value={0}
     stepper={true}
