@@ -25,6 +25,7 @@
 // ==================================================================================================
 
 // Local modules
+import { format_value } from './Link'
 import { Class_NodeElement } from './Node'
 import { label_margin, default_selected_stroke_width } from './Node'
 
@@ -181,18 +182,19 @@ export class NodeDrawValueLabel {
     const pow_out = Math.pow(10, max_digit_out)
     link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
     
-    const display_unit = this._node.value_label_unit_visible && this._node.value_label_unit != ''
-    const factor_unit = display_unit && this._node.value_label_unit_factor > 1 ? this._node.value_label_unit_factor : 1
-    const label_unit = display_unit ? this._node.value_label_unit : ''
+    return format_value(Math.max(input_val / pow_in, output_val / pow_out),this._node)
+    // const display_unit = this._node.value_label_unit_visible && this._node.value_label_unit != ''
+    // const factor_unit = display_unit && this._node.value_label_unit_factor > 1 ? this._node.value_label_unit_factor : 1
+    // const label_unit = display_unit ? this._node.value_label_unit : ''
 
-    // value is the final processed value
-    const value = Math.max(input_val / pow_in, output_val / pow_out) / factor_unit
+    // // value is the final processed value
+    // const value = Math.max(input_val / pow_in, output_val / pow_out) / factor_unit
 
-    let str_val = String(value)
-    // Rounded value only apparent when value_label_nb_digit is inferior to the number of decimal of the value
-    if (this._node.value_label_custom_digit)
-      str_val = String(parseFloat(value.toFixed(this._node.value_label_nb_digit)))
+    // let str_val = String(value)
+    // // Rounded value only apparent when value_label_nb_digit is inferior to the number of decimal of the value
+    // if (this._node.value_label_custom_digit)
+    //   str_val = String(parseFloat(value.toFixed(this._node.value_label_nb_digit)))
 
-    return str_val + label_unit
+    // return str_val + label_unit
   }
 }

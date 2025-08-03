@@ -51,7 +51,7 @@ export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'dragged' | 'top' | 'middle' | 'bottom'
 
-export const unit_type = ['unit_name','%_input_source','%_input_target','%_output_source','%_output_target'] as const
+export const unit_type = ['unit_name', 'unit_tag', 'other_unit_tag','%_input_source','%_input_target','%_output_source','%_output_target','normalized'] as const
 export type UnitType = typeof unit_type[number]
 
 export type Type_customisable_flow_style_attr =

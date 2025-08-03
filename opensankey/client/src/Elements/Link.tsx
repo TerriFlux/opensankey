@@ -197,6 +197,51 @@ export function isAttributeOverloaded(
 
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
+export const format_value = (data_value: number|undefined|null,element:Class_LinkElement|Class_NodeElement) => {
+    let text_value = ''
+    // Create data label
+    if (data_value !== null && data_value !== undefined && element.value_label_is_visible) {
+      // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
+      if (element.value_label_unit_visible && element.value_label_unit != '' && element.value_label_unit_factor > 1) {
+        data_value /= element.value_label_unit_factor
+      }
+
+      // Convert
+      if (element.value_label_scientific_notation) {
+        // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+        if (element.value_label_significant_digits) {
+          text_value = data_value.toExponential(element.value_label_nb_significant_digits! - 1)
+        } else {
+          text_value = data_value.toExponential()
+        }
+      }
+
+      // Do we need to keep only N significant numbers ?
+      else if (element.value_label_significant_digits == true) {
+        // 12345.67 avec nb_sign = 4 devient 12340
+        text_value = String(parseFloat(data_value.toPrecision(element.value_label_nb_significant_digits)))
+        if (text_value[text_value.length - 1] == '0' && text_value.length == element.value_label_nb_significant_digits && text_value == String(data_value)) {
+          text_value += '.'
+        }
+      } else if (element.value_label_custom_digit) {
+        text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
+      }
+      else {
+        text_value = String(data_value)
+      }
+    }
+    text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+    // Add unit suffix
+    const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    if (text_value && unit_taggs.length > 0) {
+      const label_unit = unit_taggs[0].first_selected_tags!.name
+      text_value = text_value + ' ' + label_unit
+    } else if (element.value_label_unit_visible)
+      text_value = text_value + ' ' + element.value_label_unit
+
+    return text_value
+  }
+
 /**
  * Class that define how to display a link element and how to interact with it
  *
@@ -1613,46 +1658,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this.sankey.drawing_area.type_data !== 'data') {
       data_value = this.valueCurrent
     }
-    let text_value = ''
-    // Create data label
-    if (data_value !== null && data_value !== undefined && this.value_label_is_visible) {
-      // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
-      if (this.value_label_unit_visible && this.value_label_unit != '' && this.value_label_unit_factor > 1) {
-        data_value /= this.value_label_unit_factor
-      }
-
-      // Convert
-      if (this.value_label_scientific_notation) {
-        // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-        if (this.value_label_significant_digits) {
-          text_value = data_value.toExponential(this.value_label_nb_significant_digits! - 1)
-        } else {
-          text_value = data_value.toExponential()
-        }
-      }
-      // Do we need to keep only N significant numbers ?
-      else if (this.value_label_significant_digits == true) {
-        // 12345.67 avec nb_sign = 4 devient 12340
-        text_value = String(parseFloat(data_value.toPrecision(this.value_label_nb_significant_digits)))
-        if (text_value[text_value.length - 1] == '0' && text_value.length == this.value_label_nb_significant_digits && text_value == String(data_value)) {
-          text_value += '.'
-        }
-      } else if (this.value_label_custom_digit) {
-        text_value = String(parseFloat(data_value.toFixed(this.value_label_nb_digit)))
-      }
-      else {
-        text_value = String(data_value)
-      }
-    }
-    text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
-    // Add unit suffix
-    const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-    if (text_value && unit_taggs.length > 0) {
-      const label_unit = unit_taggs[0].first_selected_tags!.name
-      text_value = text_value + ' ' + label_unit
-    } else if (this.value_label_unit_visible)
-      text_value = text_value + ' ' + this.value_label_unit
-    return text_value
+    return format_value(data_value!,this)
   }
 
   /**
