@@ -198,7 +198,10 @@ export function isAttributeOverloaded(
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
 export const format_value = (data_value: number | undefined | null, element: Class_LinkElement | Class_NodeElement) => {
+  /*==========================================================================*/
+  // First step. value transformation
   const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  const link = element as Class_LinkElement
   if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
     const tag = unit_taggs[0].tags_dict[element.value_label_unit]
     const data_tags : Class_DataTag[] = []
@@ -206,11 +209,30 @@ export const format_value = (data_value: number | undefined | null, element: Cla
       if (tagg == tag.group) data_tags.push(tag)
       else data_tags.push(tagg.selected_tags_list[0])
     })
-    const link = element as Class_LinkElement
     const new_value = link.valueForTags(data_tags)
     data_value = new_value?.valueResult??new_value?.valueData
   }
+  if (element.value_label_unit_type == '%_input_source') {
+    let total_source = 0
+    link.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    data_value = data_value?data_value / total_source * 100:null
+  } else if (element.value_label_unit_type == '%_output_target') {
+    let total_target = 0
+    link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    data_value = data_value?data_value / total_target * 100:null    
+  } else if (element.value_label_unit_type == '%_input_target') {
+    let total_target = 0
+    link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    data_value = data_value?data_value / total_target * 100:null    
+  } else if (element.value_label_unit_type == '%_output_target') {
+    let total_source = 0
+    link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    data_value = data_value?data_value / total_source * 100:null      
+  } else if (element.value_label_unit_type == 'normalized') {
+  }
 
+  /*==========================================================================*/
+  // Second step. value formatting
   let text_value = ''
   // Create data label
   if (data_value !== null && data_value !== undefined && element.value_label_is_visible) {
@@ -260,16 +282,6 @@ export const format_value = (data_value: number | undefined | null, element: Cla
     text_value = text_value + ' %'     
   } else if (element.value_label_unit_type == 'normalized') return text_value
 
-  // 'unit_name', 'unit_tag', 'other_unit_tag','%_input_source','%_input_target','%_output_source','%_output_target','normalized'
-  //       let total_source = 0
-  // this._link.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-  // let total_target = 0
-  // this._link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-  //       if (this._link.value_label_unit_type == '%_input_source') {
-  //   label_to_display = label_to_display! / total_source * 100
-  // } else if (this._link.value_label_unit_type == '%_output_target') {
-  //   label_to_display = label_to_display! / total_target * 100
-  // }
   return text_value
 }
 
