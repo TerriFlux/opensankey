@@ -148,7 +148,7 @@ export class LinkDrawValue {
     // =======================DRAW VALUE LABEL ============================
     if (
       (this._link.drawing_area.type_data !== 'structure') &&
-      (this._link.value_label_is_visible) &&
+      // (this._link.value_label_is_visible) &&
       ((link_val ?? 0) >= this._link.drawing_area.filter_label)
     ) {
       // Failsafe
@@ -195,7 +195,6 @@ export class LinkDrawValue {
                 .attr('spacing', 'exact')
                 .attr('method', 'align')
             } else {
-              const suffix = this._link.value_label_percent_input ? 's' : 'd'
               // Add text directly on textpath object
               d3_textpath_selection?.text(label_to_display.toFixed(this._link.value_label_nb_digit) + ' %')
                 .attr('spacing', 'exact')

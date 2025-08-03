@@ -1613,9 +1613,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this.sankey.drawing_area.type_data !== 'data') {
       data_value = this.valueCurrent
     }
-    let text_value = '-'
+    let text_value = ''
     // Create data label
-    if (data_value !== null && data_value !== undefined) {
+    if (data_value !== null && data_value !== undefined && this.value_label_is_visible) {
       // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
       if (this.value_label_unit_visible && this.value_label_unit != '' && this.value_label_unit_factor > 1) {
         data_value /= this.value_label_unit_factor
@@ -1643,16 +1643,15 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       else {
         text_value = String(data_value)
       }
-
-      text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
-      // Add unit suffix
-      const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-      if (text_value && unit_taggs.length > 0) {
-        const label_unit = unit_taggs[0].first_selected_tags!.name
-        text_value = text_value + ' ' + label_unit
-      } else if (text_value && this.value_label_unit_visible)
-        text_value = text_value + ' ' + this.value_label_unit
     }
+    text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+    // Add unit suffix
+    const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    if (text_value && unit_taggs.length > 0) {
+      const label_unit = unit_taggs[0].first_selected_tags!.name
+      text_value = text_value + ' ' + label_unit
+    } else if (this.value_label_unit_visible)
+      text_value = text_value + ' ' + this.value_label_unit
     return text_value
   }
 

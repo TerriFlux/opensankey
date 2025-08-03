@@ -455,23 +455,23 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
             <TooltipElementOverloaded k={'shape_is_curved'} />
           </OSTooltip>
         </Checkbox>
-        {shape_is_curved?<><Box layerStyle='menuconfigpanel_option_name'>
+        {shape_is_curved ? <><Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_shape')}
           <TooltipElementOverloaded k={'shape_shape'} />
         </Box>
-        <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
-          <Select
-            //isDisabled={!disable_attr_props['shape_shape']}
-            value={shape_shape}
-            onChange={(evt) => {
-              updateElements('shape_shape', evt.target.value)
-            }}
-          >
-            {new_data.menu_configuration.shape_shape.map(el => {
-              return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
-            })}
-          </Select>
-        </OSTooltip></>:<></>}
+          <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
+            <Select
+              //isDisabled={!disable_attr_props['shape_shape']}
+              value={shape_shape}
+              onChange={(evt) => {
+                updateElements('shape_shape', evt.target.value)
+              }}
+            >
+              {new_data.menu_configuration.shape_shape.map(el => {
+                return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+              })}
+            </Select>
+          </OSTooltip></> : <></>}
       </Box>
 
       <Box layerStyle='menuconfigpanel_row_2cols'>
@@ -1029,22 +1029,22 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
           }
         </Checkbox>
 
-        {/* Config Label value unit */}
-        <MenuUnit
-          new_data={new_data}
-          elements={elements}
-          selectedElements={selected_links}
-          refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-          dict_decorator_name={{
-            label_unit_visible: 'value_label_unit_visible',
-            label_unit: 'value_label_unit',
-            label_unit_factor: 'value_label_unit_factor',
-          }}
-        />
+
       </> :
       <></>}
   </Box>
 
+  const content_unit = <MenuUnit
+    new_data={new_data}
+    elements={elements}
+    selectedElements={selected_links}
+    refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+    dict_decorator_name={{
+      label_unit_visible: 'value_label_unit_visible',
+      label_unit: 'value_label_unit',
+      label_unit_factor: 'value_label_unit_factor',
+    }}
+  />
   // Content specific to link label, it us not generic so not in SankeyMenuLabelComponent
   const content_name_specific_flow = name_label_is_visible ? <>
     {/* Orienter le texte du label le long du flux  */}
@@ -1211,6 +1211,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
     {content_style}
     <>{elements.length > 0 ? <>
       {content_label_value}
+      {content_unit}
       {content_label_text}
     </> : <></>}</>
   </>
