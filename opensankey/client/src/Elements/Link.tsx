@@ -250,11 +250,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   protected _is_not_null: boolean | undefined = undefined
 
   // PRIVATE ATTRIBUTES =================================================================
-  private _link_shape : LinkDrawShape
-  protected _link_control_points : LinkControlPoints
-  protected _link_draw_label : LinkDrawLabel
-  protected _link_draw_value : LinkDrawValue
-  public _link_tooltip : LinkTooltip
+  private _link_shape: LinkDrawShape
+  protected _link_control_points: LinkControlPoints
+  protected _link_draw_label: LinkDrawLabel
+  protected _link_draw_value: LinkDrawValue
+  public _link_tooltip: LinkTooltip
 
   /**
   * Node from which link starts
@@ -319,11 +319,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Init parent class attributes
     super(id, drawing_area, drawing_area.sankey, menu_config, 'g_elements_sankey')
 
-    this._link_control_points = new LinkControlPoints(this,drawing_area)
+    this._link_control_points = new LinkControlPoints(this, drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()
-    this._link_shape = new LinkDrawShape(this,this._link_control_points)
-    this._link_draw_label = new LinkDrawLabel(this,this._link_control_points)
-    this._link_draw_value = new LinkDrawValue(this,this._link_control_points)
+    this._link_shape = new LinkDrawShape(this, this._link_control_points)
+    this._link_draw_label = new LinkDrawLabel(this, this._link_control_points)
+    this._link_draw_value = new LinkDrawValue(this, this._link_control_points)
     this._link_tooltip = new LinkTooltip(this)
 
     // Values
@@ -499,11 +499,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     super._toJSON(json_object, kwargs)
     // Related nodes
     json_object['idSource'] = this._source.sibling ? this._source.sibling.id : this._source.id
-    json_object['idTarget'] =  this._target.sibling ? this._target.sibling.id : this._target.id
+    json_object['idTarget'] = this._target.sibling ? this._target.sibling.id : this._target.id
     // Fill style & local attributes
-    if (this.style.length>0) json_object['style'] = this.style.map(s => s.id)
+    if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
     const attr_json = this._display.attributes.toJSON()
-    if (Object.keys(attr_json).length>0) json_object['local'] = this._display.attributes.toJSON()
+    if (Object.keys(attr_json).length > 0) json_object['local'] = this._display.attributes.toJSON()
     // Fill positions attributes
     if (this._display.position_offset_value !== undefined) json_object['position_offset_label'] = this._display.position_offset_value
     if (this._display.position_offset_name !== undefined) json_object['position_offset_label'] = this._display.position_offset_name
@@ -976,9 +976,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
     } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.show_legend).length == 0) {
-      if(this.source.taggs_list.filter(tagg => tagg.show_legend).length>0){
+      if (this.source.taggs_list.filter(tagg => tagg.show_legend).length > 0) {
         return this.source.getShapeColorToUse()
-      }else if(this.target.taggs_list.filter(tagg => tagg.show_legend).length>0){
+      } else if (this.target.taggs_list.filter(tagg => tagg.show_legend).length > 0) {
         return this.target.getShapeColorToUse()
       }
     }
@@ -1049,7 +1049,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @memberof Class_LinkElement
    */
   public getMaxValue() {
-    return Math.max(this.valueData??0,this.valueResult??0)
+    return Math.max(this.valueCurrent ?? 0)
     //return this._values.getMaxValue()
   }
 
@@ -1309,7 +1309,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   protected scaleValueToPx(_: number) {
     if (this.value?.data_tag && this.value?.data_tag.group.is_unit) {
       this.setDomainLocalScale(this.value?.data_tag.scale)
-      return this._scaleValueToPx(_)      
+      return this._scaleValueToPx(_)
     }
     if (this.shape_local_link_scale !== undefined) {
       return this._scaleValueToPx(_)
@@ -1545,24 +1545,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return this._values.getValueForDataTags(this.sankey.selected_data_tags_list as Class_DataTag[])
   }
 
-
   public get valueCurrent() {
-    if (this.drawing_area.type_data === 'data') return this.valueData
-    return this.valueResult
-  }
-  /**
-   * Either search correct current value with data_taggs,
-   *  or return directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
-   */
-  public get valueResult() {
-    if (this.drawing_area.type_data === 'structure')
-      return null
-
-    const value = this.value
-    // Cast as number
-    if (value !== null) return value.valueResult
-    else return null
+    if (this.drawing_area.type_data === 'data') return this.value?.valueData ?? null
+    return this.value?.valueResult ?? this.value?.valueData ?? null
   }
 
   /**
@@ -1570,38 +1555,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    *  or set directly the value when there is no data_taggs
    * @memberof Class_LinkElement
    */
-  public set valueResult(_: number | null) {
-    const value = this.value
-    // Cast as number
-    if (value !== null) {
-      value.valueResult = _
-      this.redrawNodesSourceTarget()
-    }
-  }
-
-  /**
-   * Either search correct current value with data_taggs,
-   *  or return directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
-   */
-  public get valueData() {
-    const value = this.value
-    // Cast as number
-    if (value !== null) return value.valueData
-    else return null
-  }
-
-  /**
-   * Either set correct current value with data_taggs,
-   *  or set directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
-   */
-  public set valueData(_: number | null) {
+  public set valueCurrent(_: number | null) {
     const value = this.value
     // Cast as number
     if (value !== null) {
       value.valueData = _
-      this._is_not_null = undefined  // delete value of _is_not_null so later we test if value is not null
       this.redrawNodesSourceTarget()
     }
   }
@@ -1634,7 +1592,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public get data_label() {
-        
+
     let data_value = this.value?.valueData
     if (this.sankey.drawing_area.type_data == 'data') {
       if (this.value?.value_option == 'ratio_input' && this.value?.valueData) {
@@ -1653,11 +1611,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
     // Init
     if (this.sankey.drawing_area.type_data !== 'data') {
-      data_value = this.valueResult??this.valueData
+      data_value = this.valueCurrent
     }
     let text_value = '-'
     // Create data label
-    if (data_value !== null &&  data_value !== undefined) {
+    if (data_value !== null && data_value !== undefined) {
       // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
       if (this.value_label_unit_visible && this.value_label_unit != '' && this.value_label_unit_factor > 1) {
         data_value /= this.value_label_unit_factor
@@ -1688,8 +1646,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
       text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
       // Add unit suffix
-      const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg=>tagg.is_unit) as Class_DataTagGroup[]
-      if (text_value && unit_taggs.length > 0 ) {
+      const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+      if (text_value && unit_taggs.length > 0) {
         const label_unit = unit_taggs[0].first_selected_tags!.name
         text_value = text_value + ' ' + label_unit
       } else if (text_value && this.value_label_unit_visible)
@@ -1774,7 +1732,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    */
   public get thickness() {
     // Get link value for current dataTaggs selected
-    const data_value = this.valueResult ?? this.valueData
+    const data_value = this.valueCurrent
     // Scale this value for the drawing area
     const linkValueInPx = (data_value !== null && (!this.shape_is_structure)) ? this.scaleValueToPx(data_value) : 2
 
@@ -1844,17 +1802,17 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this._display.attributes[propertyName] !== undefined) {
       return this._display.attributes[propertyName]
     }
-    
+
     // Ensuite dans le style
     const valueOfStyle = this.getStyleWithAttr(propertyName)
     if (valueOfStyle[propertyName] !== undefined) {
       return valueOfStyle[propertyName]
     }
-    
+
     // Enfin la valeur par défaut
     return LINKS_ATTRIBUTES_CONFIG[propertyName].default
   }
-  
+
   public get shape_orientation() { return this.getStyleProperty('shape_orientation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_orientation']['type']> }
   public set shape_orientation(_: Type_Orientation) {
     if (
@@ -1989,18 +1947,19 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this._link_control_points.drawControlPoint() }
 
   public get shape_is_structure() {
-      if (this.sankey.drawing_area.type_data == 'structure') {
-        return true
-      }
+    if (this.sankey.drawing_area.type_data == 'structure') {
+      return true
+    }
     if (this.sankey.drawing_area.type_data == 'data') {
-      if (this.value?.value_option != 'value' || this.value?.valueData == null) {
+      if (this.value?.value_option != 'value' || this.value.valueData == null) {
         return true
       }
     }
+    if (this.sankey.drawing_area.type_data == 'free_value' || this.sankey.drawing_area.type_data == 'free_interval') {
+      return this.valueCurrent == null
+    }
     if (this.sankey.drawing_area.type_data == 'reconciled') {
-      if (this.value?.result_min !== null) {
-        return true
-      }
+      if (this.value?.result_min !== null) return true
     }
 
     if (this._display.attributes.shape_is_structure !== undefined) {
@@ -2014,10 +1973,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     return LINKS_ATTRIBUTES_CONFIG.shape_is_structure.default
   }
 
-  public set shape_is_structure(_: boolean) { 
+  public set shape_is_structure(_: boolean) {
     this._display.attributes.shape_is_structure = _
     this.drawWithNodes()
-    this._link_control_points.drawControlPoint() 
+    this._link_control_points.drawControlPoint()
   }
 
   public get shape_is_recycling() { return this.getStyleProperty('shape_is_recycling') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_recycling']['type']> }
@@ -2261,7 +2220,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       (this._datatags_fingerprint !== this.sankey.data_tags_fingerprint)
     ) {
       // Recompute visibility value
-      const is_not_null = (this.valueData !== 0)
+      const is_not_null = (this.valueCurrent !== 0)
       // Update  fingerprint if needed
       // -> This condition allows to avoid unecessary visibility recomputing on related elements
       //    that check this link's visibility fingerprint
@@ -2323,7 +2282,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this.drawing_area.filter_link_value == 0) {
       return true
     } else {
-      return Number(this.valueResult) >= this.drawing_area.filter_link_value
+      return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
     }
   }
 }

@@ -334,31 +334,6 @@ export class Class_LinkValueTree {
     }
   }
 
-
-  public setDataValueForDataTags(data_tags: Class_DataTag[], val: number | null) {
-    const value = this.getValueForDataTags(data_tags)
-    if (value !== null) {
-      value.valueResult = val
-    }
-  }
-
-  public getDataValueForDataTags(data_tags: Class_DataTag[]): number | null {
-    const value = this.getValueForDataTags(data_tags)
-    if (value !== null) {
-      return value.valueResult
-    }
-    else {
-      return null
-    }
-  }
-
-  public setTextValueForDataTags(data_tags: Class_DataTag[], val: string | null) {
-    const value = this.getValueForDataTags(data_tags)
-    if (value !== null) {
-      value.text_value = val
-    }
-  }
-
   public setLinkValueForDataTags(data_tags: Class_DataTag[], val: Class_LinkValue) {
     // Failsafe
     if (data_tags.length === 0) return
@@ -585,27 +560,16 @@ export class Class_LinkValue {
     } else if (this.value_option == 'ratio_source_parent') {
       const parent = this.link!.target.dimensions_as_child[0].parent
       const parent_link = this.link?.sankey.links_dict[this.link.source.name + ' --> ' + parent.name]
-      if (!parent_link || parent_link.valueResult == null) {
+      if (!parent_link || parent_link.value?.valueResult == null) {
         return null
       }
-      return parent_link!.valueResult! * this.data_value!
+      return parent_link?.value?.valueResult * this.data_value!
     }
     return null
   }
 
   public set valueResult(_) {
     this.result_value = _
-    // if (this.value_option == 'value') {
-    //   this.data_value = _
-    // } else if (this.value_option == 'ratio_input') {
-    //   let total_source = 0
-    //   this.link!.source.input_links_list.filter(l=>l.is_visible).forEach(l=>total_source+=l.valueResult??0)
-    //   this.data_value = _!/total_source
-    // } else if (this.value_option == 'ratio_output') {
-    //   let total_target = 0
-    //   this.link!.target.output_links_list.filter(l=>l.is_visible).forEach(l=>total_target+=l.valueResult??0)
-    //   this.data_value = _!/total_target
-    // }
   }
 
   public get valueData() {

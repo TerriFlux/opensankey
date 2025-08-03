@@ -79,7 +79,7 @@ export class LinkDrawShape {
       const shape_color = this._link.getPathColorToUse()
       const shape_opacity = this._link.shape_opacity
       // Check to choose how to draw
-      const show_as_dash = this._link.shape_is_dashed || this._link.valueData == null && this._link.value?.valueResult == null || this._link.shape_is_structure
+      const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.shape_is_structure
       const x0 = this._link.position_x_start
       const y0 = this._link.position_y_start
       const xf = this._link.position_x_end
