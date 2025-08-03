@@ -961,6 +961,23 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
     </Box>
     {value_label_is_visible ?
       <>
+    {/* Common component with label component */}
+    <SankeyMenuLabelComponent
+      new_data={new_data}
+      elements={elements}
+      selectedElements={selected_links}
+      refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+          dict_decorator_name={{
+            label_horiz: 'value_label_horiz',
+            label_vert: 'value_label_vert',
+            label_font_size: 'value_label_font_size',
+            label_color: 'value_label_color',
+            label_bold: 'value_label_bold',
+            label_uppercase: 'value_label_uppercase',
+            label_italic: 'value_label_italic',
+            label_font_family: 'value_label_font_family'
+          }} />
+        {content_value_specific_flow}
         <SankeyMenuValueLabelComponent
           new_data={new_data}
           elements={elements}
@@ -977,9 +994,12 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
             label_font_family: 'value_label_font_family',
             label_custom_digit: 'value_label_custom_digit',
             label_nb_digit: 'value_label_nb_digit',
+            label_scientific_notation: 'value_label_scientific_notation',
+            label_significant_digits: 'value_label_significant_digits',
+            label_nb_significant_digits: 'value_label_nb_significant_digits'
           }}
         />
-        {content_value_specific_flow}
+
         {additionMenus.current.additional_link_appearence_value.map((el, idx) => <Fragment key={'additional_apparence_' + idx}>{el(menu_for_style)}</Fragment>)}
       </> :
       <></>}
