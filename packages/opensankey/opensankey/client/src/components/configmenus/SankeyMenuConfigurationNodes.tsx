@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, useRef, useState } from 'react'
+import React, { FC, useRef, useState } from 'react'
 
 import {
   Box,
@@ -52,7 +52,7 @@ type FCType_SankeyNodeEdition = {
 
 /*************************************************************************************************/
 
-export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = (
+export const SankeyNodeSelection: FC<FCType_SankeyNodeEdition> = (
   {
     new_data,
   }
@@ -375,7 +375,7 @@ export const SankeyNodeSelection: FunctionComponent<FCType_SankeyNodeEdition> = 
   )
 }
 
-export const SankeyNodeSelectionSimple: FunctionComponent<FCType_SankeyNodeEdition> = (
+export const SankeyNodeSelectionSimple: FC<FCType_SankeyNodeEdition> = (
   {
     new_data,
   }

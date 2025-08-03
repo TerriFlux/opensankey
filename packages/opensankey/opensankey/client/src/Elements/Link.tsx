@@ -197,6 +197,94 @@ export function isAttributeOverloaded(
 
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
+export const format_value = (data_value: number | undefined | null, element: Class_LinkElement | Class_NodeElement) => {
+  /*==========================================================================*/
+  // First step. value transformation
+  const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  const link = element as Class_LinkElement
+  if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+    const tag = unit_taggs[0].tags_dict[element.value_label_unit]
+    const data_tags : Class_DataTag[] = []
+    element.sankey.data_taggs_list.forEach((tagg) => {
+      if (tagg == tag.group) data_tags.push(tag)
+      else data_tags.push(tagg.selected_tags_list[0])
+    })
+    const new_value = link.valueForTags(data_tags)
+    data_value = new_value?.valueResult??new_value?.valueData
+  }
+  if (element.value_label_unit_type == '%_input_source') {
+    let total_source = 0
+    link.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    data_value = data_value?data_value / total_source * 100:null
+  } else if (element.value_label_unit_type == '%_output_target') {
+    let total_target = 0
+    link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    data_value = data_value?data_value / total_target * 100:null    
+  } else if (element.value_label_unit_type == '%_input_target') {
+    let total_target = 0
+    link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    data_value = data_value?data_value / total_target * 100:null    
+  } else if (element.value_label_unit_type == '%_output_source') {
+    let total_source = 0
+    link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    data_value = data_value?data_value / total_source * 100:null      
+  } else if (element.value_label_unit_type == 'normalized') {
+  }
+
+  /*==========================================================================*/
+  // Second step. value formatting
+  let text_value = ''
+  // Create data label
+  if (data_value !== null && data_value !== undefined && element.value_label_is_visible) {
+    // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
+    if (element.value_label_unit_visible && element.value_label_unit != '' && element.value_label_unit_factor > 1) {
+      data_value /= element.value_label_unit_factor
+    }
+
+    // Convert
+    if (element.value_label_scientific_notation) {
+      // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+      if (element.value_label_significant_digits) {
+        text_value = data_value.toExponential(element.value_label_nb_significant_digits! - 1)
+      } else {
+        text_value = data_value.toExponential()
+      }
+    }
+
+    // Do we need to keep only N significant numbers ?
+    else if (element.value_label_significant_digits == true) {
+      // 12345.67 avec nb_sign = 4 devient 12340
+      text_value = String(parseFloat(data_value.toPrecision(element.value_label_nb_significant_digits)))
+      if (text_value[text_value.length - 1] == '0' && text_value.length == element.value_label_nb_significant_digits && text_value == String(data_value)) {
+        text_value += '.'
+      }
+    } else if (element.value_label_custom_digit) {
+      text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
+    }
+    else {
+      text_value = String(data_value)
+    }
+  }
+  text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+  if (!element.value_label_unit_visible) {
+    return text_value
+  }
+  // Add unit suffix
+
+  if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
+  else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
+    const label_unit = unit_taggs[0].first_selected_tags!.name
+    text_value = text_value + ' ' + label_unit
+  } else if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+    const label_unit = unit_taggs[0].tags_dict[element.value_label_unit]!.name
+    text_value = text_value + ' ' + label_unit
+  } else if (['%_input_source','%_input_target','%_output_source','%_output_target'].filter(s=>element.value_label_unit_type==s).length>0) {
+    text_value = text_value + ' %'     
+  } else if (element.value_label_unit_type == 'normalized') return text_value
+
+  return text_value
+}
+
 /**
  * Class that define how to display a link element and how to interact with it
  *
@@ -250,11 +338,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   protected _is_not_null: boolean | undefined = undefined
 
   // PRIVATE ATTRIBUTES =================================================================
-  private _link_shape : LinkDrawShape
-  protected _link_control_points : LinkControlPoints
-  protected _link_draw_label : LinkDrawLabel
-  protected _link_draw_value : LinkDrawValue
-  public _link_tooltip : LinkTooltip
+  private _link_shape: LinkDrawShape
+  protected _link_control_points: LinkControlPoints
+  protected _link_draw_label: LinkDrawLabel
+  protected _link_draw_value: LinkDrawValue
+  public _link_tooltip: LinkTooltip
 
   /**
   * Node from which link starts
@@ -319,11 +407,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Init parent class attributes
     super(id, drawing_area, drawing_area.sankey, menu_config, 'g_elements_sankey')
 
-    this._link_control_points = new LinkControlPoints(this,drawing_area)
+    this._link_control_points = new LinkControlPoints(this, drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()
-    this._link_shape = new LinkDrawShape(this,this._link_control_points)
-    this._link_draw_label = new LinkDrawLabel(this,this._link_control_points)
-    this._link_draw_value = new LinkDrawValue(this,this._link_control_points)
+    this._link_shape = new LinkDrawShape(this, this._link_control_points)
+    this._link_draw_label = new LinkDrawLabel(this, this._link_control_points)
+    this._link_draw_value = new LinkDrawValue(this, this._link_control_points)
     this._link_tooltip = new LinkTooltip(this)
 
     // Values
@@ -499,11 +587,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     super._toJSON(json_object, kwargs)
     // Related nodes
     json_object['idSource'] = this._source.sibling ? this._source.sibling.id : this._source.id
-    json_object['idTarget'] =  this._target.sibling ? this._target.sibling.id : this._target.id
+    json_object['idTarget'] = this._target.sibling ? this._target.sibling.id : this._target.id
     // Fill style & local attributes
-    if (this.style.length>0) json_object['style'] = this.style.map(s => s.id)
+    if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
     const attr_json = this._display.attributes.toJSON()
-    if (Object.keys(attr_json).length>0) json_object['local'] = this._display.attributes.toJSON()
+    if (Object.keys(attr_json).length > 0) json_object['local'] = this._display.attributes.toJSON()
     // Fill positions attributes
     if (this._display.position_offset_value !== undefined) json_object['position_offset_label'] = this._display.position_offset_value
     if (this._display.position_offset_name !== undefined) json_object['position_offset_label'] = this._display.position_offset_name
@@ -976,9 +1064,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
     } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.show_legend).length == 0) {
-      if(this.source.taggs_list.filter(tagg => tagg.show_legend).length>0){
+      if (this.source.taggs_list.filter(tagg => tagg.show_legend).length > 0) {
         return this.source.getShapeColorToUse()
-      }else if(this.target.taggs_list.filter(tagg => tagg.show_legend).length>0){
+      } else if (this.target.taggs_list.filter(tagg => tagg.show_legend).length > 0) {
         return this.target.getShapeColorToUse()
       }
     }
@@ -1049,7 +1137,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @memberof Class_LinkElement
    */
   public getMaxValue() {
-    return Math.max(this.valueData??0,this.valueResult??0)
+    return Math.max(this.valueCurrent ?? 0)
     //return this._values.getMaxValue()
   }
 
@@ -1309,7 +1397,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   protected scaleValueToPx(_: number) {
     if (this.value?.data_tag && this.value?.data_tag.group.is_unit) {
       this.setDomainLocalScale(this.value?.data_tag.scale)
-      return this._scaleValueToPx(_)      
+      return this._scaleValueToPx(_)
     }
     if (this.shape_local_link_scale !== undefined) {
       return this._scaleValueToPx(_)
@@ -1545,24 +1633,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return this._values.getValueForDataTags(this.sankey.selected_data_tags_list as Class_DataTag[])
   }
 
-
   public get valueCurrent() {
-    if (this.drawing_area.type_data === 'data') return this.valueData
-    return this.valueResult
-  }
-  /**
-   * Either search correct current value with data_taggs,
-   *  or return directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
-   */
-  public get valueResult() {
-    if (this.drawing_area.type_data === 'structure')
-      return null
-
-    const value = this.value
-    // Cast as number
-    if (value !== null) return value.valueResult
-    else return null
+    if (this.drawing_area.type_data === 'data') return this.value?.valueData ?? null
+    return this.value?.valueResult ?? this.value?.valueData ?? null
   }
 
   /**
@@ -1570,38 +1643,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    *  or set directly the value when there is no data_taggs
    * @memberof Class_LinkElement
    */
-  public set valueResult(_: number | null) {
-    const value = this.value
-    // Cast as number
-    if (value !== null) {
-      value.valueResult = _
-      this.redrawNodesSourceTarget()
-    }
-  }
-
-  /**
-   * Either search correct current value with data_taggs,
-   *  or return directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
-   */
-  public get valueData() {
-    const value = this.value
-    // Cast as number
-    if (value !== null) return value.valueData
-    else return null
-  }
-
-  /**
-   * Either set correct current value with data_taggs,
-   *  or set directly the value when there is no data_taggs
-   * @memberof Class_LinkElement
-   */
-  public set valueData(_: number | null) {
+  public set valueCurrent(_: number | null) {
     const value = this.value
     // Cast as number
     if (value !== null) {
       value.valueData = _
-      this._is_not_null = undefined  // delete value of _is_not_null so later we test if value is not null
       this.redrawNodesSourceTarget()
     }
   }
@@ -1634,7 +1680,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public get data_label() {
-        
+
     let data_value = this.value?.valueData
     if (this.sankey.drawing_area.type_data == 'data') {
       if (this.value?.value_option == 'ratio_input' && this.value?.valueData) {
@@ -1653,49 +1699,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
     // Init
     if (this.sankey.drawing_area.type_data !== 'data') {
-      data_value = this.valueResult??this.valueData
+      data_value = this.valueCurrent
     }
-    let text_value = '-'
-    // Create data label
-    if (data_value !== null &&  data_value !== undefined) {
-      // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
-      if (this.value_label_unit_visible && this.value_label_unit != '' && this.value_label_unit_factor > 1) {
-        data_value /= this.value_label_unit_factor
-      }
-
-      // Convert
-      if (this.value_label_scientific_notation) {
-        // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-        if (this.value_label_significant_digits) {
-          text_value = data_value.toExponential(this.value_label_nb_significant_digits! - 1)
-        } else {
-          text_value = data_value.toExponential()
-        }
-      }
-      // Do we need to keep only N significant numbers ?
-      else if (this.value_label_significant_digits == true) {
-        // 12345.67 avec nb_sign = 4 devient 12340
-        text_value = String(parseFloat(data_value.toPrecision(this.value_label_nb_significant_digits)))
-        if (text_value[text_value.length - 1] == '0' && text_value.length == this.value_label_nb_significant_digits && text_value == String(data_value)) {
-          text_value += '.'
-        }
-      } else if (this.value_label_custom_digit) {
-        text_value = String(parseFloat(data_value.toFixed(this.value_label_nb_digit)))
-      }
-      else {
-        text_value = String(data_value)
-      }
-
-      text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
-      // Add unit suffix
-      const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg=>tagg.is_unit) as Class_DataTagGroup[]
-      if (text_value && unit_taggs.length > 0 ) {
-        const label_unit = unit_taggs[0].first_selected_tags!.name
-        text_value = text_value + ' ' + label_unit
-      } else if (text_value && this.value_label_unit_visible)
-        text_value = text_value + ' ' + this.value_label_unit
-    }
-    return text_value
+    return format_value(data_value!, this)
   }
 
   /**
@@ -1774,7 +1780,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    */
   public get thickness() {
     // Get link value for current dataTaggs selected
-    const data_value = this.valueResult ?? this.valueData
+    const data_value = this.valueCurrent
     // Scale this value for the drawing area
     const linkValueInPx = (data_value !== null && (!this.shape_is_structure)) ? this.scaleValueToPx(data_value) : 2
 
@@ -1844,17 +1850,17 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this._display.attributes[propertyName] !== undefined) {
       return this._display.attributes[propertyName]
     }
-    
+
     // Ensuite dans le style
     const valueOfStyle = this.getStyleWithAttr(propertyName)
     if (valueOfStyle[propertyName] !== undefined) {
       return valueOfStyle[propertyName]
     }
-    
+
     // Enfin la valeur par défaut
     return LINKS_ATTRIBUTES_CONFIG[propertyName].default
   }
-  
+
   public get shape_orientation() { return this.getStyleProperty('shape_orientation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_orientation']['type']> }
   public set shape_orientation(_: Type_Orientation) {
     if (
@@ -1989,18 +1995,19 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this._link_control_points.drawControlPoint() }
 
   public get shape_is_structure() {
-      if (this.sankey.drawing_area.type_data == 'structure') {
-        return true
-      }
+    if (this.sankey.drawing_area.type_data == 'structure') {
+      return true
+    }
     if (this.sankey.drawing_area.type_data == 'data') {
-      if (this.value?.value_option != 'value' || this.value?.valueData == null) {
+      if (this.value?.value_option != 'value' || this.value.valueData == null) {
         return true
       }
     }
+    if (this.sankey.drawing_area.type_data == 'free_value' || this.sankey.drawing_area.type_data == 'free_interval') {
+      return this.valueCurrent == null
+    }
     if (this.sankey.drawing_area.type_data == 'reconciled') {
-      if (this.value?.result_min !== null) {
-        return true
-      }
+      if (this.value?.result_min !== null) return true
     }
 
     if (this._display.attributes.shape_is_structure !== undefined) {
@@ -2014,10 +2021,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     return LINKS_ATTRIBUTES_CONFIG.shape_is_structure.default
   }
 
-  public set shape_is_structure(_: boolean) { 
+  public set shape_is_structure(_: boolean) {
     this._display.attributes.shape_is_structure = _
     this.drawWithNodes()
-    this._link_control_points.drawControlPoint() 
+    this._link_control_points.drawControlPoint()
   }
 
   public get shape_is_recycling() { return this.getStyleProperty('shape_is_recycling') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_recycling']['type']> }
@@ -2107,11 +2114,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get value_label_color() { return this.getStyleProperty('value_label_color') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']> }
   public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawValue() }
 
-  public get value_label_percent_input() { return this.getStyleProperty('value_label_percent_input') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_input']['type']> }
-  public set value_label_percent_input(_: boolean) { this._display.attributes.value_label_percent_input = _; this.drawValue() }
-
-  public get value_label_percent_output() { return this.getStyleProperty('value_label_percent_output') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_percent_output']['type']> }
-  public set value_label_percent_output(_: boolean) { this._display.attributes.value_label_percent_output = _; this.drawValue() }
+  public get value_label_unit_type() { return this.getStyleProperty('value_label_unit_type') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_type']['type']> }
+  public set value_label_unit_type(_) { this._display.attributes.value_label_unit_type = _; this.drawValue() }
 
   public get value_label_scientific_notation() { return this.getStyleProperty('value_label_scientific_notation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']> }
   public set value_label_scientific_notation(_: boolean) { this._display.attributes.value_label_scientific_notation = _; this.drawValue() }
@@ -2261,7 +2265,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       (this._datatags_fingerprint !== this.sankey.data_tags_fingerprint)
     ) {
       // Recompute visibility value
-      const is_not_null = (this.valueData !== 0)
+      const is_not_null = (this.valueCurrent !== 0)
       // Update  fingerprint if needed
       // -> This condition allows to avoid unecessary visibility recomputing on related elements
       //    that check this link's visibility fingerprint
@@ -2323,7 +2327,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this.drawing_area.filter_link_value == 0) {
       return true
     } else {
-      return Number(this.valueResult) >= this.drawing_area.filter_link_value
+      return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
     }
   }
 }

@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { Fragment, FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { Fragment, FC, MutableRefObject, useRef, useState } from 'react'
 
 import Draggable from 'react-draggable'
 
@@ -46,9 +46,7 @@ import {
 
 /*************************************************************************************************/
 
-import {
-  FCType_MenuDraggable,
-} from './types/SankeyMenuTopTypes'
+
 import {
   OSTooltip
 } from '../../types/Utils'
@@ -82,6 +80,7 @@ import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../co
 import { MenuConfigurationNodeContext, MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
 import { WrapperContentConfig } from '../configmenus/SankeyMenuComponents'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FCType_MenuDraggable } from '../SankeyMenuTypes'
 
 
 /*************************************************************************************************/
@@ -115,7 +114,7 @@ export const menu_config_width = 20
  *
  * @returns
  */
-export const Menu: FunctionComponent<FCType_Menu> = (
+export const Menu: FC<FCType_Menu> = (
   {
     new_data,
     external_modal,
@@ -319,7 +318,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
             </Button></Toast>) : (<></>)
       }
       <ApplyLayoutDialog
-        applicationData={new_data}
+        new_data={new_data}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={diagramSelector}
       />
@@ -346,7 +345,7 @@ export const Menu: FunctionComponent<FCType_Menu> = (
   )
 }
 
-const ConfigMenu: FunctionComponent<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigMenu: FC<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { type_menu_configuration_selected, style_config } = new_data.menu_configuration
   const [, setUpdate] = useState(false)
 
@@ -375,7 +374,7 @@ const ConfigMenu: FunctionComponent<{ new_data: Class_ApplicationData, additiona
  * @param {*} { new_data, additional_menus }
  * @return {*}
  */
-const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigMenuTypeConfig: FC<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, ref_to_menu_config_updater } = new_data.menu_configuration
   return <ButtonGroup className='buttonGroupTypeConfig' spacing='0.2rem' style={{
@@ -430,7 +429,7 @@ const ConfigMenuTypeConfig: FunctionComponent<{ new_data: Class_ApplicationData,
  * @param {*} { new_data, additional_menus }
  * @return {*}
  */
-const ConfigContent: FunctionComponent<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, elements_configurable_selected } = new_data.menu_configuration
   const elements_in_menu_configuration = elements_configurable_selected[type_menu_configuration_selected]
@@ -521,7 +520,7 @@ export type typeButtonElementConfigurable = { [x: string]: { text: string, icon:
  * @param {*} { new_data }
  * @return {*}
  */
-const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigMenuElementToConfig: FC<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
   const { t } = new_data
   const { type_menu_configuration_selected, style_config, ref_to_menu_config_updater } = new_data.menu_configuration
   const elements_buttons = style_config[type_menu_configuration_selected].elements_configurable
@@ -577,7 +576,7 @@ const ConfigMenuElementToConfig: FunctionComponent<{ new_data: Class_Application
  *   title }
  * @return {*}
  */
-export const MenuDraggable: FunctionComponent<FCType_MenuDraggable> = ({
+export const MenuDraggable: FC<FCType_MenuDraggable> = ({
   dict_hook_ref_setter_show_dialog_components,
   dialog_name,
   content,

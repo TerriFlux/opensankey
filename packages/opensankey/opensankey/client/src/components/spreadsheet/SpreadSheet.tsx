@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import {
   ReactGrid,
   Column,
@@ -55,14 +55,14 @@ interface IType_SpreadSheetFlux {
   id: string, // Link id
   source: string // Source node of the flow
   target: string // Target node of the flow
-  valueData?: number // Collected value (valueData)
-  valueResult?: number // Calculated value (valueResult)
+  value_data?: number // Collected value
+  value_result?: number // Calculated value
 }
 
 
 
 // Main SpreadSheet component
-export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }> = (
+export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
   { new_data }: { new_data: Class_ApplicationData }
 ) => {
   const { menu_configuration } = new_data
@@ -80,8 +80,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
           id: l.id, //Link id
           source: l.source.name,
           target: l.target.name,
-          valueData: l.valueData!, // Valeurs collectées
-          valueResult: l.valueResult! // Valeurs calculées
+          value_data: l.value?.valueData!,
+          value_result: l.value?.valueResult!
         }
       })
     // Add an empty row for new flux input
@@ -95,8 +95,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
     const baseColumns: Column[] = [
       { columnId: 'source', width: innerW * 0.050, resizable: true },
       { columnId: 'target', width: innerW * 0.050, resizable: true },
-      { columnId: 'valueData', width: innerW * 0.030, resizable: true },
-      { columnId: 'valueResult', width: innerW * 0.030, resizable: true } // Valeurs collectées
+      { columnId: 'value_data', width: innerW * 0.030, resizable: true },
+      { columnId: 'value_result', width: innerW * 0.030, resizable: true } // Valeurs collectées
     ]
     
     // Ajouter la colonne "Valeurs calculées" si nécessaire
@@ -127,8 +127,8 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
         cells: [
           { type: 'text', text: flux.source },
           { type: 'text', text: flux.target },
-          { type: 'number', value: flux.valueData as number },
-          { type: 'number', value: flux.valueResult as number }
+          { type: 'number', value: flux.value_data as number },
+          { type: 'number', value: flux.value_result as number }
         ]
       }
     })
@@ -240,11 +240,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
         target_node
       )
       // Set the value of the link, if provided
-      if (cur_flux.valueData) {
-        l.value!.valueData = +cur_flux.valueData
+      if (cur_flux.value_data) {
+        l.value!.valueData = +cur_flux.value_data
       }
-      if (cur_flux.valueResult) {
-        l.value!.valueResult = +cur_flux.valueResult
+      if (cur_flux.value_result) {
+        l.value!.valueResult = +cur_flux.value_result
       }
 
       return [{ id: l.id, idSrc: l.source.id, idTrgt: l.target.id }, createdNodes]
@@ -286,13 +286,13 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
     const valueChanged = changes.filter(change => change.type === 'number')
     // Only excecute function & save undo if we have changed value cell
     if (valueChanged.length > 0) {
-      const dict_old_val: { [x: string]: { valueData?: number | null, valueResult?: number | null } } = {}
-      const dict_new_val: { [x: string]: { valueData?: number | null, valueResult?: number | null } } = {}
+      const dict_old_val: { [x: string]: { value_data?: number | null, value_result?: number | null } } = {}
+      const dict_new_val: { [x: string]: { value_data?: number | null, value_result?: number | null } } = {}
       
       // Execute original function ----------------------------
       valueChanged.forEach(change => {
         const fluxIndex = change.rowId as number
-        const fieldName = change.columnId as 'valueData' | 'valueResult'
+        const fieldName = change.columnId as 'value_data' | 'valueResult'
         const l = new_data.drawing_area.sankey.links_list[fluxIndex]
         
         // Error can't find link
@@ -309,26 +309,26 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
           dict_new_val[l.id] = {}
         }
 
-        if (fieldName === 'valueData') {
-          dict_old_val[l.id].valueData = l.valueData
+        if (fieldName === 'value_data') {
+          dict_old_val[l.id].value_data = l.value?.valueData
           if (isNaN((change.newCell as NumberCell).value)) {
-            l.valueData = null
-            dict_new_val[l.id].valueData = null
+            l.value!.valueData = null
+            dict_new_val[l.id].value_data = null
           } else {
-            l.valueData = (change.newCell as NumberCell).value
-            dict_new_val[l.id].valueData = (change.newCell as NumberCell).value
+            l.value!.valueData = (change.newCell as NumberCell).value
+            dict_new_val[l.id].value_data = (change.newCell as NumberCell).value
           }
-          spreadSheetFlux[fluxIndex].valueData = (change.newCell as NumberCell).value
+          spreadSheetFlux[fluxIndex].value_data = (change.newCell as NumberCell).value
         } else if (fieldName === 'valueResult') {
-          dict_old_val[l.id].valueResult = l.valueResult
+          dict_old_val[l.id].value_result = l.value?.valueResult
           if (isNaN((change.newCell as NumberCell).value)) {
-            l.valueResult = null
-            dict_new_val[l.id].valueResult = null
+            l.value!.valueResult = null
+            dict_new_val[l.id].value_result = null
           } else {
-            l.valueResult = (change.newCell as NumberCell).value
-            dict_new_val[l.id].valueResult = (change.newCell as NumberCell).value
+            l.value!.valueResult = (change.newCell as NumberCell).value
+            dict_new_val[l.id].value_result = (change.newCell as NumberCell).value
           }
-          spreadSheetFlux[fluxIndex].valueResult = (change.newCell as NumberCell).value
+          spreadSheetFlux[fluxIndex].value_result = (change.newCell as NumberCell).value
         }
         
         new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -338,11 +338,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
       const undoUpdateLinksValues = () => {
         Object.entries(dict_old_val).forEach(([linkId, values]) => {
           const link = new_data.drawing_area.sankey.links_dict[linkId]
-          if (values.valueData !== undefined) {
-            link.valueData = values.valueData
+          if (values.value_data !== undefined) {
+            link.value!.valueData = values.value_data
           }
-          if (values.valueResult !== undefined) {
-            link.valueResult = values.valueResult
+          if (values.value_result !== undefined) {
+            link.value!.valueResult = values.value_result
           }
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -354,11 +354,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
       const redoUpdateLinksValues = () => {
         Object.entries(dict_new_val).forEach(([linkId, values]) => {
           const link = new_data.drawing_area.sankey.links_dict[linkId]
-          if (values.valueData !== undefined) {
-            link.valueData = values.valueData
+          if (values.value_data !== undefined) {
+            link.value!.valueData = values.value_data
           }
-          if (values.valueResult !== undefined) {
-            link.valueResult = values.valueResult
+          if (values.value_result !== undefined) {
+            link.value!.valueResult = values.value_result
           }
         })
         new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -727,11 +727,11 @@ export const SpreadSheet: FunctionComponent<{ new_data: Class_ApplicationData }>
               let synchronizeSpreadSheet = false
               const elementCreated: ([typeCreatedLink, typeCreatedNode[]] | undefined)[] = []
               spreadSheetFlux.forEach(flux => {
-                if (flux.valueData && isNaN(flux.valueData)) {
-                  flux.valueData = (flux.valueData as unknown as string).replace(' ', '').replace('\r', '') as unknown as number
+                if (flux.value_data && isNaN(flux.value_data)) {
+                  flux.value_data = (flux.value_data as unknown as string).replace(' ', '').replace('\r', '') as unknown as number
                 }
-                if (flux.valueData) {
-                  flux.valueData = +flux.valueData
+                if (flux.value_data) {
+                  flux.value_data = +flux.value_data
                 }
                 if (!((flux.id) in new_data.drawing_area.sankey.links_dict)) {
                   elementCreated.push(addLink(flux)) //add created element in list for undo

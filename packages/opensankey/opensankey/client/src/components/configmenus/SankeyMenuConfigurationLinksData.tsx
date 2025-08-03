@@ -25,18 +25,12 @@
 // ==================================================================================================
 
 // External imports
-import React, { FunctionComponent, useRef, useState } from 'react'
+import React, { FC, useRef, useState } from 'react'
 
 import {
   Box,
   Select,
 } from '@chakra-ui/react'
-
-// Local types imports
-import type {
-  FCType_MenuContextLinkData,
-  FCType_MenuConfigurationLinksData
-} from './types/SankeyMenuConfigurationLinksDataTypes'
 
 // Local components or functions
 import {
@@ -47,11 +41,12 @@ import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuText
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 import { ValueOptionType } from '../../Elements/LinkValues'
 import { Class_LinkElement } from '../../Elements/Link'
+import { BaseApplicationDataType, BaseContextualType } from '../SankeyMenuTypes'
 
 /*************************************************************************************************/
 export const default_value_option = 'value'
 
-export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurationLinksData> = ({
+export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
   new_data,
   contextual
 }) => {
@@ -84,10 +79,10 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   let unit_text : string | undefined
-  let default_value = element_ref.valueCurrent
+  let default_value = element_ref?.valueCurrent
   if (value_option == 'ratio_input' || value_option == 'ratio_output') {
     unit_text = '%'
-    default_value = default_value?default_value:null
+    default_value = element_ref?.value?.valueData??null
   } else {
       unit_text= selected_links[0]?.value_label_unit_visible ? selected_links[0]?.value_label_unit :
       undefined
@@ -101,8 +96,11 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
 
     const value_update = updated_selected_links[0]?.value
     // Update input data value
-    ref_set_data_value_input.current(String(updated_selected_links[0]?.valueCurrent ?? ''))
-
+    if (value_option == 'ratio_input' || value_option == 'ratio_output') {
+      ref_set_data_value_input.current(String(updated_selected_links[0]?.value?.valueData ?? ''))
+    } else {
+      ref_set_data_value_input.current(String(updated_selected_links[0]?.valueCurrent ?? ''))
+    }
     // Update input text value
     ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
   }
@@ -138,12 +136,12 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
   const updateValueAndHistory = (_: number | null | undefined) => {
     // Save old values in dict so the undo reset value for previous value of each link
     const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.valueData)
+    selected_links.forEach(l => dict_old_val[l.id] = l.valueCurrent)
     // Undo link value
     const inv_updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.valueData = dict_old_val[link.id]
+        link.valueCurrent = dict_old_val[link.id]
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -154,7 +152,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
     const _updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.valueData = (_ ?? null)
+        link.valueCurrent = (_ ?? null)
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -337,7 +335,7 @@ export const MenuConfigurationLinksData: FunctionComponent<FCType_MenuConfigurat
  * @param {new_data}
  * @return {JSX.Elmement}
  */
-export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData> = ({
+export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
   new_data,
 }) => {
 
@@ -352,7 +350,6 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
     // Only visible links
     selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
   }
-  const value = selected_links[0]?.value
 
   // Components updaters ---------------------------------------------------------------
 
@@ -360,7 +357,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
   const updateInputsValues = () => {
     // Update input data value
-    ref_set_data_value_input.current(String(value?.valueData ?? ''))
+    ref_set_data_value_input.current(String(selected_links[0]?.valueCurrent ?? ''))
   }
 
   // Function used to force this component to reload
@@ -378,12 +375,12 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   const updateDataLinks = (_: number | null | undefined) => {
     // Save old values in dict so the undo reset value for previous value of each link
     const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.valueData)
+    selected_links.forEach(l => dict_old_val[l.id] = l.valueCurrent)
     // Undo link value
     const inv_updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.valueData = dict_old_val[link.id]
+        link.valueCurrent = dict_old_val[link.id]
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -394,7 +391,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
     const _updateDataLinks = () => {
       // Update data for links
       selected_links.forEach(link => {
-        link.valueData = (_ ?? null)
+        link.valueCurrent = (_ ?? null)
       })
       // Update scaling if only one link
       new_data.drawing_area.updateScaleAtLinkValueSetting()
@@ -411,7 +408,7 @@ export const MenuContextLinksData: FunctionComponent<FCType_MenuContextLinkData>
   return <ConfigMenuNumberInput
     t={new_data.t}
     ref_to_set_value={ref_set_data_value_input}
-    default_value={value?.valueData ?? null}
+    default_value={selected_links[0]?.valueCurrent}
     function_on_blur={updateDataLinks}
     minimum_value={0}
     stepper={true}

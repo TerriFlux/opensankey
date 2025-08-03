@@ -1730,12 +1730,10 @@ export class Class_DrawingArea {
     if (this.eventsEnabled()) {
       // Clear tooltips presents
       d3.selectAll('.sankey-tooltip').remove()
-      // SELECTION MODE ===========================================================
-      if (this.isInSelectionMode()) {
-        this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        this.is_drawing_area_contextualised = true
-        this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-      }
+      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      this.is_drawing_area_contextualised = true
+      this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
+      this.setSelectionMode()
     }
   }
 
@@ -2284,7 +2282,10 @@ export class Class_DrawingArea {
 
   // Color
   public get color() { return this._color }
-  public set color(_: string) { this._color = _; this.drawBackground() } // TODO add regular expression check here
+  public set color(_: string) { 
+    this._color = _
+    this.drawBackground() 
+  } // TODO add regular expression check here
 
   // Scale
   public get scale(): number {

@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { Fragment, FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { Fragment, FC, MutableRefObject, useRef, useState } from 'react'
 
 import {
   Box,
@@ -50,9 +50,7 @@ import {
   CustomFaEyeCheckIcon,
   default_style_id
 } from '../../types/Utils'
-import {
-  FCType_MenuConfigurationLinksAppearence,
-} from './types/SankeyMenuConfigurationLinksAppearenceTypes'
+
 import {
   TooltipValueSurcharge,
   OSTooltip
@@ -62,6 +60,7 @@ import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabe
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FCType_MenuConfigurationLinksAppearence } from '../SankeyMenuTypes'
 
 /*************************************************************************************************/
 // Declare custom logo used for some button
@@ -84,7 +83,7 @@ const style_TableLineDragging = (isDisabled: boolean, draggableStyle: DraggingSt
   ...draggableStyle
 })
 
-export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigurationLinksAppearence> = ({
+export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppearence> = ({
   new_data,
   additionMenus,
   menu_for_style
@@ -99,7 +98,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   const { icon_redo, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
-  const { ref_setter_show_modal_styles_links } = dict_setter_show_dialog
+  const { ref_setter_show_modal_styles_links_visual } = dict_setter_show_dialog
 
   // Elements on which this menu applies ------------------------------------------------
 
@@ -263,7 +262,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
    * @param {*} {k}
    * @return {*}
    */
-  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
+  const TooltipElementOverloaded: FC<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
     if (menu_for_style)
       return <></>
 
@@ -456,23 +455,23 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
             <TooltipElementOverloaded k={'shape_is_curved'} />
           </OSTooltip>
         </Checkbox>
-        {shape_is_curved?<><Box layerStyle='menuconfigpanel_option_name'>
+        {shape_is_curved ? <><Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_shape')}
           <TooltipElementOverloaded k={'shape_shape'} />
         </Box>
-        <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
-          <Select
-            //isDisabled={!disable_attr_props['shape_shape']}
-            value={shape_shape}
-            onChange={(evt) => {
-              updateElements('shape_shape', evt.target.value)
-            }}
-          >
-            {new_data.menu_configuration.shape_shape.map(el => {
-              return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
-            })}
-          </Select>
-        </OSTooltip></>:<></>}
+          <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
+            <Select
+              //isDisabled={!disable_attr_props['shape_shape']}
+              value={shape_shape}
+              onChange={(evt) => {
+                updateElements('shape_shape', evt.target.value)
+              }}
+            >
+              {new_data.menu_configuration.shape_shape.map(el => {
+                return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+              })}
+            </Select>
+          </OSTooltip></> : <></>}
       </Box>
 
       <Box layerStyle='menuconfigpanel_row_2cols'>
@@ -717,7 +716,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
               }
             }
             new_data.menu_configuration.updateComponentRelatedToLinksStyles()
-            ref_setter_show_modal_styles_links.current(true)
+            ref_setter_show_modal_styles_links_visual.current(true)
 
           }}
         >
@@ -756,7 +755,7 @@ export const MenuConfigurationLinksStyle: FunctionComponent<FCType_MenuConfigura
   return content
 }
 
-export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigurationLinksAppearence> = ({ new_data, menu_for_style, additionMenus }) => {
+export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppearence> = ({ new_data, menu_for_style, additionMenus }) => {
 
   // Datas ------------------------------------------------------------------------------
 
@@ -765,7 +764,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   const { sankey } = drawing_area
   // Get data
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
-  const { ref_setter_show_modal_styles_links_context } = dict_setter_show_dialog
+  const { ref_setter_show_modal_styles_links_labels } = dict_setter_show_dialog
 
   // Elements on which this menu applies ------------------------------------------------
   // State variable to trigger this menu refreshing
@@ -883,8 +882,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
   const name_label_is_visible = (element_ref?.name_label_is_visible ?? LINKS_ATTRIBUTES_CONFIG.name_label_is_visible.default)
   const name_label_on_path = (element_ref?.name_label_on_path ?? LINKS_ATTRIBUTES_CONFIG.value_label_on_path.default)
   const name_label_pos_auto = (element_ref?.name_label_pos_auto ?? LINKS_ATTRIBUTES_CONFIG.value_label_pos_auto.default)
-  const value_label_percent_input = (element_ref?.value_label_percent_input ?? LINKS_ATTRIBUTES_CONFIG.value_label_percent_input.default)
-  const value_label_percent_output = (element_ref?.value_label_percent_output ?? LINKS_ATTRIBUTES_CONFIG.value_label_percent_output.default)
+
 
   /**
    * function that go throught all links of an array & check if they're all equals
@@ -903,7 +901,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
    * @param {*} {k}
    * @return {*}
    */
-  const TooltipElementOverloaded: FunctionComponent<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
+  const TooltipElementOverloaded: FC<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
     if (menu_for_style)
       return <></>
 
@@ -963,6 +961,23 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
     </Box>
     {value_label_is_visible ?
       <>
+    {/* Common component with label component */}
+    <SankeyMenuLabelComponent
+      new_data={new_data}
+      elements={elements}
+      selectedElements={selected_links}
+      refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+          dict_decorator_name={{
+            label_horiz: 'value_label_horiz',
+            label_vert: 'value_label_vert',
+            label_font_size: 'value_label_font_size',
+            label_color: 'value_label_color',
+            label_bold: 'value_label_bold',
+            label_uppercase: 'value_label_uppercase',
+            label_italic: 'value_label_italic',
+            label_font_family: 'value_label_font_family'
+          }} />
+        {content_value_specific_flow}
         <SankeyMenuValueLabelComponent
           new_data={new_data}
           elements={elements}
@@ -979,73 +994,29 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
             label_font_family: 'value_label_font_family',
             label_custom_digit: 'value_label_custom_digit',
             label_nb_digit: 'value_label_nb_digit',
+            label_scientific_notation: 'value_label_scientific_notation',
+            label_significant_digits: 'value_label_significant_digits',
+            label_nb_significant_digits: 'value_label_nb_significant_digits'
           }}
         />
-        {content_value_specific_flow}
-        {additionMenus.current.additional_link_appearence_value.map((el, idx) => <Fragment key={'additional_apparence_' + idx}>{el(menu_for_style)}</Fragment>)}
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isDisabled={!disable_attr_props['value_label_percent_input']}
-          isChecked={value_label_percent_input}
-          onChange={(evt) => {
-            elements.forEach(element => {
-              if (evt.target.checked) {
-                element.value_label_percent_output = false
-              }
-              element.value_label_percent_input = evt.target.checked
-            })
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          <OSTooltip label={t('Flux.labels.tooltips.percentInput')}>
-            {t('Flux.labels.percentInput') + ' '}
-          </OSTooltip>
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'value_label_percent_input') ?
-              TooltipValueSurcharge('link_var_', t) :
-              <></>
-          }
-        </Checkbox>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isDisabled={!disable_attr_props['value_label_percent_output']}
-          isChecked={value_label_percent_output}
-          onChange={(evt) => {
-            elements.forEach(element => {
-              if (evt.target.checked) {
-                element.value_label_percent_input = false
-              }
-              element.value_label_percent_output = evt.target.checked
-            })
-            refreshThisAndUpdateRelatedComponents()
-          }}>
-          <OSTooltip label={t('Flux.labels.tooltips.percentOutput')}>
-            {t('Flux.labels.percentOutput') + ' '}
-          </OSTooltip>
-          {
-            (!menu_for_style) &&
-              isAttributeOverloaded(selected_links, 'value_label_percent_output') ?
-              TooltipValueSurcharge('link_var_', t) :
-              <></>
-          }
-        </Checkbox>
 
-        {/* Config Label value unit */}
-        <MenuUnit
-          new_data={new_data}
-          elements={elements}
-          selectedElements={selected_links}
-          refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-          dict_decorator_name={{
-            label_unit_visible: 'value_label_unit_visible',
-            label_unit: 'value_label_unit',
-            label_unit_factor: 'value_label_unit_factor',
-          }}
-        />
+        {additionMenus.current.additional_link_appearence_value.map((el, idx) => <Fragment key={'additional_apparence_' + idx}>{el(menu_for_style)}</Fragment>)}
       </> :
       <></>}
   </Box>
 
+  const content_unit = <MenuUnit
+    new_data={new_data}
+    elements={elements}
+    selectedElements={selected_links}
+    refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+    dict_decorator_name={{
+      label_unit_visible: 'value_label_unit_visible',
+      label_unit: 'value_label_unit',
+      label_unit_type: 'value_label_unit_type',
+      label_unit_factor: 'value_label_unit_factor',
+    }}
+  />
   // Content specific to link label, it us not generic so not in SankeyMenuLabelComponent
   const content_name_specific_flow = name_label_is_visible ? <>
     {/* Orienter le texte du label le long du flux  */}
@@ -1183,7 +1154,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
             }
 
             new_data.menu_configuration.updateComponentRelatedToLinksStyles()
-            ref_setter_show_modal_styles_links_context.current(true)
+            ref_setter_show_modal_styles_links_labels.current(true)
           }}
         >
           {icon_library.icon_edit_style}
@@ -1209,9 +1180,10 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
 
   return <>
     {selection_link}
+    {content_style}
     <>{elements.length > 0 ? <>
-      {content_style}
       {content_label_value}
+      {content_unit}
       {content_label_text}
     </> : <></>}</>
   </>
@@ -1226,7 +1198,7 @@ export const MenuConfigurationLinkContext: FunctionComponent<FCType_MenuConfigur
  * @param {*} { new_data }
  * @return {*}
  */
-export const MenuOrderStylesOfSelectedFlows: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
+export const MenuOrderStylesOfSelectedFlows: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { drawing_area, t, icon_library } = new_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
   const elements = drawing_area.selected_links_list
