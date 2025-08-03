@@ -1,7 +1,7 @@
 import { Box, Button, ButtonGroup } from '@chakra-ui/react'
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { OSTooltip } from '../../types/Utils'
-import { FCType_ToolBarBottom, FCType_ToolbarSubComponent } from './types/SankeyMenuBannerTypes'
+import { FCType_ToolBarBottom, FCType_ToolbarSubComponent } from '../SankeyMenuTypes'
 
 /**
  * Bottom toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
@@ -11,7 +11,7 @@ import { FCType_ToolBarBottom, FCType_ToolbarSubComponent } from './types/Sankey
  * }
  * @return {*}
  */
-export const ToolBarBottom: FunctionComponent<FCType_ToolBarBottom> = ({
+export const ToolBarBottom: FC<FCType_ToolBarBottom> = ({
   new_data
 }) => {
   const { t } = new_data
@@ -57,7 +57,7 @@ export const ToolBarBottom: FunctionComponent<FCType_ToolBarBottom> = ({
   </Box>
 }
 
-const ComponentMouseMode: FunctionComponent<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
+const ComponentMouseMode: FC<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
   const { t } = new_data
 
   { /* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */ }
@@ -103,7 +103,7 @@ const ComponentMouseMode: FunctionComponent<FCType_ToolbarSubComponent> = ({ new
  * @param {*} {new_data}
  * @return {*}
  */
-const ComponentUndoRedo: FunctionComponent<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
+const ComponentUndoRedo: FC<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
 
   { /* Buttons to apply undo or redo function */ }
   return <ButtonGroup isAttached>
@@ -139,7 +139,7 @@ const ComponentUndoRedo: FunctionComponent<FCType_ToolbarSubComponent> = ({ new_
  * @param {*} { new_data, updateParentComponent }
  * @return {*}
  */
-const ComponetStretchButtons: FunctionComponent<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
+const ComponetStretchButtons: FC<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
   // Use variable from class
   const { t } = new_data
 

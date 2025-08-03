@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 // External imports
-import React, { FunctionComponent, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { CheckboxProps, Tooltip } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { TFunction } from 'i18next'
@@ -33,9 +33,9 @@ import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import * as d3 from 'd3'
 // Local type imports
-import type { OSTooltpFuncType } from '../components/configmenus/types/SankeyUtilsTypes'
 import { FType_InitializeAdditionalMenus } from './FunctionTypes'
 import { Class_ApplicationData } from './ApplicationData'
+import { OSTooltpFuncType } from '../components/SankeyMenuTypes'
 
 // SPECIFIC TYPES ************************************************************************
 
@@ -351,7 +351,7 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 }
 
 
-export const OSTooltip: FunctionComponent<OSTooltpFuncType> = (
+export const OSTooltip: FC<OSTooltpFuncType> = (
   {
     label,
     delay = 500,
@@ -434,7 +434,7 @@ export const parseLocaleNumber = (stringNumber: string, locale = navigator.langu
 }
 
 
-export const WrapperInitializeAdditionalMenus: FunctionComponent<{
+export const WrapperInitializeAdditionalMenus: FC<{
   new_data: Class_ApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
 }> = ({ new_data, initializeAdditionalMenus }) => {

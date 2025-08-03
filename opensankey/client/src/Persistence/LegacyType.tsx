@@ -25,9 +25,9 @@
 // ==================================================================================================
 
 import { MutableRefObject } from 'react'
-import { FType_SetDiagram } from '../components/topmenus/types/SankeyMenuBannerTypes'
 import { Type_JSON } from '../types/Utils'
 import { Class_ApplicationData } from '../types/ApplicationData'
+import { FType_SetDiagram } from '../components/SankeyMenuTypes'
 
 export type SankeyNodeAttrLocal = {
   local_aggregation?: boolean,

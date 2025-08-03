@@ -65,9 +65,8 @@ import {
 } from './NodeAttributes'
 import { Class_NodeDimension } from './NodeDimension'
 import { ClassTemplate_Handler } from './Handler'
-import * as SankeyShapes from '../components/draw/SankeyDrawShapes'
 
-import { NodeDrawShape } from './NodeDrawShape'
+import { draw_arrow_part, NodeDrawShape } from './NodeDrawShape'
 import { NodeDrawNameLabel } from './NodeDrawNameLabel'
 import { NodeDrawValueLabel } from './NodeDrawValueLabel'
 import { NodeTooltip } from './NodeTooltip'
@@ -1197,7 +1196,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
         // Draw arrow on link
-        link.shape_arrow_path = SankeyShapes.draw_arrow_part(
+        link.shape_arrow_path = draw_arrow_part(
           total_cumul_of_side / 2,
           p5,
           +link_value,
@@ -1988,6 +1987,9 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   public get value_label_unit_visible() { return this.getStyleProperty('value_label_unit_visible') as boolean }
   public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawValueLabel() }
+
+  public get value_label_unit_type() : string { return this.getStyleProperty('value_label_unit_type') as string }
+  public set value_label_unit_type(_:string) { this._display.attributes.value_label_unit_type = _; this.drawValueLabel() }
 
   public get value_label_unit() { return this.getStyleProperty('value_label_unit') as string }
   public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawValueLabel() }

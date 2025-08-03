@@ -24,13 +24,12 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FunctionComponent, MutableRefObject, useRef, useState } from 'react'
+import React, { FC, MutableRefObject, useRef, useState } from 'react'
 import {
   Box,
   Button,
   Checkbox,
 } from '@chakra-ui/react'
-import { FCTpe_LayoutConfigDAScaleAndLimit, FCType_DrawingAreaStyle, FType_OpenSankeyMenuConfigurationLayout } from './types/SankeyMenuConfigurationLayoutTypes'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
 import { ConfigMenuNumberInput} from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
@@ -38,6 +37,8 @@ import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle 
 import { t } from 'i18next'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FType_OpenSankeyMenuConfigurationLayout, FCType_DrawingAreaStyle, BaseApplicationDataType } from '../SankeyMenuTypes'
+import { Class_DataTagGroup } from '../../types/TagGroup'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -51,7 +52,7 @@ const right_addon_pixel = (val: number) => {
 
 // MENU COMPONENT ***********************************************************************
 
-export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSankeyMenuConfigurationLayout> = ({
+export const OpenSankeyMenuConfigurationLayout: FC<FType_OpenSankeyMenuConfigurationLayout> = ({
   new_data,
   extra_background_element,
 }) => {
@@ -68,7 +69,7 @@ export const OpenSankeyMenuConfigurationLayout: FunctionComponent<FType_OpenSank
 }
 
 
-export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ new_data, extra_background_element }) => {
+export const DrawingAreaStyle: FC<FCType_DrawingAreaStyle> = ({ new_data, extra_background_element }) => {
 
   // Data -------------------------------------------------------------------------------
 
@@ -211,7 +212,7 @@ export const DrawingAreaStyle: FunctionComponent<FCType_DrawingAreaStyle> = ({ n
  * @param {*} { new_data }
  * @return {*} 
  */
-export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_data }) => {
   const { t } = new_data
   const [, setCount] = useState(0)
 
@@ -224,26 +225,19 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
     // And update this menu also
     setCount(a => a + 1)
   }
+  const ref_scale = useRef((_: string | null | undefined) => null)
+  const ref_minimum_flux = useRef((_: string | null | undefined) => null)
+  const ref_maximum_flux = useRef((_: string | null | undefined) => null)
 
-  // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 3
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-  // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(String(new_data.drawing_area.scale))
-  ref_set_number_inputs[1].current(String(new_data.drawing_area.minimum_flux ?? ''))
-  ref_set_number_inputs[2].current(String(new_data.drawing_area.maximum_flux ?? ''))
-
-
-
-
-  // Event functions -------------------------------------------------------------------
-
-  // ===================================================================================
-  // Create functions that will be used when modifying a attribute of the DA or the Legend,
-  // these functions will save the last value of said attribute in data history so we can revert if we want it
-  // ===================================================================================
+  const unit_taggs = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  if (unit_taggs.length > 0) {
+    const selectedTag = unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0]
+    ref_scale.current(String(selectedTag.scale))
+  } else {
+    ref_scale.current(String(new_data.drawing_area.scale))
+  }
+  ref_minimum_flux.current(String(new_data.drawing_area.minimum_flux ?? ''))
+  ref_maximum_flux.current(String(new_data.drawing_area.maximum_flux ?? ''))
 
   const eventMinLinkThickness = (evt: number | null | undefined) => {
     if (evt == null)
@@ -288,8 +282,6 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
     }
   }
 
-
-
   return <WrapperBoxSubSectionMenu new_data={new_data} title={t('MEP.links_size')}>
     <>
       <Box
@@ -302,7 +294,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
         <Box>
           <ConfigMenuNumberInput
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[0]}
+            ref_to_set_value={ref_scale}
             default_value={new_data.drawing_area.scale}
             function_on_blur={eventScale}
             minimum_value={1}
@@ -353,7 +345,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
           <OSTooltip label={t('MEP.tooltips.MinFlux')}>
             <ConfigMenuNumberInput
               t={new_data.t}
-              ref_to_set_value={ref_set_number_inputs[1]}
+              ref_to_set_value={ref_minimum_flux}
               default_value={new_data.drawing_area.minimum_flux}
               function_on_blur={eventMinLinkThickness}
               maximum_value={new_data.drawing_area.maximum_flux}
@@ -370,7 +362,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
           <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
             <ConfigMenuNumberInput
               t={new_data.t}
-              ref_to_set_value={ref_set_number_inputs[2]}
+              ref_to_set_value={ref_maximum_flux}
               default_value={new_data.drawing_area.maximum_flux}
               function_on_blur={eventMaxLinkThickness}
               minimum_value={new_data.drawing_area.minimum_flux}
@@ -391,7 +383,7 @@ export const LayoutConfigDAScaleAndLimit: FunctionComponent<FCTpe_LayoutConfigDA
  * @param {*} { new_data }
  * @return {*} 
  */
-export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => {
 
   const { t, OSColorPicker } = new_data
   const [, setCount] = useState(0)
@@ -690,7 +682,7 @@ export const LegendStyleConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLi
 }
 
 
-export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAndLimit> = ({ new_data }) => {
+export const LegendContextConfig: FC<BaseApplicationDataType> = ({ new_data }) => {
 
   const { t } = new_data
   const [, setCount] = useState(0)
@@ -792,7 +784,7 @@ export const LegendContextConfig: FunctionComponent<FCTpe_LayoutConfigDAScaleAnd
   </>
 }
 
-export const GraphElementsOrdoner: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
+export const GraphElementsOrdoner: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
   const [, setUpdate] = useState(0)
 

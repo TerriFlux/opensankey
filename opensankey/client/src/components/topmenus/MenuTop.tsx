@@ -28,7 +28,7 @@
 
 import React,
 {
-  FunctionComponent,
+  FC,
   useState,
   useRef,
   ChangeEvent,
@@ -67,7 +67,6 @@ import {
 import { useTour } from '@reactour/tour'
 
 // Local types
-import { FCType_OpenSankeySaveButton } from './types/SankeyMenuTopTypes'
 import { FCType_MenuTop } from '../../types/FunctionTypes'
 import { OSTooltip, Type_JSON } from '../../types/Utils'
 
@@ -77,8 +76,9 @@ import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
 import {
   decompressUploadedFileUniversal,
-} from '../dialogs/UniversalJSONCompression'
+} from '../../Persistence/UniversalJSONCompression'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FCType_OpenSankeySaveButton } from '../SankeyMenuTypes'
 
 /*************************************************************************************************/
 
@@ -120,7 +120,7 @@ export const GoToUserDoc = () => {
  * }
  * @return {*}
  */
-export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton> = ({
+export const OpenSankeySaveButton: FC<FCType_OpenSankeySaveButton> = ({
   new_data
 }) => {
   const { t } = new_data
@@ -182,7 +182,7 @@ export const OpenSankeySaveButton: FunctionComponent<FCType_OpenSankeySaveButton
  * }
  * @return {*}
  */
-export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
+export const MenuTopButtons: FC<FCType_MenuTop> = ({
   new_data, additionalMenus
 }) => {
   const { t } = new_data
@@ -641,7 +641,7 @@ export const MenuTopButtons: FunctionComponent<FCType_MenuTop> = ({
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
+export const MenuTopButtonsStatic: FC<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
 
@@ -767,7 +767,7 @@ export const MenuTopButtonsStatic: FunctionComponent<FCType_MenuTop> = ({ new_da
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
+export const MenuTopNavBar: FC<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
   const { logo } = new_data
   const [flag, setFlag] = useState('fr')
   const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
@@ -885,7 +885,7 @@ export const MenuTopNavBar: FunctionComponent<FCType_MenuTop> = ({ new_data, add
  * @param {Class_ApplicationData} new_data
  * @return {*}  {JSX.Element}
  */
-export const ButtonLaunchGuide: FunctionComponent<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
+export const ButtonLaunchGuide: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
   const { setIsOpen } = useTour()
   return <OSTooltip
     label={new_data.t('guide.tooltip.guide')}

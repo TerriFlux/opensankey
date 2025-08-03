@@ -1,7 +1,7 @@
 import { Box } from '@chakra-ui/react'
-import React, { CSSProperties, FunctionComponent, useState } from 'react'
+import React, { CSSProperties, FC, useState } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
-import { OSTooltip } from '../../types/Utils'
+import { OSTooltip } from '../../types/Utils';
 
 // Necessary props to call Class
 type OSColorPickerProps = {
@@ -11,7 +11,7 @@ type OSColorPickerProps = {
   textDisabled?: string
 }
 
-export const OSColorPicker: FunctionComponent<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled,textDisabled=''}) => {
+export const OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled,textDisabled=''}) => {
   const [displayColorPicker, setDisplayColorPicker] = useState(false)
   const [color, setColor] = useState(initialColor)
 

@@ -24,14 +24,14 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Class_NodeDimension } from '../../Elements/NodeDimension'
-import { Class_Tag } from '../../types/Tag'
-import { Class_LevelTagGroup } from '../../types/TagGroup'
-import { default_style_id } from '../../types/Utils'
-import { Class_NodeStyle } from '../../Elements/NodeAttributes'
-import { Class_NodeElement } from '../../Elements/Node'
-import { Class_LinkElement } from '../../Elements/Link'
-import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_NodeDimension } from '../Elements/NodeDimension'
+import { Class_Tag } from '../types/Tag'
+import { Class_LevelTagGroup } from '../types/TagGroup'
+import { default_style_id } from '../types/Utils'
+import { Class_NodeStyle } from '../Elements/NodeAttributes'
+import { Class_NodeElement } from '../Elements/Node'
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_ApplicationData } from '../types/ApplicationData'
 
 // ============================================================================
 // TYPES ET CONSTANTES
