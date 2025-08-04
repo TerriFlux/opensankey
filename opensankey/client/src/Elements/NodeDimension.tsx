@@ -209,7 +209,10 @@ export class Class_NodeDimension {
     const nodes_to_redraw = this._unsetForcingToShow()
     // Redraw
     nodes_to_redraw
-      .forEach(node => node.draw())
+      .forEach(node => {
+        node.dimensionsUpdated()
+        node.draw()
+    })
   }
 
   /**

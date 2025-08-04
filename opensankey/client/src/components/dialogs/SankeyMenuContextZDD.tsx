@@ -357,7 +357,22 @@ export const ContextMenuZdd: FC<BaseComponentProps> = ({
         new_data.drawing_area.nodePositioning.computeParametrization()
       setForceUpdate(a => a + 1)
     }}>
-    {default_style.position_type == 'parametric' ? t('MEP.parametricMode') : t('MEP.absoluteMode')}
+    {default_style.position_type == 'absolute' ? t('MEP.parametricMode') : t('MEP.absoluteMode')}
+  </Button>
+  const button_auto_x = <Button variant='contextmenu_button'
+    onClick={() => {
+      new_data.drawing_area.sankey.node_styles_dict['default'].position.auto_x = true 
+      // new_data.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      // Object.values(new_data.drawing_area.sankey.nodes_dict)
+      //   .filter(node => node.display.position.type !== 'relative')
+      //   .forEach(node => {
+      //     node.resetPositionAttribute('dy')
+      //     node.applyPosition()
+      //   }
+      //   )
+      // new_data.drawing_area.nodePositioning.computeParametrization()
+    }}>
+    {'Auto x'}
   </Button>
 
   const style_links_visual = <Button
@@ -410,6 +425,7 @@ export const ContextMenuZdd: FC<BaseComponentProps> = ({
       {button_trade_close}
       {button_trade_open}
       {button_parametric}
+      {button_auto_x}
     </MenuList>
   </Menu>
 
