@@ -351,7 +351,7 @@ export class NodeDimensionsManager{
     const dimensionsData = this._node.internalDimensionsData
     if (dimensionsData.dimensions_as_parent[_.id]) {
       delete dimensionsData.dimensions_as_parent[_.id]
-      if (!this._node.sibling) {
+      if (!this._node.master_node) {
         _.removeNodeAsParent(this._node)
       }
     }
@@ -361,7 +361,7 @@ export class NodeDimensionsManager{
     const dimensionsData = this._node.internalDimensionsData
     if (dimensionsData.dimensions_as_child[_.id]) {
       delete dimensionsData.dimensions_as_child[_.id]
-      if (!this._node.sibling) {
+      if (!this._node.master_node) {
         _.removeNodeFromChildren(this._node)
       }
     }
