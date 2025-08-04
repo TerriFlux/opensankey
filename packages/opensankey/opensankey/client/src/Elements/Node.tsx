@@ -129,8 +129,10 @@ export class Class_NodeElement extends ClassTemplate_Element {
   protected d3_selection_g_FO_illustration: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_image: d3.Selection<SVGImageElement, unknown, SVGGElement, unknown> | null = null
   protected d3_selection_g_icon: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown> | null = null
-
   protected _sibling_node: Class_NodeElement | undefined = undefined
+  protected _master_node: Class_NodeElement | undefined = undefined
+  protected _slave_nodes: Class_NodeElement[] = []
+
 
   protected _display: {
     position: Type_ElementPosition,
@@ -2039,8 +2041,23 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   public get attached_container(): Class_ContainerElement[] { return this._attached_container }
 
-  public get sibling() {return this._sibling_node}
-  public set sibling(_) {this._sibling_node = _}
+  public get master_node() { return this._master_node }
+
+  public set master_node(_) {
+    const master = _
+    this._master_node = master
+    master?.add_slave_nodes(this)
+  }
+
+  public get slave_nodes() {
+    return this._slave_nodes
+  }
+  public add_slave_nodes(_: Class_NodeElement) {
+    this._slave_nodes.push(_)
+  }
+
+  public get sibling() { return this._sibling_node }
+  public set sibling(_) { this._sibling_node = _ }
 
   // PRIVATE VISIBILITY GETTERS ========================================================
 

@@ -340,7 +340,7 @@ export const ContextMenuZdd: FC<BaseComponentProps> = ({
   const default_style = new_data.drawing_area.sankey.node_styles_dict['default']
   const button_parametric = <Button variant='contextmenu_button'
     onClick={() => {
-      if (default_style.position_type = 'parametric')
+      if (default_style.position_type == 'parametric')
         default_style.position_type = 'absolute'
       else
         default_style.position_type = 'parametric'
@@ -353,7 +353,7 @@ export const ContextMenuZdd: FC<BaseComponentProps> = ({
           node.applyPosition()
         }
         )
-      if (default_style.position_type = 'parametric')
+      if (default_style.position_type == 'parametric')
         new_data.drawing_area.nodePositioning.computeParametrization()
       setForceUpdate(a => a + 1)
     }}>
