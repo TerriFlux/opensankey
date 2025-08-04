@@ -2160,9 +2160,20 @@ export class Class_DrawingArea {
   // Mode
 
   public isInSelectionMode() { return this._mode === 'selection' }
-  protected setSelectionMode() { this._mode = 'selection'; this.drawCursor() }
+  protected setSelectionMode() {
+    // forcing are there are some issues sometimes it is not unset
+    this.sankey.links_list.forEach(l=>l.unsetMouseOver())
+    this._mode = 'selection'; 
+    this.drawCursor() 
+  }
+
   public isInEditionMode() { return this._mode === 'edition' }
-  protected setEditionMode() { this._mode = 'edition'; this.drawCursor() }
+  protected setEditionMode() {
+    // forcing are there are some issues sometimes it is not unset
+    this.sankey.links_list.forEach(l=>l.unsetMouseOver())
+    this._mode = 'edition'; 
+    this.drawCursor() 
+  }
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
