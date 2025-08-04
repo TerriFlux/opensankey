@@ -1222,6 +1222,21 @@ export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle>
       </Checkbox>
     </Box>
     {value_label_is_visible ? <>
+      <SankeyMenuLabelComponent
+        new_data={new_data}
+        elements={elements}
+        selectedElements={selected_nodes}
+        refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+        dict_decorator_name={{
+          label_horiz: 'value_label_horiz',
+          label_vert: 'value_label_vert',
+          label_font_size: 'value_label_font_size',
+          label_color: 'value_label_color',
+          label_bold: 'value_label_bold',
+          label_uppercase: 'value_label_uppercase',
+          label_italic: 'value_label_italic',
+          label_font_family: 'value_label_font_family'
+        }} />
       <SankeyMenuValueLabelComponent
         new_data={new_data}
         elements={elements}
@@ -1317,8 +1332,13 @@ export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle>
         </Box>
       </OSTooltip>
 
+
+    </> : <></>}
+
+  </Box>
+
       {/* Config Label value unit */}
-      <MenuUnit
+  const unit_menu = <MenuUnit
         new_data={new_data}
         elements={elements}
         selectedElements={selected_nodes}
@@ -1330,10 +1350,6 @@ export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle>
           label_unit_factor: 'value_label_unit_factor',
         }}
       />
-    </> : <></>}
-
-  </Box>
-
 
   let content_style = <></>
   if (!menu_for_style) {
@@ -1437,7 +1453,8 @@ export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle>
     {
       elements.length > 0 ? <>
         <React.Fragment key={'lab_text'}>{content_label}</React.Fragment>
-        <React.Fragment key={'lab_val'}>{content_label_value}</React.Fragment></> : <></>
+        <React.Fragment key={'lab_val'}>{content_label_value}</React.Fragment>
+        <React.Fragment key={'lab_unit'}>{unit_menu}</React.Fragment></> : <></>
     }
   </Box>
 }
