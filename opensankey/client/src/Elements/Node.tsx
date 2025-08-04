@@ -673,7 +673,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public addInputLink(link: Class_LinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
-      if ( this._links_order.includes(link)) {
+      if (this._links_order.includes(link)) {
         console.log('this._links_order.includes(link)')
       } else {
         this._links_order.push(link)
@@ -688,7 +688,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public addOutputLink(link: Class_LinkElement) {
     if (!this._output_links[link.id]) {
       this._output_links[link.id] = link
-      if ( this._links_order.includes(link)) {
+      if (this._links_order.includes(link)) {
         console.log('this._links_order.includes(link)')
       } else {
         this._links_order.push(link)
@@ -1048,7 +1048,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
                 + this.position_dy
             }
             if (this.position_auto_x) {
-              this._display.position.x = this._display.position.u * this._display.position.dx!
+              this._display.position.x = this._display.position.u * this.position_dx
             }
           }
         }
@@ -1127,29 +1127,29 @@ export class Class_NodeElement extends ClassTemplate_Element {
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -1986,8 +1986,8 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public get value_label_unit_visible() { return this.getStyleProperty('value_label_unit_visible') as boolean }
   public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawValueLabel() }
 
-  public get value_label_unit_type() : string { return this.getStyleProperty('value_label_unit_type') as string }
-  public set value_label_unit_type(_:string) { this._display.attributes.value_label_unit_type = _; this.drawValueLabel() }
+  public get value_label_unit_type(): string { return this.getStyleProperty('value_label_unit_type') as string }
+  public set value_label_unit_type(_: string) { this._display.attributes.value_label_unit_type = _; this.drawValueLabel() }
 
   public get value_label_unit() { return this.getStyleProperty('value_label_unit') as string }
   public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawValueLabel() }
