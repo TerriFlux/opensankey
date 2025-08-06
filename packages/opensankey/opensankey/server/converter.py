@@ -886,17 +886,17 @@ class SankeyToJson(object):
         if data.flux.constraints:
             for constraints in data.flux.constraints.values():
                 for constraint in constraints:
-                    if constraint.type == DataConstraintType.ratio_node_output_source:
+                    if constraint.type == DataConstraintType.ratio_node_input_source.value:
                         data_json["value_option"] = (
-                            DataConstraintType.ratio_node_output_source.name
+                            DataConstraintType.ratio_node_input_source.value
                         )
-                        data_json["data_value"] = (1 + constraint.eq) * 100
+                        data_json["data_value"] = constraint.ratio * 100
                     elif (
                         constraint.type
                         == DataConstraintType.ratio_node_input_destination
                     ):
                         data_json["value_option"] = (
-                            DataConstraintType.ratio_node_input_destination.name
+                            DataConstraintType.ratio_node_input_destination.value
                         )
                         data_json["data_value"] = (1 + constraint.eq) * 100
 
