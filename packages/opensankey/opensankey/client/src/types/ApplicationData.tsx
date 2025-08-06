@@ -47,7 +47,7 @@ import { Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 import { JSONtoExcel, retrieveExcelResults } from '../Persistence/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from './IconLibrairie'
-import { OSColorPicker } from '../components/configmenus/OSColorPicker'
+import { MenuColorPicker } from '../components/configmenus/MenuColorPicker'
 import { Class_DrawingArea } from './DrawingArea'
 
 // SPECIFIC TYPES **********************************************************************/
@@ -67,7 +67,7 @@ export type Type_TextForToastPromise = {
   }
 }
 
-export type OSColorPickerProps = {
+export type MenuColorPickerProps = {
   initialColor: string;
   functionOnBlur: (x: string) => void;
   isDisabled?: boolean,
@@ -858,8 +858,8 @@ export class Class_ApplicationData {
     func(value)
   }
 
-  public OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled }) => {
-    return <OSColorPicker
+  public MenuColorPicker: FC<MenuColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled }) => {
+    return <MenuColorPicker
       isDisabled={isDisabled}
       initialColor={initialColor}
       functionOnBlur={functionOnBlur}

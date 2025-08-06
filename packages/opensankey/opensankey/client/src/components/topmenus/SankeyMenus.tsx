@@ -78,7 +78,7 @@ import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigu
 import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationNodeContext, MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
-import { WrapperContentConfig } from '../configmenus/SankeyMenuComponents'
+import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_MenuDraggable } from '../SankeyMenuTypes'
 
