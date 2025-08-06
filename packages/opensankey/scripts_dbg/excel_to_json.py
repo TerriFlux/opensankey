@@ -1,4 +1,3 @@
-
 from SankeyExcelParser.sankey import Sankey
 from SankeyExcelParser.io_excel import load_sankey_from_excel_file
 
