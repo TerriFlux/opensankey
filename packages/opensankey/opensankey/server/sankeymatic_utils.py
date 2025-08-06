@@ -1,4 +1,4 @@
-'''
+"""
 ==================================================================================================
 The MIT License (MIT)
 ==================================================================================================
@@ -24,7 +24,7 @@ THE SOFTWARE.
 ==================================================================================================
 Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 ==================================================================================================
-'''
+"""
 
 # coding: utf-8
 
@@ -52,10 +52,10 @@ def parse_setting_line_size(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'w'):
-        obj['size_width'] = lst[1]
-    elif (lst[0] == 'h'):
-        obj['size_height'] = lst[1]
+    if lst[0] == "w":
+        obj["size_width"] = lst[1]
+    elif lst[0] == "h":
+        obj["size_height"] = lst[1]
 
 
 def parse_setting_line_margin(lst: list, obj: dict):
@@ -75,14 +75,14 @@ def parse_setting_line_margin(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'l'):
-        obj['margin_left'] = lst[1]
-    elif (lst[0] == 'r'):
-        obj['margin_right'] = lst[1]
-    elif (lst[0] == 't'):
-        obj['margin_top'] = lst[1]
-    elif (lst[0] == 'b'):
-        obj['margin_bottom'] = lst[1]
+    if lst[0] == "l":
+        obj["margin_left"] = lst[1]
+    elif lst[0] == "r":
+        obj["margin_right"] = lst[1]
+    elif lst[0] == "t":
+        obj["margin_top"] = lst[1]
+    elif lst[0] == "b":
+        obj["margin_bottom"] = lst[1]
 
 
 def parse_setting_line_bg(lst: list, obj: dict):
@@ -102,10 +102,10 @@ def parse_setting_line_bg(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'color'):
-        obj['bg_color'] = lst[1]
-    elif (lst[0] == 'transparent'):
-        obj['bg_transparent'] = lst[1]
+    if lst[0] == "color":
+        obj["bg_color"] = lst[1]
+    elif lst[0] == "transparent":
+        obj["bg_transparent"] = lst[1]
 
 
 def parse_setting_line_node(lst: list, obj: dict):
@@ -125,20 +125,20 @@ def parse_setting_line_node(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'color'):
-        obj['node_color'] = lst[1]
-    elif (lst[0] == 'w'):
-        obj['node_width'] = lst[1]
-    elif (lst[0] == 'h'):
-        obj['node_height'] = lst[1]
-    elif (lst[0] == 'spacing'):
-        obj['node_spacing'] = lst[1]
-    elif (lst[0] == 'border'):
-        obj['node_border'] = lst[1]
-    elif (lst[0] == 'theme'):
-        obj['node_theme'] = lst[1]
-    elif (lst[0] == 'opacity'):
-        obj['node_opacity'] = lst[1]
+    if lst[0] == "color":
+        obj["node_color"] = lst[1]
+    elif lst[0] == "w":
+        obj["node_width"] = lst[1]
+    elif lst[0] == "h":
+        obj["node_height"] = lst[1]
+    elif lst[0] == "spacing":
+        obj["node_spacing"] = lst[1]
+    elif lst[0] == "border":
+        obj["node_border"] = lst[1]
+    elif lst[0] == "theme":
+        obj["node_theme"] = lst[1]
+    elif lst[0] == "opacity":
+        obj["node_opacity"] = lst[1]
 
 
 def parse_setting_line_flow(lst: list, obj: dict):
@@ -158,14 +158,14 @@ def parse_setting_line_flow(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'color'):
-        obj['flow_color'] = lst[1]
-    elif (lst[0] == 'inheritfrom'):
-        obj['flow_inheritfrom'] = lst[1]
-    elif (lst[0] == 'opacity'):
-        obj['flow_opacity'] = lst[1]
-    elif (lst[0] == 'curvature'):
-        obj['flow_curvature'] = lst[1]
+    if lst[0] == "color":
+        obj["flow_color"] = lst[1]
+    elif lst[0] == "inheritfrom":
+        obj["flow_inheritfrom"] = lst[1]
+    elif lst[0] == "opacity":
+        obj["flow_opacity"] = lst[1]
+    elif lst[0] == "curvature":
+        obj["flow_curvature"] = lst[1]
 
 
 def parse_setting_line_layout(lst: list, obj: dict):
@@ -185,16 +185,16 @@ def parse_setting_line_layout(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'order'):
-        obj['layout_order'] = lst[1]
-    elif (lst[0] == 'justifyorigins'):
-        obj['layout_justifyorigins'] = lst[1]
-    elif (lst[0] == 'justifyends'):
-        obj['layout_justifyends'] = lst[1]
-    elif (lst[0] == 'reversegraph'):
-        obj['layout_reversegraph'] = lst[1]
-    elif (lst[0] == 'attachincompletesto'):
-        obj['layout_attachincompletesto'] = lst[1]
+    if lst[0] == "order":
+        obj["layout_order"] = lst[1]
+    elif lst[0] == "justifyorigins":
+        obj["layout_justifyorigins"] = lst[1]
+    elif lst[0] == "justifyends":
+        obj["layout_justifyends"] = lst[1]
+    elif lst[0] == "reversegraph":
+        obj["layout_reversegraph"] = lst[1]
+    elif lst[0] == "attachincompletesto":
+        obj["layout_attachincompletesto"] = lst[1]
 
 
 def parse_setting_line_labels(lst: list, obj: dict):
@@ -214,20 +214,20 @@ def parse_setting_line_labels(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'color'):
-        obj['labels_color'] = lst[1]
-    elif (lst[0] == 'hide'):
-        obj['labels_hide'] = lst[1]
-    elif (lst[0] == 'highlight'):
-        obj['labels_highlight'] = lst[1]
-    elif (lst[0] == 'fontface'):
-        obj['labels_fontface'] = lst[1]
-    elif (lst[0] == 'linespacing'):
-        obj['labels_linespacing'] = lst[1]
-    elif (lst[0] == 'relativesize'):
-        obj['labels_relativesize'] = lst[1]
-    elif (lst[0] == 'magnify'):
-        obj['labels_magnify'] = lst[1]
+    if lst[0] == "color":
+        obj["labels_color"] = lst[1]
+    elif lst[0] == "hide":
+        obj["labels_hide"] = lst[1]
+    elif lst[0] == "highlight":
+        obj["labels_highlight"] = lst[1]
+    elif lst[0] == "fontface":
+        obj["labels_fontface"] = lst[1]
+    elif lst[0] == "linespacing":
+        obj["labels_linespacing"] = lst[1]
+    elif lst[0] == "relativesize":
+        obj["labels_relativesize"] = lst[1]
+    elif lst[0] == "magnify":
+        obj["labels_magnify"] = lst[1]
 
 
 def parse_setting_line_label_name(lst: list, obj: dict):
@@ -247,12 +247,12 @@ def parse_setting_line_label_name(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'appears'):
-        obj['label_name_appears'] = lst[1]
-    elif (lst[0] == 'size'):
-        obj['label_name_size'] = lst[1]
-    elif (lst[0] == 'weight'):
-        obj['label_name_weight'] = lst[1]
+    if lst[0] == "appears":
+        obj["label_name_appears"] = lst[1]
+    elif lst[0] == "size":
+        obj["label_name_size"] = lst[1]
+    elif lst[0] == "weight":
+        obj["label_name_weight"] = lst[1]
 
 
 def parse_setting_line_label_value(lst: list, obj: dict):
@@ -272,14 +272,14 @@ def parse_setting_line_label_value(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'appears'):
-        obj['label_value_appears'] = lst[1]
-    elif (lst[0] == 'fullprecision'):
-        obj['label_value_fullprecision'] = lst[1]
-    elif (lst[0] == 'position'):
-        obj['label_value_position'] = lst[1]
-    elif (lst[0] == 'weight'):
-        obj['label_value_weight'] = lst[1]
+    if lst[0] == "appears":
+        obj["label_value_appears"] = lst[1]
+    elif lst[0] == "fullprecision":
+        obj["label_value_fullprecision"] = lst[1]
+    elif lst[0] == "position":
+        obj["label_value_position"] = lst[1]
+    elif lst[0] == "weight":
+        obj["label_value_weight"] = lst[1]
 
 
 def parse_setting_line_label_position(lst: list, obj: dict):
@@ -299,14 +299,14 @@ def parse_setting_line_label_position(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'autoalign'):
-        obj['label_position_autoalign'] = lst[1]
-    elif (lst[0] == 'scheme'):
-        obj['label_position_scheme'] = lst[1]
-    elif (lst[0] == 'first'):
-        obj['label_position_first'] = lst[1]
-    elif (lst[0] == 'breakpoint'):
-        obj['label_position_breakpoint'] = lst[1]
+    if lst[0] == "autoalign":
+        obj["label_position_autoalign"] = lst[1]
+    elif lst[0] == "scheme":
+        obj["label_position_scheme"] = lst[1]
+    elif lst[0] == "first":
+        obj["label_position_first"] = lst[1]
+    elif lst[0] == "breakpoint":
+        obj["label_position_breakpoint"] = lst[1]
 
 
 def parse_setting_line_value(lst: list, obj: dict):
@@ -326,12 +326,12 @@ def parse_setting_line_value(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'format'):
-        obj['value_format'] = lst[1]
-    elif (lst[0] == 'prefix'):
-        obj['value_prefix'] = lst[1] if len(lst) == 2 else ''
-    elif (lst[0] == 'suffix'):
-        obj['value_suffix'] = lst[1] if len(lst) == 2 else ''
+    if lst[0] == "format":
+        obj["value_format"] = lst[1]
+    elif lst[0] == "prefix":
+        obj["value_prefix"] = lst[1] if len(lst) == 2 else ""
+    elif lst[0] == "suffix":
+        obj["value_suffix"] = lst[1] if len(lst) == 2 else ""
 
 
 def parse_setting_line_themeoffset(lst: list, obj: dict):
@@ -351,14 +351,14 @@ def parse_setting_line_themeoffset(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'a'):
-        obj['theme_a'] = lst[1]
-    elif (lst[0] == 'b'):
-        obj['theme_b'] = lst[1]
-    elif (lst[0] == 'c'):
-        obj['theme_c'] = lst[1]
-    elif (lst[0] == 'd'):
-        obj['theme_d'] = lst[1]
+    if lst[0] == "a":
+        obj["theme_a"] = lst[1]
+    elif lst[0] == "b":
+        obj["theme_b"] = lst[1]
+    elif lst[0] == "c":
+        obj["theme_c"] = lst[1]
+    elif lst[0] == "d":
+        obj["theme_d"] = lst[1]
 
 
 def parse_setting_line_meta(lst: list, obj: dict):
@@ -378,10 +378,10 @@ def parse_setting_line_meta(lst: list, obj: dict):
     -------
     - Nothing, it modify obj passed in parametter
     """
-    if (lst[0] == 'mentionsankeymatic'):
-        obj['meta_mentionsankeymatic'] = lst[1]
-    elif (lst[0] == 'listimbalances'):
-        obj['meta_listimbalances'] = lst[1]
+    if lst[0] == "mentionsankeymatic":
+        obj["meta_mentionsankeymatic"] = lst[1]
+    elif lst[0] == "listimbalances":
+        obj["meta_listimbalances"] = lst[1]
 
 
 def normalizeStringToValidId(text: str):
@@ -397,7 +397,7 @@ def normalizeStringToValidId(text: str):
     -------
       text normalised (withnon alphanumeric caracter replaced by '_')
     """
-    return 'id_' + re.sub('[^0-9a-zA-Z]+', '_', text)
+    return "id_" + re.sub("[^0-9a-zA-Z]+", "_", text)
 
 
 def create_json_node(id: str, name: str):
@@ -414,15 +414,15 @@ def create_json_node(id: str, name: str):
       json object formatted to be a node in a the front application
     """
     return {
-        'id': id,
-        'name': name,
-        'svg_parent_group': "g_nodes",
+        "id": id,
+        "name": name,
+        "svg_parent_group": "g_nodes",
         "x": 0,
         "y": 0,
         "u": 0,
         "v": 0,
         "style": "default",
-        'local': {},
+        "local": {},
         "tags": {},
         "dimensions": {},
         "inputLinksId": [],
@@ -430,17 +430,15 @@ def create_json_node(id: str, name: str):
         "links_order": [],
         "input_value": 0,  # Var not used in OS but used here to compute sankey scale
         "output_value": 0,  # Var not used in OS but used here to compute sankey scale
-
     }
 
 
 def randomId(length: int = 5):
-    result = ''
-    characters = \
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    result = ""
+    characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     charactersLength = len(characters)
     counter = 0
-    while (counter < length):
+    while counter < length:
         result += characters[random.randint(0, charactersLength - 1)]
         counter += 1
 
@@ -463,7 +461,7 @@ def create_json_flow(org_id: str, dest_id: str, value: str, color: str):
       json object formatted to be a node in a the front application
     """
     flow = {
-        "id": org_id + "-->" + dest_id + '_' + randomId(),
+        "id": org_id + "-->" + dest_id + "_" + randomId(),
         "is_visible": True,
         "svg_parent_group": "g_links",
         "idSource": org_id,
@@ -473,29 +471,34 @@ def create_json_flow(org_id: str, dest_id: str, value: str, color: str):
         "displaying_order": 0,
         "tooltip_text": "",
         "value": {
-            "id": org_id + dest_id + '_' + randomId(),
+            "id": org_id + dest_id + "_" + randomId(),
             "data_value": float(value),
-            "tags": {}
-        }
+            "tags": {},
+        },
     }
-    if (color is not None):
-        flow['local']['color'] = color
+    if color is not None:
+        flow["local"]["color"] = color
     return flow
 
 
 def sum_node_value_from_list_node_dict(nodes: List[dict]):
     col_val = 0
     for node in nodes:
-        node_val = node['input_value'] if node['input_value'] > \
-            node['output_value'] else node['output_value']
+        node_val = (
+            node["input_value"]
+            if node["input_value"] > node["output_value"]
+            else node["output_value"]
+        )
         col_val += node_val
     return col_val
 
 
 def generate_hexa_color():
-    def r(): return random.randint(0, 255)
-    return '#%02X%02X%02X' % (r(), r(), r())
+    def r():
+        return random.randint(0, 255)
+
+    return "#%02X%02X%02X" % (r(), r(), r())
 
 
 def sort_nodeIO(node: dict):
-    return node['y']
+    return node["y"]

@@ -18,11 +18,11 @@ except Exception:
 
 # --------------------------------------------------------------
 app = create_app()
-app.register_blueprint(doc_blueprint, url_prefix='/doc')
-app.secret_key = 'super secret key'
-app.config['SESSION_TYPE'] = 'filesystem'
-mfa_data_dir = os.environ.get('MFAData')
-app.config['FLASKFILEMANAGER_FILE_PATH'] = os.path.join(mfa_data_dir)
+app.register_blueprint(doc_blueprint, url_prefix="/doc")
+app.secret_key = "super secret key"
+app.config["SESSION_TYPE"] = "filesystem"
+mfa_data_dir = os.environ.get("MFAData")
+app.config["FLASKFILEMANAGER_FILE_PATH"] = os.path.join(mfa_data_dir)
 flaskfilemanager.init(app)
 
 if __name__ == "__main__":
