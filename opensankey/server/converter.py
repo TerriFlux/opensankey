@@ -878,10 +878,10 @@ class SankeyToJson(object):
         """
         data_json = copy.deepcopy(default_data_strct)
         data_json = copy.deepcopy(default_data_strct)
-        data_json["data_value"] = data.value if (data.value is not None) else ""
-        data_json["value_option"] = (
-            data.value_option if (data.value_option != "") else None
-        )
+        #data_json["data_value"] = data.value if (data.value is not None) else ""
+        # data_json["value_option"] = (
+        #     data.value_option if (data.value_option != "") else None
+        # )
 
         if data.flux.constraints:
             for constraints in data.flux.constraints.values():
@@ -1007,6 +1007,7 @@ class SankeyToJson(object):
             _update_dict_if_value(data_strct, "data_max", raw_data.max_val)
             _update_dict_if_value(data_strct, "data_value", raw_data.value)
             _update_dict_if_value(data_strct, "data_source", raw_data.source)
+            _update_dict_if_value(data_strct, "value_option", raw_data.value_option)
         # Reference result struct from data tags
         tags = [
             tag for tag in result.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)
