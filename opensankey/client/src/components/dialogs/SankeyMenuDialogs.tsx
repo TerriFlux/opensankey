@@ -53,7 +53,7 @@ import {
 } from '../../types/FunctionTypes'
 
 import { MenuDraggable } from '../topmenus/SankeyMenus'
-import { OSMultiSelect, typeElementSelectable, WrapperCheckBoxSubSectionMenu } from '../configmenus/SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable, WrapperCheckBoxSubSectionMenu } from '../configmenus/MenuCommon'
 import { checked } from './SankeyMenuContextLink'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_ApplyLayoutDialog, FType_DiagramSelector } from '../SankeyMenuTypes'

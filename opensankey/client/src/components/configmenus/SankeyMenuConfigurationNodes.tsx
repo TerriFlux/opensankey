@@ -39,7 +39,7 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import { ConfigMenuTextInput } from './SankeyMenuConfiguration'
-import { OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable } from './MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
 

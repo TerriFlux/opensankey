@@ -56,7 +56,10 @@ import {
   OSTooltip
 } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
-import { WrapperBoxSubSectionMenu, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, MenuResetAttrLocal, MenuUnit, OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
+import { WrapperBoxSubSectionMenu, MenuResetAttrLocal, OSMultiSelect, typeElementSelectable } from './MenuCommon'
+import { SankeyMenuValueLabelComponent } from './MenuValueLabel'
+import { SankeyMenuLabelComponent } from './MenuLabel'
+import { MenuUnit } from './MenuUnit'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -92,7 +95,7 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t, icon_library, OSColorPicker, drawing_area } = new_data
+  const { t, icon_library, MenuColorPicker, drawing_area } = new_data
   const { sankey } = drawing_area
 
   const { icon_redo, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
@@ -310,7 +313,7 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
           {t('Flux.apparence.shape_color')}
           <TooltipElementOverloaded k={'shape_color'} />
         </Box><Box>
-          <OSColorPicker
+          <MenuColorPicker
             isDisabled={shape_color_rule !== 'flow' || !disable_attr_props['shape_color']}
             initialColor={shape_color}
             functionOnBlur={(new_color) => {

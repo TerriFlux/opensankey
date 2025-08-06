@@ -40,7 +40,7 @@ import {
 
 
 /*************************************************************************************************/
-import { OSMultiSelect, typeElementSelectable } from './SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable } from './MenuCommon'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'

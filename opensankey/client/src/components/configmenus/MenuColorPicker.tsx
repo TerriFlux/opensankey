@@ -4,14 +4,14 @@ import { ColorResult, SketchPicker } from 'react-color'
 import { OSTooltip } from '../../types/Utils';
 
 // Necessary props to call Class
-type OSColorPickerProps = {
+type MenuColorPickerProps = {
   initialColor: string;
   functionOnBlur: (x: string) => void;
   isDisabled?: boolean,
   textDisabled?: string
 }
 
-export const OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled,textDisabled=''}) => {
+export const MenuColorPicker: FC<MenuColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled,textDisabled=''}) => {
   const [displayColorPicker, setDisplayColorPicker] = useState(false)
   const [color, setColor] = useState(initialColor)
 
@@ -24,7 +24,7 @@ export const OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOn
    *Event when we click on the 'button
    *
    * @private
-   * @memberof OSColorPicker
+   * @memberof MenuColorPicker
    */
   const handleClick = () => {
     if (isDisabled !== true)
@@ -35,7 +35,7 @@ export const OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOn
    *Event when we close the picker
    *
    * @private
-   * @memberof OSColorPicker
+   * @memberof MenuColorPicker
    */
   const handleClose = () => {
     setDisplayColorPicker(false)
@@ -48,7 +48,7 @@ export const OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOn
    *
    * @private
    * @param {ColorResult} color
-   * @memberof OSColorPicker
+   * @memberof MenuColorPicker
    */
   const handleChange = (color: ColorResult) => {
     setColor(color.hex)

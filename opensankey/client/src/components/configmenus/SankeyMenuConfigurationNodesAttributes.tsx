@@ -62,7 +62,10 @@ import {
   TooltipValueSurcharge,
 } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
-import { MenuResetAttrLocal, MenuUnit, OSMultiSelect, SankeyMenuLabelComponent, SankeyMenuValueLabelComponent, typeElementSelectable, WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
+import { MenuResetAttrLocal, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from './MenuCommon'
+import { SankeyMenuValueLabelComponent } from './MenuValueLabel'
+import { SankeyMenuLabelComponent } from './MenuLabel'
+import { MenuUnit } from './MenuUnit'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { Draggable, DraggingStyle, DragDropContext, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -110,7 +113,7 @@ export const MenuConfigurationNodeStyle: FC<FCType_MenuConfigurationNodeStyle> =
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t, icon_library, OSColorPicker, drawing_area } = new_data
+  const { t, icon_library, MenuColorPicker, drawing_area } = new_data
   const { sankey } = drawing_area
   const { ref_selected_style_node } = new_data.menu_configuration
   const { ref_setter_show_modal_styles_nodes_labels } = new_data.menu_configuration.dict_setter_show_dialog
@@ -338,7 +341,7 @@ export const MenuConfigurationNodeStyle: FC<FCType_MenuConfigurationNodeStyle> =
         <Box layerStyle='option_with_activation'>
           <OSTooltip label={t('Noeud.apparence.tooltips.shape_color')}>
             <Box>
-              <OSColorPicker
+              <MenuColorPicker
                 isDisabled={!disable_attr_props['shape_color']}
                 initialColor={shape_color}
                 functionOnBlur={(new_color) => {
@@ -854,7 +857,7 @@ export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle>
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t, menu_configuration, icon_library, OSColorPicker, drawing_area } = new_data
+  const { t, menu_configuration, icon_library, MenuColorPicker, drawing_area } = new_data
   const { sankey } = drawing_area
   const { icon_edit_style } = icon_library
   const { ref_selected_style_node, dict_setter_show_dialog } = menu_configuration
@@ -1074,7 +1077,7 @@ export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle>
           </OSTooltip>
           <TooltipElementOverloaded k='name_label_background' />
         </Checkbox>
-        <OSColorPicker
+        <MenuColorPicker
           isDisabled={!disable_attr_props['name_label_background_color']}
           initialColor={name_label_background_color}
           functionOnBlur={(new_color) => {
@@ -1273,7 +1276,7 @@ export const MenuConfigurationNodeContext: FC<FCType_MenuConfigurationNodeStyle>
           </OSTooltip>
           <TooltipElementOverloaded k='value_label_background' />
         </Checkbox>
-        <OSColorPicker
+        <MenuColorPicker
           isDisabled={!disable_attr_props['value_label_background_color']}
           initialColor={value_label_background_color}
           functionOnBlur={(new_color) => {

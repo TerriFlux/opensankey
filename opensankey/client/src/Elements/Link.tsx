@@ -321,8 +321,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public parallel_curve: Class_LinkElement | undefined
-
   public sibling: Class_LinkElement | undefined
+  private _is_unit_reference = false
 
   // Visibility memorized - source & target
   protected _source_visibility_fingerprint: string
@@ -2141,6 +2141,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   public get value_label_unit_factor() { return this.getStyleProperty('value_label_unit_factor') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']> }
   public set value_label_unit_factor(_: number) { this._display.attributes.value_label_unit_factor = _; this.drawValue() }
+
+  public get value_label_unit_is_reference() { return this._is_unit_reference }
+  public set value_label_unit_is_reference(_) { this._is_unit_reference = _; this.drawValue() }  
 
   public get value_label_custom_digit() { return this.getStyleProperty('value_label_custom_digit') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']> }
   public set value_label_custom_digit(_: boolean) {
