@@ -58,24 +58,24 @@ import { TFunction } from 'i18next'
  *
  * @type {{ data: any; set_data: any;right_menu: any; settings_edition: any; settings_edition_node_tags: any; settings_edition_link_tags: any; settings_edition_data_tags: any; ... 39 more ...; launch: any; }}
  */
-export type ConfigurationMenuTypes = {
-  configuration_menus: JSX.Element[],
-}
+// export type ConfigurationMenuTypes = {
+//   configuration_menus: JSX.Element[],
+// }
 
-export const SankeyConfigurationMenu: FC<ConfigurationMenuTypes> = (
-  {
-    configuration_menus
-  }
-) => {
+// export const SankeyConfigurationMenu: FC<ConfigurationMenuTypes> = (
+//   {
+//     configuration_menus
+//   }
+// ) => {
 
-  return (
-    <Accordion allowToggle>
-      {configuration_menus.map((c: ReactElementLike, i: number) => {
-        return <React.Fragment key={i}>{c}</React.Fragment>
-      })}
-    </Accordion>
-  )
-}
+//   return (
+//     <Accordion allowToggle>
+//       {configuration_menus.map((c: ReactElementLike, i: number) => {
+//         return <React.Fragment key={i}>{c}</React.Fragment>
+//       })}
+//     </Accordion>
+//   )
+// }
 
 /**
  * Component developped for number input of the config menu
