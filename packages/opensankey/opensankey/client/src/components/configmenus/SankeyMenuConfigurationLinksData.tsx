@@ -294,7 +294,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
         <Box
           layerStyle='menuconfigpanel_option_name'
         >
-          {t('Flux.data.'+value_option)}
+          {t('Flux.labels.'+value_option)}
         </Box>
         <ConfigMenuNumberOrUndefinedInput
           ref_to_set_value={ref_set_data_value_input}
