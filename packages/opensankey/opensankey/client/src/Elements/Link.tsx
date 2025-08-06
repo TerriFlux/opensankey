@@ -1689,7 +1689,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     } else if (option == '%OD' && value) {
       return value + '% →↕'
     }
-    return ''
+    return value as string
   }
 
   public get data_label() {
