@@ -280,7 +280,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
           // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
           //   return <></>
           // }
-          return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.data.'+el)}</OSTooltip></></option>
+          return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.labels.'+el)}</OSTooltip></></option>
         })}
       </Select>
       {/* </OSTooltip> */}
