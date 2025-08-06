@@ -1752,7 +1752,62 @@ export const tabsStyles = {
       },
     },
     list: { minWidth: 'inherit' },
-    item: { display: 'grid', fontSize: '0.6rem' }
+    item: { display: 'grid', fontSize: '0.6rem' },
+    root: {
+      border: 'inherit',
+      borderRadius: '6px',
+      borderColor: 'inherit',
+      WebkitUserSelect: 'none', /* Chrome all / Safari all */
+      MozUserSelect: 'none', /* Firefox all */
+      msUserSelect: 'none', /* IE 10+ */
+      userSelect: 'none',
+    },
+    tab: {
+      borderRight: '0px !important',
+      borderLeft: '0px !important',
+      borderBottom: '0px !important',
+      borderTop: '0px !important',
+      borderRadius: '0px',
+      margin: '0 -1px 0 0 !important',
+      padding: '0 !important',
+      height: '2rem !important',
+      color: 'primaire.3',
+      fill: 'primaire.3',
+      path: 'primaire.3',
+      width: '10rem',
+      textStyle: 'h3',
+      _selected: {
+        background: 'white',
+        borderRight: '0px !important',
+        borderLeft: 'solid 1px !important',
+        borderBottom: 'solid 1px !important',
+        borderTop: 'solid 1px !important',
+        borderRadius: '6px 0px 0px 6px',
+        borderRightColor: 'white',
+        borderLeftColor: 'primaire.2',
+        borderBottomColor: 'primaire.2',
+        borderTopColor: 'primaire.2',
+        color: 'primaire.2',
+        fill: 'primaire.2',
+        path: 'primaire.2',
+      }
+    },
+    tablist: {
+      display: 'inherit',
+      gridTemplateColumns: '1fr',
+      gridTemplateRows: '1fr',
+      borderRight: '1px !important',
+      borderColor: 'primaire.2 !important',
+      padding: '3rem 0 0 0 !important'
+    },
+    tabpanels: {
+      border: '0px !important',
+    },
+    tabpanel: {
+      display: 'block',
+      height: '100%',
+      width: '100%',
+    }
   }),
 
   menu_button_subnav_style: menu.definePartsStyle({
