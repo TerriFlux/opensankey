@@ -330,8 +330,9 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
           }
           spreadSheetFlux[fluxIndex].value_result = (change.newCell as NumberCell).value
         }
-        
         new_data.drawing_area.updateScaleAtLinkValueSetting()
+        l.source.draw()
+        l.target.draw()
       })
 
       // Create undo of original function ----------------------------

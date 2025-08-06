@@ -641,8 +641,6 @@ export const resources_app_elements = {
           value_label_nb_significant_digits: 'Number of significant numbers',
           value_label_on_path: 'Follow flow path',
           value_label_pos_auto: 'Vertical position adjusted',
-          value_label_percent_input: 'Value in % of input',
-          value_label_percent_output: 'Value in % of output',
 
           tooltips: {
             name_label_is_visible: 'Displays or not the label(s) attached to the selected node(s)',
@@ -886,8 +884,6 @@ export const resources_app_elements = {
           value_label_nb_significant_digits: 'Number of significant numbers',
           value_label_on_path: 'Follow flow path',
           value_label_pos_auto: 'Vertical position adjusted',
-          value_label_percent_input: 'Value in % of input',
-          value_label_percent_output: 'Value in % of output',
 
           tooltips: {
             label: 'Display or not the label (data / text) associated to the selected link(s)',
@@ -902,8 +898,6 @@ export const resources_app_elements = {
             milieu_v: 'For the selected link(s), allows to position the label inside the link',
             top: 'For the selected stream(s), allows to position the label above the stream',
             pls: 'Combination Alt/left click move the label of the selected stream(s)',
-          value_label_percent_input: 'Value in % of input',
-          value_label_percent_output: 'Value in % of output',
             scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             significantDigits: 'Maximum number of significant digits',
             value_label_custom_digit: 'Maximum number of decimals',
@@ -1902,10 +1896,10 @@ export const resources_app_elements = {
           l_u: 'Nom de l\'unité',
           unit_type: 'Type d\'unité',
           unit_name: 'Unité personnalisée',
-          '%_input_source' : '% entrées source',
-          '%_input_target' : '% entrées destination',
-          '%_output_source' : '% sorties source',
-          '%_output_target' : '% sorties destination',
+          '%IS' : '% entrées source',
+          '%ID' : '% entrées destination',
+          '%OS' : '% sorties source',
+          '%OD' : '% sorties destination',
           unit_tag : 'Unité naturelle d\'origine',
           other_unit_tag: 'Autres unités naturelles',
           normalized: 'Normalisé (flux réf.)',
@@ -1959,8 +1953,6 @@ export const resources_app_elements = {
           value_label_nb_significant_digits: 'Nombre de chiffre significatif',
           value_label_on_path: 'Orienter suivant l\'axe du flux',
           value_label_pos_auto: 'Position verticale ajusté',
-          value_label_percent_input: '% entrées source',
-          value_label_percent_output: '% sorties destination',
 
           tooltips: {
             label: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)',
@@ -1976,8 +1968,6 @@ export const resources_app_elements = {
             dessus: 'Pour le/les flux sélectionné(s), permet de positionner le texte du label au dessus du flux',
             pls: 'La combinaison Alt/click gauche déplace le label du/des flux sélectionné(s)',
             scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
-            value_label_percent_input: '% entrées',
-            value_label_percent_output: '% sorties',
             significantDigits: 'Nombre maximum de chiffres significatifs',
             value_label_custom_digit: 'Nombre maximum de décimales fixes',
             NbDigit: 'Nombre maximum de décimales fixes',

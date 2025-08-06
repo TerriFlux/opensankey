@@ -39,7 +39,7 @@ import SankeyExcelParser.io_excel_constants as CONST_IO_XL
 
 # Local modules ---------------------------------------------------------------
 from SankeyExcelParser.classes.sankey import Sankey
-from SankeyExcelParser.classes.sankey_utils.data import Data as SankeyData
+from SankeyExcelParser.classes.sankey_utils.data import Data as SankeyData, DataConstraintType
 from SankeyExcelParser.classes.sankey_utils.tag_group import ANTI_TAGS_NAME
 
 # Constants -------------------------------------------------------------------
@@ -602,6 +602,7 @@ class SankeyToJson(object):
         # First create default datas struct
         default_data_strct = {
             "data_value": "",
+            "value_option": None,
             "text_value": "",
             "tags": {},
             "extension": {},
@@ -876,6 +877,20 @@ class SankeyToJson(object):
         :rtype: dict
         """
         data_json = copy.deepcopy(default_data_strct)
+        data_json = copy.deepcopy(default_data_strct)
+        data_json["data_value"] = data.value if (data.value is not None) else ""
+        data_json["value_option"] = data.value_option if (data.value_option is not "") else None
+
+        if data.flux.constraints:
+            for constraints in data.flux.constraints.values():
+                for constraint in constraints:
+                    if constraint.type == DataConstraintType.ratio_node_output_source:
+                        data_json["value_option"] = DataConstraintType.ratio_node_output_source.name
+                        data_json["data_value"] = (1+constraint.eq)*100
+                    elif constraint.type == DataConstraintType.ratio_node_input_destination:
+                        data_json["value_option"] = DataConstraintType.ratio_node_input_destination.name
+                        data_json["data_value"] = (1+constraint.eq)*100
+
         # Update flux tags to data structure
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
             # TODO : Checker si len(tags) > 1 -> normalement ça ne devrait pas arriver
@@ -1235,8 +1250,8 @@ class SankeyToJson(object):
                 else:
                     # Node does not exist in given dim
                     node_json["dimensions"][id] = {}
-                    # if node._dimensions_as_child or node._dimensions_as_parent:
-                    #     node_json["dimensions"][id]["antitag"] = True
+                    if node._dimensions_as_child or node._dimensions_as_parent:
+                        node_json["dimensions"][id]["antitag"] = True
         return node_json
 
 

@@ -33,6 +33,7 @@ import {
   Type_JSON,
   Type_Position,
 } from '../types/Utils'
+import { UnitType } from './LinkValues'
 import { Class_NodeElement } from './Node'
 
 // SPECIFIC CONSTANTS *******************************************************************
@@ -119,7 +120,7 @@ export const NODES_ATTRIBUTES_CONFIG = {
   value_label_unit_visible: { default: false, type: (() => false) as (() => boolean) },
   value_label_unit: { default: '', type: (() => '') as (() => string) },
   value_label_unit_factor: { default: 1, type: (() => 1) as (() => number) },
-  value_label_unit_type: { default: 'unit_name', type: (() => 'unit_name') as (() => string) },
+  value_label_unit_type: { default: 'unit_name', type: (() => 'unit_name') as (() => UnitType) },
 
   // OSP Extensions - Icon attributes
   icon_name: { default: undefined as string | undefined, type: (() => undefined) as (() => string | undefined) },
