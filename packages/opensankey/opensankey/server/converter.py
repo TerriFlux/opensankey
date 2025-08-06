@@ -878,7 +878,7 @@ class SankeyToJson(object):
         """
         data_json = copy.deepcopy(default_data_strct)
         data_json = copy.deepcopy(default_data_strct)
-        #data_json["data_value"] = data.value if (data.value is not None) else ""
+        # data_json["data_value"] = data.value if (data.value is not None) else ""
         # data_json["value_option"] = (
         #     data.value_option if (data.value_option != "") else None
         # )
@@ -886,7 +886,10 @@ class SankeyToJson(object):
         if data.flux.constraints:
             for constraints in data.flux.constraints.values():
                 for constraint in constraints:
-                    if constraint.type == DataConstraintType.ratio_node_input_source.value:
+                    if (
+                        constraint.type
+                        == DataConstraintType.ratio_node_input_source.value
+                    ):
                         data_json["value_option"] = (
                             DataConstraintType.ratio_node_input_source.value
                         )
