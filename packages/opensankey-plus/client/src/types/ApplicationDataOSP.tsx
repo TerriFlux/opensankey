@@ -8,7 +8,7 @@
 // ==================================================================================================
 
 // OpenSankey imports
-import { Class_ApplicationData, default_save_JSON_options, OSColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
+import { Class_ApplicationData, default_save_JSON_options, MenuColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, OSTooltip, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
@@ -349,10 +349,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
  * Function to get a color picker, it override the one from OS by adding user custom palette
  *
  * @param {*} { initialColor, functionOnBlur, isDisabled, textDisabled = '' }
- * @type {FC<OSColorPickerProps>}
+ * @type {FC<MenuColorPickerProps>}
  * @memberof Class_ApplicationDataSA
  */
-  public override OSColorPicker: FC<OSColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }) => {
+  public override MenuColorPicker: FC<MenuColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }) => {
     const [displayColorPicker, setDisplayColorPicker] = useState(false)
     const [color, setColor] = useState(initialColor)
 
@@ -365,7 +365,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
      *Event when we click on the 'button
      *
      * @private
-     * @memberof OSColorPicker
+     * @memberof MenuColorPicker
      */
     const handleClick = () => {
       if (isDisabled !== true)
@@ -376,7 +376,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
      *Event when we close the picker
      *
      * @private
-     * @memberof OSColorPicker
+     * @memberof MenuColorPicker
      */
     const handleClose = () => {
       setDisplayColorPicker(false)
@@ -388,7 +388,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
      *
      * @private
      * @param {ColorResult} color
-     * @memberof OSColorPicker
+     * @memberof MenuColorPicker
      */
     const handleChange = (_: ColorResult) => {
       setColor(_.hex)

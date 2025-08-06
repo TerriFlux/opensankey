@@ -1,7 +1,7 @@
 import { Select, Box, Switch } from '@chakra-ui/react'
 import React, { FC, useState } from 'react'
 import { FilterWrapperBox, title_filter_column } from './TagsFilterComponent'
-import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { BaseComponentProps } from '../ComponentTypes'
 
 /**

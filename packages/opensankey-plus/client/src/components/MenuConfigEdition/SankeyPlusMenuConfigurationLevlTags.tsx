@@ -10,7 +10,7 @@ import {
 import type { Class_LevelTag} from '../../deps/OpenSankey/types/Tag'
 
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
-import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_NodeDimension } from '../../deps/OpenSankey/Elements/NodeDimension'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'

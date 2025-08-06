@@ -2,7 +2,7 @@ import { Select, Box, Switch } from '@chakra-ui/react'
 import React, { FC, useState } from 'react'
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { FilterWrapperBox, title_filter_column } from './TagsFilterComponent'
-import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_FluxTagGroup } from '../../deps/OpenSankey/types/TagGroup'
 import { BaseComponentProps } from '../ComponentTypes'
 

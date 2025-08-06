@@ -45,7 +45,7 @@ import {
   ConfigMenuTextInput
 } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
-import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { LevelTagFilter } from '../FilterComponent/LevelTagFilter'
 import { FilterWrapperBox } from '../FilterComponent/TagsFilterComponent'
 import { Class_DrawingAreaOSP } from '../../types/DrawingAreaOSP'

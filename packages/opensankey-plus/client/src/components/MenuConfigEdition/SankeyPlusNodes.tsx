@@ -16,14 +16,14 @@ import {
   CustomFaEyeCheckIcon,
   OSTooltip
 } from '../../deps/OpenSankey/types/Utils'
-import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { BaseComponentProps, BaseComponentPropsPlus} from '../ComponentTypes'
 
 
 export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
-  const { t, icon_library, OSColorPicker } = new_data_plus
+  const { t, icon_library, MenuColorPicker } = new_data_plus
   const { icon_locked, icon_unlocked, icon_import_file_image } = icon_library
   const is_activated = new_data_plus.has_sankey_plus
 
@@ -333,7 +333,7 @@ export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
               </Box>
               <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''}>
                 <Box>
-                  <OSColorPicker
+                  <MenuColorPicker
                     isDisabled={new_data_plus.has_sankey_plus}
                     initialColor={(selected_nodes.length === 1 && selected_nodes[0].icon_color) ?
                       selected_nodes[0].icon_color :

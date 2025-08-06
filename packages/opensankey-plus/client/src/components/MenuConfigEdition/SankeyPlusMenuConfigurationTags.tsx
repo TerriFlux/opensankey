@@ -33,7 +33,7 @@ import {
   OSTooltip
 } from '../../deps/OpenSankey/types/Utils'
 
-import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/LinkValues'
 import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../../deps/OpenSankey/types/TagGroup'
 import { FType_SankeySettingsEditionElementTags } from '../ComponentTypes'
@@ -70,7 +70,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, icon_library, OSColorPicker } = new_data
+  const { t, icon_library, MenuColorPicker } = new_data
   const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible, icon_random, icon_palette_color } = icon_library
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
@@ -735,7 +735,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                           <Td w='100%'>
                             <OSTooltip label={t('Tags.tooltips.couleur')}>
                               <Box>
-                                <OSColorPicker
+                                <MenuColorPicker
                                   initialColor={tag.color}
                                   functionOnBlur={(new_color) => {
                                     handleTagColor(tag, new_color)

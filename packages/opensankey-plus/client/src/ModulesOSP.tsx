@@ -31,7 +31,7 @@ import React from 'react'
 import {
   MenuDraggable
 } from './deps/OpenSankey/components/topmenus/SankeyMenus'
-import { WrapperContentConfig } from './deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { WrapperContentConfig } from './deps/OpenSankey/components/configmenus/MenuCommon'
 import {
   OpenSankeyDiagramSelector
 } from './deps/OpenSankey/components/dialogs/SankeyMenuDialogs'
