@@ -32,7 +32,7 @@ import {
 } from '@chakra-ui/react'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
 import { ConfigMenuNumberInput} from './SankeyMenuConfiguration'
-import { WrapperBoxSubSectionMenu } from './SankeyMenuComponents'
+import { WrapperBoxSubSectionMenu } from './MenuCommon'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { t } from 'i18next'
 import { Class_LinkElement } from '../../Elements/Link'
@@ -73,7 +73,7 @@ export const DrawingAreaStyle: FC<FCType_DrawingAreaStyle> = ({ new_data, extra_
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, OSColorPicker } = new_data
+  const { t, MenuColorPicker } = new_data
 
   // Components updaters ---------------------------------------------------------------
 
@@ -153,7 +153,7 @@ export const DrawingAreaStyle: FC<FCType_DrawingAreaStyle> = ({ new_data, extra_
         </Box>
         <OSTooltip label={t('MEP.tooltips.BgC')}>
           <Box>
-            <OSColorPicker
+            <MenuColorPicker
               initialColor={new_data.drawing_area.color}
               functionOnBlur={eventBgColor}
             />
@@ -385,7 +385,7 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
  */
 export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => {
 
-  const { t, OSColorPicker } = new_data
+  const { t, MenuColorPicker } = new_data
   const [, setCount] = useState(0)
 
 
@@ -545,7 +545,7 @@ export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => 
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgColor')}>
           <Box>
-            <OSColorPicker
+            <MenuColorPicker
               initialColor={new_data.drawing_area.legend.legend_bg_color}
               functionOnBlur={eventGLegendBgColor}
             />

@@ -66,7 +66,7 @@ export const ContextMenuZdd: FC<BaseComponentProps> = ({
   new_data,
 }) => {
 
-  const { t, OSColorPicker } = new_data
+  const { t, MenuColorPicker } = new_data
   const [, setForceUpdate] = useState(0)
   const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
   ref_set_number_inputs.current(String(new_data.drawing_area.scale))
@@ -267,7 +267,7 @@ export const ContextMenuZdd: FC<BaseComponentProps> = ({
     <Box style={{ display: 'flex', flex: '1 2' }}>
       <label htmlFor='color_bg_zdd' style={{ margin: 'auto auto auto 0' }}>{t('Menu.BgC')}</label>
       <Box w='100%'>
-        <OSColorPicker
+        <MenuColorPicker
           initialColor={new_data.drawing_area.color}
           functionOnBlur={(new_color) => {
             new_data.drawing_area.color = new_color
