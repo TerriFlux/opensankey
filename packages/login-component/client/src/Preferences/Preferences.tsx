@@ -6,7 +6,7 @@ import * as d3 from 'd3'
 
 import { TFunction } from 'i18next'
 import { SankeySettingsEditionElementTags } from '../deps/OpenSankey+/components/MenuConfigEdition/SankeyPlusMenuConfigurationTags'
-import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuComponents'
+import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 import { MenuConfigurationLinksStyle, MenuConfigurationLinkContext } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksAppearence'
 import { MenuConfigurationNodeStyle, MenuConfigurationNodeContext } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodesAttributes'
 import { WrapperNodeStyleSelector, WrapperLinkStyleSelector } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyStyle'
@@ -604,7 +604,7 @@ const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePa
    *Event when we close the picker
    *
    * @private
-   * @memberof OSColorPicker
+   * @memberof MenuColorPicker
    */
   const handleClose = () => {
     setDisplayColorPicker(false)
