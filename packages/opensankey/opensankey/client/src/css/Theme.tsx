@@ -1,8 +1,8 @@
-import { 
-  drawerAnatomy, 
-  sliderAnatomy, 
-  tagAnatomy, 
-  tabsAnatomy, 
+import {
+  drawerAnatomy,
+  sliderAnatomy,
+  tagAnatomy,
+  tabsAnatomy,
   tableAnatomy,
   selectAnatomy,
   popoverAnatomy,
@@ -47,7 +47,7 @@ const { tag, slider, tabs, table, select, popover, numberInput, accordion, card,
 // Couleurs communes
 const COLORS = {
   primaire: {
-    1: '#F7AD7C', 2: '#78A7C2', 3: '#78C2AD', 
+    1: '#F7AD7C', 2: '#78A7C2', 3: '#78C2AD',
     4: '#B49E90', 5: '#8EA4B1', 6: '#8EB1A8'
   },
   secondaire: {
@@ -147,12 +147,12 @@ export const createPositionedButtonStyle = (baseStyle: any, position: 'left' | '
 // Factory pour tables
 export const createTableStyle = (columns: string) => table.definePartsStyle({
   td: { padding: 0, margin: 'auto' },
-  th: { 
-    paddingInlineStart: 'inherit', 
-    paddingInlineEnd: 'inherit', 
-    margin: 'auto', 
-    paddingBottom: '0', 
-    fontSize: 'unset' 
+  th: {
+    paddingInlineStart: 'inherit',
+    paddingInlineEnd: 'inherit',
+    margin: 'auto',
+    paddingBottom: '0',
+    fontSize: 'unset'
   },
   table: { display: 'grid', gridRowGap: '0.2rem', width: 'unset' },
   tbody: { display: 'grid', gridRowGap: '0.2rem' },
@@ -222,19 +222,19 @@ export const modalStyles = {
       padding: '0.25rem',
     }
   }),
-  
+
   modal_dialog: modal.definePartsStyle({
     dialog: { width: 'fit-content', height: 'fit-content' },
     body: { width: 'fit-content', height: 'fit-content', margin: '1rem' },
     header: { width: '100%' },
     footer: { justifyContent: 'center' }
   }),
-  
+
   modal_welcome: modal.definePartsStyle({
     closeButton: { right: '0.65rem', top: '0.65rem' },
     footer: { height: '3rem' }
   }),
-  
+
   modal_documentation: modal.definePartsStyle({
     overlay: { opacity: 0.3 },
     dialog: { width: 'max-content', height: 'max-content', alignSelf: 'center' },
@@ -275,7 +275,7 @@ export const menuconfigBaseButton = {
 
 export const buttonStyles = {
   base: createButtonStyle('primaire', 3),
-  
+
   // Toolbar buttons
   toolbar_button_mouse_mode: defineStyle({
     bgColor: 'primaire.1',
@@ -285,7 +285,7 @@ export const buttonStyles = {
     _hover: { bgColor: 'tertiaire.1', border: 'none' },
     _active: { bgColor: 'secondaire.1', border: 'none' },
   }),
-  
+
   toolbar_button_mouse_mode_activated: defineStyle({
     bgColor: 'secondaire.1',
     border: 'none',
@@ -453,7 +453,7 @@ export const buttonStyles = {
   ...(['primary', 'secondary', 'tertiary'] as const).reduce((acc, type) => {
     const colorMap = { primary: 3, secondary: 2, tertiary: 4 }
     const level = colorMap[type]
-    
+
     acc[`menuconfigpanel_option_button_${type}`] = defineStyle({
       textStyle: 'h4',
       color: `tertiaire.${level}`,
@@ -472,7 +472,7 @@ export const buttonStyles = {
         borderColor: `primaire.${level}`,
       },
     })
-    
+
     acc[`menuconfigpanel_option_button_${type}_activated`] = defineStyle({
       textStyle: 'h4',
       color: 'white',
@@ -491,14 +491,14 @@ export const buttonStyles = {
         borderColor: `primaire.${level}`,
       },
     })
-    
+
     return acc
   }, {} as Record<string, any>),
 
   // Boutons avec positions (left, center, right) - factory
   ...(['left', 'center', 'right'] as const).reduce((acc, position) => {
     acc[`menuconfigpanel_option_button_${position}`] = createPositionedButtonStyle(menuconfigBaseButton, position)
-    
+
     acc[`menuconfigpanel_option_button_activated_${position}`] = createPositionedButtonStyle({
       ...menuconfigBaseButton,
       color: 'tertiaire.3',
@@ -506,13 +506,13 @@ export const buttonStyles = {
       borderColor: 'tertiaire.3',
       border: 'solid 2px',
     }, position)
-    
+
     return acc
   }, {} as Record<string, any>),
 
   // Base menu config panel buttons
   menuconfigpanel_option_button: defineStyle(menuconfigBaseButton),
-  
+
   menuconfigpanel_option_button_activated: defineStyle({
     ...menuconfigBaseButton,
     color: 'tertiaire.3',
@@ -896,807 +896,839 @@ export const buttonStyles = {
 // INPUT STYLES
 // ===============================
 export const inputStyles = {
- base: input.definePartsStyle({
-   addon: {
-     height: '1.5rem',
-     border: 'solid 1px',
-     fontSize: 'unset',
-     borderRadius: '6px',
-     borderColor: 'gray.100',
-     textStyle: 'h4',
-     bg: 'gray.50',
-     bgColor: 'gray.50',
-     padding: '0.2rem',
-   },
-   field: {
-     ...BASE_STYLES.inputField,
-     _disabled: { bg: 'gray.300', bgColor: 'gray.300' },
-     _focus: { border: 'solid 2px', borderColor: 'primaire.2' }
-   },
- }),
- 
- menuconfigpanel_option_input: input.definePartsStyle({
-   addon: { bg: 'gray.100', bgColor: 'gray.100' },
-   field: { paddingLeft: '0.5rem', paddingRight: '0.5rem' }
- }),
- 
- menuconfigpanel_option_input_table: input.definePartsStyle({
-   addon: { bg: 'gray.100', bgColor: 'gray.100' },
-   field: { 
-     paddingLeft: '0.25rem', 
-     paddingRight: '0.25rem', 
-     height: 'revert' 
-   }
- }),
+  base: input.definePartsStyle({
+    addon: {
+      height: '1.5rem',
+      border: 'solid 1px',
+      fontSize: 'unset',
+      borderRadius: '6px',
+      borderColor: 'gray.100',
+      textStyle: 'h4',
+      bg: 'gray.50',
+      bgColor: 'gray.50',
+      padding: '0.2rem',
+    },
+    field: {
+      ...BASE_STYLES.inputField,
+      _disabled: { bg: 'gray.300', bgColor: 'gray.300' },
+      _focus: { border: 'solid 2px', borderColor: 'primaire.2' }
+    },
+  }),
 
- menuconfigpanel_option_input_color: input.definePartsStyle({
-   field: { padding: '0.1rem' }
- }),
+  menuconfigpanel_option_input: input.definePartsStyle({
+    addon: { bg: 'gray.100', bgColor: 'gray.100' },
+    field: { paddingLeft: '0.5rem', paddingRight: '0.5rem' }
+  }),
+
+  menuconfigpanel_option_input_table: input.definePartsStyle({
+    addon: { bg: 'gray.100', bgColor: 'gray.100' },
+    field: {
+      paddingLeft: '0.25rem',
+      paddingRight: '0.25rem',
+      height: 'revert'
+    }
+  }),
+
+  menuconfigpanel_option_input_color: input.definePartsStyle({
+    field: { padding: '0.1rem' }
+  }),
 }
 
 // ===============================
 // MENU STYLES
 // ===============================
 export const menuStyles = {
- base: menu.definePartsStyle({
-   button: {
-     height: '3rem',
-     width: '4rem',
-     borderRadius: '6px',
-     textStyle: 'h4',
-     fontSize: '9px',
-     border: '0px',
-     span: {
-       display: 'grid',
-       gridColumnGap: '0',
-       gridRowGap: '0',
-       padding: '0',
-       margin: '0',
-     },
-   },
-   list: { minWidth: 'inherit' },
-   item: { display: 'grid', fontSize: '0.6rem' }
- }),
+  base: menu.definePartsStyle({
+    button: {
+      height: '3rem',
+      width: '4rem',
+      borderRadius: '6px',
+      textStyle: 'h4',
+      fontSize: '9px',
+      border: '0px',
+      span: {
+        display: 'grid',
+        gridColumnGap: '0',
+        gridRowGap: '0',
+        padding: '0',
+        margin: '0',
+      },
+    },
+    list: { minWidth: 'inherit' },
+    item: { display: 'grid', fontSize: '0.6rem' }
+  }),
 
- menu_button_subnav_style: menu.definePartsStyle({
-   button: {
-     color: 'gray.600',
-     borderColor: 'transparent',
-     bg: 'transparent',
-     bgColor: 'transparent',
-     'svg': { 'height': '2rem', 'width': '3rem' },
-     _hover: {
-       color: 'gray.600',
-       borderColor: 'transparent',
-       bg: 'transparent',
-       bgColor: 'transparent',
-     },
-   },
-   item: {
-     gridTemplateColumns: '1.5rem auto',
-     fontSize: '0.8rem',
-   }
- }),
+  menu_button_subnav_style: menu.definePartsStyle({
+    button: {
+      color: 'gray.600',
+      borderColor: 'transparent',
+      bg: 'transparent',
+      bgColor: 'transparent',
+      'svg': { 'height': '2rem', 'width': '3rem' },
+      _hover: {
+        color: 'gray.600',
+        borderColor: 'transparent',
+        bg: 'transparent',
+        bgColor: 'transparent',
+      },
+    },
+    item: {
+      gridTemplateColumns: '1.5rem auto',
+      fontSize: '0.8rem',
+    }
+  }),
 
- menu_button_subnav_account_style: menu.definePartsStyle({
-   button: {
-     color: 'white',
-     borderColor: 'primaire.2',
-     bg: 'primaire.2',
-     bgColor: 'primaire.2',
-     span: {
-       gridTemplateColumns: '2fr 1fr',
-       gridTemplateRows: '1fr',
-     },
-     _hover: {
-       color: 'white',
-       borderColor: 'secondaire.2',
-       bg: 'secondaire.2',
-       bgColor: 'secondaire.2',
-     },
-   },
-   item: { display: 'flex' }
- }),
+  menu_button_subnav_account_style: menu.definePartsStyle({
+    button: {
+      color: 'white',
+      borderColor: 'primaire.2',
+      bg: 'primaire.2',
+      bgColor: 'primaire.2',
+      span: {
+        gridTemplateColumns: '2fr 1fr',
+        gridTemplateRows: '1fr',
+      },
+      _hover: {
+        color: 'white',
+        borderColor: 'secondaire.2',
+        bg: 'secondaire.2',
+        bgColor: 'secondaire.2',
+      },
+    },
+    item: { display: 'flex' }
+  }),
 
- menu_select_elements: menu.definePartsStyle({
-   item: {
-     display: 'grid',
-     gridTemplateColumns: '1fr 9fr',
-     gridColumnGap: '0.25rem',
-     fontSize: '0.6rem',
-     span: { margin: 0, padding: 0 },
-     'span.chakra-menu__icon-wrapper': { margin: 'auto' },
-     svg: { width: '0.8rem', height: '0.8rem' },
-     _hover: { bg: 'lightgrey' }
-   },
-   list: {
-     maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
-     overflowY: 'auto',
-     border: 'solid 1px',
-     borderColor: 'primaire.5'
-   }
- }),
+  menu_select_elements: menu.definePartsStyle({
+    item: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 9fr',
+      gridColumnGap: '0.25rem',
+      fontSize: '0.6rem',
+      span: { margin: 0, padding: 0 },
+      'span.chakra-menu__icon-wrapper': { margin: 'auto' },
+      svg: { width: '0.8rem', height: '0.8rem' },
+      _hover: { bg: 'lightgrey' }
+    },
+    list: {
+      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      overflowY: 'auto',
+      border: 'solid 1px',
+      borderColor: 'primaire.5'
+    }
+  }),
 
- menu_select_style: menu.definePartsStyle({
-   list: {
-     maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
-     overflowY: 'auto',
-     border: 'solid 1px',
-     borderColor: 'primaire.5'
-   }
- }),
+  menu_select_style: menu.definePartsStyle({
+    list: {
+      maxH: 'calc(' + (window.innerHeight) + 'px - 2rem)',
+      overflowY: 'auto',
+      border: 'solid 1px',
+      borderColor: 'primaire.5'
+    }
+  }),
 
- selector_lang: menu.definePartsStyle({
-   button: {
-     margin: 'auto',
-     border: '1px solid',
-     borderColor: 'primaire.5',
-     height: '1.5rem',
-     width: '2rem',
-     'span': {
-       display: 'grid',
-       gridTemplateColumns: '4fr 1fr',
-       alignItems: 'center',
-     }
-   },
-   item: {
-     display: 'grid',
-     gridTemplateColumns: '1fr 3fr',
-     gridColumnGap: '0.25rem',
-   },
-   list: { zIndex: '3' }
- }),
+  selector_lang: menu.definePartsStyle({
+    button: {
+      margin: 'auto',
+      border: '1px solid',
+      borderColor: 'primaire.5',
+      height: '1.5rem',
+      width: '2rem',
+      'span': {
+        display: 'grid',
+        gridTemplateColumns: '4fr 1fr',
+        alignItems: 'center',
+      }
+    },
+    item: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 3fr',
+      gridColumnGap: '0.25rem',
+    },
+    list: { zIndex: '3' }
+  }),
 
- menu_subnav_item_demo: menu.definePartsStyle({
-   button: {
-     width: '8rem',
-     margin: '0.2rem, 0rem, 0.2rem, 0.75rem',
-     textStyle: 'h4',
-     fontSize: '12px',
-     color: 'gray.600',
-     borderColor: 'transparent',
-     bg: 'transparent',
-     bgColor: 'transparent',
-     span: {
-       gridTemplateColumns: '7fr 1fr',
-       gridTemplateRows: '1fr',
-     },
-     _hover: {
-       color: 'gray.600',
-       borderColor: 'transparent',
-       bg: 'transparent',
-       bgColor: 'transparent',
-     },
-   },
-   list: {
-     display: 'grid',
-     gridAutoFlow: 'row',
-   }
- }),
+  menu_subnav_item_demo: menu.definePartsStyle({
+    button: {
+      width: '8rem',
+      margin: '0.2rem, 0rem, 0.2rem, 0.75rem',
+      textStyle: 'h4',
+      fontSize: '12px',
+      color: 'gray.600',
+      borderColor: 'transparent',
+      bg: 'transparent',
+      bgColor: 'transparent',
+      span: {
+        gridTemplateColumns: '7fr 1fr',
+        gridTemplateRows: '1fr',
+      },
+      _hover: {
+        color: 'gray.600',
+        borderColor: 'transparent',
+        bg: 'transparent',
+        bgColor: 'transparent',
+      },
+    },
+    list: {
+      display: 'grid',
+      gridAutoFlow: 'row',
+    }
+  }),
 }
 
 // ===============================
 // CHECKBOX STYLES
 // ===============================
 export const checkboxStyles = {
- base: checkbox.definePartsStyle({
-   container: {
-     h: '2rem',
-     w: '100%',
-     border: 'solid 1px',
-     borderRadius: '6px',
-     borderColor: 'gray.50',
-     margin: '0',
-     padding: '0',
-     transition: 'all 150ms',
-     _checked: { bg: 'white' },
-     _hover: {
-       bg: 'primaire.5',
-       color: 'white',
-       transition: 'all 250ms',
-     },
-   },
-   control: {
-     margin: '0.25rem',
-     width: '0.75rem',
-     height: '0.75rem',
-     bg: 'gray.400',
-     borderColor: 'gray.400',
-     iconColor: 'white',
-     border: 'solid 1px',
-     borderRadius: '4px',
-     _checked: {
-       bg: 'primaire.3',
-       borderColor: 'primaire.3',
-       iconColor: 'primaire.2',
-       _hover: {
-         bg: 'gray.400',
-         borderColor: 'gray.400',
-         iconColor: 'white',
-       }
-     },
-     _hover: {
-       bg: 'primaire.3',
-       borderColor: 'primaire.3',
-       iconColor: 'primaire.2',
-     }
-   },
-   label: { width: '100%', margin: '0' }
- }),
+  base: checkbox.definePartsStyle({
+    container: {
+      h: '2rem',
+      w: '100%',
+      border: 'solid 1px',
+      borderRadius: '6px',
+      borderColor: 'gray.50',
+      margin: '0',
+      padding: '0',
+      transition: 'all 150ms',
+      _checked: { bg: 'white' },
+      _hover: {
+        bg: 'primaire.5',
+        color: 'white',
+        transition: 'all 250ms',
+      },
+    },
+    control: {
+      margin: '0.25rem',
+      width: '0.75rem',
+      height: '0.75rem',
+      bg: 'gray.400',
+      borderColor: 'gray.400',
+      iconColor: 'white',
+      border: 'solid 1px',
+      borderRadius: '4px',
+      _checked: {
+        bg: 'primaire.3',
+        borderColor: 'primaire.3',
+        iconColor: 'primaire.2',
+        _hover: {
+          bg: 'gray.400',
+          borderColor: 'gray.400',
+          iconColor: 'white',
+        }
+      },
+      _hover: {
+        bg: 'primaire.3',
+        borderColor: 'primaire.3',
+        iconColor: 'primaire.2',
+      }
+    },
+    label: { width: '100%', margin: '0' }
+  }),
 
- menuconfigpanel_option_checkbox: checkbox.definePartsStyle({
-   label: {
-     fontSize: 'unset',
-     width: '100%',
-     svg: { marginRight: '0.2rem' },
-   },
-   control: { w: '0.75rem', h: '0.75rem' },
-   container: {
-     h: '1.5rem',
-     border: '0px',
-     borderRadius: '4px',
-     borderColor: 'white',
-   },
- }),
+  menuconfigpanel_option_checkbox: checkbox.definePartsStyle({
+    label: {
+      fontSize: 'unset',
+      width: '100%',
+      svg: { marginRight: '0.2rem' },
+    },
+    control: { w: '0.75rem', h: '0.75rem' },
+    container: {
+      h: '1.5rem',
+      border: '0px',
+      borderRadius: '4px',
+      borderColor: 'white',
+    },
+  }),
 
- menuconfigpanel_tag_checkbox: checkbox.definePartsStyle({
-   container: {
-     border: '0px',
-     borderRadius: '4px',
-     borderColor: 'white',
-   },
-   label: {
-     marginLeft: '0.5rem',
-     fontSize: '14px'
-   },
-   control: { marginLeft: '1.25rem' }
- }),
+  menuconfigpanel_tag_checkbox: checkbox.definePartsStyle({
+    container: {
+      border: '0px',
+      borderRadius: '4px',
+      borderColor: 'white',
+    },
+    label: {
+      marginLeft: '0.5rem',
+      fontSize: '14px'
+    },
+    control: { marginLeft: '1.25rem' }
+  }),
 
- menuconfigpanel_part_title_1_checkbox: checkbox.definePartsStyle({
-   label: {
-     textAlign: 'center',
-     fontSize: '0.7rem',
-     fontWeight: 'bold',
-     svg: { marginRight: '0.2rem' }
-   },
-   control: { width: '1.25rem', height: '1.25rem' }
- }),
+  menuconfigpanel_part_title_1_checkbox: checkbox.definePartsStyle({
+    label: {
+      textAlign: 'center',
+      fontSize: '0.7rem',
+      fontWeight: 'bold',
+      svg: { marginRight: '0.2rem' }
+    },
+    control: { width: '1.25rem', height: '1.25rem' }
+  }),
 
- activate_antagonist_checkbox: checkbox.definePartsStyle({
-   container: {
-     margin: 'auto',
-     width: 'inherit',
-   }
- }),
+  activate_antagonist_checkbox: checkbox.definePartsStyle({
+    container: {
+      margin: 'auto',
+      width: 'inherit',
+    }
+  }),
 
- checkbox_dont_show_again: checkbox.definePartsStyle({
-   container: {
-     w: 'inherit',
-     border: 'none',
-     margin: 'auto',
-     padding: '0',
-     transition: 'all 150ms',
-     _checked: { bg: 'white' },
-     _hover: {
-       bg: 'primaire.5',
-       transition: 'all 250ms',
-     },
-   },
-   control: {
-     margin: '0.25rem',
-     width: '1rem',
-     height: '1rem',
-     bg: 'gray.400',
-     borderColor: 'gray.400',
-     iconColor: 'white',
-     border: 'solid 1px',
-     _checked: {
-       bg: 'primaire.3',
-       borderColor: 'primaire.3',
-       iconColor: 'primaire.2',
-       _hover: {
-         bg: 'gray.400',
-         borderColor: 'gray.400',
-         iconColor: 'white',
-       }
-     },
-     _hover: {
-       bg: 'primaire.3',
-       borderColor: 'primaire.3',
-       iconColor: 'primaire.2',
-     }
-   },
-   label: {
-     width: 'inherit',
-     margin: 'auto',
-     fontSize: '12px',
-     textStyle: 'h4',
-   }
- }),
+  checkbox_dont_show_again: checkbox.definePartsStyle({
+    container: {
+      w: 'inherit',
+      border: 'none',
+      margin: 'auto',
+      padding: '0',
+      transition: 'all 150ms',
+      _checked: { bg: 'white' },
+      _hover: {
+        bg: 'primaire.5',
+        transition: 'all 250ms',
+      },
+    },
+    control: {
+      margin: '0.25rem',
+      width: '1rem',
+      height: '1rem',
+      bg: 'gray.400',
+      borderColor: 'gray.400',
+      iconColor: 'white',
+      border: 'solid 1px',
+      _checked: {
+        bg: 'primaire.3',
+        borderColor: 'primaire.3',
+        iconColor: 'primaire.2',
+        _hover: {
+          bg: 'gray.400',
+          borderColor: 'gray.400',
+          iconColor: 'white',
+        }
+      },
+      _hover: {
+        bg: 'primaire.3',
+        borderColor: 'primaire.3',
+        iconColor: 'primaire.2',
+      }
+    },
+    label: {
+      width: 'inherit',
+      margin: 'auto',
+      fontSize: '12px',
+      textStyle: 'h4',
+    }
+  }),
 }
 
 // ===============================
 // CARD STYLES
 // ===============================
 export const cardStyles = {
- base: card.definePartsStyle({
-   body: {
-     margin: 'auto',
-     svg: { margin: 'auto' }
-   }
- }),
+  base: card.definePartsStyle({
+    body: {
+      margin: 'auto',
+      svg: { margin: 'auto' }
+    }
+  }),
 
- card_icon_selected: card.definePartsStyle({
-   container: {
-     borderWidth: '4px',
-     borderColor: 'primaire.5'
-   }
- }),
+  card_icon_selected: card.definePartsStyle({
+    container: {
+      borderWidth: '4px',
+      borderColor: 'primaire.5'
+    }
+  }),
 
- card_icon_not_selected: card.definePartsStyle({
-   container: {
-     borderWidth: '1px',
-     borderColor: 'grey'
-   }
- }),
+  card_icon_not_selected: card.definePartsStyle({
+    container: {
+      borderWidth: '1px',
+      borderColor: 'grey'
+    }
+  }),
 
- card_import_icon: card.definePartsStyle({
-   container: {
-     backgroundColor: 'teal',
-     borderWidth: '1px',
-     borderColor: 'grey'
-   }
- }),
+  card_import_icon: card.definePartsStyle({
+    container: {
+      backgroundColor: 'teal',
+      borderWidth: '1px',
+      borderColor: 'grey'
+    }
+  }),
 
- card_account: card.definePartsStyle({
-   container: { marginTop: '6rem' },
-   header: {
-     textAlign: 'center',
-     bg: 'primaire.5',
-     color: 'white',
-     textStyle: 'h2',
-   },
-   body: { width: '100%' }
- }),
+  card_account: card.definePartsStyle({
+    container: { marginTop: '6rem' },
+    header: {
+      textAlign: 'center',
+      bg: 'primaire.5',
+      color: 'white',
+      textStyle: 'h2',
+    },
+    body: { width: '100%' }
+  }),
 
- card_register: card.definePartsStyle({
-   container: {
-     marginTop: '175px',
-     borderWidth: '1px',
-     borderStyle: 'solid',
-     borderColor: 'primaire.5',
-     width: '40vw',
-   },
-   header: {
-     textAlign: 'center',
-     bg: 'primaire.5',
-     color: 'white',
-     textStyle: 'h2',
-   },
-   body: {
-     width: '90%',
-     display: 'grid',
-     gridRowGap: '10px',
-   },
- }),
+  card_register: card.definePartsStyle({
+    container: {
+      marginTop: '175px',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'primaire.5',
+      width: '40vw',
+    },
+    header: {
+      textAlign: 'center',
+      bg: 'primaire.5',
+      color: 'white',
+      textStyle: 'h2',
+    },
+    body: {
+      width: '90%',
+      display: 'grid',
+      gridRowGap: '10px',
+    },
+  }),
 
- cards_template: card.definePartsStyle({
-   container: {
-     borderWidth: '1px',
-     borderStyle: 'solid',
-     borderColor: 'grey'
-   },
-   header: { textStyle: 'h3' },
- }),
+  cards_template: card.definePartsStyle({
+    container: {
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'grey'
+    },
+    header: { textStyle: 'h3' },
+  }),
 
- cards_empty_template: card.definePartsStyle({
-   container: {
-     borderWidth: '1px',
-     borderStyle: 'solid',
-     borderColor: 'grey'
-   }
- }),
+  cards_empty_template: card.definePartsStyle({
+    container: {
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      borderColor: 'grey'
+    }
+  }),
 }
 
 // ===============================
 // EDITABLE STYLES
 // ===============================
 export const editableStyles = {
- base: edit.definePartsStyle({}),
+  base: edit.definePartsStyle({}),
 
- name_file_editable: edit.definePartsStyle({
-   preview: {
-     display: 'block',
-     alignItems: 'center',
-     paddingLeft: '1rem',
-     paddingRight: '1rem',
-     height: '2rem',
-     fontSize: '1rem',
-     bg: 'primaire.3',
-     border: '1px solid',
-     borderColor: 'primaire.3',
-     color: 'white',
-     maxW: '15rem',
-     minW: '8rem',
-     width: 'unset',
-     overflow: 'hidden',
-     textOverflow: 'ellipsis',
-     whiteSpace: 'nowrap',
-   },
-   input: {
-     display: 'block',
-     height: '2rem',
-     fontSize: '1rem',
-     bg: 'primaire.3',
-     border: '1px solid',
-     borderColor: 'primaire.3',
-     color: 'white',
-     maxW: '15rem',
-     minW: '8rem',
-     width: 'unset',
-     overflow: 'visible',
-     whiteSpace: 'nowrap',
-   },
-   _active: { secondaire: 'primaire.3' }
- }),
+  name_file_editable: edit.definePartsStyle({
+    preview: {
+      display: 'block',
+      alignItems: 'center',
+      paddingLeft: '1rem',
+      paddingRight: '1rem',
+      height: '2rem',
+      fontSize: '1rem',
+      bg: 'primaire.3',
+      border: '1px solid',
+      borderColor: 'primaire.3',
+      color: 'white',
+      maxW: '15rem',
+      minW: '8rem',
+      width: 'unset',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    },
+    input: {
+      display: 'block',
+      height: '2rem',
+      fontSize: '1rem',
+      bg: 'primaire.3',
+      border: '1px solid',
+      borderColor: 'primaire.3',
+      color: 'white',
+      maxW: '15rem',
+      minW: '8rem',
+      width: 'unset',
+      overflow: 'visible',
+      whiteSpace: 'nowrap',
+    },
+    _active: { secondaire: 'primaire.3' }
+  }),
 
- edit_name_palette: edit.definePartsStyle({
-   preview: {
-     fontSize: '0.8rem',
-     width: '100%',
-     padding: '0',
-     height: '1.5rem',
-     border: '1px solid',
-     borderColor: 'primaire.5',
-   },
-   input: {
-     fontSize: '0.8rem',
-     height: '1.5rem',
-     border: '1px solid',
-     borderColor: 'primaire.5'
-   }
- }),
+  edit_name_palette: edit.definePartsStyle({
+    preview: {
+      fontSize: '0.8rem',
+      width: '100%',
+      padding: '0',
+      height: '1.5rem',
+      border: '1px solid',
+      borderColor: 'primaire.5',
+    },
+    input: {
+      fontSize: '0.8rem',
+      height: '1.5rem',
+      border: '1px solid',
+      borderColor: 'primaire.5'
+    }
+  }),
 }
 
 // ===============================
 // NUMBER INPUT STYLES
 // ===============================
 export const numberInputStyles = {
- base: numberInput.definePartsStyle({
-   root: { width: '100%' },
-   field: {
-     width: '100%',
-     height: '1.5rem',
-     fontSize: 'unset',
-     border: 'solid 1px',
-     borderRadius: '6px',
-     borderColor: 'gray.100',
-     textStyle: 'h4',
-     bg: 'white',
-     bgColor: 'white',
-     _disabled: { bg: 'gray.300', bgColor: 'gray.300' },
-     _focus: { border: 'solid 2px', borderColor: 'primaire.2' }
-   },
-   stepperGroup: { height: '1.5rem', margin: '0' },
- }),
+  base: numberInput.definePartsStyle({
+    root: { width: '100%' },
+    field: {
+      width: '100%',
+      height: '1.5rem',
+      fontSize: 'unset',
+      border: 'solid 1px',
+      borderRadius: '6px',
+      borderColor: 'gray.100',
+      textStyle: 'h4',
+      bg: 'white',
+      bgColor: 'white',
+      _disabled: { bg: 'gray.300', bgColor: 'gray.300' },
+      _focus: { border: 'solid 2px', borderColor: 'primaire.2' }
+    },
+    stepperGroup: { height: '1.5rem', margin: '0' },
+  }),
 
- menuconfigpanel_option_numberinput: numberInput.definePartsStyle({
-   field: {
-     paddingLeft: '0.15rem',
-     paddingRight: '0.15rem'
-   },
-   stepperGroup: { width: '0.8rem' },
-   stepper: {
-     'svg': {
-       width: '0.4rem',
-       height: '0.4rem',
-     }
-   }
- }),
+  menuconfigpanel_option_numberinput: numberInput.definePartsStyle({
+    field: {
+      paddingLeft: '0.15rem',
+      paddingRight: '0.15rem'
+    },
+    stepperGroup: { width: '0.8rem' },
+    stepper: {
+      'svg': {
+        width: '0.4rem',
+        height: '0.4rem',
+      }
+    }
+  }),
 
- menuconfigpanel_option_numberinput_with_right_addon: numberInput.definePartsStyle({
-   field: {
-     borderRadius: '6px 0px 0px 6px',
-     paddingLeft: '0.15rem',
-     paddingRight: '0.15rem',
-   },
-   stepperGroup: { width: '0.8rem' },
-   stepper: {
-     'svg': {
-       width: '0.4rem',
-       height: '0.4rem',
-     }
-   }
- }),
+  menuconfigpanel_option_numberinput_with_right_addon: numberInput.definePartsStyle({
+    field: {
+      borderRadius: '6px 0px 0px 6px',
+      paddingLeft: '0.15rem',
+      paddingRight: '0.15rem',
+    },
+    stepperGroup: { width: '0.8rem' },
+    stepper: {
+      'svg': {
+        width: '0.4rem',
+        height: '0.4rem',
+      }
+    }
+  }),
 }
 
 // ===============================
 // SELECT STYLES
 // ===============================
 export const selectStyles = {
- base: select.definePartsStyle({
-   field: {
-     height: '1.5rem',
-     border: 'solid 1px',
-     borderRadius: '6px',
-     borderColor: 'gray.50',
-     fontSize: 'unset',
-     bg: 'white',
-     bgColor: 'white',
-     _disabled: { bg: 'gray.300', bgColor: 'gray.300' },
-     _focus: { border: 'solid 2px', borderColor: 'openSankey.100' }
-   }
- }),
+  base: select.definePartsStyle({
+    field: {
+      height: '1.5rem',
+      border: 'solid 1px',
+      borderRadius: '6px',
+      borderColor: 'gray.50',
+      fontSize: 'unset',
+      bg: 'white',
+      bgColor: 'white',
+      _disabled: { bg: 'gray.300', bgColor: 'gray.300' },
+      _focus: { border: 'solid 2px', borderColor: 'openSankey.100' }
+    }
+  }),
 
- select_custom_style: select.definePartsStyle({
-   field: {
-     height: '1.5rem',
-     borderRadius: '0px 6px 6px 0px',
-   }
- }),
+  select_custom_style: select.definePartsStyle({
+    field: {
+      height: '1.5rem',
+      borderRadius: '0px 6px 6px 0px',
+    }
+  }),
 
- menuconfigpanel_option_select: select.definePartsStyle({
-   field: {
-     height: '1.5rem',
-     border: 'solid 1px',
-     borderRadius: '6px',
-     borderColor: 'gray.50',
-   }
- }),
+  menuconfigpanel_option_select: select.definePartsStyle({
+    field: {
+      height: '1.5rem',
+      border: 'solid 1px',
+      borderRadius: '6px',
+      borderColor: 'gray.50',
+    }
+  }),
 
- menuconfigpanel_option_select_table: select.definePartsStyle({
-   field: {
-     paddingLeft: '0.25rem',
-     paddingRight: '0.8rem',
-     height: 'revert',
-     border: 'solid 1px',
-     borderRadius: '6px',
-     borderColor: 'gray.50',
-   },
-   icon: {
-     width: '0.75rem',
-     height: '0.75rem',
-   }
- }),
+  menuconfigpanel_option_select_table: select.definePartsStyle({
+    field: {
+      paddingLeft: '0.25rem',
+      paddingRight: '0.8rem',
+      height: 'revert',
+      border: 'solid 1px',
+      borderRadius: '6px',
+      borderColor: 'gray.50',
+    },
+    icon: {
+      width: '0.75rem',
+      height: '0.75rem',
+    }
+  }),
 }
 
 // ===============================
 // POPOVER STYLES
 // ===============================
 export const popoverStyles = {
- base: popover.definePartsStyle({
-   header: {
-     textStyle: 'h1',
-     width: '100%',
-     marginRight: '3rem'
-   },
-   body: {
-     textStyle: 'h4',
-     width: '100%',
-     display: 'grid',
-     gridRowGap: '0.5rem',
-   },
-   content: { width: '100%' },
-   closeButton: {
-     marginTop: '0.35rem',
-     height: '1.5rem',
-     width: '1.5rem',
-     color: 'white',
-     bg: 'primaire.1',
-     bgColor: 'primaire.1'
-   }
- }),
+  base: popover.definePartsStyle({
+    header: {
+      textStyle: 'h1',
+      width: '100%',
+      marginRight: '3rem'
+    },
+    body: {
+      textStyle: 'h4',
+      width: '100%',
+      display: 'grid',
+      gridRowGap: '0.5rem',
+    },
+    content: { width: '100%' },
+    closeButton: {
+      marginTop: '0.35rem',
+      height: '1.5rem',
+      width: '1.5rem',
+      color: 'white',
+      bg: 'primaire.1',
+      bgColor: 'primaire.1'
+    }
+  }),
 
- toolbar_popover_window: popover.definePartsStyle({}),
+  toolbar_popover_window: popover.definePartsStyle({}),
 }
 
 // ===============================
 // DRAWER STYLES
 // ===============================
 export const drawerStyles = {
- base: drawer.definePartsStyle({}),
+  base: drawer.definePartsStyle({}),
 
- drawer_menu_config: drawer.definePartsStyle({
-   dialog: {
-     maxWidth: 'inherit',
-     borderRadius: '4px',
-     background: 'none',
-     boxShadow: 'unset',
-     height: 'fit-content',
-     overflowY: 'unset',
-   },
-   dialogContainer: {
-     width: 'inherit',
-     background: 'none',
-     zIndex: 1
-   },
-   body: {
-     padding: '0',
-     overflow: 'unset'
-   },
- }),
+  drawer_menu_config: drawer.definePartsStyle({
+    dialog: {
+      maxWidth: 'inherit',
+      borderRadius: '4px',
+      background: 'none',
+      boxShadow: 'unset',
+      height: 'fit-content',
+      overflowY: 'unset',
+    },
+    dialogContainer: {
+      width: 'inherit',
+      background: 'none',
+      zIndex: 1
+    },
+    body: {
+      padding: '0',
+      overflow: 'unset'
+    },
+  }),
 }
 
 // ===============================
 // BREADCRUMB STYLES
 // ===============================
 export const breadcrumbStyles = {
- base: breadcrumb.definePartsStyle({}),
+  base: breadcrumb.definePartsStyle({}),
 
- pagination_welcome: breadcrumb.definePartsStyle({
-   container: {
-     display: 'flex',
-     alignItems: 'center',
-     borderRight: '2px solid',
-     borderColor: 'primaire.2',
-     width: '100%',
-   },
-   item: {
-     textStyle: 'h2',
-     height: 'minmax(3rem, 10vh)',
-     span: { color: 'primaire.2' }
-   },
-   link: {
-     _hover: { color: 'secondaire.2' }
-   },
-   separator: {},
- }),
+  pagination_welcome: breadcrumb.definePartsStyle({
+    container: {
+      display: 'flex',
+      alignItems: 'center',
+      borderRight: '2px solid',
+      borderColor: 'primaire.2',
+      width: '100%',
+    },
+    item: {
+      textStyle: 'h2',
+      height: 'minmax(3rem, 10vh)',
+      span: { color: 'primaire.2' }
+    },
+    link: {
+      _hover: { color: 'secondaire.2' }
+    },
+    separator: {},
+  }),
 }
 
 // ===============================
 // ACCORDION STYLES
 // ===============================
 export const accordionStyles = {
- base: accordion.definePartsStyle({
-   root: {
-     margin: '0',
-     padding: '0',
-     color: 'primaire.5',
-     bg: 'white',
-     bgColor: 'white',
-     '.chakra-collapse': {
-       overflow: 'visible !important',
-     },
-   },
-   container: {
-     margin: '0',
-     padding: '0',
-     color: 'primaire.5',
-     bg: 'white',
-     bgColor: 'white',
-     width: '100%',
-     border: '0',
-     borderRadius: '0'
-   },
-   button: {
-     margin: '0',
-     padding: '1rem 1.25rem',
-     color: 'primaire.5',
-     bg: 'white',
-     bgColor: 'white',
-     border: '0',
-     borderRadius: '0',
-     boxShadow: 'inset 0 -1px 0 rgba(0,0,0,.125)',
-     width: '100%',
-     height: '3.5rem',
-     flex: '1',
-     textAlign: 'left',
-     textStyle: 'h2',
-     _expanded: {
-       color: 'white',
-       bg: 'primaire.5',
-       bgColor: 'primaire.5',
-       border: '1px',
-       borderColor: 'primaire.5',
-     }
-   },
-   panel: {
-     margin: '0',
-     padding: '0.5rem 1.5rem',
-     color: 'primaire.5',
-     bg: 'white',
-     bgColor: 'white',
-     border: '0',
-     borderRadius: '0'
-   },
-   icon: {
-     width: '2em',
-     height: '1em',
-     border: '1px solid',
-     borderColor: 'primaire.5',
-     background: 'primaire.5',
-     borderRadius: 'full',
-     color: 'white',
-     _active: {
-       borderColor: 'white',
-       background: 'white',
-       color: 'primaire.5'
-     }
-   }
- }),
+  base: accordion.definePartsStyle({
+    root: {
+      margin: '0',
+      padding: '0',
+      color: 'primaire.5',
+      bg: 'white',
+      bgColor: 'white',
+      '.chakra-collapse': {
+        overflow: 'visible !important',
+      },
+    },
+    container: {
+      margin: '0',
+      padding: '0',
+      color: 'primaire.5',
+      bg: 'white',
+      bgColor: 'white',
+      width: '100%',
+      border: '0',
+      borderRadius: '0'
+    },
+    button: {
+      margin: '0',
+      padding: '1rem 1.25rem',
+      color: 'primaire.5',
+      bg: 'white',
+      bgColor: 'white',
+      border: '0',
+      borderRadius: '0',
+      boxShadow: 'inset 0 -1px 0 rgba(0,0,0,.125)',
+      width: '100%',
+      height: '3.5rem',
+      flex: '1',
+      textAlign: 'left',
+      textStyle: 'h2',
+      _expanded: {
+        color: 'white',
+        bg: 'primaire.5',
+        bgColor: 'primaire.5',
+        border: '1px',
+        borderColor: 'primaire.5',
+      }
+    },
+    panel: {
+      margin: '0',
+      padding: '0.5rem 1.5rem',
+      color: 'primaire.5',
+      bg: 'white',
+      bgColor: 'white',
+      border: '0',
+      borderRadius: '0'
+    },
+    icon: {
+      width: '2em',
+      height: '1em',
+      border: '1px solid',
+      borderColor: 'primaire.5',
+      background: 'primaire.5',
+      borderRadius: 'full',
+      color: 'white',
+      _active: {
+        borderColor: 'white',
+        background: 'white',
+        color: 'primaire.5'
+      }
+    }
+  }),
 }
 
 // ===============================
 // TABLE STYLES
 // ===============================
 export const tableStyles = {
- base: table.definePartsStyle({}),
- table_edit_grp_tag_node_link: createTableStyle('0.5fr 2fr 1.5fr'),
- table_edit_grp_tag_data: createTableStyle('0.75fr 2fr 1.5fr 1.5fr'),
- table_edit_tag_node: createTableStyle('0.5fr 2fr 0.75fr 0.5fr 1.5fr'),
- table_edit_tag_link: createTableStyle('0.5fr 2fr 0.5fr 0.75fr'),
- table_edit_tag_data: createTableStyle('0.5fr 1.5fr 0.75fr'),
- table_edit_node_io: createTableStyle('2fr 2fr'),
+  base: table.definePartsStyle({}),
+  table_edit_grp_tag_node_link: createTableStyle('0.5fr 2fr 1.5fr'),
+  table_edit_grp_tag_data: createTableStyle('0.75fr 2fr 1.5fr 1.5fr'),
+  table_edit_tag_node: createTableStyle('0.5fr 2fr 0.75fr 0.5fr 1.5fr'),
+  table_edit_tag_link: createTableStyle('0.5fr 2fr 0.5fr 0.75fr'),
+  table_edit_tag_data: createTableStyle('0.5fr 1.5fr 0.75fr'),
+  table_edit_node_io: createTableStyle('2fr 2fr'),
 
- table_welcome_buttons: table.definePartsStyle({
-   table: {
-     margin: '1rem',
-     justifySelf: 'center',
-     borderCollapse: 'separate',
-     borderSpacing: '0.25rem',
-   },
-   thead: {
-     bg: 'primaire.2',
-     color: 'white',
-     textStyle: 'h2',
-     paddingInlineStart: '1rem',
-     tr: {
-       borderRadius: '6px'
-     }
-   },
-   tbody: {
-     tr: {
-       '&:nth-of-type(odd)': {
-         td: {
-           background: 'gray.50',
-         },
-       },
-     }
-   },
-   td: {},
-   tr: {
-     'td:first-child': {
-       textAlign: 'end',
-       minWidth: '15rem',
-       textStyle: 'h3',
-     },
-     'td:last-child': {
-       paddingInlineStart: '1rem',
-       textAlign: 'start',
-       textStyle: 'h4',
-     },
-   },
- }),
+  table_welcome_buttons: table.definePartsStyle({
+    table: {
+      margin: '1rem',
+      justifySelf: 'center',
+      borderCollapse: 'separate',
+      borderSpacing: '0.25rem',
+    },
+    thead: {
+      bg: 'primaire.2',
+      color: 'white',
+      textStyle: 'h2',
+      paddingInlineStart: '1rem',
+      tr: {
+        borderRadius: '6px'
+      }
+    },
+    tbody: {
+      tr: {
+        '&:nth-of-type(odd)': {
+          td: {
+            background: 'gray.50',
+          },
+        },
+      }
+    },
+    td: {},
+    tr: {
+      'td:first-child': {
+        textAlign: 'end',
+        minWidth: '15rem',
+        textStyle: 'h3',
+      },
+      'td:last-child': {
+        paddingInlineStart: '1rem',
+        textAlign: 'start',
+        textStyle: 'h4',
+      },
+    },
+  }),
 }
 
 // ===============================
 // TAG STYLES
 // ===============================
 export const tagStyles = {
- base: tag.definePartsStyle({}),
- tag_dev_navbar: tag.definePartsStyle({
-   container: {
-     position: 'absolute',
-     color: 'white',
-     background: 'primaire.3',
-     fontSize: '0.4rem',
-     minHeight: '0.6rem',
-     right: '0px',
-     bottom: '0.2rem'
-   }
- }),
+  base: tag.definePartsStyle({}),
+  tag_dev_navbar: tag.definePartsStyle({
+    container: {
+      position: 'absolute',
+      color: 'white',
+      background: 'primaire.3',
+      fontSize: '0.4rem',
+      minHeight: '0.6rem',
+      right: '0px',
+      bottom: '0.2rem'
+    }
+  }),
 }
 
 // ===============================
 // SIZES
 // ===============================
 export const sizes = {
- sizeToolbarButton: createSizeStyle('2rem', '2rem'),
- sizeConfigButton: createSizeStyle('1.5rem', '1.5rem'),
- sizeCollapseButton: createSizeStyle('1.25rem', '1.25rem'),
- sizeMenuTopButton: createSizeStyle('3rem', '3rem'),
- sizeMenuTopButtonSaveCache: createSizeStyle('2rem', '2rem'),
- sizeButtonDialog: createSizeStyle('unset', '2rem', '0.3rem'),
+  sizeToolbarButton: defineStyle({
+    width: '2rem',
+    height: '2rem',
+    minW: 'unset',
+    padding: '0.2rem',
+  }),
+  sizeConfigButton: defineStyle({
+    width: '1.5rem',
+    height: '1.5rem',
+    minW: 'unset',
+    padding: '0.2rem',
+  }),
+  sizeCollapseButton: defineStyle({
+    width: '1.25rem',
+    height: '1.25rem',
+    minW: 'unset',
+    padding: '0.2rem',
+    margin: 'auto'
+  }),
+  sizeMenuTopButton: defineStyle({
+    width: '3rem',
+    height: '3rem',
+    minW: 'unset',
+    padding: '0.2rem',
+    marginRight: '0.5rem',
+    marginLeft: '0.5rem'
+  }),
+  sizeMenuTopButtonSaveCache: defineStyle({
+    height: '2rem',
+    width: '2rem',
+    minW: 'unset',
+  }),
+  sizeButtonDialog: defineStyle({
+    height: '2rem',
+    minWidth: 'unset',
+    padding: '0.3rem',
+    fontSize: '0.8rem',
+  })
 }
 
 // ===============================
@@ -1951,7 +1983,7 @@ const otherStyles = {
 // ===============================
 const layerStyles = {
   base: { margin: 0 },
-  
+
   context_menu: {
     display: 'grid',
     rowGap: '0.1rem',
@@ -1959,13 +1991,13 @@ const layerStyles = {
     border: '1px solid gray',
     borderRadius: '4px'
   },
-  
+
   menuconfig_entry: {
     textStyle: 'h1',
     textAlign: 'left',
     flex: '1',
   },
-  
+
   submenuconfig_entry: {
     textStyle: 'h2',
     textAlign: 'left',
@@ -2039,7 +2071,7 @@ const layerStyles = {
     alignItems: 'center',
     paddingLeft: '1.5rem'
   },
-  
+
   // Grid layouts avec factory
   ...(['2cols', '3cols', '4cols'] as const).reduce((acc, type) => {
     const colCount = parseInt(type.charAt(0))
@@ -2074,7 +2106,7 @@ const layerStyles = {
   welcome_license_desc: {
     whiteSpace: 'pre-line'
   },
-  
+
   menuconfigpanel_grid: {
     display: 'grid',
     gridRowGap: '0.25rem',
@@ -2322,7 +2354,7 @@ const layerStyles = {
     display: 'grid',
     gridTemplateColumns: '1fr 9fr'
   },
-  
+
   selector_elements: {
     width: '9rem',
     height: '1.5rem',
@@ -2417,8 +2449,8 @@ export const opensankey_theme = extendTheme({
     },
     Badge: {
       baseStyle: otherStyles.badge_base_style,
-      variants: { 
-        badge_on_template_img: otherStyles.badge_on_template_img 
+      variants: {
+        badge_on_template_img: otherStyles.badge_on_template_img
       }
     },
     Button: {
