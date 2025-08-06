@@ -656,6 +656,38 @@ export const logo_node_tag_unselected = <svg
   </g>
 </svg>
 
+export const logo_level_tag = <svg
+  width={25}
+  height={25}
+  viewBox="30 20 140 160"
+  version="1.1"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <line x1="100" y1="40" x2="70" y2="100" strokeWidth="1.5" />
+  <line x1="100" y1="40" x2="130" y2="100" strokeWidth="1.5" />
+  <line x1="70" y1="100" x2="50" y2="160" strokeWidth="1.5" />
+  <line x1="70" y1="100" x2="90" y2="160" strokeWidth="1.5" />
+  <line x1="130" y1="100" x2="150" y2="160" strokeWidth="1.5" />
+  <g transform="translate(100, 40)">
+    <ellipse cx="0" cy="0" rx="12" ry="12" fill="#78a7c2" style={{ strokeWidth: 1.5 }} />
+  </g>
+  <g transform="translate(70, 100)">
+    <ellipse cx="0" cy="0" rx="10" ry="10" fill="#78a7c2" style={{ strokeWidth: 1.5 }} />
+  </g>
+  <g transform="translate(130, 100)">
+    <ellipse cx="0" cy="0" rx="10" ry="10" fill="#78a7c2" style={{ strokeWidth: 1.5 }} />
+  </g>
+  <g transform="translate(50, 160)">
+    <ellipse cx="0" cy="0" rx="8" ry="8" fill="#78a7c2" style={{ strokeWidth: 1.5 }} />
+  </g>
+  <g transform="translate(90, 160)">
+    <ellipse cx="0" cy="0" rx="8" ry="8" fill="#78a7c2" style={{ strokeWidth: 1.5 }} />
+  </g>
+  <g transform="translate(150, 160)">
+    <ellipse cx="0" cy="0" rx="8" ry="8" fill="#78a7c2" style={{ strokeWidth: 1.5 }} />
+  </g>
+</svg>
+
 // Class ===========================================================================
 
 export class Class_IconLibraryOSP extends Class_IconLibrary {
@@ -696,8 +728,8 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
   protected _icon_node_tag_diabled = logo_node_tag_disabled
   protected _icon_node_tag = logo_node_tag_unselected
 
-  protected _icon_level_tag_diabled = logo_node_tag_disabled
-  protected _icon_level_tag = logo_node_tag_unselected
+  protected _icon_level_tag_diabled = logo_level_tag
+  protected _icon_level_tag = logo_level_tag
   protected _icon_filter_level = <FontAwesomeIcon icon={faFolderTree} />
 
   protected _icon_unit_view = <FontAwesomeIcon icon={faObjectUngroup} />
