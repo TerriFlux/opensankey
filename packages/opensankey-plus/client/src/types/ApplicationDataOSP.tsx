@@ -681,13 +681,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     InLink.name_label_font_size = 40
     InLink.value_label_horiz = 'left'
     InLink.value_label_pos_auto = true
-    InLink.value_label_unit_type = '%_input_target'
+    InLink.value_label_unit_type = '%OD'
 
     const OutLink = new_drawing_area.sankey.addNewLinkStyle('LinkOutUnitaryStyle', 'Link Out Unitary')
     OutLink.name_label_font_size = 40
     OutLink.value_label_horiz = 'right'
     OutLink.value_label_pos_auto = true
-    OutLink.value_label_unit_type = '%_input_source'
+    OutLink.value_label_unit_type = '%IS'
 
     const visible_links = new_drawing_area.sankey.visible_links_list.map(l => l.id)
     let maxLinkValue = 1
