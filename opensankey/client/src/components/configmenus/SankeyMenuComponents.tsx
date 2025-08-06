@@ -40,7 +40,7 @@ import {
 import { t, TFunction } from 'i18next'
 import React, { FC, MutableRefObject, useRef, useState } from 'react'
 import { Class_LinkElement } from '../../Elements/Link'
-import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle, unit_type, UnitType } from '../../Elements/LinkAttributes'
+import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { CustomFaEyeCheckIcon, OSTooltip, TooltipValueSurcharge, default_style_id, font_families } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes'
@@ -61,6 +61,7 @@ import {
   labelAttributeType, labelValueAttribute, possibleDecoratorName, UnitAttributeType
 } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
+import { unit_constants, UnitType } from '../../Elements/LinkValues'
 
 
 /**
@@ -903,7 +904,7 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
   let get_label_unit_visible = NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default
   let get_label_unit = NODES_ATTRIBUTES_CONFIG.value_label_unit.default
   let get_label_unit_factor = NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default
-  let get_label_unit_type = LINKS_ATTRIBUTES_CONFIG.value_label_unit_type.default as string
+  let get_label_unit_type = LINKS_ATTRIBUTES_CONFIG.value_label_unit_type.default as UnitType
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0]
@@ -913,7 +914,7 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
     get_label_unit_visible = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_visible']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_visible.default)
     //@ts-expect-error xxx
     get_label_unit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit.default)
-    get_label_unit_type = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_type']) ?? LINKS_ATTRIBUTES_CONFIG.value_label_unit_type.default)
+    get_label_unit_type = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_type'])  ?? LINKS_ATTRIBUTES_CONFIG.value_label_unit_type.default ) as UnitType
     //@ts-expect-error xxx
     get_label_unit_factor = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_unit_factor']) ?? NODES_ATTRIBUTES_CONFIG.value_label_unit_factor.default)
   }
@@ -989,7 +990,7 @@ export const MenuUnit: FC<FCType_MenuUnit> = ({
                   updateElementsUnit(new_data, elements, dict_decorator_name, 'label_unit_type', evt.target.value, refreshParentComponent)
                 }}
               >
-                {(unit_type).map(el => {
+                {(unit_constants).map(el => {
                   return <option key={'value_' + el} value={el}>{t('Flux.labels.' + el)}</option>
                 })}
               </Select>

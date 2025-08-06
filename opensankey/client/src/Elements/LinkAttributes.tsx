@@ -37,6 +37,7 @@ import {
   default_element_color_source,
   getBooleanFromJSON,
 } from '../types/Utils'
+import { UnitType } from './LinkValues'
 
 
 // SPECIFIC CONSTANTS *******************************************************************
@@ -50,9 +51,6 @@ export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_PathLabelHPosition = 'dragged' | 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'dragged' | 'top' | 'middle' | 'bottom'
-
-export const unit_type = ['unit_name', 'unit_tag', 'other_unit_tag','%_input_source','%_input_target','%_output_source','%_output_target','normalized'] as const
-export type UnitType = typeof unit_type[number]
 
 export type Type_customisable_flow_style_attr =
   'shape_local_link_scale' | 'shape_is_curved' | 'shape_shape' | 'shape_curvature' | 'shape_is_recycling' | 'shape_is_structure' |

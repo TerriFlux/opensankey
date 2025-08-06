@@ -39,7 +39,7 @@ import {
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributes'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
-import { ValueOptionType } from '../../Elements/LinkValues'
+import { value_option_constants, value_option_percent_constants, ValueOptionType } from '../../Elements/LinkValues'
 import { Class_LinkElement } from '../../Elements/Link'
 import { BaseApplicationDataType, BaseContextualType } from '../SankeyMenuTypes'
 
@@ -80,7 +80,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
 
   let unit_text : string | undefined
   let default_value = element_ref?.valueCurrent
-  if (value_option == 'ratio_input' || value_option == 'ratio_output') {
+  if ((value_option_percent_constants as unknown as ValueOptionType).includes(value_option)) {
     unit_text = '%'
     default_value = element_ref?.value?.valueData??null
   } else {
@@ -96,7 +96,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
 
     const value_update = updated_selected_links[0]?.value
     // Update input data value
-    if (value_option == 'ratio_input' || value_option == 'ratio_output') {
+    if ((value_option_percent_constants as unknown as ValueOptionType).includes(value_option)) {
       ref_set_data_value_input.current(String(updated_selected_links[0]?.value?.valueData ?? ''))
     } else {
       ref_set_data_value_input.current(String(updated_selected_links[0]?.valueCurrent ?? ''))
@@ -276,7 +276,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
           refreshThisAndUpdateRelatedComponents()
         }}
       >
-        {new_data.menu_configuration.data_type.map(el => {
+        {value_option_constants.map(el => {
           // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
           //   return <></>
           // }

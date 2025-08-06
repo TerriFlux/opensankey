@@ -51,7 +51,7 @@ import {
   Class_LinkStyle, Class_LinkAttribute, LINKS_ATTRIBUTES_CONFIG,
   Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side
 } from './LinkAttributes'
-import { Class_LinkValueTree, Class_LinkValue } from './LinkValues'
+import { Class_LinkValueTree, Class_LinkValue, ValueOptionType, value_option_percent_constants } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { LinkDrawLabel } from './LinkDrawLabel'
@@ -204,30 +204,30 @@ export const format_value = (data_value: number | undefined | null, element: Cla
   const link = element as Class_LinkElement
   if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
     const tag = unit_taggs[0].tags_dict[element.value_label_unit]
-    const data_tags : Class_DataTag[] = []
+    const data_tags: Class_DataTag[] = []
     element.sankey.data_taggs_list.forEach((tagg) => {
       if (tagg == tag.group) data_tags.push(tag)
       else data_tags.push(tagg.selected_tags_list[0])
     })
     const new_value = link.valueForTags(data_tags)
-    data_value = new_value?.valueResult??new_value?.valueData
+    data_value = new_value?.valueResult ?? new_value?.valueData
   }
-  if (element.value_label_unit_type == '%_input_source') {
+  if (element.value_label_unit_type == '%IS') {
     let total_source = 0
     link.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-    data_value = data_value?data_value / total_source * 100:null
-  } else if (element.value_label_unit_type == '%_output_target') {
+    data_value = data_value ? data_value / total_source * 100 : null
+  } else if (element.value_label_unit_type == '%OD') {
     let total_target = 0
     link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-    data_value = data_value?data_value / total_target * 100:null    
-  } else if (element.value_label_unit_type == '%_input_target') {
+    data_value = data_value ? data_value / total_target * 100 : null
+  } else if (element.value_label_unit_type == '%OS') {
     let total_target = 0
     link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-    data_value = data_value?data_value / total_target * 100:null    
-  } else if (element.value_label_unit_type == '%_output_source') {
+    data_value = data_value ? data_value / total_target * 100 : null
+  } else if (element.value_label_unit_type == '%ID') {
     let total_source = 0
     link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-    data_value = data_value?data_value / total_source * 100:null      
+    data_value = data_value ? data_value / total_source * 100 : null
   } else if (element.value_label_unit_type == 'normalized') {
   }
 
@@ -278,8 +278,8 @@ export const format_value = (data_value: number | undefined | null, element: Cla
   } else if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
     const label_unit = unit_taggs[0].tags_dict[element.value_label_unit]!.name
     text_value = text_value + ' ' + label_unit
-  } else if (['%_input_source','%_input_target','%_output_source','%_output_target'].filter(s=>element.value_label_unit_type==s).length>0) {
-    text_value = text_value + ' %'     
+  } else if (value_option_percent_constants.filter(s => element.value_label_unit_type == s).length > 0) {
+    text_value = link.formatValueWithOption(text_value, element.value_label_unit_type as ValueOptionType)
   } else if (element.value_label_unit_type == 'normalized') return text_value
 
   return text_value
@@ -1635,7 +1635,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   public get valueCurrent() {
     if (this.drawing_area.type_data === 'data') return this.value?.valueData ?? null
-    return this.value?.valueResult ?? this.value?.valueData ?? null
+    return this.value?.valueResult ?? (this.value?.value_option == 'value' ? this.value?.valueData : null) ?? null
   }
 
   /**
@@ -1679,15 +1679,23 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     }
   }
 
-  public get data_label() {
+  public formatValueWithOption(value: number | string, option: ValueOptionType) {
+    if (option == '%IS' && value) {
+      return '→↕ ' + value + '%'
+    } else if (option == '%OS' && value) {
+      return '↕→ ' + value + '%'
+    } else if (option == '%ID' && value) {
+      return value + '% ↕→'
+    } else if (option == '%OD' && value) {
+      return value + '% →↕'
+    }
+    return ''
+  }
 
-    let data_value = this.value?.valueData
+  public get data_label() {
     if (this.sankey.drawing_area.type_data == 'data') {
-      if (this.value?.value_option == 'ratio_input' && this.value?.valueData) {
-        return this.value.valueData + '%'
-      } else if (this.value?.value_option == 'ratio_output' && this.value?.valueData) {
-        return this.value?.valueData + '%'
-      } /*else if (this.value?.value_option == 'unit_conversion' ) {
+      if (!this.value?.valueData) return ''
+      return this.formatValueWithOption(this.value?.valueData, this.value?.value_option)/*else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }*/
     }
@@ -1697,11 +1705,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       }
     }
 
-    // Init
-    if (this.sankey.drawing_area.type_data !== 'data') {
-      data_value = this.valueCurrent
-    }
-    return format_value(data_value!, this)
+    return format_value(this.valueCurrent!, this)
   }
 
   /**

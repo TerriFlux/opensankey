@@ -78,6 +78,7 @@ import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_Sankey } from '../types/Sankey'
 import { ClassTemplate_Element } from './Element'
+import { UnitType } from './LinkValues'
 
 export const default_selected_stroke_width = 3
 export const label_margin = 5
@@ -1988,8 +1989,8 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public get value_label_unit_visible() { return this.getStyleProperty('value_label_unit_visible') as boolean }
   public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawValueLabel() }
 
-  public get value_label_unit_type(): string { return this.getStyleProperty('value_label_unit_type') as string }
-  public set value_label_unit_type(_: string) { this._display.attributes.value_label_unit_type = _; this.drawValueLabel() }
+  public get value_label_unit_type() { return this.getStyleProperty('value_label_unit_type') as UnitType }
+  public set value_label_unit_type(_) { this._display.attributes.value_label_unit_type = _; this.drawValueLabel() }
 
   public get value_label_unit() { return this.getStyleProperty('value_label_unit') as string }
   public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawValueLabel() }

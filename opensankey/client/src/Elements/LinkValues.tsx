@@ -482,7 +482,12 @@ export class Class_LinkValueTree {
   }
 }
 
-export type ValueOptionType = 'value' | 'ratio_input' | 'ratio_output' | 'ratio_source_parent' | 'ratio_target_parent'; /*| 'unit_conversion'*/
+export const value_option_percent_constants = ['%IS','%OS','%ID','%OD'] as const
+export const value_option_constants = ['value',...value_option_percent_constants] as const
+export type ValueOptionType = typeof value_option_constants[number]
+export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag',...value_option_percent_constants,'normalized'] as const
+export type UnitType = typeof unit_constants[number]
+
 // CLASS LINK VALUE *********************************************************************
 /**
  * Define a link value object
@@ -522,49 +527,71 @@ export class Class_LinkValue {
     //   return this.data_value
     // } else 
     // 
-    if (this.value_option == 'ratio_input') {
-      if (this.data_value == null) {
+        if (this.data_value == null) {
         return null
       }
+    if (this.value_option == '%IS') {
       const multiplier = this.data_value / 100
       if (this.parent == this.link) {
         let total_source = 0
         this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
         return total_source * multiplier
-      } else {
+      } /*else {
         const data_tags_id = this.data_tags_id
         const data_tags: Class_ProtoTag[] = []
         this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
         let total_source = 0
         this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
         return total_source * multiplier
-      }
+      }*/
+    } else if (this.value_option == '%OS') {
+        let total_target = 0
+        let ok = true
+        this.link!.source.output_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
+          if (!l.valueCurrent) {
+            ok = false
+            return
+          }
+          total_target += l.valueCurrent
+        })
+        if (!ok || !total_target) return null
+        return total_target*(this.data_value)/(100-this.data_value)
 
-    } else if (this.value_option == 'ratio_output') {
-      if (this.data_value == null) {
-        return null
-      }
+    } else if (this.value_option == '%OD') {
       const multiplier = this.data_value / 100
       if (this.parent == this.link) {
         let total_target = 0
         this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
         return total_target * multiplier
-      } else {
+      } /*else {
         const data_tags_id = this.data_tags_id
         const data_tags: Class_ProtoTag[] = []
         this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
         let total_target = 0
         this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
         return total_target * multiplier
-      }
-    } else if (this.value_option == 'ratio_source_parent') {
+      }*/
+    } else if (this.value_option == '%ID') {
+        let total_target = 0
+        let ok = true
+        this.link!.target.input_links_list.filter(l =>  l != this.link && l.is_visible).forEach(l => {
+          if (!l.valueCurrent) {
+            ok = false
+            return
+          }
+          total_target += l.valueCurrent
+        })
+        if (!ok) return null
+        return total_target/(1-this.data_value)
+    }
+    /*else if (this.value_option == 'ratio_source_parent') {
       const parent = this.link!.target.dimensions_as_child[0].parent
       const parent_link = this.link?.sankey.links_dict[this.link.source.name + ' --> ' + parent.name]
       if (!parent_link || parent_link.value?.valueResult == null) {
         return null
       }
       return parent_link?.valueCurrent??0 * this.data_value!
-    }
+    }*/
     return null
   }
 
