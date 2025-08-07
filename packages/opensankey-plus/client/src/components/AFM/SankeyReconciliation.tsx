@@ -208,7 +208,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
       // Reconcilliation from current Sankey -> Apply current layout
       if (menu_configuration_osp.action_type === 'optim_sankey') {
         application_data_mfa.drawing_area.fromJSON(new_sankey_json_obj)
-        application_data_mfa.drawing_area.setToModeEdition(true)
+        application_data_mfa.drawing_area.setToModeEdition(false)
         application_data_mfa.sendWaitingToast(
           () => {
             application_data_mfa.menu_configuration.ref_to_spreadsheet.current()

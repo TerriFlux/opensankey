@@ -120,6 +120,8 @@ export const AFMContextMenu: FC<Ftype_AFMEditionMenu> = ({
           onClick={() => {
             app_data.menu_configuration_osp.action_type = 'optim_sankey'
             dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current(true)
+            app_data.drawing_area.is_drawing_area_contextualised = false
+            app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
           }} >
           <Box>
             {t('Menu.afm_reconcil_json')}
