@@ -653,7 +653,7 @@ export const resources_app_elements = {
         'presentation_OSS': 'SankeySuite est une licence payante qui permet de débloquer toutes les usages avancés de réalisation et d\'analyse des diagrammes de Sankey.\n\nCette licence inclut les fonctionnalités de réconciliation des données de flux afin de relever des incohérences ou de calculer des flux dont les valeurs ne sont pas accessibles directement.\n\n Elle inclut aussi les fonctionnalités de OpenSankey+.\n\n',
         sankeytheque:'Sankeythèque',
         afm_reconcil: 'AFM',
-        afm_reconcil_json: 'Réconcilier le diagramme de Sankey actuel',
+        afm_reconcil_json: 'Ajuster et compléter le diagramme',
         afm_reconcil_excel: 'Réconcilier un fichier Excel',
         view_actual_file: 'Vues',
         other_file: 'Autre fichier',
