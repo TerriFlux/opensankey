@@ -25,18 +25,19 @@ import {
 
 import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+import { ContextMenuButton } from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextZDD'
 
 
 export type Ftype_AFMEditionMenu = {
-  application_data_mfa : Class_ApplicationDataOSP
+  app_data : Class_ApplicationDataOSP
 }
 
 export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
-  application_data_mfa
+  app_data
 }) => {
 
-  const { t } = application_data_mfa
-  const {ref_setter_show_reconciliation} = application_data_mfa.menu_configuration_osp.dict_setter_show_dialog_afm
+  const { t } = app_data
+  const {ref_setter_show_reconciliation} = app_data.menu_configuration_osp.dict_setter_show_dialog_afm
 
   const svg_reconcile = <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -88,21 +89,7 @@ export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
         <MenuList>
           <MenuItem
             onClick={() => {
-              application_data_mfa.menu_configuration_osp.action_type = 'optim_sankey'
-              ref_setter_show_reconciliation.current(true)
-            }} >
-            <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
-              icon={faFile}
-            />
-            <Box>
-              {t('Menu.afm_reconcil_json')}
-            </Box>
-          </MenuItem>
-
-          <MenuItem
-            onClick={() => {
-              application_data_mfa.menu_configuration_osp.action_type = 'optim'
+              app_data.menu_configuration_osp.action_type = 'optim'
               ref_setter_show_reconciliation.current(true)
             }}>
             <FontAwesomeIcon
@@ -117,4 +104,27 @@ export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
       </Menu>
     </OSTooltip>
   </>
+}
+
+export const AFMContextMenu: FC<Ftype_AFMEditionMenu> = ({
+  app_data
+}) => {
+  const {t,menu_configuration_osp} =app_data
+  const {dict_setter_show_dialog_afm} = menu_configuration_osp
+  return <Menu placement='end'>
+    <ContextMenuButton>
+      {t('Menu.afm_reconcil')}
+    </ContextMenuButton>
+    <MenuList as={Box} layerStyle='context_menu'>
+        <MenuItem
+          onClick={() => {
+            app_data.menu_configuration_osp.action_type = 'optim_sankey'
+            dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current(true)
+          }} >
+          <Box>
+            {t('Menu.afm_reconcil_json')}
+          </Box>
+        </MenuItem>
+    </MenuList>
+  </Menu>
 }

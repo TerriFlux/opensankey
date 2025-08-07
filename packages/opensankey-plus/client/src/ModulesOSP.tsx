@@ -102,7 +102,7 @@ import {
 } from './components/UtilsOSP'
 import { ToolbarFilter } from './components/FilterComponent/TagsFilterComponent'
 import { SankeyMenuConfigurationLevelTags } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLevlTags'
-import { AFMEditionMenu } from './components/AFM/AFMSankeyMenu'
+import { AFMContextMenu, AFMEditionMenu } from './components/AFM/AFMSankeyMenu'
 import { SupplyUseModelisationProd } from './components/AFM/SankeyReconciliation'
 import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
@@ -125,10 +125,10 @@ export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = 
   // Init application data
   const new_data_plus = new Class_ApplicationDataOSP(!!window.sankey?.publish)
   // Read data from cache if it exist
-  const url_info=checkForUrlToJSON()
-  if(url_info){
+  const url_info = checkForUrlToJSON()
+  if (url_info) {
     new_data_plus.readUrlJSON(url_info)
-  }else if (initial_data !== undefined) {
+  } else if (initial_data !== undefined) {
     new_data_plus.fromJSON(initial_data)
   }
   return new_data_plus
@@ -172,7 +172,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   if (has_sankey_afm) {
     additionalMenus.current.external_top_buttons_item['afm'] = <AFMEditionMenu
-      application_data_mfa={new_data_plus}
+      app_data={new_data_plus}
     />
   }
   // TODO OTHER JSX ELEMENTS -----------------------------------------------------------
@@ -213,6 +213,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
 
   additionalMenus.current.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
+  additionalMenus.current.additional_context_zdd_element = <AFMContextMenu app_data={new_data_plus} />
 
   // Insert OSP Button at a specific place in the link context menu
   const idx_sep_4 = additionalMenus.current.context_link_order.indexOf('sep_4')
@@ -290,9 +291,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         new_data={new_data_plus}
         elementTagNameProp='flux_taggs'
       />
-      <MenuConfigurationLinksTags
-        new_data={new_data_plus}
-      />
+        <MenuConfigurationLinksTags
+          new_data={new_data_plus}
+        />
       </>
     </WrapperContentConfig>,
 
@@ -315,9 +316,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         new_data={new_data_plus}
         elementTagNameProp='level_taggs'
       />
-      <SankeyMenuConfigurationLevelTags
-        new_data={new_data_plus}
-      />
+        <SankeyMenuConfigurationLevelTags
+          new_data={new_data_plus}
+        />
       </>
     </WrapperContentConfig>
   }
@@ -349,7 +350,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   />
   const modules_dialogs_OSP = [
     <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data_plus.menu_configuration_osp.dict_setter_show_dialog }
+      dict_hook_ref_setter_show_dialog_components={new_data_plus.menu_configuration_osp.dict_setter_show_dialog}
       dialog_name={'ref_setter_show_menu_zdt' as keyof IType_DictHookRefSetterShowDialogComponents}
       content={content_draggable_menu_zdt}
       title={t('Menu.LL')}
