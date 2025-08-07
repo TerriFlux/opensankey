@@ -334,17 +334,19 @@ export class Class_MenuConfig {
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: [],
-    additional_context_node_element: {},
+
     // Links
     additional_menu_configuration_links: {},
     additional_data_element: [],
     additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
+
     context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
     additional_context_link_element: {},
-
+    additional_context_zdd_element: <></>,
+    context_node_order: [],
+    additional_context_node_element: {},
     // Preferences
     additional_preferences: [],
 

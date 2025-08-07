@@ -466,8 +466,7 @@ export const WrapperInitializeAdditionalMenus: FC<{
     // Nodes
     advanced_appearence_content: [],
     advanced_label_content: [],
-    context_node_order: ['edition_hierarchy','nav_hierarchy', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
-    additional_context_node_element: {},
+
     // Links
     additional_menu_configuration_links: {},
     additional_data_element: [],
@@ -476,6 +475,9 @@ export const WrapperInitializeAdditionalMenus: FC<{
     additional_link_visual_filter_content: [],
     context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'changePlan', 'mask_attr', 'edit_value', 'sep_3', 'assign_tag', 'sep_4'],
     additional_context_link_element: {},
+    context_node_order: ['edition_hierarchy','nav_hierarchy', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
+    additional_context_node_element: {},
+    additional_context_zdd_element: <></>,
 
     // Preferences
     additional_preferences: [],

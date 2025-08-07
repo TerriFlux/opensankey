@@ -1699,10 +1699,12 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }*/
     }
-    if (this.drawing_area.type_data === 'free_interval') {
-      if (this.value?.result_min !== null) {
-        return '[' + this.value!.result_min + ',' + this.value!.result_max + ']'
-      }
+    if (this.value?.result_min !== null) {
+      if (this.drawing_area.type_data === 'free_interval')
+        return '[' + format_value(this.value!.result_min,this) + ',' + format_value(this.value!.result_max,this) + ']'
+      if (this.drawing_area.type_data === 'free_value')
+        return format_value(this.valueCurrent!, this)
+      return ''
     }
 
     return format_value(this.valueCurrent!, this)

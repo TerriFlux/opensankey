@@ -42,7 +42,7 @@ import {
 import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
 import { ChevronRightIcon } from '@chakra-ui/icons'
-import { FCType_ContextMenuLink } from '../SankeyMenuTypes'
+import { FCType_ContextMenu } from '../SankeyMenuTypes'
 
 /*************************************************************************************************/
 
@@ -51,7 +51,7 @@ export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto'
 
 // MENU COMPONENT ***********************************************************************
 
-export const ContextMenuLink: FC<FCType_ContextMenuLink> = ({
+export const ContextMenuLink: FC<FCType_ContextMenu> = ({
   new_data,
   additionalMenus
 }) => {

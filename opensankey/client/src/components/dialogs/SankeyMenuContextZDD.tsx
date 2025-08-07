@@ -38,7 +38,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 import { applyRandomColors } from '../../Algorithms/Colors'
-import { BaseComponentProps } from '../SankeyMenuTypes'
+import { BaseComponentProps, FCType_ContextMenu } from '../SankeyMenuTypes'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto' }}>{b ? '✓' : ''}</span>
@@ -62,8 +62,9 @@ export const ContextMenuButton: React.FC<ContextMenuButtonProps> = ({
   )
 }
 
-export const ContextMenuZdd: FC<BaseComponentProps> = ({
+export const ContextMenuZdd: FC<FCType_ContextMenu> = ({
   new_data,
+  additionalMenus
 }) => {
 
   const { t, MenuColorPicker } = new_data
@@ -477,6 +478,7 @@ export const ContextMenuZdd: FC<BaseComponentProps> = ({
       {button_positioning}
       {button_colors}
       {style_menu}
+      {additionalMenus.current.additional_context_zdd_element}
     </ButtonGroup>
   </Box> : <></>
 }

@@ -41,7 +41,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
 import { hierarchyEditionMenu, hierarchyManipulationMenu } from './SankeyMenuContextHierarchie'
-import { FCType_ContextMenuNode } from '../SankeyMenuTypes'
+import { FCType_ContextMenu } from '../SankeyMenuTypes'
 
 
 /*************************************************************************************************/
@@ -50,11 +50,11 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 
 // MENU COMPONENT ***********************************************************************
 
-export const ContextMenuNode: FC<FCType_ContextMenuNode> = (
+export const ContextMenuNode: FC<FCType_ContextMenu> = (
   {
     new_data,
-    additionalMenu
-  }: FCType_ContextMenuNode
+    additionalMenus
+  }
 ) => {
 
   // Datas ------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ export const ContextMenuNode: FC<FCType_ContextMenuNode> = (
   let pos_y = 0
 
   const size_Button = 40
-  const size_context_menu = (additionalMenu.current.context_node_order.filter(key => !key.includes('sep_')).length) * size_Button // Get approx. height of context menu
+  const size_context_menu = (additionalMenus.current.context_node_order.filter(key => !key.includes('sep_')).length) * size_Button // Get approx. height of context menu
   // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if (contextualised_node) {
@@ -754,7 +754,7 @@ export const ContextMenuNode: FC<FCType_ContextMenuNode> = (
     'change_plan': menu_change_plan,
     'select_link': drp_dwn_slct_link,
 
-    ...additionalMenu.current.additional_context_node_element
+    ...additionalMenus.current.additional_context_node_element
   }
 
   // Pop over that serve as context menu
@@ -774,7 +774,7 @@ export const ContextMenuNode: FC<FCType_ContextMenuNode> = (
         orientation='vertical'
         isAttached
       >
-        {additionalMenu.current.context_node_order.map((key, id) => {
+        {additionalMenus.current.context_node_order.map((key, id) => {
           return <React.Fragment key={id}>{context_content[key]}</React.Fragment>
         })}
       </ButtonGroup>

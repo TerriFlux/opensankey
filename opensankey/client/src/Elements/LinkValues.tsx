@@ -505,7 +505,7 @@ export class Class_LinkValue {
   }
 
   public get valueResult(): number | null {
-    if (this.result_value) {
+    if (this.result_value != undefined) {
       return this.result_value
     }
     /*if (this.value_option == 'unit_conversion') {
@@ -712,9 +712,9 @@ export class Class_LinkValue {
     if (this.data_max) json_object['data_max'] = this.data_max
 
     if (this.result_value) json_object['result_value'] = this.result_value
-    if (kwargs && kwargs['has_results']) {
-      json_object['result_value'] = this.valueResult!
-    }
+    // if (kwargs && kwargs['has_results'] && this.valueResult) {
+    //   json_object['result_value'] = this.valueResult!
+    // }
     if (this.result_min) json_object['result_min'] = this.result_min
     if (this.result_max) json_object['result_max'] = this.result_max
 

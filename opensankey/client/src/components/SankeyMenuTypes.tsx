@@ -284,12 +284,8 @@ export type FCType_WrapperLinkStyleSelector = BaseApplicationDataType & {
 // Context Menu Types
 // ==================================================================================================
 
-export type FCType_ContextMenuLink = BaseApplicationDataType & {
+export type FCType_ContextMenu = BaseApplicationDataType & {
   additionalMenus: MutableRefObject<Type_AdditionalMenus>
-}
-
-export type FCType_ContextMenuNode = BaseApplicationDataType & {
-  additionalMenu: MutableRefObject<Type_AdditionalMenus>
 }
 
 export type BaseComponentProps = BaseApplicationDataType

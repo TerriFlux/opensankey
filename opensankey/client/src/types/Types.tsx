@@ -58,15 +58,16 @@ export type Type_AdditionalMenus = {
 
   context_node_order: string[],
   additional_context_node_element: { [_: string]: JSX.Element },
+  context_link_order: string[],
+  additional_context_link_element: { [_: string]: JSX.Element },
+  additional_context_zdd_element: JSX.Element
+
   // Links
   additional_menu_configuration_links: { [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
   additional_link_appearence_items: ((_:boolean)=>JSX.Element)[],
   additional_link_appearence_value: ((_:boolean)=>JSX.Element)[],
   additional_link_visual_filter_content: JSX.Element[],
-
-  context_link_order: string[],
-  additional_context_link_element: { [_: string]: JSX.Element },
 
   // Preferences
   additional_preferences: JSX.Element[],
