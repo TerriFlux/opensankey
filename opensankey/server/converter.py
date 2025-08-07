@@ -758,14 +758,14 @@ class SankeyToJson(object):
         # We use result data if present instead of simple data
         if flux.has_result():
             for result in flux.results:
-                has_data |= result.value is not None
+                has_data |= result.data_value is not None
                 raw_data = result.alterego
                 self._parse_result(
                     sankey, result, raw_data, default_data_strct, datas_json
                 )
         elif flux.has_data():
             for data in flux.datas:
-                has_data |= data.value is not None
+                has_data |= data.data_value is not None
                 self._parse_data(sankey, data, default_data_strct, datas_json)
         return has_data
 
@@ -837,7 +837,7 @@ class SankeyToJson(object):
 
         # Create data structure
         data_json = self._init_data_struct(sankey, data, default_data_strct)
-        _update_dict_if_value(data_json, "data_value", data.value)
+        _update_dict_if_value(data_json, "data_value", data.data_value)
         # Reference data struct from data tags
         tags = [
             tag for tag in data.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)
@@ -1004,11 +1004,11 @@ class SankeyToJson(object):
         # Update extensions
         _update_dict_if_value(data_strct, "result_min", result.min_val)
         _update_dict_if_value(data_strct, "result_max", result.max_val)
-        _update_dict_if_value(data_strct, "result_value", result.value)
+        _update_dict_if_value(data_strct, "result_value", result.data_value)
         if raw_data is not None:
             _update_dict_if_value(data_strct, "data_min", raw_data.min_val)
             _update_dict_if_value(data_strct, "data_max", raw_data.max_val)
-            _update_dict_if_value(data_strct, "data_value", raw_data.value)
+            _update_dict_if_value(data_strct, "data_value", raw_data.data_value)
             _update_dict_if_value(data_strct, "data_source", raw_data.source)
             _update_dict_if_value(data_strct, "value_option", raw_data.value_option)
         # Reference result struct from data tags
@@ -1579,9 +1579,32 @@ class JsonToSankey(object):
                     flux = self.sankey.get_or_create_flux(
                         orig_node.name, dest_node.name
                     )
-                    self._extract_data(flux_json["value"], flux)
+                    self._extract_data(flux_json["value"], flux, False)
 
-    def _extract_data(self, datas_json, flux, datatags_list=[], datataggs_list=None):
+        self.sankey.autocompute_nodes_types()
+        for (source_id, target_id), flux_list in flux_groups.items():
+            # Obtenir les nœuds
+            orig_node = self._nodes_id_corresp[source_id]
+            dest_node = self._nodes_id_corresp[target_id]
+            for flux_json in flux_list:
+                if "tags" in flux_json["value"]:
+                    for tagg_id in flux_json["value"]["tags"].keys():
+                        if tagg_id in self._fluxtags_id_corresp.keys():
+                            # Get corresponding tags
+                            for tag_id in flux_json["value"]["tags"][tagg_id]:
+                                if tag_id in self._fluxtags_id_corresp[tagg_id].keys():
+                                    tag = self._fluxtags_id_corresp[tagg_id][tag_id]
+                                    flux = self.sankey.get_or_create_flux(
+                                        orig_node.name, dest_node.name, tag
+                                    )
+                                    self._extract_data(flux_json["value"], flux)
+                else:
+                    flux = self.sankey.get_or_create_flux(
+                        orig_node.name, dest_node.name
+                    )
+                    self._extract_data(flux_json["value"], flux, True)
+
+    def _extract_data(self, datas_json, flux, read_constraint, datatags_list=[], datataggs_list=None):
         """
         Extract all datas (recursively) from json flux struct to fill a Sankey struct.
 
@@ -1656,27 +1679,33 @@ class JsonToSankey(object):
             #     if "computed_data" in datas_json["tags"]["flux_types"]:
             #         data_is_computed = True
             # Update data OR result
-            if "data_value" in datas_json:
-                data.value = datas_json["data_value"]
-            # Apply only flux-tags
-            for tag in fluxtags_list:
-                data.add_tag(tag)
-            if "result_value" in datas_json:
-                # Create result
-                result = SankeyData(value=datas_json["result_value"])
-                for tag in data.tags:
-                    result.add_tag(tag)
-                # Update result value
-                flux.add_result(result)
-                # Link with data
-                result.alterego = data
-                # # Apply tags
-                # for tag in datatags_list + fluxtags_list:
-                #     result.add_tag(tag)
-            # else:
-            # Update value
 
-            return
+            if "value_option" in datas_json:
+                data.value_option = datas_json["value_option"]
+            if read_constraint and data.value_option == DataConstraintType.ratio_node_input_source.value:
+                self.sankey.ratio_node(flux, datas_json)
+            if not read_constraint and data.value_option != DataConstraintType.ratio_node_input_source.value:
+                if "data_value" in datas_json:
+                    data.data_value = datas_json["data_value"]
+                # Apply only flux-tags
+                for tag in fluxtags_list:
+                    data.add_tag(tag)
+                if "result_value" in datas_json:
+                    # Create result
+                    result = SankeyData(data_value=datas_json["result_value"])
+                    for tag in data.tags:
+                        result.add_tag(tag)
+                    # Update result value
+                    flux.add_result(result)
+                    # Link with data
+                    result.alterego = data
+                    # # Apply tags
+                    # for tag in datatags_list + fluxtags_list:
+                    #     result.add_tag(tag)
+                # else:
+                # Update value
+
+                return
         # Otherwise we have to go deeper
         elif "datatag_group" in datas_json.keys():
             curr_datatagg_id = datas_json["datatag_group"]
