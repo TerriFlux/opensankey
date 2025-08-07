@@ -171,7 +171,7 @@ export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
       </div>
       <ContextMenuNode
         new_data={new_data}
-        additionalMenu={new_data.menu_configuration.additionalMenus}
+        additionalMenus={new_data.menu_configuration.additionalMenus}
       />
       <ContextMenuLink
         new_data={new_data}
@@ -179,6 +179,7 @@ export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
       />
       <ContextMenuZdd
         new_data={new_data}
+        additionalMenus={new_data.menu_configuration.additionalMenus}
       />
       <React.Fragment key={'modale_style_link'}>
         <SankeyModalStyleLink
