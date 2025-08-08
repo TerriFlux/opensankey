@@ -211,6 +211,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
         application_data_mfa.drawing_area.setToModeEdition(false)
         application_data_mfa.sendWaitingToast(
           () => {
+            application_data_mfa.drawing_area.orderElementOnDA()
             application_data_mfa.menu_configuration.ref_to_spreadsheet.current()
           }
         )

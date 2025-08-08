@@ -1,6 +1,6 @@
 import { Select, Box, Switch } from '@chakra-ui/react'
 import React, { FC, useState } from 'react'
-import { FilterWrapperBox, title_filter_column } from './TagsFilterComponent'
+import { FilterWrapperBox } from './TagsFilterComponent'
 import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { BaseComponentProps } from '../ComponentTypes'
 
@@ -97,13 +97,10 @@ export const DataTagGroupFilter: FC<BaseComponentProps> = ({
               justifySelf='end'
               alignSelf='center'
               height='1rem'
-              isChecked={tagg.show_legend}
+              isChecked={tagg.banner == 'multi'}
               onChange={evt => {
                 // Met à jour l'indicateur de legende pour tous les tags
-                Object.values(data_taggs_with_banner)
-                  .forEach(tagg => tagg.show_legend = false)
-                tagg.show_legend = evt.target.checked
-                new_data.drawing_area.legend.draw()
+                tagg.banner = evt.target.checked ? 'multi' : 'one'
                 new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
               }} />
           </Box>
@@ -113,7 +110,13 @@ export const DataTagGroupFilter: FC<BaseComponentProps> = ({
   return data_taggs_with_banner.length > 0 ? <FilterWrapperBox
     new_data={new_data}
     title={new_data.t('Banner.sdd')}>
-    {title_filter_column(new_data)}
+    <Box
+      as='span'
+      layerStyle='popover_sidebar_row_tag_filter'
+    >
+      <Box textStyle='h2'></Box>
+      <Box textStyle='h2'>{new_data.t('Menu.type_selection')}</Box>
+    </Box>
     {SelectorOfTagsByGroup}
   </FilterWrapperBox> : <></>
 
