@@ -2289,7 +2289,7 @@ const layerStyles = {
 
   popover_sidebar_row_tag_filter: {
     display: 'grid',
-    gridTemplateColumns: '4fr 1fr',
+    gridTemplateColumns: '3.5fr 1.5fr',
     gridColumnGap: '0.25rem',
   },
 

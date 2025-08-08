@@ -23,7 +23,7 @@ export abstract class Class_ProtoTagGroup {
   // List of tags
   private _tag_count: number = 0
 
-  // Type of banne
+  // Type of banner
   private _banner: tag_banner_type = 'one'
 
   /**
