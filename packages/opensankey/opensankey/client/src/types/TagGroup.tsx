@@ -163,7 +163,22 @@ export abstract class Class_ProtoTagGroup {
         // Update tag with json
         tag.fromJSON(tag_json as Type_JSON)
       })
-
+    const nb_tags = Object.values(this._tags).length
+    if (Object.values(this._tags).filter(tag => tag.color != '').length == 0) {
+      // if tags has no colors they are generated from the defaut color map
+      const colors = colormap({
+        colormap: 'jet',
+        nshades: Math.max(11, nb_tags),
+        format: 'hex',
+        alpha: 1
+      })
+      let step = 1
+      if (nb_tags < 11) {
+        // colormap is sampled uniformly between the first index and the last
+        step = Math.round(11 / nb_tags)
+      }
+      Object.values(this._tags).forEach((tag, i) => tag.color = colors[i * step])
+    }
   }
 
   private fromLegacyJSON(json_object: Type_JSON) {
@@ -358,22 +373,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   ) {
     super._fromJSON(json_object, kwargs)
     this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
-    const nb_tags = Object.values(this._tags).length
-    if (Object.values(this._tags).filter(tag => tag.color != '').length == 0) {
-      // if tags has no colors they are generated from the defaut color map
-      const colors = colormap({
-        colormap: 'jet',
-        nshades: Math.max(11, nb_tags),
-        format: 'hex',
-        alpha: 1
-      })
-      let step = 1
-      if (nb_tags < 11) {
-        // colormap is sampled uniformly between the first index and the last
-        step = Math.round(11 / nb_tags)
-      }
-      Object.values(this._tags).forEach((tag, i) => tag.color = colors[i * step])
-    }
+
   }
 
   protected _copyFrom(
