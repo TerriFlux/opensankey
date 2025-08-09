@@ -146,6 +146,10 @@ export class LinkDrawValue {
       // (this._link.value_label_is_visible) &&
       ((link_val ?? 0) >= this._link.drawing_area.filter_label)
     ) {
+      let font_size = this._link.value_label_font_size
+      if (this._link.value_label_font_size > this._link.thickness && this._link.is_multi_link) {
+        font_size = this._link.thickness
+      }
       // Failsafe
       if (this._link.source && this._link.target) {
         // Compute label to display
@@ -161,7 +165,7 @@ export class LinkDrawValue {
             .classed('link_value_text', true)
             .attr('id', 'value_text_' + this._link.id)
 
-          d3_text_selection?.style('font-size', String(this._link.value_label_font_size) + 'px')
+          d3_text_selection?.style('font-size', String(font_size) + 'px')
             .style('font-family', this._link.value_label_font_family)
             .attr('fill', this._link.value_label_color)
             .attr('font-weight', this._link.value_label_bold ? 'bold' : 'normal')
@@ -329,7 +333,7 @@ export class LinkDrawValue {
       }
     }
 
-    if (this._link.value_label_vert === 'top' || (this._link.value_label_pos_auto && this._link.value_label_font_size > this._link.thickness)) {
+    if (this._link.value_label_vert === 'top' || (!this._link.is_multi_link && this._link.value_label_pos_auto && this._link.value_label_font_size > this._link.thickness)) {
       label_ortho_position = -this._link.thickness / 2
     }
     // orthogonal attributes

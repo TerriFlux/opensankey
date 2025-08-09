@@ -197,7 +197,11 @@ export function isAttributeOverloaded(
 
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
-export const format_value = (data_value: number | undefined | null, element: Class_LinkElement | Class_NodeElement) => {
+export const format_value = (
+  data_value: number | undefined | null, 
+  element: Class_LinkElement | Class_NodeElement,
+  unit_name : string
+) => {
   /*==========================================================================*/
   // First step. value transformation
   const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
@@ -273,8 +277,8 @@ export const format_value = (data_value: number | undefined | null, element: Cla
 
   if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
   else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
-    const label_unit = unit_taggs[0].first_selected_tags!.name
-    text_value = text_value + ' ' + label_unit
+    //const label_unit = unit_taggs[0].first_selected_tags!.name
+    text_value = text_value + ' ' + unit_name
   } else if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
     const label_unit = unit_taggs[0].tags_dict[element.value_label_unit]!.name
     text_value = text_value + ' ' + label_unit
@@ -322,6 +326,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   public parallel_curve: Class_LinkElement | undefined
   public sibling: Class_LinkElement | undefined
+  private _child_links:{[tag_name:string] : Class_LinkElement} = {}
+  private _is_multi_link = false
+  private _selected_data_tags_list : Class_DataTag[] | undefined
   private _is_unit_reference = false
 
   // Visibility memorized - source & target
@@ -1079,7 +1086,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Default color
     let shape_color = this.shape_color
     // Test if tagg of flow or data are activated, if so use color from tag associated to link
-    const dataTagColorActivated = this.sankey.selected_data_tags_list.filter(tag => tag.group.show_legend)
+    const dataTagColorActivated = this.selected_data_tags_list.filter(tag => tag.group.show_legend)
     // Do we apply color of flux tags ?
     const flux_taggs_activated = this.flux_taggs_list
       .filter(tagg => tagg.show_legend)
@@ -1161,7 +1168,23 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     }
   }
 
+  public setAsChildLink(tag: Class_DataTag) {
+    this._is_multi_link = true
+    this._selected_data_tags_list = []
+    this.sankey.data_taggs_list.forEach((tagg) => {
+      if (tagg == tag.group) this._selected_data_tags_list!.push(tag)
+      else this._selected_data_tags_list!.push(tagg.selected_tags_list[0])
+    })
+  }
+
   // PROTECTED METHODS ==================================================================
+  public addChildLink(l:Class_LinkElement,tag:Class_DataTag) {
+    this._child_links[tag.id] = l
+    this.source.addOutputLink(l)
+    this.target.addInputLink(l)
+    l.setAsChildLink(tag)
+    tag.group.show_legend = true
+  }
 
   /**
    * Set up element on d3 svg area
@@ -1395,8 +1418,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   protected scaleValueToPx(_: number) {
-    if (this.value?.data_tag && this.value?.data_tag.group.is_unit) {
-      this.setDomainLocalScale(this.value?.data_tag.scale)
+    let current_value = this.value
+    if (current_value?.data_tag?.group.is_unit) {
+      this.setDomainLocalScale(current_value?.data_tag.scale)
       return this._scaleValueToPx(_)
     }
     if (this.shape_local_link_scale !== undefined) {
@@ -1454,9 +1478,13 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     return this._values.has_result
   }
 
+  public get child_links() {return this._child_links}
+  public get is_multi_link() {return this._is_multi_link}
+
   public get is_visible() {
     return (
       super.is_visible &&
+      Object.values(this._child_links).length == 0 &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
       this.is_not_null
@@ -1619,6 +1647,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return this._values.getValueForDataTags(_ as Class_DataTag[])
   }
 
+  public get selected_data_tags_list() {
+      return this._selected_data_tags_list??this.sankey.selected_data_tags_list    
+  }
+
   /**
    * Get value object.
    * Either search correct current value with data_taggs,
@@ -1630,7 +1662,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this._values instanceof Class_LinkValue)
       return this._values
     else
-      return this._values.getValueForDataTags(this.sankey.selected_data_tags_list as Class_DataTag[])
+      return this._values.getValueForDataTags(this.selected_data_tags_list as Class_DataTag[])
   }
 
   public get valueCurrent() {
@@ -1692,6 +1724,16 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     return value as string
   }
 
+  public get unit_name() {
+    if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
+    const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    if (unit_taggs.length>0) {
+      if(!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
+      else return this.selected_data_tags_list.filter(tag=>tag.group.is_unit)[0].name
+    }
+    return ''
+  }
+
   public get data_label() {
     if (this.sankey.drawing_area.type_data == 'data') {
       if (!this.value?.valueData) return ''
@@ -1701,13 +1743,13 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     }
     if (this.value?.result_min !== null) {
       if (this.drawing_area.type_data === 'free_interval')
-        return '[' + format_value(this.value!.result_min,this) + ',' + format_value(this.value!.result_max,this) + ']'
+        return '[' + format_value(this.value!.result_min,this,this.unit_name) + ',' + format_value(this.value!.result_max,this,this.unit_name) + ']'
       if (this.drawing_area.type_data === 'free_value')
-        return format_value(this.valueCurrent!, this)
+        return format_value(this.valueCurrent!, this,this.unit_name)
       return ''
     }
 
-    return format_value(this.valueCurrent!, this)
+    return format_value(this.valueCurrent!, this,this.unit_name)
   }
 
   /**
@@ -1786,7 +1828,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    */
   public get thickness() {
     // Get link value for current dataTaggs selected
-    const data_value = this.valueCurrent
+    let data_value = this.valueCurrent
     // Scale this value for the drawing area
     const linkValueInPx = (data_value !== null && (!this.shape_is_structure)) ? this.scaleValueToPx(data_value) : 2
 
@@ -2145,7 +2187,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public set value_label_unit_factor(_: number) { this._display.attributes.value_label_unit_factor = _; this.drawValue() }
 
   public get value_label_unit_is_reference() { return this._is_unit_reference }
-  public set value_label_unit_is_reference(_) { this._is_unit_reference = _; this.drawValue() }  
+  public set value_label_unit_is_reference(_) { this._is_unit_reference = _; this.drawValue() }
 
   public get value_label_custom_digit() { return this.getStyleProperty('value_label_custom_digit') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']> }
   public set value_label_custom_digit(_: boolean) {

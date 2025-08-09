@@ -106,7 +106,7 @@ export const LINKS_ATTRIBUTES_CONFIG = {
   value_label_horiz: { default: 'middle' as Type_PathLabelHPosition, type: (() => 'middle') as (() => Type_PathLabelHPosition), setter: 'customValueLabelHoriz' },
   value_label_vert: { default: 'middle' as Type_PathLabelVPosition, type: (() => 'middle') as (() => Type_PathLabelVPosition), setter: 'customValueLabelVert' },
   value_label_on_path: { default: true, type: (() => true) as (() => boolean), setter: 'customValueLabelOnPath' },
-  value_label_pos_auto: { default: false, type: (() => false) as (() => boolean), setter: 'customValueLabelPosAuto' },
+  value_label_pos_auto: { default: true, type: (() => true) as (() => boolean), setter: 'customValueLabelPosAuto' },
   value_label_scientific_notation: { default: false, type: (() => false) as (() => boolean) },
   value_label_significant_digits: { default: false, type: (() => false) as (() => boolean) },
   value_label_nb_significant_digits: { default: 3, type: (() => 3) as (() => number) },
@@ -132,7 +132,7 @@ export const LINKS_ATTRIBUTES_CONFIG = {
   name_label_horiz: { default: 'middle' as Type_PathLabelHPosition, type: (() => 'middle') as (() => Type_TextHPos), setter: 'customNameLabelHoriz' },
   name_label_vert: { default: 'top' as Type_PathLabelVPosition, type: (() => 'top') as (() => Type_TextVPos), setter: 'customNameLabelVert' },
   name_label_on_path: { default: true, type: (() => true) as (() => boolean), setter: 'customNameLabelOnPath' },
-  name_label_pos_auto: { default: false, type: (() => false) as (() => boolean), setter: 'customNameLabelPosAuto' },
+  name_label_pos_auto: { default: true, type: (() => true) as (() => boolean), setter: 'customNameLabelPosAuto' },
 } as const
 
 type AttributeKey = keyof typeof LINKS_ATTRIBUTES_CONFIG
@@ -413,9 +413,7 @@ export class Class_LinkAttribute {
         'italic': 'name_label_italic',
         'label_color': 'name_label_color',
         'label_horiz': 'name_label_horiz',
-        'label_vert': 'name_label_vert',
-        'name_label_on_path': 'name_label_on_path',
-        'name_label_pos_auto': 'name_label_pos_auto'
+        'label_vert': 'name_label_vert'
       }
       const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', false) as boolean
       if (was_gradient) {

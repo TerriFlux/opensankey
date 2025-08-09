@@ -1405,6 +1405,7 @@ export class Class_Sankey {
     // this.links_list.forEach(link => link.draw())
     // Draw nodes
     this.nodes_list.forEach(node => node.draw())
+    this.drawing_area.orderElementOnDA()
   }
 
   // Nodes related ----------------------------------------------------------------------
