@@ -61,7 +61,7 @@ export const DataTagGroupFilter: FC<BaseComponentProps> = ({
                 (selected_options.length < 2) &&
                 (tag.id == selected_options[0].value)
               ),
-              selected:tag.is_selected
+              selected: tag.is_selected
             }
           })
 
@@ -71,14 +71,42 @@ export const DataTagGroupFilter: FC<BaseComponentProps> = ({
           onClick={(entries: typeElementSelectable) => {
             // Set correct tags as selected
             tagg.selectTagsFromIds(entries.map(_ => _.value))
-            // TODO not optimal. Target Source nodes of redrawn link must be redrawn
-            new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-            // Update related components (includes this)
-            new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+            new_data.drawing_area.sankey.links_list.forEach(l => {
+              if (l.is_multi_link) {
+                return
+              }
+              if (entries.length == 1) {
+                Object.keys(l.child_links).forEach(key => {
+                   l.child_links[key].delete()
+                  delete l.child_links[key]
+                })
+              } else {
+                tagg.tags_list.forEach(tag => {
+                  if (!tag.is_selected) {
+                    if (tag.id in l.child_links) {
+                      l.child_links[tag.id].delete()
+                      delete l.child_links[tag.id]
+                    }
+                  }
+                })
+                tagg.selected_tags_list.forEach(tag => {
+                  if (tag.id in l.child_links || l.is_multi_link) {
+                    return
+                  }
+                  const child_link = new_data.drawing_area.sankey.addNewLink(l.source, l.target)
+                  child_link.copyFrom(l)
+                  l.addChildLink(child_link, tag)
+                })
+              }
+            })
+            new_data.drawing_area.draw()
+            new_data.drawing_area.sankey.visible_nodes_list.forEach(n=>n.reorganizeIOLinks())
+            new_data.drawing_area.orderElementOnDA()
+            new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
           }}
         />
       }
-  
+
       return (
         <Box
           layerStyle='menuconfigpanel_grid'

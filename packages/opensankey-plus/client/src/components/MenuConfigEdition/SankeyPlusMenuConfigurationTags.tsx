@@ -437,6 +437,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
         tags_entry[i].color =
           d3.color(color_selected(+i / nb_of_colors))?.formatHex() ?? default_grey_color
       }
+      new_data.drawing_area.draw()
       // Update only this menu
       updateThisAndToggleSavingIndicator()
     }
@@ -445,6 +446,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       tags_entry.forEach(tag => {
         tag.color = dict_old_val[tag.id]
       })
+      new_data.drawing_area.draw()
       // Update only this menu
       updateThisAndToggleSavingIndicator()
     }
