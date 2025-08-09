@@ -1745,7 +1745,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get data_label() {
     if (this.sankey.drawing_area.type_data == 'data') {
       if (!this.value?.valueData) return ''
-      return this.formatValueWithOption(this.value?.valueData, this.value?.value_option)/*else if (this.value?.value_option == 'unit_conversion' ) {
+      return this.formatValueWithOption(format_value(this.value?.valueData,this,this.unit_name), this.value?.value_option)/*else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }*/
     }
