@@ -2163,6 +2163,7 @@ export class Class_DrawingArea {
   protected setSelectionMode() {
     // forcing are there are some issues sometimes it is not unset
     this.sankey.links_list.forEach(l=>l.unsetMouseOver())
+    this.sankey.nodes_list.forEach(n=>n.unsetMouseOver())
     this._mode = 'selection'; 
     this.drawCursor() 
   }
@@ -2171,6 +2172,7 @@ export class Class_DrawingArea {
   protected setEditionMode() {
     // forcing are there are some issues sometimes it is not unset
     this.sankey.links_list.forEach(l=>l.unsetMouseOver())
+    this.sankey.nodes_list.forEach(n=>n.unsetMouseOver())
     this._mode = 'edition'; 
     this.drawCursor() 
   }

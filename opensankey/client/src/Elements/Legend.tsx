@@ -66,9 +66,11 @@ const default_legend_police = 16
 const default_legend_bg_border = false
 const default_legend_bg_color = default_element_color
 const default_legend_bg_opacity = 0
-const default_legend_show_dataTags = false
+const default_legend_show_dataTags = true
 const default_width = 180
 const default_info_link_value_void = false
+const default_legend_position_x = 300
+const default_legend_position_y = 50
 // CLASS LEGEND *************************************************************************
 
 /**
@@ -169,8 +171,8 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     // Init other class attributes
     this._display = {
       position: {
-        x: const_default_position_x,
-        y: const_default_position_y,
+        x: default_legend_position_x,
+        y: default_legend_position_y,
         u: 0,
         v: 0
       }
@@ -256,7 +258,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     const json_legend = getJSONFromJSON(json_object, 'legend', {})
 
     const legend_position = getStringListFromJSON(
-      json_legend, 'legend_position', [String(const_default_position_x), String(const_default_position_y)]
+      json_legend, 'legend_position', [String(default_legend_position_x), String(default_legend_position_y)]
     )
     this._display.position.x = +legend_position[0]
     this._display.position.y = +legend_position[1]
