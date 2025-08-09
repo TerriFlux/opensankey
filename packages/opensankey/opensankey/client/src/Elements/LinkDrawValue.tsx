@@ -173,7 +173,7 @@ export class LinkDrawValue {
             .style('text-transform', this._link.value_label_uppercase ? 'uppercase' : 'none')
 
           // Compute text position
-          if (this._link.value_label_on_path && this._link.shape_shape != 'bezier_outline') {
+          if (this._link.value_label_on_path /*&& this._link.shape_shape != 'bezier_outline'*/) {
 
             // Create text on path
             const d3_textpath_selection = d3_text_selection?.append('textPath')
@@ -291,9 +291,15 @@ export class LinkDrawValue {
    */
   private updateValueTextPathOffset() {
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getValueTextPathOffset()
+    let ortho_position = label_ortho_position
+    let ratio = 1
+    if (this._link.shape_shape == 'bezier_outline') {
+      ratio = 2
+      ortho_position = this._link.thickness/2
+    }
     this._link.d3_selection?.select('.link_value_textpath').attr('text-anchor', label_anchor)
-    this._link.d3_selection?.select('.link_value_textpath').attr('startOffset', label_position + '%')
-    this._link.d3_selection?.select('.link_value_text').attr('dy', label_ortho_position)
+    this._link.d3_selection?.select('.link_value_textpath').attr('startOffset', label_position/ratio + '%')
+    this._link.d3_selection?.select('.link_value_text').attr('dy', ortho_position)
     this._link.d3_selection?.select('.link_value_textpath').attr('dominant-baseline', label_dominant_baseline)
   }
 

@@ -218,7 +218,10 @@ export const format_value = (
   }
   if (element.value_label_unit_type == '%IS') {
     let total_source = 0
-    link.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    // if (unit_taggs.length > 0) {
+    //   link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
+    // }
+    link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value ? data_value / total_source * 100 : null
   } else if (element.value_label_unit_type == '%OD') {
     let total_target = 0
@@ -1179,6 +1182,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this.source.addOutputLink(l)
     this.target.addInputLink(l)
     l.setAsChildLink(tag)
+    l.shape_shape = 'bezier_outline'
     tag.group.show_legend = true
   }
 
