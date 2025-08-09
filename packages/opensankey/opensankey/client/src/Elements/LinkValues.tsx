@@ -482,10 +482,10 @@ export class Class_LinkValueTree {
   }
 }
 
-export const value_option_percent_constants = ['%IS','%OS','%ID','%OD'] as const
-export const value_option_constants = ['value',...value_option_percent_constants] as const
+export const value_option_percent_constants = ['%IS', '%OS', '%ID', '%OD', '%PS', '%PD'] as const
+export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_conversion'] as const
 export type ValueOptionType = typeof value_option_constants[number]
-export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag',...value_option_percent_constants,'normalized'] as const
+export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'normalized'] as const
 export type UnitType = typeof unit_constants[number]
 
 // CLASS LINK VALUE *********************************************************************
@@ -500,6 +500,8 @@ export class Class_LinkValue {
   // PUBLIC ATTRIBUTES ==================================================================
   public parent: Class_LinkValueTree | Class_LinkElement
 
+  private ratio_unit_tag: string | undefined
+
   public get has_result() {
     return this.result_value !== null || this.value_option != 'value'
   }
@@ -508,29 +510,19 @@ export class Class_LinkValue {
     if (this.result_value != undefined) {
       return this.result_value
     }
-    /*if (this.value_option == 'unit_conversion') {
-          if (this.unit_factor) {
-            const children_with_data = Object.values((this.parent as Class_LinkValueTree).children).filter(c=>c.id!=this.id && c.valueResult !== null)
-            if (children_with_data.length == 0) {
-              return null
-            }
-            const child_with_data = children_with_data[0] as Class_LinkValue
-            const conv_factor = child_with_data.unit_factor
-            if (!conv_factor) return null
-            const this_conv_factor = this.unit_factor
-            if (!this_conv_factor) return null
-            const multiplier = this_conv_factor/conv_factor
-            return child_with_data.valueResult!*multiplier
-          }
-        } else*/ 
-    //      if (this.value_option == 'value') {
-    //   return this.data_value
-    // } else 
-    // 
-        if (this.data_value == null) {
-        return null
-      }
-    if (this.value_option == '%IS') {
+    if (this.data_value == null) {
+      return null
+    }
+    if (this.value_option == 'unit_conversion') {
+      const ratio_unit_tag_value: Class_LinkValue = this
+      // const child_with_data = children_with_data[0] as Class_LinkValue
+      // const conv_factor = child_with_data.unit_factor
+      // if (!conv_factor) return null
+      // const this_conv_factor = this.unit_factor
+      // if (!this_conv_factor) return null
+      // const multiplier = this_conv_factor / conv_factor
+      return ratio_unit_tag_value.valueResult! * this.data_value!
+    } else if (this.value_option == '%IS') {
       const multiplier = this.data_value / 100
       if (this.parent == this.link) {
         let total_source = 0
@@ -545,17 +537,17 @@ export class Class_LinkValue {
         return total_source * multiplier
       }*/
     } else if (this.value_option == '%OS') {
-        let total_target = 0
-        let ok = true
-        this.link!.source.output_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
-          if (!l.valueCurrent) {
-            ok = false
-            return
-          }
-          total_target += l.valueCurrent
-        })
-        if (!ok || !total_target) return null
-        return total_target*(this.data_value)/(100-this.data_value)
+      let total_target = 0
+      let ok = true
+      this.link!.source.output_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
+        if (!l.valueCurrent) {
+          ok = false
+          return
+        }
+        total_target += l.valueCurrent
+      })
+      if (!ok || !total_target) return null
+      return total_target * (this.data_value) / (100 - this.data_value)
 
     } else if (this.value_option == '%OD') {
       const multiplier = this.data_value / 100
@@ -572,17 +564,17 @@ export class Class_LinkValue {
         return total_target * multiplier
       }*/
     } else if (this.value_option == '%ID') {
-        let total_target = 0
-        let ok = true
-        this.link!.target.input_links_list.filter(l =>  l != this.link && l.is_visible).forEach(l => {
-          if (!l.valueCurrent) {
-            ok = false
-            return
-          }
-          total_target += l.valueCurrent
-        })
-        if (!ok) return null
-        return total_target/(1-this.data_value)
+      let total_target = 0
+      let ok = true
+      this.link!.target.input_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
+        if (!l.valueCurrent) {
+          ok = false
+          return
+        }
+        total_target += l.valueCurrent
+      })
+      if (!ok) return null
+      return total_target / (1 - this.data_value)
     }
     /*else if (this.value_option == 'ratio_source_parent') {
       const parent = this.link!.target.dimensions_as_child[0].parent
@@ -720,7 +712,7 @@ export class Class_LinkValue {
 
     if (this.text_value) json_object['text_value'] = this.text_value
     if (this.value_option !== 'value') json_object['value_option'] = this.value_option
-    if (this.flux_taggs_list.length>0) {
+    if (this.flux_taggs_list.length > 0) {
       json_object['tags'] = Object.fromEntries(
         this.flux_taggs_list
           .map(tagg => [
@@ -860,7 +852,7 @@ export class Class_LinkValue {
    * @memberof Class_LinkValue
    */
   public getMaxValue() {
-    return Math.max(this.data_value??0,this.result_value??0)
+    return Math.max(this.data_value ?? 0, this.result_value ?? 0)
   }
 
   public getAllValues() {
