@@ -578,7 +578,7 @@ protected _toJSON(
   public get references() { return Object.values(this._references) }
 
   public get scale() {
-    if (this.group.is_unit) return this._scale
+    if (this.group.is_unit) return this._scale*this.group.selected_tags_list.length
     return this._ref_sankey.drawing_area.scale
   }
   public set scale(_) { this._scale = _}
