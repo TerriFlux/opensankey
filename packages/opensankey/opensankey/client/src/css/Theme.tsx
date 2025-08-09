@@ -605,6 +605,10 @@ export const buttonStyles = {
   // Boutons toolbar avec factory pour les niveaux 2-6
   ...[2, 3, 5, 6].reduce((acc, level) => {
     acc[`toolbar_button_${level}`] = createButtonStyle('primaire', level)
+    if (level==3) {
+      acc[`toolbar_button_${level}`].width = 'unset'
+      acc[`toolbar_button_${level}`].height = 'unset'
+    }
     return acc
   }, {} as Record<string, any>),
 
