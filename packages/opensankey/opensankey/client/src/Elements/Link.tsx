@@ -328,7 +328,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public sibling: Class_LinkElement | undefined
   private _child_links:{[tag_name:string] : Class_LinkElement} = {}
   private _is_multi_link = false
-  private _selected_data_tags_list : Class_DataTag[] | undefined
+  private _multi_link_tag : Class_DataTag | undefined
   private _is_unit_reference = false
 
   // Visibility memorized - source & target
@@ -1170,11 +1170,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   public setAsChildLink(tag: Class_DataTag) {
     this._is_multi_link = true
-    this._selected_data_tags_list = []
-    this.sankey.data_taggs_list.forEach((tagg) => {
-      if (tagg == tag.group) this._selected_data_tags_list!.push(tag)
-      else this._selected_data_tags_list!.push(tagg.selected_tags_list[0])
-    })
+    this._multi_link_tag = tag
   }
 
   // PROTECTED METHODS ==================================================================
@@ -1648,7 +1644,15 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public get selected_data_tags_list() {
-      return this._selected_data_tags_list??this.sankey.selected_data_tags_list    
+    if (this._is_multi_link) {
+      const selected_tags : Class_DataTag[] = []
+      this.sankey.data_taggs_list.forEach((tagg) => {
+        if (tagg == this._multi_link_tag?.group) selected_tags.push(this._multi_link_tag)
+        else selected_tags.push(tagg.selected_tags_list[0])
+      })
+      return selected_tags
+    }
+    return this.sankey.selected_data_tags_list
   }
 
   /**
