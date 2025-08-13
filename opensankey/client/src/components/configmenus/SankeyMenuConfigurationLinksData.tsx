@@ -230,7 +230,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
             data_tags_to_unselect.forEach(tag => tag.setUnSelected())
           }
           // Retrun selection box
-          return (<>
+          return (<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box
               as='span'
               layerStyle='menuconfigpanel_part_title_3'
@@ -255,7 +255,7 @@ export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
                   return <option key={tag.id} value={tag.id}>{tag.name}</option>
                 })
               }
-            </Select></>
+            </Select></Box>
           )
         }
       })
