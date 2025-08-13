@@ -29,9 +29,10 @@ import {
   Box,
   Button,
   Checkbox,
+  Select
 } from '@chakra-ui/react'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
-import { ConfigMenuNumberInput} from './SankeyMenuConfiguration'
+import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './MenuCommon'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { t } from 'i18next'
@@ -215,7 +216,8 @@ export const DrawingAreaStyle: FC<FCType_DrawingAreaStyle> = ({ new_data, extra_
 export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_data }) => {
   const { t } = new_data
   const [, setCount] = useState(0)
-
+  const unit_taggs = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  const [selectedTag,setSelectedTag] = useState(unit_taggs.length > 0?unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0].id:'')
   /**
    * Function used to reset menu UI
    */
@@ -229,10 +231,8 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
   const ref_minimum_flux = useRef((_: string | null | undefined) => null)
   const ref_maximum_flux = useRef((_: string | null | undefined) => null)
 
-  const unit_taggs = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
   if (unit_taggs.length > 0) {
-    const selectedTag = unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0]
-    ref_scale.current(String(selectedTag.scale))
+    ref_scale.current(String(unit_taggs[0].tags_dict[selectedTag].scale))
   } else {
     ref_scale.current(String(new_data.drawing_area.scale))
   }
@@ -275,7 +275,12 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
   const eventScale = (evt: number | null | undefined) => {
     if (evt) {
       const f = (_: number) => {
-        new_data.drawing_area.scale = _
+        if (unit_taggs.length > 0) {
+          unit_taggs[0].tags_dict[selectedTag].scale = _
+          new_data.drawing_area.draw()
+        } else {
+          new_data.drawing_area.scale = _
+        }
         refreshThisAndUpdateRelatedComponents()
       }
       new_data.setValueAndSaveHistory(new_data.drawing_area, 'scale', evt, f)
@@ -284,6 +289,36 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
 
   return <WrapperBoxSubSectionMenu new_data={new_data} title={t('MEP.links_size')}>
     <>
+      {unit_taggs.length > 0 ?
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+          <Box
+            as='span'
+            layerStyle='menuconfigpanel_part_title_3'
+          >
+            {unit_taggs[0].name}
+          </Box>
+          <Select
+            name={unit_taggs[0].id}
+            variant='menuconfigpanel_option_select'
+            value={
+              selectedTag
+            }
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              setSelectedTag(evt.target.value)
+              // Update selected attributes for tags
+              // data_tagg.selectTagsFromId(evt.target.value)
+              // Update this menu
+              refreshThisAndUpdateRelatedComponents()
+            }}
+          >
+            {
+              unit_taggs[0].tags_list.map(tag => {
+                return <option key={tag.id} value={tag.id}>{tag.name}</option>
+              })
+            }
+          </Select>
+        </Box> : <></>
+      }
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
