@@ -129,6 +129,16 @@ export const DataTagGroupFilter: FC<BaseComponentProps> = ({
               onChange={evt => {
                 // Met à jour l'indicateur de legende pour tous les tags
                 tagg.banner = evt.target.checked ? 'multi' : 'one'
+                if (tagg.banner == 'one') {
+                  new_data.drawing_area.sankey.links_list.filter(l=>Object.values(l.child_links).length>0).forEach(l=>{
+                    Object.keys(l.child_links).forEach(key => {
+                      l.child_links[key].delete()
+                      delete l.child_links[key]
+                      new_data.drawing_area.sankey.links_dict[key]
+                    })
+                  })
+                }
+                tagg.selectTagsFromId(tagg.tags_list[0].id)
                 new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
               }} />
           </Box>
