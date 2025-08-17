@@ -40,8 +40,8 @@ import {
   Checkbox,
   ModalFooter
 } from '@chakra-ui/react'
-import { OSTooltip } from '../../types/Utils'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { OSTooltip } from '../configmenus/BaseComponents'
 
 
 type FCType_ModalDocumentation = {

@@ -209,9 +209,15 @@ export class LinkDrawLabel {
 */
   private updateLabelTextPathOffset() {
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getLabelTextPathOffset()
+    let ortho_position = label_ortho_position
+    let ratio = 1
+    if (this._link.shape_shape == 'bezier_outline') {
+      ratio = 3
+      ortho_position = this._link.thickness/2
+    }
     this._link.d3_selection?.select('.link_label_textpath').attr('text-anchor', label_anchor)
-    this._link.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position + '%')
-    this._link.d3_selection?.select('.link_label_text').attr('dy', label_ortho_position)
+    this._link.d3_selection?.select('.link_label_textpath').attr('startOffset', label_position/ratio + '%')
+    this._link.d3_selection?.select('.link_label_text').attr('dy', ortho_position)
     this._link.d3_selection?.select('.link_label_textpath').attr('dominant-baseline', label_dominant_baseline)
   }
 

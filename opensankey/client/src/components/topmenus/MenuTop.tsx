@@ -68,7 +68,7 @@ import { useTour } from '@reactour/tour'
 
 // Local types
 import { FCType_MenuTop } from '../../types/FunctionTypes'
-import { OSTooltip, Type_JSON } from '../../types/Utils'
+import { Type_JSON } from '../../types/Utils'
 
 import { setDiagram } from './SankeyMenuBanner'
 import { clickSavePDF } from './SankeyExports'
@@ -79,6 +79,7 @@ import {
 } from '../../Persistence/UniversalJSONCompression'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_OpenSankeySaveButton } from '../SankeyMenuTypes'
+import { OSTooltip } from '../configmenus/BaseComponents'
 
 /*************************************************************************************************/
 

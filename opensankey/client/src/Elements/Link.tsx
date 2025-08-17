@@ -80,13 +80,7 @@ export function defaultLinkId(
   return source.id + '---' + target.id
 }
 
-export function defaultLinkName(
-  source: Class_NodeElement,
-  target: Class_NodeElement
-) {
-  // coherent with code in python (Constructor of flux)
-  return source.name + '---' + target.name
-}
+
 
 /**
  * Allows to sort links alphabethically per id
@@ -179,21 +173,7 @@ export function sortLinksElementsByRelativeNodesPositions(
   }
 }
 
-/**
- * Check if given attribute is overloaded in at least one link
- * @export
- * @param {Class_LinkElement[]} links
- * @param {keyof Class_LinkAttribute} attr
- * @return {*}
- */
-export function isAttributeOverloaded(
-  links: Class_LinkElement[],
-  attr: keyof Class_LinkAttribute
-) {
-  let overloaded = false
-  links.forEach(link => overloaded = (overloaded || link.isAttributeOverloaded(attr)))
-  return overloaded
-}
+
 
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
@@ -208,14 +188,10 @@ export const format_value = (
   const link = element as Class_LinkElement
   if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
     const tag = unit_taggs[0].tags_dict[element.value_label_unit]
-    const data_tags: Class_DataTag[] = []
-    element.sankey.data_taggs_list.forEach((tagg) => {
-      if (tagg == tag.group) data_tags.push(tag)
-      else data_tags.push(tagg.selected_tags_list[0])
-    })
-    const new_value = link.valueForTags(data_tags)
+    const new_value = link.valueForTag(tag)
     data_value = new_value?.valueResult ?? new_value?.valueData
   }
+
   if (element.value_label_unit_type == '%IS') {
     let total_source = 0
     // if (unit_taggs.length > 0) {
@@ -277,8 +253,8 @@ export const format_value = (
     return text_value
   }
   // Add unit suffix
-
-  if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
+  if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name+'/'+link.value?.ratio_unit_tag!.name}
+  else if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
   else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
     //const label_unit = unit_taggs[0].first_selected_tags!.name
     text_value = text_value + ' ' + unit_name
@@ -1464,6 +1440,14 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   // GETTERS / SETTERS ==================================================================
+  public defaultLinkName(
+    source: Class_NodeElement,
+    target: Class_NodeElement
+  ) {
+    // coherent with code in python (Constructor of flux)
+    if (this.is_multi_link ) return source.name + '---' + target.name + '(' + this._multi_link_tag?.name + ')'
+    return source.name + '---' + target.name
+  }
 
   /**
    * Get name of link
@@ -1471,7 +1455,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @memberof Class_LinkElement
    */
   public get name() {
-    return defaultLinkName(this._source, this._target)
+    return this.defaultLinkName(this._source, this._target)
   }
 
   public get has_result() {
@@ -1646,6 +1630,16 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     else
       return this._values.getValueForDataTags(_ as Class_DataTag[])
   }
+
+  public valueForTag(tag: Class_DataTag | undefined) {
+    if (!tag) return this.value
+    const data_tags: Class_DataTag[] = []
+    this.sankey.data_taggs_list.forEach((tagg) => {
+      if (tagg == tag.group) data_tags.push(tag)
+      else data_tags.push(tagg.selected_tags_list[0])
+    })
+    return this.valueForTags(data_tags)
+  }  
 
   public get selected_data_tags_list() {
     if (this._is_multi_link) {

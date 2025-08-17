@@ -31,17 +31,11 @@ import {
   Button
 } from '@chakra-ui/react'
 
-
-
-/*************************************************************************************************/
-
-import {
-  OSTooltip
-} from '../../types/Utils'
 import { ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { OSMultiSelect, typeElementSelectable } from './MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
+import { OSTooltip } from './BaseComponents'
 
 
 /*************************************************************************************************/
@@ -363,8 +357,7 @@ export const SankeyNodeSelection: FC<FCType_SankeyNodeEdition> = (
         <Box>
           <OSTooltip label={t('Noeud.tooltips.Nom')}>
             <ConfigMenuTextInput
-              ref_to_set_value={ref_set_text_value_input}
-              function_get_value={() => (selected_nodes.length != 1) ? '' : selected_nodes[0].name}
+              default_value={(selected_nodes.length != 1) ? '' : selected_nodes[0].name}
               function_on_blur={updateNameNode}
               disabled={new_data.drawing_area.selected_nodes_list.length !== 1}
             />
