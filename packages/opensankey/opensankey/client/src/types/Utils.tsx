@@ -342,57 +342,6 @@ export const check_perf = (f: () => void, name: string) => {
   console.debug(`Execution ${name} took  ${e - s} ms`)
 }
 
-
-// Tooltipe added to input in menu when add a local value (for nodes & links local attributes)
-export const TooltipValueSurcharge = (k: string, t: TFunction) => {
-  return <OSTooltip label={t('Menu.overcharge_style_value')} placement='left'>
-    <FontAwesomeIcon className='tooltip_overload' style={{ color: '#6cc3d5', height: '12', width: '12', float: 'right' }} icon={faCircleInfo} />
-  </OSTooltip>
-}
-
-
-export const OSTooltip: FC<OSTooltpFuncType> = (
-  {
-    label,
-    delay = 500,
-    placement = 'auto',
-    isAlwaysOpen = false,
-    children
-  }
-) => {
-  if (label === undefined) {
-    return <>{children}</>
-  }
-  const element_key = label.split(' ').join('_')
-  if (isAlwaysOpen) {
-    return <Tooltip
-      key={element_key}
-      openDelay={delay}
-      placement={placement}
-      label={label}
-      closeDelay={100}
-      isOpen={true}
-      hasArrow={true}
-    >
-      {children}
-    </Tooltip>
-  } else {
-    return <Tooltip
-      key={element_key}
-      openDelay={delay}
-      placement={placement}
-      label={label}
-      closeDelay={100}
-    >
-      {children}
-    </Tooltip>
-  }
-}
-
-export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
-  const { isChecked } = props
-  return isChecked ? <FaEye /> : <FaEyeSlash />
-}
 export const GetRandomInt = (max: number) => {
   return Math.floor(Math.random() * max)
 }

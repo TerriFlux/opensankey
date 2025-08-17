@@ -578,10 +578,13 @@ protected _toJSON(
   public get references() { return Object.values(this._references) }
 
   public get scale() {
-    if (this.group.is_unit) return this._scale*this.group.selected_tags_list.length
+    if (this.group.is_unit) return this._scale
     return this._ref_sankey.drawing_area.scale
   }
-  public set scale(_) { this._scale = _}
+  public set scale(_) {
+    if (this.group.is_unit) this._scale = _
+    else this._scale = _
+  }
 }
 
 // CLASS LEVELTAG ***********************************************************************

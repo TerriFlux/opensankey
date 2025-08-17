@@ -294,7 +294,7 @@ export class LinkDrawValue {
     let ortho_position = label_ortho_position
     let ratio = 1
     if (this._link.shape_shape == 'bezier_outline') {
-      ratio = 2
+      ratio = 3
       ortho_position = this._link.thickness/2
     }
     this._link.d3_selection?.select('.link_value_textpath').attr('text-anchor', label_anchor)

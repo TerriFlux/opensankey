@@ -40,7 +40,7 @@ import {
   Class_NodeElement,
   sortNodesElements
 } from '../Elements/Node'
-import { Class_NodeAttribute, Class_NodeStyle,Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
+import { Class_NodeAttribute, Class_NodeStyle, Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
 import {
   Class_DataTag,
   Class_Tag,
@@ -118,7 +118,7 @@ export class Class_Sankey {
   protected _link_styles: { [_: string]: Class_LinkStyle } = {}
   protected _node_styles: { [_: string]: Class_NodeStyle } = {}
   public name: string
-  
+
   protected createNewNode(id: string, name: string): Class_NodeElement {
     const node = new Class_NodeElement(id, name, this.drawing_area, this._menu_config)
     return node
@@ -821,6 +821,43 @@ export class Class_Sankey {
     }
   }
 
+  public create_child_links() {
+    const data_tagg = Object.values(this._data_taggs).filter(tagg => tagg.banner == 'multi')[0]
+    if (!data_tagg) return
+    const selected_tags = data_tagg.tags_list.map(tag => tag.is_selected)
+    if (selected_tags.length == 1) return
+    this.links_list.forEach(l => {
+      if (l.is_multi_link) {
+        return
+      }
+      data_tagg.tags_list.forEach(tag => {
+        if (!tag.is_selected) {
+          if (tag.id in l.child_links) {
+            l.child_links[tag.id].delete()
+            delete l.child_links[tag.id]
+          }
+        }
+      })
+      data_tagg.selected_tags_list.forEach(tag => {
+        if (tag.id in l.child_links || l.is_multi_link) {
+          return
+        }
+        const child_link = this.addNewLink(l.source, l.target)
+        child_link.copyFrom(l)
+        l.addChildLink(child_link, tag)
+      })
+    })
+  }
+
+  public remove_child_links() {
+    this.links_list.filter(l => Object.values(l.child_links).length > 0).forEach(l => {
+      Object.keys(l.child_links).forEach(key => {
+        l.child_links[key].delete()
+        delete l.child_links[key]
+        //delete this.links_dict[key]
+      })
+    })
+  }
   /**
    * Extract sankey as a JSON struct
    *
@@ -846,25 +883,25 @@ export class Class_Sankey {
     // Id
     json_object['id'] = this._id
     // Add tag groups
-    if (this.level_taggs_list.length>0) {
+    if (this.level_taggs_list.length > 0) {
       json_object['levelTags'] = json_object_levelTags
       this.level_taggs_list.forEach(tagg => {
         json_object_levelTags[tagg.id] = tagg.toJSON()
       })
     }
-    if (this.node_taggs_list.length>0) {    
+    if (this.node_taggs_list.length > 0) {
       json_object['nodeTags'] = json_object_nodeTags
       this.node_taggs_list.forEach(tagg => {
         json_object_nodeTags[tagg.id] = tagg.toJSON()
       })
     }
-    if (this.flux_taggs_list.length>0) {  
+    if (this.flux_taggs_list.length > 0) {
       json_object['fluxTags'] = json_object_fluxTags
       this.flux_taggs_list.forEach(tagg => {
         json_object_fluxTags[tagg.id] = tagg.toJSON()
       })
     }
-    if (this.data_taggs_list.length>0) {      
+    if (this.data_taggs_list.length > 0) {
       json_object['dataTags'] = json_object_dataTags
       this.data_taggs_list.forEach(tagg => {
         json_object_dataTags[tagg.id] = tagg.toJSON()
@@ -887,10 +924,12 @@ export class Class_Sankey {
     const nodes_list = (only_visible_elements ? this.visible_nodes_list : this.nodes_list)
     const echangeTag = this.node_taggs_dict['type de noeud'] ? this.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
 
+    this.remove_child_links()
+
     nodes_list
       .forEach(node => {
         if (node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
-          if(!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON()
+          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON()
           return
         }
         json_object_nodes[node.id] = node.toJSON()
@@ -901,12 +940,12 @@ export class Class_Sankey {
 
     let has_results = false
     links_list.forEach(l => has_results = has_results || l.has_result)
-    links_list
+    links_list.filter(l => !l.is_multi_link)
       .forEach(link => {
         json_object_links[link.id] = link.toJSON({ 'with_values': with_values, 'has_results': has_results })
       })
     // Class container
-    if (this.containers_list.length>0) {
+    if (this.containers_list.length > 0) {
       const json_object_labels = {} as Type_JSON
       json_object['labels'] = json_object_labels
       this.containers_list.forEach(obj => {
@@ -915,7 +954,9 @@ export class Class_Sankey {
     }
 
     // Icon catalog
-    if (Object.keys(this._icon_catalog).length>0) json_object['icon_catalog'] = this._icon_catalog as Type_JSON
+    if (Object.keys(this._icon_catalog).length > 0) json_object['icon_catalog'] = this._icon_catalog as Type_JSON
+
+    this.create_child_links()
     // Out
     return json_object
   }
@@ -1015,12 +1056,12 @@ export class Class_Sankey {
         const nodeStyleConfigs = [
           {
             id: 'NodeProductStyle',
-            config: {'shape_type': 'ellipse'},
+            config: { 'shape_type': 'ellipse' },
             position: {}
           },
           {
             id: 'NodeSectorStyle',
-            config: {'shape_type': 'rect'},
+            config: { 'shape_type': 'rect' },
             position: {}
           },
           {
@@ -1046,7 +1087,7 @@ export class Class_Sankey {
               'shape_visible': false,
               'shape_min_height': 1,
               'value_label_is_visible': true,
-              'value_label_vert' : 'middle',
+              'value_label_vert': 'middle',
               'name_label_vert': 'middle',
               'name_label_separator': ' - '
             },
@@ -1065,10 +1106,10 @@ export class Class_Sankey {
           {
             id: 'NodeImportAboveStyle',
             config: {
-              'name_label_horiz' : 'left',
+              'name_label_horiz': 'left',
               //'name_label_horiz_shift' : -200,
-              'value_label_horiz' : 'left',
-              'value_label_horiz_shift' : 40,
+              'value_label_horiz': 'left',
+              'value_label_horiz_shift': 40,
             },
             position: {
               'dx': -200,
@@ -1086,10 +1127,10 @@ export class Class_Sankey {
           {
             id: 'NodeExportBelowStyle',
             config: {
-              'name_label_horiz' : 'right',
+              'name_label_horiz': 'right',
               //'name_label_horiz_shift' : 200,
-              'value_label_horiz' : 'right',
-              'value_label_horiz_shift' : -40,
+              'value_label_horiz': 'right',
+              'value_label_horiz_shift': -40,
 
             },
             position: {
@@ -1099,7 +1140,7 @@ export class Class_Sankey {
           }
         ]
         nodeStyleConfigs.forEach(({ id, config, position }) => {
-          if (this._node_styles[id] ) {
+          if (this._node_styles[id]) {
             return
           }
           const new_style = this.createNewNodeStyle(id, id, true)
@@ -1124,38 +1165,38 @@ export class Class_Sankey {
           {
             id: 'LinkImportExportCloseStyle',
             config: {
-              'value_label_is_visible' : true,
+              'value_label_is_visible': true,
               //'value_label_position' : 'end',
-              'value_label_on_path' : true
+              'value_label_on_path': true
 
             }
           },
           {
             id: 'LinkImportCloseStyle',
             config: {
-              'shape_orientation' : 'vh',
-              'shape_starting_tangeant' : 1,
-              'shape_ending_tangeant' : 0.25
+              'shape_orientation': 'vh',
+              'shape_starting_tangeant': 1,
+              'shape_ending_tangeant': 0.25
             }
           },
           {
             id: 'LinkExportCloseStyle',
             config: {
-              'shape_orientation' : 'hv',
-              'shape_starting_tangeant' : 0.25,
-              'shape_ending_tangeant' : 1
+              'shape_orientation': 'hv',
+              'shape_starting_tangeant': 0.25,
+              'shape_ending_tangeant': 1
             }
           },
           {
             id: 'LinkImportExportAboveBelowStyle',
             config: {
-              'shape_starting_point' : 0.25,
-              'shape_starting_tangeant' : 0.5,
-              'shape_ending_tangeant' : 0.5,
-              'shape_ending_point' : 0.75,
-              'value_label_is_visible' : false,
+              'shape_starting_point': 0.25,
+              'shape_starting_tangeant': 0.5,
+              'shape_ending_tangeant': 0.5,
+              'shape_ending_point': 0.75,
+              'value_label_is_visible': false,
               //'value_label_position' : 'end',
-              'value_label_on_path' : true
+              'value_label_on_path': true
 
             }
           },
@@ -1169,8 +1210,8 @@ export class Class_Sankey {
             config: {
             }
           }]
-        linkStyleConfigs.forEach(({ id, config}) => {
-          if (this._link_styles[id] ) {
+        linkStyleConfigs.forEach(({ id, config }) => {
+          if (this._link_styles[id]) {
             return
           }
           const new_style = this.createNewLinkStyle(id, id, true)
@@ -1268,6 +1309,7 @@ export class Class_Sankey {
         )
       })
 
+    this.create_child_links()
     // Icon catalog
     this._icon_catalog = getJSONFromJSON(json_object, 'icon_catalog', this._icon_catalog) as { [x: string]: string }
 
@@ -2166,7 +2208,7 @@ export class Class_Sankey {
         return n2.position_v - n1.position_v
       }
     })
-    const all_nodes = [...import_nodes, ...sorted_nodes,  ...export_nodes]
+    const all_nodes = [...import_nodes, ...sorted_nodes, ...export_nodes]
     this._nodes = Object.assign({}, ...all_nodes.map((n) => ({ [n.id]: n })))
   }
 

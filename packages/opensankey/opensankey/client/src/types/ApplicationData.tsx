@@ -496,7 +496,9 @@ export class Class_ApplicationData {
    */
   protected _saveToJSON() {
     // Convert all datas as JSON
+    this.drawing_area.bypass_redraws = true
     const json_data = this._toJSON()
+    this.drawing_area.draw()
     // Prepare JSON for saving
     const json_data_str = JSON.stringify(json_data, null, 2)
     const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
