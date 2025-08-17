@@ -39,8 +39,7 @@ import {
 } from '@chakra-ui/react'
 
 import {
-  CutName,
-  OSTooltip
+  CutName
 } from '../../types/Utils'
 import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
 
@@ -52,6 +51,7 @@ import { checked } from './SankeyMenuContextZDD'
 import { Type_customisable_node_style_attr } from '../../Elements/NodeAttributes'
 import { Type_customisable_flow_style_attr } from '../../Elements/LinkAttributes'
 import { FCType_SankeyModalStyle, FCType_WrapperLinkStyleSelector } from '../SankeyMenuTypes'
+import { OSTooltip } from '../configmenus/BaseComponents'
 
 
 export const SankeyModalStyleNode: FC<FCType_SankeyModalStyle> = ({

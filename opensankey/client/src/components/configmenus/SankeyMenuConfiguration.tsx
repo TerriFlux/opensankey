@@ -28,10 +28,10 @@
 import React, {
   FC,
   MutableRefObject,
+  useEffect,
   useRef,
   useState,
 } from 'react'
-import { ReactElementLike } from 'prop-types'
 
 // Imported libs
 import {
@@ -94,7 +94,6 @@ import { TFunction } from 'i18next'
 export const ConfigMenuNumberInput: FC<FCType_ConfigMenuNumberInput> = ({
   t,
   default_value,
-  ref_to_set_value,
   function_on_blur,
   menu_for_style = false,
   minimum_value = Number.MIN_SAFE_INTEGER,
@@ -118,7 +117,10 @@ export const ConfigMenuNumberInput: FC<FCType_ConfigMenuNumberInput> = ({
   }
   const fixed_value = getFixedVal(default_value)
   const [value, setValue] = useState<string | null | undefined>(default_value ? String(fixed_value) : '')
-  ref_to_set_value.current = (val: string | null | undefined) => setValue(getFixedVal(val))
+  useEffect(()=>{
+    setValue(default_value ? String(fixed_value) : '')
+  },[default_value])
+
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
     <NumberIncrementStepper />
@@ -185,7 +187,6 @@ export const ConfigMenuNumberInput: FC<FCType_ConfigMenuNumberInput> = ({
 
 export const ConfigMenuNumberOrUndefinedInput: FC<FCType_ConfigMenuNumberOrUndefinedInput> = ({
   default_value,
-  ref_to_set_value,
   function_on_blur,
   menu_for_style = false,
   minimum_value = Number.MIN_SAFE_INTEGER,
@@ -201,8 +202,11 @@ export const ConfigMenuNumberOrUndefinedInput: FC<FCType_ConfigMenuNumberOrUndef
   const getFixedVal = (_: string | number | null | undefined) => {
     return _?(String(_)):undefined
   }
+  
   const [value, setValue] = useState<string | undefined | null>(getFixedVal(default_value))
-  ref_to_set_value.current = setValue
+  useEffect(()=>{
+    setValue(getFixedVal(default_value))
+  },[default_value])
 
   // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
@@ -248,7 +252,7 @@ export const ConfigMenuNumberOrUndefinedInput: FC<FCType_ConfigMenuNumberOrUndef
           if (!menu_for_style) {
             clearTimeout(is_modifying.current)
           }
-          const new_value = value === undefined ? value : Number(value)
+          const new_value = value === undefined ? null : Number(value)
           // Update selected elements value
           function_on_blur(new_value)
 
@@ -263,8 +267,7 @@ export const ConfigMenuNumberOrUndefinedInput: FC<FCType_ConfigMenuNumberOrUndef
 export type FCType_ConfigMenuNumberInput = {
   t: TFunction,
   default_value: number | null | undefined,
-  ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
-  function_on_blur: (val: number | null | undefined) => void,
+  function_on_blur: (val: number | null) => void,
   menu_for_style?: boolean,
   minimum_value?: number | null,
   maximum_value?: number,
@@ -278,8 +281,7 @@ export type FCType_ConfigMenuNumberInput = {
 
 export type FCType_ConfigMenuNumberOrUndefinedInput = {
   default_value: number | undefined | null,
-  ref_to_set_value: MutableRefObject<(_: string | undefined | null) => void>,
-  function_on_blur: (val: number | undefined | null) => void,
+  function_on_blur: (val: number | null) => void,
   menu_for_style?: boolean,
   minimum_value?: number,
   maximum_value?: number,
@@ -300,8 +302,7 @@ export type FCType_ConfigMenuNumberOrUndefinedInput = {
  * @return {*}
  */
 export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
-  ref_to_set_value,
-  function_get_value,
+  default_value,
   function_on_blur,
   menu_for_style = false,
   disabled = false,
@@ -309,8 +310,10 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
 }) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
-  const [value, setValue] = useState<string | null | undefined>(function_get_value())
-  ref_to_set_value.current = setValue
+  const [value, setValue] = useState<string | null | undefined>(default_value)
+  useEffect(()=>{
+    setValue(default_value)
+  },[default_value])
 
   return <FormControl isInvalid={multiValue} > <InputGroup>
     <Input
@@ -344,7 +347,7 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
           clearTimeout(is_modifying.current)
         }
         // Update selected elements value
-        function_on_blur(value)
+        function_on_blur( value??null)
       }}
     />
   </InputGroup>
@@ -353,9 +356,8 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
 }
 
 export type FCType_ConfigMenuTextInput = {
-  ref_to_set_value: MutableRefObject<(_: string | null | undefined) => void>,
-  function_get_value: () => string | null | undefined,
-  function_on_blur: (_: string | null | undefined) => void,
+  default_value: string | null | undefined,
+  function_on_blur: (_: string | null) => void,
   menu_for_style?: boolean,
   disabled?: boolean,
   multiValue?: boolean,

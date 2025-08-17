@@ -27,15 +27,16 @@ import {
   Box, Checkbox
 } from '@chakra-ui/react';
 import { t } from 'i18next';
-import React, { FC, useRef } from 'react';
+import React, { FC } from 'react';
 import { Class_LinkElement } from '../../Elements/Link';
 import { Class_LinkStyle } from '../../Elements/LinkAttributes';
 import { Class_NodeElement } from '../../Elements/Node';
 import { Class_NodeStyle, NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributes';
-import { default_style_id, OSTooltip, TooltipValueSurcharge } from '../../types/Utils';
-import { FCType_SankeyMenuValueLabelComponent } from '../SankeyMenuTypes';
-import { getValueWithDecoratorRetriever, updateElements, isElementAttributeOverloaded } from './MenuCommon';
+import { default_style_id } from '../../types/Utils';
+import { updateElements, ValueKey } from './MenuCommon';
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration';
+import { isElementAttributeOverloaded, OSTooltip, TooltipValueSurcharge } from './BaseComponents';
+import { ElementMenuComponentType } from '../SankeyMenuTypes';
 
 /**
  * Component with inputs to set value for label_value attribute of node & flow
@@ -45,13 +46,13 @@ import { ConfigMenuNumberInput } from './SankeyMenuConfiguration';
  *   elements,
  *   selectedElements,
  *   refreshParentComponent,
- *   dict_decorator_name
+ *   prefix
  * }
  * @return {*}
  */
 
-export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelComponent> = ({
-  new_data, elements, selectedElements, refreshParentComponent, dict_decorator_name
+export const SankeyMenuValueLabelComponent: FC<ElementMenuComponentType> = ({
+  new_data, elements, selectedElements, refreshParentComponent, prefix
 }) => {
   const { ref_selected_style_node, ref_selected_style_link } = new_data.menu_configuration;
   const { node_styles_dict, link_styles_dict } = new_data.drawing_area.sankey;
@@ -61,11 +62,13 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
   const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle);
   const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement);
 
-  const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict;
+  const style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict;
   const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link;
 
   // By combining the different variable correct_ref_style_to_use can only be used when MenuUnit is used with style element (instead of normal element)
-  const disable_attr_props = menu_for_style ? correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute : correct_dict_style_to_use[default_style_id].customisable_attribute;
+  const disable_attr_props = menu_for_style ? 
+    style_to_use[correct_ref_style_to_use.current].customisable_attribute : 
+    style_to_use[default_style_id].customisable_attribute;
 
   const check_indeterminate = (curr: Class_LinkElement | Class_NodeElement) => {
     const ref_element = selectedElements[0];
@@ -79,38 +82,23 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
   };
   const is_indeterminate = !selectedElements.every(check_indeterminate);
   // Declare var used to set default attribute value in inputs 
-  let get_label_custom_digit = NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default;
-  let get_label_nb_digit = NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default;
-  let get_label_significant_digits = NODES_ATTRIBUTES_CONFIG.value_label_significant_digits.default;
-  let get_label_nb_significant_digits = NODES_ATTRIBUTES_CONFIG.value_label_nb_significant_digits.default;
-  let get_label_scientific_notation = NODES_ATTRIBUTES_CONFIG.value_label_scientific_notation.default;
+  let label_custom_digit = NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default;
+  let label_nb_digit = NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default;
+  let label_significant_digits = NODES_ATTRIBUTES_CONFIG.value_label_significant_digits.default;
+  let label_nb_significant_digits = NODES_ATTRIBUTES_CONFIG.value_label_nb_significant_digits.default;
+  let label_scientific_notation = NODES_ATTRIBUTES_CONFIG.value_label_scientific_notation.default;
 
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0];
-    // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
-    // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in dict_decorator_name
-    //@ts-expect-error xxx
-    get_label_custom_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_custom_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default);
-    //@ts-expect-error xxx
-    get_label_nb_digit = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_digit']) ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default);
-    //@ts-expect-error xxx
-    get_label_significant_digits = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_significant_digits']) ?? NODES_ATTRIBUTES_CONFIG.value_labelvalue_label_significant_digits.default);
-    //@ts-expect-error xxx
-    get_label_nb_significant_digits = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_nb_significant_digits']) ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_significant_digits.default);
-    //@ts-expect-error xxx
-    get_label_scientific_notation = (getValueWithDecoratorRetriever(element_ref, dict_decorator_name['label_scientific_notation']) ?? NODES_ATTRIBUTES_CONFIG.value_label_scientific_notation.default);
+    label_custom_digit = (Reflect.get(element_ref, prefix + 'label_custom_digit') ?? NODES_ATTRIBUTES_CONFIG.value_label_custom_digit.default);
+    label_nb_digit = (Reflect.get(element_ref, prefix + 'label_nb_digit') ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_digit.default);
+    label_significant_digits = (Reflect.get(element_ref, prefix + 'label_significant_digits') ?? NODES_ATTRIBUTES_CONFIG.value_label_significant_digits.default);
+    label_nb_significant_digits = (Reflect.get(element_ref, prefix + 'label_nb_significant_digits') ?? NODES_ATTRIBUTES_CONFIG.value_label_nb_significant_digits.default);
+    label_scientific_notation = (Reflect.get(element_ref, prefix + 'label_scientific_notation') ?? NODES_ATTRIBUTES_CONFIG.value_label_scientific_notation.default);
   }
 
-
-  const ref_label_nb_digit = useRef((_: string | null | undefined) => null);
-  ref_label_nb_digit.current(String(get_label_nb_digit));
-  const ref_label_nb_significant_digit = useRef((_: string | null | undefined) => null);
-  ref_label_nb_significant_digit.current(String(get_label_nb_significant_digits));
-
-  const is_cstm_digit_indetermined = !elements.every(el => getValueWithDecoratorRetriever(el, dict_decorator_name['label_nb_digit']) == get_label_nb_digit);
-
-
+  const is_cstm_digit_indetermined = !elements.every(el => Reflect.get(el, prefix + 'label_nb_digit') == label_nb_digit);
 
   return <Box
     layerStyle='menuconfigpanel_grid'
@@ -120,12 +108,12 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       {/* Choix d'affichage du nombre de chiffre après la virgule  */}
       <Checkbox
-        isDisabled={!disable_attr_props[dict_decorator_name['label_custom_digit']]}
+        isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_custom_digit')}
         variant='menuconfigpanel_option_checkbox'
         isIndeterminate={is_indeterminate}
-        isChecked={get_label_custom_digit}
+        isChecked={label_custom_digit}
         onChange={(evt) => {
-          updateElements(new_data, elements, dict_decorator_name, 'label_custom_digit', evt.target.checked, refreshParentComponent);
+          updateElements(new_data, elements, prefix + 'label_custom_digit' as ValueKey, evt.target.checked, refreshParentComponent);
         }}>
         <OSTooltip label={t('Flux.labels.tooltips.value_label_custom_digit')}>
           {t('Flux.labels.value_label_custom_digit') + ' '}
@@ -135,19 +123,18 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
           TooltipValueSurcharge('link_var_', t) :
           <></>}
       </Checkbox>
-      {get_label_custom_digit ?
+      {label_custom_digit ?
         /* Choose number of custom digit */
         <OSTooltip label={t('Flux.labels.tooltips.NbDigit')}>
           <ConfigMenuNumberInput
-            disabled={!disable_attr_props[dict_decorator_name['label_nb_digit']]}
+            disabled={!Reflect.get(disable_attr_props,prefix + 'label_nb_digit')}
             t={new_data.t}
-            ref_to_set_value={ref_label_nb_digit}
-            default_value={get_label_nb_digit}
+            default_value={label_nb_digit}
             menu_for_style={menu_for_style}
             minimum_value={0}
             stepper={true}
             function_on_blur={(value) => {
-              updateElements(new_data, elements, dict_decorator_name, 'label_nb_digit', value ?? undefined, refreshParentComponent);
+              updateElements(new_data, elements, prefix + 'label_nb_digit' as ValueKey, value ?? undefined, refreshParentComponent);
             }}
             multiValue={is_cstm_digit_indetermined} />
         </OSTooltip>
@@ -158,9 +145,9 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
       <Checkbox
         isDisabled={!disable_attr_props['value_label_significant_digits']}
         variant='menuconfigpanel_option_checkbox'
-        isChecked={get_label_significant_digits}
+        isChecked={label_significant_digits}
         onChange={(evt) => {
-          updateElements(new_data, elements, dict_decorator_name, 'label_significant_digits', evt.target.checked ?? undefined, refreshParentComponent);
+          updateElements(new_data, elements, prefix + 'label_significant_digits' as ValueKey, evt.target.checked ?? undefined, refreshParentComponent);
         }}>
         <OSTooltip label={t('Flux.labels.tooltips.significantDigits')}>
           {t('Flux.labels.significantDigits') + ' '}
@@ -170,7 +157,7 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
           TooltipValueSurcharge('link_var_', t) :
           <></>}
       </Checkbox>
-      {get_label_significant_digits ?
+      {label_significant_digits ?
         /* Choose number of custom digit */
         /* <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.labels.NbDigit')}
@@ -179,13 +166,12 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
           <ConfigMenuNumberInput
             disabled={!disable_attr_props['value_label_nb_significant_digits']}
             t={new_data.t}
-            ref_to_set_value={ref_label_nb_significant_digit}
-            default_value={get_label_nb_significant_digits}
+            default_value={label_nb_significant_digits}
             menu_for_style={/*menu_for_style*/false}
             minimum_value={0}
             stepper={true}
             function_on_blur={(value) => {
-              updateElements(new_data, elements, dict_decorator_name, 'label_nb_significant_digits', value ?? undefined, refreshParentComponent);
+              updateElements(new_data, elements, prefix + 'label_nb_significant_digits' as ValueKey, value ?? undefined, refreshParentComponent);
             }} />
         </OSTooltip>
         : <></>}
@@ -193,9 +179,9 @@ export const SankeyMenuValueLabelComponent: FC<FCType_SankeyMenuValueLabelCompon
     <Checkbox
       isDisabled={!disable_attr_props['value_label_scientific_notation']}
       variant='menuconfigpanel_option_checkbox'
-      isChecked={get_label_scientific_notation}
+      isChecked={label_scientific_notation}
       onChange={(evt) => {
-        updateElements(new_data, elements, dict_decorator_name, 'label_scientific_notation', evt.target.checked ?? undefined, refreshParentComponent);
+        updateElements(new_data, elements, prefix+ 'label_scientific_notation' as ValueKey, evt.target.checked ?? undefined, refreshParentComponent);
       }}>
       <OSTooltip label={t('Flux.labels.tooltips.scientificNotation')}>
         {t('Flux.labels.scientificNotation') + ' '}

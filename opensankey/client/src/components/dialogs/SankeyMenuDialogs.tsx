@@ -46,7 +46,7 @@ import {
 } from '@chakra-ui/react'
 
 
-import { default_style_id, OSTooltip } from '../../types/Utils'
+import { default_style_id } from '../../types/Utils'
 import {
   FCType_ApplySaveJSONDialog,
   FCType_ExcelModal
@@ -57,6 +57,7 @@ import { OSMultiSelect, typeElementSelectable, WrapperCheckBoxSubSectionMenu } f
 import { checked } from './SankeyMenuContextLink'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_ApplyLayoutDialog, FType_DiagramSelector } from '../SankeyMenuTypes'
+import { OSTooltip } from '../configmenus/BaseComponents'
 
 
 /**

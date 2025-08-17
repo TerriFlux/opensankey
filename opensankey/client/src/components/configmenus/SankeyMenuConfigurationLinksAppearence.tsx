@@ -38,23 +38,16 @@ import {
 
 import {
   Class_LinkElement,
-  isAttributeOverloaded,
 } from '../../Elements/Link'
 import {
-  Class_LinkAttribute,
   LINKS_ATTRIBUTES_CONFIG,
   default_shape_local_scale
 } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/LinkAttributes'
 import {
-  CustomFaEyeCheckIcon,
   default_style_id
 } from '../../types/Utils'
 
-import {
-  TooltipValueSurcharge,
-  OSTooltip
-} from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu, MenuResetAttrLocal, OSMultiSelect, typeElementSelectable } from './MenuCommon'
 import { SankeyMenuValueLabelComponent } from './MenuValueLabel'
@@ -64,6 +57,7 @@ import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_MenuConfigurationLinksAppearence } from '../SankeyMenuTypes'
+import { CustomFaEyeCheckIcon, isElementAttributeOverloaded, OSTooltip, TooltipElementOverloaded, } from './BaseComponents'
 
 /*************************************************************************************************/
 // Declare custom logo used for some button
@@ -226,20 +220,6 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
     new_data.menu_configuration.ref_to_menu_config_links_styles_updater.current = () => setCountStyle(a => a + 1)
   }
 
-  // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 6
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-
-  // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(String(shape_arrow_size))
-  ref_set_number_inputs[1].current(String(shape_starting_curve * 100))
-  ref_set_number_inputs[2].current(String(shape_ending_curve * 100))
-  ref_set_number_inputs[3].current(String(shape_starting_tangeant * 100))
-  ref_set_number_inputs[4].current(String(shape_ending_tangeant * 100))
-  ref_set_number_inputs[5].current(String(shape_opacity))
-
   const ref_set_link_scale_inputs = useRef((_: string | null | undefined) => null)
   ref_set_link_scale_inputs.current(shape_local_scale as string | null | undefined)
   /**
@@ -259,20 +239,7 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
     new_data.menu_configuration.updateComponentRelatedToLinksApparence()
   }
 
-  /**
-   * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
-   *
-   * @param {*} {k}
-   * @return {*}
-   */
-  const TooltipElementOverloaded: FC<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
-    if (menu_for_style)
-      return <></>
 
-    return isAttributeOverloaded(selected_links, k) ? (
-      <>{TooltipValueSurcharge('node_var_', t)}</>
-    ) : <></>
-  }
 
   const is_arrow_size_indeterminated = !elements.every(el => el.shape_arrow_size == element_ref.shape_arrow_size)
   const is_starting_curve_indeterminated = !elements.every(el => el.shape_starting_curve == element_ref.shape_starting_curve)
@@ -290,7 +257,9 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_color_rule')}
-          <TooltipElementOverloaded k={'shape_color_rule'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} 
+          k={'shape_color_rule'} 
+          />
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
           <Select
@@ -311,7 +280,7 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_color')}
-          <TooltipElementOverloaded k={'shape_color'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_color'} />
         </Box><Box>
           <MenuColorPicker
             isDisabled={shape_color_rule !== 'flow' || !disable_attr_props['shape_color']}
@@ -328,14 +297,13 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_opacity')}
-          <TooltipElementOverloaded k={'shape_opacity'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_opacity'} />
         </Box>
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
             <ConfigMenuNumberInput
               disabled={!disable_attr_props['shape_opacity']}
               t={new_data.t}
-              ref_to_set_value={ref_set_number_inputs[5]}
               default_value={shape_opacity}
               menu_for_style={menu_for_style}
               minimum_value={0}
@@ -455,12 +423,12 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
           onChange={(evt) => { updateElements('shape_is_curved', evt.target.checked) }}>
           <OSTooltip label={t('Flux.apparence.tooltips.courbe')}>
             {t('Flux.apparence.shape_is_curved')}
-            <TooltipElementOverloaded k={'shape_is_curved'} />
+            <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_is_curved'} />
           </OSTooltip>
         </Checkbox>
         {shape_is_curved ? <><Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_shape')}
-          <TooltipElementOverloaded k={'shape_shape'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_shape'} />
         </Box>
           <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
             <Select
@@ -494,14 +462,13 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
           <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
             <Box layerStyle='menuconfigpanel_option_name'>
               {t('Flux.apparence.shape_arrow_size')}
-              <TooltipElementOverloaded k={'shape_arrow_size'} />
+              <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_arrow_size'} />
             </Box>
             <InputGroup variant='menuconfigpanel_option_input' >
               <OSTooltip label={t('Flux.apparence.tooltips.arrow_size')}>
                 <ConfigMenuNumberInput
                   disabled={!disable_attr_props['shape_arrow_size']}
                   t={new_data.t}
-                  ref_to_set_value={ref_set_number_inputs[0]}
                   default_value={shape_arrow_size}
                   menu_for_style={menu_for_style}
                   minimum_value={1}
@@ -524,7 +491,7 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
         onChange={(evt) => { updateElements('shape_is_structure', evt.target.checked) }}>
         <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
           {t('Flux.apparence.shape_is_structure')}
-          <TooltipElementOverloaded k={'shape_is_structure'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_is_structure'} />
         </OSTooltip>
       </Checkbox>
 
@@ -535,11 +502,10 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
             <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
               <Box layerStyle='menuconfigpanel_option_name' >
                 {t('Flux.apparence.shape_local_link_scale')}
-                <TooltipElementOverloaded k={'shape_local_link_scale'} />
+                <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_local_link_scale'} />
               </Box>
               <ConfigMenuNumberOrUndefinedInput
                 disabled={!disable_attr_props['shape_local_link_scale']}
-                ref_to_set_value={ref_set_link_scale_inputs}
                 default_value={selected_links[0]?.shape_local_link_scale ?? undefined}
                 function_on_blur={(_) => { updateElements('shape_local_link_scale', _ as number) }}
                 minimum_value={0}
@@ -559,13 +525,12 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
       {<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_starting_curve')}
-          <TooltipElementOverloaded k={'shape_starting_curve'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_starting_curve'} />
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.starting_curve')}>
           <ConfigMenuNumberInput
             disabled={!disable_attr_props['shape_starting_curve']}
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[1]}
             default_value={shape_starting_curve * 100}
             function_on_blur={(value) => { updateElements('shape_starting_curve', (value ? value / 100 : undefined)) }}
             menu_for_style={menu_for_style}
@@ -583,13 +548,12 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
       {<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_ending_curve')}
-          <TooltipElementOverloaded k={'shape_ending_curve'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_ending_curve'} />
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.ending_curve')}>
           <ConfigMenuNumberInput
             disabled={!disable_attr_props['shape_ending_curve']}
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[2]}
             default_value={shape_ending_curve * 100}
             menu_for_style={menu_for_style}
             minimum_value={shape_starting_curve * 100}
@@ -608,14 +572,13 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
       {<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_starting_tangeant')}
-          <TooltipElementOverloaded k={'shape_starting_tangeant'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_starting_tangeant'} />
         </Box>
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.starting_tangeant')}>
             <ConfigMenuNumberInput
               disabled={!disable_attr_props['shape_starting_tangeant']}
               t={new_data.t}
-              ref_to_set_value={ref_set_number_inputs[3]}
               default_value={shape_starting_tangeant * 100}
               menu_for_style={menu_for_style}
               minimum_value={0}
@@ -635,14 +598,13 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
       {<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_ending_tangeant')}
-          <TooltipElementOverloaded k={'shape_ending_tangeant'} />
+          <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_ending_tangeant'} />
         </Box>
         <InputGroup variant='menuconfigpanel_option_input' >
           <OSTooltip label={t('Flux.apparence.tooltips.ending_tangeant')}>
             <ConfigMenuNumberInput
               disabled={!disable_attr_props['shape_ending_tangeant']}
               t={new_data.t}
-              ref_to_set_value={ref_set_number_inputs[4]}
               default_value={shape_ending_tangeant * 100}
               menu_for_style={menu_for_style}
               minimum_value={0}
@@ -671,21 +633,21 @@ export const MenuConfigurationLinksStyle: FC<FCType_MenuConfigurationLinksAppear
   if (!menu_for_style) {
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      shape_orientation: { overloaded: isAttributeOverloaded(selected_links, 'shape_orientation'), name: t('Flux.apparence.of') },
-      shape_starting_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_curve'), name: t('Flux.apparence.shape_starting_curve') },
-      shape_ending_curve: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_curve'), name: t('Flux.apparence.shape_ending_curve') },
-      shape_starting_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_starting_tangeant'), name: t('Flux.apparence.shape_starting_tangeant') },
-      shape_ending_tangeant: { overloaded: isAttributeOverloaded(selected_links, 'shape_ending_tangeant'), name: t('Flux.apparence.shape_ending_tangeant') },
-      shape_is_curved: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_curved'), name: t('Flux.apparence.shape_is_curved') },
-      shape_shape: { overloaded: isAttributeOverloaded(selected_links, 'shape_shape'), name: t('Flux.apparence.shape_shape') },
-      shape_is_recycling: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_recycling'), name: t('Flux.apparence.shape_is_recycling') },
-      shape_arrow_size: { overloaded: isAttributeOverloaded(selected_links, 'shape_arrow_size'), name: t('Flux.apparence.shape_arrow_size') },
-      shape_is_arrow: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_arrow'), name: t('Flux.apparence.shape_is_arrow') },
-      shape_color: { overloaded: isAttributeOverloaded(selected_links, 'shape_color'), name: t('Flux.apparence.shape_color') },
-      shape_color_rule: { overloaded: isAttributeOverloaded(selected_links, 'shape_color_rule'), name: t('Flux.apparence.shape_color_rule') },
-      shape_opacity: { overloaded: isAttributeOverloaded(selected_links, 'shape_opacity'), name: t('Flux.apparence.shape_opacity') },
-      shape_is_structure: { overloaded: isAttributeOverloaded(selected_links, 'shape_is_structure'), name: t('Flux.apparence.shape_is_structure') },
-      shape_local_link_scale: { overloaded: isAttributeOverloaded(selected_links, 'shape_local_link_scale'), name: t('Flux.apparence.shape_local_link_scale') },
+      shape_orientation: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_orientation'), name: t('Flux.apparence.of') },
+      shape_starting_curve: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_starting_curve'), name: t('Flux.apparence.shape_starting_curve') },
+      shape_ending_curve: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_ending_curve'), name: t('Flux.apparence.shape_ending_curve') },
+      shape_starting_tangeant: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_starting_tangeant'), name: t('Flux.apparence.shape_starting_tangeant') },
+      shape_ending_tangeant: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_ending_tangeant'), name: t('Flux.apparence.shape_ending_tangeant') },
+      shape_is_curved: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_is_curved'), name: t('Flux.apparence.shape_is_curved') },
+      shape_shape: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_shape'), name: t('Flux.apparence.shape_shape') },
+      shape_is_recycling: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_is_recycling'), name: t('Flux.apparence.shape_is_recycling') },
+      shape_arrow_size: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_arrow_size'), name: t('Flux.apparence.shape_arrow_size') },
+      shape_is_arrow: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_is_arrow'), name: t('Flux.apparence.shape_is_arrow') },
+      shape_color: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_color'), name: t('Flux.apparence.shape_color') },
+      shape_color_rule: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_color_rule'), name: t('Flux.apparence.shape_color_rule') },
+      shape_opacity: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_opacity'), name: t('Flux.apparence.shape_opacity') },
+      shape_is_structure: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_is_structure'), name: t('Flux.apparence.shape_is_structure') },
+      shape_local_link_scale: { overloaded: isElementAttributeOverloaded(selected_links, 'shape_local_link_scale'), name: t('Flux.apparence.shape_local_link_scale') },
     }
 
     const options_selector: typeElementSelectable = sankey.link_styles_list.map(style => {
@@ -898,20 +860,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
   }
   const is_indeterminate = !selected_links.every(check_indeterminate)
 
-  /**
-   * Local component that add a icon with a tooltip to show attribute value is managed by node attribute (and not style as by default)
-   *
-   * @param {*} {k}
-   * @return {*}
-   */
-  const TooltipElementOverloaded: FC<{ k: keyof Class_LinkAttribute }> = ({ k }) => {
-    if (menu_for_style)
-      return <></>
 
-    return isAttributeOverloaded(selected_links, k) ? (
-      <>{TooltipValueSurcharge('link_var_', t)}</>
-    ) : <></>
-  }
 
   const content_value_specific_flow = value_label_is_visible ? <>
     {/* Orienter le texte du label le long du flux  */}
@@ -924,7 +873,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
       <OSTooltip label={t('Flux.labels.tooltips.acf')}>
         {t('Flux.labels.acf') + ' '}
       </OSTooltip>
-      <TooltipElementOverloaded k='value_label_on_path' />
+      <TooltipElementOverloaded elements={selected_links} t={t} k='value_label_on_path' />
     </Checkbox>
 
     {/* Button to adjust label position in case the label is bigger than the link */}
@@ -935,10 +884,10 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
       isChecked={value_label_pos_auto}
       onChange={(evt) => { updateElements('value_label_pos_auto', evt.target.checked) }}
     >
-      <OSTooltip label={t('Flux.tooltips.ajust_label')}>
-        {t('Flux.ajust_label')}
+      <OSTooltip label={t('Flux.labels.tooltips.value_label_pos_auto')}>
+        {t('Flux.labels.value_label_pos_auto')}
       </OSTooltip>
-      <TooltipElementOverloaded k='value_label_pos_auto' />
+      <TooltipElementOverloaded elements={selected_links} t={t} k='value_label_pos_auto' />
     </Checkbox>
   </> : <></>
 
@@ -959,7 +908,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
         <OSTooltip label={t('Flux.labels.tooltips.label')}>
           {t('Flux.labels.value_label_is_visible')}
         </OSTooltip>
-        <TooltipElementOverloaded k='value_label_is_visible' />
+        <TooltipElementOverloaded elements={selected_links} t={t} k='value_label_is_visible' />
       </Checkbox>
     </Box>
     {value_label_is_visible ?
@@ -970,37 +919,14 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
       elements={elements}
       selectedElements={selected_links}
       refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-          dict_decorator_name={{
-            label_horiz: 'value_label_horiz',
-            label_vert: 'value_label_vert',
-            label_font_size: 'value_label_font_size',
-            label_color: 'value_label_color',
-            label_bold: 'value_label_bold',
-            label_uppercase: 'value_label_uppercase',
-            label_italic: 'value_label_italic',
-            label_font_family: 'value_label_font_family'
-          }} />
+          prefix={'value_'} />
         {content_value_specific_flow}
         <SankeyMenuValueLabelComponent
           new_data={new_data}
           elements={elements}
           selectedElements={selected_links}
           refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-          dict_decorator_name={{
-            label_horiz: 'value_label_horiz',
-            label_vert: 'value_label_vert',
-            label_font_size: 'value_label_font_size',
-            label_color: 'value_label_color',
-            label_bold: 'value_label_bold',
-            label_uppercase: 'value_label_uppercase',
-            label_italic: 'value_label_italic',
-            label_font_family: 'value_label_font_family',
-            label_custom_digit: 'value_label_custom_digit',
-            label_nb_digit: 'value_label_nb_digit',
-            label_scientific_notation: 'value_label_scientific_notation',
-            label_significant_digits: 'value_label_significant_digits',
-            label_nb_significant_digits: 'value_label_nb_significant_digits'
-          }}
+          prefix={'value_'}
         />
 
         {additionMenus.current.additional_link_appearence_value.map((el, idx) => <Fragment key={'additional_apparence_' + idx}>{el(menu_for_style)}</Fragment>)}
@@ -1013,12 +939,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
     elements={elements}
     selectedElements={selected_links}
     refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-    dict_decorator_name={{
-      label_unit_visible: 'value_label_unit_visible',
-      label_unit: 'value_label_unit',
-      label_unit_type: 'value_label_unit_type',
-      label_unit_factor: 'value_label_unit_factor',
-    }}
+    prefix={'value_'}
   />
   // Content specific to link label, it us not generic so not in SankeyMenuLabelComponent
   const content_name_specific_flow = name_label_is_visible ? <>
@@ -1033,7 +954,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
       <OSTooltip label={t('Flux.labels.tooltips.acf')}>
         {t('Flux.labels.acf') + ' '}
       </OSTooltip>
-      <TooltipElementOverloaded k='name_label_on_path' />
+      <TooltipElementOverloaded elements={selected_links} t={t} k='name_label_on_path' />
     </Checkbox>
 
     {/* Button to adjust label position in case the label is bigger than the link */}
@@ -1047,7 +968,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
       <OSTooltip label={t('Flux.tooltips.ajust_label')}>
         {t('Flux.ajust_label')}
       </OSTooltip>
-      <TooltipElementOverloaded k='name_label_pos_auto' />
+      <TooltipElementOverloaded elements={selected_links} t={t} k='name_label_pos_auto' />
     </Checkbox>
   </> : <></>
 
@@ -1066,7 +987,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
         <OSTooltip label={t('Noeud.labels.tooltips.name_label_is_visible')}>
           {t('Noeud.labels.name_label_is_visible')}
         </OSTooltip>
-        <TooltipElementOverloaded k='name_label_is_visible' />
+        <TooltipElementOverloaded elements={selected_links} t={t} k='name_label_is_visible' />
       </Checkbox>
     </Box>
 
@@ -1075,16 +996,7 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
       elements={elements}
       selectedElements={selected_links}
       refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-      dict_decorator_name={{
-        label_horiz: 'name_label_horiz',
-        label_vert: 'name_label_vert',
-        label_font_size: 'name_label_font_size',
-        label_color: 'name_label_color',
-        label_bold: 'name_label_bold',
-        label_uppercase: 'name_label_uppercase',
-        label_italic: 'name_label_italic',
-        label_font_family: 'name_label_font_family',
-      }} /> : <></>}
+      prefix={'name_'} /> : <></>}
 
     {content_name_specific_flow}
   </Box>
@@ -1096,35 +1008,35 @@ export const MenuConfigurationLinkContext: FC<FCType_MenuConfigurationLinksAppea
   if (!menu_for_style) {
     // Dict of attribute who overwrite style value
     const dict_overwritted_attr = {
-      name_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'name_label_is_visible'), name: t('Noeud.labels.name_label_is_visible') },
-      value_label_is_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_is_visible'), name: t('Flux.labels.value_label_is_visible') },
-      value_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'value_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
-      value_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'value_label_pos_auto'), name: '' },
-      name_label_on_path: { overloaded: isAttributeOverloaded(selected_links, 'name_label_on_path'), name: t('Label.name_title') + ' ' + t('Label.textPath') },
-      name_label_pos_auto: { overloaded: isAttributeOverloaded(selected_links, 'name_label_pos_auto'), name: '' },
+      name_label_is_visible: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_is_visible'), name: t('Flux.labels.name_label_is_visible') },
+      value_label_is_visible: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_is_visible'), name: t('Flux.labels.value_label_is_visible') },
+      value_label_on_path: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_on_path'), name: t('Label.name_title') + ' ' + t('Flux.labels.value_label_on_path') },
+      value_label_pos_auto: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_pos_auto'), name: '' },
+      name_label_on_path: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_on_path'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_on_path') },
+      name_label_pos_auto: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_pos_auto'), name: '' },
 
-      value_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'value_label_horiz'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_horiz') },
-      value_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'value_label_vert'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_vert') },
-      value_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_size'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_size') },
-      value_label_color: { overloaded: isAttributeOverloaded(selected_links, 'value_label_color'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_color') },
-      value_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'value_label_font_family'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_family') },
-      value_label_unit_visible: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_visible'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_visible') },
-      value_label_unit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit') },
-      value_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'value_label_bold'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_bold') },
-      value_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'value_label_uppercase'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_uppercase') },
-      value_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'value_label_italic'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_italic') },
-      value_label_unit_factor: { overloaded: isAttributeOverloaded(selected_links, 'value_label_unit_factor'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_factor') },
-      value_label_custom_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_custom_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_custom_digit') },
-      value_label_nb_digit: { overloaded: isAttributeOverloaded(selected_links, 'value_label_nb_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_nb_digit') },
+      value_label_horiz: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_horiz'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_horiz') },
+      value_label_vert: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_vert'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_vert') },
+      value_label_font_size: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_font_size'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_size') },
+      value_label_color: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_color'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_color') },
+      value_label_font_family: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_font_family'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_font_family') },
+      value_label_unit_visible: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_unit_visible'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_visible') },
+      value_label_unit: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_unit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit') },
+      value_label_bold: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_bold'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_bold') },
+      value_label_uppercase: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_uppercase'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_uppercase') },
+      value_label_italic: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_italic'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_italic') },
+      value_label_unit_factor: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_unit_factor'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_unit_factor') },
+      value_label_custom_digit: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_custom_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_custom_digit') },
+      value_label_nb_digit: { overloaded: isElementAttributeOverloaded(selected_links, 'value_label_nb_digit'), name: t('Label.value_title') + ' ' + t('Flux.labels.value_label_nb_digit') },
 
-      name_label_horiz: { overloaded: isAttributeOverloaded(selected_links, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_horiz') },
-      name_label_vert: { overloaded: isAttributeOverloaded(selected_links, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_vert') },
-      name_label_font_size: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_size') },
-      name_label_color: { overloaded: isAttributeOverloaded(selected_links, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_color') },
-      name_label_font_family: { overloaded: isAttributeOverloaded(selected_links, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_family') },
-      name_label_bold: { overloaded: isAttributeOverloaded(selected_links, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_bold') },
-      name_label_uppercase: { overloaded: isAttributeOverloaded(selected_links, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Label.uppercase') },
-      name_label_italic: { overloaded: isAttributeOverloaded(selected_links, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_italic') },
+      name_label_horiz: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_horiz'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_horiz') },
+      name_label_vert: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_vert'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_vert') },
+      name_label_font_size: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_font_size'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_size') },
+      name_label_color: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_color'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_color') },
+      name_label_font_family: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_font_family'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_font_family') },
+      name_label_bold: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_bold'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_bold') },
+      name_label_uppercase: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_uppercase'), name: t('Label.name_title') + ' ' + t('Label.uppercase') },
+      name_label_italic: { overloaded: isElementAttributeOverloaded(selected_links, 'name_label_italic'), name: t('Label.name_title') + ' ' + t('Flux.labels.name_label_italic') },
     }
 
     const options_selector: typeElementSelectable = sankey.link_styles_list.map(style => {

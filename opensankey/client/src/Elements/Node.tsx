@@ -94,15 +94,6 @@ export function sortNodesElements(
   else return 0
 }
 
-export function isAttributeOverloaded(
-  nodes: Class_NodeElement[],
-  attr: keyof Class_NodeAttribute
-) {
-  let overloaded = false
-  nodes.forEach(node => overloaded = (overloaded || node.isAttributeOverloaded(attr)))
-  return overloaded
-}
-
 export function isPositionOverloaded(
   nodes: Class_NodeElement[],
   attr: keyof Type_ElementPosition

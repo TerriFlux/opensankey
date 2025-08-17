@@ -34,16 +34,12 @@ import {
   Select,
 } from '@chakra-ui/react'
 
-import {
-  OSTooltip
-} from '../../types/Utils'
-
-
 /*************************************************************************************************/
 import { OSMultiSelect, typeElementSelectable } from './MenuCommon'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
+import { OSTooltip } from './BaseComponents'
 
 
 /*************************************************************************************************/

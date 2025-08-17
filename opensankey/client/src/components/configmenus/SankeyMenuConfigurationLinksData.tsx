@@ -25,307 +25,149 @@
 // ==================================================================================================
 
 // External imports
-import React, { FC, useRef, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
+import { Box, Select } from '@chakra-ui/react'
 
-import {
-  Box,
-  Select,
-} from '@chakra-ui/react'
-
-// Local components or functions
-import {
-  OSTooltip
-} from '../../types/Utils'
-import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributes'
+import { BaseApplicationDataType } from '../SankeyMenuTypes'
+import { BOX2COLOPTION, BOX2COLSTITLEH4, DataTagSelector, OSTooltip } from './BaseComponents'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
-import { value_option_constants, value_option_percent_constants, ValueOptionType } from '../../Elements/LinkValues'
+
 import { Class_LinkElement } from '../../Elements/Link'
-import { BaseApplicationDataType, BaseContextualType } from '../SankeyMenuTypes'
+import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributes'
+import { value_option_constants, value_option_percent_constants, ValueOptionType } from '../../Elements/LinkValues'
 
 /*************************************************************************************************/
 export const default_value_option = 'value'
 
-export const MenuConfigurationLinksData: FC<BaseContextualType> = ({
-  new_data,
-  contextual
-}) => {
+export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_data }) => {
+  const { t, drawing_area, menu_configuration } = new_data
+  const { sankey } = drawing_area
+  const { data_taggs_list } = sankey
+  const {
+    is_selector_only_for_visible_links, 
+    ref_to_menu_config_links_data_updater,
+    ref_to_save_in_cache_indicator
+  } = menu_configuration
 
-  // Traduction
-  const { t } = new_data
+  const unit_data_tagg = data_taggs_list.find(tagg => tagg.is_unit)
 
-  // Selected links --------------------------------------------------------------------
+  let selected_links = is_selector_only_for_visible_links ?
+    drawing_area.visible_and_selected_links_list_sorted :
+    drawing_area.selected_links_list_sorted
+  const first_link = selected_links[0]
+  const first_link_value = first_link?.value
 
-  let selected_links: Class_LinkElement[]
-  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
-    // All availables links
-    selected_links = new_data.drawing_area.selected_links_list_sorted
-  }
-  else {
-    // Only visible links
-    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
-  }
-  const element_ref = selected_links[0]
-  const value_option = (element_ref?.value?.value_option ?? default_value_option)
+  const value_option = first_link_value?.value_option ?? default_value_option
 
-  // Data tags and values --------------------------------------------------------------
-  const list_data_taggs = new_data.drawing_area.sankey.data_taggs_list
-  const value = selected_links[0]?.value
-
-  // Components updaters ---------------------------------------------------------------
-
-  // Refs used to trigger refreshing of number & text inputs
-  const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
-  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
-
-  let unit_text : string | undefined
-  let default_value = element_ref?.valueCurrent
-  if ((value_option_percent_constants as unknown as ValueOptionType).includes(value_option)) {
-    unit_text = '%'
-    default_value = element_ref?.value?.valueData??null
-  } else {
-      unit_text= selected_links[0]?.value_label_unit_visible ? selected_links[0]?.value_label_unit :
+  const unit_text = value_option_percent_constants.includes(value_option) ?
+    '%' :
+    first_link?.value_label_unit_visible ?
+      first_link?.value_label_unit :
       undefined
-  }
+  const default_value = value_option_percent_constants.includes(value_option) ?
+    first_link?.value?.valueData ?? null :
+    first_link?.valueCurrent
 
-  const updateInputsValues = () => {
-    // Recreate a updated_selected_links list in the function because it can be called before re-rendering <MenuConfigurationLinksData/>
-    // so selected_links can have the list of previous selected links wich can lead to incorrect links value
-    const updated_selected_links = !new_data.menu_configuration.is_selector_only_for_visible_links ?
-      new_data.drawing_area.selected_links_list_sorted : new_data.drawing_area.visible_and_selected_links_list_sorted
-
-    const value_update = updated_selected_links[0]?.value
-    // Update input data value
-    if ((value_option_percent_constants as unknown as ValueOptionType).includes(value_option)) {
-      ref_set_data_value_input.current(String(updated_selected_links[0]?.value?.valueData ?? ''))
-    } else {
-      ref_set_data_value_input.current(String(updated_selected_links[0]?.valueCurrent ?? ''))
-    }
-    // Update input text value
-    ref_set_text_value_input.current(String(value_update?.text_value ?? ''))
-  }
+  const is_label_indeterminated = !selected_links.every(el => el.value?.text_value == first_link_value?.text_value)
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
 
   const refreshThis = () => {
-    updateInputsValues()
     setCount(a => a + 1)
   }
 
   // Link this menu's update function
   const refreshThisAndUpdateRelatedComponents = () => {
+    drawing_area.updateScaleAtLinkValueSetting()
     // Toogle saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
-    new_data.menu_configuration.updateComponentRelatedToLinksData()
+    menu_configuration.updateComponentRelatedToLinksData()
   }
+  ref_to_menu_config_links_data_updater.current = refreshThis
 
-  if (contextual) {
-    new_data.menu_configuration.ref_to_menu_contextual_config_links_data_updater.current = refreshThis
-  }
-  else {
-    new_data.menu_configuration.ref_to_menu_config_links_data_updater.current = refreshThis
-  }
-
-  /**
-   * Method to mutate link value & save it's undoing in data history
-   *
-   * @param {(number | null | undefined)} _
-   */
-  const updateValueAndHistory = (_: number | null | undefined) => {
-    // Save old values in dict so the undo reset value for previous value of each link
-    const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.valueCurrent)
-    // Undo link value
-    const inv_updateDataLinks = () => {
-      // Update data for links
-      selected_links.forEach(link => {
-        link.valueCurrent = dict_old_val[link.id]
-      })
-      // Update scaling if only one link
-      new_data.drawing_area.updateScaleAtLinkValueSetting()
-      // Update this menu
-      refreshThisAndUpdateRelatedComponents()
+  data_taggs_list.map(data_tagg => {
+    let selected_data_tags = data_tagg.selected_tags_list
+    if (selected_data_tags.length === 0) {
+      data_tagg.tags_list[0].setSelected()
+    } else if (selected_data_tags.length > 1 && data_tagg.banner == 'one') {
+      const data_tags_to_unselect = selected_data_tags.splice(1)
+      data_tags_to_unselect.forEach(tag => tag.setUnSelected())
     }
-    // Mutate link value
-    const _updateDataLinks = () => {
-      // Update data for links
-      selected_links.forEach(link => {
-        link.valueCurrent = (_ ?? null)
-      })
-      // Update scaling if only one link
-      new_data.drawing_area.updateScaleAtLinkValueSetting()
-      // Update this menu
-      refreshThisAndUpdateRelatedComponents()
-    }
-    // Save undo/redo in data history
-    new_data.history.saveUndo(inv_updateDataLinks)
-    new_data.history.saveRedo(_updateDataLinks)
-    // Execute original attr mutation
-    _updateDataLinks()
-  }
+  })
 
-  /**
-   * Method to mutate link text & save it's undoing in data history
-   *
-   * @param {(number | null | undefined)} _
-   */
-  const updateTextLinks = (_: string | undefined | null) => {
-    // Save old values in dict so the undo reset value for previous value of each link
-    const dict_old_val: { [x: string]: string } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.text_value)
-    // Undo link value
-    const inv_updateTextLinks = () => {
-      // Update data for links
-      selected_links.forEach(link => {
-        link.text_value = dict_old_val[link.id]
-      })
-      // Update scaling if only one link
-      new_data.drawing_area.updateScaleAtLinkValueSetting()
-      // Update this menu
-      refreshThisAndUpdateRelatedComponents()
-    }
-
-    // Mutate link value
-    const _updateTextLinks = () => {
-      // Update data for links
-      selected_links.forEach(link => {
-        link.text_value = (_ ?? '')
-      })
-      // Update scaling if only one link
-      new_data.drawing_area.updateScaleAtLinkValueSetting()
-      // Update this menu
-      refreshThisAndUpdateRelatedComponents()
-    }
-    // Save undo/redo in data history
-    new_data.history.saveUndo(inv_updateTextLinks)
-    new_data.history.saveRedo(_updateTextLinks)
-    // Execute original attr mutation
-    _updateTextLinks()
-  }
-
-  const is_label_indeterminated = !selected_links.every(el => el.value?.text_value == selected_links[0].value?.text_value)
-
-  // JSX -------------------------------------------------------------------------------
-
-  const content = <Box
-    layerStyle='menu_sub_section'
-  >
-    <SankeyLinkSelection
-      new_data={new_data}
-    />
-    {
-      // Définition des valeurs selon les paramètre dataTags
-      list_data_taggs.map(data_tagg => {
-        if (data_tagg.has_tags) {
-          // Only one dataTag / group can be selected
-          let selected_data_tags = data_tagg.selected_tags_list
-          if (selected_data_tags.length === 0) {
-            data_tagg.tags_list[0].setSelected()
-            selected_data_tags = data_tagg.selected_tags_list
-          }
-          else if (selected_data_tags.length > 1) {
-            const data_tags_to_unselect = selected_data_tags.splice(1)
-            data_tags_to_unselect.forEach(tag => tag.setUnSelected())
-          }
-          // Retrun selection box
-          return (<Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box
-              as='span'
-              layerStyle='menuconfigpanel_part_title_3'
-            >
-              {data_tagg.name}
-            </Box>
-            <Select
-              name={data_tagg.id}
-              variant='menuconfigpanel_option_select'
-              value={
-                selected_data_tags[0].id
-              }
-              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                // Update selected attributes for tags
-                data_tagg.selectTagsFromId(evt.target.value)
-                // Update this menu
-                refreshThisAndUpdateRelatedComponents()
-              }}
-            >
-              {
-                data_tagg.tags_list.map(tag => {
-                  return <option key={tag.id} value={tag.id}>{tag.name}</option>
-                })
-              }
-            </Select></Box>
-          )
-        }
-      })
-    }
+  return <Box layerStyle='menu_sub_section'>
+    <SankeyLinkSelection new_data={new_data} />
+    {data_taggs_list.map(data_tagg => {
+      return <BOX2COLSTITLEH4 title={data_tagg.name}>
+        <Select
+          name={data_tagg.id}
+          variant='menuconfigpanel_option_select'
+          value={data_tagg.selected_tags_list[0].id}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            data_tagg.selectTagsFromId(evt.target.value)
+            refreshThisAndUpdateRelatedComponents()
+          }}
+        >
+          {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+        </Select>
+      </BOX2COLSTITLEH4>
+    })}
 
     {/* Choix du type de donnée */}
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-      <Box layerStyle='menuconfigpanel_option_name'>
-        {t('Flux.data.data_type')}
-      </Box>
-      {/* <OSTooltip label={t('Flux.data.tooltips.data_type')}> */}
+    <BOX2COLOPTION
+      tooltipLabel={t('Flux.data.tooltips.data_type')}
+      optionName={t('Flux.data.data_type')}
+    >
       <Select
+        key={`value-option-${value_option}`}
         value={value_option}
         onChange={(evt) => {
-          selected_links.forEach(l=>l.value!.value_option = evt.target.value as ValueOptionType)
-          new_data.drawing_area.updateScaleAtLinkValueSetting()
-          // Update this menu
+          selected_links.forEach(l => l.value!.value_option = evt.target.value as ValueOptionType)
           refreshThisAndUpdateRelatedComponents()
         }}
       >
-        {value_option_constants.map(el => {
-          // if (el=='unit_conversion' && (list_data_taggs.length==0 || list_data_taggs.filter(g=>g.banner == 'unit').length==0)) {
-          //   return <></>
-          // }
-          return <option key={'value_' + el} value={el}><><OSTooltip label={el}>{t('Flux.labels.'+el)}</OSTooltip></></option>
-        })}
+        {value_option_constants.map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)}
       </Select>
-      {/* </OSTooltip> */}
-    </Box>
-    {/* Valeur du flux pour les parametre (filtres datatags) choisis  */}
-    <OSTooltip label={t('Flux.data.tooltips.vpp')}>
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-        >
-          {t('Flux.labels.'+value_option)}
-        </Box>
-        <ConfigMenuNumberOrUndefinedInput
-          ref_to_set_value={ref_set_data_value_input}
-          default_value={default_value}
-          function_on_blur={updateValueAndHistory}
-          minimum_value={0}
-          stepper={true}
-          step={1}
-          unit_text={unit_text}
-        />
-      </Box>
-    </OSTooltip>
-
-    <OSTooltip
-      label={t('Flux.data.tooltips.affichage')}
+    </BOX2COLOPTION>
+    {value_option == 'unit_conversion' && unit_data_tagg ? <DataTagSelector
+      data_tagg={unit_data_tagg}
+      value={selected_links[0]?.value!.ratio_unit_tag?.id as string}
+      onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+        first_link_value!.ratio_unit_tag = unit_data_tagg.tags_dict[evt.target.value]
+        refreshThisAndUpdateRelatedComponents()
+      }}
+    /> : <></>}
+    <BOX2COLOPTION
+      tooltipLabel={t('Flux.data.tooltips.vpp')}
+      optionName={value_option == 'unit_conversion' && unit_data_tagg ?
+        'ratio ' + unit_data_tagg.selected_tags_list[0].id + '/' + first_link_value?.ratio_unit_tag?.id :
+        t('Flux.labels.' + value_option)
+      }
     >
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name' >
-          {t('Flux.data.affichage')}
-        </Box>
-        <ConfigMenuTextInput
-          ref_to_set_value={ref_set_text_value_input}
-          function_get_value={() => { return value?.text_value }}
-          function_on_blur={updateTextLinks}
-          multiValue={is_label_indeterminated}
-        />
-      </Box>
-    </OSTooltip>
+      <ConfigMenuNumberOrUndefinedInput
+        default_value={default_value}
+        function_on_blur={(_: number | null) => updateAttributeAndHistory(selected_links, 'valueCurrent', _, refreshThisAndUpdateRelatedComponents)}
+        minimum_value={0}
+        stepper={true}
+        step={1}
+        unit_text={unit_text}
+      />
+    </BOX2COLOPTION>
+
+    <BOX2COLOPTION
+      tooltipLabel={t('Flux.data.tooltips.affichage')}
+      optionName={t('Flux.data.affichage')}
+    >
+      <ConfigMenuTextInput
+        default_value={first_link_value?.text_value}
+        function_on_blur={(_: string | null) => updateAttributeAndHistory(selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)}
+        multiValue={is_label_indeterminated}
+      />
+    </BOX2COLOPTION>
   </Box>
-  // Return JSX component
-  return content
 }
 
 /*************************************************************************************************/
@@ -339,77 +181,39 @@ export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
   new_data,
 }) => {
 
-  // Selected links --------------------------------------------------------------------
+  const { drawing_area, menu_configuration } = new_data
+  const { selected_links_list_sorted, visible_and_selected_links_list_sorted } = drawing_area
+  const {
+    ref_to_menu_contextual_config_links_data_updater,
+    ref_to_save_in_cache_indicator
+  } = menu_configuration
 
-  let selected_links: Class_LinkElement[]
-  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
-    // All availables links
-    selected_links = new_data.drawing_area.selected_links_list_sorted
-  }
-  else {
-    // Only visible links
-    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
-  }
-
-  // Components updaters ---------------------------------------------------------------
-
-  // Refs used to trigger refreshing of number & text inputs
-  const ref_set_data_value_input = useRef((_: string | null | undefined) => null)
-  const updateInputsValues = () => {
-    // Update input data value
-    ref_set_data_value_input.current(String(selected_links[0]?.valueCurrent ?? ''))
-  }
-
+  let selected_links = menu_configuration.is_selector_only_for_visible_links ?
+    visible_and_selected_links_list_sorted :
+    selected_links_list_sorted
+  const first_link = selected_links[0]
+  const first_link_value = first_link?.value
+  const value_option = first_link_value?.value_option ?? default_value_option
+  const default_value = value_option_percent_constants.includes(value_option) ?
+    first_link_value?.valueData ?? null :
+    first_link?.valueCurrent
   // Function used to force this component to reload
   const [, setCount] = useState(0)
+  ref_to_menu_contextual_config_links_data_updater.current = ()=>setCount(a => a + 1)
+
   const refreshThisAndUpdateRelatedComponents = () => {
     // Toogle saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    ref_to_save_in_cache_indicator.current(false)
     // Update data menu for link
-    new_data.menu_configuration.updateComponentRelatedToLinksData()
-    // And update this menu also
+    menu_configuration.updateComponentRelatedToLinksData()
     setCount(a => a + 1)
-    updateInputsValues()
-  }
-
-  const updateDataLinks = (_: number | null | undefined) => {
-    // Save old values in dict so the undo reset value for previous value of each link
-    const dict_old_val: { [x: string]: number | null } = {}
-    selected_links.forEach(l => dict_old_val[l.id] = l.valueCurrent)
-    // Undo link value
-    const inv_updateDataLinks = () => {
-      // Update data for links
-      selected_links.forEach(link => {
-        link.valueCurrent = dict_old_val[link.id]
-      })
-      // Update scaling if only one link
-      new_data.drawing_area.updateScaleAtLinkValueSetting()
-      // Update this menu
-      refreshThisAndUpdateRelatedComponents()
-    }
-
-    const _updateDataLinks = () => {
-      // Update data for links
-      selected_links.forEach(link => {
-        link.valueCurrent = (_ ?? null)
-      })
-      // Update scaling if only one link
-      new_data.drawing_area.updateScaleAtLinkValueSetting()
-      // Update this menu
-      refreshThisAndUpdateRelatedComponents()
-    }
-    // Save undo/redo in data history
-    new_data.history.saveUndo(inv_updateDataLinks)
-    new_data.history.saveRedo(_updateDataLinks)
-    // Execute original attr mutation
-    _updateDataLinks()
+    // And update this menu also
   }
 
   return <ConfigMenuNumberInput
     t={new_data.t}
-    ref_to_set_value={ref_set_data_value_input}
-    default_value={selected_links[0]?.valueCurrent}
-    function_on_blur={updateDataLinks}
+    default_value={default_value}
+    function_on_blur={(_: number | null) => updateAttributeAndHistory(selected_links, 'valueCurrent', _, refreshThisAndUpdateRelatedComponents)}
     minimum_value={0}
     stepper={true}
     step={1}
@@ -423,3 +227,33 @@ export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
     }
   />
 }
+
+const updateAttributeAndHistory = <
+  TKey extends keyof Class_LinkElement
+>(
+  selected_links: Class_LinkElement[],
+  attribute_name: TKey,
+  attribute_value: Class_LinkElement[TKey],
+  refresh: () => void
+) => {
+  if (selected_links.length == 0) {
+    return
+  }
+  const drawing_area = selected_links[0].sankey.drawing_area
+  const app_data = drawing_area.application_data
+  const dict_old_val: { [x: string]: Class_LinkElement[TKey] } = {}
+  selected_links.forEach(l => dict_old_val[l.id] = l[attribute_name])
+  const _invUpdateAttribute = () => {
+    selected_links.forEach(link => link[attribute_name] = dict_old_val[link.id])
+    refresh()
+  }
+  const _updateAttribute = () => {
+    selected_links.forEach(link => link[attribute_name] = attribute_value)
+    refresh()
+  }
+  app_data.history.saveUndo(_invUpdateAttribute)
+  app_data.history.saveRedo(_updateAttribute)
+  _updateAttribute()
+}
+
+

@@ -55,8 +55,8 @@ import {
 
 // Local libs
 import { UploadExemple } from '../../Persistence/SankeyPersistence'
-import { OSTooltip } from '../../types/Utils'
 import { FCtype_ModalTemplate } from '../SankeyMenuTypes'
+import { OSTooltip } from '../configmenus/BaseComponents'
 
 // CONSTANTS
 

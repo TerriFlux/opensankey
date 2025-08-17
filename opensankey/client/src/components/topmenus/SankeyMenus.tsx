@@ -46,13 +46,6 @@ import {
 
 /*************************************************************************************************/
 
-
-import {
-  OSTooltip
-} from '../../types/Utils'
-
-/*************************************************************************************************/
-
 import SankeyLoad from '../../Persistence/SankeyPersistence'
 import {
   ExcelModal,
@@ -81,6 +74,7 @@ import { MenuConfigurationNodeContext, MenuConfigurationNodeStyle } from '../con
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_MenuDraggable } from '../SankeyMenuTypes'
+import { OSTooltip } from '../configmenus/BaseComponents'
 
 
 /*************************************************************************************************/
@@ -452,7 +446,7 @@ const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: Mut
       </WrapperContentConfig>,
 
       'flow': <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinksData new_data={new_data} contextual={false} />
+        <MenuConfigurationLinksData new_data={new_data}/>
       </WrapperContentConfig>,
 
       ...additional_menus.current.additional_menu_config_content.data

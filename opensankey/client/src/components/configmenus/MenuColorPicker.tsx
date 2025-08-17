@@ -1,7 +1,7 @@
 import { Box } from '@chakra-ui/react'
 import React, { CSSProperties, FC, useState } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
-import { OSTooltip } from '../../types/Utils';
+import { OSTooltip } from './BaseComponents';
 
 // Necessary props to call Class
 type MenuColorPickerProps = {

@@ -69,8 +69,7 @@ export const ContextMenuZdd: FC<FCType_ContextMenu> = ({
 
   const { t, MenuColorPicker } = new_data
   const [, setForceUpdate] = useState(0)
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void> = useRef((_: string | null | undefined) => null)
-  ref_set_number_inputs.current(String(new_data.drawing_area.scale))
+
   new_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current = () => setForceUpdate(a => a + 1)
   const { dict_setter_show_dialog } = new_data.menu_configuration
   const {
@@ -301,7 +300,6 @@ export const ContextMenuZdd: FC<FCType_ContextMenu> = ({
       <Box margin={'auto'}>
         <ConfigMenuNumberInput
           t={new_data.t}
-          ref_to_set_value={ref_set_number_inputs}
           default_value={new_data.drawing_area.scale}
           function_on_blur={changeScale}
           minimum_value={1}

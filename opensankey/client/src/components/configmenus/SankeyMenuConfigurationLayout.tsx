@@ -31,7 +31,6 @@ import {
   Checkbox,
   Select
 } from '@chakra-ui/react'
-import { CustomFaEyeCheckIcon, OSTooltip } from '../../types/Utils'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu } from './MenuCommon'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
@@ -40,6 +39,7 @@ import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FType_OpenSankeyMenuConfigurationLayout, FCType_DrawingAreaStyle, BaseApplicationDataType } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
+import { CustomFaEyeCheckIcon, OSTooltip } from './BaseComponents'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -79,14 +79,6 @@ export const DrawingAreaStyle: FC<FCType_DrawingAreaStyle> = ({ new_data, extra_
   // Components updaters ---------------------------------------------------------------
 
   const [, setCount] = useState(0)
-
-  // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 1
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-  // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(String(new_data.drawing_area.grid_size))
 
   /**
    * Function used to reset menu UI
@@ -183,7 +175,6 @@ export const DrawingAreaStyle: FC<FCType_DrawingAreaStyle> = ({ new_data, extra_
         <OSTooltip label={t('MEP.tooltips.TCG')}>
           <ConfigMenuNumberInput
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[0]}
             default_value={new_data.drawing_area.grid_size}
             function_on_blur={eventGridSize}
             minimum_value={10}
@@ -329,7 +320,6 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
         <Box>
           <ConfigMenuNumberInput
             t={new_data.t}
-            ref_to_set_value={ref_scale}
             default_value={new_data.drawing_area.scale}
             function_on_blur={eventScale}
             minimum_value={1}
@@ -380,7 +370,6 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
           <OSTooltip label={t('MEP.tooltips.MinFlux')}>
             <ConfigMenuNumberInput
               t={new_data.t}
-              ref_to_set_value={ref_minimum_flux}
               default_value={new_data.drawing_area.minimum_flux}
               function_on_blur={eventMinLinkThickness}
               maximum_value={new_data.drawing_area.maximum_flux}
@@ -397,7 +386,6 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
           <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
             <ConfigMenuNumberInput
               t={new_data.t}
-              ref_to_set_value={ref_maximum_flux}
               default_value={new_data.drawing_area.maximum_flux}
               function_on_blur={eventMaxLinkThickness}
               minimum_value={new_data.drawing_area.minimum_flux}
@@ -422,20 +410,6 @@ export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => 
 
   const { t, MenuColorPicker } = new_data
   const [, setCount] = useState(0)
-
-
-  // Link to ConfigMenuNumberInput state variable
-  const number_of_input = 5
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-  // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(String(new_data.drawing_area.legend.legend_police))
-  ref_set_number_inputs[1].current(String(new_data.drawing_area.legend.legend_bg_opacity))
-  ref_set_number_inputs[2].current(String(new_data.drawing_area.legend.position_x))
-  ref_set_number_inputs[3].current(String(new_data.drawing_area.legend.position_y))
-  ref_set_number_inputs[4].current(String(new_data.drawing_area.legend.width))
-
 
   /**
    * Function used to reset menu UI
@@ -600,7 +574,6 @@ export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => 
         <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
           <ConfigMenuNumberInput
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[1]}
             default_value={new_data.drawing_area.legend.legend_bg_opacity}
             function_on_blur={eventLegendBgOpacity}
             minimum_value={0}
@@ -637,7 +610,6 @@ export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => 
         <OSTooltip label={t('Menu.tooltips.fontSize')}>
           <ConfigMenuNumberInput
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[0]}
             default_value={new_data.drawing_area.legend.legend_police}
             function_on_blur={eventLegendFontSize}
             minimum_value={1}
@@ -657,7 +629,6 @@ export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => 
         <OSTooltip label={t('Menu.tooltips.LegX')}>
           <ConfigMenuNumberInput
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[2]}
             default_value={new_data.drawing_area.legend.position_x}
             function_on_blur={eventLegendPosX}
             step={1}
@@ -679,7 +650,6 @@ export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => 
         <OSTooltip label={t('Menu.tooltips.LegY')}>
           <ConfigMenuNumberInput
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[3]}
             default_value={new_data.drawing_area.legend.position_y}
             function_on_blur={eventLegendPosY}
             step={1}
@@ -701,7 +671,6 @@ export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => 
         <OSTooltip label={t('Menu.tooltips.LegWidth')}>
           <ConfigMenuNumberInput
             t={new_data.t}
-            ref_to_set_value={ref_set_number_inputs[4]}
             default_value={new_data.drawing_area.legend.width}
             function_on_blur={eventLegendWidth}
             minimum_value={0}

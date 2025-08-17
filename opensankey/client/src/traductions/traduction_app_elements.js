@@ -640,8 +640,6 @@ export const resources_app_elements = {
           value_label_scientific_notation: 'Scientific notation',
           value_label_significant_digits: 'Significant digits',
           value_label_nb_significant_digits: 'Number of significant numbers',
-          value_label_on_path: 'Follow flow path',
-          value_label_pos_auto: 'Vertical position adjusted',
 
           tooltips: {
             name_label_is_visible: 'Displays or not the label(s) attached to the selected node(s)',
@@ -1674,7 +1672,7 @@ export const resources_app_elements = {
           value_label_font_size: 'Taille police',
           value_label_color: 'Couleur police',
           value_label_font_family: 'Style de police',
-          value_label_unit_visible: 'Unité',
+          value_label_unit_visible: 'Unité, %, Ratio',
           value_label_unit: 'Nom de l\'unité',
           value_label_bold: 'Gras',
           value_label_uppercase: 'Majuscule',
@@ -1894,9 +1892,7 @@ export const resources_app_elements = {
           scientificNotation: 'Notation scientifique',
           significantDigits: 'Chiffres significatifs',
           NbDigit: 'Nombre maximum de décimales',
-          l_u_v: 'Unité',
-          l_u: 'Nom de l\'unité',
-          unit_type: 'Type d\'unité',
+
           unit_name: 'Unité personnalisée',
           value: 'Valeur',
           '%IS': '% entrées source',
@@ -1905,7 +1901,7 @@ export const resources_app_elements = {
           '%OD': '% sorties destination',
           '%PS': '% flux parent source',
           '%PD': '% flux parent destination',
-          unit_conversion: 'Conversion d\'unité',
+          unit_conversion: 'Ratio d\'unité',
           unit_tag: 'Unité naturelle d\'origine',
           other_unit_tag: 'Autres unités naturelles',
           normalized: 'Normalisé (flux réf.)',
@@ -1941,7 +1937,8 @@ export const resources_app_elements = {
           value_label_font_size: 'Taille police',
           value_label_color: 'Couleur police',
           value_label_font_family: 'Style de police',
-          value_label_unit_visible: 'Unité',
+          value_label_unit_visible: 'Unité, %, Ratio',
+          value_label_unit_type: 'Type d\'unité',
           value_label_unit: 'Nom de l\'unité',
           value_label_bold: 'Gras',
           value_label_uppercase: 'Majuscule',
@@ -1977,10 +1974,10 @@ export const resources_app_elements = {
             significantDigits: 'Nombre maximum de chiffres significatifs',
             value_label_custom_digit: 'Nombre maximum de décimales fixes',
             NbDigit: 'Nombre maximum de décimales fixes',
-
-            l_u_v: 'Permet d\'afficher ou non l\'unité du flux',
-            l_u: 'Permet de choisir le nom de l\'unité',
-            unit_factor: 'Facteur de conversions de l\'unité du flux',
+            value_label_unit_visible: 'Permet d\'afficher ou non l\'unité du flux',
+            value_label_unit: 'Permet de choisir le nom de l\'unité',
+            value_label_unit_factor: 'Facteur de conversions de l\'unité du flux',
+            value_label_unit_type: 'Type d\'unité',
           }
         },
         layout: 'Organiser',
@@ -2008,11 +2005,7 @@ export const resources_app_elements = {
         NbDigit: 'Nombre maximum de décimales',
         unit: 'Unité',
         unit_name: 'Nom de l\'unité',
-        unit_factor: 'Facteur d\'unité',
-
-        textPath: 'Orienter suivant l\'axe du flux',
-        ajust_label: 'Position vertical ajusté',
-
+        unit_factor: 'Facteur d\'unité'
       },
 
       Banner: {

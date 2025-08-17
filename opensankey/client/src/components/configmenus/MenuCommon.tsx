@@ -39,7 +39,7 @@ import {
 import { t, TFunction } from 'i18next'
 import React, { FC, useState } from 'react'
 import { Class_LinkElement } from '../../Elements/Link'
-import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle } from '../../Elements/LinkAttributes'
+import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle, Class_LinkAttribute } from '../../Elements/LinkAttributes'
 import {
   Class_NodeAttribute,
   Class_NodeStyle} from '../../Elements/NodeAttributes'
@@ -49,98 +49,59 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import {
-  FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu,
-  labelAttributeType, labelValueAttribute, possibleDecoratorName} from '../SankeyMenuTypes'
+import { FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu} from '../SankeyMenuTypes'
 
 
-/**
- * Check if element attribute is from local attr
- *
- * @param {(Class_LinkElement[] | Class_NodeElement[])} elements
- * @param {possibleDecoratorName} attr
- * @return {boolean} 
- */
-export function isElementAttributeOverloaded(
-  elements: Class_LinkElement[] | Class_NodeElement[],
-  attr: possibleDecoratorName) {
-  let overloaded = false
-  elements.forEach(el => overloaded = (overloaded || el.isAttributeOverloaded(attr)))
-  return overloaded
-}
+// ✅ Union de tous vos éléments
+export type ElementsType = Class_LinkStyle | Class_LinkElement | Class_NodeElement | Class_NodeStyle
 
-/**
- * Generic function to call getter decorator of model
- *
- * @template TModel
- * @template TKey
- * @param {TModel} model
- * @param {TKey} key
- * @return {TModel[TKey]} 
- */
-export function getValueWithDecoratorRetriever<TModel, TKey extends keyof TModel>(
-  model: TModel,
-  key: TKey
-) {
-  return model[key]
-}
+// ✅ Toutes les clés possibles
+export type ValueKey = keyof  Class_NodeAttribute & keyof Class_LinkAttribute
 
-export type elementsType = Class_LinkStyle | Class_LinkElement | Class_NodeElement | Class_NodeStyle
-type valueType = labelValueAttribute[valueKeu]
-type valueKeu = keyof labelValueAttribute
-export type valueElementsType = elementsType[valueType] | undefined
+// ✅ Type conditionnel pour obtenir la bonne valeur selon la clé
+export type ValueType<K extends ValueKey> = 
+  K extends keyof Class_LinkAttribute 
+    ? Class_LinkAttribute[K] 
+    : K extends keyof Class_NodeAttribute 
+    ? Class_NodeAttribute[K] 
+    : never
 
-
-/**
- * Generic function to call setter decorator of model
- *
- * @template TModel
- * @template TKey
- * @template Tvalue
- * @param {TModel} model
- * @param {TKey} key
- * @param {Tvalue} value
- */
-export function setValueWithDecoratorRetriever<TModel, TKey extends keyof TModel, Tvalue extends TModel[TKey]>(
-  model: TModel,
-  key: TKey,
-  value: Tvalue | undefined
-) {
-  model[key] = value as TModel[TKey]
-}
+// ✅ Type de valeur qu'un élément peut avoir
+export type ValueElementsType = 
+  | Class_LinkAttribute[keyof Class_LinkAttribute]
+  | Class_NodeAttribute[keyof Class_NodeAttribute]
+  | undefined
 
 /**
  * Upate attribute value via it's decorator & save it's possible undoing in data history
  *
  * @param {Class_ApplicationData} data
  * @param {elementsType[]} elements
- * @param {(labelValueAttribute | labelAttributeType)} _dict_decorator_name
+ * @param {(labelValueAttribute | labelAttributeType)} _prefix
  * @param {keyof labelValueAttribute} k
  * @param {valueElementsType} val
  * @param {() => void} refreshParentComponent
  */
 export const updateElements = (
   data: Class_ApplicationData,
-  elements: elementsType[],
-  _dict_decorator_name: labelValueAttribute | labelAttributeType, // declare var can be both type so we can use the function in SankeyMenuLabelComponent & SankeyMenuValueLabelComponent 
-  k: keyof labelValueAttribute, // key of labelValueAttribute also contain key of labelAttributeType (since labelValueAttribute is a composite type with labelAttributeType)
-  val: valueElementsType,
+  elements: ElementsType[],
+  k: ValueKey, 
+  val: ValueElementsType,
   refreshParentComponent: () => void
 ) => {
-  const dict_decorator_name = _dict_decorator_name as labelValueAttribute
   // Create a dict of old val for each elements 
-  const dict_old_val: { [x: string]: valueElementsType } = {}
-  elements.forEach(element => dict_old_val[element.id] = getValueWithDecoratorRetriever(element, dict_decorator_name[k]))
+  const dict_old_val: { [x: string]: ValueElementsType } = {}
+  elements.forEach(element => dict_old_val[element.id] = Reflect.get(element,k) )
 
   // Original function
   const _updateElements = () => {
-    elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name[k], val))
+    elements.forEach(element => {Reflect.set(element, k, val)})
     refreshParentComponent()
   }
 
   // Undo function
   const inv_updateElements = () => {
-    elements.forEach(element => setValueWithDecoratorRetriever(element, dict_decorator_name[k], dict_old_val[element.id]))
+    elements.forEach(element => Reflect.set(element, k, dict_old_val[element.id]))
     refreshParentComponent()
   }
 

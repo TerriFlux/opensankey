@@ -156,57 +156,7 @@ export type handleDownLinkFType = (data: SankeyData, i: string) => void
 // Label and Decorator Types
 // ==================================================================================================
 
-export type possibleDecoratorName = 'value_label_horiz'
-    | 'value_label_vert'
-    | 'value_label_font_size'
-    | 'value_label_color'
-    | 'value_label_font_family'
-    | 'value_label_unit_visible'
-    | 'value_label_unit'
-    | 'value_label_unit_type'
-    | 'value_label_unit_factor'
-    | 'value_label_custom_digit'
-    | 'value_label_nb_digit'
-    | 'value_label_scientific_notation'
-    | 'value_label_significant_digits'
-    | 'value_label_nb_significant_digits'
-    | 'name_label_horiz'
-    | 'name_label_vert'
-    | 'name_label_font_size'
-    | 'name_label_color'
-    | 'name_label_font_family'
-    | 'value_label_uppercase'
-    | 'name_label_uppercase'
-    | 'value_label_italic'
-    | 'name_label_italic'
-    | 'value_label_bold'
-    | 'name_label_bold'
 
-export type labelAttributeType = {
-    label_horiz: 'value_label_horiz' | 'name_label_horiz',
-    label_vert: 'value_label_vert' | 'name_label_vert',
-    label_font_size: 'value_label_font_size' | 'name_label_font_size',
-    label_bold: 'value_label_bold' | 'name_label_bold',
-    label_italic: 'value_label_italic' | 'name_label_italic',
-    label_uppercase: 'value_label_uppercase' | 'name_label_uppercase',
-    label_color: 'value_label_color' | 'name_label_color',
-    label_font_family: 'value_label_font_family' | 'name_label_font_family'
-}
-
-export type labelValueAttribute = labelAttributeType & {
-    label_nb_digit: 'value_label_nb_digit',
-    label_custom_digit: 'value_label_custom_digit',
-    label_scientific_notation: 'value_label_scientific_notation',
-    label_significant_digits: 'value_label_significant_digits',
-    label_nb_significant_digits: 'value_label_nb_significant_digits',
-}
-
-export type UnitAttributeType = {
-    label_unit_visible: 'value_label_unit_visible',
-    label_unit: 'value_label_unit',
-    label_unit_factor: 'value_label_unit_factor',
-    label_unit_type: 'value_label_unit_type',    
-}
 
 // ==================================================================================================
 // Menu Component Types
@@ -219,16 +169,8 @@ export type BaseMenuComponentType = BaseApplicationDataType & {
   refreshParentComponent: () => void,
 }
 
-export type FCType_MenuUnit = BaseMenuComponentType & {
-  dict_decorator_name: UnitAttributeType
-}
-
-export type FCType_SankeyMenuLabelComponent = BaseMenuComponentType & {
-  dict_decorator_name: labelAttributeType
-}
-
-export type FCType_SankeyMenuValueLabelComponent = BaseMenuComponentType & {
-  dict_decorator_name: labelValueAttribute
+export type ElementMenuComponentType = BaseMenuComponentType & {
+  prefix: 'name_' | 'value_'
 }
 
 export type FCType_WrapperBoxSubSectionMenu = BaseApplicationDataType & {

@@ -482,10 +482,10 @@ export class Class_LinkValueTree {
   }
 }
 
-export const value_option_percent_constants = ['%IS', '%OS', '%ID', '%OD', '%PS', '%PD'] as const
+export const value_option_percent_constants = ['%IS', '%OS', '%ID', '%OD', '%PS', '%PD']
 export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_conversion'] as const
 export type ValueOptionType = typeof value_option_constants[number]
-export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'normalized'] as const
+export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'unit_ratio','normalized'] as const
 export type UnitType = typeof unit_constants[number]
 
 // CLASS LINK VALUE *********************************************************************
@@ -500,7 +500,10 @@ export class Class_LinkValue {
   // PUBLIC ATTRIBUTES ==================================================================
   public parent: Class_LinkValueTree | Class_LinkElement
 
-  private ratio_unit_tag: string | undefined
+  private _ratio_unit_tag: Class_DataTag | null
+
+  public get ratio_unit_tag() {return this._ratio_unit_tag}
+  public set ratio_unit_tag(_) {this._ratio_unit_tag = _}
 
   public get has_result() {
     return this.result_value !== null || this.value_option != 'value'
@@ -514,14 +517,9 @@ export class Class_LinkValue {
       return null
     }
     if (this.value_option == 'unit_conversion') {
-      const ratio_unit_tag_value: Class_LinkValue = this
-      // const child_with_data = children_with_data[0] as Class_LinkValue
-      // const conv_factor = child_with_data.unit_factor
-      // if (!conv_factor) return null
-      // const this_conv_factor = this.unit_factor
-      // if (!this_conv_factor) return null
-      // const multiplier = this_conv_factor / conv_factor
-      return ratio_unit_tag_value.valueResult! * this.data_value!
+      const ratio_unit_tag_value = this.link?.valueForTag(this._ratio_unit_tag!)!
+      if (ratio_unit_tag_value == this) return this.data_value
+      return (ratio_unit_tag_value.valueResult??ratio_unit_tag_value.valueData??1) * this.data_value!
     } else if (this.value_option == '%IS') {
       const multiplier = this.data_value / 100
       if (this.parent == this.link) {
@@ -640,6 +638,7 @@ export class Class_LinkValue {
     this.data_tags_id
       .forEach(tag_id => name + '_' + tag_id)
     this._id = makeId(name)
+    this._ratio_unit_tag = null
   }
 
   // CLEANING METHODS ===================================================================

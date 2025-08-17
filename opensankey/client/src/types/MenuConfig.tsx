@@ -491,7 +491,6 @@ export class Class_MenuConfig {
     this._r_setter_editor_content_fo_node = useRef(() => null)
     this._r_editor_content_fo_node_updater = useRef(() => null)
     this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
-    this._ref_to_menu_config_link_data_text_updater = useRef(() => null)
     this._ref_to_menu_config_link_scientific_precision_updater = useRef(() => null)
 
     this._ref_to_menu_config_node_icon_updater = useRef(() => null)
@@ -771,7 +770,6 @@ export class Class_MenuConfig {
         _this._ref_to_menu_config_links_data_updater.current()
         _this._ref_to_spreadsheet.current()
         _this._ref_to_menu_contextual_config_links_data_updater.current()
-        _this._ref_to_menu_config_link_data_text_updater.current()
       }
     )
   }
@@ -1325,7 +1323,6 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 
-  public get ref_to_menu_config_link_data_text_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_link_data_text_updater }
   public get ref_to_menu_config_link_scientific_precision_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_link_scientific_precision_updater }
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
   public get ref_to_menu_context_container_updater(){return this._ref_to_menu_context_container_updater}
@@ -1356,7 +1353,6 @@ export class Class_MenuConfig {
   private _ref_to_menu_config_container_updater: MutableRefObject<(() => void)>
   private _ref_to_menu_context_container_updater: MutableRefObject<(() => void)>
   private _ref_to_menu_config_node_name_label_bg_updater: MutableRefObject<(() => void)>
-  private _ref_to_menu_config_link_data_text_updater: MutableRefObject<(() => void)>
   private _ref_to_menu_config_link_scientific_precision_updater: MutableRefObject<(() => void)>
 
   // Updater of config node icon
