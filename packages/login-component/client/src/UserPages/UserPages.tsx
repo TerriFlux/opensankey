@@ -5,10 +5,10 @@ import {
   Button,
   ButtonGroup,
 } from '@chakra-ui/react'
-import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { LoginOutButton } from '../Login/Login'
 import { loginComponent } from '../LoginComponent'
 import {Class_ApplicationDataLoginComponent} from '../ApplicationDataLoginComponent'
+import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/BaseComponents'
 
 type FCType_UserPagesButtons = {
   new_data_app: Class_ApplicationDataLoginComponent

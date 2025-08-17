@@ -13,8 +13,9 @@ import { WrapperNodeStyleSelector, WrapperLinkStyleSelector } from '../deps/Open
 import { Class_LinkStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/LinkAttributes'
 import { Class_NodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/NodeAttributes'
 import { Type_AdditionalMenus } from '../deps/OpenSankey+/deps/OpenSankey/types/Types'
-import { getJSONFromJSON, Type_MacroTagGroup, OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { getJSONFromJSON, Type_MacroTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
+import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/BaseComponents'
 
 
 const paddingBoxPreference = '0.6rem'
