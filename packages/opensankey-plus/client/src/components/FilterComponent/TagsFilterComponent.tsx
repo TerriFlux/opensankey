@@ -116,13 +116,6 @@ const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
   // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
   const ref: RefObject<HTMLButtonElement> = useRef(null)
 
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < 2; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-
-  ref_set_number_inputs[0].current(String(new_data.drawing_area.filter_link_value))
-  ref_set_number_inputs[1].current(String(new_data.drawing_area.filter_label))
-
   return <FilterWrapperBox
     new_data={new_data}
     title={t('Banner.p_aff')}
@@ -156,7 +149,6 @@ const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
 
         <ConfigMenuNumberInput
           t={new_data.t}
-          ref_to_set_value={ref_set_number_inputs[0]}
           default_value={new_data.drawing_area.filter_link_value}
           function_on_blur={(value) => {
             if (value && value > max_link_value) {
@@ -199,7 +191,6 @@ const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
         </Slider>
         <ConfigMenuNumberInput
           t={new_data.t}
-          ref_to_set_value={ref_set_number_inputs[1]}
           default_value={new_data.drawing_area.filter_label}
           function_on_blur={(value) => {
 

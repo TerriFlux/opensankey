@@ -23,9 +23,9 @@ import {
   ChevronDownIcon
 } from '@chakra-ui/icons'
 
-import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { ContextMenuButton } from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextZDD'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 
 export type Ftype_AFMEditionMenu = {

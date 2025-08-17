@@ -11,13 +11,10 @@ import {
   MenuItem
 } from '@chakra-ui/react'
 
-// OpenSankey ts-code
-import {
-  CustomFaEyeCheckIcon,
-  OSTooltip
-} from '../../deps/OpenSankey/types/Utils'
+
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { BaseComponentProps, BaseComponentPropsPlus} from '../ComponentTypes'
+import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 
 export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({

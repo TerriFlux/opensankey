@@ -38,7 +38,6 @@ import {
 import {
   default_main_sankey_id,
   makeId,
-  OSTooltip,
   Type_JSON,
 } from '../../deps/OpenSankey/types/Utils'
 import {
@@ -52,6 +51,7 @@ import { Class_DrawingAreaOSP } from '../../types/DrawingAreaOSP'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { BaseComponentPropsPlus } from '../ComponentTypes'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 
 export const logo_view = <svg
@@ -631,8 +631,7 @@ export const SelecteurView: FC<BaseComponentPropsPlus> = (
   </Select>
 
   const text_input = <ConfigMenuTextInput
-    ref_to_set_value={ref_set_text_value_input}
-    function_get_value={() => { return cur_view.name }}
+    default_value={cur_view.name }
     function_on_blur={(_) => {
       // Update text for links
       if ((_ !== undefined) && (_ !== null)) {

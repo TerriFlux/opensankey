@@ -19,15 +19,9 @@ import {
   ChevronRightIcon
 } from '@chakra-ui/icons'
 
-// OpenSankey imports
-import {
-  default_style_id,
-  OSTooltip,
-  TooltipValueSurcharge
-} from '../../deps/OpenSankey/types/Utils'
+
 import {
   Class_LinkElement,
-  isAttributeOverloaded
 } from '../../deps/OpenSankey/Elements/Link'
 import {
   LINKS_ATTRIBUTES_CONFIG
@@ -38,9 +32,8 @@ import {
   checked,
   sep
 } from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextLink'
-
-import { ConfigMenuNumberInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 import { BaseMenuStylePropsPlus, BaseComponentProps } from '../ComponentTypes'
+import { isElementAttributeOverloaded, OSTooltip, TooltipValueSurcharge } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 export const MenuConfLinkApparenceDashedOSP: FC<BaseMenuStylePropsPlus> = ({
   new_data_plus,
@@ -113,7 +106,7 @@ export const MenuConfLinkApparenceDashedOSP: FC<BaseMenuStylePropsPlus> = ({
     </OSTooltip>
     {
       (!menu_for_style) &&
-        isAttributeOverloaded(selected_links, 'shape_is_dashed') ?
+        isElementAttributeOverloaded(selected_links, 'shape_is_dashed') ?
         TooltipValueSurcharge('link_var_', t) :
         <></>
     }

@@ -9,12 +9,11 @@ import {
   Button
 } from '@chakra-ui/react'
 
-// OpenSankey imports
-import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/types/Utils'
 
 import { listOptionSizeQuill } from '../UtilsOSP'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 import { BaseComponentPropsPlus } from '../ComponentTypes'
+import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 export const NodeForeignObjectOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,

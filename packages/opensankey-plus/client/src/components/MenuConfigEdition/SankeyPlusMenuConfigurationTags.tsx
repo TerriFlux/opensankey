@@ -29,14 +29,14 @@ import {
 // Local functions / components
 import {
   default_grey_color,
-  GetRandomInt,
-  OSTooltip
+  GetRandomInt
 } from '../../deps/OpenSankey/types/Utils'
 
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/LinkValues'
 import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../../deps/OpenSankey/types/TagGroup'
 import { FType_SankeySettingsEditionElementTags } from '../ComponentTypes'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 const list_palette_color = [
   d3.interpolateBlues,

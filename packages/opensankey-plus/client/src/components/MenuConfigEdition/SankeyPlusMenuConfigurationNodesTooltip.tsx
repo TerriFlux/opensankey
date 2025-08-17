@@ -6,11 +6,11 @@ import {
   Textarea,
 } from '@chakra-ui/react'
 
-import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { SankeyNodeSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 import { BaseComponentProps } from '../ComponentTypes'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 
 

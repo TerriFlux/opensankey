@@ -6,10 +6,11 @@ import React, { FC, useState } from 'react'
 
 import { Box, Button } from '@chakra-ui/react'
 
-import { OSTooltip, Type_JSON } from '../deps/OpenSankey/types/Utils'
+import { Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { DiffType, OSPData } from '../types/LegacyTypes'
 import { applyChange } from 'deep-diff'
 import { BaseComponentPropsPlus } from './ComponentTypes'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/BaseComponents'
 
 
 

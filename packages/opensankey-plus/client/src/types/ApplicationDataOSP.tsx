@@ -9,7 +9,7 @@
 
 // OpenSankey imports
 import { Class_ApplicationData, default_save_JSON_options, MenuColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
-import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, OSTooltip, Type_JSON } from '../deps/OpenSankey/types/Utils'
+import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_IconLibraryOSP } from './IconLibrairieOSP'
@@ -21,6 +21,7 @@ import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
 import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/BaseComponents'
 
 declare const window: Window &
   typeof globalThis & {

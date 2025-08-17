@@ -8,11 +8,11 @@ import {
 
 // Local types
 import type { Class_Tag } from '../../deps/OpenSankey/types/Tag'
-import { OSTooltip } from '../../deps/OpenSankey/types/Utils'
 import { SankeyLinkSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkElement } from '../../deps/OpenSankey/Elements/Link'
 import { BaseComponentProps } from '../ComponentTypes'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 /*************************************************************************************************/
 

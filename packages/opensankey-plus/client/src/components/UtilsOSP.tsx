@@ -29,12 +29,10 @@ import {
 
 // OpenSankey imports
 import {
-  CustomFaEyeCheckIcon,
   getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
-  OSTooltip,
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 
@@ -48,6 +46,7 @@ import { GetOldDataFromView } from './ConvertOSP'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { FCType_ImportImageAsSvgBg } from './ComponentTypes'
+import { CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/BaseComponents'
 
 export const ImportImageAsSvgBg: FC<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,
@@ -247,7 +246,6 @@ export const DrawerSequenceDataTagg: FC<FCType_DrawerSequenceDataTagg> = ({ new_
     <ConfigMenuNumberInput
       t={new_data.t}
       default_value={new_data.menu_configuration_osp.timeout_sequence}
-      ref_to_set_value={ref_set_number_input}
       minimum_value={1}
       function_on_blur={(value) => {
         if (value) {

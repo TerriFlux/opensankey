@@ -14,7 +14,7 @@ import {
 } from '@chakra-ui/react'
 
 // OpenSankey ts-code
-import { OSTooltip, Type_JSON } from '../../deps/OpenSankey/types/Utils'
+import { Type_JSON } from '../../deps/OpenSankey/types/Utils'
 import { Class_ContainerElement } from '../../deps/OpenSankey/Elements/TextZone'
 
 
@@ -22,6 +22,7 @@ import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSanke
 import { OSMultiSelect } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { listOptionSizeQuill } from '../UtilsOSP'
 import { BaseComponentPropsPlus} from '../ComponentTypes'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -597,17 +598,6 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
     _updateMargin()
   }
 
-  // Ref to number input setter --------------------------------------
-  const number_of_input = 4
-  const ref_set_number_inputs: MutableRefObject<(_: string | null | undefined) => void>[] = []
-  for (let i = 0; i < number_of_input; i++)
-    ref_set_number_inputs.push(useRef((_: string | null | undefined) => null))
-  // Be sure that values are updated in inputs when refreshing this component
-  ref_set_number_inputs[0].current(String(allLabelHeight()))
-  ref_set_number_inputs[1].current(String(allLabelWidth()))
-  ref_set_number_inputs[2].current(String(allLabelTransparent()))
-  ref_set_number_inputs[3].current(String(allLabelMargin()))
-
   const is_zdt_at_extremity_top = allLabelTiedToNodesAtExtremityPos('top')
   const is_zdt_at_extremity_bottom = allLabelTiedToNodesAtExtremityPos('bottom')
   const is_zdt_at_extremity_left = allLabelTiedToNodesAtExtremityPos('left')
@@ -661,7 +651,6 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
       <ConfigMenuNumberInput
         t={new_data_plus.t}
         disabled={disable_options || (is_all_zdt_node_tied && (is_zdt_at_extremity_left || is_zdt_at_extremity_right))}
-        ref_to_set_value={ref_set_number_inputs[0]}
         default_value={allLabelHeight()}
         function_on_blur={updateHeight}
         minimum_value={1}
@@ -679,7 +668,6 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
       <ConfigMenuNumberInput
         t={new_data_plus.t}
         disabled={disable_options || (is_all_zdt_node_tied && (is_zdt_at_extremity_top || is_zdt_at_extremity_bottom))}
-        ref_to_set_value={ref_set_number_inputs[1]}
         default_value={allLabelWidth()}
         function_on_blur={updateWidth}
         minimum_value={1}
@@ -718,7 +706,6 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
         <ConfigMenuNumberInput
           t={new_data_plus.t}
           disabled={disable_options}
-          ref_to_set_value={ref_set_number_inputs[3]}
           default_value={allLabelMargin()}
           function_on_blur={updateMargin}
           minimum_value={1}
@@ -796,8 +783,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
         </Box>
         <ConfigMenuTextInput
           disabled={disable_options}
-          ref_to_set_value={ref_set_text_value_input}
-          function_get_value={allLabelTitle}
+          default_value={allLabelTitle()}
           function_on_blur={updateTitle}
         />
       </Box>
@@ -894,7 +880,6 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
           <ConfigMenuNumberInput
             t={new_data_plus.t}
             disabled={disable_options}
-            ref_to_set_value={ref_set_number_inputs[2]}
             default_value={allLabelTransparent()}
             function_on_blur={updateTransparent}
             minimum_value={0}
