@@ -13,7 +13,7 @@ import {
 import { listOptionSizeQuill } from '../UtilsOSP'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 import { BaseComponentPropsPlus } from '../ComponentTypes'
-import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 export const NodeForeignObjectOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,

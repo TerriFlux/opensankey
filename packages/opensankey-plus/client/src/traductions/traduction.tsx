@@ -2,9 +2,9 @@ import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
-import { deep_assign_resources, resources_opensankey } from '../deps/OpenSankey/traductions/traduction.js'
-import { resources_app_elements } from './traduction_app_elements.js'
-import { resources_template } from './traduction_templates.js'
+import { deep_assign_resources, resources_opensankey } from '../deps/OpenSankey/traductions/traduction'
+import { resources_app_elements } from './traduction_app_elements'
+import { resources_template } from './traduction_templates'
 
 // Traduction increment for OpenSankey+
 export const resources_opensankeyplus = {}

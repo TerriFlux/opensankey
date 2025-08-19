@@ -21,7 +21,7 @@ import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
 import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
-import { OSTooltip } from '../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 declare const window: Window &
   typeof globalThis & {

@@ -36,7 +36,7 @@ import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/confi
 import { Class_LinkValue } from '../../deps/OpenSankey/Elements/LinkValues'
 import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../../deps/OpenSankey/types/TagGroup'
 import { FType_SankeySettingsEditionElementTags } from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 const list_palette_color = [
   d3.interpolateBlues,

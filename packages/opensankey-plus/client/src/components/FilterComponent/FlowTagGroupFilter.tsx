@@ -4,7 +4,7 @@ import { FilterWrapperBox, title_filter_column } from './TagsFilterComponent'
 import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_FluxTagGroup } from '../../deps/OpenSankey/types/TagGroup'
 import { BaseComponentProps } from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 /**
  * Function that generate dropdown for each groupTag of linkTags

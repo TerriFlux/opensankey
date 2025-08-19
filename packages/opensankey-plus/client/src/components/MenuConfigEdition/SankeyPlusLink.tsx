@@ -23,17 +23,15 @@ import {
 import {
   Class_LinkElement,
 } from '../../deps/OpenSankey/Elements/Link'
-import {
-  LINKS_ATTRIBUTES_CONFIG
-} from '../../deps/OpenSankey/Elements/LinkAttributes'
-import { Class_LinkStyle } from '../../deps/OpenSankey/Elements/LinkAttributes'
 
 import {
   checked,
   sep
 } from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextLink'
 import { BaseMenuStylePropsPlus, BaseComponentProps } from '../ComponentTypes'
-import { isElementAttributeOverloaded, OSTooltip, TooltipValueSurcharge } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { isElementAttributeOverloaded, OSTooltip, TooltipValueSurcharge } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
+import { LINKS_ATTRIBUTES_CONFIG } from '../../deps/OpenSankey/Elements/LinkAttributesConfig'
+import { Class_LinkStyle } from '../../deps/OpenSankey/Elements/ElementStyle'
 
 export const MenuConfLinkApparenceDashedOSP: FC<BaseMenuStylePropsPlus> = ({
   new_data_plus,

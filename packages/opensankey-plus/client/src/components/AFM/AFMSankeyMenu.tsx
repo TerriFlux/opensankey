@@ -25,7 +25,7 @@ import {
 
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { ContextMenuButton } from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextZDD'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 
 export type Ftype_AFMEditionMenu = {

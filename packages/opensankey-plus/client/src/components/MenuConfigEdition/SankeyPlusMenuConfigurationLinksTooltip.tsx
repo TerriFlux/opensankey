@@ -11,7 +11,7 @@ import { SankeyLinkSelectionSimple } from '../../deps/OpenSankey/components/conf
 import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkElement } from '../../deps/OpenSankey/Elements/Link'
 import { BaseComponentProps } from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 // MENU COMPONENT ***********************************************************************
 

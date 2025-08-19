@@ -46,7 +46,7 @@ import { GetOldDataFromView } from './ConvertOSP'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { FCType_ImportImageAsSvgBg } from './ComponentTypes'
-import { CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/BaseComponents'
+import { CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 export const ImportImageAsSvgBg: FC<FCType_ImportImageAsSvgBg> = ({
   new_data_plus,

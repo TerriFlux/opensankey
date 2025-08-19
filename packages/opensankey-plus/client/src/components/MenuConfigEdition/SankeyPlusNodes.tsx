@@ -12,9 +12,8 @@ import {
 } from '@chakra-ui/react'
 
 
-import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
+import { CustomFaEyeCheckIcon, OSTooltip, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { BaseComponentProps, BaseComponentPropsPlus} from '../ComponentTypes'
-import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
 
 
 export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
@@ -331,7 +330,7 @@ export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
               <OSTooltip label={!new_data_plus.has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''}>
                 <Box>
                   <MenuColorPicker
-                    isDisabled={new_data_plus.has_sankey_plus}
+                    isDisabled={!new_data_plus.has_sankey_plus}
                     initialColor={(selected_nodes.length === 1 && selected_nodes[0].icon_color) ?
                       selected_nodes[0].icon_color :
                       '#ffffff'}

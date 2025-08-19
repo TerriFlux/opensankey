@@ -51,7 +51,7 @@ import { Class_DrawingAreaOSP } from '../../types/DrawingAreaOSP'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { BaseComponentPropsPlus } from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 
 export const logo_view = <svg

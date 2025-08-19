@@ -10,7 +10,7 @@ import { Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { DiffType, OSPData } from '../types/LegacyTypes'
 import { applyChange } from 'deep-diff'
 import { BaseComponentPropsPlus } from './ComponentTypes'
-import { OSTooltip } from '../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 
 

@@ -22,7 +22,7 @@ import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSanke
 import { OSMultiSelect } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 import { listOptionSizeQuill } from '../UtilsOSP'
 import { BaseComponentPropsPlus} from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 

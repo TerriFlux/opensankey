@@ -32,7 +32,7 @@ import { OSMultiSelect, typeElementSelectable } from '../../deps/OpenSankey/comp
 import { Class_Tag } from '../../deps/OpenSankey/types/Tag'
 import { Class_TagGroup, Class_LevelTagGroup, Class_NodeTagGroup } from '../../deps/OpenSankey/types/TagGroup'
 import { BaseLevelProps } from '../ComponentTypes'
-import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { CustomFaEyeCheckIcon, OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 /**
  *

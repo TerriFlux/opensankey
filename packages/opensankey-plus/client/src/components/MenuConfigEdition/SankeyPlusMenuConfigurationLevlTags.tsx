@@ -14,7 +14,7 @@ import { Class_NodeDimension } from '../../deps/OpenSankey/Elements/NodeDimensio
 import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
 import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
 import { Class_LevelTagGroup } from '../../deps/OpenSankey/types/TagGroup'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
 
 
 type FCType_SankeyMenuConfigurationLevelTags = {
