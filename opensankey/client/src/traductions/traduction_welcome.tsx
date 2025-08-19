@@ -1,0 +1,142 @@
+export const resources_welcome = {
+  en: {
+    translation: {
+      welcome: {
+        welcome: 'Welcome to OpenSankey web application',
+        breadcrumbs: {
+          intro: 'Overview',
+          //interface: 'Interface',
+          rc: 'Shortcuts',
+          //licence: 'Licences',
+        },
+        read_me: 'Read me',
+        intro: 'Quick overview of the application\'s functionalities',
+        caroussel: {
+          Image1: 'Understand your flows, represent them with Sankey diagrams',
+          Image2: 'Quickly import your data or draw your diagrams directly',
+          Image3: 'Clarify the information represented',
+          Image40: 'Give the necessary depth of understanding',
+          Image41: 'Give the necessary depth to understanding',
+          Image5: 'Create interactive & didactic infographics',
+          Image6: 'Create interactive & didactic infographics',
+          descr: {
+            Image1: 'In this representation mode, the thickness of each arrow is proportional to the value of the flow it represents',
+            Image2: 'Create your diagrams from Excel spreadsheets or via the interactive drawing area',
+            Image3: 'Make your diagrams easy to read with integrated node, flow and data labeling',
+            Image40: 'Aggregation levels allow you to represent your flows in several levels of detail',
+            Image41: 'Each level of detail can be directly selected to display only what is useful',
+            Image5: 'Explain your achievements simply with the automatic legend system and the addition of text boxes',
+            Image6: 'Create beautiful diagrams by directly integrating images or icons'
+          }
+        },
+        interface: 'Interface\'s buttons explained',
+        rc: 'Keyboard Shortcuts',
+        licence: 'Licences',
+        1: 'Mouse mode selection button, there are 2 modes: a mode to select nodes and links to be able to move them, then a mode to create links and nodes with mouse click',
+        2: 'Buttons to filter the visibility or colors of nodes and links according to the groups to which they are associated',
+        3: 'Buttons to filter the nodes according to their aggregation level',
+        4: 'Buttons to filter the visibility of the links according to their values, this button also allows to modify the scale of the diagram (the thickness of the links)',
+        5: 'Buttons to adjust the size of the drawing area so that all elements are visible',
+        6: 'Buttons to display the diagram without taking into account the value of the links',
+        7: 'Buttons to display additional help',
+        8: 'Navigation menu to open,save, edit sankeys',
+        9: 'Buttons to connect with an opensankey account and enable additional modules',
+        10: 'Buttons to open the configuration menu to edit the elements of the sankey diagram',
+        excel: 'Button download the data used for the sankey in Excel format'
+      },
+      useTemplate: 'Use this template',
+      DisplayWelcome: 'Welcome',
+      dontSeeAgain: 'Don\'t show again',
+      scale: 'Scale',
+      useTutoJSON: 'Open',
+      useTutoExcel: 'Open Excel',
+      menuTuto: 'Open tutorials menu',
+      desire_to_know_more: 'Learn more',
+      contribute_to_os: 'En savoir +',
+      legal: 'Legal informations',
+      tdr: 'All right reserved',
+      fullscreen: 'Activate fullscreen',
+      exitFullscreen: 'Exit fullscreen',
+      Avancé: 'Advanced',
+      separator_interval: ',',
+      sep_decimal: '.',
+      diaporama: 'Presentation',
+      start: 'Start',
+      tooltip: {
+        dontSeeAgain: 'By checking this box, the welcome screen will no longer appear on the next page load. To display this welcome screen again, go to Help->Home.',
+        diaporama: 'Presentation of the various features of the tool, from the most basic to the most advanced as well as mouse/keyboard combination for edition.',
+        start: 'Start drawing your flows. To do this, click in the drawing area, drag without releasing, then release.'
+      }
+    }
+  },
+  fr: {
+    translation: {
+      welcome: {
+        welcome: 'Bienvenue sur l\'application web OpenSankey',
+        breadcrumbs: {
+          intro: 'Fonctionnalités',
+          //interface: 'Boutons et Menus',
+          rc: 'Raccourcis',
+          //licence: 'Licences',
+        },
+        read_me: 'Lisez moi',
+        intro: 'Présentation des fonctionnalités de l\'outil',
+        caroussel: {
+          Image1: 'Comprenez vos flux, Représentez les avec des diagrammes de Sankey',
+          Image2: 'Importez rapidement vos données ou tracez directement vos diagrammes',
+          Image3: 'Clarifiez l\'information représentée',
+          Image40: 'Donnez la profondeur nécessaire à la compréhension',
+          Image41: 'Donnez la profondeur nécessaire à la compréhension',
+          Image5: 'Créez de véritables infographies didactiques',
+          Image6: 'Créez de véritables infographies didactiques',
+          descr: {
+            Image1: 'Dans ce mode de réprésentation, l\'épaisseur de chaque flèche est proportionnelle à la valeur du flux qu\'elle représente.',
+            Image2: 'Créez vos diagrammes à partir de tableurs Excel ou via l\'espace de dessin interactif',
+            Image3: 'Facilitez la lecture de vos diagrammes grâce au système intégré d\'étiquetage des noeuds, des flux et des données',
+            Image40: 'Les niveaux d\'agregations permettent de representer vos flux suivant plusieurs niveaux de détails',
+            Image41: 'Chaque niveau de détails peut être individuellement selectionnés pour afficher seulement ce qui est utile',
+            Image5: 'Expliquez simplement vos réalisations avec le système de légende automatique et l\'ajout de zones de texte',
+            Image6: 'Créez de beaux diagrammes en y intégrant directement des images ou des icônes'
+          }
+        },
+        interface: 'Présentation des actions associées aux boutons et menus',
+        rc: 'Pour plus de rapidité, des raccourcis clavier sont disponibles',
+        licence: 'Optez pour la licence adaptée à votre usage',
+        1: 'Bouton de sélection du mode de la souris, il existe 2 modes : un mode permettant de sélectionner les noeuds et flux pour pouvoir les déplacer, puis un mode permettant de créer des liens et noeuds aux cliques de la souris',
+        2: 'Boutons permettant de filtrer la visibilité ou couleurs des noeuds et flux en fonction des groupes auxquels ils sont associés',
+        3: 'Bouton permettant de filtrer les noeuds en fonction de leur niveau d\'agrégation',
+        4: 'Bouton permettant de filtrer la visibilité des flux en fonction de leurs valeurs, ce bouton permet aussi de modifier l\'échelle du diagramme (l\'épaisseur des flux)',
+        5: 'Bouton permettant de réajuster la taille de la zone de dessin pour que tous les éléments soient visibles',
+        6: 'Bouton permettant d\'afficher le diagramme sans prendre en compte la valeur des flux',
+        7: 'Bouton permettant d\'afficher de l\'aide supplémentaire',
+        8: 'Menu de navigation permettant d\'ouvrir, enregistrer, éditer des sankeys',
+        9: 'Bouton permettant de se connecter avec un compte opensankey et activer des modules supplémentaires',
+        10: 'Bouton permettant d\'ouvrir le menu de configuration qui permet d\'éditer les éléments du diagramme de sankey',
+        excel: 'Bouton permettant de télécharger les données au format Excel'
+      },
+      useTemplate: 'Utiliser ce modèle',
+      DisplayWelcome: 'Accueil',
+      dontSeeAgain: 'Ne plus montrer',
+      scale: 'Échelle',
+      useTutoJSON: 'Ouvrir',
+      useTutoExcel: 'Ouvrir Excel',
+      menuTuto: 'Ouvrir menu tutoriel',
+      desire_to_know_more: 'En savoir +',
+      contribute_to_os: 'En savoir +',
+      legal: 'Mentions légales',
+      tdr: 'Tous droits réservées',
+      fullscreen: 'Activer le mode plein écran',
+      exitFullscreen: 'Quitter le mode plein écran',
+      Avancé: 'Avancé',
+      separator_interval: ';',
+      sep_decimal: ',',
+      diaporama: 'Présentation',
+      start: 'Démarrer',
+      tooltip: {
+        dontSeeAgain: 'En cochant cette case il n\'y aura plus d\'écran d\'accueil au prochaine chargement de la page. Pour réafficher cet accueil aller dans Aide->Accueil.',
+        diaporama: 'Présentation des différentes fonctionnalités de l\'outil des plus basiques aux plus avancées, ainsi que les combinaisons souris/claviers d\'édition.',
+        start: 'Commencez à tracer vos flux. Pour cela cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
+      }
+    }
+  }
+};

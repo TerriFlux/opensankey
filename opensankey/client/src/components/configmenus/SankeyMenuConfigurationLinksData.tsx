@@ -25,17 +25,17 @@
 // ==================================================================================================
 
 // External imports
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { Box, Select } from '@chakra-ui/react'
 
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
-import { BOX2COLOPTION, BOX2COLSTITLEH4, DataTagSelector, OSTooltip } from './BaseComponents'
+import { RowSetter2Cols, BOX2COLSTITLEH4, DataTagSelector, OSTooltip } from './MenuCommon'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 
 import { Class_LinkElement } from '../../Elements/Link'
-import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributes'
 import { value_option_constants, value_option_percent_constants, ValueOptionType } from '../../Elements/LinkValues'
+import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 
 /*************************************************************************************************/
 export const default_value_option = 'value'
@@ -117,9 +117,9 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
     })}
 
     {/* Choix du type de donnée */}
-    <BOX2COLOPTION
-      tooltipLabel={t('Flux.data.tooltips.data_type')}
-      optionName={t('Flux.data.data_type')}
+    <RowSetter2Cols
+      attributePath={'Flux.data'}
+      attributeKey={'data_type'}
     >
       <Select
         key={`value-option-${value_option}`}
@@ -131,7 +131,7 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
       >
         {value_option_constants.map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)}
       </Select>
-    </BOX2COLOPTION>
+    </RowSetter2Cols>
     {value_option == 'unit_conversion' && unit_data_tagg ? <DataTagSelector
       data_tagg={unit_data_tagg}
       value={selected_links[0]?.value!.ratio_unit_tag?.id as string}
@@ -140,12 +140,13 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
         refreshThisAndUpdateRelatedComponents()
       }}
     /> : <></>}
-    <BOX2COLOPTION
-      tooltipLabel={t('Flux.data.tooltips.vpp')}
-      optionName={value_option == 'unit_conversion' && unit_data_tagg ?
-        'ratio ' + unit_data_tagg.selected_tags_list[0].id + '/' + first_link_value?.ratio_unit_tag?.id :
-        t('Flux.labels.' + value_option)
-      }
+    <RowSetter2Cols
+      attributePath={'Flux.labels'}
+      attributeKey={value_option}
+      // optionName={value_option == 'unit_conversion' && unit_data_tagg ?
+      //   'ratio ' + unit_data_tagg.selected_tags_list[0].id + '/' + first_link_value?.ratio_unit_tag?.id :
+      //   t('Flux.labels.' + value_option)
+      // }
     >
       <ConfigMenuNumberOrUndefinedInput
         default_value={default_value}
@@ -155,18 +156,18 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
         step={1}
         unit_text={unit_text}
       />
-    </BOX2COLOPTION>
+    </RowSetter2Cols>
 
-    <BOX2COLOPTION
-      tooltipLabel={t('Flux.data.tooltips.affichage')}
-      optionName={t('Flux.data.affichage')}
+    <RowSetter2Cols
+      attributePath={'Flux.data'}
+      attributeKey={'affichage'}
     >
       <ConfigMenuTextInput
         default_value={first_link_value?.text_value}
         function_on_blur={(_: string | null) => updateAttributeAndHistory(selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)}
         multiValue={is_label_indeterminated}
       />
-    </BOX2COLOPTION>
+    </RowSetter2Cols>
   </Box>
 }
 
