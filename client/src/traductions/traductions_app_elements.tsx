@@ -780,10 +780,10 @@ export const resources_app_elements = {
           'couleur': 'Couleur',
           'rIN': 'Ratio taille icône/noeud',
           'Aucun': 'Aucun',
-          'icon_catalog': 'Sélectionner une icône depuis un catalogue'
+          'icon_catalog': 'Catalogue d\'icône'
         },
         foreign_object: {
-          'Visibilité': 'Visibilité',
+          'Visibilité': 'Contenu enrichi',
           'raw': 'Editeur brut',
           'not_activated': 'Pour activer l\'editeur, activer la visibilité'
         },
