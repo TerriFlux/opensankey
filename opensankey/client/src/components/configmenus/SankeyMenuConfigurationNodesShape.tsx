@@ -163,7 +163,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                 isDisabled={!disable_attr_props['shape_color']}
                 initialColor={shape_color}
                 functionOnBlur={(new_color) => {
-                  updateElements(app_data, elements, ' shape_color' as ValueKey, new_color, refreshThisAndUpdateRelatedComponents)
+                  updateElements(app_data, elements, 'shape_color' as ValueKey, new_color, refreshThisAndUpdateRelatedComponents)
                 }}
               />
             </Box>
@@ -177,7 +177,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   'menuconfigpanel_option_button_activated' :
                   'menuconfigpanel_option_button'}
               onClick={() => {
-                updateElements(app_data, elements, ' shape_color_sustainable' as ValueKey, !shape_color_sustainable, refreshThisAndUpdateRelatedComponents)
+                updateElements(app_data, elements, 'shape_color_sustainable' as ValueKey, !shape_color_sustainable, refreshThisAndUpdateRelatedComponents)
               }}
             >
               {shape_color_sustainable ? icon_locked : icon_unlocked}
@@ -203,7 +203,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   'menuconfigpanel_option_button_activated' :
                   'menuconfigpanel_option_button'}
               onClick={() => {
-                updateElements(app_data, elements, ' shape_type' as ValueKey, 'ellipse', refreshThisAndUpdateRelatedComponents)
+                updateElements(app_data, elements, 'shape_type' as ValueKey, 'ellipse', refreshThisAndUpdateRelatedComponents)
               }}
             >
               <svg
@@ -225,7 +225,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   'menuconfigpanel_option_button_activated' :
                   'menuconfigpanel_option_button'}
               onClick={() => {
-                updateElements(app_data, elements, ' shape_type' as ValueKey, 'rect', refreshThisAndUpdateRelatedComponents)
+                updateElements(app_data, elements, 'shape_type' as ValueKey, 'rect', refreshThisAndUpdateRelatedComponents)
               }}
             >
               <svg
@@ -249,7 +249,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   'menuconfigpanel_option_button'
               }
               onClick={() => {
-                updateElements(app_data, elements, ' shape_type' as ValueKey, 'arrow', refreshThisAndUpdateRelatedComponents)
+                updateElements(app_data, elements, 'shape_type' as ValueKey, 'arrow', refreshThisAndUpdateRelatedComponents)
               }}
             >
               <svg
@@ -284,7 +284,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   step={5}
                   value={shape_arrow_angle_factor}
                   onChange={(value) => {
-                    updateElements(app_data, elements, ' shape_arrow_angle_factor' as ValueKey, value, refreshThisAndUpdateRelatedComponents)
+                    updateElements(app_data, elements, 'shape_arrow_angle_factor' as ValueKey, value, refreshThisAndUpdateRelatedComponents)
                   }}
                 >
                   <SliderMark
@@ -315,7 +315,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   }
                   minWidth={0}
                   onClick={() => {
-                    updateElements(app_data, elements, ' shape_arrow_angle_direction' as ValueKey, 'left', refreshThisAndUpdateRelatedComponents)
+                    updateElements(app_data, elements, 'shape_arrow_angle_direction' as ValueKey, 'left', refreshThisAndUpdateRelatedComponents)
                   }}
                 >
                   {icon_direction_left}
@@ -329,7 +329,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   }
                   minWidth={0}
                   onClick={() => {
-                    updateElements(app_data, elements, ' shape_arrow_angle_direction' as ValueKey, 'right', refreshThisAndUpdateRelatedComponents)
+                    updateElements(app_data, elements, 'shape_arrow_angle_direction' as ValueKey, 'right', refreshThisAndUpdateRelatedComponents)
                   }}
                 >
                   {icon_direction_rift}
@@ -343,7 +343,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   }
                   minWidth={0}
                   onClick={() => {
-                    updateElements(app_data, elements, ' shape_arrow_angle_direction' as ValueKey, 'top', refreshThisAndUpdateRelatedComponents)
+                    updateElements(app_data, elements, 'shape_arrow_angle_direction' as ValueKey, 'top', refreshThisAndUpdateRelatedComponents)
 
                   }}
                 >
@@ -358,7 +358,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
                   }
                   minWidth={0}
                   onClick={() => {
-                    updateElements(app_data, elements, ' shape_arrow_angle_direction' as ValueKey, 'bottom', refreshThisAndUpdateRelatedComponents)
+                    updateElements(app_data, elements, 'shape_arrow_angle_direction' as ValueKey, 'bottom', refreshThisAndUpdateRelatedComponents)
                   }}
                 >
                   {icon_direction_down}

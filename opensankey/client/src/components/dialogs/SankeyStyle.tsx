@@ -628,7 +628,7 @@ export const ConfigMenuStyleElement = ({ app_data, selected_elements, config, ca
   return <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Style')} ><>
     <Box layerStyle='menuconfigpanel_row_stylechoice' >
       <OSTooltip label={t('Noeud.tooltips.AS')}>
-        <MenuResetAttrLocal new_data={app_data} nodesOrLinks='links' dict_overwritted_attr={dict_overwritted_attr} />
+        <MenuResetAttrLocal new_data={app_data} nodesOrLinks={nodesOrLinks} dict_overwritted_attr={dict_overwritted_attr} />
       </OSTooltip>
       <Button
         variant='menuconfigpanel_option_button'
