@@ -285,7 +285,9 @@ export const MenuResetAttrLocal = (
   // Delete all local attributes of selected elements
   const resetAll = () => nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
   // Delete local attributes 'k' of selected elements
-  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : new_data.drawing_area.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG))
+  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? 
+    new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : 
+    new_data.drawing_area.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG))
 
   return <Menu direction='rtl' placement='left' closeOnSelect={false}>
     <MenuButton as={Button} variant='menuconfigpanel_option_button'>
