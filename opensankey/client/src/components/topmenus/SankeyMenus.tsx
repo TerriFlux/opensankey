@@ -69,12 +69,14 @@ import { keyTypeConfig, keyTypeElements } from '../../types/MenuConfig'
 import { DrawingAreaStyle, GraphElementsOrdoner, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
-import { MenuConfigurationLinkContext, MenuConfigurationLinksStyle } from '../configmenus/SankeyMenuConfigurationLinksAppearence'
-import { MenuConfigurationNodeContext, MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesAttributes'
+import { MenuConfigurationLinkShape } from '../configmenus/SankeyMenuConfigurationLinksShape'
+import { MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesShape'
+import { MenuConfigurationNodeContext } from '../configmenus/SankeyMenuConfigurationNodesLabel'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_MenuDraggable } from '../SankeyMenuTypes'
-import { OSTooltip } from '../configmenus/BaseComponents'
+import { OSTooltip } from '../configmenus/MenuCommon'
+import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 
 
 /*************************************************************************************************/
@@ -460,11 +462,11 @@ const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: Mut
       </WrapperContentConfig>,
 
       flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinkContext new_data={new_data} additionMenus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationLinkLabel new_data={new_data} additionMenus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
       node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeContext new_data={new_data} additional_menus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationNodeContext app_data={new_data} menu_for_style={false} />
       </WrapperContentConfig>,
 
       ...additional_menus.current.additional_menu_config_content.context
@@ -481,11 +483,11 @@ const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: Mut
       </WrapperContentConfig>,
 
       flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
-        <MenuConfigurationLinksStyle new_data={new_data} additionMenus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationLinkShape new_data={new_data} additionMenus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
       node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeStyle new_data={new_data} additional_menus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationNodeStyle app_data={new_data} additional_menus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
       ...additional_menus.current.additional_menu_config_content.style
     },

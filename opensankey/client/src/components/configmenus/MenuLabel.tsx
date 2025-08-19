@@ -30,19 +30,20 @@ import {
 import { t } from 'i18next';
 import React, { FC } from 'react';
 import { Class_LinkElement } from '../../Elements/Link';
-import { Class_LinkStyle } from '../../Elements/LinkAttributes';
+import { Class_LinkStyle } from '../../Elements/ElementStyle';
 import { Class_NodeElement } from '../../Elements/Node';
-import { Class_NodeStyle, NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributes';
+import { Class_NodeStyle } from '../../Elements/ElementStyle';
 import { default_style_id, font_families } from '../../types/Utils';
 import { updateElements, ValueKey } from './MenuCommon';
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration';
-import { svg_label_upper } from './SankeyMenuConfigurationNodesAttributes';
-import { OSTooltip, TooltipElementOverloaded } from './BaseComponents';
+import { svg_label_upper } from './SankeyMenuConfigurationNodesShape';
+import { OSTooltip, TooltipElementOverloaded } from './MenuCommon';
 import { ElementMenuComponentType } from '../SankeyMenuTypes';
+import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig';
 
 
 export const SankeyMenuLabelComponent: FC<ElementMenuComponentType> = ({
-  new_data, elements, selectedElements, refreshParentComponent, prefix
+  new_data, elements, refreshParentComponent, prefix
 }) => {
   const { MenuColorPicker } = new_data;
   const { ref_selected_style_node, ref_selected_style_link } = new_data.menu_configuration;
@@ -62,7 +63,7 @@ export const SankeyMenuLabelComponent: FC<ElementMenuComponentType> = ({
     correct_dict_style_to_use[default_style_id].customisable_attribute;
 
   const check_indeterminate = (curr: Class_LinkElement | Class_NodeElement) => {
-    const ref_element = selectedElements[0];
+    const ref_element = elements[0];
     if (curr instanceof Class_LinkElement && ref_element instanceof Class_LinkElement) {
       return (ref_element.isEqual(curr));
     } else if (curr instanceof Class_NodeElement && ref_element instanceof Class_NodeElement) {
@@ -71,7 +72,7 @@ export const SankeyMenuLabelComponent: FC<ElementMenuComponentType> = ({
       return false;
     }
   };
-  const is_indeterminate = !selectedElements.every(check_indeterminate);
+  const is_indeterminate = !(elements as (Class_NodeElement|Class_LinkElement)[]).every(check_indeterminate);
   // Declare var used to set default attribute value in inputs 
   let label_horiz = NODES_ATTRIBUTES_CONFIG.value_label_horiz.default;
   let label_vert = NODES_ATTRIBUTES_CONFIG.value_label_vert.default;

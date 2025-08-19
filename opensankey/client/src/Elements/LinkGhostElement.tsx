@@ -4,7 +4,8 @@ import type { Class_MenuConfig } from '../types/MenuConfig'
 import { Class_Sankey } from '../types/Sankey'
 import { Type_ElementPosition } from '../types/Utils'
 import { Class_LinkElement } from './Link'
-import { Class_LinkStyle, Class_LinkAttribute } from './LinkAttributes'
+import { Class_LinkAttribute } from './LinkAttributes'
+import { Class_LinkStyle } from './ElementStyle'
 import { Class_NodeElement } from './Node'
 
 // CLASS GHOST LINK *********************************************************************

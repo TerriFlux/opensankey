@@ -48,9 +48,10 @@ import {
   getStringListFromJSON
 } from '../types/Utils'
 import {
-  Class_LinkStyle, Class_LinkAttribute, LINKS_ATTRIBUTES_CONFIG,
+  Class_LinkAttribute,
   Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side
 } from './LinkAttributes'
+import { Class_LinkStyle } from './ElementStyle'
 import { Class_LinkValueTree, Class_LinkValue, ValueOptionType, value_option_percent_constants } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
@@ -60,6 +61,7 @@ import { LinkTooltip } from './LinkTooltip'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import { ClassTemplate_ProtoElement } from './Element'
+import { LINKS_ATTRIBUTES_CONFIG, LinkSetterGenerator } from './LinkAttributesConfig'
 
 
 const side_order: { [_ in Type_Side]: number } = {
@@ -178,9 +180,9 @@ export function sortLinksElementsByRelativeNodesPositions(
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
 export const format_value = (
-  data_value: number | undefined | null, 
+  data_value: number | undefined | null,
   element: Class_LinkElement | Class_NodeElement,
-  unit_name : string
+  unit_name: string
 ) => {
   /*==========================================================================*/
   // First step. value transformation
@@ -253,7 +255,7 @@ export const format_value = (
     return text_value
   }
   // Add unit suffix
-  if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name+'/'+link.value?.ratio_unit_tag!.name}
+  if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
   else if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
   else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
     //const label_unit = unit_taggs[0].first_selected_tags!.name
@@ -274,6 +276,55 @@ export const format_value = (
  * @class Class_LinkElement
  */
 export class Class_LinkElement extends ClassTemplate_ProtoElement {
+  shape_local_link_scale!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_local_link_scale']['type']>
+  shape_is_curved!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_curved']['type']>
+  shape_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_shape']['type']>
+  shape_curvature!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_curvature']['type']>
+  shape_is_recycling!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_recycling']['type']>
+  shape_is_structure!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_structure']['type']>
+  shape_orientation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_orientation']['type']>
+  shape_starting_curve!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_curve']['type']>
+  shape_ending_curve!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_curve']['type']>
+  shape_starting_tangeant!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_tangeant']['type']>
+  shape_ending_tangeant!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_tangeant']['type']>
+  shape_middle_recycling!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_middle_recycling']['type']>
+  shape_is_arrow!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_arrow']['type']>
+  shape_arrow_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_arrow_size']['type']>
+  shape_is_dashed!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_dashed']['type']>
+  shape_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color']['type']>
+  shape_color_rule!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color_rule']['type']>
+  shape_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_opacity']['type']>
+  value_label_is_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_is_visible']['type']>
+  value_label_font_family!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_family']['type']>
+  value_label_font_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_size']['type']>
+  value_label_uppercase!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_uppercase']['type']>
+  value_label_bold!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_bold']['type']>
+  value_label_italic!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_italic']['type']>
+  value_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']>
+  value_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_horiz']['type']>
+  value_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_vert']['type']>
+  value_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_on_path']['type']>
+  value_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_pos_auto']['type']>
+  value_label_scientific_notation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']>
+  value_label_significant_digits!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_significant_digits']['type']>
+  value_label_nb_significant_digits!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']>
+  value_label_custom_digit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']>
+  value_label_nb_digit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_digit']['type']>
+  value_label_unit_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_visible']['type']>
+  value_label_unit_type!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_type']['type']>
+  value_label_unit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit']['type']>
+  value_label_unit_factor!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']>
+  name_label_is_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_is_visible']['type']>
+  name_label_font_family!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_family']['type']>
+  name_label_font_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_size']['type']>
+  name_label_uppercase!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_uppercase']['type']>
+  name_label_bold!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_bold']['type']>
+  name_label_italic!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_italic']['type']>
+  name_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_color']['type']>
+  name_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_horiz']['type']>
+  name_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_vert']['type']>
+  name_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_on_path']['type']>
+  name_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']>
   /**
    * Display attributes for link
    * @protected
@@ -305,9 +356,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   public parallel_curve: Class_LinkElement | undefined
   public sibling: Class_LinkElement | undefined
-  private _child_links:{[tag_name:string] : Class_LinkElement} = {}
+  private _child_links: { [tag_name: string]: Class_LinkElement } = {}
   private _is_multi_link = false
-  private _multi_link_tag : Class_DataTag | undefined
+  private _multi_link_tag: Class_DataTag | undefined
   private _is_unit_reference = false
 
   // Visibility memorized - source & target
@@ -392,6 +443,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   ) {
     // Init parent class attributes
     super(id, drawing_area, drawing_area.sankey, menu_config, 'g_elements_sankey')
+    LinkSetterGenerator.generateSetters(this)
 
     this._link_control_points = new LinkControlPoints(this, drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()
@@ -810,95 +862,25 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
-    return this._display.attributes[attr] !== undefined
+    if (this._display.attributes[attr] === undefined) return false
+    if (this._display.attributes[attr] === this.getStyleWithAttr(attr)[attr]) return false
+    return true
   }
 
   public isEqual(_: this) {
-    if (this.shape_orientation !== _.shape_orientation) {
-      return false
-    }
-    if (this.shape_starting_curve !== _.shape_starting_curve) {
-      return false
-    }
-    if (this.shape_ending_curve !== _.shape_ending_curve) {
-      return false
-    }
-    if (this.shape_curvature !== _.shape_curvature) {
-      return false
-    }
-    if (this.shape_is_curved !== _.shape_is_curved) {
-      return false
-    }
-    if (this.shape_shape !== _.shape_shape) {
-      return false
-    }
-    if (this.shape_is_recycling !== _.shape_is_recycling) {
-      return false
-    }
-    if (this.shape_arrow_size !== _.shape_arrow_size) {
-      return false
-    }
-    if (this.value_label_horiz !== _.value_label_horiz) {
-      return false
-    }
-    if (this.value_label_vert !== _.value_label_vert) {
-      return false
-    }
-    if (this.value_label_on_path !== _.value_label_on_path) {
-      return false
-    }
-    if (this.value_label_pos_auto !== _.value_label_pos_auto) {
-      return false
-    }
-    if (this.shape_is_arrow !== _.shape_is_arrow) {
-      return false
-    }
-    if (this.shape_color !== _.shape_color) {
-      return false
-    }
-    if (this.shape_opacity !== _.shape_opacity) {
-      return false
-    }
-    if (this.shape_is_dashed !== _.shape_is_dashed) {
-      return false
-    }
-    if (this.value_label_is_visible !== _.value_label_is_visible) {
-      return false
-    }
-    if (this.value_label_font_size !== _.value_label_font_size) {
-      return false
-    }
-    if (this.value_label_color !== _.value_label_color) {
-      return false
-    }
-    if (this.value_label_custom_digit !== _.value_label_custom_digit) {
-      return false
-    }
-    if (this.value_label_nb_digit !== _.value_label_nb_digit) {
-      return false
-    }
-    if (this.value_label_significant_digits !== _.value_label_significant_digits) {
-      return false
-    }
-    if (this.value_label_nb_significant_digits !== _.value_label_nb_significant_digits) {
-      return false
-    }
-    if (this.value_label_scientific_notation !== _.value_label_scientific_notation) {
-      return false
-    }
-    if (this.value_label_font_family !== _.value_label_font_family) {
-      return false
-    }
-    if (this.value_label_unit_visible !== _.value_label_unit_visible) {
-      return false
-    }
-    if (this.value_label_unit !== _.value_label_unit) {
-      return false
-    }
-    if (this.value_label_unit_factor !== _.value_label_unit_factor) {
-      return false
-    }
-    return true
+    // Implementation de comparaison des attributs
+    const compareAttrs = [
+      'shape_orientation', 'shape_starting_curve', 'shape_ending_curve', 'shape_curvature',
+      'shape_is_curved', 'shape_shape', 'shape_is_recycling', 'shape_arrow_size',
+      'value_label_horiz', 'value_label_vert', 'value_label_on_path', 'value_label_pos_auto',
+      'shape_is_arrow', 'shape_color', 'shape_opacity', 'shape_is_dashed',
+      'value_label_is_visible', 'value_label_font_size', 'value_label_color',
+      'value_label_custom_digit', 'value_label_nb_digit', 'value_label_significant_digits',
+      'value_label_nb_significant_digits', 'value_label_scientific_notation',
+      'value_label_font_family', 'value_label_unit_visible', 'value_label_unit',
+      'value_label_unit_factor'
+    ] as const
+    return compareAttrs.every(attr => this[attr] === _[attr])
   }
 
   public getPathColorToUse(): string {
@@ -1153,7 +1135,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   // PROTECTED METHODS ==================================================================
-  public addChildLink(l:Class_LinkElement,tag:Class_DataTag) {
+  public addChildLink(l: Class_LinkElement, tag: Class_DataTag) {
     this._child_links[tag.id] = l
     this.source.addOutputLink(l)
     this.target.addInputLink(l)
@@ -1239,6 +1221,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this._drawArrow()
     this._link_draw_value.drawValue()
     this._link_draw_label.drawLabel()
+  }
+
+  public drawControlPoint() {
+    this._link_control_points.drawControlPoint()
   }
 
   /**
@@ -1445,7 +1431,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     target: Class_NodeElement
   ) {
     // coherent with code in python (Constructor of flux)
-    if (this.is_multi_link ) return source.name + '---' + target.name + '(' + this._multi_link_tag?.name + ')'
+    if (this.is_multi_link) return source.name + '---' + target.name + '(' + this._multi_link_tag?.name + ')'
     return source.name + '---' + target.name
   }
 
@@ -1462,8 +1448,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     return this._values.has_result
   }
 
-  public get child_links() {return this._child_links}
-  public get is_multi_link() {return this._is_multi_link}
+  public get child_links() { return this._child_links }
+  public get is_multi_link() { return this._is_multi_link }
 
   public get is_visible() {
     return (
@@ -1639,11 +1625,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       else data_tags.push(tagg.selected_tags_list[0])
     })
     return this.valueForTags(data_tags)
-  }  
+  }
 
   public get selected_data_tags_list() {
     if (this._is_multi_link) {
-      const selected_tags : Class_DataTag[] = []
+      const selected_tags: Class_DataTag[] = []
       this.sankey.data_taggs_list.forEach((tagg) => {
         if (tagg == this._multi_link_tag?.group) selected_tags.push(this._multi_link_tag)
         else selected_tags.push(tagg.selected_tags_list[0])
@@ -1729,9 +1715,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get unit_name() {
     if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
     const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-    if (unit_taggs.length>0) {
-      if(!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
-      else return this.selected_data_tags_list.filter(tag=>tag.group.is_unit)[0].name
+    if (unit_taggs.length > 0) {
+      if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
+      else return this.selected_data_tags_list.filter(tag => tag.group.is_unit)[0].name
     }
     return ''
   }
@@ -1739,19 +1725,19 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get data_label() {
     if (this.sankey.drawing_area.type_data == 'data') {
       if (!this.value?.valueData) return ''
-      return this.formatValueWithOption(format_value(this.value?.valueData,this,this.unit_name), this.value?.value_option)/*else if (this.value?.value_option == 'unit_conversion' ) {
+      return this.formatValueWithOption(format_value(this.value?.valueData, this, this.unit_name), this.value?.value_option)/*else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }*/
     }
     if (this.value?.result_min !== null) {
       if (this.drawing_area.type_data === 'free_interval')
-        return '[' + format_value(this.value!.result_min,this,this.unit_name) + ',' + format_value(this.value!.result_max,this,this.unit_name) + ']'
+        return '[' + format_value(this.value!.result_min, this, this.unit_name) + ',' + format_value(this.value!.result_max, this, this.unit_name) + ']'
       if (this.drawing_area.type_data === 'free_value')
-        return format_value(this.valueCurrent!, this,this.unit_name)
+        return format_value(this.valueCurrent!, this, this.unit_name)
       return ''
     }
 
-    return format_value(this.valueCurrent!, this,this.unit_name)
+    return format_value(this.valueCurrent!, this, this.unit_name)
   }
 
   /**
@@ -1878,21 +1864,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     return this._display.position_ending.y - shifting_end_point_y
   }
 
-  public get shape_local_link_scale(): number | undefined {
-    if ('shape_local_link_scale' in this._display.attributes) {
-      return this._display.attributes.shape_local_link_scale
-    } else {
-      const valueOfStyle = this.getStyleWithAttr('shape_local_link_scale')
-
-      return valueOfStyle.shape_local_link_scale
-    }
-  }
-
-  public set shape_local_link_scale(value: number | undefined) {
-    this._display.attributes.shape_local_link_scale = value
-    this.setDomainLocalScale(value)
-    this.redrawNodesSourceTarget()
-  }
+  // public set shape_local_link_scale(value: number | undefined) {
+  //   this._display.attributes.shape_local_link_scale = value
+  //   this.setDomainLocalScale(value)
+  //   this.redrawNodesSourceTarget()
+  // }
 
   // ------------ Decorator about shape attribute -------------
   private getStyleProperty(propertyName: StyleProperty) {
@@ -1911,24 +1887,6 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     return LINKS_ATTRIBUTES_CONFIG[propertyName].default
   }
 
-  public get shape_orientation() { return this.getStyleProperty('shape_orientation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_orientation']['type']> }
-  public set shape_orientation(_: Type_Orientation) {
-    if (
-      (!this.shape_is_recycling) && (
-        ((this.is_vertical_horizontal) || (this.is_horizontal_vertical)) &&
-        ((_ === 'hh') || (_ === 'vv'))
-      )
-    ) {
-      // In 'hh' or 'vv' : ending + starting <= 1
-      // In 'hv' or 'vh' : ending <= 1 & starting <= 1
-      // So we need to divide these values per 2 here to avoid bricking link
-      this.shape_starting_curve = this.shape_starting_curve / 2
-      this.shape_starting_curve = this.shape_ending_curve / 2
-    }
-    this._display.attributes.shape_orientation = _
-    // Need to redraw from nodes
-    this.drawWithNodes()
-  }
 
   // Orientation
   public get is_horizontal() { return this.shape_orientation === 'hh' }
@@ -1936,165 +1894,34 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
   public get is_vertical_horizontal() { return this.shape_orientation === 'vh' }
 
-  public get shape_starting_curve() { return this.getStyleProperty('shape_starting_curve') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_curve']['type']> }
+  // public get shape_is_structure() {
+  //   if (this.sankey.drawing_area.type_data == 'structure') return true
+  //   if (this.sankey.drawing_area.type_data == 'data') {
+  //     if (this.value?.value_option != 'value' || this.value.valueData == null) return true
+  //   }
+  //   if (this.sankey.drawing_area.type_data == 'free_value' || this.sankey.drawing_area.type_data == 'free_interval') {
+  //     if (this.valueCurrent == null) return true
+  //   }
+  //   if (this.sankey.drawing_area.type_data == 'reconciled') {
+  //     if (this.value?.result_min !== null) return true
+  //   }
 
-  public set shape_starting_curve(_: number) {
-    if (_ >= 0) {
-      // For non recycling shape we have upper bound on starting
-      if (!this.shape_is_recycling) {
-        // Specific case for horizontal-vertical links : starting = [0; 1]
-        if (
-          (this.is_horizontal_vertical) ||
-          (this.is_vertical_horizontal)
-        ) {
-          if (_ <= 1.0)
-            this._display.attributes.shape_starting_curve = _
-          else
-            this._display.attributes.shape_starting_curve = 1.0
-        }
-        // Otherwise for rectiligne links : starting = [0; 1 - ending]
-        else {
-          if ((_ + this.shape_ending_curve) <= 1.0)
-            this._display.attributes.shape_starting_curve = _
-          else
-            this._display.attributes.shape_starting_curve = 1.0 - this.shape_ending_curve
-        }
-      }
-      // For recycling shapes we don't have upper bounds on starting
-      else {
-        this._display.attributes.shape_starting_curve = _
-      }
-      this.drawElements()
-      this._link_control_points.drawControlPoint()
-    }
-  }
+  //   if (this._display.attributes.shape_is_structure !== undefined) {
+  //     return this._display.attributes.shape_is_structure
+  //   }
+  //   const valueOfStyle = this.getStyleWithAttr('shape_is_structure')
 
-  public get shape_ending_curve() { return this.getStyleProperty('shape_ending_curve') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_curve']['type']> }
+  //   if (valueOfStyle.shape_is_structure !== undefined) {
+  //     return valueOfStyle.shape_is_structure
+  //   }
+  //   return LINKS_ATTRIBUTES_CONFIG.shape_is_structure.default
+  // }
 
-  public set shape_ending_curve(_: number) {
-    if (_ >= 0) {
-      // For non recycling shape we have upper bound on ending
-      if (!this.shape_is_recycling) {
-        // Specific case for horizontal-vertical links : ending = [0; 1]
-        if (
-          (this.is_horizontal_vertical) ||
-          (this.is_vertical_horizontal)
-        ) {
-          if (_ <= 1.0)
-            this._display.attributes.shape_ending_curve = _
-          else
-            this._display.attributes.shape_ending_curve = 1.0
-        }
-        // Otherwise for rectiligne links : ending = [0; 1 - starting]
-        else {
-          if ((_ + this.shape_starting_curve) <= 1.0)
-            this._display.attributes.shape_ending_curve = _
-          else
-            this._display.attributes.shape_ending_curve = 1.0 - this.shape_starting_curve
-        }
-      }
-      // For recycling shapes we don't have upper bounds on ending
-      else {
-        this._display.attributes.shape_ending_curve = _
-      }
-      this.drawElements()
-      this._link_control_points.drawControlPoint()
-    }
-  }
-
-  public get shape_starting_tangeant() { return this.getStyleProperty('shape_starting_tangeant') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_tangeant']['type']> }
-
-  public set shape_starting_tangeant(_: number) {
-    if (_ > 0) {
-      this._display.attributes.shape_starting_tangeant = _
-      this.drawElements()
-      this._link_control_points.drawControlPoint()
-    }
-  }
-
-  public get shape_ending_tangeant() { return this.getStyleProperty('shape_ending_tangeant') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_tangeant']['type']> }
-
-  public set shape_ending_tangeant(_: number) {
-    if (_ > 0) {
-      this._display.attributes.shape_ending_tangeant = _
-      this.drawElements()
-      this._link_control_points.drawControlPoint()
-    }
-  }
-
-  public get shape_middle_recycling() { return this.getStyleProperty('shape_middle_recycling') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_middle_recycling']['type']> }
-
-  public set shape_middle_recycling(_: number) {
-    this._display.attributes.shape_middle_recycling = _
-    this.drawElements()
-    this._link_control_points.drawControlPoint()
-  }
-
-  public get shape_shape() { return this.getStyleProperty('shape_shape') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_shape']['type']> }
-
-  public set shape_shape(_: string) {
-    this._display.attributes.shape_shape = _
-    this.drawElements()
-    this._link_control_points.drawControlPoint()
-  }
-
-  public get shape_curvature() { return this.getStyleProperty('shape_curvature') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_curvature']['type']> }
-  public set shape_curvature(_: number) { this._display.attributes.shape_curvature = _; this.drawElements() }
-
-  public get shape_is_curved() { return this.getStyleProperty('shape_is_curved') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_curved']['type']> }
-  public set shape_is_curved(_: boolean) { this._display.attributes.shape_is_curved = _; this.drawElements(); this._link_control_points.drawControlPoint() }
-
-  public get shape_is_structure() {
-    if (this.sankey.drawing_area.type_data == 'structure') {
-      return true
-    }
-    if (this.sankey.drawing_area.type_data == 'data') {
-      if (this.value?.value_option != 'value' || this.value.valueData == null) {
-        return true
-      }
-    }
-    if (this.sankey.drawing_area.type_data == 'free_value' || this.sankey.drawing_area.type_data == 'free_interval') {
-      return this.valueCurrent == null
-    }
-    if (this.sankey.drawing_area.type_data == 'reconciled') {
-      if (this.value?.result_min !== null) return true
-    }
-
-    if (this._display.attributes.shape_is_structure !== undefined) {
-      return this._display.attributes.shape_is_structure
-    }
-    const valueOfStyle = this.getStyleWithAttr('shape_is_structure')
-
-    if (valueOfStyle.shape_is_structure !== undefined) {
-      return valueOfStyle.shape_is_structure
-    }
-    return LINKS_ATTRIBUTES_CONFIG.shape_is_structure.default
-  }
-
-  public set shape_is_structure(_: boolean) {
-    this._display.attributes.shape_is_structure = _
-    this.drawWithNodes()
-    this._link_control_points.drawControlPoint()
-  }
-
-  public get shape_is_recycling() { return this.getStyleProperty('shape_is_recycling') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_recycling']['type']> }
-
-  public set shape_is_recycling(_: boolean) {
-    // In recylcing mode we dont have upperbound for starting & ending
-    // But in normal mode we have upper bounds, so we need to add upper bound
-    // to avoid bricking link path
-    if (!_ && this._display.attributes.shape_is_recycling) {
-      this.shape_starting_curve = Math.min(this.shape_starting_curve, 0.25)
-      this.shape_ending_curve = Math.min(this.shape_ending_curve, 0.25)
-    }
-    this._display.attributes.shape_is_recycling = _
-    // Need to redraw from nodes
-    this.drawWithNodes()
-    this._link_control_points.drawControlPoint()
-  }
-
-  public get shape_arrow_size() { return this.getStyleProperty('shape_arrow_size') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_arrow_size']['type']> }
-  public set shape_arrow_size(_: number) { this._display.attributes.shape_arrow_size = _; this.drawElements() }
+  // public set shape_is_structure(_: boolean) {
+  //   this._display.attributes.shape_is_structure = _
+  //   this.drawWithNodes()
+  //   this._link_control_points.drawControlPoint()
+  // }
 
   /**
    * Set and redraw d3 path for link arrow
@@ -2104,165 +1931,182 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this.drawArrow()
   }
 
-  public get shape_is_arrow() { return this.getStyleProperty('shape_is_arrow') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_arrow']['type']> }
-  public set shape_is_arrow(_: boolean) { this._display.attributes.shape_is_arrow = _; this.drawElements() }
+  public get value_label_unit_is_reference() { return this._is_unit_reference }
+  public set value_label_unit_is_reference(_) { this._is_unit_reference = _; this.drawValue() }
 
-  public get shape_color() { return this.getStyleProperty('shape_color') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color']['type']> }
-  public set shape_color(_: string) { this._display.attributes.shape_color = _; this.drawElements() }
-
-  public get shape_color_rule() { return this.getStyleProperty('shape_color_rule') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color_rule']['type']> }
-  public set shape_color_rule(_) { this._display.attributes.shape_color_rule = _; this.drawElements() }
-
-  public get shape_opacity() { return this.getStyleProperty('shape_opacity') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_opacity']['type']> }
-  public set shape_opacity(_: number) { this._display.attributes.shape_opacity = _; this.drawElements() }
-
-  public get shape_is_dashed() { return this.getStyleProperty('shape_is_dashed') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_dashed']['type']> }
-  public set shape_is_dashed(_: boolean) { this._display.attributes.shape_is_dashed = _; this.drawElements() }
-
-  // ------------ Decorator about value label attribute -------------
-  public get value_label_horiz() { return this.getStyleProperty('value_label_horiz') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_horiz']['type']> }
-  public set value_label_horiz(_: Type_PathLabelHPosition) {
-    this._display.attributes.value_label_pos_auto = false
-    if (_ !== 'dragged') this.deleteDraggedValuePos()
-    this._display.attributes.value_label_horiz = _
-    this.drawValue()
+  /**
+   * Setter personnalisé pour name_label_pos_auto avec logique spéciale
+   */
+  customNameLabelPosAuto(value: boolean) {
+    this._display.attributes.name_label_pos_auto = value
+    const orth_pos = this._display.attributes.name_label_vert
+    this._display.attributes.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
   }
 
-  public get value_label_vert() { return this.getStyleProperty('value_label_vert') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_vert']['type']> }
-  public set value_label_vert(_: Type_PathLabelVPosition) {
-    if (_ !== 'dragged') this.deleteDraggedValuePos()
-    this._display.attributes.value_label_pos_auto = false
-    this._display.attributes.value_label_vert = _
-    this.drawValue()
+  // ==================================================================================================
+  // SETTERS PERSONNALISÉS POUR LOGIQUE COMPLEXE
+  // ==================================================================================================
+  /**
+     * Setter personnalisé pour shape_orientation avec logique spéciale
+     */
+  customShapeOrientation(value: Type_Orientation) {
+    if ((!this._display.attributes.shape_is_recycling) && (
+      ((this._display.attributes.shape_orientation === 'vh') || (this._display.attributes.shape_orientation === 'hv')) &&
+      ((value === 'hh') || (value === 'vv'))
+    )) {
+      if (this._display.attributes.shape_starting_curve !== undefined)
+        this._display.attributes.shape_starting_curve = this._display.attributes.shape_starting_curve / 2
+      if (this._display.attributes.shape_ending_curve !== undefined)
+        this._display.attributes.shape_ending_curve = this._display.attributes.shape_ending_curve / 2
+    }
+    this._display.attributes.shape_orientation = value
   }
 
-  public get value_label_on_path() { return this.getStyleProperty('value_label_on_path') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_on_path']['type']> }
-  public set value_label_on_path(_: boolean) {
-    this._display.attributes.value_label_on_path = _
-    if (_) {
+  /**
+   * Setter personnalisé pour shape_starting_curve avec logique spéciale
+   */
+  customStartingCurve(value: number) {
+    if (value !== undefined && value >= 0) {
+      if (!this._display.attributes.shape_is_recycling) {
+        if ((this._display.attributes.shape_orientation === 'vh') || (this._display.attributes.shape_orientation === 'hv')) {
+          this._display.attributes.shape_starting_curve = value <= 1.0 ? value : 1.0
+        } else {
+          const endingCurve = this._display.attributes.shape_ending_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_curve.default
+          this._display.attributes.shape_starting_curve = (value + endingCurve) <= 1.0 ? value : 1.0 - endingCurve
+        }
+      } else {
+        this._display.attributes.shape_starting_curve = value
+      }
+    } else {
+      this._display.attributes.shape_starting_curve = value
+    }
+  }
+
+  /**
+   * Setter personnalisé pour shape_ending_curve avec logique spéciale
+   */
+  customEndingCurve(value: number) {
+    if (value !== undefined && value >= 0) {
+      if (!this._display.attributes.shape_is_recycling) {
+        if ((this._display.attributes.shape_orientation === 'vh') || (this._display.attributes.shape_orientation === 'hv')) {
+          this._display.attributes.shape_ending_curve = value <= 1.0 ? value : 1.0
+        } else {
+          const startingCurve = this._display.attributes.shape_starting_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_curve.default
+          this._display.attributes.shape_ending_curve = (value + startingCurve) <= 1.0 ? value : 1.0 - startingCurve
+        }
+      } else {
+        this._display.attributes.shape_ending_curve = value
+      }
+    } else {
+      this._display.attributes.shape_ending_curve = value
+    }
+  }
+
+  /**
+   * Setter personnalisé pour shape_starting_tangeant avec logique spéciale
+   */
+  customStartingTangeant(value: number) {
+    this._display.attributes.shape_starting_tangeant = (value !== undefined && value > 0) ? value : value
+  }
+
+  /**
+   * Setter personnalisé pour shape_ending_tangeant avec logique spéciale
+   */
+  customEndingTangeant(value: number) {
+    this._display.attributes.shape_ending_tangeant = (value !== undefined && value > 0) ? value : value
+  }
+
+  /**
+   * Setter personnalisé pour shape_is_recycling avec logique spéciale
+   */
+  customShapeIsRecycling(value: boolean) {
+    // En mode recycling, pas de limite supérieure pour starting & ending
+    // En mode normal, on a des limites, donc on doit les appliquer
+    if (!value && this._display.attributes.shape_is_recycling) {
+      this.shape_starting_curve = Math.min(this.shape_starting_curve, 0.25)
+      this.shape_ending_curve = Math.min(this.shape_ending_curve, 0.25)
+    }
+    this._display.attributes.shape_is_recycling = value
+  }
+
+  /**
+   * Setter personnalisé pour value_label_horiz avec logique spéciale
+   */
+  customValueLabelHoriz(value: Type_PathLabelHPosition) {
+    this._display.attributes.value_label_pos_auto = false
+    if (value !== 'dragged') this.deleteDraggedValuePos()
+    this._display.attributes.value_label_horiz = value
+  }
+
+  /**
+   * Setter personnalisé pour value_label_vert avec logique spéciale
+   */
+  customValueLabelVert(value: Type_PathLabelVPosition) {
+    if (value !== 'dragged') this.deleteDraggedValuePos()
+    this._display.attributes.value_label_pos_auto = false
+    this._display.attributes.value_label_vert = value
+  }
+
+  /**
+   * Setter personnalisé pour value_label_on_path avec logique spéciale
+   */
+  customValueLabelOnPath(value: boolean) {
+    this._display.attributes.value_label_on_path = value
+    if (value) {
       const lab_pos = this._display.attributes.value_label_horiz
       const lab_orth_pos = this._display.attributes.value_label_vert
       this._display.attributes.value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
       this._display.attributes.value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
     }
-    this.drawValue()
   }
 
-  public get value_label_pos_auto() { return this.getStyleProperty('value_label_pos_auto') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_pos_auto']['type']> }
-  public set value_label_pos_auto(_: boolean) {
-    this._display.attributes.value_label_pos_auto = _
+  /**
+   * Setter personnalisé pour value_label_pos_auto avec logique spéciale
+   */
+  customValueLabelPosAuto(value: boolean) {
+    this._display.attributes.value_label_pos_auto = value
     this._display.attributes.value_label_vert = (this._display.attributes.value_label_vert === 'dragged') ? 'middle' : this._display.attributes.value_label_vert
-    this.drawValue()
   }
 
-  public get value_label_is_visible() { return this.getStyleProperty('value_label_is_visible') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_is_visible']['type']> }
-  public set value_label_is_visible(_: boolean) { this._display.attributes.value_label_is_visible = _; this.drawValue() }
-
-  public get value_label_font_size() { return this.getStyleProperty('value_label_font_size') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_size']['type']> }
-  public set value_label_font_size(_: number) { this._display.attributes.value_label_font_size = _; this.drawValue() }
-
-  public get value_label_color() { return this.getStyleProperty('value_label_color') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']> }
-  public set value_label_color(_: string) { this._display.attributes.value_label_color = _; this.drawValue() }
-
-  public get value_label_unit_type() { return this.getStyleProperty('value_label_unit_type') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_type']['type']> }
-  public set value_label_unit_type(_) { this._display.attributes.value_label_unit_type = _; this.drawValue() }
-
-  public get value_label_scientific_notation() { return this.getStyleProperty('value_label_scientific_notation') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']> }
-  public set value_label_scientific_notation(_: boolean) { this._display.attributes.value_label_scientific_notation = _; this.drawValue() }
-
-  public get value_label_significant_digits() { return this.getStyleProperty('value_label_significant_digits') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_significant_digits']['type']> }
-  public set value_label_significant_digits(_: boolean) { this._display.attributes.value_label_significant_digits = _; this.drawValue() }
-
-  public get value_label_nb_significant_digits() { return this.getStyleProperty('value_label_nb_significant_digits') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']> }
-  public set value_label_nb_significant_digits(_: number) { this._display.attributes.value_label_nb_significant_digits = _; this.drawValue() }
-
-  public get value_label_font_family() { return this.getStyleProperty('value_label_font_family') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_family']['type']> }
-  public set value_label_font_family(_: string) { this._display.attributes.value_label_font_family = _; this.drawValue() }
-
-  public get value_label_unit_visible() { return this.getStyleProperty('value_label_unit_visible') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_visible']['type']> }
-  public set value_label_unit_visible(_: boolean) { this._display.attributes.value_label_unit_visible = _; this.drawValue() }
-
-  public get value_label_unit() { return this.getStyleProperty('value_label_unit') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit']['type']> }
-  public set value_label_unit(_: string) { this._display.attributes.value_label_unit = _; this.drawValue() }
-
-  public get value_label_unit_factor() { return this.getStyleProperty('value_label_unit_factor') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']> }
-  public set value_label_unit_factor(_: number) { this._display.attributes.value_label_unit_factor = _; this.drawValue() }
-
-  public get value_label_unit_is_reference() { return this._is_unit_reference }
-  public set value_label_unit_is_reference(_) { this._is_unit_reference = _; this.drawValue() }
-
-  public get value_label_custom_digit() { return this.getStyleProperty('value_label_custom_digit') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']> }
-  public set value_label_custom_digit(_: boolean) {
-    this._display.attributes.value_label_custom_digit = _
-    if (_) {
+  /**
+   * Setter personnalisé pour value_label_custom_digit avec logique spéciale
+   */
+  customValueLabelCustomDigit(value: boolean) {
+    this._display.attributes.value_label_custom_digit = value
+    if (value) {
       this.value_label_scientific_notation = false
       this.value_label_significant_digits = false
     }
-    this.drawValue()
   }
 
-  public get value_label_nb_digit() { return this.getStyleProperty('value_label_nb_digit') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_digit']['type']> }
-  public set value_label_nb_digit(_: number) { this._display.attributes.value_label_nb_digit = _; this.drawValue() }
-
-  public get value_label_uppercase() { return this.getStyleProperty('value_label_uppercase') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_uppercase']['type']> }
-  public set value_label_uppercase(_: boolean) { this._display.attributes.value_label_uppercase = _; this.drawValue() }
-
-  public get value_label_bold() { return this.getStyleProperty('value_label_bold') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_bold']['type']> }
-  public set value_label_bold(_: boolean) { this._display.attributes.value_label_bold = _; this.drawValue() }
-
-  public get value_label_italic() { return this.getStyleProperty('value_label_italic') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_italic']['type']> }
-  public set value_label_italic(_: boolean) { this._display.attributes.value_label_italic = _; this.drawValue() }
-
-  // ------------ Decorator about name label attribute -------------
-
-  public get name_label_is_visible() { return this.getStyleProperty('name_label_is_visible') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_is_visible']['type']> }
-  public set name_label_is_visible(_: boolean) { this._display.attributes.name_label_is_visible = _; this.drawLabel() }
-
-  public get name_label_font_family() { return this.getStyleProperty('name_label_font_family') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_family']['type']> }
-  public set name_label_font_family(_: string) { this._display.attributes.name_label_font_family = _; this.drawLabel() }
-
-  public get name_label_font_size() { return this.getStyleProperty('name_label_font_size') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_size']['type']> }
-  public set name_label_font_size(_: number) { this._display.attributes.name_label_font_size = _; this.drawLabel() }
-
-  public get name_label_uppercase() { return this.getStyleProperty('name_label_uppercase') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_uppercase']['type']> }
-  public set name_label_uppercase(_: boolean) { this._display.attributes.name_label_uppercase = _; this.drawLabel() }
-
-  public get name_label_bold() { return this.getStyleProperty('name_label_bold') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_bold']['type']> }
-  public set name_label_bold(_: boolean) { this._display.attributes.name_label_bold = _; this.drawLabel() }
-
-  public get name_label_italic() { return this.getStyleProperty('name_label_italic') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_italic']['type']> }
-  public set name_label_italic(_: boolean) { this._display.attributes.name_label_italic = _; this.drawLabel() }
-
-  public get name_label_color() { return this.getStyleProperty('name_label_color') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_color']['type']> }
-  public set name_label_color(_: string) { this._display.attributes.name_label_color = _; this.drawLabel() }
-
-  public get name_label_pos_auto() { return this.getStyleProperty('name_label_pos_auto') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']> }
-  public set name_label_pos_auto(_: boolean) {
-    this._display.attributes.name_label_pos_auto = _
-    const orth_pos = this.name_label_vert
-    this._display.attributes.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
-    this.drawLabel()
+  /**
+   * Setter personnalisé pour name_label_horiz avec logique spéciale
+   */
+  customNameLabelHoriz(value: Type_PathLabelHPosition) {
+    if (value !== 'dragged') this.deleteDraggedLabelPos(); 
+    this._display.attributes.name_label_horiz = value
   }
 
-  public get name_label_on_path() { return this.getStyleProperty('name_label_on_path') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_on_path']['type']> }
-  public set name_label_on_path(_: boolean) {
-    this._display.attributes.name_label_on_path = _
-    if (_) {
-      const lab_pos = this.name_label_horiz
-      const lab_orth_pos = this.name_label_vert
+  /**
+   * Setter personnalisé pour name_label_vert avec logique spéciale
+   */
+  customNameLabelVert(value: Type_PathLabelVPosition) {
+    if (value !== 'dragged') this.deleteDraggedLabelPos()
+    this._display.attributes.name_label_vert = value
+  }
+
+  /**
+   * Setter personnalisé pour name_label_on_path avec logique spéciale
+   */
+  customNameLabelOnPath(value: boolean) {
+    this._display.attributes.name_label_on_path = value
+    if (value) {
+      const lab_pos = this._display.attributes.name_label_horiz
+      const lab_orth_pos = this._display.attributes.name_label_vert
       this._display.attributes.name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
       this._display.attributes.name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
     }
-    this.drawLabel()
   }
-
-  public get name_label_vert() { return this.getStyleProperty('name_label_vert') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_vert']['type']> }
-  public set name_label_vert(_: Type_PathLabelVPosition) { if (_ !== 'dragged') this.deleteDraggedLabelPos(); this._display.attributes.name_label_vert = _; this.drawLabel() }
-
-  public get name_label_horiz() { return this.getStyleProperty('name_label_horiz') as ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_horiz']['type']> }
-  public set name_label_horiz(_: Type_PathLabelHPosition) { if (_ !== 'dragged') this.deleteDraggedLabelPos(); this._display.attributes.name_label_horiz = _; this.drawLabel() }
-
-  // ------------ Other Decorators  -------------
 
   public get datatags_fingerprint() { return this._datatags_fingerprint }
 

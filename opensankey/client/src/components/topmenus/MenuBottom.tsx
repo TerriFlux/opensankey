@@ -1,7 +1,7 @@
 import { Box, Button, ButtonGroup } from '@chakra-ui/react'
 import React, { FC, useState } from 'react'
 import { FCType_ToolBarBottom, FCType_ToolbarSubComponent } from '../SankeyMenuTypes'
-import { OSTooltip } from '../configmenus/BaseComponents'
+import { OSTooltip } from '../configmenus/MenuCommon'
 
 /**
  * Bottom toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)

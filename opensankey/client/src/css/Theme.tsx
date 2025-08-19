@@ -2201,12 +2201,6 @@ const layerStyles = {
     gridColumnGap: '0.25rem',
   },
 
-  menuconfigpanel_row_2cols_little_input: {
-    display: 'grid',
-    gridTemplateColumns: '3fr 2fr',
-    gridColumnGap: '0.25rem',
-  },
-
   menuconfigpanel_row_3cols: {
     display: 'grid',
     gridTemplateColumns: '2fr 1.5fr 1.5fr',

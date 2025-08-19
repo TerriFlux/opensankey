@@ -57,7 +57,7 @@ import { OSMultiSelect, typeElementSelectable, WrapperCheckBoxSubSectionMenu } f
 import { checked } from './SankeyMenuContextLink'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_ApplyLayoutDialog, FType_DiagramSelector } from '../SankeyMenuTypes'
-import { OSTooltip } from '../configmenus/BaseComponents'
+import { OSTooltip } from '../configmenus/MenuCommon'
 
 
 /**

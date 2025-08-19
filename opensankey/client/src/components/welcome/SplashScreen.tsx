@@ -41,7 +41,7 @@ import {
   ModalFooter
 } from '@chakra-ui/react'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { OSTooltip } from '../configmenus/BaseComponents'
+import { OSTooltip } from '../configmenus/MenuCommon'
 
 
 type FCType_ModalDocumentation = {

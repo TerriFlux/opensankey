@@ -35,12 +35,14 @@ import {
   defaultLinkId,
   sortLinksElementsByIds
 } from '../Elements/Link'
-import { Class_LinkAttribute, Class_LinkStyle, Type_customisable_flow_style_attr } from '../Elements/LinkAttributes'
+import { Class_LinkAttribute, Type_customisable_flow_style_attr } from '../Elements/LinkAttributes'
+import { Class_LinkStyle } from '../Elements/ElementStyle'
 import {
   Class_NodeElement,
   sortNodesElements
 } from '../Elements/Node'
-import { Class_NodeAttribute, Class_NodeStyle, Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
+import { Class_NodeAttribute, Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
+import { Class_NodeStyle } from '../Elements/ElementStyle'
 import {
   Class_DataTag,
   Class_Tag,

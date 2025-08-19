@@ -39,7 +39,8 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 
 /*************************************************************************************************/
 
-import { Class_NodeAttribute, Class_NodeStyle } from '../../Elements/NodeAttributes'
+import { Class_NodeAttribute } from '../../Elements/NodeAttributes'
+import { Class_NodeStyle } from '../../Elements/ElementStyle'
 import { hierarchyEditionMenu, hierarchyManipulationMenu } from './SankeyMenuContextHierarchie'
 import { FCType_ContextMenu } from '../SankeyMenuTypes'
 

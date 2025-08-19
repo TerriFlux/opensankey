@@ -28,9 +28,9 @@ import { MutableRefObject, ReactNode } from 'react'
 import { PlacementWithLogical } from '@chakra-ui/react'
 import { TFunction } from 'i18next'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_LinkStyle } from '../Elements/LinkAttributes'
+import { Class_LinkStyle } from '../Elements/ElementStyle'
 import { Class_NodeElement } from '../Elements/Node'
-import { Class_NodeStyle } from '../Elements/NodeAttributes'
+import { Class_NodeStyle } from '../Elements/ElementStyle'
 import { SankeyData, SankeyNode, treeFolderType, applicationDataType, SankeyLink } from '../Persistence/LegacyType'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { FType_ProcessFunctions } from '../types/FunctionTypes'
@@ -165,7 +165,6 @@ export type handleDownLinkFType = (data: SankeyData, i: string) => void
 // Base type for menu components with elements and selected elements
 export type BaseMenuComponentType = BaseApplicationDataType & {
   elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
-  selectedElements: Class_LinkElement[] | Class_NodeElement[],
   refreshParentComponent: () => void,
 }
 
