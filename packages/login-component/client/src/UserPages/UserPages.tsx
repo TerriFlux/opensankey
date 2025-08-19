@@ -8,7 +8,7 @@ import {
 import { LoginOutButton } from '../Login/Login'
 import { loginComponent } from '../LoginComponent'
 import {Class_ApplicationDataLoginComponent} from '../ApplicationDataLoginComponent'
-import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/BaseComponents'
+import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 
 type FCType_UserPagesButtons = {
   new_data_app: Class_ApplicationDataLoginComponent

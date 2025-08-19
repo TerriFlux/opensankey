@@ -7,16 +7,17 @@ import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import { SankeySettingsEditionElementTags } from '../deps/OpenSankey+/components/MenuConfigEdition/SankeyPlusMenuConfigurationTags'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
-import { MenuConfigurationLinksStyle, MenuConfigurationLinkContext } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksAppearence'
-import { MenuConfigurationNodeStyle, MenuConfigurationNodeContext } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodesAttributes'
+import { MenuConfigurationLinkShape } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksShape'
+import {MenuConfigurationLinkLabel} from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksLabel'
+
 import { WrapperNodeStyleSelector, WrapperLinkStyleSelector } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyStyle'
-import { Class_LinkStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/LinkAttributes'
-import { Class_NodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/NodeAttributes'
 import { Type_AdditionalMenus } from '../deps/OpenSankey+/deps/OpenSankey/types/Types'
 import { getJSONFromJSON, Type_MacroTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
-import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/BaseComponents'
-
+import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_LinkStyle, Class_NodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/ElementStyle'
+import { MenuConfigurationNodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodesShape'
+import { MenuConfigurationNodeContext } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodesLabel'
 
 const paddingBoxPreference = '0.6rem'
 
@@ -331,16 +332,15 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
 
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_node_styles_visual')} collapse={false}>
               <MenuConfigurationNodeStyle
-                new_data={user_data}
+                app_data={user_data}
                 menu_for_style={true}
                 additional_menus={additionalMenus}
               />
             </WrapperBoxSubSectionMenu>
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_node_styles_context')} collapse={false}>
               <MenuConfigurationNodeContext
-                new_data={user_data}
+                app_data={user_data}
                 menu_for_style={true}
-                additional_menus={additionalMenus}
               />
             </WrapperBoxSubSectionMenu>
 
@@ -353,14 +353,14 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
           <Box layerStyle='menuconfigpanel_grid'>
             <WrapperLinkStyleSelector new_data={user_data}><></></WrapperLinkStyleSelector>
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_visual')} collapse={false}>
-              <MenuConfigurationLinksStyle
+              <MenuConfigurationLinkShape
                 new_data={user_data}
                 additionMenus={additionalMenus}
                 menu_for_style={true}
               />
             </WrapperBoxSubSectionMenu>
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_context')} collapse={false}>
-              <MenuConfigurationLinkContext
+              <MenuConfigurationLinkLabel
                 new_data={user_data}
                 additionMenus={additionalMenus}
                 menu_for_style={true}
