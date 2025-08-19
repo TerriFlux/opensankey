@@ -36,7 +36,7 @@ import { TourProvider } from '@reactour/tour'
 
 import { Menu } from './components/topmenus/SankeyMenus'
 
-import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesAttributes'
+import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesShape'
 
 import { ContextMenuLink } from './components/dialogs/SankeyMenuContextLink'
 import { ContextMenuNode } from './components/dialogs/SankeyMenuContextNode'
@@ -103,7 +103,7 @@ export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
 
   /*************************************************************************************************/
   const menu_configuration_nodes_attributes = <MenuConfigurationNodeStyle
-    new_data={new_data}
+    app_data={new_data}
     menu_for_style={false}
     additional_menus={new_data.menu_configuration.additionalMenus}
   />

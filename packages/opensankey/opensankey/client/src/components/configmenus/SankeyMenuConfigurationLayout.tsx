@@ -39,7 +39,7 @@ import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FType_OpenSankeyMenuConfigurationLayout, FCType_DrawingAreaStyle, BaseApplicationDataType } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
-import { CustomFaEyeCheckIcon, OSTooltip } from './BaseComponents'
+import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
 
 
 // Utils functions -------------------------------------------------------------------

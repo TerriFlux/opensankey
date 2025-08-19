@@ -79,7 +79,7 @@ import {
 } from '../../Persistence/UniversalJSONCompression'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_OpenSankeySaveButton } from '../SankeyMenuTypes'
-import { OSTooltip } from '../configmenus/BaseComponents'
+import { OSTooltip } from '../configmenus/MenuCommon'
 
 /*************************************************************************************************/
 

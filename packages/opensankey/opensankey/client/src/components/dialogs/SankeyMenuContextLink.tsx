@@ -40,7 +40,8 @@ import {
 /*************************************************************************************************/
 
 import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
-import { Class_LinkAttribute, Class_LinkStyle } from '../../Elements/LinkAttributes'
+import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
+import { Class_LinkStyle } from '../../Elements/ElementStyle'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { FCType_ContextMenu } from '../SankeyMenuTypes'
 

@@ -23,7 +23,8 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-
+import React, { FC, useState, useMemo, ChangeEvent } from 'react'
+import { t, TFunction } from 'i18next'
 import {
   Box,
   Button,
@@ -35,42 +36,94 @@ import {
   MenuItem,
   MenuList,
   useDisclosure,
+  CheckboxProps,
+  Tooltip,
+  Select,
 } from '@chakra-ui/react'
-import { t, TFunction } from 'i18next'
-import React, { FC, useState } from 'react'
 import { Class_LinkElement } from '../../Elements/Link'
-import { LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle, Class_LinkAttribute } from '../../Elements/LinkAttributes'
+import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
+import { Class_LinkStyle } from '../../Elements/ElementStyle'
 import {
-  Class_NodeAttribute,
-  Class_NodeStyle} from '../../Elements/NodeAttributes'
+  Class_NodeAttribute
+} from '../../Elements/NodeAttributes'
+import { Class_NodeStyle } from '../../Elements/ElementStyle'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSquareCheck } from '@fortawesome/free-solid-svg-icons'
+import { faSquareCheck, faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu} from '../SankeyMenuTypes'
+import { FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu, OSTooltpFuncType } from '../SankeyMenuTypes'
+import { Class_DataTagGroup } from '../../types/TagGroup'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { default_style_id } from '../../types/Utils'
+import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
+import { MenuColorPicker } from './MenuColorPicker'
 
 
 // ✅ Union de tous vos éléments
 export type ElementsType = Class_LinkStyle | Class_LinkElement | Class_NodeElement | Class_NodeStyle
 
 // ✅ Toutes les clés possibles
-export type ValueKey = keyof  Class_NodeAttribute & keyof Class_LinkAttribute
+export type ValueKey = keyof Class_NodeAttribute & keyof Class_LinkAttribute
 
 // ✅ Type conditionnel pour obtenir la bonne valeur selon la clé
-export type ValueType<K extends ValueKey> = 
-  K extends keyof Class_LinkAttribute 
-    ? Class_LinkAttribute[K] 
-    : K extends keyof Class_NodeAttribute 
-    ? Class_NodeAttribute[K] 
-    : never
+export type ValueType<K extends ValueKey> =
+  K extends keyof Class_LinkAttribute
+  ? Class_LinkAttribute[K]
+  : K extends keyof Class_NodeAttribute
+  ? Class_NodeAttribute[K]
+  : never
 
 // ✅ Type de valeur qu'un élément peut avoir
-export type ValueElementsType = 
+export type ValueElementsType =
   | Class_LinkAttribute[keyof Class_LinkAttribute]
   | Class_NodeAttribute[keyof Class_NodeAttribute]
   | undefined
+
+// Hook pour extraire la logique commune des composants ElementAttr*
+export const useElementAttributeConfig = (app_data: Class_ApplicationData, elements: ElementsType[]) => {
+  return useMemo(() => {
+    const { drawing_area, menu_configuration } = app_data
+    const { sankey } = drawing_area
+    const { ref_selected_style_node, ref_selected_style_link } = menu_configuration
+    const { link_styles_dict, node_styles_dict } = sankey
+
+    const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
+    const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle)
+    const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement)
+
+    const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
+    const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
+
+    const disable_attr_props = menu_for_style ?
+      correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute :
+      correct_dict_style_to_use[default_style_id].customisable_attribute
+
+    return {
+      menu_for_style,
+      disable_attr_props,
+      t: app_data.t
+    }
+  }, [app_data, elements])
+}
+
+// Hook pour obtenir la valeur d'un attribut et vérifier s'il est indéterminé
+export const useAttributeValue = (elements: ElementsType[], attributeKey: ValueKey) => {
+  return useMemo(() => {
+    const attribute_value = elements[0]
+      ? Reflect.get(elements[0], attributeKey)
+      : LINKS_ATTRIBUTES_CONFIG[attributeKey as keyof typeof LINKS_ATTRIBUTES_CONFIG]?.default
+
+    const is_attribute_indetermined = attribute_value != undefined && !elements.every(el => {
+      const valEl = Reflect.get(el, attributeKey)
+      if (valEl == undefined) return true
+      return valEl === attribute_value
+    })
+
+    return { attribute_value, is_attribute_indetermined }
+  }, [elements, attributeKey])
+}
 
 /**
  * Upate attribute value via it's decorator & save it's possible undoing in data history
@@ -85,17 +138,17 @@ export type ValueElementsType =
 export const updateElements = (
   data: Class_ApplicationData,
   elements: ElementsType[],
-  k: ValueKey, 
+  k: ValueKey,
   val: ValueElementsType,
   refreshParentComponent: () => void
 ) => {
   // Create a dict of old val for each elements 
   const dict_old_val: { [x: string]: ValueElementsType } = {}
-  elements.forEach(element => dict_old_val[element.id] = Reflect.get(element,k) )
+  elements.forEach(element => dict_old_val[element.id] = Reflect.get(element, k))
 
   // Original function
   const _updateElements = () => {
-    elements.forEach(element => {Reflect.set(element, k, val)})
+    elements.forEach(element => { Reflect.set(element, k, val) })
     refreshParentComponent()
   }
 
@@ -111,13 +164,11 @@ export const updateElements = (
   _updateElements() // execute function
 }
 
-
-
 /**
  * Wrapper to create a box collapsable to reduce size of sub-section in configuration sub-menus 
  *
  * @param {*} {
- *   new_data,
+ *   app_data,
  *   title,
  *   children
  * }
@@ -156,7 +207,7 @@ export const WrapperBoxSubSectionMenu: FC<FCType_WrapperBoxSubSectionMenu> = ({
  * Wrapper to create a box collapsable to reduce size of sub-section in configuration sub-menus 
  *
  * @param {*} {
- *   new_data,
+ *   app_data,
  *   title,
  *   children
  * }
@@ -199,7 +250,7 @@ export const WrapperCheckBoxSubSectionMenu: FC<FCType_WrapperCheckBoxSubSectionM
 /**
  * Wrapper for content of each sub-menus  
  *
- * @param {*} { new_data, title, children, hide = false }
+ * @param {*} { app_data, title, children, hide = false }
  * @return {*} 
  */
 export const WrapperContentConfig: FC<{ title: string; hide?: boolean; children: JSX.Element }> = ({ title, children, hide = false }) => {
@@ -216,14 +267,17 @@ export const WrapperContentConfig: FC<{ title: string; hide?: boolean; children:
 /**
  * Menu select to delete local attribute value of nodes/links
  *
- * @param {*} { new_data, nodesOrLinks, dict_overwritted_attr }
+ * @param {*} { app_data, nodesOrLinks, dict_overwritted_attr }
  * @return {*} 
  */
-export const MenuResetAttrLocal: FC<{ new_data: Class_ApplicationData, nodesOrLinks: 'nodes' | 'links', dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } } }> = (
+export const MenuResetAttrLocal = (
   {
     new_data,
     nodesOrLinks,
     dict_overwritted_attr
+  }: {
+    new_data: Class_ApplicationData, nodesOrLinks: 'nodes' | 'links',
+    dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } }
   }) => {
   const { t, icon_library } = new_data
   const { icon_undo } = icon_library
@@ -269,9 +323,10 @@ export type typeElementSelectable = {
  * }
  * @return {*} 
  */
-export const OSMultiSelect: FC<{ t: TFunction, elements: typeElementSelectable, onClick: (entries: typeElementSelectable) => void }> = ({
-  elements,
-  onClick
+export const OSMultiSelect = ({ elements, onClick }: {
+  t: TFunction,
+  elements: typeElementSelectable,
+  onClick: (entries: typeElementSelectable) => void
 }) => {
   const [menuListItems, setMenuListItems] = useState<JSX.Element[]>([])
   const [displayBgOverlay, setDisplayBgOverlay] = useState(false)
@@ -332,4 +387,515 @@ export const OSMultiSelect: FC<{ t: TFunction, elements: typeElementSelectable, 
   </Menu>
 }
 
+export const BOX2COLS = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      {children}
+    </Box>
+  );
+};
+
+export const BOX2COLSTITLEH4 = ({ title, children }: {
+  title: string
+  children: React.ReactNode
+}) => {
+  return (
+    <BOX2COLS>
+      <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
+        {title}
+      </Box>
+      {children}
+    </BOX2COLS>
+  )
+}
+
+export const RowSetter2Cols = ({
+  attributePath, attributeKey, children
+}: {
+  attributePath: string
+  attributeKey: string
+  children: React.ReactNode
+}) => {
+  const label = t(`${attributePath}.${String(attributeKey)}`)
+  const tooltip = t(`${attributePath}.tooltips.${String(attributeKey)}`);
+  return (
+    <OSTooltip label={tooltip}>
+      <span>
+        <BOX2COLS>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {label}
+          </Box>
+          {children}
+        </BOX2COLS>
+      </span>
+    </OSTooltip>
+  )
+}
+
+export const ElementAttrSetter2Cols = ({
+  elements, attributePath, attributeKey, t, showTooltipOverload = true, children
+}: {
+  elements: (Class_LinkElement | Class_NodeElement | Class_LinkStyle | Class_NodeStyle)[]; // Éléments pour vérifier l'overload
+  attributePath: string,
+  attributeKey: keyof (Class_LinkAttribute | Class_NodeAttribute); // Clé de l'attribut pour les traductions et overload
+  t: TFunction; // Fonction de traduction
+  showTooltipOverload?: boolean; // Optionnel - afficher le tooltip overload
+  children: React.ReactNode; // Le composant enfant (Select, Input, etc.)
+}): JSX.Element => {
+
+  const label = t(`${String(attributePath)}.${String(attributeKey)}`);
+  const tooltip = t(`${String(attributePath)}.tooltips.${String(attributeKey)}`);
+
+  return (
+    <OSTooltip label={tooltip}>
+      <span>
+        <BOX2COLS>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {label}
+            {showTooltipOverload && (
+              <TooltipElementOverloaded
+                k={attributeKey}
+                elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+                t={t} />
+            )}
+          </Box>
+          {children}
+        </BOX2COLS>
+      </span>
+    </OSTooltip>
+  )
+}
+
+// Version refactorisée d'ElementAttrSetterSelect2Cols
+export const ElementAttrSetterSelect2Cols = ({ app_data, elements, attributeKey, refreshParentComponent, options }: {
+  app_data: Class_ApplicationData
+  elements: ElementsType[]
+  attributeKey: ValueKey
+  refreshParentComponent: () => void
+  options: Array<{ key: string; value: string; label: string }>
+}) => {
+
+  const { disable_attr_props, t } = useElementAttributeConfig(app_data, elements)
+  const { attribute_value } = useAttributeValue(elements, attributeKey)
+
+  return (
+    <ElementAttrSetter2Cols
+      attributePath='Flux.labels'
+      attributeKey={attributeKey}
+      t={t} elements={elements}>
+      <Select
+        isDisabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]}
+        value={attribute_value as string}
+        onChange={(evt) => {
+          updateElements(app_data, elements, attributeKey, evt.target.value, refreshParentComponent)
+        }}
+      >
+        {options.map(option => (
+          <option key={option.key} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </Select>
+    </ElementAttrSetter2Cols>
+  )
+}
+
+
+// ==================================================================================================
+// COMPOSANT POUR TEXT INPUT
+// ==================================================================================================
+
+// Version refactorisée d'ElementAttrSetterTextInput2Cols
+export const ElementAttrSetterTextInput2Cols = ({ app_data, elements, attributePath, attributeKey, refreshParentComponent }:{
+  app_data: Class_ApplicationData
+  elements: ElementsType[]
+  attributePath: string
+  attributeKey: ValueKey
+  refreshParentComponent: () => void
+}) => {
+  const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig(app_data, elements)
+  const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, attributeKey)
+  return (
+    <ElementAttrSetter2Cols
+      attributePath={attributePath}
+      attributeKey={attributeKey} t={t} elements={elements}>
+      <ConfigMenuTextInput
+        disabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]}
+        default_value={attribute_value as string}
+        function_on_blur={(value) => {
+          updateElements(app_data, elements, attributeKey, value || undefined, refreshParentComponent)
+        }}
+        menu_for_style={menu_for_style}
+        multiValue={is_attribute_indetermined}
+      />
+    </ElementAttrSetter2Cols>
+  )
+}
+
+// ==================================================================================================
+// COMPOSANT POUR NUMBER INPUT
+// ==================================================================================================
+
+// Version refactorisée d'ElementAttrSetterNumberInput2Cols
+export const ElementAttrSetterNumberInput2Cols = ({
+  app_data, elements, attributePath, attributeKey, refreshParentComponent = () => null,
+  minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text
+}: {
+  app_data: Class_ApplicationData
+  elements: ElementsType[]
+  attributePath: string,
+  attributeKey: ValueKey
+  refreshParentComponent?: () => void
+  minimum_value?: number
+  maximum_value?: number
+  step?: number
+  stepper?: boolean
+  percent?: boolean,
+  unit_text?: string
+}) => {
+
+  const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig(app_data, elements)
+  const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, attributeKey)
+
+  const geometry_attributes = ['position_dx','position_dy','position_u']
+  return (
+    <ElementAttrSetter2Cols
+      attributePath={attributePath}
+      attributeKey={attributeKey}
+      t={t}
+      elements={elements}>
+      <ConfigMenuNumberInput
+        disabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]&& !geometry_attributes.includes(attributeKey)}
+        t={t}
+        default_value={percent ? attribute_value * 100 : attribute_value}
+        function_on_blur={(value) => {
+          updateElements(
+            app_data, elements, attributeKey,
+            (percent && value ? value / 100 : value) as ValueElementsType, refreshParentComponent)
+        }}
+        menu_for_style={menu_for_style}
+        minimum_value={minimum_value}
+        maximum_value={maximum_value}
+        unit_text={percent ? '%' : unit_text}
+        step={step}
+        stepper={stepper}
+        multiValue={is_attribute_indetermined}
+      />
+    </ElementAttrSetter2Cols>
+  )
+}
+
+export const DataTagSelector = ({ data_tagg, value, onChange }: {
+  data_tagg: Class_DataTagGroup;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+}) => {
+  return (
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box as='span'layerStyle='menuconfigpanel_part_title_3'>
+        {data_tagg.name}
+      </Box>
+      <Select
+        name={data_tagg.id}
+        variant='menuconfigpanel_option_select'
+        value={value}
+        onChange={onChange}
+      >
+        {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+      </Select>
+    </Box>
+  );
+};
+// Tooltipe added to input in menu when add a local value (for nodes & links local attributes)
+
+
+
+export const TooltipValueSurcharge = (k: string, t: TFunction) => {
+  return <OSTooltip label={t('Menu.overcharge_style_value')} placement='left'>
+    <FontAwesomeIcon className='tooltip_overload' style={{ color: '#6cc3d5', height: '12', width: '12', float: 'right' }} icon={faCircleInfo} />
+  </OSTooltip>;
+};
+
+
+export const OSTooltip: FC<OSTooltpFuncType> = (
+  {
+    label, delay = 500, placement = 'auto', isAlwaysOpen = false, children
+  }
+) => {
+  if (label === undefined) {
+    return <>{children}</>
+  }
+  const element_key = label.split(' ').join('_')
+  if (isAlwaysOpen) {
+    return <Tooltip
+      key={element_key}
+      openDelay={delay}
+      placement={placement}
+      label={label}
+      closeDelay={100}
+      isOpen={true}
+      hasArrow={true}
+    >
+      {children}
+    </Tooltip>
+  } else {
+    return <Tooltip
+      key={element_key}
+      openDelay={delay}
+      placement={placement}
+      label={label}
+      closeDelay={100}
+    >
+      {children}
+    </Tooltip>
+  }
+};
+
+export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
+  const { isChecked } = props;
+  return isChecked
+    ? <FontAwesomeIcon icon={faEye} />
+    : <FontAwesomeIcon icon={faEyeSlash} />;
+};
+/**
+ * Check if given attribute is overloaded in at least one link
+ * @export
+ * @param {Class_LinkElement[]} links
+ * @param {keyof Class_LinkAttribute} attr
+ * @return {*}
+ */
+
+export const isElementAttributeOverloaded = (
+  elements: (Class_LinkElement | Class_NodeElement)[],
+  attr: keyof Class_LinkAttribute | keyof Class_NodeAttribute
+) => {
+  return elements.some(element => {
+    if (element instanceof Class_LinkElement) {
+      return element.isAttributeOverloaded(attr as unknown as keyof Class_LinkAttribute)
+    } else if (element instanceof Class_NodeElement) {
+      return element.isAttributeOverloaded(attr as unknown as keyof Class_NodeAttribute)
+    }
+    return false
+  })
+}
+interface TooltipElementOverloadedProps {
+  k: keyof Class_LinkAttribute | keyof Class_NodeAttribute // Clé de l'attribut à vérifier
+  elements: (Class_LinkElement | Class_NodeElement)[] // Éléments à vérifier
+  t: TFunction // Fonction de traduction
+  tooltipPrefix?: string // Préfixe pour le tooltip (par défaut 'el_var_')
+}
+/**
+   * Local component that add a icon with a tooltip to show attribute value is managed by element attribute (and not style as by default)
+   *
+   * @param {*} {k}
+   * @return {*}
+   */
+/**
+ * Local component that adds an icon with a tooltip to show attribute value is managed by element attribute (and not style as by default)
+ * @template TElement - Type of elements (Class_LinkElement | Class_NodeElement)
+ * @template TElementAttribute - Type of element attributes (Class_LinkAttribute | Class_NodeAttribute)
+ */
+export const TooltipElementOverloaded = ({
+  k, elements, t
+}: TooltipElementOverloadedProps): JSX.Element => {
+  const isOverwritted = isElementAttributeOverloaded(elements, k)
+  return isOverwritted ? (
+    <>{TooltipValueSurcharge('el_var_', t)}</>
+  ) : <></>
+}
+
+// Version refactorisée de MenuSectionCheckbox
+export const MenuSectionCheckbox = ({ app_data, elements,attributePath, attributeKey, refreshParentComponent, children }: {
+  app_data: Class_ApplicationData
+  elements: ElementsType[]
+  attributePath: string,
+  attributeKey: ValueKey
+  refreshParentComponent: () => void
+  children: React.ReactNode
+}) => {
+
+  const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig(app_data, elements)
+  const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, attributeKey)
+
+  return (
+    <Box layerStyle='menu_sub_section'>
+      <Box layerStyle='menu_sub_section_title'>
+        <Checkbox
+          isDisabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]}
+          isIndeterminate={is_attribute_indetermined}
+          variant='menuconfigpanel_part_title_1_checkbox'
+          icon={<CustomFaEyeCheckIcon />}
+          isChecked={attribute_value as boolean}
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+            updateElements(app_data, elements, attributeKey, evt.target.checked, refreshParentComponent)
+          }}
+        >
+          <OSTooltip label={t(`${String(attributePath)}.tooltips.${String(attributeKey)}`)}>
+            {t(`${String(attributePath)}.${String(attributeKey)}`) + ' '}
+          </OSTooltip>
+          {!menu_for_style && (
+            <TooltipElementOverloaded
+              k={attributeKey}
+              elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+              t={t}
+            />
+          )}
+        </Checkbox>
+      </Box>
+      {children}
+    </Box>
+  )
+}
+
+export const ConditionalCheckboxWithInput = ({
+  app_data, elements, checkboxAttributeKey, inputAttributeKey, refreshParentComponent,
+  minimum_value = 0, stepper = true, children
+}: {
+  app_data: Class_ApplicationData,
+  elements: ElementsType[],
+  checkboxAttributeKey: ValueKey,
+  inputAttributeKey: ValueKey,
+  refreshParentComponent: () => void,
+  minimum_value?: number,
+  stepper?: boolean,
+  children?: React.ReactNode
+}) => {
+  const { disable_attr_props, t, menu_for_style } = useElementAttributeConfig(app_data, elements)
+  const { attribute_value: checkboxValue } = useAttributeValue(elements, checkboxAttributeKey)
+  const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, inputAttributeKey)
+
+  const layoutStyle = 'menuconfigpanel_row_2cols'
+
+  return (
+    <Box as='span' layerStyle={layoutStyle}>
+      <Checkbox
+        isDisabled={!disable_attr_props[checkboxAttributeKey as keyof typeof disable_attr_props]}
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={checkboxValue as boolean}
+        onChange={(evt) => {
+          updateElements(app_data, elements, checkboxAttributeKey, evt.target.checked, refreshParentComponent);
+        }}
+      >
+        <OSTooltip label={t(`Flux.labels.tooltips.${String(checkboxAttributeKey)}`)}>
+          {t(`Flux.labels.${String(checkboxAttributeKey)}`) + ' '}
+        </OSTooltip>
+        {!menu_for_style && (
+          <TooltipElementOverloaded
+            k={checkboxAttributeKey}
+            elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+            t={t}
+          />
+        )}
+      </Checkbox>
+
+      {checkboxValue && inputAttributeKey && (
+        <OSTooltip label={t(`Flux.labels.tooltips.${String(inputAttributeKey)}`)}>
+          <ConfigMenuNumberInput
+            disabled={!disable_attr_props[inputAttributeKey as keyof typeof disable_attr_props]}
+            t={t}
+            default_value={attribute_value as number}
+            menu_for_style={menu_for_style}
+            minimum_value={minimum_value}
+            stepper={stepper}
+            function_on_blur={(value) => {
+              updateElements(app_data, elements, inputAttributeKey, value ?? undefined, refreshParentComponent);
+            }}
+            multiValue={is_attribute_indetermined}
+          />
+        </OSTooltip>
+      )}
+
+      {children}
+    </Box>
+  )
+}
+
+export const CheckboxWithColorPicker = ({
+  app_data, elements, attributePath, checkboxAttributeKey, inputAttributeKey, refreshParentComponent, children
+}: {
+  app_data: Class_ApplicationData,
+  elements: ElementsType[],
+  attributePath: string,
+  checkboxAttributeKey: ValueKey,
+  inputAttributeKey: ValueKey,
+  refreshParentComponent: () => void,
+  children?: React.ReactNode
+}) => {
+  const { disable_attr_props, t, menu_for_style } = useElementAttributeConfig(app_data, elements)
+  const { attribute_value: checkboxValue } = useAttributeValue(elements, checkboxAttributeKey)
+  const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, inputAttributeKey)
+
+  const layoutStyle = 'menuconfigpanel_row_2cols'
+
+  return (
+    <Box as='span' layerStyle={layoutStyle}>
+      <Checkbox
+        isDisabled={!disable_attr_props[checkboxAttributeKey as keyof typeof disable_attr_props]}
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={checkboxValue as boolean}
+        onChange={(evt) => {
+          updateElements(app_data, elements, checkboxAttributeKey, evt.target.checked, refreshParentComponent);
+        }}
+      >
+        <OSTooltip label={t(`${String(attributePath)}.tooltips.${String(checkboxAttributeKey)}`)}>
+          {t(`${String(attributePath)}.${String(checkboxAttributeKey)}`) + ' '}
+        </OSTooltip>
+        {!menu_for_style && (
+          <TooltipElementOverloaded
+            k={checkboxAttributeKey}
+            elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+            t={t}
+          />
+        )}
+      </Checkbox>
+
+      {checkboxValue && (
+        <OSTooltip label={t(`${String(attributePath)}.tooltips.${String(inputAttributeKey)}`)}>
+        <MenuColorPicker
+          isDisabled={!disable_attr_props[inputAttributeKey as keyof typeof disable_attr_props]}
+          initialColor={attribute_value}
+          functionOnBlur={(new_color) => {
+            updateElements(app_data, elements, inputAttributeKey, new_color,refreshParentComponent)
+          }} />
+        </OSTooltip>
+      )}
+      {children}
+    </Box>
+  )
+}
+
+export const SimpleElementCheckbox = ({
+  app_data, elements, attributeKey, refreshParentComponent, variant = 'menuconfigpanel_option_checkbox'
+}: {
+  app_data: Class_ApplicationData
+  elements: ElementsType[]
+  attributeKey: ValueKey
+  refreshParentComponent: () => void
+  variant?: string
+}) => {
+  const { disable_attr_props, t, menu_for_style } = useElementAttributeConfig(app_data, elements)
+  const { attribute_value } = useAttributeValue(elements, attributeKey)
+
+  return (
+    <Checkbox
+      isDisabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]}
+      variant={variant}
+      isChecked={attribute_value as boolean}
+      onChange={(evt) => {
+        updateElements(app_data, elements, attributeKey, evt.target.checked, refreshParentComponent)
+      }}
+    >
+      <OSTooltip label={t(`Flux.labels.tooltips.${String(attributeKey)}`)}>
+        {t(`Flux.labels.${String(attributeKey)}`) + ' '}
+      </OSTooltip>
+      {!menu_for_style && (
+        <TooltipElementOverloaded
+          k={attributeKey}
+          elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+          t={t}
+        />
+      )}
+    </Checkbox>
+  )
+}
 
