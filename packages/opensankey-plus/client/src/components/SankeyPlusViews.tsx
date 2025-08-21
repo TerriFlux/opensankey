@@ -39,20 +39,22 @@ import {
   default_main_sankey_id,
   makeId,
   Type_JSON,
-} from '../../deps/OpenSankey/types/Utils'
+} from '../deps/OpenSankey/types/Utils'
 import {
   ConfigMenuTextInput
-} from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
+} from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
-import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-import { LevelTagFilter } from '../FilterComponent/LevelTagFilter'
-import { FilterWrapperBox } from '../FilterComponent/TagsFilterComponent'
-import { Class_DrawingAreaOSP } from '../../types/DrawingAreaOSP'
-import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
-import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
-import { BaseComponentPropsPlus } from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
+import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { FilterWrapperBox } from './Toolbar'
+import { Class_DrawingAreaOSP } from '../types/DrawingAreaOSP'
+import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { LevelTagFilter } from './Toolbar'
 
+interface BaseComponentPropsPlus {
+  new_data_plus: Class_ApplicationDataOSP
+}
 
 export const logo_view = <svg
   xmlns='http://www.w3.org/2000/svg'

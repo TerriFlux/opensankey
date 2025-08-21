@@ -6,15 +6,11 @@ import {
   Textarea,
 } from '@chakra-ui/react'
 
-import { SankeyNodeSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
-import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
-import { BaseComponentProps } from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-
-
-
-// MENU COMPONENT ***********************************************************************
+import { SankeyNodeSelectionSimple } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
+import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 /**
  * Create tootltip modification menu
@@ -25,8 +21,10 @@ import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuComm
  * }
  * @return {*}
  */
-export const SankeyMenuConfigurationNodesTooltip: FC<BaseComponentProps> = ({
+export const SankeyMenuConfigurationNodesTooltip = ({
   new_data,
+}:{
+  new_data: Class_ApplicationDataOSP
 }) => {
   // Data -------------------------------------------------------------------------------
   // Get necessary infos

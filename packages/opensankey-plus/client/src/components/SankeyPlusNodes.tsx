@@ -12,9 +12,15 @@ import {
 } from '@chakra-ui/react'
 
 
-import { CustomFaEyeCheckIcon, OSTooltip, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-import { BaseComponentProps, BaseComponentPropsPlus} from '../ComponentTypes'
+import { CustomFaEyeCheckIcon, OSTooltip, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
+interface BaseComponentProps {
+  new_data: Class_ApplicationDataOSP
+}
+interface BaseComponentPropsPlus {
+  new_data_plus: Class_ApplicationDataOSP
+}
 
 export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,

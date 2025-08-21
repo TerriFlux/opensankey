@@ -22,10 +22,10 @@ import {
 
 // Local types
 import { MultiSelect } from 'react-multi-select-component'
-import { Class_LevelTag } from '../../deps/OpenSankey/types/Tag'
-import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
-import { Class_LevelTagGroup } from '../../deps/OpenSankey/types/TagGroup'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_LevelTag } from '../deps/OpenSankey/types/Tag'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { Class_LevelTagGroup } from '../deps/OpenSankey/types/TagGroup'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 export type FCType_SankeyPlusEditionLevelTag = { new_data: Class_ApplicationDataOSP }
 

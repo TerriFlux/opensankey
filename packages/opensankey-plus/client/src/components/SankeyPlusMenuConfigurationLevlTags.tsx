@@ -7,14 +7,14 @@ import {
 } from '@chakra-ui/react'
 
 // Local types
-import type { Class_LevelTag} from '../../deps/OpenSankey/types/Tag'
+import type { Class_LevelTag} from '../deps/OpenSankey/types/Tag'
 
-import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-import { Class_NodeDimension } from '../../deps/OpenSankey/Elements/NodeDimension'
-import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
-import { Class_NodeElement } from '../../deps/OpenSankey/Elements/Node'
-import { Class_LevelTagGroup } from '../../deps/OpenSankey/types/TagGroup'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
+import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_NodeDimension } from '../deps/OpenSankey/Elements/NodeDimension'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
+import { Class_LevelTagGroup } from '../deps/OpenSankey/types/TagGroup'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 
 type FCType_SankeyMenuConfigurationLevelTags = {

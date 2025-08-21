@@ -9,13 +9,14 @@ import { Box, Button } from '@chakra-ui/react'
 import { Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { DiffType, OSPData } from '../types/LegacyTypes'
 import { applyChange } from 'deep-diff'
-import { BaseComponentPropsPlus } from './ComponentTypes'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 
-
-export const TransformationElementsOSP: FC<BaseComponentPropsPlus> = ({
+export const TransformationElementsOSP = ({
   new_data_plus,
+}:{
+  new_data_plus: Class_ApplicationDataOSP
 }) => {
 
   const { t, data_var_to_update,menu_configuration,icon_library} = new_data_plus
@@ -88,6 +89,12 @@ export const TransformationElementsOSP: FC<BaseComponentPropsPlus> = ({
       </Box>
     </OSTooltip></>
 }
+
+// export type FType_SankeyLayoutOSP = (
+//   data: OSPData,
+//   new_layout: OSPData,
+//   mode: string[]
+// ) => void
 
 // export const sankeyLayoutOSP : FType_SankeyLayoutOSP =(
 //   data:OSPData,

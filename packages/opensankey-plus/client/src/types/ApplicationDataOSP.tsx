@@ -739,16 +739,16 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Remove tag group
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
       new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
-      tagg.show_legend = false
+      tagg.use_colors = false
     })
     new_drawing_area.sankey.flux_taggs_list.forEach(tagg => {
-      tagg.show_legend = false
+      tagg.use_colors = false
     })
     new_drawing_area.sankey.level_taggs_list.forEach(tagg => {
       new_drawing_area.sankey.removeTagGroup('level_taggs', tagg)
     })
     new_drawing_area.sankey.data_taggs_list.forEach(tagg => {
-      tagg.show_legend = false
+      tagg.use_colors = false
     })
 
 

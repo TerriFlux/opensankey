@@ -19,7 +19,7 @@ import {
   initializeDiagrammSelectorOSP,
   moduleDialogsOSP,
 } from './ModulesOSP'
-import { ModalWelcomeBuilderOSP } from './components/welcome/ModalWelcomeOSP'
+import { ModalWelcomeBuilderOSP } from './components/ModalWelcomeOSP'
 import { ThemeOSP } from './css/ThemeOSP'
 
 // OpenSankey imports ===============================================================================

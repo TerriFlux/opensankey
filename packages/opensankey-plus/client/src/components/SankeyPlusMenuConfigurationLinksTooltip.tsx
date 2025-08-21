@@ -7,13 +7,15 @@ import {
 } from '@chakra-ui/react'
 
 // Local functions
-import { SankeyLinkSelectionSimple } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
-import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-import { Class_LinkElement } from '../../deps/OpenSankey/Elements/Link'
-import { BaseComponentProps } from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
+import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
+import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
-// MENU COMPONENT ***********************************************************************
+interface BaseComponentProps {
+  new_data: Class_ApplicationDataOSP
+}
 
 /**
  * Create tootltip modification menu

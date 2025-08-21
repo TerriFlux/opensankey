@@ -24,19 +24,26 @@ import {
   Class_LevelTag,
   Class_DataTag,
   Class_ProtoTag,
-} from '../../deps/OpenSankey/types/Tag'
+} from '../deps/OpenSankey/types/Tag'
 
 // Local functions / components
 import {
   default_grey_color,
-  GetRandomInt
-} from '../../deps/OpenSankey/types/Utils'
+  GetRandomInt,
+  Type_MacroTagGroup
+} from '../deps/OpenSankey/types/Utils'
 
-import { WrapperBoxSubSectionMenu } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-import { Class_LinkValue } from '../../deps/OpenSankey/Elements/LinkValues'
-import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../../deps/OpenSankey/types/TagGroup'
-import { FType_SankeySettingsEditionElementTags } from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
+import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_LinkValue } from '../deps/OpenSankey/Elements/LinkValues'
+import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../deps/OpenSankey/types/TagGroup'
+
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+
+export type FType_SankeySettingsEditionElementTags = {
+  new_data: Class_ApplicationDataOSP,
+  elementTagNameProp: Type_MacroTagGroup
+}
 
 const list_palette_color = [
   d3.interpolateBlues,
@@ -272,7 +279,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
     // old_val is an organised dict that contain :
     // - 1 : Tagg id
     // - 2 : Tagg Name
-    // - 3 : Tagg show_legend
+    // - 3 : Tagg use_colors
     // - 4 : Tagg banner
     // - 5 : Dict containing all info concerning the tags of the group
     // - 6 : if It's a dataTag then save link value associated to this of each links
@@ -291,7 +298,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       = {
         id: tagg.id,
         name: tagg.name,
-        activated: tagg.show_legend,
+        activated: tagg.use_colors,
         banner: tagg.banner,
         dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
         dict_link_value: {}
@@ -338,7 +345,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
         n_tag.color = tag[2]
       })
       clone_tagg.banner = old_val.banner
-      clone_tagg.show_legend = old_val.activated
+      clone_tagg.use_colors = old_val.activated
 
       clone_tagg.updateTagsReferences()
 

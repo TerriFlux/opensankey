@@ -25,7 +25,7 @@ import {
   ModalOverlay,
   useDisclosure
 } from '@chakra-ui/react'
-import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 export interface IType_SupplyUseModelisationProd {
   application_data_mfa: Class_ApplicationDataOSP,

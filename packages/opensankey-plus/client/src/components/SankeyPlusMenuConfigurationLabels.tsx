@@ -14,18 +14,21 @@ import {
 } from '@chakra-ui/react'
 
 // OpenSankey ts-code
-import { Type_JSON } from '../../deps/OpenSankey/types/Utils'
-import { Class_ContainerElement } from '../../deps/OpenSankey/Elements/TextZone'
+import { Type_JSON } from '../deps/OpenSankey/types/Utils'
+import { Class_ContainerElement } from '../deps/OpenSankey/Elements/TextZone'
 
 
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
-import { OSMultiSelect } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-import { listOptionSizeQuill } from '../UtilsOSP'
-import { BaseComponentPropsPlus} from '../ComponentTypes'
-import { OSTooltip } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
+import { OSMultiSelect } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { listOptionSizeQuill } from './UtilsOSP'
+import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
+interface BaseComponentPropsPlus {
+  new_data_plus: Class_ApplicationDataOSP
+}
 /**
  * Description placeholder
  *

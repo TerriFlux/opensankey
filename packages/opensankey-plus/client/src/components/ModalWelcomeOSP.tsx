@@ -2,10 +2,10 @@
 import React, { FC, useState } from 'react'
 
 // OpenSankey libs
-import { ModalWelcome, ModalWelcomeContent } from '../../deps/OpenSankey/components/welcome/ModalWelcome'
+import { ModalWelcome, ModalWelcomeContent } from '../deps/OpenSankey/components/welcome/ModalWelcome'
 import { Box, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react'
-import { Class_ApplicationDataOSP } from '../../types/ApplicationDataOSP'
-import { FCType_ModalWelcomeBuilder } from '../../deps/OpenSankey/components/SankeyMenuTypes'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { FCType_ModalWelcomeBuilder } from '../deps/OpenSankey/components/SankeyMenuTypes'
 
 
 const ShortcutsOSP = (

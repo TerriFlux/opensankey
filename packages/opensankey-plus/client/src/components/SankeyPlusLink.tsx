@@ -22,23 +22,29 @@ import {
 
 import {
   Class_LinkElement,
-} from '../../deps/OpenSankey/Elements/Link'
+} from '../deps/OpenSankey/Elements/Link'
 
 import {
   checked,
   sep
-} from '../../deps/OpenSankey/components/dialogs/SankeyMenuContextLink'
-import { BaseMenuStylePropsPlus, BaseComponentProps } from '../ComponentTypes'
-import { isElementAttributeOverloaded, OSTooltip, TooltipValueSurcharge } from '../../deps/OpenSankey/components/configmenus/MenuCommon'
-import { LINKS_ATTRIBUTES_CONFIG } from '../../deps/OpenSankey/Elements/LinkAttributesConfig'
-import { Class_LinkStyle } from '../../deps/OpenSankey/Elements/ElementStyle'
+} from '../deps/OpenSankey/components/dialogs/SankeyMenuContextLink'
+import { isElementAttributeOverloaded, OSTooltip, TooltipValueSurcharge } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { LINKS_ATTRIBUTES_CONFIG } from '../deps/OpenSankey/Elements/LinkAttributesConfig'
+import { Class_LinkStyle } from '../deps/OpenSankey/Elements/ElementStyle'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
-export const MenuConfLinkApparenceDashedOSP: FC<BaseMenuStylePropsPlus> = ({
-  new_data_plus,
-  menu_for_style 
+export interface BaseComponentProps {
+  new_data: Class_ApplicationDataOSP
+}
+export interface BaseComponentPropsPlus {
+  new_data_plus: Class_ApplicationDataOSP
+}
+
+export const MenuConfLinkApparenceDashedOSP = ({new_data_plus,menu_for_style } : {
+  new_data_plus:Class_ApplicationDataOSP,
+  menu_for_style: boolean
 }) => {
-  {/* Flux hachuré */ }
-  // Get data
+
   const { ref_selected_style_link } = new_data_plus.menu_configuration
 
   const { t } = new_data_plus

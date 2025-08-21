@@ -20,10 +20,13 @@ import {
   Tabs
 } from '@chakra-ui/react'
 
-import SankeyListIcons from '../../icons/lib_of_icons.json'
-import { BaseComponentPropsPlus } from '../ComponentTypes'
+import SankeyListIcons from '../icons/lib_of_icons.json'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 type KeysOfIcon = keyof typeof SankeyListIcons
+interface BaseComponentPropsPlus {
+  new_data_plus: Class_ApplicationDataOSP
+}
 
 export const ModalSelectionIconsOSP: FC<BaseComponentPropsPlus> = (
   { new_data_plus }

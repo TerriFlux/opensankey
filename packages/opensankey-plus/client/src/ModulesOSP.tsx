@@ -36,6 +36,7 @@ import {
   OpenSankeyDiagramSelector
 } from './deps/OpenSankey/components/dialogs/SankeyMenuDialogs'
 import {
+  FType_InitializeAdditionalMenus,
   FType_ModuleDialogs
 } from './deps/OpenSankey/types/FunctionTypes'
 import {
@@ -50,14 +51,14 @@ import {
 import {
   MenuConfigurationFreeLabelsOSP,
   ContextZDTOSP,
-} from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLabels'
+} from './components/SankeyPlusMenuConfigurationLabels'
 import {
   ButtonNodeContextCreateUnitaryView,
   ButtonNodeContextCreateZDTAroundSelectedNode,
   ButtonNodeContextStartAnimation,
   NodeHyperLinkOSP,
   NodeIconOSP
-} from './components/MenuConfigEdition/SankeyPlusNodes'
+} from './components/SankeyPlusNodes'
 
 import {
   ModalTransparentViewAttrOSP,
@@ -66,32 +67,32 @@ import {
   BannerViewsOSP,
   ViewsConfig,
   ModalCreateUnitaryViewOSP,
-} from './components/MenuConfigEdition/SankeyPlusViews'
+} from './components/SankeyPlusViews'
 import {
   SankeyMenuConfigurationNodesTooltip
-} from './components/MenuConfigEdition/SankeyPlusMenuConfigurationNodesTooltip'
+} from './components/SankeyPlusMenuConfigurationNodesTooltip'
 import {
   ModalSelectionIconsOSP
-} from './components/MenuConfigEdition/SankeyPlusCatalogIcon'
+} from './components/SankeyPlusCatalogIcon'
 import {
   NodeForeignObjectOSP
-} from './components/MenuConfigEdition/SankeyPlusForeignObject'
+} from './components/SankeyPlusForeignObject'
 import {
   ButtonLinkContextAssignTag,
   MenuConfLinkApparenceDashedOSP,
-} from './components/MenuConfigEdition/SankeyPlusLink'
+} from './components/SankeyPlusLink'
 import {
   SankeyMenuConfigurationNodesTags
-} from './components/MenuConfigEdition/SankeyPlusMenuConfigurationNodesTags'
+} from './components/SankeyPlusMenuConfigurationNodesTags'
 import {
   MenuConfigurationLinksTags
-} from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLinksTags'
+} from './components/SankeyPlusMenuConfigurationLinksTags'
 import {
   MenuConfigurationLinksTooltip
-} from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLinksTooltip'
+} from './components/SankeyPlusMenuConfigurationLinksTooltip'
 import {
   SankeySettingsEditionElementTags
-} from './components/MenuConfigEdition/SankeyPlusMenuConfigurationTags'
+} from './components/SankeyPlusMenuConfigurationTags'
 
 import {
   TransformationElementsOSP
@@ -100,16 +101,15 @@ import {
   DrawerSequenceDataTagg,
   ImportImageAsSvgBg,
 } from './components/UtilsOSP'
-import { ToolbarFilter } from './components/FilterComponent/TagsFilterComponent'
-import { SankeyMenuConfigurationLevelTags } from './components/MenuConfigEdition/SankeyPlusMenuConfigurationLevlTags'
-import { AFMContextMenu, AFMEditionMenu } from './components/AFM/AFMSankeyMenu'
-import { SupplyUseModelisationProd } from './components/AFM/SankeyReconciliation'
+import { ToolbarFilter } from './components/Toolbar'
+import { SankeyMenuConfigurationLevelTags } from './components/SankeyPlusMenuConfigurationLevlTags'
+import { AFMContextMenu, AFMEditionMenu } from './components/AFMSankeyMenu'
+import { SupplyUseModelisationProd } from './components/SankeyReconciliation'
 import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
-import { checkForUrlToJSON } from './deps/OpenSankey/types/Utils'
+import { checkForUrlToJSON, Type_JSON } from './deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/components/SankeyMenuTypes'
-import { FType_InitializeApplicationDataOSP, FType_InitializeAdditionalMenusOSP } from './components/ComponentTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -117,9 +117,26 @@ declare const window: Window &
       publish: boolean
     }
   }
+/**
+ * Generic Type that with given argument return a functionType that return a given type,
+ * Useful when we want to only recast the returned value of OS function in submodule
+ * so that when original functionType change linter should trigger in submodule too
+ */
+type RecastReturnTypeOfFunction<T extends any[], R extends any> = (...args: T) => R  // eslint-disable-line
+  /**
+ * Special parameter for additionalMenu
+ * It takes original AdditionalMenusType parameters but also its return object that contains array of additional JSX.Element
+ */
+type PType_InitializeAdditionalMenus = Parameters<FType_InitializeAdditionalMenus>
+type PType_InitializeAdditionalMenusOSP = [...PType_InitializeAdditionalMenus]
+export type FType_InitializeAdditionalMenusOSP = RecastReturnTypeOfFunction<PType_InitializeAdditionalMenusOSP, void>
 
-export const initializeApplicationDataOSP: FType_InitializeApplicationDataOSP = (
-  initial_data
+/**
+ * Application data initializer
+ */
+
+export const initializeApplicationDataOSP = (
+  initial_data:Type_JSON | undefined
 ) => {
   console.log('initializeApplicationDataOSP')
   // Init application data
