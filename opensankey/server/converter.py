@@ -1561,7 +1561,7 @@ class JsonToSankey(object):
                                     flux = self.sankey.get_or_create_flux(
                                         orig_node.name, dest_node.name, tag
                                     )
-                                    self._extract_data(flux_json["value"], flux)
+                                    self._extract_data(flux_json["value"], flux, False)
                 else:
                     flux = self.sankey.get_or_create_flux(
                         orig_node.name, dest_node.name
@@ -1584,7 +1584,7 @@ class JsonToSankey(object):
                                     flux = self.sankey.get_or_create_flux(
                                         orig_node.name, dest_node.name, tag
                                     )
-                                    self._extract_data(flux_json["value"], flux)
+                                    self._extract_data(flux_json["value"], flux, True)
                 else:
                     flux = self.sankey.get_or_create_flux(
                         orig_node.name, dest_node.name
