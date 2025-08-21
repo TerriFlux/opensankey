@@ -34,7 +34,7 @@ import {
   initializeDiagrammSelectorOSP,
   moduleDialogsOSP,
 } from './deps/LoginComponent//deps/OpenSankey+/ModulesOSP'
-import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/welcome/ModalWelcomeOSP'
+import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/ModalWelcomeOSP'
 
 // Local imports ====================================================================================
 
