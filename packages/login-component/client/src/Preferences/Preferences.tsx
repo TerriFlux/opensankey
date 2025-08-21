@@ -5,7 +5,7 @@ import { FaMinus, FaPlus } from 'react-icons/fa'
 import * as d3 from 'd3'
 
 import { TFunction } from 'i18next'
-import { SankeySettingsEditionElementTags } from '../deps/OpenSankey+/components/MenuConfigEdition/SankeyPlusMenuConfigurationTags'
+import { SankeySettingsEditionElementTags } from '../deps/OpenSankey+/components/SankeyPlusMenuConfigurationTags'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 import { MenuConfigurationLinkShape } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksShape'
 import {MenuConfigurationLinkLabel} from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksLabel'
