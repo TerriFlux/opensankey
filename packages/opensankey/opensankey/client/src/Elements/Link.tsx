@@ -214,6 +214,7 @@ export const format_value = (
     link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value ? data_value / total_source * 100 : null
   } else if (element.value_label_unit_type == 'normalized') {
+    data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
   }
 
   /*==========================================================================*/
@@ -255,6 +256,7 @@ export const format_value = (
     return text_value
   }
   // Add unit suffix
+  if (element.sankey.drawing_area.type_data == 'data' || element.sankey.drawing_area.type_data == 'data_label' && link.value!.value_option == 'unit_conversion') return text_value
   if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
   else if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
   else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
@@ -1031,10 +1033,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       // }
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
-    } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.show_legend).length == 0) {
-      if (this.source.taggs_list.filter(tagg => tagg.show_legend).length > 0) {
+    } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors).length == 0) {
+      if (this.source.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
         return this.source.getShapeColorToUse()
-      } else if (this.target.taggs_list.filter(tagg => tagg.show_legend).length > 0) {
+      } else if (this.target.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
         return this.target.getShapeColorToUse()
       }
     }
@@ -1047,10 +1049,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Default color
     let shape_color = this.shape_color
     // Test if tagg of flow or data are activated, if so use color from tag associated to link
-    const dataTagColorActivated = this.selected_data_tags_list.filter(tag => tag.group.show_legend)
+    const dataTagColorActivated = this.selected_data_tags_list.filter(tag => tag.group.use_colors)
     // Do we apply color of flux tags ?
     const flux_taggs_activated = this.flux_taggs_list
-      .filter(tagg => tagg.show_legend)
+      .filter(tagg => tagg.use_colors)
     if (flux_taggs_activated.length > 0) {
       const tagg_for_colormap = flux_taggs_activated[0]
       const tags_for_colormap = this.flux_tags_list
@@ -1141,7 +1143,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this.target.addInputLink(l)
     l.setAsChildLink(tag)
     l.shape_shape = 'bezier_outline'
-    tag.group.show_legend = true
+    tag.group.use_colors = true
   }
 
   /**
@@ -1191,6 +1193,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Speed-up computing
     if (!this.d3_selection)
       return
+    const da = this.sankey.drawing_area
     // Clean previous shape
     this.d3_selection?.selectAll('.link_arrow').remove()
     // draw arrow if needed
@@ -1204,7 +1207,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
           .attr('class', 'link_arrow')
           .attr('d', this._arrow_shape)
           .attr('fill', arrow_color)
-          .attr('fill-opacity', this.shape_opacity)
+          .attr('fill-opacity', da.type_data == 'data_label' ? 0.2 :this.shape_opacity)
           .attr('stroke', arrow_color)
           .attr('stroke-width', 0.1)
       }
@@ -1653,9 +1656,17 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return this._values.getValueForDataTags(this.selected_data_tags_list as Class_DataTag[])
   }
 
+  private _is_computing = false
   public get valueCurrent() {
-    if (this.drawing_area.type_data === 'data') return this.value?.valueData ?? null
-    return this.value?.valueResult ?? (this.value?.value_option == 'value' ? this.value?.valueData : null) ?? null
+    if (this._is_computing) {
+      return null
+    }
+    this._is_computing = true
+    let value_current = null
+    if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
+    else value_current = this.value?.valueResult ?? (this.value?.value_option == 'value' ? this.value?.valueData : null) ?? null
+    this._is_computing = false
+    return value_current
   }
 
   /**
@@ -1708,6 +1719,12 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return value + '% ↕→'
     } else if (option == '%OD' && value) {
       return value + '% →↕'
+    } else if (option == 'unit_conversion' && value) {
+      return value + ' ' + this.unit_name+'/'+this.value?.ratio_unit_tag!.name
+    } else if (option == '%PS' && value) {
+      return '↑→ ' + value + '%'
+    } else if (option == '%PD' && value) {
+      return value + '% ↑→'
     }
     return value as string
   }
@@ -1723,7 +1740,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public get data_label() {
-    if (this.sankey.drawing_area.type_data == 'data') {
+    if (this.sankey.drawing_area.type_data == 'data' || this.sankey.drawing_area.type_data == 'data_label') {
       if (!this.value?.valueData) return ''
       return this.formatValueWithOption(format_value(this.value?.valueData, this, this.unit_name), this.value?.value_option)/*else if (this.value?.value_option == 'unit_conversion' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
@@ -1809,6 +1826,20 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this.drawElements()
   }
 
+  public linkIsStructure = () => {
+    if (this.sankey.drawing_area.type_data == 'structure') return true
+    if (this.sankey.drawing_area.type_data == 'data') {
+      if (this.value?.value_option != 'value' || this.value.valueData == null) return true
+    }
+    if (this.sankey.drawing_area.type_data == 'free_value' || this.sankey.drawing_area.type_data == 'free_interval') {
+      if (this.valueCurrent == null) return true
+    }
+    if (this.sankey.drawing_area.type_data == 'reconciled') {
+      if (this.value?.result_min !== null) return true
+    }
+    return this.shape_is_structure
+  }
+
   /**
    * Get thickness of stroke shape
    * @readonly
@@ -1818,7 +1849,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Get link value for current dataTaggs selected
     let data_value = this.valueCurrent
     // Scale this value for the drawing area
-    const linkValueInPx = (data_value !== null && (!this.shape_is_structure)) ? this.scaleValueToPx(data_value) : 2
+    const linkValueInPx = (data_value !== null && (!this.linkIsStructure())) ? this.scaleValueToPx(data_value) : 2
 
     // If link processed size is inferior to min. limit return min. limit
     if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
@@ -2083,7 +2114,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * Setter personnalisé pour name_label_horiz avec logique spéciale
    */
   customNameLabelHoriz(value: Type_PathLabelHPosition) {
-    if (value !== 'dragged') this.deleteDraggedLabelPos(); 
+    if (value !== 'dragged') this.deleteDraggedLabelPos();
     this._display.attributes.name_label_horiz = value
   }
 

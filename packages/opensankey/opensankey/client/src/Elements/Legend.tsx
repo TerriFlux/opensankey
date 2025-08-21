@@ -67,6 +67,7 @@ const default_legend_bg_border = false
 const default_legend_bg_color = default_element_color
 const default_legend_bg_opacity = 0
 const default_legend_show_dataTags = true
+const default_legend_show_constraints = false
 const default_width = 180
 const default_info_link_value_void = false
 const default_legend_position_x = 300
@@ -80,8 +81,7 @@ const default_legend_position_y = 50
  * @class ClassTemplate_Legend
  * @extends {ClassTemplate_Element}
  */
-export class ClassTemplate_Legend extends ClassTemplate_Element
-{
+export class ClassTemplate_Legend extends ClassTemplate_Element {
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -94,6 +94,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
   private _legend_bg_color: string = default_legend_bg_color
   private _legend_bg_opacity: number = default_legend_bg_opacity
   private _legend_show_dataTags: boolean = default_legend_show_dataTags
+  private _legend_show_constraints: boolean = default_legend_show_constraints
   private _width: number = default_width
   private _info_link_value_void: boolean = default_info_link_value_void
 
@@ -167,7 +168,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     // Init parent class attributes
 
     //TODO : rename grp_legend to g_legend when legacy code will be deleted as for now some legacy functions might be tirgered when interactiong with DA and look for g_legend
-    super('legend',drawing_area,sankey, menu_config, 'grp_legend')
+    super('legend', drawing_area, sankey, menu_config, 'grp_legend')
     // Init other class attributes
     this._display = {
       position: {
@@ -222,6 +223,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     this._legend_bg_color = _._legend_bg_color
     this._legend_bg_opacity = _._legend_bg_opacity
     this._legend_show_dataTags = _._legend_show_dataTags
+    this._legend_show_constraints = _._legend_show_constraints
     this._info_link_value_void = _._info_link_value_void
     this._pos_from_legacy = _._pos_from_legacy
     this._stick_to_drawing = _._stick_to_drawing
@@ -246,6 +248,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     if (this._legend_bg_color != default_legend_bg_color) json_legend['legend_bg_color'] = this._legend_bg_color
     if (this._legend_bg_opacity != default_legend_bg_opacity) json_legend['legend_bg_opacity'] = this._legend_bg_opacity
     if (this._legend_show_dataTags) json_legend['legend_show_dataTags'] = this._legend_show_dataTags
+    if (this._legend_show_constraints) json_legend['legend_show_constraints'] = this._legend_show_constraints
     if (this._stick_to_drawing) json_legend['legend_stick_to_drawing'] = this._stick_to_drawing
     if (this._info_link_value_void) json_legend['info_link_value_void'] = this._info_link_value_void
   }
@@ -273,6 +276,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     this._legend_bg_color = getStringFromJSON(json_legend, 'legend_bg_color', this._legend_bg_color)
     this._legend_bg_opacity = getNumberFromJSON(json_legend, 'legend_bg_opacity', this._legend_bg_opacity)
     this._legend_show_dataTags = getBooleanFromJSON(json_legend, 'legend_show_dataTags', this._legend_show_dataTags)
+    this._legend_show_constraints = getBooleanFromJSON(json_legend, 'legend_show_constraints', this._legend_show_constraints)
     this._info_link_value_void = getBooleanFromJSON(json_legend, 'info_link_value_void', this._info_link_value_void)
     this._stick_to_drawing = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', this._stick_to_drawing)
     // Var only present if json is legacy
@@ -443,6 +447,9 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     }
     if (this._display_legend_scale) {
       this._drawSankeyScale()
+    }
+    if (this._legend_show_constraints) {
+      this._drawInfoConstraintLink()
     }
     this._updateLegendHeight()
   }
@@ -619,7 +626,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     // Get all grp tag insind one variable
     const all_tags = [...node_taggs, ...flux_taggs, ...data_taggs]
     all_tags
-      .filter(tag_group => tag_group.show_legend)
+      .filter(tag_group => tag_group.use_colors)
       .forEach(tag_group => {
         // Tag froup id can have caracter that 'break' html id selection so we normalize it
         const id_to_use = tag_group.id.replaceAll(' ', '_').replaceAll('\'', '_')
@@ -750,7 +757,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
 
     free_value?.append('text')
       .attr('x', '35')
-      .text('MEP.show_legend_free_value')
+      .text('MEP.use_colors_free_value')
       .call(this._wrapper)
   }
 
@@ -785,6 +792,121 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
     dashed_link?.select('text')
       .attr('x', '35')
       .attr('y', this._legend_police / 2)
+  }
+
+  private _drawInfoConstraintLink() {
+    this._dy += this._legend_police
+
+    const dashed_link = this.d3_selection?.append('g')
+      .attr('id', 'gg_legend_constraint_links')
+      .attr('transform', 'translate(0,' + this._dy + ')')
+      .attr('font-size', this._legend_police + 'px')
+
+    // Données du tableau
+    const tableData = [
+      { symbol: '→↕ x%', description: '% ∑ entrées source' },
+      { symbol: '↕→ %x', description: '% ∑ sorties source' },
+      { symbol: 'x% ↕→', description: '% ∑ entrées destination' },
+      { symbol: 'x% →↕', description: '% ∑ sorties destination' },
+      { symbol: '↑→ x%', description: '% flux parent (source)' },
+      { symbol: 'x% ↑→', description: '% flux parent (destination)' }
+    ]
+
+    // Dimensions du tableau
+    const rowHeight = 25
+    const colWidth1 = 80  // largeur colonne symbole
+    const colWidth2 = 200 // largeur colonne description
+    const padding = 8
+
+    // Fond du tableau
+    dashed_link?.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', colWidth1 + colWidth2)
+      .attr('height', (tableData.length + 1) * rowHeight)
+      .attr('fill', '#f8f9fa')
+      .attr('stroke', '#dee2e6')
+      .attr('stroke-width', 1)
+
+    // En-têtes
+    dashed_link?.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', colWidth1 + colWidth2)
+      .attr('height', rowHeight)
+      .attr('fill', '#e9ecef')
+      .attr('stroke', '#dee2e6')
+      .attr('stroke-width', 1)
+
+    // Séparateur vertical en-tête
+    dashed_link?.append('line')
+      .attr('x1', colWidth1)
+      .attr('y1', 0)
+      .attr('x2', colWidth1)
+      .attr('y2', rowHeight)
+      .attr('stroke', '#dee2e6')
+      .attr('stroke-width', 1)
+
+    // Texte en-têtes
+    dashed_link?.append('text')
+      .text('Symbole')
+      .attr('x', colWidth1 / 2)
+      .attr('y', rowHeight / 2 + this._legend_police / 3)
+      .attr('text-anchor', 'middle')
+      .attr('font-weight', 'bold')
+      .attr('fill', '#495057')
+
+    dashed_link?.append('text')
+      .text('Description')
+      .attr('x', colWidth1 + colWidth2 / 2)
+      .attr('y', rowHeight / 2 + this._legend_police / 3)
+      .attr('text-anchor', 'middle')
+      .attr('font-weight', 'bold')
+      .attr('fill', '#495057')
+
+    // Lignes du tableau
+    tableData.forEach((row, index) => {
+      const yPos = (index + 1) * rowHeight
+
+      // Ligne horizontale
+      dashed_link?.append('line')
+        .attr('x1', 0)
+        .attr('y1', yPos + rowHeight)
+        .attr('x2', colWidth1 + colWidth2)
+        .attr('y2', yPos + rowHeight)
+        .attr('stroke', '#dee2e6')
+        .attr('stroke-width', 1)
+
+      // Ligne verticale séparatrice
+      dashed_link?.append('line')
+        .attr('x1', colWidth1)
+        .attr('y1', yPos)
+        .attr('x2', colWidth1)
+        .attr('y2', yPos + rowHeight)
+        .attr('stroke', '#dee2e6')
+        .attr('stroke-width', 1)
+
+      // Texte symbole
+      dashed_link?.append('text')
+        .text(row.symbol)
+        .attr('x', colWidth1 / 2)
+        .attr('y', yPos + rowHeight / 2 + this._legend_police / 3)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#212529')
+        .attr('font-family', 'monospace')
+
+      // Texte description
+      dashed_link?.append('text')
+        .text(row.description)
+        .attr('x', colWidth1 + padding)
+        .attr('y', yPos + rowHeight / 2 + this._legend_police / 3)
+        .attr('fill', '#495057')
+    })
+    this._dy += 160
+    // // Correct text position // font size
+    // dashed_link?.select('text')
+    //   .attr('x', '35')
+    //   .attr('y', this._legend_police / 2)
   }
 
   /**
@@ -874,6 +996,9 @@ export class ClassTemplate_Legend extends ClassTemplate_Element
 
   public get legend_show_dataTags(): boolean { return this._legend_show_dataTags }
   public set legend_show_dataTags(_) { this._legend_show_dataTags = _; this.draw() }
+
+  public get legend_show_constraints(): boolean { return this._legend_show_constraints }
+  public set legend_show_constraints(_) { this._legend_show_constraints = _; this.draw() }
 
   public get width(): number { return this._width }
   public set width(_) { this._width = _; this.draw() }

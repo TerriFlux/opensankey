@@ -345,6 +345,8 @@ export const ContextMenuZdd: FC<FCType_ContextMenu> = ({
         default_style.position_type = 'parametric'
 
       new_data.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      if (default_style.position_type == 'parametric')
+        new_data.drawing_area.nodePositioning.computeParametrization()
       Object.values(new_data.drawing_area.sankey.nodes_dict)
         .filter(node => node.display.position.type !== 'relative')
         .forEach(node => {
@@ -352,11 +354,9 @@ export const ContextMenuZdd: FC<FCType_ContextMenu> = ({
           node.applyPosition()
         }
         )
-      if (default_style.position_type == 'parametric')
-        new_data.drawing_area.nodePositioning.computeParametrization()
       setForceUpdate(a => a + 1)
     }}>
-    {default_style.position_type == 'absolute' ? t('MEP.parametricMode') : t('MEP.absoluteMode')}
+    {default_style.position_type == 'absolute' || default_style.position_type == undefined ? t('MEP.parametricMode') : t('MEP.absoluteMode')}
   </Button>
   const button_auto_x = <Button variant='contextmenu_button'
     onClick={() => {

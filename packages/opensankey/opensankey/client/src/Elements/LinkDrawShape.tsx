@@ -58,7 +58,7 @@ export class LinkDrawShape {
     }
   }
 
-  
+
   /**
  * Draw link shape on d3 svg
  * @protected
@@ -79,13 +79,13 @@ export class LinkDrawShape {
       const shape_color = this._link.getPathColorToUse()
       const shape_opacity = this._link.shape_opacity
       // Check to choose how to draw
-      const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.shape_is_structure
+      const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.linkIsStructure()
       const x0 = this._link.position_x_start
       const y0 = this._link.position_y_start
       const xf = this._link.position_x_end
       const yf = this._link.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
-      const show_as_path = show_as_dash || ((dist / thickness) > 1.5) || this._link.shape_is_recycling
+      const show_as_path = show_as_dash || ((dist / thickness) > 1.1) || this._link.shape_is_recycling
       // Show as full shape for specific shapes
       if (!show_as_path && this._link.shape_shape !== 'bezier_outline') {
         // Which shape to use
@@ -96,7 +96,7 @@ export class LinkDrawShape {
           .attr('d', shape)
         // Apply properties
         this._link.d3_selection?.selectAll('.link_shape')
-          .attr('id', this._link.id + '_shape')
+          .attr('id', this._link.id)
           .attr('fill', shape_color)
           .attr('opacity', shape_opacity)
           .attr('stroke', 'none')
@@ -106,7 +106,8 @@ export class LinkDrawShape {
       else {
         // Which path to use
         const path = this.getBezierPath(this._link.shape_shape == 'bezier_outline')
-
+        const da = this._link.sankey.drawing_area
+        da.type_data
         // Add new path
         this._link.d3_selection?.append('path')
           .classed('link', true)
@@ -120,6 +121,11 @@ export class LinkDrawShape {
           .attr('stroke-opacity', this._link.shape_shape == 'bezier_path' ? shape_opacity : '0')
           .attr('stroke-width', this._link.shape_shape == 'bezier_path' ? thickness : '0')
           .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+        if (this._link.shape_shape == 'bezier_outline') {
+          this._link.d3_selection?.selectAll('.link_path')
+            .attr('fill-opacity', da.type_data == 'data_label' ? 0.2 : shape_opacity)
+            .attr('dasharray', show_as_dash ? '10,2' : '')       
+        }
       }
     }
   }

@@ -469,9 +469,10 @@ export const ElementAttrSetter2Cols = ({
 }
 
 // Version refactorisée d'ElementAttrSetterSelect2Cols
-export const ElementAttrSetterSelect2Cols = ({ app_data, elements, attributeKey, refreshParentComponent, options }: {
+export const ElementAttrSetterSelect2Cols = ({ app_data, elements, attributePath, attributeKey, refreshParentComponent, options }: {
   app_data: Class_ApplicationData
   elements: ElementsType[]
+  attributePath: string,
   attributeKey: ValueKey
   refreshParentComponent: () => void
   options: Array<{ key: string; value: string; label: string }>
@@ -482,9 +483,10 @@ export const ElementAttrSetterSelect2Cols = ({ app_data, elements, attributeKey,
 
   return (
     <ElementAttrSetter2Cols
-      attributePath='Flux.labels'
+      attributePath={attributePath}
       attributeKey={attributeKey}
-      t={t} elements={elements}>
+      t={t} 
+      elements={elements}>
       <Select
         isDisabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]}
         value={attribute_value as string}

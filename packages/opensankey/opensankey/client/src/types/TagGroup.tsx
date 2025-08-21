@@ -338,7 +338,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // PRIVATE ATTRIBUTES =================================================================
   // Display attributes
-  private _show_legend: boolean = false
+  private _use_colors: boolean = false
 
   // CONSTRUCTOR ========================================================================
   /**
@@ -364,7 +364,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
     kwargs?: Type_JSON
   ) {
     super._toJSON(json_object, kwargs)
-    json_object['show_legend'] = this._show_legend
+    json_object['use_colors'] = this._use_colors
   }
 
   protected _fromJSON(
@@ -372,7 +372,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
     kwargs?: Type_JSON
   ) {
     super._fromJSON(json_object, kwargs)
-    this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
+    this._use_colors = getBooleanFromJSON(json_object, 'use_colors', this._use_colors)
 
   }
 
@@ -381,7 +381,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
     matching_tags_id: { [_: string]: string; } = {}
   ) {
     super._copyFrom(tagg_to_copy, matching_tags_id)
-    this._show_legend = tagg_to_copy.show_legend
+    this._use_colors = tagg_to_copy.use_colors
   }
 
   // PUBLIC METHODS =====================================================================
@@ -428,13 +428,13 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
    */
   public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
 
-  public get show_legend(): boolean { return this._show_legend }
+  public get use_colors(): boolean { return this._use_colors }
 
   // SETTER =============================================================================
-  public set show_legend(value: boolean) {
+  public set use_colors(value: boolean) {
     // Avoid useless updates
-    if (this._show_legend !== value) {
-      this._show_legend = value
+    if (this._use_colors !== value) {
+      this._use_colors = value
       this.updateTagsReferences()
     }
   }
@@ -536,7 +536,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   // PRIVATE ATTRIBUTES =================================================================
   // Display attributes
-  private _show_legend: boolean = false
+  private _use_colors: boolean = false
 
   private _is_sequence: boolean = false
   private _is_unit = false
@@ -572,7 +572,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     tagg_to_copy: Class_DataTagGroup
   ) {
     super._copyFrom(tagg_to_copy)
-    this._show_legend = tagg_to_copy.show_legend
+    this._use_colors = tagg_to_copy.use_colors
     this._is_sequence = tagg_to_copy._is_sequence
     this._is_unit = tagg_to_copy._is_unit
   }
@@ -582,7 +582,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     kwargs?: Type_JSON
   ) {
     super._toJSON(json_object, kwargs)
-    json_object['show_legend'] = this._show_legend
+    json_object['use_colors'] = this._use_colors
     json_object['is_sequence'] = this._is_sequence
     json_object['is_unit'] = this._is_unit
   }
@@ -592,7 +592,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     kwargs?: Type_JSON
   ) {
     super._fromJSON(json_object, kwargs)
-    this._show_legend = getBooleanFromJSON(json_object, 'show_legend', this._show_legend)
+    this._use_colors = getBooleanFromJSON(json_object, 'use_colors', this._use_colors)
     this._is_sequence = getBooleanFromJSON(json_object, 'is_sequence', this._is_sequence)
     this._is_unit = getBooleanFromJSON(json_object, 'is_unit', this._is_unit)
   }
@@ -686,15 +686,15 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
    */
   public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
 
-  public get show_legend(): boolean { return this._show_legend }
+  public get use_colors(): boolean { return this._use_colors }
   public get is_sequence(): boolean { return this._is_sequence }
   public get is_unit(): boolean { return this._is_unit }
 
   // SETTER ==============================================================================
-  public set show_legend(value: boolean) {
+  public set use_colors(value: boolean) {
     // Avoid useless updates
-    if (this._show_legend !== value) {
-      this._show_legend = value
+    if (this._use_colors !== value) {
+      this._use_colors = value
       this.updateTagsReferences()
     }
   }

@@ -155,6 +155,12 @@ export class LinkDrawValue {
         // Compute label to display
         let label_to_display = link_val
 
+        const x0 = this._link.position_x_start
+        const y0 = this._link.position_y_start
+        const xf = this._link.position_x_end
+        const yf = this._link.position_y_end
+        const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
+        if ((dist / this._link.thickness) < 1.1) return
 
         // If label is undefined or null, do nothing
         if (label_to_display) {

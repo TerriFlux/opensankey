@@ -52,7 +52,7 @@ export class NodeDrawValueLabel {
     
     // Clean previous label
     drawingElements.d3_selection_g_value_label?.remove()
-    
+    if (this._node.drawing_area.type_data === 'structure') return
     // Add value label
     if (this._node.value_label_is_visible) {
       // Create group

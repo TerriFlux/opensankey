@@ -178,6 +178,10 @@ export const resources_flux = {
           données: 'Données',
           vpp: 'Valeur',
           data_type: 'Type de données',
+          value_type: 'Type de données',
+          ratio: 'Type de ratio',
+          node_ref: 'Relatif à',
+          dir: 'Flux pris en compte',
           value: 'Valeur',
           ratio_input: 'Ratio total entrées',
           ratio_output: 'Ratio total sorties',
@@ -239,6 +243,10 @@ export const resources_flux = {
           }
         },
         labels: {
+          source: 'Noeud source',
+          target: 'Noeud destination',          
+          percent: '%',
+          ratio: 'Ratio',
           label: 'Label',
           vdb: 'Valeur',
           len: 'Label en noir',
