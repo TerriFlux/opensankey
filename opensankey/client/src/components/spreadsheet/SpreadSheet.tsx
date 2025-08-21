@@ -219,7 +219,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
 
   const redraw = () => {
     if (!new_data.menu_configuration.spreadsheet_freeze) {
-      new_data.drawing_area.computeAutoSankey(true)
+      new_data.drawing_area.computeAutoSankey(false)
     }
     new_data.draw()
   }
