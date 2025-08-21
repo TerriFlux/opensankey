@@ -380,9 +380,9 @@ def upload_excel_thread(
     if use_layout_file:
         # Try to get layout from another file
         if '_reconciled' in trace_filename:
-            layout_filename = os.path.splitext(trace_filename)[0].replace('_reconciled',  '_layout')+'.json'
+            layout_filename = os.path.splitext(trace_filename)[0].replace('_reconciled',  '')+'.json'
         else:
-            layout_filename = os.path.splitext(trace_filename)[0] + '_layout.json'
+            layout_filename = os.path.splitext(trace_filename)[0] + '.json'
         # Start extracting layout
         trace.logger.info('{:-<{w}}'.format('Extract diagram layout ', w=max_line_length))
         try:
@@ -526,7 +526,10 @@ def parse_folder(current_dir, menus, key=None):
     exemple_found = False
 
     extension_to_avoid = [
+        '.vscode',
         '.gitkeep',
+        'Clients',
+        'Documents'
         'mfadata',
         'not_tested',
         'sankeylayout',
@@ -556,7 +559,7 @@ def parse_folder(current_dir, menus, key=None):
             menus[key]['Files'].sort()
             exemple_found = True
             continue
-        if 'layout.json' in file_or_folder:
+        if file_or_folder.endswith('.json') and not file_or_folder.endswith('.json.gz'):
             if key not in menus:
                 menus[key] = {}
             if 'Files' not in menus[key]:
