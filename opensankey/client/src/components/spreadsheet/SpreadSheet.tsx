@@ -91,7 +91,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   { new_data }: { new_data: Type_GenericApplicationData }
 ) => {
   const { menu_configuration } = new_data
-  const [freeze, set_freeze] = useState(false)
+  const [freeze, set_freeze] = useState(menu_configuration.spreadsheet_freeze)
 
   // Table header
   const headerRow: Row = {
@@ -218,7 +218,7 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   }
 
   const redraw = () => {
-    if (!freeze) {
+    if (!new_data.menu_configuration.spreadsheet_freeze) {
       new_data.drawing_area.computeAutoSankey(true)
     }
     new_data.draw()
@@ -717,9 +717,10 @@ export const SpreadSheet: FunctionComponent<{ new_data: Type_GenericApplicationD
   />
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
-      isChecked={freeze}
+      isChecked={menu_configuration.spreadsheet_freeze}
       onChange={(evt) => {
         set_freeze(evt.target.checked)
+        menu_configuration.spreadsheet_freeze = evt.target.checked
       }}
     >
       {'Freeze'}

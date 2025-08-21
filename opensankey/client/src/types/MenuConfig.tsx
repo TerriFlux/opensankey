@@ -126,6 +126,8 @@ export class Class_MenuConfig {
    */
   protected _type_menu_configuration_selected: keyTypeConfig = 'data'
 
+  protected _spreadsheet_freeze = false
+
   /**
    * Dict containing theme of menu according to _type_menu_configuration_selected & elements configurable
    *
@@ -1236,6 +1238,9 @@ export class Class_MenuConfig {
   public get menu_top_order(): string[][] {
     return this._menu_top_order
   }
+
+  public get spreadsheet_freeze() { return this._spreadsheet_freeze }
+  public set spreadsheet_freeze(_) { this._spreadsheet_freeze = _ }
 
   public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
   public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }
