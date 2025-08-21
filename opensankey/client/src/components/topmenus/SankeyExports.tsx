@@ -44,8 +44,10 @@ import FileSaver from 'file-saver'
 import * as d3 from 'd3'
 import { MenuDraggable } from './SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FType_ModalResolutionPNG } from '../SankeyMenuTypes'
 
+type FType_ModalResolutionPNG = (
+  new_data: Class_ApplicationData
+) => JSX.Element
 
 // COMPONENTS ===========================================================================
 

@@ -461,7 +461,7 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
       })
       new_data.drawing_area.legend.masked = false
       if (new_data.drawing_area.sankey.flux_taggs_list.length > 0) {
-        new_data.drawing_area.sankey.flux_taggs_list[0].show_legend = true
+        new_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
       } else if (new_data.drawing_area.sankey.node_taggs_list.length == 0) {
         applyRandomColors(new_data, new_data.drawing_area.sankey.links_list)
       }

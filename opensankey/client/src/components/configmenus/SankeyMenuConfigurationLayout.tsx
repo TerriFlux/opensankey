@@ -725,6 +725,14 @@ export const LegendContextConfig: FC<BaseApplicationDataType> = ({ new_data }) =
     new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_show_dataTags', evt.target.checked, f)
   }
 
+  const eventLegendConstraints = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      new_data.drawing_area.legend.legend_show_constraints = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_show_constraints', evt.target.checked, f)
+  }
+
   const eventLegendLinkInfo = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
       new_data.drawing_area.legend.info_link_value_void = _
@@ -774,6 +782,15 @@ export const LegendContextConfig: FC<BaseApplicationDataType> = ({ new_data }) =
       onChange={eventLegendDataTag}
     >
       {t('MEP.leg_show_dataTags')}
+    </Checkbox>
+    {/* Afficher les dataTags dans la légende*/}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={new_data.drawing_area.legend.legend_show_constraints}
+      checked={new_data.drawing_area.legend.legend_show_constraints}
+      onChange={eventLegendConstraints}
+    >
+      {t('MEP.leg_show_constraints')}
     </Checkbox>
 
     {/* Afficher l'info concernant les flux null*/}

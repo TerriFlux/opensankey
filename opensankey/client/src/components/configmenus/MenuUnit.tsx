@@ -69,6 +69,7 @@ export const MenuUnit = ({ new_data, elements, refreshParentComponent }: {
           {is_link && (
             <ElementAttrSetterSelect2Cols
               app_data={new_data}
+              attributePath='Flux.labels'
               attributeKey={'value_label_unit_type'}
               elements={elements}
               options={unit_constants.map(el => ({
@@ -84,6 +85,7 @@ export const MenuUnit = ({ new_data, elements, refreshParentComponent }: {
             <ElementAttrSetterSelect2Cols
               app_data={new_data}
               elements={elements}
+              attributePath='Flux.labels'
               attributeKey={'value_label_unit'}
               options={unit_tagg.tags_list.map(el => ({
                 key: 'value_' + el.id,
