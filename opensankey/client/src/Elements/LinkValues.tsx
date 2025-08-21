@@ -481,8 +481,9 @@ export class Class_LinkValueTree {
       return null
   }
 }
-
-export const value_option_percent_constants = ['%IS', '%OS', '%ID', '%OD', '%PS', '%PD']
+export const value_option_percent_constants_source = ['%IS', '%OS','%PS']
+export const value_option_percent_constants_target = ['%ID', '%OD','%PD']
+export const value_option_percent_constants = [...value_option_percent_constants_source,...value_option_percent_constants_target]
 export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_conversion'] as const
 export type ValueOptionType = typeof value_option_constants[number]
 export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'unit_ratio','normalized'] as const
@@ -572,16 +573,18 @@ export class Class_LinkValue {
         total_target += l.valueCurrent
       })
       if (!ok) return null
-      return total_target / (1 - this.data_value)
+      return total_target * (this.data_value) / (100 - this.data_value)
+    } else if (this.value_option == '%PS') {
+      const multiplier = this.data_value / 100
+      const parent_source = this.link!.source.dimensions_as_child_pure[0].parent!
+      const parent_link = parent_source.output_links_list.find(l=>l.target==this.link!.target)
+      return parent_link?.valueCurrent!*multiplier
+    } else if (this.value_option == '%PD') {
+      const multiplier = this.data_value / 100
+      const parent_target = this.link!.target.dimensions_as_child_pure[0].parent!
+      const parent_link = parent_target.output_links_list.find(l=>l.source==this.link!.source)
+      return parent_link?.valueCurrent!*multiplier
     }
-    /*else if (this.value_option == 'ratio_source_parent') {
-      const parent = this.link!.target.dimensions_as_child[0].parent
-      const parent_link = this.link?.sankey.links_dict[this.link.source.name + ' --> ' + parent.name]
-      if (!parent_link || parent_link.value?.valueResult == null) {
-        return null
-      }
-      return parent_link?.valueCurrent??0 * this.data_value!
-    }*/
     return null
   }
 
@@ -681,7 +684,12 @@ export class Class_LinkValue {
 
 
   public addFrom(element: Class_LinkValue) {
-    this.data_value = element.data_value === null ? null : this.data_value! + element.data_value!
+    if (element.value_option=='%PS' || element.value_option=='%PD' ) {
+      // TODO
+      this.value_option = element.value_option
+      this.data_value = element.data_value
+    }
+    this.result_value = element.valueResult === null ? null : this.result_value! + element.valueResult!
   }
 
   /**

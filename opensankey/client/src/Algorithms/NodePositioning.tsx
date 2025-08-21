@@ -1100,14 +1100,14 @@ export class NodePositioning {
         this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
       })
     }
-
+    let max_w_col = 0
     // ÉTAPE 2: Calculer les positions Y avec la logique center_biggest_nodes
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
 
-      let max_w_col = 0
+
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true
       const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
@@ -1183,7 +1183,7 @@ export class NodePositioning {
                 }
               } else if (non_recycling_input_links.filter(l =>
                 l.source.output_links_list.filter(ol => ol.is_visible).length == 1
-              ).length == 1) {
+              ).length == 1 && idx == 0) {
                 // Alignement des centres
                 const source_node = non_recycling_input_links[0].source
                 const current_node = this.drawingArea.sankey.nodes_dict[node_id]
@@ -1208,7 +1208,7 @@ export class NodePositioning {
         })
       }
 
-      prev_col_width += max_w_col
+      //prev_col_width += max_w_col
     }
 
     // Calcul des dimensions finales

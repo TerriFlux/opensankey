@@ -78,7 +78,7 @@ import {
   decompressUploadedFileUniversal,
 } from '../../Persistence/UniversalJSONCompression'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FCType_OpenSankeySaveButton } from '../SankeyMenuTypes'
+import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 
 /*************************************************************************************************/
@@ -121,7 +121,7 @@ export const GoToUserDoc = () => {
  * }
  * @return {*}
  */
-export const OpenSankeySaveButton: FC<FCType_OpenSankeySaveButton> = ({
+export const OpenSankeySaveButton: FC<BaseApplicationDataType> = ({
   new_data
 }) => {
   const { t } = new_data

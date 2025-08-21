@@ -27,8 +27,19 @@
 import { Class_NodeElement } from './Node'
 import { default_element_color } from '../types/Utils'
 import { default_selected_stroke_width } from './Node'
-import { draw_arrow_partFType } from '../components/SankeyMenuTypes'
 
+type draw_arrow_partFType = (
+  node_face_size: number,
+  position_node_face: number[],
+  link_size: number,
+  cumulative_link_size: number,
+  horizontal: boolean,
+  revert: boolean,
+  arrow_length: number,
+  node_arrow_shift: number,
+  node_arrow_shift2: number,
+  node_is_arrow: boolean
+) => string
 /**
  * Class that handles all drawing and rendering operations for NodeElement shapes
  */
@@ -112,7 +123,7 @@ export class NodeDrawShape {
     
     // Is the color defined by tags
     const taggs_activated = this._node.taggs_list
-      .filter(tagg => tagg.show_legend)
+      .filter(tagg => tagg.use_colors)
     
     if (
       (!this._node.shape_color_sustainable) &&

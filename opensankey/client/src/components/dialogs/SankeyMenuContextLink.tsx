@@ -24,51 +24,98 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FC, useState } from 'react'
+import React, { MutableRefObject, useState } from 'react'
+import { Box, Button, ButtonGroup, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 
-
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList
-} from '@chakra-ui/react'
-
-/*************************************************************************************************/
-
-import { MenuContextLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/ElementStyle'
 import { ChevronRightIcon } from '@chakra-ui/icons'
-import { FCType_ContextMenu } from '../SankeyMenuTypes'
+import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
+import { updateElements, ValueElementsType, ValueKey } from '../configmenus/MenuCommon'
+import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { default_value_option } from '../configmenus/SankeyMenuConfigurationLinksData'
+import { value_option_percent_constants } from '../../Elements/LinkValues'
+import { Type_AdditionalMenus } from '../../types/Types'
 
 /*************************************************************************************************/
 
 export const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto' }}>{b ? '✓' : ''}</span>
 
-// MENU COMPONENT ***********************************************************************
+/*************************************************************************************************/
 
-export const ContextMenuLink: FC<FCType_ContextMenu> = ({
-  new_data,
-  additionalMenus
+/**
+ * Component developped for number input of the link data config menu
+ * @param {app_data}
+ * @return {JSX.Elmement}
+ */
+export const MenuContextLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { drawing_area, menu_configuration } = app_data
+  const { selected_links_list_sorted, visible_and_selected_links_list_sorted } = drawing_area
+  const {
+    ref_to_menu_contextual_config_links_data_updater,
+    ref_to_save_in_cache_indicator
+  } = menu_configuration
+
+  let selected_links = menu_configuration.is_selector_only_for_visible_links ?
+    visible_and_selected_links_list_sorted :
+    selected_links_list_sorted
+  const first_link = selected_links[0]
+  const first_link_value = first_link?.value
+  const value_option = first_link_value?.value_option ?? default_value_option
+  const default_value = value_option_percent_constants.includes(value_option) ?
+    first_link_value?.valueData ?? null :
+    first_link?.valueCurrent
+  // Function used to force this component to reload
+  const [, setCount] = useState(0)
+  ref_to_menu_contextual_config_links_data_updater.current = () => setCount(a => a + 1)
+
+  const refreshThisAndUpdateRelatedComponents = () => {
+    // Toogle saving indicator
+    drawing_area.updateScaleAtLinkValueSetting()
+    ref_to_save_in_cache_indicator.current(false)
+    // Update data menu for link
+    menu_configuration.updateComponentRelatedToLinksData()
+    setCount(a => a + 1)
+    // And update this menu also
+  }
+
+  return <ConfigMenuNumberInput
+    t={app_data.t}
+    default_value={default_value}
+    function_on_blur={(_: number | null) => updateElements(
+      app_data, selected_links, 'valueCurrent' as ValueKey, _ as ValueElementsType, refreshThisAndUpdateRelatedComponents
+    )}
+    minimum_value={0}
+    stepper={true}
+    step={1}
+    unit_text={
+      (
+        selected_links[0]?.value_label_unit_visible &&
+        selected_links[0]?.value_label_unit !== LINKS_ATTRIBUTES_CONFIG.value_label_unit.default
+      ) ?
+        selected_links[0]?.value_label_unit :
+        undefined
+    }
+  />
+}
+
+export const ContextMenuLink = ({ app_data, additionalMenus }: {
+  app_data: Class_ApplicationData,
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>
 }) => {
 
-  // Datas ------------------------------------------------------------------------------
-
-  const { t, drawing_area } = new_data
+  const { t, drawing_area, menu_configuration, history } = app_data
 
   // Link on which this menu applies ----------------------------------------------------
 
-  const contextualised_link = new_data.drawing_area.link_contextualised
+  const contextualised_link = drawing_area.link_contextualised
 
   let style_c_l = '0px 0px auto auto'
   let is_top = true
-  let pos_x = new_data.drawing_area.pointer_pos[0]
-  let pos_y = new_data.drawing_area.pointer_pos[1]
+  let pos_x = drawing_area.pointer_pos[0]
+  let pos_y = drawing_area.pointer_pos[1]
 
   const context_link_value_visible = (contextualised_link !== undefined) ? contextualised_link.value_label_is_visible : false
   const context_link_name_visible = (contextualised_link !== undefined) ? contextualised_link.name_label_is_visible : false
@@ -76,18 +123,18 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
   // The limit value of the mouse position that engages the shift of the context menu
   // is arbitrary and taken by hand because it is not possible to know the dimensions of the menu before it is render
   if (contextualised_link) {
-    if (new_data.drawing_area.pointer_pos[0] + 240 > window.innerWidth) {
-      pos_x = new_data.drawing_area.pointer_pos[0] - 245
+    if (drawing_area.pointer_pos[0] + 240 > window.innerWidth) {
+      pos_x = drawing_area.pointer_pos[0] - 245
     }
 
-    if (new_data.drawing_area.pointer_pos[1] + 360 > window.innerHeight) {
-      pos_y = new_data.drawing_area.pointer_pos[1] - 340
+    if (drawing_area.pointer_pos[1] + 360 > window.innerHeight) {
+      pos_y = drawing_area.pointer_pos[1] - 340
       is_top = false
     }
     style_c_l = pos_y + 'px auto auto ' + pos_x + 'px'
   }
 
-  const selected_links = new_data.drawing_area.visible_and_selected_links_list
+  const selected_links = drawing_area.visible_and_selected_links_list
 
   // Menu updaters ----------------------------------------------------------------------
 
@@ -95,20 +142,20 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
   const [, setCount] = useState(0)
 
   // Link this menu's update function
-  new_data.menu_configuration.ref_to_menu_context_links_updater.current = () => setCount(a => a + 1)
+  menu_configuration.ref_to_menu_context_links_updater.current = () => setCount(a => a + 1)
 
   // Functions used to reset menu UI ----------------------------------------------------
 
   const refreshThisAndToggleSaving = () => {
     // Toogle saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // Refresh this menu
     setCount(a => a + 1)
   }
 
   const closeContextMenu = () => {
     // Unset contextualized flow
-    new_data.drawing_area.link_contextualised = undefined
+    drawing_area.link_contextualised = undefined
     // Refresh this menu
     setCount(a => a + 1)
   }
@@ -123,7 +170,7 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
     const _updateStyle = () => {
       selected_links.forEach(_ => {
         const flow_ref_has_style = selected_links[0].style.includes(sl) ?? false
-        new_data.drawing_area.sankey.switchLinkStyle(sl, flow_ref_has_style)
+        drawing_area.sankey.switchLinkStyle(sl, flow_ref_has_style)
       })
       refreshThisAndToggleSaving()
 
@@ -136,8 +183,8 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
       refreshThisAndToggleSaving()
     }
     // Save undo/redo in data history
-    new_data.history.saveUndo(inv_updateStyle)
-    new_data.history.saveRedo(_updateStyle)
+    history.saveUndo(inv_updateStyle)
+    history.saveRedo(_updateStyle)
     // Execute original attr mutation
     _updateStyle()
     closeContextMenu()
@@ -163,8 +210,8 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
       refreshThisAndToggleSaving()
     }
     // Save undo/redo in data history
-    new_data.history.saveUndo(inv_resetAttr)
-    new_data.history.saveRedo(_resetAttr)
+    history.saveUndo(inv_resetAttr)
+    history.saveRedo(_resetAttr)
     // Execute original attr mutation
     _resetAttr()
     closeContextMenu()
@@ -192,8 +239,8 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
       refreshThisAndToggleSaving()
     }
     // Save undo/redo in data history
-    new_data.history.saveUndo(inv_updateValueVisibility)
-    new_data.history.saveRedo(_updateValueVisibility)
+    history.saveUndo(inv_updateValueVisibility)
+    history.saveRedo(_updateValueVisibility)
     // Execute original attr mutation
     _updateValueVisibility()
     closeContextMenu()
@@ -221,8 +268,8 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
       refreshThisAndToggleSaving()
     }
     // Save undo/redo in data history
-    new_data.history.saveUndo(inv_updateNameVisibility)
-    new_data.history.saveRedo(_updateNameVisibility)
+    history.saveUndo(inv_updateNameVisibility)
+    history.saveRedo(_updateNameVisibility)
     // Execute original attr mutation
     _updateNameVisibility()
     closeContextMenu()
@@ -243,7 +290,7 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
     closeContextMenu()
   }
 
-  const list_style_id_context_flow=contextualised_link?.style.map(s=>s.id)
+  const list_style_id_context_flow = contextualised_link?.style.map(s => s.id)
   // JSX Components ---------------------------------------------------------------------
   // Menu to change some pararmeter concerning the style of the node
   const dropdown_c_l_style_select = (contextualised_link !== undefined) ?
@@ -258,7 +305,7 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
       </MenuButton>
       <MenuList >
         {
-          new_data.drawing_area.sankey.link_styles_list
+          drawing_area.sankey.link_styles_list
             .map(sl => {
               return <MenuItem
                 onClick={() => {
@@ -266,7 +313,7 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
                 }}
               >
                 {sl.name}
-                {checked(list_style_id_context_flow?.includes(sl.id)??false)}
+                {checked(list_style_id_context_flow?.includes(sl.id) ?? false)}
               </MenuItem>
             })
         }
@@ -352,7 +399,7 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
       </MenuButton>
       <MenuList>
         <MenuContextLinksData
-          new_data={new_data}
+          app_data={app_data}
         />
       </MenuList>
     </Menu> : <></>
@@ -360,7 +407,7 @@ export const ContextMenuLink: FC<FCType_ContextMenu> = ({
   const btn_inverse_io = <Button
     variant='contextmenu_button'
     onClick={() => {
-      new_data.drawing_area.inverseSelectedLinks()
+      drawing_area.inverseSelectedLinks()
       closeContextMenu()
     }}
   >

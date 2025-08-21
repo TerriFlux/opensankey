@@ -31,40 +31,26 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_LinkStyle } from '../Elements/ElementStyle'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeStyle } from '../Elements/ElementStyle'
-import { SankeyData, SankeyNode, treeFolderType, applicationDataType, SankeyLink } from '../Persistence/LegacyType'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { FType_ProcessFunctions } from '../types/FunctionTypes'
 import { IType_DictHookRefSetterShowDialogComponents } from '../types/MenuConfig'
 import { Type_AdditionalMenus } from '../types/Types'
 
-
-// ==================================================================================================
-// Base Types - Common across multiple components
-// ==================================================================================================
-
-// Base type for components that receive new_data
 export type BaseApplicationDataType = {
   new_data: Class_ApplicationData
 }
 
-// Base type for contextual menu components
 export type BaseContextualType = BaseApplicationDataType & {
   contextual: boolean
 }
 
-// Base type for components with menu_for_style
 export type BaseStyleMenuType = BaseApplicationDataType & {
   menu_for_style: boolean
 }
 
-// Base type for components with additional menus
 export type BaseAdditionalMenusType = BaseApplicationDataType & {
   additional_menus: MutableRefObject<Type_AdditionalMenus>
 }
-
-// ==================================================================================================
-// Configuration Menu Types
-// ==================================================================================================
 
 export type FCType_OpenSankeyConfigurationsMenus = BaseApplicationDataType & {
   menu_configuration_layout: JSX.Element,
@@ -74,10 +60,6 @@ export type FCType_OpenSankeyConfigurationsMenus = BaseApplicationDataType & {
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
 }
 
-// ==================================================================================================
-// Layout Configuration Types
-// ==================================================================================================
-
 export type FType_OpenSankeyMenuConfigurationLayout = BaseContextualType & {
   extra_background_element: JSX.Element,
 }
@@ -85,10 +67,6 @@ export type FType_OpenSankeyMenuConfigurationLayout = BaseContextualType & {
 export type FCType_DrawingAreaStyle = BaseApplicationDataType & {
   extra_background_element: JSX.Element,
 }
-
-// ==================================================================================================
-// Nodes Configuration Types
-// ==================================================================================================
 
 export type FCType_MenuConfigurationNodeStyle = BaseStyleMenuType & {
   additional_menus: MutableRefObject<Type_AdditionalMenus>
@@ -106,61 +84,9 @@ export type SankeyWrapperConfigInModalOrMenuType = {
   idTab: string
 }
 
-// Tree and node selection types
-export type tree_data_nodesFType = (
-  t: TFunction<'translation', undefined>, 
-  data: SankeyData, 
-  multi_selected_nodes: { current: SankeyNode[] }, 
-  node_visible: string[],
-  filter_node_selector: string[]
-) => treeFolderType
-
-export type add_childrenFType = (
-  nodes: { [x: string]: SankeyNode }, 
-  n: SankeyNode, 
-  multi_selected_nodes: { current: SankeyNode[] }, 
-  displayed_node_selector: boolean, 
-  node_visible: string[], 
-  filter_node_selector: string[]
-) => treeFolderType[]
-
-export type getNodeFromTreeFType = (
-  path: number[],
-  tree: treeFolderType
-) => { id: string, checked?: number }
-
-export type check_node_has_node_typeFType = (
-  n: SankeyNode,
-  filter_node_selector: string[]
-) => boolean
-
-// ==================================================================================================
-// Links Configuration Types
-// ==================================================================================================
-
 export type FCType_MenuConfigurationLinksAppearence = BaseStyleMenuType & {
   additionMenus: MutableRefObject<Type_AdditionalMenus>,
 }
-
-export type MenuConfigurationLinksFType = (
-  applicationData: applicationDataType,
-  menu_config_link_data: JSX.Element,
-  menu_config_link_attr: JSX.Element,
-) => { [s: string]: JSX.Element; }
-
-// Link manipulation functions
-export type handleUpLinkFType = (data: SankeyData, i: string) => void
-export type handleDownLinkFType = (data: SankeyData, i: string) => void
-
-// ==================================================================================================
-// Label and Decorator Types
-// ==================================================================================================
-
-
-
-// ==================================================================================================
-// Menu Component Types
-// ==================================================================================================
 
 // Base type for menu components with elements and selected elements
 export type BaseMenuComponentType = BaseApplicationDataType & {
@@ -185,10 +111,6 @@ export type FCType_WrapperCheckBoxSubSectionMenu = {
   children: ReactNode
 }
 
-// ==================================================================================================
-// Dialog and Modal Types
-// ==================================================================================================
-
 export type FType_DiagramSelector = (
   new_data: Class_ApplicationData
 ) => JSX.Element
@@ -209,10 +131,6 @@ export type FCType_ModalWelcome = BaseApplicationDataType & {
 
 export type FCType_ModalWelcomeBuilder = BaseApplicationDataType
 
-// ==================================================================================================
-// Style Modal Types
-// ==================================================================================================
-
 export type FCType_SankeyModalStyle = BaseApplicationDataType & {
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }
@@ -221,19 +139,11 @@ export type FCType_WrapperLinkStyleSelector = BaseApplicationDataType & {
   children: JSX.Element
 }
 
-// ==================================================================================================
-// Context Menu Types
-// ==================================================================================================
-
 export type FCType_ContextMenu = BaseApplicationDataType & {
   additionalMenus: MutableRefObject<Type_AdditionalMenus>
 }
 
 export type BaseComponentProps = BaseApplicationDataType
-
-// ==================================================================================================
-// Template and Tutorial Types
-// ==================================================================================================
 
 export type FCtype_ModalTemplate = BaseApplicationDataType & {
   additionalMenu: MutableRefObject<Type_AdditionalMenus>
@@ -245,40 +155,10 @@ export type FCType_ModalTuto = BaseApplicationDataType & {
   set_show_tuto: (b: boolean) => void
 }
 
-// ==================================================================================================
-// Export Types
-// ==================================================================================================
-
-export type FType_ModalResolutionPNG = (
-  new_data: Class_ApplicationData
-) => JSX.Element
-
-// ==================================================================================================
-// Banner and Toolbar Types
-// ==================================================================================================
-
 export type FType_SetDiagram = (
   the_diagram: string,
   new_data: Class_ApplicationData
 ) => void
-
-export type FCType_ToolBarBottom = BaseApplicationDataType
-
-export type FCType_ToolbarBuilder = BaseApplicationDataType & {
-  additionalMenu: MutableRefObject<Type_AdditionalMenus>,
-}
-
-export type FCType_ToolbarSubComponent = BaseApplicationDataType & {
-  updateParentComponent: () => void
-}
-
-export type FType_StretchButtons = (
-  new_data: Class_ApplicationData
-) => JSX.Element
-
-// ==================================================================================================
-// Top Menu Types
-// ==================================================================================================
 
 export type FCType_MenuDraggable = {
   dict_hook_ref_setter_show_dialog_components: IType_DictHookRefSetterShowDialogComponents,
@@ -288,105 +168,6 @@ export type FCType_MenuDraggable = {
   maxW?: string,
   customPos?: { x: number, y: number }
 }
-
-export type FCType_OpenSankeySaveButton = BaseApplicationDataType
-
-export type FType_OpenSankeyMenusDictBuilder = (
-  new_data: Class_ApplicationData,
-  additional_menus: MutableRefObject<Type_AdditionalMenus>,
-  setDiagram: FType_SetDiagram,
-) => { [s: string]: JSX.Element | JSX.Element[] }
-
-// ==================================================================================================
-// Layout and Drawing Types
-// ==================================================================================================
-
-export type FType_ComputeAutoSankey = (
-  applicationData: applicationDataType,
-  h_space: number,
-  launched_from_process: boolean
-) => void
-
-export type FType_ComputeHorizontalIndex = (
-  node: SankeyNode,
-  starting_index: number,
-  visible_nodes_ids: string[],
-  visited_nodes_ids: string[],
-  recycling_links_ids: string[],
-  horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
-  links: { [link_id: string]: SankeyLink },
-  nodes: { [node_id: string]: SankeyNode },
-) => void
-
-export type FType_ComputeRecyclingHorizontalIndex = (
-  link: SankeyLink,
-  visible_nodes_ids: string[],
-  recycling_links_ids: string[],
-  horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
-  links: { [link_id: string]: SankeyLink },
-  nodes: { [node_id: string]: SankeyNode },
-) => void
-
-export type FType_ReorganizeAllInputOutputLinksId = (
-  data: SankeyData,
-  nodes: { [idNode: string]: SankeyNode },
-  links: { [idLink: string]: SankeyLink }
-) => void
-
-export type FType_Desagregation = (
-  applicationData: applicationDataType,
-  idNode: string,
-  cur_dimension: string,
-  to_compute_auto_sankey: boolean
-) => void
-
-export type FType_Agregation = (
-  data: SankeyData,
-  idNode: string,
-  cur_dimension: string,
-) => void
-
-export type FType_ReorganizeNodeInputLinksId = (
-  data: SankeyData,
-  node: SankeyNode,
-  nodes: { [idNode: string]: SankeyNode },
-  links: { [idLink: string]: SankeyLink }
-) => void
-
-export type FType_ReorganizeNodeOutputLinksId = (
-  data: SankeyData,
-  node: SankeyNode,
-  nodes: { [idNode: string]: SankeyNode },
-  links: { [idLink: string]: SankeyLink }
-) => void
-
-export type FType_HasAggregationLinkToNode = (
-  data: SankeyData,
-  idNodeFather: string,
-  idNodeCurr: string,
-  cur_dimension: string,
-) => boolean
-
-// ==================================================================================================
-// Shape Drawing Types
-// ==================================================================================================
-
-export type draw_arrow_partFType = (
-  node_face_size: number,
-  position_node_face: number[],
-  link_size: number,
-  cumulative_link_size: number,
-  horizontal: boolean,
-  revert: boolean,
-  arrow_length: number,
-  node_arrow_shift: number,
-  node_arrow_shift2: number,
-  node_is_arrow: boolean
-) => string
-
-// ==================================================================================================
-// Utility Types
-// ==================================================================================================
 
 export type OSTooltpFuncType = {
   delay?: number,

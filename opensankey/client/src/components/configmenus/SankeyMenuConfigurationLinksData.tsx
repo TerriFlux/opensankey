@@ -24,28 +24,25 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
-import React, { FC, useState } from 'react'
+import React, { useState } from 'react'
 import { Box, Select } from '@chakra-ui/react'
 
-import { BaseApplicationDataType } from '../SankeyMenuTypes'
-import { RowSetter2Cols, BOX2COLSTITLEH4, DataTagSelector, OSTooltip } from './MenuCommon'
-import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
+import { RowSetter2Cols, BOX2COLSTITLEH4, DataTagSelector, OSTooltip, updateElements, ValueKey, ValueElementsType } from './MenuCommon'
+import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 
-import { Class_LinkElement } from '../../Elements/Link'
-import { value_option_constants, value_option_percent_constants, ValueOptionType } from '../../Elements/LinkValues'
-import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
+import { value_option_constants, value_option_percent_constants, value_option_percent_constants_source, value_option_percent_constants_target, ValueOptionType } from '../../Elements/LinkValues'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /*************************************************************************************************/
 export const default_value_option = 'value'
 
-export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_data }) => {
-  const { t, drawing_area, menu_configuration } = new_data
+export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
   const { data_taggs_list } = sankey
   const {
-    is_selector_only_for_visible_links, 
+    is_selector_only_for_visible_links,
     ref_to_menu_config_links_data_updater,
     ref_to_save_in_cache_indicator
   } = menu_configuration
@@ -65,7 +62,7 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
     first_link?.value_label_unit_visible ?
       first_link?.value_label_unit :
       undefined
-  const default_value = value_option_percent_constants.includes(value_option) ?
+  const default_value = value_option_percent_constants.includes(value_option) || value_option == 'unit_conversion' ?
     first_link?.value?.valueData ?? null :
     first_link?.valueCurrent
 
@@ -73,6 +70,44 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
+  const current_value_type = value_option == 'value' ? 'value' : value_option == 'unit_conversion' ? 'ratio' : 'percent'
+  const [value_type, set_value_type] = useState(current_value_type)
+  if (value_type !== current_value_type) set_value_type(current_value_type)
+  const type_constants = ['value', 'percent']
+  if (unit_data_tagg) type_constants.push('ratio')
+  const current_node_ref = value_option == '%PS' || value_option == '%IS' || value_option == '%OS' ? 'source' : 'target'
+  const [node_ref, set_node_ref] = useState(current_node_ref)
+  if (node_ref !== current_node_ref) set_node_ref(current_node_ref)
+  const current_dir = value_option == '%IS' || value_option == '%ID' ? 'input' : 'output'
+  const [dir, set_dir] = useState(current_dir)
+  if (dir !== current_dir) set_dir(current_dir)
+  const [ratio, set_ratio] = useState('unit_conversion')
+  if (unit_data_tagg && value_type == 'ratio' && ratio == 'unit_conversion' && value_option !== 'unit_conversion') {
+    selected_links.forEach(l => {
+      l.value!.value_option = 'unit_conversion' as ValueOptionType
+      l.value!.ratio_unit_tag = unit_data_tagg.tags_list[0]
+    })
+  }
+
+  const compute_value_option = (
+    value_type: string, node_ref: string, dir: string
+  ) => {
+    if (value_type == 'value') return 'value'
+    if (value_type == 'percent') {
+      if (node_ref == 'source') {
+        if (dir == 'input') return '%IS'
+        if (dir == 'output') return '%OS'
+        if (dir == 'parent') return '%PS'
+      }
+      if (node_ref == 'target') {
+        if (dir == 'input') return '%ID'
+        if (dir == 'output') return '%OD'
+        if (dir == 'parent') return '%PD'
+      }
+    }
+    if (value_type == 'ratio') return 'unit_conversion'
+    return
+  }
 
   const refreshThis = () => {
     setCount(a => a + 1)
@@ -99,7 +134,7 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
   })
 
   return <Box layerStyle='menu_sub_section'>
-    <SankeyLinkSelection new_data={new_data} />
+    <SankeyLinkSelection new_data={app_data} />
     {data_taggs_list.map(data_tagg => {
       return <BOX2COLSTITLEH4 title={data_tagg.name}>
         <Select
@@ -119,19 +154,79 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
     {/* Choix du type de donnée */}
     <RowSetter2Cols
       attributePath={'Flux.data'}
-      attributeKey={'data_type'}
+      attributeKey={'value_type'}
     >
       <Select
-        key={`value-option-${value_option}`}
-        value={value_option}
+        value={value_type}
         onChange={(evt) => {
-          selected_links.forEach(l => l.value!.value_option = evt.target.value as ValueOptionType)
+          const value_option = compute_value_option(evt.target.value, node_ref, dir)
+          selected_links.forEach(l => {
+            l.value!.value_option = value_option as ValueOptionType
+            if (value_option == 'unit_conversion') {
+              l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
+            }
+          })
+          set_value_type(evt.target.value)
           refreshThisAndUpdateRelatedComponents()
         }}
       >
-        {value_option_constants.map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)}
+        {type_constants.map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)}
       </Select>
     </RowSetter2Cols>
+    {value_type === 'percent' ? <RowSetter2Cols
+      attributePath={'Flux.data'}
+      attributeKey={'node_ref'}
+    >
+      <Select
+        value={node_ref}
+        onChange={(evt) => {
+          const value_option = compute_value_option(value_type, evt.target.value, dir)
+          selected_links.forEach(l => l.value!.value_option = value_option as ValueOptionType)
+          set_node_ref(evt.target.value)
+          refreshThisAndUpdateRelatedComponents()
+        }}
+      >
+        {['source', 'target'].map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)}
+      </Select>
+    </RowSetter2Cols> : <></>}
+    {value_type === 'percent' ? <RowSetter2Cols
+      attributePath={'Flux.data'}
+      attributeKey={'dir'}
+    >
+      <Select
+        value={compute_value_option(value_type, node_ref, dir)}
+        onChange={(evt) => {
+          const value_option = compute_value_option(value_type, node_ref, evt.target.value)
+          selected_links.forEach(l => l.value!.value_option = value_option as ValueOptionType)
+          set_dir(evt.target.value)
+          refreshThisAndUpdateRelatedComponents()
+        }}
+      >
+        {node_ref == 'source' ? value_option_percent_constants_source.map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)
+          : value_option_percent_constants_target.map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)
+        }
+      </Select>
+    </RowSetter2Cols> : <></>}
+    {value_type === 'ratio' ? <RowSetter2Cols
+      attributePath={'Flux.data'}
+      attributeKey={'ratio'}
+    >
+      <Select
+        value={ratio}
+        onChange={(evt) => {
+          const value_option = 'unit_conversion'
+          selected_links.forEach(l => {
+            l.value!.value_option = value_option as ValueOptionType
+            l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
+            l.value_label_unit_type = 'unit_ratio'
+          })
+          set_ratio(evt.target.value)
+          refreshThisAndUpdateRelatedComponents()
+        }}
+      >
+        {['unit_conversion'].map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)}
+      </Select>
+    </RowSetter2Cols> : <></>}
     {value_option == 'unit_conversion' && unit_data_tagg ? <DataTagSelector
       data_tagg={unit_data_tagg}
       value={selected_links[0]?.value!.ratio_unit_tag?.id as string}
@@ -140,17 +235,21 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
         refreshThisAndUpdateRelatedComponents()
       }}
     /> : <></>}
+
     <RowSetter2Cols
       attributePath={'Flux.labels'}
       attributeKey={value_option}
-      // optionName={value_option == 'unit_conversion' && unit_data_tagg ?
-      //   'ratio ' + unit_data_tagg.selected_tags_list[0].id + '/' + first_link_value?.ratio_unit_tag?.id :
-      //   t('Flux.labels.' + value_option)
-      // }
+    // optionName={value_option == 'unit_conversion' && unit_data_tagg ?
+    //   'ratio ' + unit_data_tagg.selected_tags_list[0].id + '/' + first_link_value?.ratio_unit_tag?.id :
+    //   t('Flux.labels.' + value_option)
+    // }
     >
-      <ConfigMenuNumberOrUndefinedInput
+      <ConfigMenuNumberInput
+        t={t}
         default_value={default_value}
-        function_on_blur={(_: number | null) => updateAttributeAndHistory(selected_links, 'valueCurrent', _, refreshThisAndUpdateRelatedComponents)}
+        function_on_blur={(_: number | null) => updateElements(
+          app_data, selected_links, 'valueCurrent' as ValueKey, _ as ValueElementsType, refreshThisAndUpdateRelatedComponents
+        )}
         minimum_value={0}
         stepper={true}
         step={1}
@@ -164,97 +263,12 @@ export const MenuConfigurationLinksData: FC<BaseApplicationDataType> = ({ new_da
     >
       <ConfigMenuTextInput
         default_value={first_link_value?.text_value}
-        function_on_blur={(_: string | null) => updateAttributeAndHistory(selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)}
+        function_on_blur={(_: string | null) => updateElements(app_data, selected_links, 'text_value' as ValueKey, _ ?? '', refreshThisAndUpdateRelatedComponents)}
         multiValue={is_label_indeterminated}
       />
     </RowSetter2Cols>
   </Box>
 }
 
-/*************************************************************************************************/
-
-/**
- * Component developped for number input of the link data config menu
- * @param {new_data}
- * @return {JSX.Elmement}
- */
-export const MenuContextLinksData: FC<BaseApplicationDataType> = ({
-  new_data,
-}) => {
-
-  const { drawing_area, menu_configuration } = new_data
-  const { selected_links_list_sorted, visible_and_selected_links_list_sorted } = drawing_area
-  const {
-    ref_to_menu_contextual_config_links_data_updater,
-    ref_to_save_in_cache_indicator
-  } = menu_configuration
-
-  let selected_links = menu_configuration.is_selector_only_for_visible_links ?
-    visible_and_selected_links_list_sorted :
-    selected_links_list_sorted
-  const first_link = selected_links[0]
-  const first_link_value = first_link?.value
-  const value_option = first_link_value?.value_option ?? default_value_option
-  const default_value = value_option_percent_constants.includes(value_option) ?
-    first_link_value?.valueData ?? null :
-    first_link?.valueCurrent
-  // Function used to force this component to reload
-  const [, setCount] = useState(0)
-  ref_to_menu_contextual_config_links_data_updater.current = ()=>setCount(a => a + 1)
-
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Toogle saving indicator
-    ref_to_save_in_cache_indicator.current(false)
-    // Update data menu for link
-    menu_configuration.updateComponentRelatedToLinksData()
-    setCount(a => a + 1)
-    // And update this menu also
-  }
-
-  return <ConfigMenuNumberInput
-    t={new_data.t}
-    default_value={default_value}
-    function_on_blur={(_: number | null) => updateAttributeAndHistory(selected_links, 'valueCurrent', _, refreshThisAndUpdateRelatedComponents)}
-    minimum_value={0}
-    stepper={true}
-    step={1}
-    unit_text={
-      (
-        selected_links[0]?.value_label_unit_visible &&
-        selected_links[0]?.value_label_unit !== LINKS_ATTRIBUTES_CONFIG.value_label_unit.default
-      ) ?
-        selected_links[0]?.value_label_unit :
-        undefined
-    }
-  />
-}
-
-const updateAttributeAndHistory = <
-  TKey extends keyof Class_LinkElement
->(
-  selected_links: Class_LinkElement[],
-  attribute_name: TKey,
-  attribute_value: Class_LinkElement[TKey],
-  refresh: () => void
-) => {
-  if (selected_links.length == 0) {
-    return
-  }
-  const drawing_area = selected_links[0].sankey.drawing_area
-  const app_data = drawing_area.application_data
-  const dict_old_val: { [x: string]: Class_LinkElement[TKey] } = {}
-  selected_links.forEach(l => dict_old_val[l.id] = l[attribute_name])
-  const _invUpdateAttribute = () => {
-    selected_links.forEach(link => link[attribute_name] = dict_old_val[link.id])
-    refresh()
-  }
-  const _updateAttribute = () => {
-    selected_links.forEach(link => link[attribute_name] = attribute_value)
-    refresh()
-  }
-  app_data.history.saveUndo(_invUpdateAttribute)
-  app_data.history.saveRedo(_updateAttribute)
-  _updateAttribute()
-}
 
 

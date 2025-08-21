@@ -174,7 +174,7 @@ export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
         additionalMenus={new_data.menu_configuration.additionalMenus}
       />
       <ContextMenuLink
-        new_data={new_data}
+        app_data={new_data}
         additionalMenus={new_data.menu_configuration.additionalMenus}
       />
       <ContextMenuZdd

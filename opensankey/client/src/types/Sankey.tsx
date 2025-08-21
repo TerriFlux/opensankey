@@ -121,6 +121,8 @@ export class Class_Sankey {
   protected _node_styles: { [_: string]: Class_NodeStyle } = {}
   public name: string
 
+  public normalised_link? : Class_LinkElement
+
   protected createNewNode(id: string, name: string): Class_NodeElement {
     const node = new Class_NodeElement(id, name, this.drawing_area, this._menu_config)
     return node

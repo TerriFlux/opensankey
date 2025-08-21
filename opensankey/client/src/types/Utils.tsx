@@ -74,7 +74,7 @@ export type Type_Position = 'absolute' | 'relative' | 'parametric'
  * Define type properties for Sankey structure
  * @type Type_Structure
  */
-export type Type_Structure = 'structure' | 'data' | 'reconciled' | 'free_value' | 'free_interval'
+export type Type_Structure = 'structure' | 'data' | 'data_label' | 'reconciled' | 'free_value' | 'free_interval'
 
 export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
 
