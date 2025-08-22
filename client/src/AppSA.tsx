@@ -58,8 +58,6 @@ import { DrawerSequenceDataTagg } from './deps/LoginComponent/deps/OpenSankey+/c
 import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
 import { Type_JSON, checkForUrlToJSON } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Type_AdditionalMenus } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Types'
-import { Class_ApplicationData } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
-import { Class_ApplicationDataOSP } from './deps/LoginComponent/deps/OpenSankey+/types/ApplicationDataOSP'
 import { Class_ApplicationDataLoginComponent } from './deps/LoginComponent/ApplicationDataLoginComponent'
 
 // Specific methods ==================================================================================
