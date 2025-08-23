@@ -889,7 +889,20 @@ class SankeyToJson(object):
                     if constraint.type in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS:
                         data_json["value_option"] = constraint.type
                         data_json["data_value"] = constraint.ratio * 100
+                    if constraint.type in CONST_IO_XL.DATA_VALUE_TYPE_UNIT_RATIO:
+                        data_json["value_option"] = constraint.type
+                        data_json["data_value"] = constraint.ratio
 
+        if data.constraints:
+            for constraints in data.constraints.values():
+                for constraint in constraints:
+                    if constraint.type in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS:
+                        data_json["value_option"] = constraint.type
+                        data_json["data_value"] = constraint.ratio * 100
+                    if constraint.type in CONST_IO_XL.DATA_VALUE_TYPE_UNIT_RATIO:
+                        data_json["value_option"] = constraint.type
+                        data_json["data_value"] = constraint.ratio
+                        data_json["ratio_unit_tag"] = constraint.ratio_unit_tag
         # Update flux tags to data structure
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
             # TODO : Checker si len(tags) > 1 -> normalement ça ne devrait pas arriver
@@ -1669,9 +1682,9 @@ class JsonToSankey(object):
 
             if "value_option" in datas_json:
                 data.value_option = datas_json["value_option"]
-            if read_constraint and data.value_option == DataConstraintType.ratio_node_input_source.value:
+            if read_constraint and data.value_option in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS:
                 self.sankey.ratio_node(flux, datas_json)
-            if not read_constraint and data.value_option != DataConstraintType.ratio_node_input_source.value:
+            if not read_constraint:
                 if "data_value" in datas_json:
                     data.data_value = datas_json["data_value"]
                 # Apply only flux-tags
