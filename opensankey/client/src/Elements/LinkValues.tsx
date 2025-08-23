@@ -484,7 +484,7 @@ export class Class_LinkValueTree {
 export const value_option_percent_constants_source = ['%IS', '%OS','%PS']
 export const value_option_percent_constants_target = ['%ID', '%OD','%PD']
 export const value_option_percent_constants = [...value_option_percent_constants_source,...value_option_percent_constants_target]
-export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_conversion'] as const
+export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_ratio'] as const
 export type ValueOptionType = typeof value_option_constants[number]
 export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'unit_ratio','normalized'] as const
 export type UnitType = typeof unit_constants[number]
@@ -517,7 +517,7 @@ export class Class_LinkValue {
     if (this.data_value == null) {
       return null
     }
-    if (this.value_option == 'unit_conversion') {
+    if (this.value_option == 'unit_ratio') {
       const ratio_unit_tag_value = this.link?.valueForTag(this._ratio_unit_tag!)!
       if (ratio_unit_tag_value == this) return this.data_value
       return (ratio_unit_tag_value.valueResult??ratio_unit_tag_value.valueData??1) * this.data_value!
@@ -671,6 +671,7 @@ export class Class_LinkValue {
 
     this.text_value = element.text_value
     this.value_option = element.value_option
+    this.ratio_unit_tag = element.ratio_unit_tag
     // Tags - Cleaning
     this.flux_tags_list.forEach(tag => tag.removeReference(this))
     this._flux_tags = []
@@ -719,6 +720,7 @@ export class Class_LinkValue {
 
     if (this.text_value) json_object['text_value'] = this.text_value
     if (this.value_option !== 'value') json_object['value_option'] = this.value_option
+    if (this._ratio_unit_tag) json_object['ratio_unit_tag'] = this._ratio_unit_tag.id
     if (this.flux_taggs_list.length > 0) {
       json_object['tags'] = Object.fromEntries(
         this.flux_taggs_list
@@ -765,6 +767,9 @@ export class Class_LinkValue {
 
       this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
       this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType
+      const { data_taggs_list } = this.link?.sankey ?? { data_taggs_list: [] }
+      const unit_data_tagg = data_taggs_list.find(tagg => tagg.is_unit)
+      this.ratio_unit_tag = (unit_data_tagg?.tags_dict[getStringFromJSON(json_object, 'ratio_unit_tag', '')] ?? null)
     }
     // Get Flux tags
     // In JSON here are how supposed tags var is :

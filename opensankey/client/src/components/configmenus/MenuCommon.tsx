@@ -53,7 +53,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck, faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FCType_WrapperBoxSubSectionMenu, FCType_WrapperCheckBoxSubSectionMenu, OSTooltpFuncType } from '../SankeyMenuTypes'
+import { FCType_WrapperBoxSubSectionMenu, OSTooltpFuncType } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { default_style_id } from '../../types/Utils'
@@ -213,11 +213,11 @@ export const WrapperBoxSubSectionMenu: FC<FCType_WrapperBoxSubSectionMenu> = ({
  * }
  * @return {*} 
  */
-export const WrapperCheckBoxSubSectionMenu: FC<FCType_WrapperCheckBoxSubSectionMenu> = ({
-  title,
-  open = true,
-  onClick,
-  children
+export const WrapperCheckBoxSubSectionMenu = ({title,open = true,onClick,children}:{
+  title: string,
+  open?: boolean,
+  onClick: (evt: boolean) => void,
+  children: React.ReactNode
 }) => {
   // Hooks controlling collapse opening, initiallised at true
   const { isOpen, onToggle } = useDisclosure({ isOpen: open })

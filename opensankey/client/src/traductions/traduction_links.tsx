@@ -42,7 +42,7 @@ export const resources_flux = {
           ratio_output: 'Ratio total output',
           ratio_source_parent: 'Ratio parent flux(left)',
           ratio_target_parent: 'Ratio parent flux(right)',
-          unit_conversion: 'Coeff. units conversion',
+          unit_ratio: 'Coeff. units conversion',
           edit_value: 'Edit value',
           affichage: 'Label',
           tooltips: {
@@ -187,7 +187,7 @@ export const resources_flux = {
           ratio_output: 'Ratio total sorties',
           ratio_source_parent: 'Ratio flux parent(à gauche)',
           ratio_target_parent: 'Ratio flux parent(à droite)',
-          unit_conversion: 'Coeff. conversion unités',
+          unit_ratio: 'Coeff. conversion unités',
           affichage: 'Label',
           tooltips: {
             data_type: 'Type de données',
@@ -268,7 +268,7 @@ export const resources_flux = {
           '%OD': '% sorties destination',
           '%PS': '% flux parent source',
           '%PD': '% flux parent destination',
-          unit_conversion: 'Ratio d\'unité',
+          unit_ratio: 'Ratio d\'unité',
           unit_tag: 'Unité naturelle d\'origine',
           other_unit_tag: 'Autres unités naturelles',
           normalized: 'Normalisé (flux réf.)',

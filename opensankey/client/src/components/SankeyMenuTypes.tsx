@@ -104,13 +104,6 @@ export type FCType_WrapperBoxSubSectionMenu = BaseApplicationDataType & {
   children: JSX.Element
 }
 
-export type FCType_WrapperCheckBoxSubSectionMenu = {
-  title: string,
-  open?: boolean,
-  onClick: (evt: boolean) => void,
-  children: ReactNode
-}
-
 export type FType_DiagramSelector = (
   new_data: Class_ApplicationData
 ) => JSX.Element

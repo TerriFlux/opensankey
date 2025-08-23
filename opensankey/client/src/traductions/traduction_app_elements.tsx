@@ -267,31 +267,7 @@ export const resources_app_elements = {
           }
         },
 
-        saveExcel: {
-          nodeSheets: 'Splited among different sheets',
-          nodeSheetsCriteria: 'According to what cirteria ?',
-          dim: 'Dimensions',
-          fam: 'Families',
-          tag: 'Node tag',
 
-          dimMaxLevel: 'Select max level for each level tag group :',
-          noMaxLevel: 'No max level selected',
-          fluxData: 'With data',
-          formatSheet: 'Sheet formating',
-
-          matrixTable: 'Matrix of flow',
-          dataTable: 'Table of data',
-          fluxAllData: 'Table with all flows',
-
-
-          ignTagg: 'Ignore tag groups ',
-          ignNodeTagg: 'Ignore node tag groups',
-          ignFlowTagg: 'Ignore flow tag groups',
-          ignDataTagg: 'Ignore data tag groups',
-          ignDimTagg: 'Ignore level tag groups',
-
-          PreferenceTag: 'Data tag value to keep when deleting tag group',
-        },
         tooltips: {
           noeud: {
             slct: 'Choose one / some / all nodes to select via a drop-down list',
@@ -805,31 +781,6 @@ export const resources_app_elements = {
             tagLevel: 'Transfert les nieveaux de détails du sankey importé vers l\'actuel',
             attrGeneral: 'Transfert les attributs de la zone de dessin du sankey importé vers l\'actuel',
           }
-        },
-        saveExcel: {
-          nodeSheets: 'Répartition sur plusieurs feuilles',
-          nodeSheetsCriteria: 'Selon quel critère ?',
-          dim: 'Dimensions',
-          fam: 'Familles',
-          tag: 'Étiquette de noeud',
-
-          dimMaxLevel: 'Sélection du niveau max pour chaque groupe de dimensions :',
-          noMaxLevel: 'Aucun niveau max séléctionné',
-
-          fluxData: 'Avec données',
-          formatSheet: 'Formattage des onglets excel',
-
-          matrixTable: 'Matrice de flux',
-          dataTable: 'Tableau de valeurs',
-          fluxAllData: 'Tableau avec toutes les flux',
-
-          ignTagg: 'Ignorer des groupes d\'étiquettes',
-          ignNodeTagg: 'Ignorer  groupes d\'étiquettes de noeuds',
-          ignFlowTagg: 'Ignorer  groupes d\'étiquettes de flux',
-          ignDataTagg: 'Ignorer  groupes d\'étiquettes de données',
-          ignDimTagg: 'Ignorer  groupes de dimensions',
-          PreferenceTag: 'Étiquette de données à utilisé comme valeur lors de la suppression du groupe d\'étiquette ',
-
         },
         tooltips: {
           noeud: {

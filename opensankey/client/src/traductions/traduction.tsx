@@ -10,6 +10,22 @@ import { resources_template } from './traduction_templates'
 import { resources_welcome } from './traduction_welcome'
 import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
 import { NODES_ATTRIBUTES_CONFIG } from '../Elements/NodeAttributesConfig'
+import { EXCEL_ATTRIBUTES_CONFIG } from '../components/dialogs/ExcelModalSaver'
+
+
+const use_excel_config = (resources:any) => {
+    resources.en.translation['Menu']['saveExcel'] = {tooltips:{}}
+    resources.fr.translation['Menu']['saveExcel'] = {tooltips:{}}
+    Object.entries(EXCEL_ATTRIBUTES_CONFIG).forEach(([attributeKey, config]) => {
+       const { labels, tooltips } = config
+      resources.en.translation['Menu']['saveExcel'][attributeKey] = labels.en
+      resources.fr.translation['Menu']['saveExcel'][attributeKey] = labels.fr
+
+      // Ajouter les tooltips
+      resources.en.translation['Menu']['saveExcel'].tooltips[attributeKey] = tooltips.en
+      resources.fr.translation['Menu']['saveExcel'].tooltips[attributeKey] = tooltips.fr  
+    })
+}
 
 const use_link_config = (resources:any) => {
   // Génération automatique des traductions pour chaque attribut
@@ -102,6 +118,7 @@ export const deep_assign_resources = (s:any, t:any) => {
 
 use_link_config(resources_flux)
 use_node_config(resources_nodes)
+use_excel_config(resources_app_elements)
 
 // Concat traductions resources
 export const resources_opensankey = {}

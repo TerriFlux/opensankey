@@ -256,7 +256,7 @@ export const format_value = (
     return text_value
   }
   // Add unit suffix
-  if (element.sankey.drawing_area.type_data == 'data' || element.sankey.drawing_area.type_data == 'data_label' && link.value!.value_option == 'unit_conversion') return text_value
+  if (element.sankey.drawing_area.type_data == 'data' || element.sankey.drawing_area.type_data == 'data_label' && link.value!.value_option == 'unit_ratio') return text_value
   if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
   else if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
   else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
@@ -1719,8 +1719,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return value + '% ↕→'
     } else if (option == '%OD' && value) {
       return value + '% →↕'
-    } else if (option == 'unit_conversion' && value) {
-      return value + ' ' + this.unit_name+'/'+this.value?.ratio_unit_tag!.name
+    } else if (option == 'unit_ratio' && value) {
+      return value + ' ' + this.unit_name+'/'+ 't'//this.value?.ratio_unit_tag!.name
     } else if (option == '%PS' && value) {
       return '↑→ ' + value + '%'
     } else if (option == '%PD' && value) {
@@ -1742,7 +1742,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get data_label() {
     if (this.sankey.drawing_area.type_data == 'data' || this.sankey.drawing_area.type_data == 'data_label') {
       if (!this.value?.valueData) return ''
-      return this.formatValueWithOption(format_value(this.value?.valueData, this, this.unit_name), this.value?.value_option)/*else if (this.value?.value_option == 'unit_conversion' ) {
+      return this.formatValueWithOption(format_value(this.value?.valueData, this, this.unit_name), this.value?.value_option)/*else if (this.value?.value_option == 'unit_ratio' ) {
         return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
       }*/
     }

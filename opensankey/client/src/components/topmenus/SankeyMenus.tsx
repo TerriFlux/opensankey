@@ -49,9 +49,8 @@ import {
 import SankeyLoad from '../../Persistence/SankeyPersistence'
 import {
   ExcelModal,
-  ApplyLayoutDialog,
-  ExcelModalSaver
-} from '../dialogs/SankeyMenuDialogs'
+  ApplyLayoutDialog} from '../dialogs/SankeyMenuDialogs'
+import { ExcelModalSaver } from '../dialogs/ExcelModalSaver'
 import {
   uploadExcelImpl
 } from '../../Persistence/SankeyPersistence'
@@ -324,7 +323,7 @@ export const Menu: FC<FCType_Menu> = (
         launch={new_data.processFunction.launch}
         uploadExcelImpl={uploadExcelImpl}
       />
-      <ExcelModalSaver new_data={new_data} />
+      <ExcelModalSaver app_data={new_data} />
 
       <SankeyLoad
         new_data={new_data}
