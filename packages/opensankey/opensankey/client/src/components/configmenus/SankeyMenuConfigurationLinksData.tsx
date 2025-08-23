@@ -62,7 +62,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     first_link?.value_label_unit_visible ?
       first_link?.value_label_unit :
       undefined
-  const default_value = value_option_percent_constants.includes(value_option) || value_option == 'unit_conversion' ?
+  const default_value = value_option_percent_constants.includes(value_option) || value_option == 'unit_ratio' ?
     first_link?.value?.valueData ?? null :
     first_link?.valueCurrent
 
@@ -70,7 +70,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
-  const current_value_type = value_option == 'value' ? 'value' : value_option == 'unit_conversion' ? 'ratio' : 'percent'
+  const current_value_type = value_option == 'value' ? 'value' : value_option == 'unit_ratio' ? 'ratio' : 'percent'
   const [value_type, set_value_type] = useState(current_value_type)
   if (value_type !== current_value_type) set_value_type(current_value_type)
   const type_constants = ['value', 'percent']
@@ -81,10 +81,10 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   const current_dir = value_option == '%IS' || value_option == '%ID' ? 'input' : 'output'
   const [dir, set_dir] = useState(current_dir)
   if (dir !== current_dir) set_dir(current_dir)
-  const [ratio, set_ratio] = useState('unit_conversion')
-  if (unit_data_tagg && value_type == 'ratio' && ratio == 'unit_conversion' && value_option !== 'unit_conversion') {
+  const [ratio, set_ratio] = useState('unit_ratio')
+  if (unit_data_tagg && value_type == 'ratio' && ratio == 'unit_ratio' && value_option !== 'unit_ratio') {
     selected_links.forEach(l => {
-      l.value!.value_option = 'unit_conversion' as ValueOptionType
+      l.value!.value_option = 'unit_ratio' as ValueOptionType
       l.value!.ratio_unit_tag = unit_data_tagg.tags_list[0]
     })
   }
@@ -105,7 +105,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         if (dir == 'parent') return '%PD'
       }
     }
-    if (value_type == 'ratio') return 'unit_conversion'
+    if (value_type == 'ratio') return 'unit_ratio'
     return
   }
 
@@ -162,7 +162,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           const value_option = compute_value_option(evt.target.value, node_ref, dir)
           selected_links.forEach(l => {
             l.value!.value_option = value_option as ValueOptionType
-            if (value_option == 'unit_conversion') {
+            if (value_option == 'unit_ratio') {
               l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
             }
           })
@@ -214,7 +214,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       <Select
         value={ratio}
         onChange={(evt) => {
-          const value_option = 'unit_conversion'
+          const value_option = 'unit_ratio'
           selected_links.forEach(l => {
             l.value!.value_option = value_option as ValueOptionType
             l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
@@ -224,10 +224,10 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           refreshThisAndUpdateRelatedComponents()
         }}
       >
-        {['unit_conversion'].map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)}
+        {['unit_ratio'].map(el => <option key={'value_' + el} value={el}><OSTooltip label={el}>{t('Flux.labels.' + el)}</OSTooltip></option>)}
       </Select>
     </RowSetter2Cols> : <></>}
-    {value_option == 'unit_conversion' && unit_data_tagg ? <DataTagSelector
+    {value_option == 'unit_ratio' && unit_data_tagg ? <DataTagSelector
       data_tagg={unit_data_tagg}
       value={selected_links[0]?.value!.ratio_unit_tag?.id as string}
       onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -239,7 +239,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     <RowSetter2Cols
       attributePath={'Flux.labels'}
       attributeKey={value_option}
-    // optionName={value_option == 'unit_conversion' && unit_data_tagg ?
+    // optionName={value_option == 'unit_ratio' && unit_data_tagg ?
     //   'ratio ' + unit_data_tagg.selected_tags_list[0].id + '/' + first_link_value?.ratio_unit_tag?.id :
     //   t('Flux.labels.' + value_option)
     // }
