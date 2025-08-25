@@ -5,7 +5,7 @@ import React, { FC, useState } from 'react'
 import { ModalWelcome, ModalWelcomeContent } from '../deps/OpenSankey/components/welcome/ModalWelcome'
 import { Box, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { FCType_ModalWelcomeBuilder } from '../deps/OpenSankey/components/SankeyMenuTypes'
+import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 
 
 const ShortcutsOSP = (
@@ -78,9 +78,7 @@ const ShortcutsOSP = (
 }
 
 
-export const ModalWelcomeBuilderOSP: FC<FCType_ModalWelcomeBuilder> = (
-  { new_data }
-) => {
+export const ModalWelcomeBuilderOSP = ({ new_data }: { new_data: Class_ApplicationData }) => {
   const [, setCount] = useState(0)
   new_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current = () => setCount(a => a + 1)
 

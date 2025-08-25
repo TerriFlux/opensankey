@@ -1,43 +1,17 @@
-import React, {
-  FC,
-} from 'react'
-
-import {
-  faTable,
-  faFileCsv,
-  faToolbox,
-  faFile
-} from '@fortawesome/free-solid-svg-icons'
-import {
-  FontAwesomeIcon
-} from '@fortawesome/react-fontawesome'
-import {
-  Box,
-  MenuList,
-  MenuItem,
-  Menu,
-  MenuButton,
-  Badge
-} from '@chakra-ui/react'
-import {
-  ChevronDownIcon
-} from '@chakra-ui/icons'
-
+import React from 'react'
+import { faTable } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Box, MenuList, MenuItem, Menu, MenuButton, } from '@chakra-ui/react'
+import { ChevronDownIcon } from '@chakra-ui/icons'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { ContextMenuButton } from '../deps/OpenSankey/components/dialogs/SankeyMenuContextZDD'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
-
-export type Ftype_AFMEditionMenu = {
-  app_data : Class_ApplicationDataOSP
-}
-
-export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
-  app_data
+export const AFMEditionMenu = ({ app_data }: {
+  app_data: Class_ApplicationDataOSP
 }) => {
 
   const { t } = app_data
-  const {ref_setter_show_reconciliation} = app_data.menu_configuration_osp.dict_setter_show_dialog_afm
+  const { ref_setter_show_reconciliation } = app_data.menu_configuration_osp.dict_setter_show_dialog_afm
 
   const svg_reconcile = <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +19,7 @@ export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
     data-prefix='fas'
     className='svg-inline--fa'
     viewBox="0 0 24 24"
-    style={{'height':'2rem', 'width':'2rem'}}
+    style={{ 'height': '2rem', 'width': '2rem' }}
   >
     <path
       fill='currentColor'
@@ -81,7 +55,7 @@ export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
             width="1rem"
           >
             <ChevronDownIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
             />
           </Box>
         </MenuButton>
@@ -93,7 +67,7 @@ export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
               ref_setter_show_reconciliation.current(true)
             }}>
             <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faTable}
             />
             <Box>
@@ -104,29 +78,4 @@ export const AFMEditionMenu: FC<Ftype_AFMEditionMenu> = ({
       </Menu>
     </OSTooltip>
   </>
-}
-
-export const AFMContextMenu: FC<Ftype_AFMEditionMenu> = ({
-  app_data
-}) => {
-  const {t,menu_configuration_osp} =app_data
-  const {dict_setter_show_dialog_afm} = menu_configuration_osp
-  return <Menu placement='end'>
-    <ContextMenuButton>
-      {t('Menu.afm_reconcil')}
-    </ContextMenuButton>
-    <MenuList as={Box} layerStyle='context_menu'>
-        <MenuItem
-          onClick={() => {
-            app_data.menu_configuration_osp.action_type = 'optim_sankey'
-            dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current(true)
-            app_data.drawing_area.is_drawing_area_contextualised = false
-            app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
-          }} >
-          <Box>
-            {t('Menu.afm_reconcil_json')}
-          </Box>
-        </MenuItem>
-    </MenuList>
-  </Menu>
 }

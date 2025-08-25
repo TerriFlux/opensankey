@@ -14,25 +14,8 @@ import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
-/*************************************************************************************************/
-interface BaseComponentProps {
-  new_data: Class_ApplicationDataOSP
-}
-interface BaseComponentPropsPlus {
-  new_data_plus: Class_ApplicationDataOSP
-}
-
-export const MenuConfigurationLinksTags: FC<BaseComponentProps> = ({
-  new_data,
-}) => {
-
-  // Data -------------------------------------------------------------------------------
-
+export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_ApplicationDataOSP}) => {
   const { t } = new_data
-
-  // Tags -------------------------------------------------------------------------------
-
-  // Flux tag groups
   const list_flux_taggs = new_data.drawing_area.sankey.flux_taggs_list
   const has_flux_taggs = list_flux_taggs.length > 0
   const [flux_tagg_entry_index, setFluxTaggEntryIndex] = useState(0)

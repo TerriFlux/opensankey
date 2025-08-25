@@ -36,13 +36,11 @@ import {
   OpenSankeyDiagramSelector
 } from './deps/OpenSankey/components/dialogs/SankeyMenuDialogs'
 import {
-  FType_InitializeAdditionalMenus,
-  FType_ModuleDialogs
-} from './deps/OpenSankey/types/FunctionTypes'
-import {
   IType_DictHookRefSetterShowDialogComponents
 } from './deps/OpenSankey/types/MenuConfig'
 import {
+  FType_InitializeAdditionalMenus,
+  FType_ModuleDialogs,
   initializeAdditionalMenus,
   moduleDialogs
 } from './deps/OpenSankey/Modules'
@@ -103,13 +101,14 @@ import {
 } from './components/UtilsOSP'
 import { ToolbarFilter } from './components/Toolbar'
 import { SankeyMenuConfigurationLevelTags } from './components/SankeyPlusMenuConfigurationLevlTags'
-import { AFMContextMenu, AFMEditionMenu } from './components/AFMSankeyMenu'
+import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { SupplyUseModelisationProd } from './components/SankeyReconciliation'
 import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { checkForUrlToJSON, Type_JSON } from './deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/components/SankeyMenuTypes'
+import { initializePlusMenus } from './components/ContextMenuConfigs'
 
 declare const window: Window &
   typeof globalThis & {
@@ -148,6 +147,7 @@ export const initializeApplicationDataOSP = (
   } else if (initial_data !== undefined) {
     new_data_plus.fromJSON(initial_data)
   }
+  initializePlusMenus()
   return new_data_plus
 }
 
@@ -229,12 +229,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     />)
 
 
-  additionalMenus.current.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
-  additionalMenus.current.additional_context_zdd_element = <AFMContextMenu app_data={new_data_plus} />
+  //additionalMenus.current.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
 
   // Insert OSP Button at a specific place in the link context menu
-  const idx_sep_4 = additionalMenus.current.context_link_order.indexOf('sep_4')
-  additionalMenus.current.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
+  // const idx_sep_4 = additionalMenus.current.context_link_order.indexOf('sep_4')
+  // additionalMenus.current.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
 
 
   // Addition chackbox for dialog save JSON dagram
@@ -243,9 +242,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       new_data_plus={new_data_plus}
     />
   )
-
-  // Place new button in desired order in the toolbar
-  additionalMenus.current.toolbar_order.splice(1, 0, 'aggregation', 'link_visual_filter', 'node_tag_filter', 'link_tag_filter', 'data_tag_filter')
 
   // add option for updateLayout (OSP var to update)
   // (Only add these options if connected with OSP)

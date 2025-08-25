@@ -26,6 +26,8 @@ import { ThemeOSP } from './css/ThemeOSP'
 
 import OpenSankeyApp from './deps/OpenSankey/App'
 import { ClickSaveDiagram } from './deps/OpenSankey/Persistence/SankeyPersistence'
+import { createZDDModifierPlus, LINK_MENU_CONFIG_PLUS, ZDD_MENU_CONFIG_PLUS } from './components/ContextMenuConfigs'
+import { createLinkModifier } from './deps/OpenSankey/components/dialogs/ContextLinkConfig'
 
 // OpenSankeyApp for OpenSankey+ ========================================================================
 
@@ -39,5 +41,11 @@ export const OpenSankeyPlusApp = <ChakraProvider theme={ThemeOSP}>
     ClickSaveDiagram={
       (new_data) => { ClickSaveDiagram(new_data) }
     }
+    //@ts-expect-error xxx
+    createZDDModifier={createZDDModifierPlus}
+    ZDD_MENU_CONFIG={ZDD_MENU_CONFIG_PLUS()}
+    //@ts-expect-error xxx
+    createLinkModifier={createLinkModifier}
+    LINK_MENU_CONFIG={LINK_MENU_CONFIG_PLUS()}
   />
 </ChakraProvider>

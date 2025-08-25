@@ -353,7 +353,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
  * @type {FC<MenuColorPickerProps>}
  * @memberof Class_ApplicationDataSA
  */
-  public override MenuColorPicker: FC<MenuColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }) => {
+  public override MenuColorPicker = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }:MenuColorPickerProps) => {
     const [displayColorPicker, setDisplayColorPicker] = useState(false)
     const [color, setColor] = useState(initialColor)
 
