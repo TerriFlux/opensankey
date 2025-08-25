@@ -40,8 +40,7 @@ import SankeyExcelParser.io_excel_constants as CONST_IO_XL
 # Local modules ---------------------------------------------------------------
 from SankeyExcelParser.classes.sankey import Sankey
 from SankeyExcelParser.classes.sankey_utils.data import (
-    Data as SankeyData,
-    DataConstraintType,
+    Data as SankeyData
 )
 from SankeyExcelParser.classes.sankey_utils.tag_group import ANTI_TAGS_NAME
 
@@ -1604,7 +1603,9 @@ class JsonToSankey(object):
                     )
                     self._extract_data(flux_json["value"], flux, True)
 
-    def _extract_data(self, datas_json, flux, read_constraint, datatags_list=[], datataggs_list=None):
+    def _extract_data(
+        self, datas_json, flux, read_constraint, datatags_list=[], datataggs_list=None
+    ):
         """
         Extract all datas (recursively) from json flux struct to fill a Sankey struct.
 
@@ -1682,7 +1683,10 @@ class JsonToSankey(object):
 
             if "value_option" in datas_json:
                 data.value_option = datas_json["value_option"]
-            if read_constraint and data.value_option in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS:
+            if (
+                read_constraint
+                and data.value_option in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS
+            ):
                 self.sankey.ratio_node(flux, datas_json)
             if not read_constraint:
                 if "data_value" in datas_json:
