@@ -23,7 +23,7 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-import React, { FC, useState, useMemo, ChangeEvent } from 'react'
+import React, { FC, useState, useMemo, ChangeEvent,ReactNode } from 'react'
 import { t, TFunction } from 'i18next'
 import {
   Box,
@@ -39,6 +39,7 @@ import {
   CheckboxProps,
   Tooltip,
   Select,
+  PlacementWithLogical,
 } from '@chakra-ui/react'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
@@ -53,12 +54,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck, faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FCType_WrapperBoxSubSectionMenu, OSTooltpFuncType } from '../SankeyMenuTypes'
+import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { default_style_id } from '../../types/Utils'
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { MenuColorPicker } from './MenuColorPicker'
+import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 
 
 // ✅ Union de tous vos éléments
@@ -279,15 +281,16 @@ export const MenuResetAttrLocal = (
     new_data: Class_ApplicationData, nodesOrLinks: 'nodes' | 'links',
     dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } }
   }) => {
-  const { t, icon_library } = new_data
+  const { t, icon_library,drawing_area } = new_data
+  const { sankey } = drawing_area
   const { icon_undo } = icon_library
 
   // Delete all local attributes of selected elements
   const resetAll = () => nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
   // Delete local attributes 'k' of selected elements
   const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? 
-    new_data.drawing_area.deleteLocalAttrSelectedNode(k as keyof Class_NodeAttribute) : 
-    new_data.drawing_area.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG))
+    sankey.deleteLocalAttrSelectedNodes(k as (keyof typeof  NODES_ATTRIBUTES_CONFIG),drawing_area.selected_nodes_list) : 
+    sankey.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG),drawing_area.selected_links_list)
 
   return <Menu direction='rtl' placement='left' closeOnSelect={false}>
     <MenuButton as={Button} variant='menuconfigpanel_option_button'>
@@ -621,10 +624,16 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 };
 
 
-export const OSTooltip: FC<OSTooltpFuncType> = (
+export const OSTooltip = (
   {
     label, delay = 500, placement = 'auto', isAlwaysOpen = false, children
-  }
+  }:{
+  delay?: number,
+  label: string,
+  placement?: PlacementWithLogical
+  children: ReactNode,
+  isAlwaysOpen?: boolean
+}
 ) => {
   if (label === undefined) {
     return <>{children}</>

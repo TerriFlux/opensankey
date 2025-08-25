@@ -49,22 +49,16 @@ import {
 import SankeyLoad from '../../Persistence/SankeyPersistence'
 import {
   ExcelModal,
-  ApplyLayoutDialog} from '../dialogs/SankeyMenuDialogs'
+  ApplyLayoutDialog
+} from '../dialogs/SankeyMenuDialogs'
 import { ExcelModalSaver } from '../dialogs/ExcelModalSaver'
-import {
-  uploadExcelImpl
-} from '../../Persistence/SankeyPersistence'
-import {
-  DownloadExamples
-} from '../../Persistence/SankeyPersistence'
+import { uploadExcelImpl, DownloadExamples } from '../../Persistence/SankeyPersistence'
 
 import { ToolBarBottom } from './MenuBottom'
-import { FCType_Menu } from '../../types/FunctionTypes'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
-import { Type_AdditionalMenus } from '../../types/Types'
-import { keyTypeConfig, keyTypeElements } from '../../types/MenuConfig'
+import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
 import { DrawingAreaStyle, GraphElementsOrdoner, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
@@ -73,7 +67,7 @@ import { MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurati
 import { MenuConfigurationNodeContext } from '../configmenus/SankeyMenuConfigurationNodesLabel'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FCType_MenuDraggable } from '../SankeyMenuTypes'
+import { FType_DiagramSelector } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 
@@ -109,14 +103,20 @@ export const menu_config_width = 20
  *
  * @returns
  */
-export const Menu: FC<FCType_Menu> = (
+export const Menu = (
   {
     new_data,
     external_modal,
     additionalMenus,
     apply_transformation_additional_elements,
     diagramSelector,
-  }: FCType_Menu
+  }: {
+    new_data: Class_ApplicationData,
+    diagramSelector: FType_DiagramSelector,
+    external_modal: JSX.Element[],
+    apply_transformation_additional_elements: JSX.Element[],
+    additionalMenus: MutableRefObject<Type_AdditionalMenus>,
+  }
 ) => {
   const { t, app_name, logo_terriflux, icon_library, menu_configuration } = new_data
   const { icon_open_close_config } = icon_library
@@ -186,7 +186,7 @@ export const Menu: FC<FCType_Menu> = (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
-      {((!new_data.is_static) ||(window.sankey && window.sankey.topbar != false ))? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} />:<></>}
+      {((!new_data.is_static) || (window.sankey && window.sankey.topbar != false)) ? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} /> : <></>}
 
       {/* Bottom Navbar with some more info */}
       {
@@ -201,7 +201,7 @@ export const Menu: FC<FCType_Menu> = (
             bottom='0'
             layerStyle='menubottom_layout_style'
           >
-            {additionalMenus.current.footer.map((add_footer,idx)=><Fragment key={'additional_footer_'+idx}>{add_footer}</Fragment>)}
+            {additionalMenus.current.footer.map((add_footer, idx) => <Fragment key={'additional_footer_' + idx}>{add_footer}</Fragment>)}
             <Box
               display='grid'
               gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
@@ -303,7 +303,7 @@ export const Menu: FC<FCType_Menu> = (
 
       {((!new_data.is_static) || (window.sankey && window.sankey.toolbar)) ? <ToolBarBottom
         new_data={new_data}
-      />:<></>}
+      /> : <></>}
 
       {
         new_data.processFunction.ref_processing.current ? (
@@ -340,7 +340,9 @@ export const Menu: FC<FCType_Menu> = (
   )
 }
 
-const ConfigMenu: FC<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigMenu = ({ new_data, additional_menus }: {
+  new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus>
+}) => {
   const { type_menu_configuration_selected, style_config } = new_data.menu_configuration
   const [, setUpdate] = useState(false)
 
@@ -369,7 +371,10 @@ const ConfigMenu: FC<{ new_data: Class_ApplicationData, additional_menus: Mutabl
  * @param {*} { new_data, additional_menus }
  * @return {*}
  */
-const ConfigMenuTypeConfig: FC<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
+const ConfigMenuTypeConfig = ({ new_data, additional_menus }: {
+  new_data: Class_ApplicationData,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>
+}) => {
   const { t } = new_data
   const { type_menu_configuration_selected, ref_to_menu_config_updater } = new_data.menu_configuration
   return <ButtonGroup className='buttonGroupTypeConfig' spacing='0.2rem' style={{
@@ -439,7 +444,7 @@ const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: Mut
       'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
           <LayoutConfigDAScaleAndLimit new_data={new_data} />
-          <GraphElementsOrdoner new_data={new_data}/>
+          <GraphElementsOrdoner new_data={new_data} />
         </>
       </WrapperContentConfig>,
       'node': <WrapperContentConfig title={t('Menu.Config.title_node')}>
@@ -447,7 +452,7 @@ const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: Mut
       </WrapperContentConfig>,
 
       'flow': <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinksData app_data={new_data}/>
+        <MenuConfigurationLinksData app_data={new_data} />
       </WrapperContentConfig>,
 
       ...additional_menus.current.additional_menu_config_content.data
@@ -571,13 +576,20 @@ const ConfigMenuElementToConfig: FC<{ new_data: Class_ApplicationData, additiona
  *   title }
  * @return {*}
  */
-export const MenuDraggable: FC<FCType_MenuDraggable> = ({
+export const MenuDraggable = ({
   dict_hook_ref_setter_show_dialog_components,
   dialog_name,
   content,
   title,
   maxW = '40vw',
   customPos,
+}: {
+  dict_hook_ref_setter_show_dialog_components: IType_DictHookRefSetterShowDialogComponents,
+  dialog_name: keyof IType_DictHookRefSetterShowDialogComponents,
+  content: JSX.Element | JSX.Element[],
+  title: string,
+  maxW?: string,
+  customPos?: { x: number, y: number }
 }
 ) => {
   const [display_menu, set_display_menu] = useState(false)

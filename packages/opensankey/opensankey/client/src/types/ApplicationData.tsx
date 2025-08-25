@@ -36,14 +36,9 @@ import FileSaver from 'file-saver'
 import { StepType } from '@reactour/tour'
 import { useToast } from '@chakra-ui/react'
 
-// Local imports
 import { Class_MenuConfig } from '../types/MenuConfig'
-// import { ClassAbstract_ApplicationData } from '../types/Abstract'
 import { getStringFromJSON, randomId, Type_JSON } from './Utils'
-
-import { FType_ProcessFunctions } from './FunctionTypes'
-
-import { Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
+import { FType_RetrieveExcelResults, Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 import { JSONtoExcel, retrieveExcelResults } from '../Persistence/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from './IconLibrairie'
@@ -92,6 +87,16 @@ const default_toast_duration: number = 1000 // 1sec
 const default_toast_waiting_delay: number = 500 // 500ms
 const toast_bypass: boolean = window.sankey?.publish??false
 
+export type FType_ProcessFunctions = {
+  ref_processing: MutableRefObject<boolean>,
+  ref_setter_processing: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  failure: MutableRefObject<boolean>,
+  not_started: MutableRefObject<boolean>,
+  ref_result: MutableRefObject<Dispatch<SetStateAction<string>>>,
+  path: MutableRefObject<string>,
+  launch: (path: string) => void,
+  retrieveExcelResults: FType_RetrieveExcelResults
+}
 // CLASS APPLICATION DATA **************************************************************/
 
 /**
@@ -860,7 +865,7 @@ export class Class_ApplicationData {
     func(value)
   }
 
-  public MenuColorPicker: FC<MenuColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled, textDisabled }) => {
+  public MenuColorPicker = ({ initialColor, functionOnBlur, isDisabled, textDisabled }:MenuColorPickerProps) => {
     return <MenuColorPicker
       isDisabled={isDisabled}
       initialColor={initialColor}

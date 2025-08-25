@@ -31,7 +31,8 @@ import { initializeAdditionalMenus, initializeApplicationData, initializeDiagram
 import { ClickSaveDiagram } from './Persistence/SankeyPersistence'
 import { ModalWelcomeBuilder } from './components/welcome/ModalWelcome'
 import OpenSankeyApp from './App'
-
+import { createZDDModifier, ZDD_MENU_CONFIG } from './components/dialogs/ContextZDDConfig'
+import { createLinkModifier, LINK_MENU_CONFIG } from './components/dialogs/ContextLinkConfig'
 /*************************************************************************************************/
 export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
   <OpenSankeyApp
@@ -56,6 +57,11 @@ export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
 
     // BackEnd
     ClickSaveDiagram={ClickSaveDiagram}
+    createZDDModifier={createZDDModifier}
+    ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
+      //@ts-expect-error xxx
+    createLinkModifier={createLinkModifier}
+    LINK_MENU_CONFIG={LINK_MENU_CONFIG}
   />
 </ChakraProvider>
 

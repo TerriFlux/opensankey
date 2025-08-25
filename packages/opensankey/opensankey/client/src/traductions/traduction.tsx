@@ -11,7 +11,10 @@ import { resources_welcome } from './traduction_welcome'
 import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
 import { NODES_ATTRIBUTES_CONFIG } from '../Elements/NodeAttributesConfig'
 import { EXCEL_ATTRIBUTES_CONFIG } from '../components/dialogs/ExcelModalSaver'
-
+import { ZDD_MENU_CONFIG } from '../components/dialogs/ContextZDDConfig'
+import { MenuConfig } from '../components/dialogs/SankeyMenuContext'
+import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
+import { rcc_shortcuts } from './traduction_rcc_shortcuts'
 
 const use_excel_config = (resources:any) => {
     resources.en.translation['Menu']['saveExcel'] = {tooltips:{}}
@@ -24,6 +27,29 @@ const use_excel_config = (resources:any) => {
       // Ajouter les tooltips
       resources.en.translation['Menu']['saveExcel'].tooltips[attributeKey] = tooltips.en
       resources.fr.translation['Menu']['saveExcel'].tooltips[attributeKey] = tooltips.fr  
+    })
+}
+
+export const use_context_config = (resources:any, menu_config:MenuConfig, path:string) => {
+    resources.en.translation[path] = {tooltips:{}}
+    resources.fr.translation[path] = {tooltips:{}}
+    Object.entries(menu_config.sectionTitles).forEach(([attributeKey, attributeValue]) => {
+      resources.en.translation[path][attributeKey] = attributeValue.en
+      resources.fr.translation[path][attributeKey] = attributeValue.fr
+    })
+    Object.entries(menu_config.actions).forEach((item) => {
+      const { labels, labelsToggle } = item[1]
+      resources.en.translation[path][item[0]] = labels.en
+      resources.fr.translation[path][item[0]] = labels.fr
+      if (labelsToggle) {
+        resources.en.translation[path][item[0] + 'True'] = labelsToggle.en.true
+        resources.en.translation[path][item[0] + 'False'] = labelsToggle.en.false
+        resources.fr.translation[path][item[0] + 'True'] = labelsToggle.fr.true
+        resources.fr.translation[path][item[0] + 'False'] = labelsToggle.fr.false
+      }
+
+      resources.en.translation[path].tooltips[item[0]] = item[1].tooltips.en
+      resources.fr.translation[path].tooltips[item[0]] = item[1].tooltips.fr
     })
 }
 
@@ -119,9 +145,12 @@ export const deep_assign_resources = (s:any, t:any) => {
 use_link_config(resources_flux)
 use_node_config(resources_nodes)
 use_excel_config(resources_app_elements)
+use_context_config(resources_app_elements,ZDD_MENU_CONFIG,'ContextMenuZDD')
+use_context_config(resources_app_elements,LINK_MENU_CONFIG,'ContextMenuLinks')
 
 // Concat traductions resources
 export const resources_opensankey = {}
+deep_assign_resources(rcc_shortcuts, resources_opensankey)
 deep_assign_resources(resources_app_elements, resources_opensankey)
 deep_assign_resources(resources_nodes, resources_opensankey)
 deep_assign_resources(resources_flux, resources_opensankey)
