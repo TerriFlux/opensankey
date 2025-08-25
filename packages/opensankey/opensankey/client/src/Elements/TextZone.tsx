@@ -383,7 +383,8 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       .attr('id', this.id + '_text')
       .append('xhtml:div')
       .attr('class', 'ql-editor')
-      .html(this.unescapeHtml(this._content))
+      .html(this._content)
+      //.html(this.unescapeHtml(this._content))
   }
 
   /**
