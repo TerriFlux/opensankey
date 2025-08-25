@@ -260,6 +260,7 @@ export type SankeyLink = {
 export type TagsGroup = {
   group_name: string,
   show_legend: boolean,
+  use_colors?: boolean,
   color_map: string,
   tags: {
     [_: string]: {

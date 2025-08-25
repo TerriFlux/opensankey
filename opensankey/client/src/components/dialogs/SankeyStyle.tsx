@@ -48,10 +48,10 @@ import { default_style_id } from '../../types/Utils'
 import { MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesShape'
 import { MenuConfigurationNodeContext } from '../configmenus/SankeyMenuConfigurationNodesLabel'
 import { ChevronDownIcon } from '@chakra-ui/icons'
-import { checked } from './SankeyMenuContextZDD'
+import { checked } from './SankeyMenuContext'
 import { Class_NodeAttribute, Type_customisable_node_style_attr } from '../../Elements/NodeAttributes'
 import { Class_LinkAttribute, Type_customisable_flow_style_attr } from '../../Elements/LinkAttributes'
-import { FCType_SankeyModalStyle, FCType_WrapperLinkStyleSelector } from '../SankeyMenuTypes'
+import { FCType_SankeyModalStyle } from '../SankeyMenuTypes'
 import { isElementAttributeOverloaded, MenuResetAttrLocal, OSMultiSelect, OSTooltip, typeElementSelectable, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -197,7 +197,10 @@ export const SankeyModalStyleNode: FC<FCType_SankeyModalStyle> = ({
   </>
 }
 
-export const WrapperNodeStyleSelector: FC<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
+export const WrapperNodeStyleSelector = ({ new_data, children }:{
+  new_data: Class_ApplicationData
+  children: JSX.Element
+}) => {
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 
@@ -464,7 +467,10 @@ export const SankeyModalStyleLink: FC<FCType_SankeyModalStyle> = ({
   </>
 }
 
-export const WrapperLinkStyleSelector: FC<FCType_WrapperLinkStyleSelector> = ({ new_data, children }) => {
+export const WrapperLinkStyleSelector = ({ new_data, children }:{
+  new_data: Class_ApplicationData
+  children: JSX.Element
+}) => {
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 

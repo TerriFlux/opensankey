@@ -1207,7 +1207,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
           .attr('class', 'link_arrow')
           .attr('d', this._arrow_shape)
           .attr('fill', arrow_color)
-          .attr('fill-opacity', da.type_data == 'data_label' ? 0.2 :this.shape_opacity)
+          .attr('fill-opacity', da.type_data == 'data_label' ? 0.2 : this.shape_opacity)
           .attr('stroke', arrow_color)
           .attr('stroke-width', 0.1)
       }
@@ -1299,16 +1299,16 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Apply parent behavior first
     super.eventSimpleRMBCLick(event)
     // SELECTION MODE =========================================================
-    if (this.drawing_area.isInSelectionMode()) {
-      event.preventDefault()
-      this.drawing_area.pointer_pos = [event.pageX, event.pageY]
-      if (!this.drawing_area.selected_links_list.includes(this)) {
-        this.drawing_area.addLinkToSelection(this)
-      }
-      this.menu_config.updateAllComponentsRelatedToLinks()
-      this.drawing_area.link_contextualised = this
-      this.menu_config.ref_to_menu_context_links_updater.current()
+
+    event.preventDefault()
+    this.drawing_area.pointer_pos = [event.pageX, event.pageY]
+    if (!this.drawing_area.selected_links_list.includes(this)) {
+      this.drawing_area.addLinkToSelection(this)
     }
+    this.menu_config.updateAllComponentsRelatedToLinks()
+    this.drawing_area.link_contextualised = this
+    this.menu_config.ref_to_menu_context_links_updater.current()
+    this.drawing_area.setToModeEdition(false)
   }
 
   protected addOrRemoveLinkFromSelection() {
@@ -1720,7 +1720,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     } else if (option == '%OD' && value) {
       return value + '% →↕'
     } else if (option == 'unit_ratio' && value) {
-      return value + ' ' + this.unit_name+'/'+ 't'//this.value?.ratio_unit_tag!.name
+      return value + ' ' + this.unit_name + '/' + 't'//this.value?.ratio_unit_tag!.name
     } else if (option == '%PS' && value) {
       return '↑→ ' + value + '%'
     } else if (option == '%PD' && value) {

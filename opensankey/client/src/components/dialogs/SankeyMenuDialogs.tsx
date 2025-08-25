@@ -40,16 +40,21 @@ import {
 
 
 import { default_style_id } from '../../types/Utils'
-import {
-  FCType_ApplySaveJSONDialog,
-  FCType_ExcelModal
-} from '../../types/FunctionTypes'
-
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { FCType_ApplyLayoutDialog, FType_DiagramSelector } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FType_ClickSaveDiagram, FType_UploadExcelImpl } from '../../Persistence/SankeyPersistenceTypes'
 
+/**
+ *
+ * @type {{ ref_setter_show_modal_json_saver: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
+ */
 
+type FCType_ApplySaveJSONDialog = {
+  new_data: Class_ApplicationData,
+  ClickSaveDiagram: FType_ClickSaveDiagram
+}
 /**
  *
  * @param {FCType_ApplyLayoutDialog} { ref_setter_show_modal_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
@@ -473,11 +478,10 @@ export const ApplySaveJSONDialog: FC<FCType_ApplySaveJSONDialog> = (
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
  * @returns
  */
-export const ExcelModal: FC<FCType_ExcelModal> = (
-  {
-    new_data,
-    uploadExcelImpl,
-    launch,
+export const ExcelModal = ({new_data,uploadExcelImpl,launch}:{
+    new_data: Class_ApplicationData,
+    uploadExcelImpl: FType_UploadExcelImpl,
+    launch: (path: string) => void,
   }
 ) => {
   const { t, url_prefix } = new_data

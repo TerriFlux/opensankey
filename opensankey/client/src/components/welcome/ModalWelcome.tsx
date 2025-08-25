@@ -58,14 +58,13 @@ import {
 
 import resources from './resources.json'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FCType_ModalWelcome, FCType_ModalWelcomeBuilder } from '../SankeyMenuTypes'
 
 
-export const ModalWelcome: FC<FCType_ModalWelcome> = ({
-  new_data,
-  external_pagination,
-  external_content
-}) => {
+export const ModalWelcome = ({new_data, external_pagination, external_content}: {
+    new_data: Class_ApplicationData
+   external_pagination: { [x: string]: JSX.Element; };
+    external_content: { [x: string]: JSX.Element; };
+  }) => {
   const { t } = new_data
   const [show_welcome, set_show_welcome] = useState(false)
   const [current_header, setCurrentHeader] = useState<string>(Object.keys(external_pagination)[0] as string)
@@ -130,9 +129,7 @@ export const ModalWelcome: FC<FCType_ModalWelcome> = ({
   return content
 }
 
-export const ModalWelcomeBuilder: FC<FCType_ModalWelcomeBuilder> = (
-  { new_data }
-) => {
+export const ModalWelcomeBuilder = ({ new_data } : { new_data: Class_ApplicationData }) => {
   const [, setCount] = useState(0)
   new_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current = () => setCount(a => a + 1)
 
@@ -147,9 +144,7 @@ export const ModalWelcomeBuilder: FC<FCType_ModalWelcomeBuilder> = (
   />
 }
 
-export const ModalWelcomeContent = (
-  new_data: Class_ApplicationData,
-) => {
+export const ModalWelcomeContent = (new_data: Class_ApplicationData) => {
   const { t, static_path } = new_data
   const welcome_text = (new_data.options?.welcome_text as string) ?? ''
   const has_welcome_text = welcome_text.length > 0
@@ -188,14 +183,14 @@ export const ModalWelcomeContent = (
         /> :
         <Carousel
           variant='dark'
-          style={{'height': '100%'}}
+          style={{ 'height': '100%' }}
         >
           {
             (images_paths as string[]).map((_, idx) => {
               let title = _.split('/').pop()
               title = title!.split('.').splice(0, 1).join('')
               return (
-                <Carousel.Item key={idx} style={{'height': '100%'}}>
+                <Carousel.Item key={idx} style={{ 'height': '100%' }}>
                   <Box
                     display='grid'
                     width='100%'

@@ -24,21 +24,8 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// Standard imports
-
-import React,
-{
-  FC,
-  useState,
-  useRef,
-  ChangeEvent,
-  Fragment
-} from 'react'
-
+import React,{FC,useState,useRef,MutableRefObject,ChangeEvent,Fragment} from 'react'
 import ReactCountryFlag from 'react-country-flag'
-
-// External imports
-
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
   Box,
@@ -66,8 +53,6 @@ import {
 } from '@fortawesome/react-fontawesome'
 import { useTour } from '@reactour/tour'
 
-// Local types
-import { FCType_MenuTop } from '../../types/FunctionTypes'
 import { Type_JSON } from '../../types/Utils'
 
 import { setDiagram } from './SankeyMenuBanner'
@@ -80,6 +65,7 @@ import {
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
+import { Type_AdditionalMenus } from '../../types/MenuConfig'
 
 /*************************************************************************************************/
 
@@ -121,9 +107,7 @@ export const GoToUserDoc = () => {
  * }
  * @return {*}
  */
-export const OpenSankeySaveButton: FC<BaseApplicationDataType> = ({
-  new_data
-}) => {
+export const OpenSankeySaveButton = ({new_data}:BaseApplicationDataType) => {
   const { t } = new_data
 
   const [save_boolean, setSaveBoolean] = useState(true)
@@ -183,12 +167,13 @@ export const OpenSankeySaveButton: FC<BaseApplicationDataType> = ({
  * }
  * @return {*}
  */
-export const MenuTopButtons: FC<FCType_MenuTop> = ({
-  new_data, additionalMenus
+export const MenuTopButtons = ({ new_data, additionalMenus }: {
+  new_data: Class_ApplicationData,
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { t } = new_data
   const {
-    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader,ref_setter_show_modal_excel_saver, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
+    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader, ref_setter_show_modal_excel_saver, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
   const [show_tuto, set_show_tuto] = useState(false)
@@ -596,7 +581,7 @@ export const MenuTopButtons: FC<FCType_MenuTop> = ({
       {
         new_data.menu_configuration.menu_top_order
           .map((arr, i) => {
-            return <Fragment key={'top_grp_'+i}>
+            return <Fragment key={'top_grp_' + i}>
               <ButtonGroup
                 marginRight='1rem'
                 marginLeft='1rem'
@@ -642,7 +627,10 @@ export const MenuTopButtons: FC<FCType_MenuTop> = ({
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopButtonsStatic: FC<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
+export const MenuTopButtonsStatic = ({ new_data, additionalMenus }:{
+  new_data: Class_ApplicationData,
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>,
+}) => {
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
 
@@ -721,7 +709,7 @@ export const MenuTopButtonsStatic: FC<FCType_MenuTop> = ({ new_data, additionalM
   }
 
   const dict_components_menu_top: { [x: string]: React.JSX.Element; } = {
-    'diagrams':diagrams_element,
+    'diagrams': diagrams_element,
     ...additionalMenus.current.external_top_buttons_item
   }
 
@@ -733,7 +721,7 @@ export const MenuTopButtonsStatic: FC<FCType_MenuTop> = ({ new_data, additionalM
     {
       new_data.menu_configuration.menu_top_order
         .map((arr, i) => {
-          return <Fragment key={'top_grp_'+i}>
+          return <Fragment key={'top_grp_' + i}>
             <ButtonGroup
               marginRight='1rem'
               marginLeft='1rem'
@@ -768,7 +756,10 @@ export const MenuTopButtonsStatic: FC<FCType_MenuTop> = ({ new_data, additionalM
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopNavBar: FC<FCType_MenuTop> = ({ new_data, additionalMenus }) => {
+export const MenuTopNavBar = ({ new_data, additionalMenus }:{
+  new_data: Class_ApplicationData,
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>,
+}) => {
   const { logo } = new_data
   const [flag, setFlag] = useState('fr')
   const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
@@ -870,7 +861,7 @@ export const MenuTopNavBar: FC<FCType_MenuTop> = ({ new_data, additionalMenus })
               <MenuItem onClick={() => { setFlag('gb'); changeLang('en') }}><ReactCountryFlag countryCode={'gb'} svg />English</MenuItem>
             </MenuList>
           </Portal>
-        </Menu>:<></>}
+        </Menu> : <></>}
 
         {constent_additional_nav_item}
       </Box>

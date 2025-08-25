@@ -24,19 +24,12 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-/*************************************************************************************************/
-
-import {
-  FType_InitializeAdditionalMenus,
-  FType_InitializeApplicationData,
-  FType_ModuleDialogs,
-} from './types/FunctionTypes'
-
 import { OpenSankeyDiagramSelector } from './components/dialogs/SankeyMenuDialogs'
-import { checkForUrlToJSON } from './types/Utils'
-import { Class_ApplicationData } from './types/ApplicationData'
+import { checkForUrlToJSON, Type_JSON } from './types/Utils'
+import { Class_ApplicationData, FType_ProcessFunctions } from './types/ApplicationData'
 import { FType_InitializeDiagrammSelector } from './components/SankeyMenuTypes'
-
+import type { MutableRefObject } from 'react'
+import { Type_AdditionalMenus } from './types/MenuConfig'
 
 declare const window: Window &
   typeof globalThis & {
@@ -44,6 +37,10 @@ declare const window: Window &
       publish: boolean
     }
   }
+
+  export type FType_InitializeApplicationData = (
+  initial_data: Type_JSON | undefined
+) => Class_ApplicationData
 
 /**
  * Set up data with initial value as Type_JSON
@@ -67,7 +64,10 @@ export const initializeApplicationData: FType_InitializeApplicationData = (
   return application_data
 }
 
-
+export type FType_InitializeAdditionalMenus = (
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
+  new_data: Class_ApplicationData
+) => void
 /**
  * Additional menus components.
  * @param {*} additional_menus
@@ -85,6 +85,13 @@ export const initializeDiagrammSelector: FType_InitializeDiagrammSelector = (
 ) => {
   return OpenSankeyDiagramSelector
 }
+
+export type FType_ModuleDialogs = (
+  new_data: Class_ApplicationData,
+  additional_menus: MutableRefObject<Type_AdditionalMenus>,
+  menu_configuration_nodes_attributes: JSX.Element,
+  processFunctions: FType_ProcessFunctions
+) => JSX.Element[]
 
 // Modal Dialogs
 export const moduleDialogs: FType_ModuleDialogs = () => { return [] }
