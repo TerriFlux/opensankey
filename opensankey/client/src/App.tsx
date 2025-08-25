@@ -37,16 +37,18 @@ import { TourProvider } from '@reactour/tour'
 import { Menu } from './components/topmenus/SankeyMenus'
 
 import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesShape'
-
-import { ContextMenuLink } from './components/dialogs/SankeyMenuContextLink'
 import { ContextMenuNode } from './components/dialogs/SankeyMenuContextNode'
-import { ContextMenuZdd } from './components/dialogs/SankeyMenuContextZDD'
+import { ContextMenu, MenuConfig } from './components/dialogs/SankeyMenuContext'
 import { ApplySaveJSONDialog } from './components/dialogs/SankeyMenuDialogs'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
 
 import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
-import { FCType_OpenSankeyApp } from './types/FunctionTypes'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
+import { FType_InitializeDiagrammSelector } from './components/SankeyMenuTypes'
+import { Class_ApplicationData } from './types/ApplicationData'
+import { FType_ClickSaveDiagram } from './Persistence/SankeyPersistenceTypes'
+import { FType_InitializeAdditionalMenus, FType_InitializeApplicationData, FType_ModuleDialogs } from './Modules'
+import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
 
 declare const window: Window &
   typeof globalThis & {
@@ -61,15 +63,29 @@ declare const window: Window &
       logo?: string
     }
   }
-/*************************************************************************************************/
 
-export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
+export const OpenSankeyApp = ({
   initializeApplicationData,
   initializeAdditionalMenus,
   initializeDiagrammSelector,
   moduleDialogs,
   ModalWelcome,
   ClickSaveDiagram,
+  createZDDModifier,
+  ZDD_MENU_CONFIG,
+  createLinkModifier,
+  LINK_MENU_CONFIG
+}:{
+  initializeApplicationData: FType_InitializeApplicationData,
+  initializeAdditionalMenus: FType_InitializeAdditionalMenus,
+  initializeDiagrammSelector: FType_InitializeDiagrammSelector,
+  moduleDialogs: FType_ModuleDialogs,
+  ModalWelcome: React.ComponentType<{ new_data: Class_ApplicationData }>
+  ClickSaveDiagram: FType_ClickSaveDiagram,
+  createZDDModifier: ZDDModifierType,
+  ZDD_MENU_CONFIG: MenuConfig,
+  createLinkModifier: ZDDModifierType,
+  LINK_MENU_CONFIG: MenuConfig
 }) => {
 
   // Datas init -------------------------------------------------------------------------
@@ -80,19 +96,21 @@ export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
 
   // If there is, store the data in the sankey_data
   if (json_data !== null && json_data != '' && json_data != 'null') {
-    const new_data = JSON.parse(json_data)
-    initial_data = new_data
+    const app_data = JSON.parse(json_data)
+    initial_data = app_data
   }
   if (window.sankey && window.sankey.diagram) {
     initial_data = window.sankey.diagram
   }
 
   // Initialize data
-  const new_data = initializeApplicationData(initial_data)
+  const app_data = initializeApplicationData(initial_data)
   /*************************************************************************************************/
 
+
+
   const mode_pref = sessionStorage.getItem('modepref')
-  const menu_config = new_data.menu_configuration
+  const menu_config = app_data.menu_configuration
   if (
     (mode_pref) &&
     (mode_pref === 'expert')
@@ -103,9 +121,9 @@ export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
 
   /*************************************************************************************************/
   const menu_configuration_nodes_attributes = <MenuConfigurationNodeStyle
-    app_data={new_data}
+    app_data={app_data}
     menu_for_style={false}
-    additional_menus={new_data.menu_configuration.additionalMenus}
+    additional_menus={app_data.menu_configuration.additionalMenus}
   />
 
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
@@ -119,78 +137,86 @@ export const OpenSankeyApp: FC<FCType_OpenSankeyApp> = ({
   useEffect(() => {
     // Delete potential duplicat
     d3.select('#draw_zoom').remove()
-    new_data.draw()
-    new_data.menu_configuration.ref_to_toolbar_bottom_updater.current()//update bottom toolbar to place it above footer
-  }, [new_data.language])
+    app_data.draw()
+    app_data.menu_configuration.ref_to_toolbar_bottom_updater.current()//update bottom toolbar to place it above footer
+  }, [app_data.language])
 
   const background_color = window.sankey?.publish ? 'white' : 'WhiteSmoke'
 
   /*************************************************************************************************/
-  return <TourProvider steps={new_data.steps}>
+  return <TourProvider steps={app_data.steps}>
     <div id='sankey_app' style={{ 'backgroundColor': background_color, 'height' : '100%'}}>
       <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
         <WrapperInitializeAdditionalMenus
-          new_data={new_data}
+          new_data={app_data}
           initializeAdditionalMenus={initializeAdditionalMenus}
         />
         {
           moduleDialogs(
-            new_data,
-            new_data.menu_configuration.additionalMenus,
+            app_data,
+            app_data.menu_configuration.additionalMenus,
             menu_configuration_nodes_attributes,
-            new_data.processFunction
+            app_data.processFunction
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
         {
-          !new_data.is_static ?
+          !app_data.is_static ?
             <ModalDocumentation
-              app_data={new_data}
+              app_data={app_data}
             /> :
             <></>
         }
         <ModalWelcome
-          new_data={new_data}
+          new_data={app_data}
         />
         <>
           <Menu
-            new_data={new_data}
+            new_data={app_data}
             external_modal={[
               <></>
             ]}
             additionalMenus={
-              new_data.menu_configuration.additionalMenus
+              app_data.menu_configuration.additionalMenus
             }
-            apply_transformation_additional_elements={new_data.menu_configuration.additionalMenus.current.apply_transformation_additional_elements}
-            diagramSelector={initializeDiagrammSelector(new_data)}
+            apply_transformation_additional_elements={app_data.menu_configuration.additionalMenus.current.apply_transformation_additional_elements}
+            diagramSelector={initializeDiagrammSelector(app_data)}
           />
         </>
         <ApplySaveJSONDialog
-          new_data={new_data}
+          new_data={app_data}
           ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
       <ContextMenuNode
-        new_data={new_data}
-        additionalMenus={new_data.menu_configuration.additionalMenus}
+        new_data={app_data}
+        additionalMenus={app_data.menu_configuration.additionalMenus}
       />
-      <ContextMenuLink
-        app_data={new_data}
-        additionalMenus={new_data.menu_configuration.additionalMenus}
+      <ContextMenu
+        app_data={app_data}
+        createModifier={createLinkModifier}
+        menuConfig={LINK_MENU_CONFIG}
+        attr_is_contextualised='link_contextualised'
+        attr_updater='ref_to_menu_context_links_updater'
+        path='ContextMenuLinks'
       />
-      <ContextMenuZdd
-        new_data={new_data}
-        additionalMenus={new_data.menu_configuration.additionalMenus}
+      <ContextMenu
+        app_data={app_data}
+        createModifier={createZDDModifier}
+        menuConfig={ZDD_MENU_CONFIG}
+        attr_is_contextualised='is_drawing_area_contextualised'
+        attr_updater='ref_to_menu_context_drawing_area_updater'
+        path='ContextMenuZDD'
       />
       <React.Fragment key={'modale_style_link'}>
         <SankeyModalStyleLink
-          new_data={new_data}
-          additionalMenus={new_data.menu_configuration.additionalMenus}
+          new_data={app_data}
+          additionalMenus={app_data.menu_configuration.additionalMenus}
         />
       </React.Fragment>
       <React.Fragment key={'modale_style_node'}>
         <SankeyModalStyleNode
-          new_data={new_data}
-          additionalMenus={new_data.menu_configuration.additionalMenus}
+          new_data={app_data}
+          additionalMenus={app_data.menu_configuration.additionalMenus}
         />
       </React.Fragment>
     </div>

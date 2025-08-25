@@ -54,7 +54,7 @@ import {
 // Local libs
 import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { ExempleMenuTypes } from '../welcome/MenuExamples'
-import { FCType_ModalTuto } from '../SankeyMenuTypes'
+import { Class_ApplicationData, FType_ProcessFunctions } from '../../types/ApplicationData'
 
 
 // COMPONENTS ===========================================================================
@@ -73,8 +73,13 @@ export declare const window: Window & typeof globalThis
  * @return {*}
  */
 
-export const ModalTuto: FC<FCType_ModalTuto> = ({
+export const ModalTuto = ({
   new_data, processFunctions, show_tuto, set_show_tuto,
+}:{
+  new_data: Class_ApplicationData
+  processFunctions: FType_ProcessFunctions
+  show_tuto: boolean
+  set_show_tuto: (b: boolean) => void
 }) => {
   const [firstRender, setFirstRender] = useState(true)
   const [formation, setFormation] = useState<ExempleMenuTypes>({})

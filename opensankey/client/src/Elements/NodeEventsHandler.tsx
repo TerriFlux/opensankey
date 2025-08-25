@@ -255,17 +255,15 @@ export class NodeEventsHandler {
    * Handle right mouse button click
    */
   public handleSimpleRMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    // SELECTION MODE =========================================================
-    if (this._node.drawing_area.isInSelectionMode()) {
-      event.preventDefault()
-      this._node.drawing_area.pointer_pos = [event.pageX, event.pageY]
-      if (!this._node.drawing_area.selected_nodes_list.includes(this._node)) {
-        this._node.drawing_area.addNodeToSelection(this._node)
-      }
-      this._node.menu_config.updateAllComponentsRelatedToNodes()
-      this._node.drawing_area.node_contextualised = this._node
-      this._node.menu_config.ref_to_menu_context_nodes_updater.current()
+    event.preventDefault()
+    this._node.drawing_area.pointer_pos = [event.pageX, event.pageY]
+    if (!this._node.drawing_area.selected_nodes_list.includes(this._node)) {
+      this._node.drawing_area.addNodeToSelection(this._node)
     }
+    this._node.menu_config.updateAllComponentsRelatedToNodes()
+    this._node.drawing_area.node_contextualised = this._node
+    this._node.menu_config.ref_to_menu_context_nodes_updater.current()
+    this._node.drawing_area.setToModeEdition(false)
   }
 
   /**

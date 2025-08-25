@@ -1283,6 +1283,18 @@ const convert_tags: convert_tagsFuncType = (
       }
     })
   }
+  Object.values(data.nodeTags).forEach(t => {
+    t.use_colors = t.show_legend
+  })
+  Object.values(data.fluxTags).forEach(t => {
+    t.use_colors = t.show_legend
+  })
+  Object.values(data.dataTags).forEach(t => {
+    t.use_colors = t.show_legend
+  })
+  Object.values(data.levelTags).forEach(t => {
+    t.use_colors = t.show_legend
+  })
 }
 
 export const NodeHasDisplayedLevel = (

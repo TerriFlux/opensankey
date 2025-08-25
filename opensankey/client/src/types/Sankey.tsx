@@ -30,6 +30,7 @@
 import {
   Class_MenuConfig
 } from '../types/MenuConfig'
+import { NODES_ATTRIBUTES_CONFIG } from '../Elements/NodeAttributesConfig'
 import {
   Class_LinkElement,
   defaultLinkId,
@@ -68,6 +69,7 @@ import {
 import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_DrawingArea } from './DrawingArea'
+import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
 
 
 // LOCAL FUNCTIONS **********************************************************************
@@ -244,6 +246,112 @@ export class Class_Sankey {
 
   }
 
+  /**
+   * Remove a single attribute from local Class_NodeAttribute
+   *
+   * @param {keyof Class_NodeAttribute} k
+   * @memberof Class_DrawingArea
+   */
+  public deleteLocalAttrSelectedNodes(
+    k: keyof typeof NODES_ATTRIBUTES_CONFIG, selected_nodes_list: Class_NodeElement[]) {
+
+    selected_nodes_list.forEach(n => {
+      if (k in n.display.attributes) {
+        delete n.display.attributes[k]
+        n.draw()
+      }
+    })
+    this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+  }
+
+  /**
+   * Remove a single attribute from local Class_LinkAttribute
+   *
+   * @param {keyof Class_LinkAttribute} k
+   * @memberof Class_DrawingArea
+   */
+  public deleteLocalAttrSelectedLinks(k: keyof typeof LINKS_ATTRIBUTES_CONFIG,selected_links_list: Class_LinkElement[]) {
+    selected_links_list.forEach(link => {
+      if (k in LINKS_ATTRIBUTES_CONFIG) {
+        link.display.attributes.delete_attribute(k)
+        link.drawWithNodes()
+      }
+    })
+    this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+  }
+  public setTrade = (close: boolean) => {
+    const node_styles_dict = this.node_styles_dict
+    const link_styles_dict = this.link_styles_dict
+    if (!this.node_taggs_dict['type de noeud']) {
+      return
+    }
+    this.drawing_area.bypass_redraws = true
+    const process_nodes = this.nodes_list
+    const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
+    const import_nodes = process_nodes.filter(n =>
+      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
+    )
+    const export_nodes = process_nodes.filter(n =>
+      n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
+    )
+    if (close) {
+      import_nodes.forEach((n, i) => {
+        if (i == 0) n.sibling!.style = [
+          node_styles_dict['NodeSectorStyle'],
+          node_styles_dict['NodeImportExportCloseStyle'],
+        ]
+        n.style = [
+          node_styles_dict['NodeSectorStyle'],
+          node_styles_dict['NodeImportExportCloseStyle'],
+          node_styles_dict['NodeImportCloseStyle']
+        ]
+        n.getFirstOutputLink()!.style = [
+          link_styles_dict['LinkImportExportCloseStyle'],
+          link_styles_dict['LinkImportCloseStyle']
+        ]
+      })
+      export_nodes.forEach(n => {
+        n.style = [
+          node_styles_dict['NodeSectorStyle'],
+          node_styles_dict['NodeImportExportCloseStyle'],
+          node_styles_dict['NodeExportCloseStyle']
+        ]
+        n.getFirstInputLink()!.style = [
+          link_styles_dict['LinkImportExportCloseStyle'],
+          link_styles_dict['LinkExportCloseStyle']
+        ]
+      })
+    } else {
+      import_nodes.forEach((n, i) => {
+        if (i == 0) n.sibling!.style = [
+          node_styles_dict['NodeSectorStyle'],
+          node_styles_dict['NodeImportExportAboveBelowStyle'],
+        ]
+        n.style = [
+          node_styles_dict['NodeSectorStyle'],
+          node_styles_dict['NodeImportExportAboveBelowStyle'],
+          node_styles_dict['NodeImportAboveStyle']
+        ]
+        n.getFirstOutputLink()!.style = [
+          link_styles_dict['LinkImportExportAboveBelowStyle'],
+          link_styles_dict['LinkImportAboveStyle']
+        ]
+      })
+      export_nodes.forEach(n => {
+        n.style = [
+          node_styles_dict['NodeSectorStyle'],
+          node_styles_dict['NodeImportExportAboveBelowStyle'],
+          node_styles_dict['NodeExportBelowStyle']
+        ]
+        n.getFirstInputLink()!.style = [
+          link_styles_dict['LinkImportExportAboveBelowStyle'],
+          link_styles_dict['LinkExportBelowStyle']
+        ]
+      })
+    }
+    this.drawing_area.nodePositioning.arrangeTrade(true)
+    this.drawing_area.draw()
+  }
   // CLEANING METHODS ===================================================================
 
   public delete() {

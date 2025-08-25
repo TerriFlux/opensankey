@@ -395,7 +395,7 @@ export class Class_DrawingArea {
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
 
     //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
-    this._legend = new ClassTemplate_Legend(this,this._sankey, this.application_data.menu_configuration)
+    this._legend = new ClassTemplate_Legend(this, this._sankey, this.application_data.menu_configuration)
     // Copy Legend
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
@@ -463,13 +463,13 @@ export class Class_DrawingArea {
 
     if (this._grid_visible != default_grid_visible) json_object['grid_visible'] = this._grid_visible
     if (this._grid_size != default_grid_size) json_object['grid_square_size'] = this._grid_size
-    if (this._scale != default_scale)  json_object['user_scale'] = this._scale
+    if (this._scale != default_scale) json_object['user_scale'] = this._scale
     if (this._color != default_background_color) json_object['couleur_fond_sankey'] = this._color
     if (this._grid_color != default_grid_color) json_object['default_grid_color'] = this._grid_color
     if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
     if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
-    if (this._filter_label>0) json_object['filter_label'] = this._filter_label
-    if (this._filter_link_value>0) json_object['filter_link_value'] = this._filter_link_value
+    if (this._filter_label > 0) json_object['filter_label'] = this._filter_label
+    if (this._filter_link_value > 0) json_object['filter_link_value'] = this._filter_link_value
     if (this._type_data != initial_show_structure) json_object['show_structure'] = this._type_data
     if (this._magnetic_nodes) json_object['magnetic_nodes'] = this._magnetic_nodes
 
@@ -506,7 +506,7 @@ export class Class_DrawingArea {
       (Number(version) < 0.9)
     ) {
       console.log('convert_data_legacy')
-      convert_data_legacy(json_object) 
+      convert_data_legacy(json_object)
       this.sankey.link_styles_dict['default'].shape_color_rule = 'auto'
       console.log(json_object.version)
     }
@@ -1072,7 +1072,7 @@ export class Class_DrawingArea {
    */
   public updateScaleAtLinkValueSetting() {
     // Update scaling if only one link
-    const links = this.sankey.links_list.filter(l => l.valueCurrent )
+    const links = this.sankey.links_list.filter(l => l.valueCurrent)
     if (links.length == 1) {
       this.scale = links[0].valueCurrent! // will redraw everything // will redraw everything
     }
@@ -1371,41 +1371,7 @@ export class Class_DrawingArea {
     })
   }
 
-  /**
-   * Remove a single attribute from local Class_NodeAttribute
-   *
-   * @param {keyof Class_NodeAttribute} k
-   * @memberof Class_DrawingArea
-   */
-  public deleteLocalAttrSelectedNode(k: keyof Class_NodeAttribute) {
-    const list_node = this.selected_nodes_list
 
-    list_node.forEach(n => {
-      if (k in n.display.attributes) {
-        delete n.display.attributes[k]
-        n.draw()
-      }
-    })
-    this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-  }
-
-  /**
-   * Remove a single attribute from local Class_LinkAttribute
-   *
-   * @param {keyof Class_LinkAttribute} k
-   * @memberof Class_DrawingArea
-   */
-  public deleteLocalAttrSelectedLinks(k: keyof typeof LINKS_ATTRIBUTES_CONFIG) {
-    const list_links = this.selected_links_list
-
-    list_links.forEach(link => {
-      if (k in LINKS_ATTRIBUTES_CONFIG) {
-        link.display.attributes.delete_attribute(k)
-        link.drawWithNodes()
-      }
-    })
-    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-  }
 
   /**
    * Return an element (node,flow) given an id
@@ -1462,7 +1428,7 @@ export class Class_DrawingArea {
   }
 
   public orderElementOnDA() {
-    const list_element_id = this._list_g_element.map(e=>e.id)
+    const list_element_id = this._list_g_element.map(e => e.id)
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
       ?.sort((a, b) => { return sortElementByIdOrder(a as ClassTemplate_ProtoElement, b as ClassTemplate_ProtoElement, [...list_element_id].reverse()) })
@@ -2164,19 +2130,19 @@ export class Class_DrawingArea {
   public isInSelectionMode() { return this._mode === 'selection' }
   protected setSelectionMode() {
     // forcing are there are some issues sometimes it is not unset
-    this.sankey.links_list.forEach(l=>l.unsetMouseOver())
-    this.sankey.nodes_list.forEach(n=>n.unsetMouseOver())
-    this._mode = 'selection'; 
-    this.drawCursor() 
+    // this.sankey.links_list.forEach(l => l.unsetMouseOver())
+    // this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
+    this._mode = 'selection';
+    this.drawCursor()
   }
 
   public isInEditionMode() { return this._mode === 'edition' }
   protected setEditionMode() {
     // forcing are there are some issues sometimes it is not unset
-    this.sankey.links_list.forEach(l=>l.unsetMouseOver())
-    this.sankey.nodes_list.forEach(n=>n.unsetMouseOver())
-    this._mode = 'edition'; 
-    this.drawCursor() 
+    // this.sankey.links_list.forEach(l => l.unsetMouseOver())
+    // this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
+    this._mode = 'edition';
+    this.drawCursor()
   }
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
@@ -2297,9 +2263,9 @@ export class Class_DrawingArea {
 
   // Color
   public get color() { return this._color }
-  public set color(_: string) { 
+  public set color(_: string) {
     this._color = _
-    this.drawBackground() 
+    this.drawBackground()
   } // TODO add regular expression check here
 
   // Scale
@@ -2622,6 +2588,77 @@ export class Class_DrawingArea {
           n.drawDragHandlers()
         }
       })
+  }
+  /**
+   * Update background grid visibility & save it's undo
+   *
+   */
+  public bgGrid = () => {
+    const app_data = this.application_data
+    const _bgGrid = () => {
+      this.grid_visible = !this.grid_visible
+      app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+    // Save undo/redo in data history
+    app_data.history.saveUndo(_bgGrid)
+    app_data.history.saveRedo(_bgGrid)
+    // Execute original attr mutation
+    _bgGrid()
+  }
+
+  /**
+   * Update legend visibility & save it's undo
+   *
+   */
+  public maskLegend = () => {
+    const app_data = this.application_data
+    const _maskLegend = () => {
+      this.legend.masked = !this.legend.masked
+      app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+    // Save undo/redo in data history
+    app_data.history.saveUndo(_maskLegend)
+    app_data.history.saveRedo(_maskLegend)
+    // Execute original attr mutation
+    _maskLegend()
+  }
+
+
+
+  /**
+   * Update DA scale & save it's undo
+   *
+   * @param {(number | null | undefined)} evt
+   */
+  public changeScale = (evt: number | null | undefined) => {
+    const app_data = this.application_data
+    if (evt) {
+      const f = (_: number) => {
+        this.scale = _
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      }
+      // Undo/redo done in setValueAndSaveHistory
+      app_data.setValueAndSaveHistory(this, 'scale', evt, f)
+    }
+  }
+
+  public setParametricMode() {
+    const default_style = this.sankey.node_styles_dict['default']
+    if (default_style.position_type == 'parametric')
+      default_style.position_type = 'absolute'
+    else
+      default_style.position_type = 'parametric'
+
+    this.sankey.nodes_list.forEach(n => n.position_v = -1)
+    if (default_style.position_type == 'parametric')
+      this.nodePositioning.computeParametrization()
+    Object.values(this.sankey.nodes_dict)
+      .filter(node => node.display.position.type !== 'relative')
+      .forEach(node => {
+        node.resetPositionAttribute('dy')
+        node.applyPosition()
+      }
+      )
   }
 
   // PRIVATE METHODS =====================================================================

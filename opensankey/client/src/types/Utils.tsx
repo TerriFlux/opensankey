@@ -25,17 +25,10 @@
 // ==================================================================================================
 
 // External imports
-import React, { FC, useState } from 'react'
-import { CheckboxProps, Tooltip } from '@chakra-ui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { TFunction } from 'i18next'
-import { faCircleInfo } from '@fortawesome/free-solid-svg-icons'
-import { FaEye, FaEyeSlash } from 'react-icons/fa'
+import React, { useState } from 'react'
 import * as d3 from 'd3'
-// Local type imports
-import { FType_InitializeAdditionalMenus } from './FunctionTypes'
 import { Class_ApplicationData } from './ApplicationData'
-import { OSTooltpFuncType } from '../components/SankeyMenuTypes'
+import { FType_InitializeAdditionalMenus } from '../Modules'
 
 // SPECIFIC TYPES ************************************************************************
 
@@ -383,13 +376,12 @@ export const parseLocaleNumber = (stringNumber: string, locale = navigator.langu
 }
 
 
-export const WrapperInitializeAdditionalMenus: FC<{
+export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditionalMenus }:{
   new_data: Class_ApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
-}> = ({ new_data, initializeAdditionalMenus }) => {
+}) => {
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_rerender_submodules_menus.current = () => setUpdate(a => a + 1)
-
 
   new_data.menu_configuration.additionalMenus.current = {
 
@@ -422,11 +414,10 @@ export const WrapperInitializeAdditionalMenus: FC<{
     additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
-    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'changePlan', 'mask_attr', 'edit_value', 'sep_3', 'assign_tag', 'sep_4'],
-    additional_context_link_element: {},
+    // context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'changePlan', 'mask_attr', 'edit_value', 'sep_3', 'assign_tag', 'sep_4'],
+    // additional_context_link_element: {},
     context_node_order: ['edition_hierarchy','nav_hierarchy', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
     additional_context_node_element: {},
-    additional_context_zdd_element: <></>,
 
     // Preferences
     additional_preferences: [],
@@ -439,11 +430,6 @@ export const WrapperInitializeAdditionalMenus: FC<{
 
     formations_menu: {},
 
-    toolbar_order: ['mode_souris',
-      'node_type',
-      'strectch_zdd',
-      'help',
-      'fullscreen'],
     template_module_key: ['essential'],
   }
 

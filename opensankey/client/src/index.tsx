@@ -52,6 +52,8 @@ import {
   ModalWelcomeBuilder
 } from './components/welcome/ModalWelcome'
 import { opensankey_theme } from './css/Theme'
+import { createZDDModifier, ZDD_MENU_CONFIG } from './components/dialogs/ContextZDDConfig'
+import { LINK_MENU_CONFIG } from './components/dialogs/ContextLinkConfig'
 
 // CONSTANTS =========================================================================================
 
@@ -59,8 +61,8 @@ import { opensankey_theme } from './css/Theme'
 window.React = React
 
 // Application container
-const container=document.getElementById('react-container') as Element | DocumentFragment
-const root=createRoot(container)
+const container = document.getElementById('react-container') as Element | DocumentFragment
+const root = createRoot(container)
 
 // RENDERING ==========================================================================================
 root.render(
@@ -87,6 +89,11 @@ root.render(
 
       // BackEnd
       ClickSaveDiagram={ClickSaveDiagram}
+      createZDDModifier={createZDDModifier}
+      ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
+      //@ts-expect-error xxx
+      createLinkModifier={createLinkModifier}
+      LINK_MENU_CONFIG={LINK_MENU_CONFIG}
     />
   </ChakraProvider>
 )

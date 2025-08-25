@@ -52,8 +52,7 @@ import type {
   FType_JSONtoExcel
 } from './SankeyPersistenceTypes'
 import { type Type_JSON } from '../types/Utils'
-import type { FCType_SankeyLoad } from '../types/FunctionTypes'
-import { Class_ApplicationData } from '../types/ApplicationData'
+import { Class_ApplicationData, FType_ProcessFunctions } from '../types/ApplicationData'
 import { applyRandomColors } from '../Algorithms/Colors'
 import { Class_DataTagGroup } from '../types/TagGroup'
 
@@ -122,11 +121,10 @@ interface PakoInflate {
  * }
  * @return {*}
  */
-const SankeyLoad: FC<FCType_SankeyLoad> = ({
-  new_data,
-  successAction,
-  processFunctions,
-  // postProcessLoadExcel
+const SankeyLoad = ({new_data,successAction,processFunctions}:{
+  new_data: Class_ApplicationData,
+  successAction: () => void,
+  processFunctions: FType_ProcessFunctions
 }) => {
   const { t, url_prefix } = new_data
   const { ref_processing, ref_setter_processing, failure, ref_result, not_started } = processFunctions

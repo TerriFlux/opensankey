@@ -1,8 +1,3 @@
-import { ChevronRightIcon } from '@chakra-ui/icons'
-import {
-  Button, Menu,
-  MenuButton, MenuList, MenuGroup
-} from '@chakra-ui/react'
 // ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
@@ -29,37 +24,21 @@ import {
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 import React from 'react'
+import { ChevronRightIcon } from '@chakra-ui/icons'
+import {
+  Button, Menu,
+  MenuButton, MenuList, MenuGroup
+} from '@chakra-ui/react'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
-import { Class_LevelTag } from '../../types/Tag'
 import { Class_LevelTagGroup } from '../../types/TagGroup'
-import { aggregate, disaggregate, aggregationExpansion, disaggregationExpansion, EXPANSION_SUFFIXES, contract } from '../../Algorithms/Hierarchies'
+import { 
+  aggregate, disaggregate, aggregationExpansion, disaggregationExpansion, EXPANSION_SUFFIXES, 
+  contract, create_parent, set_child, applyDimension 
+} from '../../Algorithms/Hierarchies'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 
-// const contractLegacy = (
-//   new_data: Class_ApplicationData,
-//   contextualised_node: Class_NodeElement
-// ) => {
-//   const expand_left = contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT)
-//   const l = expand_left ? contextualised_node.output_links_list[0] : contextualised_node.input_links_list[0]
-//   if (!l) return
-//   let parent_node = expand_left ? l.target : l.source
-//   const children = expand_left
-//     ? parent_node.input_links_list.filter(l => l.is_visible)
-//     : parent_node.output_links_list.filter(l => l.is_visible)
-//   children.forEach((c) => {
-//     new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
-//   })
-//   if (expand_left) {
-//     parent_node.input_links_list.forEach(l => l.setVisible())
-//   } else {
-//     parent_node.output_links_list.forEach(l => l.setVisible())
-//   }
-// }
-// ============================================================================
-// UTILITAIRES POUR LES MENUS
-// ============================================================================
+
 const sep = <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid #e2e8f0' }} />
 // ============================================================================
 // MENUS CONTEXTUELS
@@ -122,74 +101,6 @@ export const hierarchyEditionMenu = (
 
   const btn_set_child_ok = [...possible_root_nodes].length > 0 && contextualised_node
 
-  function addNewLinks(n: Class_NodeElement, extremity_node: Class_NodeElement, tagg: Class_LevelTagGroup) {
-    const pdim = n.nodeDimensionAsParent(tagg)
-    if (!pdim) {
-      return
-    }
-    if (pdim.children.includes(pdim.parent)) {
-      return
-    }
-    (pdim.children as Class_NodeElement[]).forEach(c => {
-      const link2copy = (c as Class_NodeElement)[input_or_output_attr][0]
-      const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
-      (child_link as Class_LinkElement).copyValues(link2copy)
-      addNewLinks(c, extremity_node, tagg)
-    })
-  }
-
-  function removeLinks(n: Class_NodeElement, tagg: Class_LevelTagGroup) {
-    const pdim = n.nodeDimensionAsParent(tagg)
-    if (!pdim) {
-      return
-    }
-    if (pdim.children.includes(pdim.parent)) {
-      return
-    }
-    (pdim.children as Class_NodeElement[]).forEach(c => {
-      n.sankey.drawing_area.deleteLink((c as Class_NodeElement)[input_or_output_attr][0])
-      removeLinks(c, tagg)
-    })
-  }
-
-  function applyDimension(
-    parent_level_tag: Class_LevelTag,
-    root_node: Class_NodeElement,
-    child_level_tag: Class_LevelTag,
-    tagg: Class_LevelTagGroup
-  ) {
-    selected_nodes.forEach(n => {
-      (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)
-      n.dimensionsUpdated()
-      const desagregation_links = n[input_or_output_attr].filter(l => l[source_or_target_attr].id == root_node.id)
-      if (desagregation_links.length > 1) {
-        return
-      }
-      const desagregation_link = desagregation_links[0]
-      if (n.input_links_list.length == 0 || n.output_links_list.length == 0) {
-        root_node[input_or_output_attr].forEach(supply_link => {
-          if (!supply_link.valueCurrent) {
-            return
-          }
-          const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
-          (new_link as Class_LinkElement).copyValues(desagregation_link)
-          addNewLinks(n, expand_left ? supply_link.source : supply_link.target, tagg)
-          supply_link[source_or_target_attr].reorganizeIOLinks()
-        })
-        removeLinks(n, tagg)
-      }
-      root_node.dimensionsUpdated()
-      root_node.nodeDimensionAsParent(tagg)!.normalize()
-      sankey.drawing_area.deleteLink(desagregation_link)
-    })
-    sankey.nodes_list.forEach(n => {
-      n.dimensionsUpdated()
-      n.updateVisibilityFingerprint()
-      n.input_links_list.forEach(l => l.updateVisibilityFingerprint())
-      n.output_links_list.forEach(l => l.updateVisibilityFingerprint())
-    })
-  }
-
   const btn_create_dim = <Button
     variant='contextmenu_button'
     onClick={() => {
@@ -204,7 +115,7 @@ export const hierarchyEditionMenu = (
       const child_level_tag = tagg.tags_list[1]
       const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
 
-      applyDimension(parent_level_tag, root_node, child_level_tag, tagg)
+      applyDimension(new_data,selected_nodes,parent_level_tag, root_node, child_level_tag, tagg,expand_left)
       tagg.tags_list[0].setSelected()
       new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
       new_data.drawing_area.draw()
@@ -237,39 +148,7 @@ export const hierarchyEditionMenu = (
             key={index}
             variant='contextmenu_button'
             onClick={() => {
-              new_data.drawing_area.bypass_redraws = true
-              let this_parent_dim: Class_NodeDimension | null = null
-              const this_child_dim: Class_NodeDimension | null = null
-
-              selected_nodes.forEach(n => {
-                this_parent_dim = n.nodeDimensionAsParent(tagg as Class_LevelTagGroup)
-                if (this_parent_dim) {
-                  this_parent_dim.shift_level_tags()
-                }
-              })
-              const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
-
-              const root_has_parent = root_node.dimensions_as_parent.filter(dim => dim.parent_level_tag.group.id == tagg.id).length !== 0
-              let parent_level_tag: Class_LevelTag
-              let child_level_tag: Class_LevelTag
-              if (!root_has_parent && !this_child_dim) {
-                parent_level_tag = tagg.tags_list[0]
-                if (tagg.tags_list.length == 1) {
-                  tagg.addTag(
-                    String(+parent_level_tag.id + 1),
-                    String(+parent_level_tag.id + 1)
-                  )
-                }
-                child_level_tag = tagg.tags_list[1]
-              } else {
-                return
-              }
-
-              applyDimension(parent_level_tag, root_node, child_level_tag, tagg)
-
-              tagg.tags_list[0].setSelected()
-              new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-              new_data.drawing_area.draw()
+              set_child(new_data, selected_nodes,possible_root_nodes, tagg as Class_LevelTagGroup,expand_left)
             }}
           >{tagg.name}</Button>)}
           {btn_create_dim}
@@ -287,30 +166,7 @@ export const hierarchyEditionMenu = (
             key={index}
             variant='contextmenu_button'
             onClick={() => {
-              new_data.drawing_area.bypass_redraws = true
-              const parent_dim = selected_nodes[0].nodeDimensionAsParent(tagg)
-              const child_level_tag = parent_dim ? parent_dim.parent_level_tag : tagg.tags_list[1]
-              const parent_level_tag = tagg.tags_list[tagg.tags_list.indexOf(child_level_tag as Class_LevelTag) - 1]
-              const parent = sankey.addNewNode(selected_nodes.map(n => n.id).join('-'), selected_nodes.map(n => n.name).join('+'))
-              parent.position_x = selected_nodes[0].position_x
-              parent.position_u = selected_nodes[0].position_u
-              parent.position_v = selected_nodes[0].position_v
-              let y = 0
-              selected_nodes.forEach(n => y += n.position_y)
-              parent.position_y = y / selected_nodes.length
-
-              selected_nodes.forEach(c => parent_level_tag.getOrCreateLowerDimension(parent, c, child_level_tag as Class_LevelTag))
-              tagg.tags_list[0].setSelected()
-              new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-              const source_nodes = new Set<Class_NodeElement>()
-              selected_nodes.forEach(c => c.input_links_list.forEach(l => source_nodes.add(l.source)))
-              const target_nodes = new Set<Class_NodeElement>()
-              selected_nodes.forEach(c => c.output_links_list.forEach(l => target_nodes.add(l.target)));
-              [...source_nodes].forEach(source => {
-                const parent_link = sankey.addNewLink(source, parent)
-                selected_nodes.forEach(c => c.input_links_list.filter(l => l.source == source).forEach(l => parent_link.addValues(l)))
-              })
-              new_data.drawing_area.draw()
+              create_parent(new_data, selected_nodes, tagg as Class_LevelTagGroup)
             }}
           >{tagg.name}</Button>)}
           {btn_create_dim}
@@ -326,13 +182,22 @@ export const hierarchyManipulationMenu = (
   refreshThisAndToggleSaving: () => void
 ) => {
   const { t } = new_data
+  const parent_dims = (contextualised_node.master_node ? 
+    contextualised_node.master_node.dimensions_as_parent_pure : 
+    contextualised_node.dimensions_as_parent_pure) as Class_NodeDimension[]
+  let child_dims = (contextualised_node.master_node ? 
+    contextualised_node.master_node.dimensions_as_child_pure : 
+    contextualised_node.dimensions_as_child_pure) as Class_NodeDimension[]
+  const forced_dim = child_dims.filter(dim => dim.force_show_children)
+  if (forced_dim.length > 0) {
+    child_dims = forced_dim
+  }
 
   const btn_aggregate = (dim: Class_NodeDimension) => {
     const b = (selected_nodes.length === 1) &&
       (contextualised_node !== undefined) &&
       (selected_nodes.includes(contextualised_node)) &&
       (contextualised_node.is_child)
-      // (contextualised_node.master_node == undefined)
       ?
       <Button
         variant='contextmenu_button'
@@ -363,13 +228,6 @@ export const hierarchyManipulationMenu = (
         }}
       >{t('Noeud.context_desagregate')}</Button> : <></>
     return b
-  }
-
-  const parent_dims = (contextualised_node.master_node ? contextualised_node.master_node.dimensions_as_parent_pure : contextualised_node.dimensions_as_parent_pure) as Class_NodeDimension[]
-  let child_dims = (contextualised_node.master_node ? contextualised_node.master_node.dimensions_as_child_pure : contextualised_node.dimensions_as_child_pure) as Class_NodeDimension[]
-  const forced_dim = child_dims.filter(dim => dim.force_show_children)
-  if (forced_dim.length > 0) {
-    child_dims = forced_dim
   }
 
   const menu_agregation = (dim: Class_NodeDimension) => <>

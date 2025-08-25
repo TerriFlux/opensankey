@@ -1788,7 +1788,7 @@ export class NodePositioning {
   /**
    * Reposition visible nodes so that their left/top side is close to a grid line
    */
-  public arrangeNodesToGrid() {
+  protected _arrangeNodesToGrid() {
     this.drawingArea.sankey.visible_nodes_list.forEach(node => {
       const shift_x = node.position_x - (node.position_x % this.drawingArea.grid_size)// get position so that the node position_x is set to previous horizontal grid line
       const shift_y = node.position_y - (node.position_y % this.drawingArea.grid_size)// get position so that the node position_y is set to previous vertical grid line
@@ -1876,5 +1876,29 @@ export class NodePositioning {
 
       console.log(`✅ shape_middle_recycling calculé pour ${link_id}: ${calculated_middle_recycling}`)
     })
+  }
+  /**
+   * Align node pos with grid lines & save it's undo
+   *
+   */
+  public arrangeNodesToGrid = () => {
+    const app_data = this.drawingArea.application_data
+    const {sankey} = this.drawingArea
+    const node_pos = Object.fromEntries(sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y }]))
+
+    const _arrangeNodesToGrid = () => {
+      this._arrangeNodesToGrid()
+      app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+
+    const inv_arrangeNodesToGrid = () => {
+      sankey.visible_nodes_list.forEach(n => {
+        n.setPosXY(node_pos[n.id].x, node_pos[n.id].y)
+      })
+    }
+
+    app_data.history.saveUndo(inv_arrangeNodesToGrid)
+    app_data.history.saveRedo(_arrangeNodesToGrid)
+    _arrangeNodesToGrid()
   }
 }

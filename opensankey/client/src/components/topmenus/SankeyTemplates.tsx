@@ -24,10 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// Standard libs
-import React, { FC, useState } from 'react'
-
-// Imported libs
+import React, { useState, MutableRefObject } from 'react'
 import {
   Tabs,
   TabList,
@@ -55,8 +52,9 @@ import {
 
 // Local libs
 import { UploadExemple } from '../../Persistence/SankeyPersistence'
-import { FCtype_ModalTemplate } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_AdditionalMenus } from '../../types/MenuConfig'
 
 // CONSTANTS
 
@@ -75,7 +73,10 @@ export declare const window: Window & typeof globalThis
  * @param {*} { new_data, additionalMenu, Reinitialization }
  * @return {*}
  */
-export const ModalTemplate: FC<FCtype_ModalTemplate> = ({ new_data, additionalMenu }) => {
+export const ModalTemplate = ({ new_data, additionalMenu }:{
+  new_data: Class_ApplicationData
+  additionalMenu: MutableRefObject<Type_AdditionalMenus>
+}) => {
 
   type Type_TemplateInfos = {
     'file_path': string;

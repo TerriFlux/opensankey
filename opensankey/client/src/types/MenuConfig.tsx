@@ -27,13 +27,63 @@
 // External imports
 import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 
-// Local imports
 import { Type_MacroTagGroup } from '../types/Utils'
-import { Type_AdditionalMenus } from './Types'
-import { ValueOptionType } from '../Elements/LinkValues'
+import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 
-// SPECIFIC TYPES **********************************************************************/
+export type Type_AdditionalMenus = {
+  // Top Menu
+  external_edition_item: JSX.Element[],
+  external_file_export_item: JSX.Element[],
+  externale_save_item: JSX.Element[],
+  externale_navbar_item: { [_: string]: JSX.Element }
+  external_top_buttons_item: {[x:string]:JSX.Element},
 
+  // Config menu
+  additional_menu_type:{[x:string]:string}
+  additional_menu_button_element_configurable:typeButtonElementConfigurable
+  additional_menu_config_content:{
+    data:{[x:string]:JSX.Element},
+    context:{[x:string]:JSX.Element},
+    style:{[x:string]:JSX.Element},
+  }
+  additional_new_menu_config_content:{[x:string]:{[x:string]:JSX.Element}}
+  additional_node_config_style:JSX.Element[]
+
+  footer:JSX.Element[]
+
+  // Mise en page
+  extra_background_element: JSX.Element
+  apply_transformation_additional_elements: JSX.Element[]
+
+  // Nodes
+  advanced_appearence_content: JSX.Element[],
+  advanced_label_content: JSX.Element[],
+
+  context_node_order: string[],
+  additional_context_node_element: { [_: string]: JSX.Element },
+  // context_link_order: string[],
+  // additional_context_link_element: { [_: string]: JSX.Element }
+
+  // Links
+  additional_menu_configuration_links: { [_: string]: JSX.Element },
+  additional_data_element: JSX.Element[],
+  additional_link_appearence_items: ((_:boolean)=>JSX.Element)[],
+  additional_link_appearence_value: ((_:boolean)=>JSX.Element)[],
+  additional_link_visual_filter_content: JSX.Element[],
+
+  // Preferences
+  additional_preferences: JSX.Element[],
+
+  // Other menus
+  additional_file_save_json_option: JSX.Element[],
+  additional_file_export_item: JSX.Element[],
+
+
+  additional_nav_item: JSX.Element[],
+
+  formations_menu: object,
+  template_module_key: string[]
+}
 
 export type keyTypeConfig = 'data' | 'context' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node'
@@ -342,9 +392,8 @@ export class Class_MenuConfig {
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
 
-    context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
-    additional_context_link_element: {},
-    additional_context_zdd_element: <></>,
+    // context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
+    // additional_context_link_element: {},
     context_node_order: [],
     additional_context_node_element: {},
     // Preferences
@@ -357,12 +406,6 @@ export class Class_MenuConfig {
     additional_nav_item: [],
 
     formations_menu: {},
-
-    toolbar_order: ['mode_souris',
-      'node_type',
-      'strectch_zdd',
-      'help',
-      'fullscreen'],
     template_module_key: ['essential'],
   })
 
@@ -1343,9 +1386,7 @@ export class Class_MenuConfig {
   public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
   public get shape_shape(): string[] { return this._shape_shape }
 
-  public get additionalMenus(): MutableRefObject<Type_AdditionalMenus> {
-    return this._additionalMenus
-  }
+  public get additionalMenus() {return this._additionalMenus}
 
   /* ========================================
   Updater of component for containers related menus

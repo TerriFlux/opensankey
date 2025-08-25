@@ -24,35 +24,35 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { MutableRefObject, ReactNode } from 'react'
-import { PlacementWithLogical } from '@chakra-ui/react'
-import { TFunction } from 'i18next'
+import { MutableRefObject } from 'react'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_LinkStyle } from '../Elements/ElementStyle'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeStyle } from '../Elements/ElementStyle'
 import { Class_ApplicationData } from '../types/ApplicationData'
-import { FType_ProcessFunctions } from '../types/FunctionTypes'
-import { IType_DictHookRefSetterShowDialogComponents } from '../types/MenuConfig'
-import { Type_AdditionalMenus } from '../types/Types'
+import { Type_AdditionalMenus } from '../types/MenuConfig'
 
 export type BaseApplicationDataType = {
   new_data: Class_ApplicationData
 }
 
-export type BaseContextualType = BaseApplicationDataType & {
+export type BaseContextualType = {
+  new_data: Class_ApplicationData
   contextual: boolean
 }
 
-export type BaseStyleMenuType = BaseApplicationDataType & {
+export type BaseStyleMenuType = {
+  new_data: Class_ApplicationData
   menu_for_style: boolean
 }
 
-export type BaseAdditionalMenusType = BaseApplicationDataType & {
+export type BaseAdditionalMenusType = {
+  new_data: Class_ApplicationData
   additional_menus: MutableRefObject<Type_AdditionalMenus>
 }
 
-export type FCType_OpenSankeyConfigurationsMenus = BaseApplicationDataType & {
+export type FCType_OpenSankeyConfigurationsMenus =  {
+  new_data: Class_ApplicationData
   menu_configuration_layout: JSX.Element,
   menu_configuration_nodes_attributes: JSX.Element,
   menu_config_link_data: JSX.Element,
@@ -60,36 +60,32 @@ export type FCType_OpenSankeyConfigurationsMenus = BaseApplicationDataType & {
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
 }
 
-export type FType_OpenSankeyMenuConfigurationLayout = BaseContextualType & {
+export type FType_OpenSankeyMenuConfigurationLayout = {
+  new_data: Class_ApplicationData
+  contextual: boolean
   extra_background_element: JSX.Element,
 }
 
-export type FCType_DrawingAreaStyle = BaseApplicationDataType & {
+export type FCType_DrawingAreaStyle = {
+  new_data: Class_ApplicationData
   extra_background_element: JSX.Element,
 }
 
-export type FCType_MenuConfigurationNodeStyle = BaseStyleMenuType & {
+export type FCType_MenuConfigurationNodeStyle = {
+  new_data: Class_ApplicationData
+  menu_for_style: boolean
   additional_menus: MutableRefObject<Type_AdditionalMenus>
 }
 
-export type SankeyMenuConfigurationNodesAttributesFType = (
-  t: TFunction,
-  menu_configuration_nodes_attributes: JSX.Element[],
-  for_modal: boolean
-) => JSX.Element
-
-export type SankeyWrapperConfigInModalOrMenuType = {
-  menu_to_wrap: JSX.Element,
-  for_modal: boolean,
-  idTab: string
-}
-
-export type FCType_MenuConfigurationLinksAppearence = BaseStyleMenuType & {
+export type FCType_MenuConfigurationLinksAppearence = {
+  new_data: Class_ApplicationData
+  menu_for_style: boolean
   additionMenus: MutableRefObject<Type_AdditionalMenus>,
 }
 
 // Base type for menu components with elements and selected elements
-export type BaseMenuComponentType = BaseApplicationDataType & {
+export type BaseMenuComponentType = {
+  new_data: Class_ApplicationData
   elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
   refreshParentComponent: () => void,
 }
@@ -98,7 +94,8 @@ export type ElementMenuComponentType = BaseMenuComponentType & {
   prefix: 'name_' | 'value_'
 }
 
-export type FCType_WrapperBoxSubSectionMenu = BaseApplicationDataType & {
+export type FCType_WrapperBoxSubSectionMenu = {
+  new_data: Class_ApplicationData
   title: string,
   collapse?: boolean,
   children: JSX.Element
@@ -112,60 +109,26 @@ export type FType_InitializeDiagrammSelector = (
   new_data: Class_ApplicationData
 ) => FType_DiagramSelector
 
-export type FCType_ApplyLayoutDialog = BaseApplicationDataType & {
+export type FCType_ApplyLayoutDialog = {
+  new_data: Class_ApplicationData
   diagramSelector: FType_DiagramSelector,
   apply_transformation_additional_elements: JSX.Element[],
 }
 
-export type FCType_ModalWelcome = BaseApplicationDataType & {
-  external_pagination: { [x: string]: JSX.Element; };
-  external_content: { [x: string]: JSX.Element; };
-}
 
-export type FCType_ModalWelcomeBuilder = BaseApplicationDataType
-
-export type FCType_SankeyModalStyle = BaseApplicationDataType & {
+export type FCType_SankeyModalStyle = {
+  new_data: Class_ApplicationData
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }
 
-export type FCType_WrapperLinkStyleSelector = BaseApplicationDataType & {
-  children: JSX.Element
-}
-
-export type FCType_ContextMenu = BaseApplicationDataType & {
+export type FCType_ContextMenu = {
+  new_data: Class_ApplicationData
   additionalMenus: MutableRefObject<Type_AdditionalMenus>
 }
 
 export type BaseComponentProps = BaseApplicationDataType
 
-export type FCtype_ModalTemplate = BaseApplicationDataType & {
-  additionalMenu: MutableRefObject<Type_AdditionalMenus>
-}
-
-export type FCType_ModalTuto = BaseApplicationDataType & {
-  processFunctions: FType_ProcessFunctions
-  show_tuto: boolean
-  set_show_tuto: (b: boolean) => void
-}
-
 export type FType_SetDiagram = (
   the_diagram: string,
   new_data: Class_ApplicationData
 ) => void
-
-export type FCType_MenuDraggable = {
-  dict_hook_ref_setter_show_dialog_components: IType_DictHookRefSetterShowDialogComponents,
-  dialog_name: keyof IType_DictHookRefSetterShowDialogComponents,
-  content: JSX.Element | JSX.Element[],
-  title: string,
-  maxW?: string,
-  customPos?: { x: number, y: number }
-}
-
-export type OSTooltpFuncType = {
-  delay?: number,
-  label: string,
-  placement?: PlacementWithLogical
-  children: ReactNode,
-  isAlwaysOpen?: boolean
-}
