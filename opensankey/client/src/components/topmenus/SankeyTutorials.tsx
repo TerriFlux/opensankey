@@ -161,6 +161,7 @@ export const ModalTuto = ({
             >
               {/* Button to open directly the JSON file */}
               <Button variant='toolbar_button_6'
+                fontSize='1rem'
                 onClick={() => {
                   UploadExemple(
                     ('Formations/Tutoriels/' + (d[0]) + '/' + dd), new_data
@@ -173,6 +174,7 @@ export const ModalTuto = ({
               {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx')) ?
                 <Button
                   variant='toolbar_button_6'
+                  fontSize='1rem'
                   onClick={() => {
                     processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx'))
                     UploadExemple(
@@ -189,6 +191,7 @@ export const ModalTuto = ({
               {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx')) ?
                 <Button
                   variant='toolbar_button_6'
+                  fontSize='1rem'
                   onClick={() => {
                     processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx'))
                     UploadExemple(

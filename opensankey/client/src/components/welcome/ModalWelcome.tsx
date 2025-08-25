@@ -24,11 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// Standard lib
-import React, {
-  FC,
-  useState
-} from 'react'
+import React, {useState} from 'react'
 import { Carousel } from 'react-bootstrap'
 
 // Imported libs
