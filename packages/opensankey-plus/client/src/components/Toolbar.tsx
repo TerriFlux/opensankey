@@ -444,12 +444,12 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
   }
 
   // Gestion des actions spécifiques selon le mode
-  const handleTagSelection = (tagg: Class_TagGroup, value: string | string[]) => {
-    if (Array.isArray(value)) {
-      tagg.selectTagsFromIds(value)
+  const handleTagSelection = (tagg: Class_TagGroup, values:string[]) => {
+    if (values.length>1) {
+      tagg.selectTagsFromIds(values)
     } else {
-      tagg.selectTagsFromId(value)
-    }
+      tagg.selectTagsFromId(values[0])
+    } 
 
     // Actions spécifiques selon le mode
     switch (mode) {
@@ -459,7 +459,7 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
         new_data.drawing_area.draw()
         break
       case 'data':
-        handleDataTagSelection(tagg as unknown as Class_DataTagGroup, value as string[])
+        handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
         break
       case 'flow':
         new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
@@ -508,7 +508,7 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
           key={tagg.name}
           value={selected_value}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            handleTagSelection(tagg, evt.target.value)
+            handleTagSelection(tagg, [evt.target.value])
           } }
         >
           {tagg.tags_list.map(tag => (
