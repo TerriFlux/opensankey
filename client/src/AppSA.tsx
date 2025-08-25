@@ -35,6 +35,7 @@ import {
   moduleDialogsOSP,
 } from './deps/LoginComponent//deps/OpenSankey+/ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/ModalWelcomeOSP'
+import { createZDDModifierPlus, ZDD_MENU_CONFIG_PLUS, LINK_MENU_CONFIG_PLUS, initializePlusMenus } from './deps/LoginComponent/deps/OpenSankey+/components/ContextMenuConfigs'
 
 // Local imports ====================================================================================
 
@@ -55,10 +56,12 @@ import { ClickSaveDiagram } from './deps/LoginComponent//deps/OpenSankey+/deps/O
 import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
 import { DrawerSequenceDataTagg } from './deps/LoginComponent/deps/OpenSankey+/components/UtilsOSP'
-import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/FunctionTypes'
 import { Type_JSON, checkForUrlToJSON } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { Type_AdditionalMenus } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Types'
 import { Class_ApplicationDataLoginComponent } from './deps/LoginComponent/ApplicationDataLoginComponent'
+import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Modules'
+import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
+import { ZDDModifierType } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextZDDConfig'
+import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
 
 // Specific methods ==================================================================================
 
@@ -102,6 +105,7 @@ export const initializeApplicationDataSA = (
   } else if (initial_data !== undefined) {
     new_data_app.fromJSON(initial_data)
   }
+  initializePlusMenus()
   return new_data_app
 }
 
@@ -244,6 +248,11 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
       ClickSaveDiagram={
         (new_data_app) => { ClickSaveDiagram(new_data_app) }
       }
+      createZDDModifier={createZDDModifierPlus as unknown as ZDDModifierType}
+      ZDD_MENU_CONFIG={ZDD_MENU_CONFIG_PLUS()}
+      //@ts-expect-error xxx
+      createLinkModifier={createLinkModifier}
+      LINK_MENU_CONFIG={LINK_MENU_CONFIG_PLUS()}
     />
 
   if (new_data_app.is_static)
