@@ -77,6 +77,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_Sankey } from '../types/Sankey'
 import { ClassTemplate_Element } from './Element'
 import { AttributeTypes as NodeAttributeTypes, NODES_ATTRIBUTES_CONFIG, NodeSetterGenerator } from './NodeAttributesConfig'
+import { OSPFormatConverter } from '../Persistence/OSPFormatConverter'
 
 export const default_selected_stroke_width = 3
 export const label_margin = 5
@@ -406,14 +407,15 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
     const style_id = getStringListFromJSON(json_node_object, 'style', [default_style_id])
     this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_NodeStyle[]
-
+    
+    OSPFormatConverter.convertNodeFromOSPFormat(json_node_object)
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
       this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
       this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
     }
-    //this._display.attributes.convertFromOSPFormat(json_node_object)
+
 
     this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
 

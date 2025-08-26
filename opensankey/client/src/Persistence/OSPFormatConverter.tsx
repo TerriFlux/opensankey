@@ -45,25 +45,25 @@ export class OSPFormatConverter {
    * @returns L'objet JSON converti avec les attributs dans 'local'
    */
   public static convertNodeFromOSPFormat(json_object: Type_JSON): Type_JSON {
-    const converted = { ...json_object }
+    //const converted = { ...json_object }
     
     // Initialise l'objet local s'il n'existe pas
-    if (!converted.local) {
-      converted.local = {}
+    if (!json_object.local) {
+      json_object.local = {}
     }
 
     // Convertit chaque attribut OSP de la racine vers local avec le nouveau nom
     Object.entries(this.OSP_ATTRIBUTE_MAPPING).forEach(([oldKey, newKey]) => {
-      if (converted[oldKey] !== undefined) {
+      if (json_object[oldKey] !== undefined) {
         // Déplace l'attribut vers local avec le nouveau nom
         //@ts-expect-error xxx
-        converted.local[newKey] = converted[oldKey]
+        json_object.local[newKey] = json_object[oldKey]
         // Supprime l'ancien attribut de la racine
-        delete converted[oldKey]
+        delete json_object[oldKey]
       }
     })
 
-    return converted
+    return json_object
   }
 
   /**
