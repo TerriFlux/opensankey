@@ -123,7 +123,7 @@ export class Class_Sankey {
   protected _node_styles: { [_: string]: Class_NodeStyle } = {}
   public name: string
 
-  public normalised_link? : Class_LinkElement
+  public normalised_link?: Class_LinkElement
 
   protected createNewNode(id: string, name: string): Class_NodeElement {
     const node = new Class_NodeElement(id, name, this.drawing_area, this._menu_config)
@@ -270,7 +270,7 @@ export class Class_Sankey {
    * @param {keyof Class_LinkAttribute} k
    * @memberof Class_DrawingArea
    */
-  public deleteLocalAttrSelectedLinks(k: keyof typeof LINKS_ATTRIBUTES_CONFIG,selected_links_list: Class_LinkElement[]) {
+  public deleteLocalAttrSelectedLinks(k: keyof typeof LINKS_ATTRIBUTES_CONFIG, selected_links_list: Class_LinkElement[]) {
     selected_links_list.forEach(link => {
       if (k in LINKS_ATTRIBUTES_CONFIG) {
         link.display.attributes.delete_attribute(k)
@@ -2322,6 +2322,51 @@ export class Class_Sankey {
     })
     const all_nodes = [...import_nodes, ...sorted_nodes, ...export_nodes]
     this._nodes = Object.assign({}, ...all_nodes.map((n) => ({ [n.id]: n })))
+
+    // Sort input and output links for each node based on their connected nodes' position_v
+    all_nodes.forEach(node => {
+      // Get current links order
+      const current_links_order = [...node.links_order]
+
+      // Sort input links based on source node position_v
+      const sorted_input_links = node.input_links_list.sort((link1, link2) => {
+        const source1_v = link1.source.position_v
+        const source2_v = link2.source.position_v
+
+        if (source1_v >= 0 || source2_v >= 0) {
+          return source1_v - source2_v
+        } else {
+          return source2_v - source1_v
+        }
+      })
+
+      // Sort output links based on target node position_v  
+      const sorted_output_links = node.output_links_list.sort((link1, link2) => {
+        const target1_v = link1.target.position_v
+        const target2_v = link2.target.position_v
+
+        if (target1_v >= 0 || target2_v >= 0) {
+          return target1_v - target2_v
+        } else {
+          return target2_v - target1_v
+        }
+      })
+
+      // Create new sorted order: input links, other links, output links
+      const other_links = current_links_order.filter(link =>
+        !sorted_input_links.includes(link) && !sorted_output_links.includes(link)
+      )
+
+      const new_links_order = [
+        ...sorted_input_links,
+        ...other_links,
+        ...sorted_output_links
+      ]
+
+      // Use reorganizeIOFromListIds to update the internal order
+      const new_links_ids = new_links_order.map(link => link.id)
+      node.reorganizeIOFromListIds(new_links_ids)
+    })
   }
 
   /**
