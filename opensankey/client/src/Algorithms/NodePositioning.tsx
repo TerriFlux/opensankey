@@ -1578,6 +1578,66 @@ export class NodePositioning {
     })
 
     this.computeParametricV()
+    // // Sort input and output links for each node based on their connected nodes' position_v
+    // this.drawingArea.sankey.nodes_list.forEach(node => {
+    //   // Get current links order
+    //   const current_links_order = [...node.links_order]
+
+    //   // Sort input links based on source node position_v
+    //   const sorted_input_links = node.input_links_list.sort((link1, link2) => {
+    //     const source1_v = link1.source.position_v
+    //     const source2_v = link2.source.position_v
+
+    //     if (source1_v >= 0 || source2_v >= 0) {
+    //       return source1_v - source2_v
+    //     } else {
+    //       return source2_v - source1_v
+    //     }
+    //   })
+
+    //   // Sort output links based on target node position_v  
+    //   const sorted_output_links = node.output_links_list.sort((link1, link2) => {
+    //     const target1_v = link1.target.position_v
+    //     const target2_v = link2.target.position_v
+
+    //     if (target1_v >= 0 || target2_v >= 0) {
+    //       return target1_v - target2_v
+    //     } else {
+    //       return target2_v - target1_v
+    //     }
+    //   })
+
+    //   // Create new sorted order: import links first, other links, export links last
+    //   const other_links = current_links_order.filter(link =>
+    //     !sorted_input_links.includes(link) && !sorted_output_links.includes(link)
+    //   )
+
+    //   // Separate import and export links from input/output links
+    //   const import_links = sorted_input_links.filter(link =>
+    //     echangeTag && link.source.hasGivenTag(echangeTag)
+    //   )
+    //   const export_links = sorted_output_links.filter(link =>
+    //     echangeTag && link.target.hasGivenTag(echangeTag)
+    //   )
+    //   const regular_input_links = sorted_input_links.filter(link =>
+    //     !echangeTag || !link.source.hasGivenTag(echangeTag)
+    //   )
+    //   const regular_output_links = sorted_output_links.filter(link =>
+    //     !echangeTag || !link.target.hasGivenTag(echangeTag)
+    //   )
+
+    //   const new_links_order = [
+    //     ...import_links,        // Import links first
+    //     ...regular_input_links, // Regular input links
+    //     ...other_links,         // Other links (like recycling)
+    //     ...regular_output_links,// Regular output links  
+    //     ...export_links         // Export links last
+    //   ]
+
+    //   // Use reorganizeIOFromListIds to update the internal order
+    //   const new_links_ids = new_links_order.map(link => link.id)
+    //   node.reorganizeIOFromListIds(new_links_ids)
+    //})
   }
 
   /**
@@ -1883,7 +1943,7 @@ export class NodePositioning {
    */
   public arrangeNodesToGrid = () => {
     const app_data = this.drawingArea.application_data
-    const {sankey} = this.drawingArea
+    const { sankey } = this.drawingArea
     const node_pos = Object.fromEntries(sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y }]))
 
     const _arrangeNodesToGrid = () => {
