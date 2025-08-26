@@ -407,7 +407,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
     const style_id = getStringListFromJSON(json_node_object, 'style', [default_style_id])
     this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_NodeStyle[]
-    
+
     OSPFormatConverter.convertNodeFromOSPFormat(json_node_object)
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
@@ -981,7 +981,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
       .attr('x', 0)
       .append('g')
       .append('path')
-      .style('fill', (this.shape_visible || this.icon_color_sustainable) ? this.icon_color : this.getShapeColorToUse())
+      .style('fill', (!this.shape_visible || this.icon_color_sustainable) ? this.icon_color : this.getShapeColorToUse())
       .attr('d', this.sankey.getIconFromCatalog(this.icon_name))
   }
 

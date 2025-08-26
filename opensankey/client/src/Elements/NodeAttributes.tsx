@@ -58,19 +58,7 @@ class NodeAttributeMappings {
     shape_color: 'color',
     shape_opacity: 'opacity',
     shape_color_sustainable: 'colorSustainable',
-    
-    // OSP Extensions mappings
-    icon_name: 'iconName',
-    icon_color: 'iconColor',
-    icon_visible: 'iconVisible',
-    icon_view_box: 'iconViewBox',
-    icon_color_sustainable: 'iconColorSustainable',
-    has_fo: 'has_FO',
-    is_fo_raw: 'is_FO_raw',
-    fo_content: 'FO_content',
-    is_image: 'is_image',
-    image_src: 'image_src',
-    hyperlink: 'hyperlink',
+  
   }
 
   // Mapping legacy: ancienne clé JSON -> attribut interne
@@ -112,16 +100,6 @@ class NodeAttributeMappings {
     'color': 'shape_color',
     'opacity': 'shape_opacity',
     'colorSustainable': 'shape_color_sustainable',
-    
-    // OSP legacy (fusion avec MAIN_MAPPING)
-    // 'iconName': 'icon_name',
-    // 'iconColor': 'icon_color',
-    // 'iconVisible': 'icon_visible',
-    // 'iconViewBox': 'icon_view_box',
-    // 'iconColorSustainable': 'icon_color_sustainable',
-    // 'has_FO': 'has_fo',
-    // 'is_FO_raw': 'is_fo_raw',
-    // 'FO_content': 'fo_content',
   }
 
   /**
