@@ -353,9 +353,7 @@ export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
                     'menuconfigpanel_option_button_activated' :
                     'menuconfigpanel_option_button'}
                 onClick={() => {
-                  let value = false
-                  value = selected_nodes[0]?.icon_color_sustainable ?? ''
-                  updateNodeIconColorSustainable(value)
+                  updateNodeIconColorSustainable(!selected_nodes[0]?.icon_color_sustainable)
                 }}
               >
                 {(selected_nodes.length === 1 && selected_nodes[0].icon_color_sustainable) ? icon_locked : icon_unlocked}
