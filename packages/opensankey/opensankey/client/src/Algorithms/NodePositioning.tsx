@@ -1685,7 +1685,7 @@ export class NodePositioning {
         nn.display.position.x = node.position_x
         nn.display.position.u = node.position_u
         nn.display.position.y = current_y
-        current_y += 20
+        current_y += nn.getShapeHeightToUse() + nn.position_dy
         new_current_v = this.applyVDesagregate(nn, new_current_v, tagGroup)
       })
     }
