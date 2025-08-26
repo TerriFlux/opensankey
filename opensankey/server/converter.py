@@ -160,7 +160,6 @@ class SankeyToJson(object):
 
     def __init__(self):
         self.primary_level_id = None
-        self._legacy = False
 
     def parse_tags(
         self,
@@ -237,17 +236,10 @@ class SankeyToJson(object):
             if taggs_type == CONST_IO_XL.TAG_TYPE_NODE:
                 self._parse_node_tags(taggs_type, taggs, nodeTags)
                 continue
-            # Flux tags parsin
-            if taggs_type == CONST_IO_XL.TAG_TYPE_LEVEL:
-                if len(taggs.values()) > 0:
-                    self._legacy = True
-                self._parse_legacy_level_tags(taggs_type, taggs, levelTags)
-                continue
             if taggs_type == CONST_IO_XL.TAG_TYPE_FLUX:
                 self._parse_flux_tags(taggs, fluxTags)
-        if not self._legacy:
-            # Dimension parsing
-            self._parse_level_tags(sankey, levelTags)
+        # Dimension parsing
+        self._parse_level_tags(sankey, levelTags)
 
     def _parse_data_tags(self, taggs, data_tags_json):
         """
@@ -381,77 +373,6 @@ class SankeyToJson(object):
                 "show_legend": tagg.has_palette,
                 "tags": tags,
                 "banner": banner,
-                "activated": activated,
-                "siblings": [anta_tagg.name for anta_tagg in tagg.antagonists_taggs],
-            }
-
-    def _parse_legacy_level_tags(self, taggs_type, taggs, level_tags_json):
-        """
-        Extract level tags from dict of taggs to update json data format.
-
-        Struct for level_tags_json :
-        {
-            'tag group name': tagg_json,
-            ...
-        }
-
-        Struct for tagg_json :
-        {
-            'name': str,
-            'show_legend': bool,
-            'tags': {
-                '<tag name>': tags_json,
-                ...
-            }
-            'banner': str,
-            'activated': bool,
-            'siblings': [str, ...]
-        }
-
-        Struct for tags_json :
-        {
-            'name': str
-            'selected': bool
-            'color': str (in hexa)
-        }
-
-        Parameters
-        ----------
-        :param taggs_type: Type of all taggroups from input taggs dict
-        :type taggs_type: str
-
-        :param taggs: Input taggroups from sankey struct
-        :type taggs: dict(tagg_name: tagg)
-
-        :param level_tags_json: nodes tags json struct
-        :type level_tags_json: dict (modified)
-        """
-        for tagg in taggs.values():
-            # tags dict
-            tags = {
-                tag.name: {
-                    "name": tag.name_unformatted,
-                    "selected": True,
-                    "color": tag.color_in_hex,
-                }
-                for tag in tagg.tags.values()
-            }
-            # Select only first tag
-            for tag in list(tags.values())[1:]:
-                tag["selected"] = False
-            # tag group dict
-            # if there are antagonists_taggs only one can be selected
-            activated = True
-            for antagonists_tagg in tagg.antagonists_taggs:
-                if antagonists_tagg.name in level_tags_json:
-                    if level_tags_json[antagonists_tagg.name]["activated"]:
-                        activated = False
-                        break
-            level_tags_json[tagg.name] = {
-                "name": tagg.name_unformatted,
-                "show_legend": tagg.has_palette,
-                "tags": tags,
-                "banner": "level",
                 "activated": activated,
                 "siblings": [anta_tagg.name for anta_tagg in tagg.antagonists_taggs],
             }
@@ -1148,123 +1069,37 @@ class SankeyToJson(object):
             # Add the tag
             node_json["tags"][tag_group_name].append(tag.name)
         # Parents relations -> TODO duplicate node for each parent
-        if self._legacy:
-            if node.has_parents():
-                if create_primary:
-                    node_json["dimensions"]["Primaire"]["parent_name"] = node.parents[
-                        0
-                    ].id
-                    node_json["dimensions"]["Primaire"]["parent_tag"] = str(
-                        node.parents[0].level
-                    )
-                    node_json["dimensions"]["Primaire"]["children_tags"] = [
-                        str(node.level)
+        for dimension in sankey.dimensions.values():
+            id = (
+                "Primaire"
+                if dimension.id == self.primary_level_id
+                else dimension.id
+            )
+            parent = dimension.get_parent_of(node)
+            children = dimension.get_children_of(node)
+            if parent is not None:
+                # Node has parent in given dim
+                node_json["dimensions"][id] = {}
+                node_json["dimensions"][id]["parent_name"] = parent.id
+                level = dimension.get_level_of(node)
+                is_root_child = children is None
+                node_json["dimensions"][id]["parent_tag"] = str(level - 1)
+                if is_root_child:
+                    node_json["dimensions"][id]["children_tags"] = [
+                        str(_) for _ in range(level, dimension.depth + 1)
                     ]
-                    node_json["dimensions"]["Primaire"]["level"] = int(node.level)
-                    node_json["dimensions"]["Primaire"]["antitag"] = False
-                # Level tag parent relations
-                for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values():
-                    # Check all current node level tags groups
-                    if tagg in node.taggs:
-                        node_json["dimensions"][tagg.name] = {}
-                        # For each node level tag group, get associated tags
-                        tags = node.get_tags_from_taggroup(tagg)
-                        if tags is not None:
-                            # Levels taggs are applied instead of primary
-                            node_json["dimensions"]["Primaire"] = {}
-                            # Get the upper level tag if it exists :
-                            # ie if tag = 2, upper_tag = 1
-                            # ie if tags = 3:4, upper_tag = 2
-                            # Levels tags can be something different than pure numbers, ie level1:level2:level3
-                            upper_tag = None
-                            for tag in tags:
-                                upper_tag = tagg.get_previous_tag(tag)
-                                # Verify that if we are in multiple level tags config (such as tag=2:3)
-                                # the tag "2" can not be the upper tag, it must be the tag "1"
-                                if upper_tag not in tags:
-                                    break
-                                else:
-                                    upper_tag = None
-                            tags_names = [tag.name for tag in tags]
-
-                            if ANTI_TAGS_NAME in tags_names:
-                                dimension = {}
-                                dimension["antitag"] = ANTI_TAGS_NAME in tags_names
-                                node_json["dimensions"][tagg.name] = dimension
-                                continue
-                            # We found an upper tag
-                            if upper_tag is not None:
-                                # Try to find parent nodes that have given upper tag
-                                parenthood_search_limit = 0
-                                while parenthood_search_limit < 10:
-                                    node_parents = node.get_all_parents(
-                                        limit=parenthood_search_limit
-                                    )
-                                    parent_nodes_for_leveltagg = list(
-                                        set(upper_tag.references) & set(node_parents)
-                                    )
-                                    if len(parent_nodes_for_leveltagg) > 0:
-                                        # We found matching nodes
-                                        # TODO : if more than 1 parent_node_for_leveltagg ->
-                                        # we have a problem in input file
-                                        # I do a sort here to be sure that we always have the same id
-                                        # if multiple parent nodes are found
-                                        dimension = {}
-
-                                        parent_nodes_ids_for_leveltagg = sorted(
-                                            [_.id for _ in parent_nodes_for_leveltagg]
-                                        )
-                                        for parent in node.parents:
-                                            # we are looking for a "real" parent
-                                            if (
-                                                parent_nodes_ids_for_leveltagg[0]
-                                                == parent.id
-                                            ):
-                                                dimension["parent_name"] = (
-                                                    parent_nodes_ids_for_leveltagg[0]
-                                                )
-                                                dimension["children_tags"] = tags_names
-                                                dimension["parent_tag"] = upper_tag.name
-                                                node_json["dimensions"][
-                                                    tagg.name
-                                                ] = dimension
-                                                break
-                                        # Break the loop
-                                        break
-                                    else:
-                                        parenthood_search_limit += 1
-        else:
-            for dimension in sankey.dimensions.values():
-                id = (
-                    "Primaire"
-                    if dimension.id == self.primary_level_id
-                    else dimension.id
-                )
-                parent = dimension.get_parent_of(node)
-                children = dimension.get_children_of(node)
-                if parent is not None:
-                    # Node has parent in given dim
-                    node_json["dimensions"][id] = {}
-                    node_json["dimensions"][id]["parent_name"] = parent.id
-                    level = dimension.get_level_of(node)
-                    is_root_child = children is None
-                    node_json["dimensions"][id]["parent_tag"] = str(level - 1)
-                    if is_root_child:
-                        node_json["dimensions"][id]["children_tags"] = [
-                            str(_) for _ in range(level, dimension.depth + 1)
-                        ]
-                    else:
-                        node_json["dimensions"][id]["children_tags"] = [str(level)]
-                elif children is not None:
-                    # Node does not have parent but have children in givent dim
-                    # ie : Node is parent-root
-                    # Nothing to do
-                    pass
                 else:
-                    # Node does not exist in given dim
-                    node_json["dimensions"][id] = {}
-                    if node._dimensions_as_child or node._dimensions_as_parent:
-                        node_json["dimensions"][id]["antitag"] = True
+                    node_json["dimensions"][id]["children_tags"] = [str(level)]
+            elif children is not None:
+                # Node does not have parent but have children in givent dim
+                # ie : Node is parent-root
+                # Nothing to do
+                pass
+            # else:
+            #     # Node does not exist in given dim
+            #     node_json["dimensions"][id] = {}
+            #     if node._dimensions_as_child or node._dimensions_as_parent:
+            #         node_json["dimensions"][id]["antitag"] = True
         return node_json
 
 
@@ -1300,8 +1135,8 @@ class JsonToSankey(object):
         # Private attributes - for computation purpose
         self._nodes_id_corresp = {}
         self._dimensions_id_corresp = {}
-        self._leveltaggs_corresp = {}
-        self._leveltags_corresp = {}
+        # self._leveltaggs_corresp = {}
+        # self._leveltags_corresp = {}
         self._nodetags_id_corresp = {}
         self._fluxtags_id_corresp = {}
         self._datatags_id_corresp = {}
@@ -1400,9 +1235,6 @@ class JsonToSankey(object):
                 # For latter reference
                 tags_corresp[tag_id] = tag
             # Update correspondance dict
-            if tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL:
-                self._leveltaggs_corresp[tagg_id] = tagg
-                self._leveltags_corresp[tagg_id] = tags_corresp
             if tagg_type == CONST_IO_XL.TAG_TYPE_NODE:
                 self._nodetags_id_corresp[tagg_id] = tags_corresp
             if tagg_type == CONST_IO_XL.TAG_TYPE_FLUX:
@@ -1721,5 +1553,5 @@ class JsonToSankey(object):
                 new_datatags_list = datatags_list.copy()
                 new_datatags_list.append(datatag)
                 # Recurse
-                self._extract_data(datas_json[datatag_id], flux, new_datatags_list)
+                self._extract_data(datas_json[datatag_id], flux,read_constraint, new_datatags_list)
         return
