@@ -806,7 +806,7 @@ class SankeyToJson(object):
                     if constraint.type in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS:
                         data_json["value_option"] = constraint.type
                         data_json["data_value"] = constraint.ratio * 100
-                    if constraint.type in CONST_IO_XL.DATA_VALUE_TYPE_UNIT_RATIO:
+                    if constraint.type == CONST_IO_XL.DATA_VALUE_TYPE_UNIT_RATIO:
                         data_json["value_option"] = constraint.type
                         data_json["data_value"] = constraint.ratio
 
@@ -816,7 +816,7 @@ class SankeyToJson(object):
                     if constraint.type in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS:
                         data_json["value_option"] = constraint.type
                         data_json["data_value"] = constraint.ratio * 100
-                    if constraint.type in CONST_IO_XL.DATA_VALUE_TYPE_UNIT_RATIO:
+                    if constraint.type == CONST_IO_XL.DATA_VALUE_TYPE_UNIT_RATIO:
                         data_json["value_option"] = constraint.type
                         data_json["data_value"] = constraint.ratio
                         data_json["ratio_unit_tag"] = constraint.ratio_unit_tag
