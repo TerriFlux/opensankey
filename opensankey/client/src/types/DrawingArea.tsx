@@ -54,7 +54,6 @@ import { ClassTemplate_GhostLinkElement } from '../Elements/LinkGhostElement'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
-import { Class_NodeAttribute } from '../Elements/NodeAttributes'
 import { Class_NodeStyle } from '../Elements/ElementStyle'
 import { Class_LinkStyle } from '../Elements/ElementStyle'
 import { NodePositioning } from '../Algorithms/NodePositioning'
@@ -64,7 +63,6 @@ import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { ClassTemplate_Handler } from '../Elements/Handler'
 import { Class_ApplicationData } from './ApplicationData'
-import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
 
 
 declare const window: Window &

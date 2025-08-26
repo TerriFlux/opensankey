@@ -114,14 +114,14 @@ class NodeAttributeMappings {
     'colorSustainable': 'shape_color_sustainable',
     
     // OSP legacy (fusion avec MAIN_MAPPING)
-    'iconName': 'icon_name',
-    'iconColor': 'icon_color',
-    'iconVisible': 'icon_visible',
-    'iconViewBox': 'icon_view_box',
-    'iconColorSustainable': 'icon_color_sustainable',
-    'has_FO': 'has_fo',
-    'is_FO_raw': 'is_fo_raw',
-    'FO_content': 'fo_content',
+    // 'iconName': 'icon_name',
+    // 'iconColor': 'icon_color',
+    // 'iconVisible': 'icon_visible',
+    // 'iconViewBox': 'icon_view_box',
+    // 'iconColorSustainable': 'icon_color_sustainable',
+    // 'has_FO': 'has_fo',
+    // 'is_FO_raw': 'is_fo_raw',
+    // 'FO_content': 'fo_content',
   }
 
   /**
