@@ -158,16 +158,17 @@ def save_excel():
         io_excel.write_excel_from_sankey(
             excel_filename, sankey, mode="w", **options_save_excel
         )
-        # Ajoute le fichier json dans un onglet layout
-        wb = openpyxl.load_workbook(excel_filename)
-        layout_sheet = wb.create_sheet()
-        layout_sheet.title = "layout"
-        splitted_layout = cut_layout(sankey_as_data)
-        cpt = 1
-        for i in splitted_layout:
-            layout_sheet["A" + str(cpt)].value = i
-            cpt = cpt + 1
-        wb.save("tutu.xlsx")
+        if options_save_excel["layout"]:
+            # Ajoute le fichier json dans un onglet layout
+            wb = openpyxl.load_workbook(excel_filename)
+            layout_sheet = wb.create_sheet()
+            layout_sheet.title = "layout"
+            splitted_layout = cut_layout(sankey_as_data)
+            cpt = 1
+            for i in splitted_layout:
+                layout_sheet["A" + str(cpt)].value = i
+                cpt = cpt + 1
+            wb.save("tutu.xlsx")
         return send_file(excel_filename, as_attachment=True)
     except Exception as excpt:
         response = Response(

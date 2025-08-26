@@ -204,16 +204,16 @@ export class Class_NodeDimension {
     }
   }
 
-  public showAccordingToLevelTags() {
-    // Unset booleans
-    const nodes_to_redraw = this._unsetForcingToShow()
-    // Redraw
-    nodes_to_redraw
-      .forEach(node => {
-        node.dimensionsUpdated()
-        node.draw()
-    })
-  }
+  // public showAccordingToLevelTags() {
+  //   // Unset booleans
+  //   const nodes_to_redraw = this._unsetForcingToShow()
+  //   // Redraw
+  //   nodes_to_redraw
+  //     .forEach(node => {
+  //       node.dimensionsUpdated()
+  //       node.draw()
+  //   })
+  // }
 
   /**
    * Force to set this dimension's parent as visible

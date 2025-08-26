@@ -804,9 +804,9 @@ export const applyDimension = (
     const desagregation_link = desagregation_links[0]
     if (n.input_links_list.length == 0 || n.output_links_list.length == 0) {
       root_node[input_or_output_attr].forEach(supply_link => {
-        if (!supply_link.valueCurrent) {
-          return
-        }
+        // if (!supply_link.valueCurrent) {
+        //   return
+        // }
         const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
         (new_link as Class_LinkElement).copyValues(desagregation_link)
         addNewLinks(n, expand_left ? supply_link.source : supply_link.target, tagg,expand_left)
