@@ -39,10 +39,7 @@ import SankeyExcelParser.io_excel_constants as CONST_IO_XL
 
 # Local modules ---------------------------------------------------------------
 from SankeyExcelParser.classes.sankey import Sankey
-from SankeyExcelParser.classes.sankey_utils.data import (
-    Data as SankeyData
-)
-from SankeyExcelParser.classes.sankey_utils.tag_group import ANTI_TAGS_NAME
+from SankeyExcelParser.classes.sankey_utils.data import Data as SankeyData
 
 # Constants -------------------------------------------------------------------
 JSON_TO_IO_XL__TAGG_TYPES = {
@@ -1070,11 +1067,7 @@ class SankeyToJson(object):
             node_json["tags"][tag_group_name].append(tag.name)
         # Parents relations -> TODO duplicate node for each parent
         for dimension in sankey.dimensions.values():
-            id = (
-                "Primaire"
-                if dimension.id == self.primary_level_id
-                else dimension.id
-            )
+            id = "Primaire" if dimension.id == self.primary_level_id else dimension.id
             parent = dimension.get_parent_of(node)
             children = dimension.get_children_of(node)
             if parent is not None:
@@ -1553,5 +1546,7 @@ class JsonToSankey(object):
                 new_datatags_list = datatags_list.copy()
                 new_datatags_list.append(datatag)
                 # Recurse
-                self._extract_data(datas_json[datatag_id], flux,read_constraint, new_datatags_list)
+                self._extract_data(
+                    datas_json[datatag_id], flux, read_constraint, new_datatags_list
+                )
         return
