@@ -44,7 +44,7 @@ const Dashboard = ({
   t: TFunction,
   logo:string,
   returnToApp: (navigate: NavigateFunction) => void,
-  loginComponent:()=>LoginComponent,
+  loginComponent:LoginComponent,
   setLicenses:React.MutableRefObject<() => void>,
   exemple_menu: object
 }) => {
@@ -53,7 +53,7 @@ const Dashboard = ({
   const navigate = useNavigate()
 
   //If we acces this page without being logged, it is resent to the application
-  if (!loginComponent().has_account) {
+  if (!loginComponent.has_account) {
     returnToApp(navigate)
   }
 

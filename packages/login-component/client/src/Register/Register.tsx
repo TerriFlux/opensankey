@@ -52,7 +52,7 @@ const Register = ({
   t: TFunction,
   logo: string,
   logo_sankey_plus: string,
-  loginComponent:()=>LoginComponent,
+  loginComponent:LoginComponent,
   setLicenses:React.MutableRefObject<() => void>,
   returnToApp: (navigate: NavigateFunction) => void,
   theme:Record<string, any>

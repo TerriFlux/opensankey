@@ -31,7 +31,7 @@ export const Login = ({
   t: TFunction
   logo: string,
   returnToApp: (navigate: NavigateFunction) => void,
-  loginComponent: () => LoginComponent,
+  loginComponent: LoginComponent,
   setLicenses: React.MutableRefObject<() => void>}) => {
   // States
   const [on_wait, setOnWait] = useState(false)
@@ -219,7 +219,7 @@ export const LoginOutButton = (
   t: TFunction
   logo: string,
   returnToApp: (navigate: NavigateFunction) => void,
-  loginComponent: () => LoginComponent,
+  loginComponent: LoginComponent,
   setLicenses: React.MutableRefObject<() => void>,
 }
 ) => {

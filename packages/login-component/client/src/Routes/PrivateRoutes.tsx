@@ -1,24 +1,27 @@
-import React, { FC } from 'react'
+import React from 'react'
 import { Navigate } from 'react-router-dom'
-import { loginComponent } from '../LoginComponent'
+import { LoginComponent } from '../LoginComponent'
 
-type FCType_PrivateRoute = {
+export const PrivateRoute = ({
+  component,loginComponent
+}:{
     component: JSX.Element,
-}
-
-export const PrivateRoute: FC<FCType_PrivateRoute> = ({
-  component,
+    loginComponent: LoginComponent
 }) => {
-  if (loginComponent().has_account) {
+  if (loginComponent.has_account) {
     return component
   }
   return <Navigate to="/" />
 }
 
-export const LoginRoute: FC<FCType_PrivateRoute> = ({
+export const LoginRoute = ({
   component,
+  loginComponent
+}:{
+    component: JSX.Element,
+    loginComponent: LoginComponent
 }) => {
-  if (loginComponent().has_account) {
+  if (loginComponent.has_account) {
     return component
   }
   return <Navigate to="/login" />

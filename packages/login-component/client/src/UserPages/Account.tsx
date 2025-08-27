@@ -113,7 +113,7 @@ const Account = ({
   logo:string,
   logo_sankey_plus:string,
   returnToApp: (navigate: NavigateFunction) => void,
-  loginComponent:()=>LoginComponent,
+  loginComponent:LoginComponent,
   blocker_suite_sankey: { [_: string]: JSX.Element },
   setLicenses:React.MutableRefObject<() => void>
 }) => {
@@ -122,7 +122,7 @@ const Account = ({
   const navigate = useNavigate()
 
   //If we acces this page without being logged, it is resent to the application
-  if (!loginComponent().has_account) {
+  if (!loginComponent.has_account) {
     returnToApp(navigate)
   }
 

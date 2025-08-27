@@ -6,9 +6,9 @@ import {
   ButtonGroup,
 } from '@chakra-ui/react'
 import { LoginOutButton } from '../Login/Login'
-import { loginComponent } from '../LoginComponent'
 import {Class_ApplicationDataLoginComponent} from '../ApplicationDataLoginComponent'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
+//import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
 
 export const UserPagesButtons = (
   { new_data_app, setLicenses,returnToApp }:{
@@ -75,12 +75,12 @@ export const UserPagesButtons = (
       t={new_data_app.t}
       logo={new_data_app.logo}
       returnToApp={returnToApp}
-      loginComponent={loginComponent}
+      loginComponent={new_data_app.login_component}
       setLicenses={setLicenses}
     />
   </ButtonGroup>
 
 
-  return (!loginComponent().has_account ? user_navigation_bar_free : user_navigation_bar_connected)
+  return (!new_data_app.login_component.has_account ? user_navigation_bar_free : user_navigation_bar_connected)
 }
 

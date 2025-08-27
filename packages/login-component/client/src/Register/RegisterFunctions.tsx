@@ -72,7 +72,7 @@ export async function userSignUp(
 // Check Licence and register account if everything is Ok
 export async function userValidate(
   token: string,
-  loginComponent:()=>LoginComponent,
+  loginComponent:LoginComponent,
   navigate: NavigateFunction,
   setLicenses:React.MutableRefObject<() => void>
 ) {
@@ -100,11 +100,11 @@ export async function userValidate(
       logInfo(i18next.t('Register.validation.msg.' + response['message']))
     })
     .then(() => {
-      return loginComponent().checkTokens(setLicenses,true)
+      return loginComponent.checkTokens(setLicenses,true)
     })
     .then(() => {
       let next_page
-      if (loginComponent().has_account) {
+      if (loginComponent.has_account) {
         logInfo(i18next.t('Register.validation.msg.redirect'))
         next_page = '/license/checkout'
       }

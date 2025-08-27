@@ -1,15 +1,15 @@
 import React, { FC } from 'react'
 import { Navigate } from 'react-router-dom'
-import { loginComponent } from '../LoginComponent'
+import { LoginComponent } from '../LoginComponent'
 
-type FCType_PublicRoute = {
-    component: JSX.Element,
-}
-
-export const PublicRoute: FC<FCType_PublicRoute> = ({
+export const PublicRoute = ({
   component,
+  loginComponent
+}: {
+  component: JSX.Element,
+  loginComponent: LoginComponent
 }) => {
-  if (!loginComponent().has_account) {
+  if (!loginComponent.has_account) {
     return component
   }
   return <Navigate to="/" />

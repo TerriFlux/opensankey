@@ -1,6 +1,7 @@
 import { Class_MenuConfig } from "./deps/OpenSankey+/deps/OpenSankey/types/MenuConfig"
 import { Class_ApplicationDataOSP } from "./deps/OpenSankey+/types/ApplicationDataOSP"
 import { Class_IconLibraryLoginComponent } from "./IconLibraryLoginComponent"
+import { LoginComponent } from "./LoginComponent"
 import { Class_MenuConfigLoginComponent } from "./MenuConfigLoginComponent"
 
 export class Class_ApplicationDataLoginComponent extends Class_ApplicationDataOSP {
@@ -9,7 +10,12 @@ export class Class_ApplicationDataLoginComponent extends Class_ApplicationDataOS
     options: { [_: string]: boolean | string } = {}
   ) {
     super(published_mode, options)
+    this._login_component = new LoginComponent
+
   }
+
+  public get login_component() { return this._login_component}
+  private _login_component : LoginComponent
 
   public createNewMenuConfiguration() {
     return new Class_MenuConfigLoginComponent() as Class_MenuConfig
