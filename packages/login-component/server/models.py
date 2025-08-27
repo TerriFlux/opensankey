@@ -6,6 +6,7 @@
 # ---------------------------------------------------------------
 # External imports
 import os
+import requests
 import time
 import hashlib
 
@@ -35,13 +36,12 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 # ---------------------------------------------------------------
 # Shared variables
 
-connected_user = Blueprint("connected_user", __name__)
+connected_user = Blueprint('connected_user', __name__)
 db = SQLAlchemy()
 
 
 # ---------------------------------------------------------------
 # Define specific functions
-
 
 def init_db(app):
     """
@@ -55,20 +55,19 @@ def init_db(app):
     Optional parameters
     -------------------
     """
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
     db.init_app(app)
 
-    path_directory_user_pref = ""
+    path_directory_user_pref = ''
     # Check if dir of pref user exist, if not then create it
-    if "USER_PREF_REP" in os.environ:
-        path_directory_user_pref = os.environ["USER_PREF_REP"]
-        if not os.path.exists(path_directory_user_pref):
+    if 'USER_PREF_REP' in os.environ:
+        path_directory_user_pref = os.environ['USER_PREF_REP']
+        if (not os.path.exists(path_directory_user_pref)):
             os.mkdir(path_directory_user_pref)
 
 
 # ---------------------------------------------------------------
 # Define models
-
 
 class User(UserMixin, db.Model):
     """
@@ -82,7 +81,6 @@ class User(UserMixin, db.Model):
         - license_opensankeyplus (String)
         - license_sankeysuite (String)
     """
-
     # Primary keys are required by SQLAlchemy
     id = db.Column(db.Integer, primary_key=True)
     # User infos entries
@@ -104,9 +102,10 @@ class User(UserMixin, db.Model):
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
     user_licenses = db.relationship(
-        "UserLicences", back_populates="user", cascade="all, delete"
-    )
-    licenses = association_proxy("user_licenses", "license")
+        'UserLicences',
+        back_populates='user',
+        cascade="all, delete")
+    licenses = association_proxy('user_licenses', 'license')
 
     def delete(self):
         """
@@ -143,7 +142,9 @@ class User(UserMixin, db.Model):
         if license is None:
             return None
         # Get relation between license and user
-        return UserLicences.query.filter_by(license=license, user=self).first()
+        return UserLicences.query.filter_by(
+            license=license,
+            user=self).first()
 
     def is_from_terriflux(self):
         """
@@ -154,9 +155,9 @@ class User(UserMixin, db.Model):
         :rtype: boolean
         """
         # Get related license to terriflux
-        this_license = self.get_license("terriflux")
+        this_license = self.get_license('terriflux')
         # Check if user is related to this specific license
-        return this_license is not None
+        return (this_license is not None)
 
     def get_license_expiry(self):
         """
@@ -178,8 +179,8 @@ class User(UserMixin, db.Model):
             if user_license.expiry is None:
                 continue
             # Expiry is set to never
-            if user_license.expiry == "never":
-                return "never"
+            if user_license.expiry == 'never':
+                return 'never'
             # Save expiry date
             if expiry is None:
                 expiry = user_license.expiry
@@ -187,8 +188,8 @@ class User(UserMixin, db.Model):
             # Otherwise keep max expiry date
             expiry = max(
                 datetime.fromisoformat(expiry),
-                datetime.fromisoformat(user_license.expiry),
-            ).isoformat()
+                datetime.fromisoformat(user_license.expiry))\
+                .isoformat()
         # Return
         return expiry
 
@@ -212,18 +213,18 @@ class User(UserMixin, db.Model):
                 continue
             # Check expiration
             ok_expiry = False
-            if user_license.expiry is not None:
-                if user_license.expiry == "never":
+            if (user_license.expiry is not None):
+                if (user_license.expiry == 'never'):
                     ok_expiry = True
                 else:
                     cur_time = datetime.now()
                     try:
                         exp_time = datetime.fromisoformat(user_license.expiry)
-                        ok_expiry = exp_time >= cur_time
+                        ok_expiry = (exp_time >= cur_time)
                     except Exception as e:
-                        print("Error - has_valid_license - {}".format(e))
+                        print('Error - has_valid_license - {}'.format(e))
             # Ok if activated and not expired
-            if ok_expiry and user_license.activated:
+            if (ok_expiry and user_license.activated):
                 ok_license = True
                 break
         return ok_license
@@ -237,7 +238,7 @@ class User(UserMixin, db.Model):
         :return: Timed serialized token
         :rtype: string
         """
-        serializer = Serializer(current_app.config["SECRET_KEY"])
+        serializer = Serializer(current_app.config['SECRET_KEY'])
         return serializer.dumps(self.id)
 
     @staticmethod
@@ -257,7 +258,7 @@ class User(UserMixin, db.Model):
         :return: User id that correspond to given token
         :rtype: db.Integer
         """
-        serializer = Serializer(current_app.config["SECRET_KEY"])
+        serializer = Serializer(current_app.config['SECRET_KEY'])
         try:
             user_id = serializer.loads(token, max_age=900)  # valid for 15min
         except Exception:
@@ -274,18 +275,18 @@ class UserLicences(db.Model):
     :param db: _description_
     :type db: _type_
     """
-
-    __tablename__ = "user_licenses"
+    __tablename__ = 'user_licenses'
     # primary keys are required by SQLAlchemy
     id = db.Column(db.Integer(), primary_key=True)
     # Db relation for user - at least one entry is needed + relationship
-    user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
-    user = db.relationship("User", back_populates="user_licenses")
+    user_id = db.Column(
+        db.Integer(),
+        db.ForeignKey('user.id', ondelete='CASCADE'))
+    user = db.relationship('User', back_populates='user_licenses')
     # Db relation for license - at least one entry is needed + relationship
     license_id = db.Column(
-        db.Integer(), db.ForeignKey("license.id", ondelete="CASCADE")
-    )
-    license = db.relationship("License", back_populates="user_licenses")
+        db.Integer(), db.ForeignKey('license.id', ondelete='CASCADE'))
+    license = db.relationship('License', back_populates='user_licenses')
     # Db extra entries
     creation = db.Column(db.String(128))
     expiry = db.Column(db.String(128))
@@ -314,8 +315,7 @@ class License(db.Model):
     :param db: _description_
     :type db: _type_
     """
-
-    __tablename__ = "license"
+    __tablename__ = 'license'
     # primary keys are required by SQLAlchemy
     id = db.Column(db.Integer(), primary_key=True)
     # Db entries
@@ -324,9 +324,10 @@ class License(db.Model):
     # Relationships
     # Cascade - delete entries in UserLicense if this db entry is deleted
     user_licenses = db.relationship(
-        "UserLicences", back_populates="license", cascade="all, delete"
-    )
-    users = association_proxy("user_licenses", "user")
+        'UserLicences',
+        back_populates='license',
+        cascade="all, delete")
+    users = association_proxy('user_licenses', 'user')
 
     def delete(self):
         """
@@ -352,16 +353,15 @@ class Metrics(db.Model):
     :param db: _description_
     :type db: _type_
     """
-
-    __tablename__ = "metrics"
+    __tablename__ = 'metrics'
     # primary keys are required by SQLAlchemy
     id = db.Column(db.String(64), primary_key=True)
     nb_visits = db.Column(db.Integer())
     last_visit = db.Column(db.Integer())
 
     def new_visit(self):
-        epoch = int(time.time() / (24 * 60 * 60)) - int(os.environ["REF_EPOCH"])
-        if epoch != self.last_visit:
+        epoch = int(time.time() / (24 * 60 * 60)) - int(os.environ['REF_EPOCH'])
+        if (epoch != self.last_visit):
             # Increase number of visits for given id
             if self.nb_visits:
                 self.nb_visits = self.nb_visits + 1
@@ -373,7 +373,6 @@ class Metrics(db.Model):
 
 # ---------------------------------------------------------------
 # Define decorators
-
 
 def login_required(f):
     """
@@ -389,13 +388,11 @@ def login_required(f):
     :return: HTTP response (text, status)
     :rtype: string, int
     """
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             return "Not connected", 401
         return f(*args, **kwargs)
-
     return decorated_function
 
 
@@ -416,25 +413,22 @@ def license_required(f):
     :return: HTTP response (text, status)
     :rtype: string, int
     """
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             return "Not connected", 401
         found = False
         for user_license in current_user.user_licenses:
-            if current_user.has_valid_license(user_license):
+            if current_user.has_valid_license(user_license.license.name):
                 found = True
         if not found:
             return "No valid license", 401
         return f(*args, **kwargs)
-
     return decorated_function
 
 
 # ---------------------------------------------------------------
 # Functions
-
 
 def update_metrics(ip: str):
     """
@@ -480,12 +474,14 @@ def create_user_from_stripe(
     :rtype: (str, boolean)
     """
     # Get user related to mail
-    user_by_email = User.query.filter(
-        func.lower(User.email) == func.lower(user_email)
-    ).first()
+    user_by_email = User.query\
+        .filter(func.lower(User.email) == func.lower(user_email))\
+        .first()
 
     # Get user related to stripe id
-    user_by_stripe_id = User.query.filter_by(stripe_id=user_stripe_id).first()
+    user_by_stripe_id = User.query\
+        .filter_by(stripe_id=user_stripe_id)\
+        .first()
 
     # Case 1 : no email related user nor stripe related customer
     if (user_by_email is None) and (user_by_stripe_id is None):
@@ -494,8 +490,7 @@ def create_user_from_stripe(
             firstname=user_firstname,
             name=user_lastname,
             creation=datetime.now().isoformat(),
-            stripe_id=user_stripe_id,
-        )
+            stripe_id=user_stripe_id)
         db.session.commit()
     # Case 2 : Got email related user but no stripe related customer
     elif (user_by_email is not None) and (user_by_stripe_id is None):
@@ -503,7 +498,7 @@ def create_user_from_stripe(
         db.session.commit()
 
     # Return
-    return "ok", True
+    return 'ok', True
 
 
 def delete_user_from_stripe(
@@ -527,9 +522,11 @@ def delete_user_from_stripe(
     :rtype: (str, boolean)
     """
     # Get user related to mail
-    user = User.query.filter_by(
-        func.lower(User.email) == func.lower(user_email), stripe_id=user_stripe_id
-    ).first()
+    user = User.query\
+        .filter_by(
+            func.lower(User.email) == func.lower(user_email),
+            stripe_id=user_stripe_id)\
+        .first()
 
     # Update user if it exists
     if user is not None:
@@ -543,10 +540,13 @@ def delete_user_from_stripe(
         db.session.commit()
 
     # Return
-    return "ok", True
+    return 'ok', True
 
 
-def create_license_from_stripe(license_name: str, license_stripe_id: str):
+def create_license_from_stripe(
+    license_name: str,
+    license_stripe_id: str
+):
     """
     Create license entry in db
 
@@ -564,19 +564,26 @@ def create_license_from_stripe(license_name: str, license_stripe_id: str):
     :rtype: (str, boolean)
     """
     # Get license related to stripe id
-    license = License.query.filter_by(stripe_id=license_stripe_id).first()
+    license = License.query\
+        .filter_by(stripe_id=license_stripe_id)\
+        .first()
 
     # If no license, create
-    if license is None:
-        license = License(name=license_name, stripe_id=license_stripe_id)
+    if (license is None):
+        license = License(
+            name=license_name,
+            stripe_id=license_stripe_id)
         db.session.add(license)
         db.session.commit()
 
     # Return
-    return "ok", True
+    return 'ok', True
 
 
-def update_license_name_from_stripe(license_name: str, license_stripe_id: str):
+def update_license_name_from_stripe(
+    license_name: str,
+    license_stripe_id: str
+):
     """
     Update license entry in db
 
@@ -594,21 +601,25 @@ def update_license_name_from_stripe(license_name: str, license_stripe_id: str):
     :rtype: (str, boolean)
     """
     # Get license related to stripe id
-    license = License.query.filter_by(stripe_id=license_stripe_id).first()
+    license = License.query\
+        .filter_by(stripe_id=license_stripe_id)\
+        .first()
 
     # If no license, error
-    if license is None:
-        return "no_matching_id", False
+    if (license is None):
+        return 'no_matching_id', False
 
     # Update
     license.name = license_name
     db.session.commit()
 
     # Return
-    return "ok", True
+    return 'ok', True
 
 
-def delete_license_from_stripe(license_stripe_id: str):
+def delete_license_from_stripe(
+    license_stripe_id: str
+):
     """
     Delete license from stripe
 
@@ -618,17 +629,19 @@ def delete_license_from_stripe(license_stripe_id: str):
     :type license_stripe_id: str
     """
     # Get license related to stripe id
-    license = License.query.filter_by(stripe_id=license_stripe_id).first()
+    license = License.query\
+        .filter_by(stripe_id=license_stripe_id)\
+        .first()
 
     # If no license, error
-    if license is None:
-        return "no_matching_id", False
+    if (license is None):
+        return 'no_matching_id', False
 
     # Delete license
     license.delete()
 
     # Return
-    return "ok", True
+    return 'ok', True
 
 
 def create_user_license_subscription(
@@ -658,19 +671,23 @@ def create_user_license_subscription(
     :rtype: (str, boolean)
     """
     # Get license
-    license = License.query.filter_by(stripe_id=license_stripe_id).first()
+    license = License.query\
+        .filter_by(stripe_id=license_stripe_id)\
+        .first()
     if license is None:
         license = License(
-            name="unknown_{}".format(license_stripe_id), stripe_id=license_stripe_id
-        )
+            name='unknown_{}'.format(license_stripe_id),
+            stripe_id=license_stripe_id)
         db.session.add(license)
 
     # Get or create user license
-    user_license = UserLicences.query.filter_by(
-        stripe_id=user_license_stripe_id
-    ).first()
+    user_license = UserLicences.query\
+        .filter_by(stripe_id=user_license_stripe_id)\
+        .first()
     if user_license is None:
-        user_license = UserLicences(stripe_id=user_license_stripe_id, activated=False)
+        user_license = UserLicences(
+            stripe_id=user_license_stripe_id,
+            activated=False)
         db.session.add(user_license)
 
     # Update infos
@@ -682,10 +699,13 @@ def create_user_license_subscription(
     db.session.commit()
 
     # Return
-    return "ok", True
+    return 'ok', True
 
 
-def update_user_license_subscription(user_license_stripe_id, user_license_expiry):
+def update_user_license_subscription(
+    user_license_stripe_id,
+    user_license_expiry
+):
     """
     Triggered for subscription update event
 
@@ -703,10 +723,10 @@ def update_user_license_subscription(user_license_stripe_id, user_license_expiry
     :rtype: (str, boolean)
     """
     # Get subcription license
-    user_license = UserLicences.query.filter_by(
-        stripe_id=user_license_stripe_id
-    ).first()
-    if user_license is None:
+    user_license = UserLicences\
+        .query.filter_by(stripe_id=user_license_stripe_id)\
+        .first()
+    if (user_license is None):
         return "Invalid subscription id", False
 
     # Update infos
@@ -714,10 +734,12 @@ def update_user_license_subscription(user_license_stripe_id, user_license_expiry
 
     # Apply modification to database
     db.session.commit()
-    return "ok", True
+    return 'ok', True
 
 
-def delete_user_license_subscription(user_license_stripe_id):
+def delete_user_license_subscription(
+    user_license_stripe_id
+):
     """
     Triggered for subscription deletion event
 
@@ -732,10 +754,10 @@ def delete_user_license_subscription(user_license_stripe_id):
     :rtype: (str, boolean)
     """
     # Get subcription license
-    user_license = UserLicences.query.filter_by(
-        stripe_id=user_license_stripe_id
-    ).first()
-    if user_license is None:
+    user_license = UserLicences\
+        .query.filter_by(stripe_id=user_license_stripe_id)\
+        .first()
+    if (user_license is None):
         return "Invalid subscription id", False
 
     # Update infos
@@ -743,11 +765,14 @@ def delete_user_license_subscription(user_license_stripe_id):
 
     # Apply modification to database
     db.session.commit()
-    return "ok", True
+    return 'ok', True
 
 
 def set_licence_checkout_completed(
-    user_id, user_email, user_stripe_id, user_license_stripe_id
+    user_id,
+    user_email,
+    user_stripe_id,
+    user_license_stripe_id
 ):
     """
     Create a license at checkout for given user
@@ -774,20 +799,22 @@ def set_licence_checkout_completed(
     :rtype: _type_
     """
     # Get user
-    user = User.query.filter(
-        func.lower(User.email) == func.lower(user_email), User.id == user_id
-    ).first()
+    user = User.query\
+        .filter(
+            func.lower(User.email) == func.lower(user_email),
+            User.id == user_id)\
+        .first()
     if user is None:
         return "Invalid user", False
 
     # Get subcription license
-    user_license = UserLicences.query.filter_by(
-        stripe_id=user_license_stripe_id
-    ).first()
-    if user_license is None:
+    user_license = UserLicences.query\
+        .filter_by(stripe_id=user_license_stripe_id)\
+        .first()
+    if (user_license is None):
         user_license = UserLicences(
-            creation=datetime.now().isoformat(), stripe_id=user_license_stripe_id
-        )
+            creation=datetime.now().isoformat(),
+            stripe_id=user_license_stripe_id)
         db.session.add(user_license)
 
     # Update infos
@@ -797,44 +824,55 @@ def set_licence_checkout_completed(
 
     # Apply modification to database
     db.session.commit()
-    return "ok", True
+    return 'ok', True
 
 
 def set_license_invoice_created(
-    user_email, user_stripe_id, license_stripe_id, user_license_stripe_id
+    user_email,
+    user_stripe_id,
+    license_stripe_id,
+    user_license_stripe_id
 ):
     # Get user
     # - Matching email & stripe id
-    user = User.query.filter(
-        func.lower(User.email) == func.lower(user_email),
-        User.stripe_id == user_stripe_id,
-    ).first()
+    user = User.query\
+        .filter(
+            func.lower(User.email) == func.lower(user_email),
+            User.stripe_id == user_stripe_id)\
+        .first()
     # - Then priority on matching stripe id
     if user is None:
-        user = User.query.filter_by(stripe_id=user_stripe_id).first()
+        user = User.query\
+            .filter_by(
+                stripe_id=user_stripe_id)\
+            .first()
     # - Or get user via email and set stripe id
     if user is None:
-        user = User.query.filter(
-            func.lower(User.email) == func.lower(user_email)
-        ).first()
+        user = User.query\
+            .filter(
+                func.lower(User.email) == func.lower(user_email))\
+            .first()
         if user is not None:
             user.stripe_id = user_stripe_id
     if user is None:
         return "Could not find related user", False
 
     # Get license
-    license = License.query.filter_by(stripe_id=license_stripe_id).first()
+    license = License.query\
+        .filter_by(
+            stripe_id=license_stripe_id)\
+        .first()
     if license is None:
         return "Could not find related license", False
 
     # Get subcription license
-    user_license = UserLicences.query.filter_by(
-        stripe_id=user_license_stripe_id
-    ).first()
-    if user_license is None:
+    user_license = UserLicences.query\
+        .filter_by(stripe_id=user_license_stripe_id)\
+        .first()
+    if (user_license is None):
         user_license = UserLicences(
-            creation=datetime.now().isoformat(), stripe_id=user_license_stripe_id
-        )
+            creation=datetime.now().isoformat(),
+            stripe_id=user_license_stripe_id)
         db.session.add(user_license)
 
     # Update infos
@@ -843,11 +881,13 @@ def set_license_invoice_created(
 
     # Apply modification to database
     db.session.commit()
-    return "ok", True
+    return 'ok', True
 
 
 def set_licence_invoice_paid(
-    user_stripe_id: str, license_stripe_id: str, user_license_stripe_id: str
+    user_stripe_id: str,
+    license_stripe_id: str,
+    user_license_stripe_id: str
 ):
     """
     Create a license at checkout for given user
@@ -874,27 +914,34 @@ def set_licence_invoice_paid(
     :rtype: _type_
     """
     # Get user
-    user = User.query.filter_by(stripe_id=user_stripe_id).first()
+    user = User.query\
+        .filter_by(stripe_id=user_stripe_id)\
+        .first()
     if user is None:
         return "No user found for invoice", False
 
     # Get related license
-    license = License.query.filter_by(stripe_id=license_stripe_id).first()
+    license = License.query\
+        .filter_by(stripe_id=license_stripe_id)\
+        .first()
     if license is None:
         return "No license found for invoice", False
 
     # Get subcription license
-    user_license = UserLicences.query.filter_by(
-        user=user, license=license, stripe_id=user_license_stripe_id
-    ).first()
-    if user_license is None:
+    user_license = UserLicences.query\
+        .filter_by(
+            user=user,
+            license=license,
+            stripe_id=user_license_stripe_id)\
+        .first()
+    if (user_license is None):
         return "Invalid invoice id for user and license", False
 
     # Update infos
     user_license.activated = True
     if user_license.expiry is None:
-        user_license.expiry = "never"
+        user_license.expiry = 'never'
 
     # Apply modification to database
     db.session.commit()
-    return "ok", True
+    return 'ok', True
