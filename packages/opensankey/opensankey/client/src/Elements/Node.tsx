@@ -269,7 +269,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this._nodeTagsManager = new NodeTagsManager(this)
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
 
-    drawing_area.list_g_element.unshift(this)
+    drawing_area.list_g_element.unshift(this.id)
   }
 
   // CLEANING METHODS ===================================================================

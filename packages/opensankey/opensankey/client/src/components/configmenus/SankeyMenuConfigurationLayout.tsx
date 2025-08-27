@@ -37,7 +37,7 @@ import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle 
 import { t } from 'i18next'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FType_OpenSankeyMenuConfigurationLayout, FCType_DrawingAreaStyle, BaseApplicationDataType } from '../SankeyMenuTypes'
+import {BaseApplicationDataType } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
 
@@ -53,9 +53,13 @@ const right_addon_pixel = (val: number) => {
 
 // MENU COMPONENT ***********************************************************************
 
-export const OpenSankeyMenuConfigurationLayout: FC<FType_OpenSankeyMenuConfigurationLayout> = ({
+export const OpenSankeyMenuConfigurationLayout = ({
   new_data,
   extra_background_element,
+}:{
+  new_data: Class_ApplicationData
+  contextual: boolean
+  extra_background_element: JSX.Element,
 }) => {
 
   // Components updaters ---------------------------------------------------------------
@@ -69,8 +73,10 @@ export const OpenSankeyMenuConfigurationLayout: FC<FType_OpenSankeyMenuConfigura
   </Box>
 }
 
-
-export const DrawingAreaStyle: FC<FCType_DrawingAreaStyle> = ({ new_data, extra_background_element }) => {
+export const DrawingAreaStyle = ({ new_data, extra_background_element }:{
+  new_data: Class_ApplicationData
+  extra_background_element: JSX.Element,
+}) => {
 
   // Data -------------------------------------------------------------------------------
 
@@ -835,14 +841,14 @@ export const GraphElementsOrdoner: FC<{ new_data: Class_ApplicationData }> = ({ 
           >
             {
               new_data.drawing_area.list_g_element
-                .map((element, element_idx) => {
-                  //const element = new_data.drawing_area.elementFromId(id_element)
+                .map((id_element, element_idx) => {
+                  const element = new_data.drawing_area.elementFromId(id_element)
                   if (!element.is_visible)
                     return <></>
                   return (
                     <Draggable key={element.id} index={element_idx} draggableId={'line_drag_' + element.id}>
                       {(provided, snapshot) => (
-                        <Box key={element.id} layerStyle='drag_line_element_order' ref={provided.innerRef}
+                        <Box key={id_element} layerStyle='drag_line_element_order' ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
                           style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
