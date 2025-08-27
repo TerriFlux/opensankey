@@ -126,7 +126,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   //Add user_data sequence in footer
   additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
-  new_data_app.login_component.checkTokens(setLicenses)
+  // new_data_app.login_component.checkTokens(setLicenses)
 
   // OpenSankey+ initialisation ----------------------------------------------------------
 
@@ -235,6 +235,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
 
     console.log('Calling updateAllMenuComponents...')
     new_data_app.menu_configuration.updateAllMenuComponents()
+    new_data_app.menu_configuration.ref_rerender_submodules_menus.current()
     console.log('=== setLicenses function completed ===')
   })
 
