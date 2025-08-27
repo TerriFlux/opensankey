@@ -6,7 +6,6 @@
 # ---------------------------------------------------------------
 # External imports
 import os
-import requests
 import time
 import hashlib
 
