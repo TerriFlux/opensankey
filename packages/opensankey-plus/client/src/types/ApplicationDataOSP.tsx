@@ -51,7 +51,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   // Static path
   public override static_path: string = 'static/sankeyanimation'
 
-  protected _has_sankey_plus: boolean = true
+  protected _has_sankey_plus: boolean = false
+  protected _has_sankey_afm: boolean = false
 
   protected _views: { [id: string]: Class_DrawingArea } = {}
   protected _views_order: string[] = []
@@ -991,7 +992,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public get has_sankey_plus() { return this._has_sankey_plus || this.is_static }
   public set has_sankey_plus(_) { this._has_sankey_plus = _ }
 
-  public get has_sankey_afm() { return process.env.REACT_APP_AFM == 'true' }
+  public get has_sankey_afm() { return this._has_sankey_afm || this.is_static }
+  public set has_sankey_afm(_) { this._has_sankey_afm = _ }
 
   // Override getter & setter so we can get new type
   public get menu_configuration_osp(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
