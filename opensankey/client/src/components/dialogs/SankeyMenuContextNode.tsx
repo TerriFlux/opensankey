@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FC, useState } from 'react'
+import React, { useState, MutableRefObject } from 'react'
 
 import {
   Box,
@@ -42,7 +42,8 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_NodeAttribute } from '../../Elements/NodeAttributes'
 import { Class_NodeStyle } from '../../Elements/ElementStyle'
 import { hierarchyEditionMenu, hierarchyManipulationMenu } from './SankeyMenuContextHierarchie'
-import { FCType_ContextMenu } from '../SankeyMenuTypes'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_AdditionalMenus } from '../../types/MenuConfig'
 
 
 /*************************************************************************************************/
@@ -51,11 +52,10 @@ const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', back
 
 // MENU COMPONENT ***********************************************************************
 
-export const ContextMenuNode: FC<FCType_ContextMenu> = (
-  {
-    new_data,
-    additionalMenus
-  }
+export const ContextMenuNode = ({new_data,additionalMenus}:{
+  new_data: Class_ApplicationData
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>
+}
 ) => {
 
   // Datas ------------------------------------------------------------------------------
@@ -389,14 +389,14 @@ export const ContextMenuNode: FC<FCType_ContextMenu> = (
 
   const moveToFirstPlan = () => {
     drawing_area.selected_nodes_list.forEach(node => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(node)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(node.id)
       drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
     })
     closeContextMenu()
   }
   const moveToLastPlan = () => {
     drawing_area.selected_nodes_list.forEach(node => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(node)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(node.id)
       drawing_area.moveOrderElementInDA(idx_to_shift, 0)
     })
     closeContextMenu()

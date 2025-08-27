@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { Fragment, FC, useRef, useState } from 'react'
+import React, { Fragment, useRef, useState, MutableRefObject } from 'react'
 
 import {
   Box,
@@ -43,20 +43,21 @@ import { default_style_id } from '../../types/Utils'
 import { ConfigMenuNumberInput, ConfigMenuNumberOrUndefinedInput } from './SankeyMenuConfiguration'
 import { WrapperBoxSubSectionMenu, ElementAttrSetterNumberInput2Cols, ValueKey } from './MenuCommon'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
-import { FCType_MenuConfigurationLinksAppearence } from '../SankeyMenuTypes'
 import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_AdditionalMenus } from '../../types/MenuConfig'
 
 export type keyStyle = keyof Class_LinkStyle
 export type valStyle = Class_LinkStyle[keyStyle]
 export type keyLink = keyof Class_LinkElement
 export type valLink = Class_LinkElement[keyLink]
 
-export const MenuConfigurationLinkShape: FC<FCType_MenuConfigurationLinksAppearence> = ({
-  new_data,
-  additionMenus,
-  menu_for_style
+export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_style }: {
+  new_data: Class_ApplicationData
+  menu_for_style: boolean
+  additionMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
 
   // Datas ------------------------------------------------------------------------------

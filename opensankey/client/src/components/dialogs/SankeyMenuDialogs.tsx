@@ -41,7 +41,7 @@ import {
 
 import { default_style_id } from '../../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
-import { FCType_ApplyLayoutDialog, FType_DiagramSelector } from '../SankeyMenuTypes'
+import { FType_DiagramSelector } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FType_ClickSaveDiagram, FType_UploadExcelImpl } from '../../Persistence/SankeyPersistenceTypes'
@@ -57,14 +57,18 @@ type FCType_ApplySaveJSONDialog = {
 }
 /**
  *
- * @param {FCType_ApplyLayoutDialog} { ref_setter_show_modal_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
+ * @param  { ref_setter_show_modal_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
  * @returns {*}
  */
-export const ApplyLayoutDialog: FC<FCType_ApplyLayoutDialog> = ({
+export const ApplyLayoutDialog = ({
   new_data,
   diagramSelector,
   apply_transformation_additional_elements
-}: FCType_ApplyLayoutDialog) => {
+}: {
+  new_data: Class_ApplicationData
+  diagramSelector: FType_DiagramSelector,
+  apply_transformation_additional_elements: JSX.Element[],
+}) => {
   const { data_var_to_update, t, menu_configuration } = new_data
   const { node_styles_dict } = new_data.drawing_area.sankey
   const { ref_to_updater_modal_apply_layout } = menu_configuration
@@ -405,11 +409,10 @@ export const ApplyLayoutDialog: FC<FCType_ApplyLayoutDialog> = ({
  * @param {FCType_ApplySaveJSONDialog}
  * @returns {*}
  */
-export const ApplySaveJSONDialog: FC<FCType_ApplySaveJSONDialog> = (
-  {
-    new_data,
-    ClickSaveDiagram
-  }: FCType_ApplySaveJSONDialog
+export const ApplySaveJSONDialog = ({new_data,ClickSaveDiagram} : {
+  new_data: Class_ApplicationData,
+  ClickSaveDiagram: FType_ClickSaveDiagram
+}
 ) => {
   const { t } = new_data
   const [show_save_json_modal, set_show_save_json_modal] = useState(false)

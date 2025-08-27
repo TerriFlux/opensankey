@@ -1,9 +1,8 @@
-import React, { FC, useState, Fragment } from 'react';
+import React, { useState, Fragment, MutableRefObject } from 'react';
 import {
   SimpleElementCheckbox, ValueKey, MenuSectionCheckbox
 } from './MenuCommon'
-// Import the missing type
-import type { FCType_MenuConfigurationLinksAppearence } from '../SankeyMenuTypes'
+
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_LinkStyle } from '../../Elements/ElementStyle';
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
@@ -13,9 +12,15 @@ import { SankeyMenuValueLabelComponent } from './MenuValueLabel'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 import { Class_NodeAttribute } from '../../Elements/NodeAttributes';
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle';
+import { Class_ApplicationData } from '../../types/ApplicationData';
+import { Type_AdditionalMenus } from '../../types/MenuConfig';
 
 
-export const MenuConfigurationLinkLabel: FC<FCType_MenuConfigurationLinksAppearence> = ({ new_data, menu_for_style, additionMenus }) => {
+export const MenuConfigurationLinkLabel = ({ new_data, menu_for_style, additionMenus }:{
+  new_data: Class_ApplicationData
+  menu_for_style: boolean
+  additionMenus: MutableRefObject<Type_AdditionalMenus>,
+}) => {
   const { t, icon_library, drawing_area } = new_data
   const { sankey } = drawing_area
   const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration

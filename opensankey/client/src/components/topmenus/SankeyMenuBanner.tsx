@@ -27,10 +27,8 @@
 // External Imports
 
 // Internal Types / Classes
-import {
-  SankeyData
-} from '../../Persistence/LegacyType'
-import { FType_SetDiagram } from '../SankeyMenuTypes'
+import {SankeyData} from '../../Persistence/LegacyType'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
 // Internal functions / Components
@@ -51,9 +49,9 @@ declare const window: Window &
 
 // FUNCTIONS ============================================================================
 
-export const setDiagram: FType_SetDiagram = (
-  the_diagram,
-  new_data
+export const setDiagram = (
+  the_diagram: string,
+  new_data: Class_ApplicationData
 ) => {
   const sous_filieres = window.sankey.sous_filieres
 

@@ -23,27 +23,32 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
+import React from 'react'
 import {
   Box,
   Button, Select
-} from '@chakra-ui/react';
-import { t } from 'i18next';
-import React, { FC } from 'react';
-import { Class_LinkElement } from '../../Elements/Link';
-import { Class_LinkStyle } from '../../Elements/ElementStyle';
-import { Class_NodeElement } from '../../Elements/Node';
-import { Class_NodeStyle } from '../../Elements/ElementStyle';
-import { default_style_id, font_families } from '../../types/Utils';
-import { updateElements, ValueKey } from './MenuCommon';
-import { ConfigMenuNumberInput } from './SankeyMenuConfiguration';
-import { svg_label_upper } from './SankeyMenuConfigurationNodesShape';
-import { OSTooltip, TooltipElementOverloaded } from './MenuCommon';
-import { ElementMenuComponentType } from '../SankeyMenuTypes';
-import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig';
+} from '@chakra-ui/react'
+import { t } from 'i18next'
+import { Class_LinkElement } from '../../Elements/Link'
+import { Class_LinkStyle } from '../../Elements/ElementStyle'
+import { Class_NodeElement } from '../../Elements/Node'
+import { Class_NodeStyle } from '../../Elements/ElementStyle'
+import { default_style_id, font_families } from '../../types/Utils'
+import { updateElements, ValueKey } from './MenuCommon'
+import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
+import { svg_label_upper } from './SankeyMenuConfigurationNodesShape'
+import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
+import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 
-export const SankeyMenuLabelComponent: FC<ElementMenuComponentType> = ({
+export const SankeyMenuLabelComponent = ({
   new_data, elements, refreshParentComponent, prefix
+}:{
+  new_data: Class_ApplicationData
+  elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
+  refreshParentComponent: () => void,
+  prefix: 'name_' | 'value_'
 }) => {
   const { MenuColorPicker } = new_data;
   const { ref_selected_style_node, ref_selected_style_link } = new_data.menu_configuration;

@@ -40,6 +40,7 @@ import {
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
+  getStringListFromJSON,
   getStringOrUndefinedFromJSON,
 } from '../types/Utils'
 import {
@@ -286,7 +287,7 @@ export class Class_DrawingArea {
 
   // Context attributes for drawing area ------------------------------------------------
 
-  private _list_g_element: ClassTemplate_ProtoElement[] = []
+  private _list_g_element_id: string[] = []
 
   protected _group_to_select: string = '.gg_nodes,.gg_links'
 
@@ -483,7 +484,7 @@ export class Class_DrawingArea {
         with_values
       )
     }
-    out['order_g_elements'] = this._list_g_element.map(el => el.id) // Order elements by id 
+    out['order_g_elements'] = this._list_g_element_id // Order elements by id 
     return out
   }
 
@@ -543,7 +544,7 @@ export class Class_DrawingArea {
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
 
-    //this._list_g_element = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element.map(el=>el.id)).map(id=>)
+    this._list_g_element_id = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element_id)
 
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
@@ -1402,7 +1403,7 @@ export class Class_DrawingArea {
    */
   public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
     // Save old value that can be used in undo
-    const list_old_io: ClassTemplate_ProtoElement[] = this.list_g_element ?? []
+    const list_old_io: string[] = this.list_g_element ?? []
     // Function undo
     const inv_moveElement = () => {
       this.list_g_element = list_old_io
@@ -1426,7 +1427,7 @@ export class Class_DrawingArea {
   }
 
   public orderElementOnDA() {
-    const list_element_id = this._list_g_element.map(e => e.id)
+    const list_element_id = this._list_g_element_id
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
       ?.sort((a, b) => { return sortElementByIdOrder(a as ClassTemplate_ProtoElement, b as ClassTemplate_ProtoElement, [...list_element_id].reverse()) })
@@ -2343,8 +2344,8 @@ export class Class_DrawingArea {
   public get magnetic_nodes(): boolean { return this._magnetic_nodes }
   public set magnetic_nodes(value: boolean) { this._magnetic_nodes = value }
 
-  public get list_g_element() { return this._list_g_element }
-  public set list_g_element(list) { this._list_g_element = list }
+  public get list_g_element() { return this._list_g_element_id }
+  public set list_g_element(list) { this._list_g_element_id = list }
 
   /**
      * d3 selection of svg group that contains drawing area container

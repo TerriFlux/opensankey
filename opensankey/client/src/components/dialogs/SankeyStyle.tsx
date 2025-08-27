@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FC, useState } from 'react'
+import React, { useState, MutableRefObject } from 'react'
 
 import {
   Box,
@@ -51,7 +51,6 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import { checked } from './SankeyMenuContext'
 import { Class_NodeAttribute, Type_customisable_node_style_attr } from '../../Elements/NodeAttributes'
 import { Class_LinkAttribute, Type_customisable_flow_style_attr } from '../../Elements/LinkAttributes'
-import { FCType_SankeyModalStyle } from '../SankeyMenuTypes'
 import { isElementAttributeOverloaded, MenuResetAttrLocal, OSMultiSelect, OSTooltip, typeElementSelectable, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -60,11 +59,15 @@ import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { Class_NodeElement } from '../../Elements/Node'
 import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { Class_LinkStyle, Class_NodeStyle } from '../../Elements/ElementStyle'
+import { Type_AdditionalMenus } from '../../types/MenuConfig'
 
 
-export const SankeyModalStyleNode: FC<FCType_SankeyModalStyle> = ({
+export const SankeyModalStyleNode = ({
   new_data,
   additionalMenus
+}:{
+  new_data: Class_ApplicationData
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { t } = new_data
   const { ref_selected_style_node } = new_data.menu_configuration
@@ -329,9 +332,12 @@ export const WrapperNodeStyleSelector = ({ new_data, children }:{
 
 
 //Modal et fonctions pour l'edition et affectation des style de flux
-export const SankeyModalStyleLink: FC<FCType_SankeyModalStyle> = ({
+export const SankeyModalStyleLink = ({
   new_data,
   additionalMenus
+}:{
+  new_data: Class_ApplicationData
+  additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { t } = new_data
 

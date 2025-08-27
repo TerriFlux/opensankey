@@ -466,7 +466,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this._target = target
     this._target_visibility_fingerprint = target.visibility_fingerprint
 
-    drawing_area.list_g_element.push(this)
+    drawing_area.list_g_element.push(this.id)
 
     // Display
     this._display = {
