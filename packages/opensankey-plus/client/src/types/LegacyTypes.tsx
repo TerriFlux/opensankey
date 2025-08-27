@@ -98,8 +98,6 @@ export type OSPShowMenuComponentsVarType = {
 
   ref_setter_show_menu_view_not_saved: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
-
-// OSP type that overwrite or add variable to for applicationDataType
 interface OSPApplicationDataVarType {
   new_data_plus: Class_ApplicationDataOSP
 }

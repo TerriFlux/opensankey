@@ -1001,14 +1001,14 @@ export const ContextZDTOSP: FC<BaseComponentPropsPlus> = (
 
   const moveToFirstPlan = () => {
     drawing_area.selected_containers_list.forEach(cont => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(cont)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(cont.id)
       drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
     })
   }
 
   const moveToLastPlan = () => {
     drawing_area.selected_containers_list.forEach(cont => {
-      const idx_to_shift = drawing_area.list_g_element.indexOf(cont)
+      const idx_to_shift = drawing_area.list_g_element.indexOf(cont.id)
       drawing_area.moveOrderElementInDA(idx_to_shift, 0)
     })
   }
