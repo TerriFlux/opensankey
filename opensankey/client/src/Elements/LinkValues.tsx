@@ -19,6 +19,14 @@ export class Class_LinkValueTree {
 
   public data_tag_group: Class_DataTagGroup
 
+  public unit_data_tag(child: Class_LinkValueTree | Class_LinkValue): Class_DataTag | undefined {
+    if (this.data_tag_group.is_unit) return this.data_tag_group.tags_dict[this.getDataTagIdFromChild(child) as string]
+    if (this.parent instanceof Class_LinkValueTree) {
+       return this.parent.unit_data_tag(this)
+    }
+    return undefined
+  }
+
   // PRIVATE ATTRIBUTES =================================================================
   private _is_currently_deleted = false
 
@@ -501,6 +509,13 @@ export class Class_LinkValue {
   // PUBLIC ATTRIBUTES ==================================================================
   public parent: Class_LinkValueTree | Class_LinkElement
 
+  public unit_data_tag() : Class_DataTag | undefined{
+    if (this.parent instanceof Class_LinkValueTree) {
+       return this.parent.unit_data_tag(this)
+    }
+    return undefined
+  }
+  
   private _ratio_unit_tag: Class_DataTag | null
 
   public get ratio_unit_tag() {return this._ratio_unit_tag}
