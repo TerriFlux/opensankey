@@ -37,8 +37,6 @@ import {
 import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/ModalWelcomeOSP'
 import { createZDDModifierPlus, ZDD_MENU_CONFIG_PLUS, LINK_MENU_CONFIG_PLUS, initializePlusMenus } from './deps/LoginComponent/deps/OpenSankey+/components/ContextMenuConfigs'
 
-// Local imports ====================================================================================
-
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { Theme_SankeyApplication } from './chakra/Theme'
 import Account from './deps/LoginComponent/UserPages/Account'
@@ -46,22 +44,20 @@ import Dashboard from './deps/LoginComponent/UserPages/Dashboard'
 import Register from './deps/LoginComponent/Register/Register'
 import { Login } from './deps/LoginComponent/Login/Login'
 import { PasswordResetFromMail, PasswordResetFromToken } from './deps/LoginComponent/Login/PasswordReset'
-import { LoginRoute, PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 import { PublicRoute } from './deps/LoginComponent/Routes/PublicRoutes'
 import { PaiementCheckout, PaiementPage, PaiementReturn } from './deps/LoginComponent/Paiement/Paiement'
 import { MetaTags } from './components/MetaTags'
-import { loginComponent } from './deps/LoginComponent/LoginComponent'
 import i18next from 'i18next'
 import { ClickSaveDiagram } from './deps/LoginComponent//deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
 import { DrawerSequenceDataTagg } from './deps/LoginComponent/deps/OpenSankey+/components/UtilsOSP'
 import { Type_JSON, checkForUrlToJSON } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { Class_ApplicationDataLoginComponent } from './deps/LoginComponent/ApplicationDataLoginComponent'
 import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Modules'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 import { ZDDModifierType } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextZDDConfig'
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
+import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 
 // Specific methods ==================================================================================
 
@@ -111,7 +107,7 @@ export const initializeApplicationDataSA = (
 
 type FType_InitializeAdditionalMenusSA = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
-  new_data: Class_ApplicationDataLoginComponent,
+  new_data: Class_ApplicationDataSA,
   setLicenses: React.MutableRefObject<() => void>
 ) => void
 /**
@@ -130,7 +126,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   //Add user_data sequence in footer
   additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
-  loginComponent().checkTokens(setLicenses)
+  new_data_app.login_component.checkTokens(setLicenses)
 
   // OpenSankey+ initialisation ----------------------------------------------------------
 
@@ -221,11 +217,25 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
 ) => {
 
   const setLicenses = useRef(() => {
-    const log_component = loginComponent()
+    console.log('=== setLicenses function called ===')
+
+    const log_component = new_data_app.login_component
+    console.log('loginComponent result:', log_component)
+
     const has_account = log_component.has_account
+    console.log('has_account:', has_account)
+    console.log('log_component.has_licence_sankeyplus:', log_component.has_licence_sankeyplus)
+    console.log('log_component.has_licence_sankeysuite:', log_component.has_licence_sankeysuite)
+
     new_data_app.has_sankey_plus = has_account && log_component.has_licence_sankeyplus
+    console.log('new_data_app.has_sankey_plus set to:', new_data_app.has_sankey_plus)
+
     new_data_app.has_sankey_afm = has_account && log_component.has_licence_sankeysuite
+    console.log('new_data_app.has_sankey_afm set to:', new_data_app.has_sankey_afm)
+
+    console.log('Calling updateAllMenuComponents...')
     new_data_app.menu_configuration.updateAllMenuComponents()
+    console.log('=== setLicenses function completed ===')
   })
 
   // Minimal app ------------------------------------------------------------------------------------
@@ -378,7 +388,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
 
   useEffect(() => {
     setTimeout(() => {
-      loginComponent().checkTokens(setLicenses)
+      new_data_app.login_component.checkTokens(setLicenses)
         .then(() => setApp(
           <HelmetProvider>
             <MetaTags
@@ -398,12 +408,13 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             t={new_data_app.t}
                             logo={new_data_app.logo}
                             logo_sankey_plus={new_data_app.logo_sankey_plus}
-                            loginComponent={loginComponent}
+                            loginComponent={new_data_app.login_component}
                             setLicenses={setLicenses}
                             returnToApp={returnToApp}
                             theme={Theme_SankeyApplication}
                           />
                         }
+                        loginComponent={new_data_app.login_component}
                       />
                     }
                   />
@@ -418,11 +429,12 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             <Login
                               t={new_data_app.t}
                               logo={new_data_app.logo}
-                              loginComponent={loginComponent}
+                              loginComponent={new_data_app.login_component}
                               setLicenses={setLicenses}
                               returnToApp={returnToApp}
                             />
                           }
+                          loginComponent={new_data_app.login_component}
                         />
                       }
                     />
@@ -437,6 +449,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                               returnToApp={returnToApp}
                             />
                           }
+                          loginComponent={new_data_app.login_component}
                         />
                       }
                     />
@@ -451,6 +464,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                               returnToApp={returnToApp}
                             />
                           }
+                          loginComponent={new_data_app.login_component}
                         />
                       }
                     />
@@ -464,11 +478,12 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             t={new_data_app.t}
                             logo={new_data_app.logo}
                             returnToApp={returnToApp}
-                            loginComponent={loginComponent}
+                            loginComponent={new_data_app.login_component}
                             setLicenses={setLicenses}
                             exemple_menu={exemple_menu}
                           />
                         }
+                        loginComponent={new_data_app.login_component}
                       />
                     }
                   />
@@ -487,6 +502,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                               logo_sankey_plus={new_data_app.logo_sankey_plus}
                             />
                           }
+                          loginComponent={new_data_app.login_component}
                         />
                       }
                     />
@@ -497,6 +513,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                           component={
                             <PaiementCheckout />
                           }
+                          loginComponent={new_data_app.login_component}
                         />
                       }
                     />
@@ -507,6 +524,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                           component={
                             <PaiementReturn />
                           }
+                          loginComponent={new_data_app.login_component}
                         />
                       }
                     />
@@ -521,11 +539,12 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             logo={new_data_app.logo}
                             logo_sankey_plus={new_data_app.logo_sankey_plus}
                             returnToApp={returnToApp}
-                            loginComponent={loginComponent}
+                            loginComponent={new_data_app.login_component}
                             setLicenses={setLicenses}
                             blocker_suite_sankey={blockers}
                           />
                         }
+                        loginComponent={new_data_app.login_component}
                       />
                     }
                   />

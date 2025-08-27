@@ -1,7 +1,9 @@
 
 import { Class_MenuConfigSA } from './MenuConfigSA'
 import { Class_ApplicationDataLoginComponent} from './deps/LoginComponent/ApplicationDataLoginComponent'
+import { LoginComponent } from './deps/LoginComponent/LoginComponent'
 import { Class_MenuConfig } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
+//import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
 
 declare const window: Window &
   typeof globalThis & {
@@ -24,7 +26,6 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataLoginComponent
     //this._menu_configuration = this.menu_configuration
     // Get MFA logo
     this._logo_mfa = 'logos/logo_OSS.png'
-
   }
 
   private _logo_mfa: string = ''
