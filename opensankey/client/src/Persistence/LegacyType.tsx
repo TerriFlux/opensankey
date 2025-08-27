@@ -24,10 +24,8 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { MutableRefObject } from 'react'
+
 import { Type_JSON } from '../types/Utils'
-import { Class_ApplicationData } from '../types/ApplicationData'
-import { FType_SetDiagram } from '../components/SankeyMenuTypes'
 
 export type SankeyNodeAttrLocal = {
   local_aggregation?: boolean,
@@ -340,25 +338,6 @@ export interface treeFolderType {
 }
 
 export type postProcessLoadExcelFuncType = (server_data: SankeyData) => void
-
-/*****************************************************************************/
-
-// Data
-type OSGetDefaultData = () => SankeyData
-
-export type applicationDataType = {
-  data: SankeyData,
-  set_data: (_: SankeyData) => void,
-  get_default_data: OSGetDefaultData,
-  dataVarToUpdate: MutableRefObject<string[]>,
-  setDiagram: FType_SetDiagram,
-  new_data: Class_ApplicationData
-}
-
-/*****************************************************************************/
-
-// ===================CONVERTER LEGACY CODE========================
-
 export interface ConvertSankeyValue {
   color_tag?: { [key: string]: string }
   extension: {

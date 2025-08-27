@@ -23,17 +23,25 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-import React, { FC } from 'react';
-import {Box} from '@chakra-ui/react';
-import { ConditionalCheckboxWithInput, SimpleElementCheckbox, ValueKey } from './MenuCommon';
-import { ElementMenuComponentType } from '../SankeyMenuTypes';
+import React from 'react';
+import {Box} from '@chakra-ui/react'
+import { ConditionalCheckboxWithInput, SimpleElementCheckbox, ValueKey } from './MenuCommon'
+import { Class_LinkStyle, Class_NodeStyle } from '../../Elements/ElementStyle';
+import { Class_LinkElement } from '../../Elements/Link';
+import { Class_NodeElement } from '../../Elements/Node';
+import { Class_ApplicationData } from '../../types/ApplicationData';
 
 /**
  * Component with inputs to set value for label_value attribute of node & flow
  * Version refactorisée utilisant les composants communs
  */
-export const SankeyMenuValueLabelComponent: FC<ElementMenuComponentType> = ({
+export const SankeyMenuValueLabelComponent = ({
   new_data, elements, refreshParentComponent, prefix
+}:{
+  new_data: Class_ApplicationData
+  elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
+  refreshParentComponent: () => void,
+  prefix: 'name_' | 'value_'
 }) => {
   // Construction des clés d'attributs avec le préfixe
   const customDigitKey = `${prefix}label_custom_digit` as ValueKey;

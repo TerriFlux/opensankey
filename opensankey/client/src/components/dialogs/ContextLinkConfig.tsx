@@ -292,14 +292,14 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     // Plan actions
     moveToFirstPlan: () => {
       drawing_area.selected_links_list.forEach(link => {
-        const idx_to_shift = drawing_area.list_g_element.indexOf(link)
+        const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
         drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
       })
     },
 
     moveToLastPlan: () => {
       drawing_area.selected_links_list.forEach(link => {
-        const idx_to_shift = drawing_area.list_g_element.indexOf(link)
+        const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
         drawing_area.moveOrderElementInDA(idx_to_shift, 0)
       })
     },
