@@ -676,7 +676,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (json_local_object) {
       this._display.attributes.fromJSON(json_local_object)
       // If local attribute have key local_scale then update local scale domain
-      if ('shape_local_link_scale' in this._display.attributes) this.setDomainLocalScale(this._display.attributes.shape_local_link_scale)
+      if (this._display.attributes.shape_local_link_scale) {
+        this.setDomainLocalScale(this._display.attributes.shape_local_link_scale)
+      }
     }
     // Get positions infos
     this._display.position_offset_value = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
@@ -1388,7 +1390,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       this.setDomainLocalScale(current_value?.data_tag.scale)
       return this._scaleValueToPx(_)
     }
-    if (this.shape_local_link_scale !== undefined) {
+    if (this.shape_local_link_scale) {
       return this._scaleValueToPx(_)
     } else {
       return this.drawing_area.scaleValueToPx(_)
