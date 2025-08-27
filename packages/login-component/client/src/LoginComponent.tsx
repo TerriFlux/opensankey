@@ -53,7 +53,8 @@ public async checkTokens(
             'Content-Type': 'application/json'
           },
         }
-        
+        this._has_licence_sankeyplus = false
+        this._has_licence_sankeysuite = false
         // Si l'utilisateur a un compte, vérifier ses licences
         if (this._has_account) {
           console.log('checkTokens: Checking licenses for authenticated user')
@@ -72,7 +73,7 @@ public async checkTokens(
                   this._has_licence_sankeyplus = license.licenses['OpenSankey+'] == true
                   this._has_licence_sankeysuite = license.licenses['terriflux'] == true
                   console.log('checkTokens: SankeyPlus license:', this._has_licence_sankeyplus)
-                  console.log('checkTokens: TerriFlix license:', this._has_licence_sankeysuite)
+                  console.log('checkTokens: SankeySuite license:', this._has_licence_sankeysuite)
                 })
             })
             .then(() => {
@@ -81,6 +82,7 @@ public async checkTokens(
               setLicenses.current()
             })
         } else {
+          setLicenses.current()
           console.log('checkTokens: No account, skipping license check')
         }
         
