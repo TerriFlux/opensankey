@@ -68,7 +68,7 @@ export abstract class ClassTemplate_ProtoElement {
    */
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
- 
+
   private _drawing_area: Class_DrawingArea
   private _sankey: Class_Sankey
   /**
@@ -431,7 +431,7 @@ export abstract class ClassTemplate_ProtoElement {
    * @param f
    */
   protected saveUndo(f: (_: ClassTemplate_ProtoElement) => void) {
-    this.drawing_area.application_data.history.saveUndo(() => {f(this)})
+    this.drawing_area.application_data.history.saveUndo(() => { f(this) })
   }
 
   /**
@@ -439,7 +439,7 @@ export abstract class ClassTemplate_ProtoElement {
   * @param f
   */
   protected saveRedo(f: (_: ClassTemplate_ProtoElement) => void) {
-    this.drawing_area.application_data.history.saveRedo(() => {f(this)})
+    this.drawing_area.application_data.history.saveRedo(() => { f(this) })
   }
 
   /**
@@ -589,7 +589,7 @@ export abstract class ClassTemplate_ProtoElement {
 
   // Svg Group
   public get svg_parent_group() { return this._svg_parent_group }
-  public get svg_group() { return 'gg_' +  this._id.replace(/[^a-zA-Z0-9]/g, '') }
+  public get svg_group() { return 'gg_' + this._id.replace(/[^a-zA-Z0-9]/g, '') }
 
   // Selection
   public setSelected() { this._is_selected = true; this.drawAsSelected() }
@@ -598,7 +598,7 @@ export abstract class ClassTemplate_ProtoElement {
 
   // Visible
   public setVisible() { this._is_visible = true; this.updateVisibilityFingerprint(); this.draw() }
-  public setInvisible() { this._is_visible = false; this.updateVisibilityFingerprint();  this.draw() }
+  public setInvisible() { this._is_visible = false; this.updateVisibilityFingerprint(); this.draw() }
   public updateVisibilityFingerprint() { this._visibility_fingerprint = randomId() }
   public get is_visible() {
     return (this.sankey.is_visible && this._is_visible)
@@ -663,7 +663,7 @@ export class ClassTemplate_Element extends ClassTemplate_ProtoElement {
   ) {
     super(id, drawing_area, sankey, menu_config, svg_parent_group)
     this._display = {
-      position : {
+      position: {
         type: 'absolute', // Default position type
         x: const_default_position_x, // Default position x    
         y: const_default_position_y, // Default position y
@@ -687,6 +687,9 @@ export class ClassTemplate_Element extends ClassTemplate_ProtoElement {
     this._display.position.x = _._display.position.x
     this._display.position.y = _._display.position.y
     this._display.position.u = _._display.position.u
+    if (Number.isNaN(this._display.position.u)) {
+      console.log('tutu')
+    }
     this._display.position.v = _._display.position.v
     this._display.position.dx = _._display.position.dx
     this._display.position.dy = _._display.position.dy
