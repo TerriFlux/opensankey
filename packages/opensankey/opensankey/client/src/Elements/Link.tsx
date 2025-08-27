@@ -1386,8 +1386,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   protected scaleValueToPx(_: number) {
     let current_value = this.value
-    if (current_value?.data_tag?.group.is_unit) {
-      this.setDomainLocalScale(current_value?.data_tag.scale)
+    const unit_tag = current_value?.unit_data_tag()
+    if (unit_tag) {
+      this.setDomainLocalScale(unit_tag.scale)
       return this._scaleValueToPx(_)
     }
     if (this.shape_local_link_scale) {
