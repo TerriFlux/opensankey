@@ -1219,6 +1219,8 @@ class JsonToSankey(object):
                 continue
             # Create tag groupe
             tagg = self.sankey.get_or_create_tagg(tagg_json["name"], tagg_type)
+            if tagg_type == CONST_IO_XL.TAG_TYPE_DATA and tagg_json["is_unit"]:
+                tagg.is_unit = True
             # Create tags corresp table
             tags_corresp = {}
             # Create tags

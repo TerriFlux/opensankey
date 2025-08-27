@@ -625,6 +625,10 @@ export class NodePositioning {
       max_horizontal_index,
       launched_from_process
     )
+
+    const tmp = this.drawingArea.sankey.nodes_list.filter(n =>
+      !echangeTag || !n.hasGivenTag(echangeTag))
+    tmp.forEach(n=>this.setNodeLabelPositioning(n))
   }
 
   /**
@@ -790,12 +794,8 @@ export class NodePositioning {
         }
         max_vertical_index += 1
         height_cumul_for_index += node_height
-
-        // Configuration des labels si lancé depuis le processus
-        if (launched_from_process) {
-          this.setNodeLabelPositioning(node)
-        }
       })
+
 
       height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.node_styles_dict['default'].position.dy!
       if (height_cumul_for_index > max_height_cumul) {
