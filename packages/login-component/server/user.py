@@ -80,10 +80,10 @@ def user_infos():
         'email': current_user.email,
         'name': current_user.name,
         'firstname': current_user.firstname,
-        'license_legacy_opensankeyplus': current_user.license_opensankeyplus,
-        'license_legacy_sankeysuite': current_user.license_sankeysuite,
-        'license_opensankeyplus_validity': current_user.has_valid_license(),
-        'license_opensankeyplus_expiry': license_exp
+        'license_opensankeyplus_validity': current_user.has_valid_license('OpenSankey+'),
+        'license_opensankeyplus_expiry': license_exp,
+        'license_sankeysuite_validity': current_user.has_valid_license('terriflux'),
+        'license_sankeysuite_expiry': ''
     }
     # Send back response
     return jsonify(response)

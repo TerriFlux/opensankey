@@ -58,11 +58,11 @@ interface IType_UserData {
   email: string,
   firstname: string,
   name: string,
-  // Legacy license
-  loading_legacy_opensankeyplus: boolean,
-  license_legacy_opensankeyplus_id: string,
-  license_legacy_opensankeyplus_active: string,
-  license_legacy_opensankeyplus_validity: string,
+  // // Legacy license
+  // loading_legacy_opensankeyplus: boolean,
+  // license_legacy_opensankeyplus_id: string,
+  // license_legacy_opensankeyplus_active: string,
+  // license_legacy_opensankeyplus_validity: string,
   // New license
   license_opensankeyplus_active: boolean,
   license_opensankeyplus_expiry: string,
@@ -81,10 +81,10 @@ const user_data_default: IType_UserData = {
   email: '-',
   firstname: '-',
   name: '-',
-  loading_legacy_opensankeyplus: true,
-  license_legacy_opensankeyplus_id: '',
-  license_legacy_opensankeyplus_active: '',
-  license_legacy_opensankeyplus_validity: '',
+  // loading_legacy_opensankeyplus: true,
+  // license_legacy_opensankeyplus_id: '',
+  // license_legacy_opensankeyplus_active: '',
+  // license_legacy_opensankeyplus_validity: '',
   license_opensankeyplus_active: false,
   license_opensankeyplus_expiry: '',
 }
@@ -100,27 +100,22 @@ const possible_feedback: string[] = [
   'other'
 ]
 
-// Account
-export type AccountTypes = {
-  t:TFunction,
-  logo:string,
-  logo_sankey_plus:string,
-  returnToApp: (navigate: NavigateFunction) => void,
-  loginComponent:()=>LoginComponent,
-  noLicenceAccountRequired: boolean,
-  blocker_suite_sankey: { [_: string]: JSX.Element },
-  setUpdate:React.MutableRefObject<() => void>
-}
-
-const Account: FC<AccountTypes> = ({
+const Account = ({
   t,
   logo,
   logo_sankey_plus,
   returnToApp,
   loginComponent,
-  noLicenceAccountRequired,
   blocker_suite_sankey,
   setUpdate
+}:{
+  t:TFunction,
+  logo:string,
+  logo_sankey_plus:string,
+  returnToApp: (navigate: NavigateFunction) => void,
+  loginComponent:()=>LoginComponent,
+  blocker_suite_sankey: { [_: string]: JSX.Element },
+  setUpdate:React.MutableRefObject<() => void>
 }) => {
 
   // Define navigation behaviour to return to App
@@ -175,51 +170,51 @@ const Account: FC<AccountTypes> = ({
   const [msgs_modal_del_account, setMsgsLicenseModification] = useState(structuredClone(log_default))
 
   // Activate and save a new license OpenSankey+
-  const signupNewLicenseOpenOSP = () => {
-    // Check licence and activate from EDD
-    if (newLicenseOpenOSPToCheck) {
-      registerNewLicenseOpenOSP(newLicenseOpenOSP)
-        .then(() => {
-          // Save in db
-          const path = window.location.origin
-          const url = path + '/user/infos/legacy/license_opensankeyplus'
-          fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              license_id: newLicenseOpenOSP,
-            })
-          })
-            .then(response => {
-              if (response.ok) {
-                return response.json()
-              } else {
-                return Promise.reject(response)
-              }
-            })
-            .then(() => {
-              // console.log('POST /user/infos/legacy/license_opensankeyplus : SUCCESS - ', data.message)
-              const userData_ = user_data
-              userData_.loading_legacy_opensankeyplus = true
-              userData_.license_legacy_opensankeyplus_id = newLicenseOpenOSP
-              userData_.license_legacy_opensankeyplus_active = ''
-              userData_.license_legacy_opensankeyplus_validity = ''
-              setUserData(userData_)
-              setReqCount(1)
-              activateLicensesTokens(loginComponent,setUpdate) //Update tokens
-              // setSuiteApplicationContext({...suiteApplicationContext})
-            })
-            .catch(error => {
-              console.error('Error in registerNewLicenseOpenOSP - ' + error.toString())
-            })
-        })
-        .catch(error => {
-          console.error('Error in signupNewLicenseOpenOSP - ' + error.toString())
-        })
-    }
-  }
+  // const signupNewLicenseOpenOSP = () => {
+  //   // Check licence and activate from EDD
+  //   if (newLicenseOpenOSPToCheck) {
+  //     registerNewLicenseOpenOSP(newLicenseOpenOSP)
+  //       .then(() => {
+  //         // Save in db
+  //         const path = window.location.origin
+  //         const url = path + '/user/infos/legacy/license_opensankeyplus'
+  //         fetch(url, {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //           },
+  //           body: JSON.stringify({
+  //             license_id: newLicenseOpenOSP,
+  //           })
+  //         })
+  //           .then(response => {
+  //             if (response.ok) {
+  //               return response.json()
+  //             } else {
+  //               return Promise.reject(response)
+  //             }
+  //           })
+  //           .then(() => {
+  //             // console.log('POST /user/infos/legacy/license_opensankeyplus : SUCCESS - ', data.message)
+  //             const userData_ = user_data
+  //             userData_.loading_legacy_opensankeyplus = true
+  //             userData_.license_legacy_opensankeyplus_id = newLicenseOpenOSP
+  //             userData_.license_legacy_opensankeyplus_active = ''
+  //             userData_.license_legacy_opensankeyplus_validity = ''
+  //             setUserData(userData_)
+  //             setReqCount(1)
+  //             activateLicensesTokens(loginComponent,setUpdate) //Update tokens
+  //             // setSuiteApplicationContext({...suiteApplicationContext})
+  //           })
+  //           .catch(error => {
+  //             console.error('Error in registerNewLicenseOpenOSP - ' + error.toString())
+  //           })
+  //       })
+  //       .catch(error => {
+  //         console.error('Error in signupNewLicenseOpenOSP - ' + error.toString())
+  //       })
+  //   }
+  // }
 
   // Credentials modifications ----------------------------------------------------------
 
@@ -621,10 +616,6 @@ const Account: FC<AccountTypes> = ({
 
   // Hooks
   const [reqCount, setReqCount] = useState(1)
-  const [newLicenseOpenOSP, setNewLicenseOpenOSP] = useState('')
-  const [newLicenseOpenOSPToCheck, setNewLicenseOpenOSPToCheck] = useState(false)
-  // const [newLicenseSankeySuite, setNewLicenseSankeySuite] = useState('')
-  // const [newLicenseSankeySuiteToCheck, setNewLicenseSankeySuiteToCheck] = useState(false)
 
   // Get user's data
   useEffect(() => {
@@ -652,15 +643,6 @@ const Account: FC<AccountTypes> = ({
           // User info data
           userData_.name = data.name
           userData_.firstname = data.firstname
-          // User legacy license data
-          if (
-            data.license_legacy_opensankeyplus !== '' &&
-            data.license_legacy_opensankeyplus !== '0000' &&
-            typeof (data.license_legacy_opensankeyplus) !== 'undefined'
-          )
-            userData_.license_legacy_opensankeyplus_id = data.license_legacy_opensankeyplus
-          else
-            userData_.license_legacy_opensankeyplus_id = '-'
           // User OpenSankey+ license
           userData_.license_opensankeyplus_active = data.license_opensankeyplus_validity
           userData_.license_opensankeyplus_expiry = data.license_opensankeyplus_expiry
@@ -682,56 +664,6 @@ const Account: FC<AccountTypes> = ({
           reqCount_ = reqCount_ + 1
           setReqCount(reqCount_)
         })
-    }
-
-    // User's OpenSankey+ licence data
-    if (user_data.license_legacy_opensankeyplus_id === '-') {
-      const userData_ = user_data
-      userData_.loading_legacy_opensankeyplus = false
-      userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_no_lic')
-      setUserData(userData_)
-    }
-    else {
-      if (user_data.license_legacy_opensankeyplus_id !== '' &&
-        user_data.loading_legacy_opensankeyplus === true &&
-        reqCount < 10) {
-        let reqCount_ = reqCount
-        // Get license informations
-        checkLicenseOpenOSP(user_data.license_legacy_opensankeyplus_id)
-          .then(data_edd => {
-            // Verify opensankeyplus license validity
-            const userData_ = user_data
-            if (data_edd.success) {
-              userData_.license_legacy_opensankeyplus_validity = t('UserPages.usr_lic_validdate') + data_edd.expires.substring(0, 10)
-              userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_valid') // active, inactive, expired, disabled
-            }
-            else {
-              if (data_edd.license === 'invalid') {
-                userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_invalid')
-              } else if (data_edd.license === 'expired') {
-                userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_expdate')
-                userData_.license_legacy_opensankeyplus_validity = data_edd.expires.substring(0, 10)
-              } else if (data_edd.license === 'disabled') {
-                userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_deactivated')
-              } else {
-                userData_.license_legacy_opensankeyplus_active = t('UserPages.usr_lic_err')
-              }
-            }
-            userData_.loading_legacy_opensankeyplus = false
-            setUserData(userData_)
-            // Increase number of requests
-            reqCount_ = reqCount_ + 1
-            setReqCount(reqCount_)
-          })
-          .catch(error => {
-            // Erreur fetch license
-            d3.select('.LogError').append('p').style('color', 'red').text(t('UserPages.err_get_OS+_infos'))
-            console.log('check_license OpenSankey+ : ERROR', error)
-            // Increase number of requests
-            reqCount_ = reqCount_ + 1
-            setReqCount(reqCount_)
-          })
-      }
     }
   }, [reqCount, user_data, t])
 
@@ -868,7 +800,7 @@ const Account: FC<AccountTypes> = ({
                   </FormControl>
 
                   {/* Infos licenses --------------------------------------------------------------------  */}
-                  { !noLicenceAccountRequired ? <FormControl
+                  <FormControl
                     variant='form_account_page'
                   >
                     <FormLabel
@@ -952,7 +884,7 @@ const Account: FC<AccountTypes> = ({
                         }
                       </Box>
                     </Box>
-                  </FormControl>:<></>}
+                  </FormControl>
                 </Box>
 
                 {/* Seconde colonne */}
@@ -1052,54 +984,6 @@ const Account: FC<AccountTypes> = ({
                     <FormErrorMessage textStyle='account_log_error'>{msgs_login_modification.err}</FormErrorMessage>
                     <FormHelperText textStyle='account_log_info'>{msgs_login_modification.info}</FormHelperText>
                   </FormControl>
-
-                  {/* Infos licenses legacy --------------------------------------------------------------------  */}
-
-                  {
-                    user_data.license_legacy_opensankeyplus_validity ?
-                      <FormControl
-                        variant='form_account_page'
-                      >
-                        <FormLabel
-                          layerStyle='account_card_title'
-                        >
-                          <Text textStyle='h2'>{t('UserPages.license.title') + ' (Legacy)'}</Text>
-                        </FormLabel>
-
-                        <Box layerStyle='account_row'>
-                          <Box>
-                            {has_blockers ? <>{blocker_suite_sankey['block_osp']}</> : <></>}
-                            {t('UserPages.OS+_lic')}
-                          </Box>
-                          <Input
-                            onChange={(e) => {
-                              setNewLicenseOpenOSP(e.target.value)
-                              setNewLicenseOpenOSPToCheck(true)
-                            }}
-                            placeholder={user_data.license_legacy_opensankeyplus_id} />
-                          <Button
-                            variant='menuconfigpanel_option_button'
-                            onClick={() => signupNewLicenseOpenOSP()}
-                            isDisabled={newLicenseOpenOSPToCheck === false}>
-                            {t('UserPages.update_lic')}
-                          </Button>
-                          {user_data.loading_legacy_opensankeyplus ? (
-                            <>
-                              <Spinner animation="border" />
-                              <Spinner animation="border" />
-                            </>
-                          ) : (
-                            <>
-                              <Text>{user_data.license_legacy_opensankeyplus_active}</Text>
-                              <Text>{user_data.license_legacy_opensankeyplus_validity}</Text>
-                            </>
-                          )}
-                        </Box>
-                        <div className='LogError' style={{ 'color': 'red' }}></div>
-                      </FormControl> :
-                      <></>
-                  }
-
                 </Box>
               </Box>
             )}

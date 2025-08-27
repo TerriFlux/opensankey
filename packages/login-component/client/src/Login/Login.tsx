@@ -21,24 +21,18 @@ import {
 import { loginOut, loginUser } from './LoginFunctions'
 import { LoginComponent } from '../LoginComponent'
 
-export type LoginTypes = {
-  t: TFunction
-  logo: string,
-  returnToApp: (navigate: NavigateFunction) => void,
-  loginComponent: () => LoginComponent,
-  setUpdate: React.MutableRefObject<() => void>,
-  noLicenceAccountRequired?: boolean
-}
-
-// Login
-export const Login: FC<LoginTypes> = ({
+export const Login = ({
   t,
   logo,
   returnToApp,
   loginComponent,
-  setUpdate,
-  noLicenceAccountRequired
-}) => {
+  setUpdate
+}:{
+  t: TFunction
+  logo: string,
+  returnToApp: (navigate: NavigateFunction) => void,
+  loginComponent: () => LoginComponent,
+  setUpdate: React.MutableRefObject<() => void>}) => {
   // States
   const [on_wait, setOnWait] = useState(false)
   const [email, setUserName] = useState('')
@@ -80,9 +74,6 @@ export const Login: FC<LoginTypes> = ({
   }
 
   let template = 'minmax(7vw, 150px) auto 11rem 11rem'
-  if (noLicenceAccountRequired) {
-    template = 'minmax(7vw, 150px) auto 11rem'
-  }
 
   // React output
   return (
@@ -109,13 +100,6 @@ export const Login: FC<LoginTypes> = ({
             />
           </Box>
           <Box></Box>
-          {!noLicenceAccountRequired ? <Button
-            variant='btn_lone_navigation'
-            onClick={() => returnToApp(navigate)}
-          >
-            {t('UserNav.to_app')}
-          </Button> : <></>
-          }
           <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/register')}
@@ -230,8 +214,14 @@ export const Login: FC<LoginTypes> = ({
   )
 }
 
-export const LoginOutButton: FC<LoginTypes> = (
-  { t, logo, returnToApp, loginComponent, setUpdate }
+export const LoginOutButton = (
+  { t, logo, returnToApp, loginComponent, setUpdate }:{
+  t: TFunction
+  logo: string,
+  returnToApp: (navigate: NavigateFunction) => void,
+  loginComponent: () => LoginComponent,
+  setUpdate: React.MutableRefObject<() => void>,
+}
 ) => {
   const navigate = useNavigate()
 

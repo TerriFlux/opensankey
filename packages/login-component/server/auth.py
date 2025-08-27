@@ -241,11 +241,6 @@ def login_post():
             user.secret_expiry = None
             db.session.commit()
 
-    # Switch automatically to new license system
-    # user.replace_legacy_opensankeyplus_license()
-    # user.replace_legacy_sankeysuite_license()
-    user.replace_developper_token()
-
     # Return
     return jsonify(response), 200
 
@@ -268,10 +263,15 @@ def is_connected():
     return 'ok', 200
 
 
-@auth_blueprint.route('/auth/license')
-@license_required
+@auth_blueprint.route('/auth/license', methods=['POST'])
 def has_license():
-    return 'ok', 200
+    if not current_user.is_authenticated:
+        return "Not connected", 401
+    response = {}
+    for user_license in current_user.user_licenses:
+        response[user_license] = current_user.has_valid_license(user_license)
+        
+    return jsonify(response), 200
 
 
 @auth_blueprint.route('/auth/forgot_pw', methods=['POST'])

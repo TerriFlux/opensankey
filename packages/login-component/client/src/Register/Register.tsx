@@ -46,17 +46,16 @@ export const lic_regex_str = '^([a-zA-Z0-9- ]{2,})$'
  * }
  * @return {*}
  */
-const Register: FC<{
+const Register = ({
+  t, logo, logo_sankey_plus, loginComponent, setUpdate, returnToApp,theme
+}:{
   t: TFunction,
   logo: string,
   logo_sankey_plus: string,
   loginComponent:()=>LoginComponent,
-  noLicenceAccountRequired:boolean,
   setUpdate:React.MutableRefObject<() => void>,
   returnToApp: (navigate: NavigateFunction) => void,
   theme:Record<string, any>
-}> = ({
-  t, logo, logo_sankey_plus, loginComponent,noLicenceAccountRequired, setUpdate, returnToApp,theme
 }) => {
   // Step to register
   const [on_wait, setOnWait] = useState(false)
@@ -165,13 +164,7 @@ const Register: FC<{
     <Box
       display="inline-grid"
     >
-      {noLicenceAccountRequired ? <Button
-        variant='btn_lone_navigation_tertiary'
-        maxWidth='inherit'
-        width='fit-content'
-        onClick={() => window.location.href = 'mailto:contact@terriflux.fr?subject=Demande de devis'}>
-        {t('Register.presentation.btn_next')}
-      </Button> : <Button
+      <Button
         variant='btn_lone_navigation_tertiary'
         maxWidth='inherit'
         width='fit-content'
@@ -179,7 +172,6 @@ const Register: FC<{
         onClick={handleSubmit}>
         {t('Register.presentation.btn_next')}
       </Button>
-      }
     </Box>
   ]
 
@@ -395,9 +387,6 @@ const Register: FC<{
   }
 
   let template = 'minmax(7vw, 150px) auto 11rem 11rem'
-  if (noLicenceAccountRequired) {
-    template = 'minmax(7vw, 150px) auto 11rem'
-  }
   
   return (
     <ChakraProvider
@@ -427,12 +416,11 @@ const Register: FC<{
             />
           </Box>
           <Box></Box>
-          {!noLicenceAccountRequired ?<Button
+          <Button
             variant='btn_lone_navigation'
             onClick={() => { returnToApp(navigate) }}>
             {t('UserNav.to_app')}
-          </Button> : <></>
-          }
+          </Button>
           <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/login')}>
