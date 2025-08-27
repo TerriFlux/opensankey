@@ -271,7 +271,7 @@ def has_license():
             try:
                 # Récupérer le nom de la licence selon votre structure de données
                 license_name = user_license.license.name if hasattr(user_license, 'license') else str(user_license)
-                response[license_name] = current_user.has_valid_license(user_license)
+                response[license_name] = current_user.has_valid_license(user_license.license.name)
             except AttributeError as e:
                 return jsonify({
                     "error": f"License structure error: {str(e)}",
