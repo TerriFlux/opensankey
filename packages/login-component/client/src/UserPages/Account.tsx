@@ -107,7 +107,7 @@ const Account = ({
   returnToApp,
   loginComponent,
   blocker_suite_sankey,
-  setUpdate
+  setLicenses
 }:{
   t:TFunction,
   logo:string,
@@ -115,7 +115,7 @@ const Account = ({
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
   blocker_suite_sankey: { [_: string]: JSX.Element },
-  setUpdate:React.MutableRefObject<() => void>
+  setLicenses:React.MutableRefObject<() => void>
 }) => {
 
   // Define navigation behaviour to return to App
@@ -712,7 +712,7 @@ const Account = ({
             logo={logo}
             returnToApp={returnToApp}
             loginComponent={loginComponent}
-            setUpdate={setUpdate}
+            setLicenses={setLicenses}
           />
         </Box>
       </Box>

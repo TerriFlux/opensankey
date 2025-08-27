@@ -24,7 +24,7 @@ export class LoginComponent {
   }
 
   public async checkTokens(
-    setUpdate: React.MutableRefObject<() => void>,
+    setLicenses: React.MutableRefObject<() => void>,
     force = false
   ) {
     if (this._ok_to_check_account || force) {
@@ -60,7 +60,7 @@ export class LoginComponent {
                   })
               })
               .then(() => {
-                setUpdate.current()
+                setLicenses.current()
               })
           // Cannot check for given time
           this._ok_to_check_account = false

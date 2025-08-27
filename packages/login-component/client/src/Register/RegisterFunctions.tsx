@@ -74,7 +74,7 @@ export async function userValidate(
   token: string,
   loginComponent:()=>LoginComponent,
   navigate: NavigateFunction,
-  setUpdate:React.MutableRefObject<() => void>
+  setLicenses:React.MutableRefObject<() => void>
 ) {
   resetLogs()
 
@@ -100,7 +100,7 @@ export async function userValidate(
       logInfo(i18next.t('Register.validation.msg.' + response['message']))
     })
     .then(() => {
-      return loginComponent().checkTokens(setUpdate,true)
+      return loginComponent().checkTokens(setLicenses,true)
     })
     .then(() => {
       let next_page

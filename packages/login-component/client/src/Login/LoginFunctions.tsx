@@ -60,7 +60,7 @@ export function activateLicensesTokens(
 export async function loginUser(
   t: TFunction,
   loginComponent:()=>LoginComponent,
-  setUpdate:React.MutableRefObject<() => void>,
+  setLicenses:React.MutableRefObject<() => void>,
   credentials: {
     email: string;
     password: string;
@@ -100,7 +100,7 @@ export async function loginUser(
       }
     })
     .then(() => {
-      return loginComponent().checkTokens(setUpdate,true)
+      return loginComponent().checkTokens(setLicenses,true)
     })
     .then(() => {
       callbackSuccess()
@@ -114,7 +114,7 @@ export async function loginUser(
 //Logout
 export function loginOut(
   loginComponent:()=>LoginComponent,
-  setUpdate:React.MutableRefObject<() => void>,
+  setLicenses:React.MutableRefObject<() => void>,
   callback = () => { }
 ) {
   // LogOut on server
@@ -123,7 +123,7 @@ export function loginOut(
   return fetch(url)
     .then(() => {
       // Check that we are effectivly disconnected
-      return loginComponent().checkTokens(setUpdate,true)
+      return loginComponent().checkTokens(setLicenses,true)
     })
     .then(callback)
 }

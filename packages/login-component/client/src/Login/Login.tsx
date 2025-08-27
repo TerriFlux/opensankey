@@ -26,13 +26,13 @@ export const Login = ({
   logo,
   returnToApp,
   loginComponent,
-  setUpdate
+  setLicenses
 }:{
   t: TFunction
   logo: string,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent: () => LoginComponent,
-  setUpdate: React.MutableRefObject<() => void>}) => {
+  setLicenses: React.MutableRefObject<() => void>}) => {
   // States
   const [on_wait, setOnWait] = useState(false)
   const [email, setUserName] = useState('')
@@ -56,7 +56,7 @@ export const Login = ({
       await loginUser(
         t,
         loginComponent,
-        setUpdate,
+        setLicenses,
         {
           email,
           password,
@@ -215,12 +215,12 @@ export const Login = ({
 }
 
 export const LoginOutButton = (
-  { t, logo, returnToApp, loginComponent, setUpdate }:{
+  { t, logo, returnToApp, loginComponent, setLicenses }:{
   t: TFunction
   logo: string,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent: () => LoginComponent,
-  setUpdate: React.MutableRefObject<() => void>,
+  setLicenses: React.MutableRefObject<() => void>,
 }
 ) => {
   const navigate = useNavigate()
@@ -235,7 +235,7 @@ export const LoginOutButton = (
       setOnWait(true)
       loginOut(
         loginComponent,
-        setUpdate,
+        setLicenses,
         () => {
           setOnWait(false)
           returnToApp(navigate)

@@ -1,5 +1,5 @@
 
-import React, { FC, useState } from 'react'
+import React, { useState } from 'react'
 import { useNavigate, NavigateFunction } from 'react-router-dom'
 import {
   Button,
@@ -10,14 +10,12 @@ import { loginComponent } from '../LoginComponent'
 import {Class_ApplicationDataLoginComponent} from '../ApplicationDataLoginComponent'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 
-type FCType_UserPagesButtons = {
+export const UserPagesButtons = (
+  { new_data_app, setLicenses,returnToApp }:{
   new_data_app: Class_ApplicationDataLoginComponent
-  setUpdate: React.MutableRefObject<() => void>,
+  setLicenses: React.MutableRefObject<() => void>,
     returnToApp: (navigate: NavigateFunction) => void,
 }
-
-export const UserPagesButtons: FC<FCType_UserPagesButtons> = (
-  { new_data_app, setUpdate,returnToApp }
 ) => {
   // Traduction
   const { t } = new_data_app
@@ -78,7 +76,7 @@ export const UserPagesButtons: FC<FCType_UserPagesButtons> = (
       logo={new_data_app.logo}
       returnToApp={returnToApp}
       loginComponent={loginComponent}
-      setUpdate={setUpdate}
+      setLicenses={setLicenses}
     />
   </ButtonGroup>
 

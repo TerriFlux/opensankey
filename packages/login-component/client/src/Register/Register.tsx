@@ -47,13 +47,13 @@ export const lic_regex_str = '^([a-zA-Z0-9- ]{2,})$'
  * @return {*}
  */
 const Register = ({
-  t, logo, logo_sankey_plus, loginComponent, setUpdate, returnToApp,theme
+  t, logo, logo_sankey_plus, loginComponent, setLicenses, returnToApp,theme
 }:{
   t: TFunction,
   logo: string,
   logo_sankey_plus: string,
   loginComponent:()=>LoginComponent,
-  setUpdate:React.MutableRefObject<() => void>,
+  setLicenses:React.MutableRefObject<() => void>,
   returnToApp: (navigate: NavigateFunction) => void,
   theme:Record<string, any>
 }) => {
@@ -131,7 +131,7 @@ const Register = ({
       token,
       loginComponent,
       navigate,
-      setUpdate
+      setLicenses
     )
   }
 

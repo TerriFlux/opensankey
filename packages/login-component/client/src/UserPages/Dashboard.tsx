@@ -34,21 +34,19 @@ export type SankeyLabelTypes = {
   image_src: string
 }
 
-export type DashboardTypes = {
+// Dashboard, Register or Buy License
+const Dashboard = ({
+  t,logo,
+  returnToApp,
+  loginComponent,
+  setLicenses
+}:{
   t: TFunction,
   logo:string,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:()=>LoginComponent,
-  setUpdate:React.MutableRefObject<() => void>,
+  setLicenses:React.MutableRefObject<() => void>,
   exemple_menu: object
-}
-
-// Dashboard, Register or Buy License
-const Dashboard: FC<DashboardTypes> = ({
-  t,logo,
-  returnToApp,
-  loginComponent,
-  setUpdate
 }) => {
 
   // Define navigation behaviour to return to App
@@ -117,7 +115,7 @@ const Dashboard: FC<DashboardTypes> = ({
               logo={logo}
               returnToApp={returnToApp}
               loginComponent={loginComponent}
-              setUpdate={setUpdate}
+              setLicenses={setLicenses}
             />
           </Box>
         </Box>
