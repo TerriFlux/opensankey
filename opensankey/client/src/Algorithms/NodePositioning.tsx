@@ -1572,9 +1572,9 @@ export class NodePositioning {
     const result = this.detectAllCyclesAndOptimize(nodes_to_process)
     const horizontal_indexes_per_nodes_ids = result.horizontal_indexes
 
-    this.drawingArea.sankey.visible_nodes_list.forEach(node => {
+    nodes_to_process.forEach(node => {
       const node_index = horizontal_indexes_per_nodes_ids[node.id]
-      node.display.position.u = node_index + 1
+      if (node_index) node.display.position.u = node_index + 1
     })
 
     this.computeParametricV()
