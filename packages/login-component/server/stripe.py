@@ -39,46 +39,46 @@ from .models import set_licence_invoice_paid
 # ---------------------------------------------------------------
 # Constants
 STRIPE_KEYS = {
-    'secret_key': None,
-    'publishable_key': None,
-    'price_id_osplusmensuel': None,
-    'endpoint_secret': None}
+    "secret_key": None,
+    "publishable_key": None,
+    "price_id_osplusmensuel": None,
+    "endpoint_secret": None,
+}
 CLIENT_ROOT_URL = None
-if 'STRIPE_SECRET_KEY' in os.environ:
+if "STRIPE_SECRET_KEY" in os.environ:
     STRIPE_KEYS = {
-        'secret_key': os.environ['STRIPE_SECRET_KEY'],
-        'publishable_key': os.environ['STRIPE_PUBLISHABLE_KEY'],
-        'price_id_osplusmensuel': os.environ['STRIPE_PRICE_ID_OSPLUSMENSUEL'],
-        'endpoint_secret': os.environ['STRIPE_ENDPOINT_SECRET']}
-    CLIENT_ROOT_URL = os.environ['CLIENT_ROOT_URL']
+        "secret_key": os.environ["STRIPE_SECRET_KEY"],
+        "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"],
+        "price_id_osplusmensuel": os.environ["STRIPE_PRICE_ID_OSPLUSMENSUEL"],
+        "endpoint_secret": os.environ["STRIPE_ENDPOINT_SECRET"],
+    }
+    CLIENT_ROOT_URL = os.environ["CLIENT_ROOT_URL"]
 
 
 # ---------------------------------------------------------------
 # Create stripe blue print
-stripe_blueprint = Blueprint('stripe_blueprint', __name__)
-stripe.api_key = STRIPE_KEYS['secret_key']
+stripe_blueprint = Blueprint("stripe_blueprint", __name__)
+stripe.api_key = STRIPE_KEYS["secret_key"]
 
 
 # ---------------------------------------------------------------
 # Define all routes
-@stripe_blueprint.route('/stripe/config')
+@stripe_blueprint.route("/stripe/config")
 @login_required
 def get_publishable_key():
-    '''
+    """
     Return the public key to configurate Stripe client
 
     Returns
     -------
     :return: Jsonified publicKey
     :rtype: json
-    '''
-    stripe_config = {'publicKey': STRIPE_KEYS['publishable_key']}
+    """
+    stripe_config = {"publicKey": STRIPE_KEYS["publishable_key"]}
     return jsonify(stripe_config)
 
 
-@stripe_blueprint.route(
-    '/stripe/create-checkout-session/osplus',
-    methods=['POST'])
+@stripe_blueprint.route("/stripe/create-checkout-session/osplus", methods=["POST"])
 def create_checkout_session():
     """
     Create and return a checkout object for stripe client.
@@ -88,25 +88,25 @@ def create_checkout_session():
     :return: _description_
     :rtype: _type_
     """
-    stripe.api_key = STRIPE_KEYS['secret_key']
+    stripe.api_key = STRIPE_KEYS["secret_key"]
     try:
         checkout_session = stripe.checkout.Session.create(
-            ui_mode='embedded',
+            ui_mode="embedded",
             client_reference_id=current_user.id,
             customer_email=current_user.email,
-            billing_address_collection='required',
+            billing_address_collection="required",
             return_url=(
-                CLIENT_ROOT_URL +
-                'license/return?session_id={CHECKOUT_SESSION_ID}'),
-            payment_method_types=['card'],
-            mode='subscription',
+                CLIENT_ROOT_URL + "license/return?session_id={CHECKOUT_SESSION_ID}"
+            ),
+            payment_method_types=["card"],
+            mode="subscription",
             allow_promotion_codes=True,
             line_items=[
                 {
-                    'price': STRIPE_KEYS['price_id_osplusmensuel'],
-                    'quantity': 1,
+                    "price": STRIPE_KEYS["price_id_osplusmensuel"],
+                    "quantity": 1,
                 }
-            ]
+            ],
         )
         # return jsonify({url: checkout_session.url}), 200
         return jsonify(clientSecret=checkout_session.client_secret)
@@ -114,22 +114,20 @@ def create_checkout_session():
         return jsonify(error=str(e)), 500
 
 
-@stripe_blueprint.route('/stripe/create-customer-portal', methods=['GET'])
+@stripe_blueprint.route("/stripe/create-customer-portal", methods=["GET"])
 @login_required
 def create_customer_portal():
     if current_user.stripe_id is not None:
         billing_session = stripe.billing_portal.Session.create(
             customer=current_user.stripe_id,
-            return_url=(
-                CLIENT_ROOT_URL +
-                'account'),
+            return_url=(CLIENT_ROOT_URL + "account"),
         )
         return jsonify(url=billing_session.url), 200
     else:
-        return 'not_a_client', 400
+        return "not_a_client", 400
 
 
-@stripe_blueprint.route('/stripe/session-status', methods=['GET'])
+@stripe_blueprint.route("/stripe/session-status", methods=["GET"])
 @login_required
 def session_status():
     """
@@ -140,14 +138,14 @@ def session_status():
     :return: _description_
     :rtype: _type_
     """
-    checkout_session = stripe.checkout.Session.retrieve(
-        request.args.get('session_id'))
+    checkout_session = stripe.checkout.Session.retrieve(request.args.get("session_id"))
     return jsonify(
         status=checkout_session.status,
-        customer_email=checkout_session.customer_details.email)
+        customer_email=checkout_session.customer_details.email,
+    )
 
 
-@stripe_blueprint.route('/stripe/webhook', methods=['POST'])
+@stripe_blueprint.route("/stripe/webhook", methods=["POST"])
 def stripe_webhook():
     """
     Handle all webhooks sent by stripe.
@@ -161,21 +159,22 @@ def stripe_webhook():
     """
     # Get data
     payload = request.get_data(as_text=True)
-    sig_header = request.headers.get('Stripe-Signature')
+    sig_header = request.headers.get("Stripe-Signature")
 
     # Stripe checks
     try:
         event = stripe.Webhook.construct_event(
-            payload, sig_header, STRIPE_KEYS['endpoint_secret'])
+            payload, sig_header, STRIPE_KEYS["endpoint_secret"]
+        )
     except ValueError:
         # Invalid payload
-        return 'Invalid payload', 400
+        return "Invalid payload", 400
     except stripe.error.SignatureVerificationError:
         # Invalid signature
-        return 'Invalid signature', 400
+        return "Invalid signature", 400
 
     # Defaut outputs
-    msg, ok = 'ok', True
+    msg, ok = "ok", True
 
     # Defaut function
     def pass_defaut(_session):
@@ -183,26 +182,27 @@ def stripe_webhook():
 
     # Event dispatcher
     event_dispatcher = {
-        'customer.created': handle_customer_creation,
-        'customer.updated': pass_defaut,
-        'customer.deleted': handle_customer_deletion,
-        'customer.subscription.created': handle_subscription_creation_session,
-        'customer.subscription.updated': handle_subscription_update_session,
-        'customer.subscription.deleted': handle_subscription_delete_session,
-        'product.created': handle_product_creation,
-        'product.updated': handle_product_update,
-        'product.deleted': handle_product_deletion,
-        'checkout.session.completed': handle_checkout_session,
-        'invoice.created': handle_invoice_created,
-        'invoice.paid': handle_invoice_paid}
+        "customer.created": handle_customer_creation,
+        "customer.updated": pass_defaut,
+        "customer.deleted": handle_customer_deletion,
+        "customer.subscription.created": handle_subscription_creation_session,
+        "customer.subscription.updated": handle_subscription_update_session,
+        "customer.subscription.deleted": handle_subscription_delete_session,
+        "product.created": handle_product_creation,
+        "product.updated": handle_product_update,
+        "product.deleted": handle_product_deletion,
+        "checkout.session.completed": handle_checkout_session,
+        "invoice.created": handle_invoice_created,
+        "invoice.paid": handle_invoice_paid,
+    }
 
     # Dispatch events
-    if (event['type'] in event_dispatcher):
+    if event["type"] in event_dispatcher:
         try:
-            f = event_dispatcher[event['type']]
-            msg, ok = f(event['data'])
+            f = event_dispatcher[event["type"]]
+            msg, ok = f(event["data"])
         except Exception as e:
-            return 'Error dispatching {0} : {1}'.format(event['type'], e), 400
+            return "Error dispatching {0} : {1}".format(event["type"], e), 400
 
     # Return
     return msg, 200 if ok else 400
@@ -223,13 +223,11 @@ def handle_customer_creation(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    object = session['object']
-    user_name = object['name'].split()
+    object = session["object"]
+    user_name = object["name"].split()
     return create_user_from_stripe(
-        object['email'],
-        user_name[0],
-        ' '.join(user_name[1:]),
-        object['id'])
+        object["email"], user_name[0], " ".join(user_name[1:]), object["id"]
+    )
 
 
 def handle_customer_deletion(session):
@@ -247,10 +245,8 @@ def handle_customer_deletion(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    object = session['object']
-    return delete_user_from_stripe(
-        object['email'],
-        object['id'])
+    object = session["object"]
+    return delete_user_from_stripe(object["email"], object["id"])
 
 
 def handle_subscription_creation_session(session):
@@ -268,21 +264,22 @@ def handle_subscription_creation_session(session):
     :rtype: (str, boolean)
     """
     # Check associated product
-    object = session['object']
-    items = object['items']
-    if (items['total_count'] != 1):
-        return 'Total items mismatch', False
-    item = items['data'][0]
-    if (item['quantity'] != 1):
-        return 'Item quantity mismatch', False
-    if (item['object'] != 'subscription_item'):
-        return 'Item type mismatch', False
+    object = session["object"]
+    items = object["items"]
+    if items["total_count"] != 1:
+        return "Total items mismatch", False
+    item = items["data"][0]
+    if item["quantity"] != 1:
+        return "Item quantity mismatch", False
+    if item["object"] != "subscription_item":
+        return "Item type mismatch", False
     # Add subscription
     return create_user_license_subscription(
-        item['plan']['product'],
-        object['id'],
-        datetime.fromtimestamp(object['created']).isoformat(),
-        datetime.fromtimestamp(object['current_period_end']).isoformat())
+        item["plan"]["product"],
+        object["id"],
+        datetime.fromtimestamp(object["created"]).isoformat(),
+        datetime.fromtimestamp(object["current_period_end"]).isoformat(),
+    )
 
 
 def handle_subscription_update_session(session):
@@ -299,12 +296,13 @@ def handle_subscription_update_session(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    object = session['object']
-    if (object['object'] == 'subscription'):
+    object = session["object"]
+    if object["object"] == "subscription":
         return update_user_license_subscription(
-            object['id'],
-            datetime.fromtimestamp(object['current_period_end']).isoformat())
-    return 'Nothing done', False
+            object["id"],
+            datetime.fromtimestamp(object["current_period_end"]).isoformat(),
+        )
+    return "Nothing done", False
 
 
 def handle_subscription_delete_session(session):
@@ -321,10 +319,10 @@ def handle_subscription_delete_session(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    object = session['object']
-    if (object['object'] == 'subscription'):
-        return delete_user_license_subscription(object['id'])
-    return 'Nothing done', False
+    object = session["object"]
+    if object["object"] == "subscription":
+        return delete_user_license_subscription(object["id"])
+    return "Nothing done", False
 
 
 def handle_product_creation(session):
@@ -341,10 +339,8 @@ def handle_product_creation(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    object = session['object']
-    return create_license_from_stripe(
-        object['name'],
-        object['id'])
+    object = session["object"]
+    return create_license_from_stripe(object["name"], object["id"])
 
 
 def handle_product_update(session):
@@ -361,18 +357,15 @@ def handle_product_update(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    if ('name' in session['previous_attributes']):
-        object = session['object']
-        return update_license_name_from_stripe(
-            object['name'],
-            object['id'])
-    if ('active' in session['previous_attributes']):
-        object = session['object']
-        if (object['active'] is False):
+    if "name" in session["previous_attributes"]:
+        object = session["object"]
+        return update_license_name_from_stripe(object["name"], object["id"])
+    if "active" in session["previous_attributes"]:
+        object = session["object"]
+        if object["active"] is False:
             # TODO : deactivate instead ?
-            return delete_license_from_stripe(
-                object['id'])
-    return 'Nothing done', True
+            return delete_license_from_stripe(object["id"])
+    return "Nothing done", True
 
 
 def handle_product_deletion(session):
@@ -389,9 +382,8 @@ def handle_product_deletion(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    object = session['object']
-    return delete_license_from_stripe(
-        object['id'])
+    object = session["object"]
+    return delete_license_from_stripe(object["id"])
 
 
 def handle_checkout_session(session):
@@ -408,14 +400,15 @@ def handle_checkout_session(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    object = session['object']
-    if (object['payment_status'] == 'paid'):
+    object = session["object"]
+    if object["payment_status"] == "paid":
         return set_licence_checkout_completed(
-            object['client_reference_id'],
-            object['customer_email'],
-            object['customer'],
-            object['subscription'])
-    return 'Not paid', False
+            object["client_reference_id"],
+            object["customer_email"],
+            object["customer"],
+            object["subscription"],
+        )
+    return "Not paid", False
 
 
 def handle_invoice_created(session):
@@ -433,27 +426,25 @@ def handle_invoice_created(session):
     :return: msg, ok
     :rtype: (str, boolean)
     """
-    object = session['object']
+    object = session["object"]
     # Check number of lines in invoice
-    lines = object['lines']
-    if (lines['total_count'] != 1):
-        return 'Total lines mismatch', False
+    lines = object["lines"]
+    if lines["total_count"] != 1:
+        return "Total lines mismatch", False
     # Check number of items for given line
-    item = lines['data'][0]
-    if (item['quantity'] != 1):
-        return 'Item quantity mismatch', False
+    item = lines["data"][0]
+    if item["quantity"] != 1:
+        return "Item quantity mismatch", False
     # Get product id
-    prod_id = item['price']['product']
+    prod_id = item["price"]["product"]
     # Check if it's about a subscription
-    sub_id = item['subscription']
+    sub_id = item["subscription"]
     if sub_id is None:
-        sub_id = object['id']
+        sub_id = object["id"]
     # Create / update user_license object
     return set_license_invoice_created(
-        object['customer_email'],
-        object['customer'],
-        prod_id,
-        sub_id)
+        object["customer_email"], object["customer"], prod_id, sub_id
+    )
 
 
 def handle_invoice_paid(session):
@@ -472,38 +463,28 @@ def handle_invoice_paid(session):
     :rtype: (str, boolean)
     """
     # Check if it has been paid
-    object = session['object']
-    if (object['paid'] is True):
+    object = session["object"]
+    if object["paid"] is True:
         # Check number of lines in invoice
-        lines = object['lines']
-        if (lines['total_count'] != 1):
-            return 'Total lines mismatch', False
+        lines = object["lines"]
+        if lines["total_count"] != 1:
+            return "Total lines mismatch", False
         # Check number of items for given line
-        item = lines['data'][0]
-        if (item['quantity'] != 1):
-            return 'Item quantity mismatch', False
+        item = lines["data"][0]
+        if item["quantity"] != 1:
+            return "Item quantity mismatch", False
         # Get product id
-        prod_id = item['price']['product']
+        prod_id = item["price"]["product"]
         # Check if it's about a subscription
-        sub_id = item['subscription']
-        if (sub_id is not None):
-            return set_licence_invoice_paid(
-                object['customer'],
-                prod_id,
-                sub_id)
+        sub_id = item["subscription"]
+        if sub_id is not None:
+            return set_licence_invoice_paid(object["customer"], prod_id, sub_id)
         else:
-            return set_licence_invoice_paid(
-                object['customer'],
-                prod_id,
-                object['id'])
-    return 'Not paid', False
+            return set_licence_invoice_paid(object["customer"], prod_id, object["id"])
+    return "Not paid", False
 
 
-def cancel_subscription(
-    id,
-    comment,
-    feedback
-):
+def cancel_subscription(id, comment, feedback):
     """
     Cancel a subscription using its stripe id.
 
@@ -513,23 +494,20 @@ def cancel_subscription(
     :rtype: boolean
     """
     # Create cancel details
-    cancel_details = {
-        'comment': comment
-    }
+    cancel_details = {"comment": comment}
     possible_feedback = [
-        'customer_service',
-        'low_quality',
-        'missing_features',
-        'other',
-        'switched_service',
-        'too_complex',
-        'too_expensive',
-        'unused']
+        "customer_service",
+        "low_quality",
+        "missing_features",
+        "other",
+        "switched_service",
+        "too_complex",
+        "too_expensive",
+        "unused",
+    ]
     if feedback in possible_feedback:
-        cancel_details['feedback'] = feedback
+        cancel_details["feedback"] = feedback
     # Cancel subscription
-    stripe.api_key = STRIPE_KEYS['secret_key']
-    resp = stripe.Subscription.cancel(
-        id,
-        cancellation_details=cancel_details)
-    return (resp['status'] == 'canceled')
+    stripe.api_key = STRIPE_KEYS["secret_key"]
+    resp = stripe.Subscription.cancel(id, cancellation_details=cancel_details)
+    return resp["status"] == "canceled"
