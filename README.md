@@ -121,8 +121,33 @@ UPDATE user SET is_developer = 1 WHERE name = 'toto' AND firstname = 'titi';
 # ATTENTION UNE FOIS SUPPRIME PAS DE MARCHE ARRIERE
 DELETE FROM user WHERE id = 14;  # via id - checker avec SELECT * FROM USER
 DELETE FROM user WHERE name = 'toto' AND firstname = 'titi'; #
-```
 
+BEGIN TRANSACTION;
+
+DELETE FROM user_licenses;
+DELETE FROM license;
+DELETE from user;
+
+INSERT INTO license (id, name, stripe_id) VALUES (1, 'terriflux', '');
+INSERT INTO license (id, name, stripe_id) VALUES (2, 'OpenSankey+', 'prod_R7n52f0kCNLMRW');
+
+INSERT INTO user (email, password, firstname, name, creation) 
+VALUES (
+    'julien.alapetite@terriflux.fr', 
+    'sha256$dDXgBrfDgcUe1Izu$c28a9d2f829a957e5b4e0b7be1f22528c046f3a64f2982ecff658a16ab6a1451',
+    'Julien',
+    'Alapetite',
+    datetime('now')
+);
+
+INSERT INTO user_licenses (user_id, license_id, creation, expiry, activated)
+VALUES (last_insert_rowid(), 1, datetime('now'), 'never', 1);
+
+INSERT INTO user_licenses (user_id, license_id, creation, expiry, activated)
+VALUES (last_insert_rowid(), 2, datetime('now'), 'never', 1);
+
+COMMIT;
+```
 ### Utilisation d'alembic
 
 Alembic permet de faire automatiquement les migrations de bases de données. Tutoriel disponible [ici](https://alembic.sqlalchemy.org/en/latest/tutorial.html#create-a-migration-script)

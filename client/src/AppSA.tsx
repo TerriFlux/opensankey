@@ -130,6 +130,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   //Add user_data sequence in footer
   additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
+  loginComponent().checkTokens(setUpdate)
 
   // OpenSankey+ initialisation ----------------------------------------------------------
 
@@ -143,7 +144,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   // Check if user is connected ----------------------------------------------------------
 
-  loginComponent().checkTokens(setUpdate)
+
 
   // New modules -------------------------------------------------------------------------
 
@@ -220,7 +221,10 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
 ) => {
 
   const setUpdate = useRef(() => {
-    new_data_app.has_sankey_plus = loginComponent().has_account && loginComponent().has_licence
+    const log_component = loginComponent()
+    const has_account = log_component.has_account
+    new_data_app.has_sankey_plus = has_account && log_component.has_licence_sankeyplus
+    new_data_app.has_sankey_afm = has_account && log_component.has_licence_sankeysuite
     new_data_app.menu_configuration.updateAllMenuComponents()
   })
 
@@ -398,7 +402,6 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             setUpdate={setUpdate}
                             returnToApp={returnToApp}
                             theme={Theme_SankeyApplication}
-                            noLicenceAccountRequired={process.env.REACT_APP_AFM == 'true'}
                           />
                         }
                       />
@@ -521,19 +524,12 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             loginComponent={loginComponent}
                             setUpdate={setUpdate}
                             blocker_suite_sankey={blockers}
-                            noLicenceAccountRequired={process.env.REACT_APP_AFM == 'true'}
                           />
                         }
                       />
                     }
                   />
-                  {process.env.REACT_APP_AFM == 'true' ? <Route
-                    path='/'
-                    element={
-                      <LoginRoute
-                        component={sankeyApp}
-                      />} />
-                    : <Route path='/' element={sankeyApp} />}
+                  <Route path='/' element={sankeyApp} />
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
               </HashRouter>
