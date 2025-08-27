@@ -112,7 +112,7 @@ export const initializeApplicationDataSA = (
 type FType_InitializeAdditionalMenusSA = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
   new_data: Class_ApplicationDataLoginComponent,
-  setUpdate: React.MutableRefObject<() => void>
+  setLicenses: React.MutableRefObject<() => void>
 ) => void
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
@@ -123,14 +123,14 @@ type FType_InitializeAdditionalMenusSA = (
 export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   additionalMenus,
   new_data_app,
-  setUpdate
+  setLicenses
 ) => {
 
   // No initialisation if static --------------------------------------------------------
 
   //Add user_data sequence in footer
   additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
-  loginComponent().checkTokens(setUpdate)
+  loginComponent().checkTokens(setLicenses)
 
   // OpenSankey+ initialisation ----------------------------------------------------------
 
@@ -151,7 +151,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   additionalMenus.current.additional_nav_item.push(
     <UserPagesButtons
       new_data_app={new_data_app}
-      setUpdate={setUpdate}
+      setLicenses={setLicenses}
       returnToApp={returnToApp}
     />
   )
@@ -220,7 +220,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
   { new_data_app }
 ) => {
 
-  const setUpdate = useRef(() => {
+  const setLicenses = useRef(() => {
     const log_component = loginComponent()
     const has_account = log_component.has_account
     new_data_app.has_sankey_plus = has_account && log_component.has_licence_sankeyplus
@@ -243,7 +243,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
         initializeAdditionalMenusSA(
           additionalMenus,
           new_data as Class_ApplicationDataSA,
-          setUpdate
+          setLicenses
         )
       }}
       initializeDiagrammSelector={initializeDiagrammSelectorOSP}
@@ -378,7 +378,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
 
   useEffect(() => {
     setTimeout(() => {
-      loginComponent().checkTokens(setUpdate)
+      loginComponent().checkTokens(setLicenses)
         .then(() => setApp(
           <HelmetProvider>
             <MetaTags
@@ -399,7 +399,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             logo={new_data_app.logo}
                             logo_sankey_plus={new_data_app.logo_sankey_plus}
                             loginComponent={loginComponent}
-                            setUpdate={setUpdate}
+                            setLicenses={setLicenses}
                             returnToApp={returnToApp}
                             theme={Theme_SankeyApplication}
                           />
@@ -419,7 +419,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                               t={new_data_app.t}
                               logo={new_data_app.logo}
                               loginComponent={loginComponent}
-                              setUpdate={setUpdate}
+                              setLicenses={setLicenses}
                               returnToApp={returnToApp}
                             />
                           }
@@ -465,7 +465,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             logo={new_data_app.logo}
                             returnToApp={returnToApp}
                             loginComponent={loginComponent}
-                            setUpdate={setUpdate}
+                            setLicenses={setLicenses}
                             exemple_menu={exemple_menu}
                           />
                         }
@@ -522,7 +522,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
                             logo_sankey_plus={new_data_app.logo_sankey_plus}
                             returnToApp={returnToApp}
                             loginComponent={loginComponent}
-                            setUpdate={setUpdate}
+                            setLicenses={setLicenses}
                             blocker_suite_sankey={blockers}
                           />
                         }
