@@ -449,6 +449,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public toJSON(
+    keep_siblings: boolean = false,
     only_visible_elements: boolean = false,
     with_values: boolean = true
   ) {
@@ -480,6 +481,7 @@ export class Class_DrawingArea {
       ...json_object,
       ...this._legend.toJSON(),
       ...this._sankey.toJSON(
+        keep_siblings,
         only_visible_elements,
         with_values
       )

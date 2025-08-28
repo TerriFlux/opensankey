@@ -999,8 +999,9 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public toJSON(
+    keep_sibling: boolean = false,
     only_visible_elements: boolean = default_save_only_visible_elements,
-    with_values: boolean = default_save_with_values
+    with_values: boolean = default_save_with_values,
   ) {
     // Create json struct
     const json_object = {} as Type_JSON
@@ -1060,7 +1061,7 @@ export class Class_Sankey {
 
     nodes_list
       .forEach(node => {
-        if (node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
+        if (!keep_sibling && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
           if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON()
           return
         }

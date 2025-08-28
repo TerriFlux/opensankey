@@ -41,7 +41,7 @@ import { default_file_name, default_save_JSON_options, default_save_only_visible
 import { FType_RetrieveExcelResults, Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 import { JSONtoExcel, retrieveExcelResults } from '../Persistence/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
-import { Class_IconLibrary } from './IconLibrairie'
+import { Class_IconLibrary } from '../css/IconLibrairie'
 import { MenuColorPicker } from '../components/configmenus/MenuColorPicker'
 import { Class_DrawingArea } from './DrawingArea'
 
