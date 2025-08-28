@@ -1207,8 +1207,7 @@ export class NodePositioning {
           if (node_w > max_w_col) max_w_col = node_w
         })
       }
-
-      //prev_col_width += max_w_col
+      if (max_w_col>50) prev_col_width += max_w_col
     }
 
     // Calcul des dimensions finales
