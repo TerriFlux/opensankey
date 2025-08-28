@@ -163,6 +163,9 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       cont['content'] = container_content
 
     })
+    json_object.labels = Object.fromEntries(
+      Object.entries(containers).reverse()
+    )
   }
 
 
