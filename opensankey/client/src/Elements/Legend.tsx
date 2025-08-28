@@ -669,7 +669,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
                       nodes_tied_to_link_with_tag_hovered.push(l.source as Class_NodeElement)
                       nodes_tied_to_link_with_tag_hovered.push(l.target as Class_NodeElement)
                       return true
-                    } else if (l.source.hasGivenTag(tag as Class_Tag) && l.target.hasGivenTag(tag as Class_Tag)) {
+                    } else if (l.source.hasGivenTag(tag as Class_Tag) || l.target.hasGivenTag(tag as Class_Tag)) {
                       nodes_tied_to_link_with_tag_hovered.push(l.source as Class_NodeElement)
                       nodes_tied_to_link_with_tag_hovered.push(l.target as Class_NodeElement)
                       return true
