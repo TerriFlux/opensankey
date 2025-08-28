@@ -1972,11 +1972,15 @@ const convert_links: convert_linksFuncType = (
   data_to_convert.links = Object.assign({}, ...(Object.values(data.links)).map((l: SankeyLink) => ({ [l.idLink]: { ...l } })))
   Object.values(data.nodes).forEach(n => {
     const newInputLinksId: string[] = []
-    n.inputLinksId.forEach(id => newInputLinksId.push(mapper[id]))
+    n.inputLinksId.forEach(id => {
+      if (mapper[id]) newInputLinksId.push(mapper[id])
+    })
     n.inputLinksId = newInputLinksId
 
     const newOutputLinksId: string[] = []
-    n.outputLinksId.forEach(id => newOutputLinksId.push(mapper[id]))
+    n.outputLinksId.forEach(id => {
+      if (mapper[id]) newOutputLinksId.push(mapper[id])
+    })
     n.outputLinksId = newOutputLinksId
 
     // Add links_order to node by combining input/outputs id (for version>=0.9)

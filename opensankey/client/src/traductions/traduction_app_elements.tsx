@@ -854,7 +854,7 @@ export const resources_app_elements = {
         data: 'Données',
         filter: 'Filtres',
         fdf: 'Filtrage des flux',
-        fdn: 'Filtrage des noeuds',
+        fdn: 'Filtrage des éléments',
         ndd: 'Hiérarchies par Dimension',
         ndd_lst: 'Groupes d\'étiquettes',
         ndd_chk: 'Appliquer les couleurs associées',

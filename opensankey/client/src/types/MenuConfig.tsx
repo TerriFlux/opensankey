@@ -330,7 +330,7 @@ export class Class_MenuConfig {
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
 
   // TODO description
-  private _ref_to_fluxtag_filter_updater: MutableRefObject<() => void>
+  // private _ref_to_fluxtag_filter_updater: MutableRefObject<() => void>
 
   // Update FlowTagGroupFilter
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
@@ -480,7 +480,7 @@ export class Class_MenuConfig {
     // Init filtering components updater ------------------------------------------------
     this._ref_to_leveltag_filter_updater = useRef(() => null)
     this._ref_to_nodetag_filter_updater = useRef(() => null)
-    this._ref_to_fluxtag_filter_updater = useRef(() => null)
+    // this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
 
     // Init save diagram JSON components updater ------------------------------------------------
@@ -1006,7 +1006,7 @@ export class Class_MenuConfig {
   }
 
   public updateAllComponentsRelatedToFluxTags() {
-    this._ref_to_fluxtag_filter_updater.current()
+    this._ref_to_nodetag_filter_updater.current()
     this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['flux_taggs'].current()
   }
@@ -1311,9 +1311,9 @@ export class Class_MenuConfig {
     return this._ref_to_nodetag_filter_updater
   }
 
-  public get ref_to_fluxtag_filter_updater(): MutableRefObject<() => void> {
-    return this._ref_to_fluxtag_filter_updater
-  }
+  // public get ref_to_fluxtag_filter_updater(): MutableRefObject<() => void> {
+  //   return this._ref_to_fluxtag_filter_updater
+  // }
 
   public get ref_to_datatag_filter_updater(): MutableRefObject<() => void> {
     return this._ref_to_datatag_filter_updater
