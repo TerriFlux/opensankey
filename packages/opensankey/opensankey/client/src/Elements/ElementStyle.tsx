@@ -381,7 +381,7 @@ export type NodeStyleKey = keyof typeof nodeStyleConfigs
 export const product_sector_styles: readonly NodeStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
 export const node_exchanges_style: readonly NodeStyleKey[] = [
     'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
-    'NodeImportExportAboveBelowStyle', 'NodeImporttExportCloseStyle'
+    'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
   ] as const
 export const node_unitary_styles: readonly NodeStyleKey[] = [
   'SankeyUnitaryNodeOutputStyle','SankeyUnitaryNodeInputStyle','SankeyUnitaryNodeStyle'] as const
