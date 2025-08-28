@@ -87,7 +87,7 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
   const content_label =
     <MenuSectionCheckbox
       app_data={app_data}
-      elements={selected_nodes}
+      elements={elements}
       attributePath='Noeud.labels'
       attributeKey={'name_label_is_visible'}
       refreshParentComponent={refreshThisAndUpdateRelatedComponents}
@@ -166,7 +166,7 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
 
   const content_label_value = <MenuSectionCheckbox
     app_data={app_data}
-    elements={selected_nodes}
+    elements={elements}
     attributePath='Noeud.labels'
     attributeKey={'value_label_is_visible'}
     refreshParentComponent={refreshThisAndUpdateRelatedComponents}
