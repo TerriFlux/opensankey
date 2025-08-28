@@ -26,7 +26,7 @@
 
 
 import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup, faRepeat } from '@fortawesome/free-solid-svg-icons'
-import { Class_IconLibrary } from '../deps/OpenSankey/types/IconLibrairie'
+import { Class_IconLibrary } from '../deps/OpenSankey/css/IconLibrairie'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
 import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaFilter, FaPalette, FaPause, FaPlay, FaRandom } from 'react-icons/fa'

@@ -47,12 +47,10 @@ import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
-interface BaseComponentPropsPlus {
-  new_data_plus: Class_ApplicationDataOSP
-}
-
-export const ImportImageAsSvgBg: FC<BaseComponentPropsPlus> = ({
+export const ImportImageAsSvgBg = ({
   new_data_plus,
+}:{
+  new_data_plus: Class_ApplicationDataOSP
 }) => {
   const _load_image = useRef<HTMLInputElement>(null)
   const [, setCount] = useState(0)

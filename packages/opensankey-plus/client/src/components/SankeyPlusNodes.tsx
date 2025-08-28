@@ -550,7 +550,6 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
   }
 
   const node_hyperlink = hasHyperLink()
-  // const data_plus = data as OSPData
   const content_image_tab = selected_nodes.length > 0 ?
     <Box
       layerStyle='menuconfigpanel_grid'

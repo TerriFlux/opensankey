@@ -630,9 +630,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Copy current sankey
     const name = 'Unitary view of ' + node_ref.name
     const id = new_drawing_area.id
-    const copy = base_drawing_area.toJSON()
+    const keep_siblings = true
+    const copy = base_drawing_area.toJSON(keep_siblings)
     copy.id = id
-    new_drawing_area.fromJSON(copy) // /!\ CopyFrom overwrites drawing area's name
+    new_drawing_area.fromJSON(copy)
     new_drawing_area.name = name
 
     node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, nodeStyleConfigs))
@@ -649,6 +650,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     })
 
     const visible_links = new_drawing_area.sankey.visible_links_list.map(l => l.id)
+
     //let link_value = 1
     new_drawing_area.sankey.links_list
       .forEach(link => {
@@ -662,9 +664,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style.push(new_drawing_area.sankey.link_styles_dict['LinkOutUnitaryStyle'])
+            link.style = [new_drawing_area.sankey.link_styles_dict['LinkOutUnitaryStyle']]
           } else {
-            link.style.push(new_drawing_area.sankey.link_styles_dict['LinkInUnitaryStyle'])
+            link.style = [new_drawing_area.sankey.link_styles_dict['LinkInUnitaryStyle']]
           }
           // Search for max link value in unitary sankey to re-scale sankey
           //const link_val = link.getMaxValue() ?? 1
@@ -688,9 +690,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           node.resetAttributes()
           // Affect style depending on IO
           if (node.input_links_list.length == 0) {
-            node.style.push(new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle'])
+            node.style=[new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
           } else if (node.output_links_list.length == 0) {
-            node.style.push(new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle'])
+            node.style=[new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
           }
           node.dimensions_as_child.forEach(dim => node.removeDimensionAsChild(dim))
           node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
