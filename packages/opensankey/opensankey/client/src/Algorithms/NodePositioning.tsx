@@ -628,7 +628,7 @@ export class NodePositioning {
 
     const tmp = this.drawingArea.sankey.nodes_list.filter(n =>
       !echangeTag || !n.hasGivenTag(echangeTag))
-    tmp.forEach(n=>this.setNodeLabelPositioning(n))
+    tmp.forEach(n => this.setNodeLabelPositioning(n))
   }
 
   /**
@@ -1084,7 +1084,7 @@ export class NodePositioning {
     echangeTag?: Class_Tag
   ) {
     const v_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
-    let prev_col_width = 0
+
     let shift = 0
     const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].position_dx
 
@@ -1095,18 +1095,17 @@ export class NodePositioning {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
-      const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
+      const h_position_for_index = horizontal_spacing + horizontal_index * horizontal_spacing
       node_id_per_hxv_indexes[horizontal_index].forEach((node_id) => {
         this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
       })
     }
-    let max_w_col = 0
+    let prev_col_width = 0
     // ÉTAPE 2: Calculer les positions Y avec la logique center_biggest_nodes
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
-
 
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true
       const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
@@ -1118,6 +1117,7 @@ export class NodePositioning {
       if (center_biggest_nodes === true) {
         // LOGIQUE ALTERNÉE : Du bas vers le haut, puis du haut vers le bas
         let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
+        let col_max_w_col = 0
         for (let index = last_index; index >= 0; index -= 2) {
           const node_id = node_id_per_hxv_indexes[horizontal_index][index]
 
@@ -1128,7 +1128,7 @@ export class NodePositioning {
           upper_node_height_and_margin += node_height + v_margin
 
           const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > max_w_col) max_w_col = node_w
+          if (node_w > col_max_w_col) col_max_w_col = node_w
 
           last_index = index
         }
@@ -1147,13 +1147,13 @@ export class NodePositioning {
 
           const node_height = height_per_nodes_ids[node_id]
           upper_node_height_and_margin += node_height + v_margin
-
-          const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > max_w_col) max_w_col = node_w
         }
+        if (col_max_w_col > 50) prev_col_width += col_max_w_col
       } else {
         // LOGIQUE SIMPLE : Positionnement séquentiel avec alignements spéciaux
+        let col_max_w_col = 0
         node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
+          this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
           this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
           // Logique d'alignement pour les liens spéciaux
@@ -1204,10 +1204,11 @@ export class NodePositioning {
           upper_node_height_and_margin += node_height + v_margin
 
           const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > max_w_col) max_w_col = node_w
+          if (node_w > col_max_w_col) col_max_w_col = node_w
         })
+        if (col_max_w_col > 50) prev_col_width = col_max_w_col
       }
-      if (max_w_col>50) prev_col_width += max_w_col
+
     }
 
     // Calcul des dimensions finales
