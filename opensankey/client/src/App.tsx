@@ -171,7 +171,7 @@ export const OpenSankeyApp = ({
         />
         <>
           <Menu
-            new_data={app_data}
+            app_data={app_data}
             external_modal={[
               <></>
             ]}

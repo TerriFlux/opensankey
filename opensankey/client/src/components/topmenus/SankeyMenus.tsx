@@ -105,38 +105,38 @@ export const menu_config_width = 20
  */
 export const Menu = (
   {
-    new_data,
+    app_data,
     external_modal,
     additionalMenus,
     apply_transformation_additional_elements,
     diagramSelector,
   }: {
-    new_data: Class_ApplicationData,
+    app_data: Class_ApplicationData,
     diagramSelector: FType_DiagramSelector,
     external_modal: JSX.Element[],
     apply_transformation_additional_elements: JSX.Element[],
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
   }
 ) => {
-  const { t, app_name, logo_terriflux, icon_library, menu_configuration } = new_data
+  const { t, app_name, logo_terriflux, icon_library, menu_configuration } = app_data
   const { icon_open_close_config } = icon_library
   const [show_nav, set_show_nav] = useState(false)
   const [, setCount] = useState(0)
 
   menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   menu_configuration.ref_menu_opened.current = [show_nav, (val) => set_show_nav(val)]
-  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + menu_config_width + '% + ' + new_data.drawing_area.fit_margin + 'px)' : new_data.drawing_area.fit_margin / 2
+  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + menu_config_width + '% + ' + app_data.drawing_area.fit_margin + 'px)' : app_data.drawing_area.fit_margin / 2
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
   }
 
   // 1.75rem is the size of the btn save in cache + edit diagram name
-  const posTopMenuConfig = 'calc(' + (new_data.drawing_area.getNavBarHeight() + (new_data.drawing_area.fit_margin)) + 'px + 1.75rem)'
+  const posTopMenuConfig = 'calc(' + (app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)) + 'px + 1.75rem)'
 
   // JSX.Elements for the component ----------------------------------------------------------------
 
-  const modal_resolution_png = modalResolutionPNG(new_data)
+  const modal_resolution_png = modalResolutionPNG(app_data)
 
   const content_support = <>
     <Text
@@ -155,23 +155,23 @@ export const Menu = (
 
 
   const modal_support = <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+    dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_support'}
     content={content_support}
     title={t('Menu.c_support')}
   />
 
 
-  const sankey_file_name = <Box style={{ top: new_data.drawing_area.getNavBarHeight() + new_data.drawing_area.fit_margin / 2, right: new_data.drawing_area.fit_margin / 2 }} className='toolbar_save_and_file_name' layerStyle='toolbar_save_and_file_name' >
-    <OpenSankeySaveButton new_data={new_data} />
-    <OSTooltip placement='left' label={t('Menu.tooltips.sankey_file_name') + new_data.file_name}>
+  const sankey_file_name = <Box style={{ top: app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin / 2, right: app_data.drawing_area.fit_margin / 2 }} className='toolbar_save_and_file_name' layerStyle='toolbar_save_and_file_name' >
+    <OpenSankeySaveButton new_data={app_data} />
+    <OSTooltip placement='left' label={t('Menu.tooltips.sankey_file_name') + app_data.file_name}>
       <Box layerStyle='topbar_file_name' >
         <Editable textAlign={'center'} justifyContent={'center'}
           variant='name_file_editable'
-          defaultValue={new_data.file_name}
+          defaultValue={app_data.file_name}
           onSubmit={(evt) => {
             if (evt) {
-              new_data.file_name = evt
+              app_data.file_name = evt
               setCount(a => a + 1)
             }
           }}>
@@ -186,12 +186,12 @@ export const Menu = (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
-      {((!new_data.is_static) || (window.sankey && window.sankey.topbar != false)) ? <MenuTopNavBar new_data={new_data} additionalMenus={additionalMenus} /> : <></>}
+      {((!app_data.is_static) || (window.sankey && window.sankey.topbar != false)) ? <MenuTopNavBar new_data={app_data} additionalMenus={additionalMenus} /> : <></>}
 
       {/* Bottom Navbar with some more info */}
       {
         (
-          (!new_data.is_static) ||
+          (!app_data.is_static) ||
           (window.sankey && window.sankey.footer)
         ) ?
           <Box
@@ -241,7 +241,7 @@ export const Menu = (
       }
 
       {
-        (!new_data.is_static) ? <>
+        (!app_data.is_static) ? <>
           {sankey_file_name}
           <Drawer
             blockScrollOnMount={false}
@@ -267,23 +267,23 @@ export const Menu = (
               className='drawer_menu_config'
               style={{
                 width: menu_config_width + '%',
-                right: new_data.drawing_area.fit_margin / 2,
+                right: app_data.drawing_area.fit_margin / 2,
                 marginTop: posTopMenuConfig
               }}
             >
               <DrawerBody>
-                <ConfigMenu new_data={new_data} additional_menus={additionalMenus} />
+                <ConfigMenu app_data={app_data} additional_menus={additionalMenus} />
               </DrawerBody>
             </DrawerContent>
           </Drawer></> :
           <></>}
 
 
-      {!(new_data.is_static ? new_data.is_static : false) ? (
+      {!(app_data.is_static ? app_data.is_static : false) ? (
         <OSTooltip
           placement='left'
           label={t('Banner.open_configuration_menu')}
-          isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
+          isAlwaysOpen={app_data.menu_configuration.show_splashscreen}
         >
           <Button
             id='toggle-check'
@@ -301,37 +301,37 @@ export const Menu = (
       ) : (<></>)}
 
 
-      {((!new_data.is_static) || (window.sankey && window.sankey.toolbar)) ? <ToolBarBottom
-        new_data={new_data}
+      {((!app_data.is_static) || (window.sankey && window.sankey.toolbar)) ? <ToolBarBottom
+        new_data={app_data}
       /> : <></>}
 
       {
-        new_data.processFunction.ref_processing.current ? (
+        app_data.processFunction.ref_processing.current ? (
           <Toast >
             <Button className='btn btn-sm btn-warning col-md-12'>
               <span className='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span> Processing...
             </Button></Toast>) : (<></>)
       }
       <ApplyLayoutDialog
-        new_data={new_data}
+        new_data={app_data}
         apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={diagramSelector}
       />
 
       <ExcelModal
-        new_data={new_data}
-        launch={new_data.processFunction.launch}
+        new_data={app_data}
+        launch={app_data.processFunction.launch}
         uploadExcelImpl={uploadExcelImpl}
       />
-      <ExcelModalSaver app_data={new_data} />
+      <ExcelModalSaver app_data={app_data} />
 
       <SankeyLoad
-        new_data={new_data}
+        new_data={app_data}
         successAction={() => DownloadExamples(
-          new_data.processFunction.path.current,
+          app_data.processFunction.path.current,
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )}
-        processFunctions={new_data.processFunction}
+        processFunctions={app_data.processFunction}
       />
 
       {modal_support}
@@ -340,26 +340,26 @@ export const Menu = (
   )
 }
 
-const ConfigMenu = ({ new_data, additional_menus }: {
-  new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus>
+const ConfigMenu = ({ app_data, additional_menus }: {
+  app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus>
 }) => {
-  const { type_menu_configuration_selected, style_config } = new_data.menu_configuration
+  const { type_menu_configuration_selected, style_config } = app_data.menu_configuration
   const [, setUpdate] = useState(false)
 
-  new_data.menu_configuration.ref_to_menu_config_updater.current = () => setUpdate(a => !a)
+  app_data.menu_configuration.ref_to_menu_config_updater.current = () => setUpdate(a => !a)
 
   const sizeBtn = document.getElementsByClassName('buttonGroupTypeConfig')[0]?.getBoundingClientRect().height ?? 30
-  const maxHConfig = window.innerHeight - (new_data.drawing_area.getNavBarHeight() + new_data.drawing_area.getBottomBarHeight() + sizeBtn + (new_data.drawing_area.fit_margin * 2))
+  const maxHConfig = window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + sizeBtn + (app_data.drawing_area.fit_margin * 2))
 
   return <Box layerStyle='config_menu_layout' style={{ background: (style_config[type_menu_configuration_selected].theme) }}>
     <Box layerStyle='type_config_box' >
-      <ConfigMenuTypeConfig new_data={new_data} additional_menus={additional_menus} />
+      <ConfigMenuTypeConfig app_data={app_data} additional_menus={additional_menus} />
     </Box>
     <Box layerStyle='config_box' style={{ maxHeight: 'calc(' + maxHConfig + 'px - 0.8rem)' }}>
-      <ConfigContent new_data={new_data} additional_menus={additional_menus} />
+      <ConfigContent app_data={app_data} additional_menus={additional_menus} />
     </Box>
     <Box layerStyle='element_box'>
-      <ConfigMenuElementToConfig new_data={new_data} additional_menus={additional_menus} />
+      <ConfigMenuElementToConfig app_data={app_data} additional_menus={additional_menus} />
     </Box>
   </Box>
 }
@@ -368,15 +368,15 @@ const ConfigMenu = ({ new_data, additional_menus }: {
  * Buttons to choose what kind of configuration we want the menu to be.
  * For each kind of menu there is a set of configurable elements (node, flow, drawing area, ...)
  *
- * @param {*} { new_data, additional_menus }
+ * @param {*} { app_data, additional_menus }
  * @return {*}
  */
-const ConfigMenuTypeConfig = ({ new_data, additional_menus }: {
-  new_data: Class_ApplicationData,
+const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
+  app_data: Class_ApplicationData,
   additional_menus: MutableRefObject<Type_AdditionalMenus>
 }) => {
-  const { t } = new_data
-  const { type_menu_configuration_selected, ref_to_menu_config_updater } = new_data.menu_configuration
+  const { t } = app_data
+  const { type_menu_configuration_selected, ref_to_menu_config_updater } = app_data.menu_configuration
   return <ButtonGroup className='buttonGroupTypeConfig' spacing='0.2rem' style={{
     border: '2px solid lightblue',
     borderRadius: '4px',
@@ -385,7 +385,7 @@ const ConfigMenuTypeConfig = ({ new_data, additional_menus }: {
   }} >
     <Button variant={type_menu_configuration_selected == 'data' ? 'button_type_config_activated' : 'button_type_config'}
       onClick={() => {
-        new_data.menu_configuration.type_menu_configuration_selected = 'data'
+        app_data.menu_configuration.type_menu_configuration_selected = 'data'
         ref_to_menu_config_updater.current()
       }}
     >
@@ -394,7 +394,7 @@ const ConfigMenuTypeConfig = ({ new_data, additional_menus }: {
 
     <Button variant={type_menu_configuration_selected == 'style' ? 'button_type_config_activated' : 'button_type_config'}
       onClick={() => {
-        new_data.menu_configuration.type_menu_configuration_selected = 'style'
+        app_data.menu_configuration.type_menu_configuration_selected = 'style'
         ref_to_menu_config_updater.current()
       }}
     >
@@ -402,7 +402,7 @@ const ConfigMenuTypeConfig = ({ new_data, additional_menus }: {
     </Button>
     <Button variant={type_menu_configuration_selected == 'context' ? 'button_type_config_activated' : 'button_type_config'}
       onClick={() => {
-        new_data.menu_configuration.type_menu_configuration_selected = 'context'
+        app_data.menu_configuration.type_menu_configuration_selected = 'context'
         ref_to_menu_config_updater.current()
       }}
     >
@@ -412,7 +412,7 @@ const ConfigMenuTypeConfig = ({ new_data, additional_menus }: {
       const keyType = el[0] as keyTypeConfig
       return <Button key={'additional_type_config_' + id} variant={type_menu_configuration_selected == keyType ? 'button_type_config_activated' : 'button_type_config'}
         onClick={() => {
-          new_data.menu_configuration.type_menu_configuration_selected = keyType
+          app_data.menu_configuration.type_menu_configuration_selected = keyType
           ref_to_menu_config_updater.current()
         }}
       >
@@ -426,33 +426,34 @@ const ConfigMenuTypeConfig = ({ new_data, additional_menus }: {
 /**
  * Return the content of displayed sub menus from a type of configuration
  *
- * @param {*} { new_data, additional_menus }
+ * @param {*} { app_data, additional_menus }
  * @return {*}
  */
-const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
-  const { t } = new_data
-  const { type_menu_configuration_selected, elements_configurable_selected } = new_data.menu_configuration
+const ConfigContent = ({ app_data, additional_menus }:
+  { app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }) => {
+  const { t } = app_data
+  const { type_menu_configuration_selected, elements_configurable_selected } = app_data.menu_configuration
   const elements_in_menu_configuration = elements_configurable_selected[type_menu_configuration_selected]
 
   const dict_config_windows: { [x: string]: { [x: string]: JSX.Element } } = {
     // Menus related to data config
     data: {
       'data': <WrapperContentConfig title={t('Menu.Config.title_table')}>
-        <SpreadSheet new_data={new_data} />
+        <SpreadSheet app_data={app_data} />
       </WrapperContentConfig>,
 
       'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
-          <LayoutConfigDAScaleAndLimit new_data={new_data} />
-          <GraphElementsOrdoner new_data={new_data} />
+          <LayoutConfigDAScaleAndLimit new_data={app_data} />
+          <GraphElementsOrdoner new_data={app_data} />
         </>
       </WrapperContentConfig>,
       'node': <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <SankeyMenuConfigurationNodesIO new_data={new_data} />
+        <SankeyMenuConfigurationNodesIO new_data={app_data} />
       </WrapperContentConfig>,
 
       'flow': <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinksData app_data={new_data} />
+        <MenuConfigurationLinksData app_data={app_data} />
       </WrapperContentConfig>,
 
       ...additional_menus.current.additional_menu_config_content.data
@@ -462,15 +463,15 @@ const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: Mut
     // Menus related to context config
     context: {
       DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
-        <LegendContextConfig new_data={new_data} />
+        <LegendContextConfig new_data={app_data} />
       </WrapperContentConfig>,
 
       flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinkLabel new_data={new_data} additionMenus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationLinkLabel new_data={app_data} additionMenus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
       node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeContext app_data={new_data} menu_for_style={false} />
+        <MenuConfigurationNodeContext app_data={app_data} menu_for_style={false} />
       </WrapperContentConfig>,
 
       ...additional_menus.current.additional_menu_config_content.context
@@ -481,17 +482,17 @@ const ConfigContent: FC<{ new_data: Class_ApplicationData, additional_menus: Mut
     style: {
       DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
-          <DrawingAreaStyle new_data={new_data} extra_background_element={additional_menus.current.extra_background_element} />
-          <LegendStyleConfig new_data={new_data} />
+          <DrawingAreaStyle new_data={app_data} extra_background_element={additional_menus.current.extra_background_element} />
+          <LegendStyleConfig new_data={app_data} />
         </>
       </WrapperContentConfig>,
 
       flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
-        <MenuConfigurationLinkShape new_data={new_data} additionMenus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationLinkShape new_data={app_data} additionMenus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
       node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeStyle app_data={new_data} additional_menus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationNodeStyle app_data={app_data} additional_menus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
       ...additional_menus.current.additional_menu_config_content.style
     },
@@ -517,19 +518,20 @@ export type typeButtonElementConfigurable = { [x: string]: { text: string, icon:
 /**
  * Component for selecting which configurable elements sub menu we want to display in <ConfigContent />
  *
- * @param {*} { new_data }
+ * @param {*} { app_data }
  * @return {*}
  */
-const ConfigMenuElementToConfig: FC<{ new_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }> = ({ new_data, additional_menus }) => {
-  const { t } = new_data
-  const { type_menu_configuration_selected, style_config, ref_to_menu_config_updater } = new_data.menu_configuration
+const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
+  { app_data: Class_ApplicationData, additional_menus: MutableRefObject<Type_AdditionalMenus> }) => {
+  const { t } = app_data
+  const { type_menu_configuration_selected, style_config, ref_to_menu_config_updater } = app_data.menu_configuration
   const elements_buttons = style_config[type_menu_configuration_selected].elements_configurable
 
   const dict_buttons_element_to_config: typeButtonElementConfigurable = {
-    'flow': { icon: new_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
-    'DA': { icon: new_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
-    'node': { icon: new_data.icon_library.icon_node, text: t('Menu.Config.element_node'), disabled: false },
-    'data': { icon: new_data.icon_library.icon_tableau, text: t('Menu.Config.element_data'), disabled: false },
+    'flow': { icon: app_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
+    'DA': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
+    'node': { icon: app_data.icon_library.icon_node, text: t('Menu.Config.element_node'), disabled: false },
+    'data': { icon: app_data.icon_library.icon_tableau, text: t('Menu.Config.element_data'), disabled: false },
     ...additional_menus.current.additional_menu_button_element_configurable
   }
 
@@ -543,13 +545,13 @@ const ConfigMenuElementToConfig: FC<{ new_data: Class_ApplicationData, additiona
     {
       elements_buttons.filter(el => el in dict_buttons_element_to_config).map((el, i) => {
         const element_typed = el as keyTypeElements
-        const activated = new_data.menu_configuration.elements_configurable_selected[type_menu_configuration_selected].includes(element_typed)
+        const activated = app_data.menu_configuration.elements_configurable_selected[type_menu_configuration_selected].includes(element_typed)
         return <Button
           key={'btn_element_' + i}
           isDisabled={dict_buttons_element_to_config[el].disabled}
           variant={activated ? 'button_config_element_activated' : 'button_config_element'}
           onClick={() => {
-            new_data.menu_configuration.toggleElementInConfigEdition(type_menu_configuration_selected, element_typed)
+            app_data.menu_configuration.toggleElementInConfigEdition(type_menu_configuration_selected, element_typed)
             ref_to_menu_config_updater.current()
           }}
         >
