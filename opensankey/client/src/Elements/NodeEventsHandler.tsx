@@ -265,16 +265,37 @@ export class NodeEventsHandler {
     this._node.menu_config.ref_to_menu_context_nodes_updater.current()
     this._node.drawing_area.setToModeEdition(false)
   }
+  // Getter pour la position de la souris
+  public getMousePosition(): { x: number, y: number } {
+    return { x: this.tooltipMouseX, y: this.tooltipMouseY }
+  }
+  private tooltipMouseX: number = 0
+  private tooltipMouseY: number = 0
+
 
   /**
    * Define event when mouse moves over element
    */
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    // ALT
+    // ALT + pas de tooltip déjà ouvert pour ce noeud
     if (event.altKey && (event.target as HTMLElement).tagName !== 'tspan') {
-      // Show tooltip
-      this._node.drawTooltip()
-      this._node.d3_selection?.classed('tooltip_shown', true)
+      const existingTooltip = document.querySelector('.sankey-tooltip')
+      if (!existingTooltip || !this._node.d3_selection?.classed('tooltip_shown')) {
+        // Fermer les autres tooltips d'abord
+        d3.selectAll('.sankey-tooltip').remove()
+        d3.selectAll('.tooltip_shown').classed('tooltip_shown', false)
+
+        // Stocker la position de la souris pour l'ouverture
+        this.tooltipMouseX = event.pageX
+        this.tooltipMouseY = event.pageY
+
+        // Show tooltip à la position de la souris
+        this._node.drawTooltip()
+        this._node.d3_selection?.classed('tooltip_shown', true)
+
+        // Initialiser le click outside une seule fois
+        setTimeout(() => this.initTooltipClickOutside(), 100)
+      }
     }
   }
 
@@ -282,22 +303,97 @@ export class NodeEventsHandler {
    * Define event when mouse moves in the element
    */
   public handleMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    if (event.altKey) {
-      // Move tooltip to follow cursor
-      d3.selectAll('.sankey-tooltip')
-        .style('top', event.pageY + 'px')
-        .style('left', event.pageX + 'px')
-    }
+    // Ne plus faire bouger le tooltip du tout une fois créé
+    // Le tooltip reste fixe à sa position initiale
+    return;
   }
 
   /**
    * Define event when mouse leaves element
    */
   public handleMouseOut() {
-    // Clear tooltip
-    d3.selectAll('.sankey-tooltip').remove()
-    this._node.d3_selection?.classed('tooltip_shown', false)
+    // Ne plus fermer automatiquement le tooltip
+    // L'utilisateur devra utiliser ESC ou cliquer sur X
+    return;
   }
+
+  /**
+   * Vérifie si la souris survole le tooltip
+   */
+  private isMouseOverTooltip(event: React.MouseEvent): boolean {
+    const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement
+    if (!tooltip) return false
+
+    const rect = tooltip.getBoundingClientRect()
+    return (
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom
+    )
+  }
+
+  /**
+   * Optionnel : fermer le tooltip quand on clique ailleurs
+   */
+  public initTooltipClickOutside() {
+    // Éviter les event listeners multiples en utilisant body
+    if (!document.body.hasAttribute('data-tooltip-click-handler')) {
+      document.body.setAttribute('data-tooltip-click-handler', 'true')
+
+      const clickHandler = (event: Event) => {
+        const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement
+        if (tooltip && !tooltip.contains(event.target as Node)) {
+          // Vérifier que ce n'est pas un clic sur un autre noeud avec ALT
+          const target = event.target as HTMLElement
+          const isNodeClick = target.closest('[class*="node"]') && (event as MouseEvent).altKey
+
+          if (!isNodeClick) {
+            tooltip.remove()
+            d3.selectAll('.tooltip_shown').classed('tooltip_shown', false)
+
+            // Nettoyer l'handler
+            document.removeEventListener('click', clickHandler)
+            document.body.removeAttribute('data-tooltip-click-handler')
+          }
+        }
+      }
+
+      document.addEventListener('click', clickHandler)
+    }
+  }
+  /**
+   * Define event when mouse moves over element
+   */
+  // public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  //   // ALT
+  //   if (event.altKey && (event.target as HTMLElement).tagName !== 'tspan') {
+  //     // Show tooltip
+  //     this._node.drawTooltip()
+  //     this._node.d3_selection?.classed('tooltip_shown', true)
+  //   }
+  // }
+
+  // /**
+  //  * Define event when mouse moves in the element
+  //  */
+  // public handleMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  //   if (event.altKey) {
+  //     // Move tooltip to follow cursor
+  //     d3.selectAll('.sankey-tooltip')
+  //       .style('top', event.pageY + 'px')
+  //       .style('left', event.pageX + 'px')
+  //   }
+  // }
+
+  // /**
+  //  * Define event when mouse leaves element
+  //  */
+  // public handleMouseOut() {
+  //   // Clear tooltip
+  //   d3.selectAll('.sankey-tooltip').remove()
+  //   this._node.d3_selection?.classed('tooltip_shown', false)
+  // }
 
   // PRIVATE HELPER METHODS =============================================================
 

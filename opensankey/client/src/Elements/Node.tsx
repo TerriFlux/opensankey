@@ -209,7 +209,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   private _nodeDrawNameLabel: NodeDrawNameLabel
   private _nodeDrawValueLabel: NodeDrawValueLabel
   private _nodeTooltip: NodeTooltip
-  private _nodeEventsHandler: NodeEventsHandler
+  public _nodeEventsHandler: NodeEventsHandler
   private _nodeTagsManager: NodeTagsManager
   private _nodeDimensionsManager: NodeDimensionsManager
 

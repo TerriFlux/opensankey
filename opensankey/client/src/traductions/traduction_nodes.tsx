@@ -68,10 +68,10 @@ export const resources_nodes = {
         drawing_area_tooltip: {
           outputs: 'Outputs',
           inputs: 'Inputs',
-          dest: 'Destination',
+          dest: 'Outputs',
           val: 'Values',
           rat: 'Ratios',
-          prov: 'Origin',
+          prov: 'Inputs',
         },
         tabs: {
           apparence: 'Appearence',
@@ -273,8 +273,8 @@ export const resources_nodes = {
           inputs: 'Entrées',
           val: 'Valeurs',
           rat: 'Ratios',
-          prov: 'Provenance',
-          dest: 'Destination',
+          prov: 'Entrées',
+          dest: 'Sorties',
         },
         tabs: {
           apparence: 'Apparence',
