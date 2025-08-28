@@ -24,35 +24,23 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
-
-// Local imports
-import {
-  Class_MenuConfig
-} from '../types/MenuConfig'
+import { Class_DrawingArea } from './DrawingArea'
+import { Class_MenuConfig } from '../types/MenuConfig'
+import { 
+  Class_LinkStyle, nodeStyleConfigs, Class_NodeStyle, linkStyleConfigs, NodeStyleConfigsDict, 
+  product_sector_styles, NodeStyleKey, node_exchanges_style, LinkStyleConfigsDict, LinkStyleKey, 
+  link_exchanges_style
+} from '../Elements/ElementStyle'
 import { NODES_ATTRIBUTES_CONFIG } from '../Elements/NodeAttributesConfig'
-import {
-  Class_LinkElement,
-  defaultLinkId,
-  sortLinksElementsByIds
-} from '../Elements/Link'
+import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
+import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
 import { Class_LinkAttribute, Type_customisable_flow_style_attr } from '../Elements/LinkAttributes'
-import { Class_LinkStyle } from '../Elements/ElementStyle'
-import {
-  Class_NodeElement,
-  sortNodesElements
-} from '../Elements/Node'
+import { Class_NodeElement, sortNodesElements } from '../Elements/Node'
 import { Class_NodeAttribute, Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
-import { Class_NodeStyle } from '../Elements/ElementStyle'
-import {
-  Class_DataTag,
-  Class_Tag,
-} from '../types/Tag'
-import {
-  Class_NodeTagGroup,
-  Class_FluxTagGroup, Class_DataTagGroup,
-  Class_LevelTagGroup
-} from './TagGroup'
+import { Class_NodeDimension } from '../Elements/NodeDimension'
+import { Class_ContainerElement } from '../Elements/TextZone'
+import { Class_DataTag, Class_Tag, } from '../types/Tag'
+import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup } from './TagGroup'
 import {
   Type_JSON,
   getJSONFromJSON,
@@ -64,45 +52,10 @@ import {
   randomId,
   CutName,
   makeId,
-  default_style_name
+  default_style_name,
+  default_save_only_visible_elements,
+  default_save_with_values
 } from '../types/Utils'
-import { default_save_only_visible_elements, default_save_with_values } from './ApplicationData'
-import { Class_ContainerElement } from '../Elements/TextZone'
-import { Class_DrawingArea } from './DrawingArea'
-import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
-
-
-// LOCAL FUNCTIONS **********************************************************************
-
-export function get_sync_lists(
-  to_sync: { [id: string]: unknown },
-  as_ref: { [id: string]: unknown },
-  matching_id: { [id: string]: string }
-) {
-  const revert_matching_id: { [id: string]: string } = {}
-  if (matching_id) {
-    Object.entries(matching_id).forEach(([k, v]) => revert_matching_id[v] = k)
-  }
-  // Transfer node style from new_layout style node  to corresponding style in current
-  const to_sync_ids = Object.keys(to_sync)
-  const as_ref_ids = Object.keys(as_ref)
-
-  // Styles can be to remove, to add or to update
-  const to_remove = to_sync_ids
-    .filter(id => !(as_ref_ids.includes(matching_id[id] ?? id)))
-  const to_add = as_ref_ids
-    .filter(id => !to_sync_ids.includes(revert_matching_id[id] ?? id))
-  const to_update = to_sync_ids
-    .filter(id => as_ref_ids.includes(matching_id[id] ?? id))
-
-  return [
-    to_remove,
-    to_add,
-    to_update
-  ]
-}
-
-// CLASS SANKEY *************************************************************************
 
 /**
  * Contains all necessary elements to draw a Sankey
@@ -121,6 +74,9 @@ export class Class_Sankey {
 
   protected _link_styles: { [_: string]: Class_LinkStyle } = {}
   protected _node_styles: { [_: string]: Class_NodeStyle } = {}
+
+  public _nodes_dimensions: Class_NodeDimension[] = []
+
   public name: string
 
   public normalised_link?: Class_LinkElement
@@ -246,6 +202,33 @@ export class Class_Sankey {
 
   }
 
+  private static get_sync_lists(
+    to_sync: { [id: string]: unknown },
+    as_ref: { [id: string]: unknown },
+    matching_id: { [id: string]: string }
+  ) {
+    const revert_matching_id: { [id: string]: string } = {}
+    if (matching_id) {
+      Object.entries(matching_id).forEach(([k, v]) => revert_matching_id[v] = k)
+    }
+    // Transfer node style from new_layout style node  to corresponding style in current
+    const to_sync_ids = Object.keys(to_sync)
+    const as_ref_ids = Object.keys(as_ref)
+
+    // Styles can be to remove, to add or to update
+    const to_remove = to_sync_ids
+      .filter(id => !(as_ref_ids.includes(matching_id[id] ?? id)))
+    const to_add = as_ref_ids
+      .filter(id => !to_sync_ids.includes(revert_matching_id[id] ?? id))
+    const to_update = to_sync_ids
+      .filter(id => as_ref_ids.includes(matching_id[id] ?? id))
+
+    return [
+      to_remove,
+      to_add,
+      to_update
+    ]
+  }
   /**
    * Remove a single attribute from local Class_NodeAttribute
    *
@@ -497,7 +480,7 @@ export class Class_Sankey {
     if (mode.includes('attrDrawingArea') || all) {
 
       // Nodes styles can be to remove, to add or to update
-      const [ns_to_remove, ns_to_add, ns_to_update] = get_sync_lists(this._node_styles, other_sankey._node_styles, {})
+      const [ns_to_remove, ns_to_add, ns_to_update] = Class_Sankey.get_sync_lists(this._node_styles, other_sankey._node_styles, {})
 
       // Update styles
       ns_to_remove
@@ -516,7 +499,7 @@ export class Class_Sankey {
         })
 
       // Link styles can be to remove, to add or to update
-      const [ls_to_remove, ls_to_add, ls_to_update] = get_sync_lists(this._link_styles, other_sankey._link_styles, {})
+      const [ls_to_remove, ls_to_add, ls_to_update] = Class_Sankey.get_sync_lists(this._link_styles, other_sankey._link_styles, {})
 
       // Update styles
       ls_to_remove
@@ -539,7 +522,7 @@ export class Class_Sankey {
 
     if (mode.includes('tagLevel') || all) {
       // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = get_sync_lists(this._level_taggs, other_sankey._level_taggs, matching_taggs_id['levelTags'])
+      const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(this._level_taggs, other_sankey._level_taggs, matching_taggs_id['levelTags'])
 
       // Update taggs
       to_remove
@@ -561,7 +544,7 @@ export class Class_Sankey {
     // Update node_tag_dict ------------------------------------------------------------
     if (mode.includes('tagNode') || all) {
       // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = get_sync_lists(this._node_taggs, other_sankey._node_taggs, matching_taggs_id['nodeTags'])
+      const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(this._node_taggs, other_sankey._node_taggs, matching_taggs_id['nodeTags'])
 
       // Update taggs
       to_remove
@@ -583,7 +566,7 @@ export class Class_Sankey {
     // Update flux_tag_dict ------------------------------------------------------------
     if (mode.includes('tagFlux') || all) {
       // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = get_sync_lists(this._flux_taggs, other_sankey._flux_taggs, matching_taggs_id['fluxTags'])
+      const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(this._flux_taggs, other_sankey._flux_taggs, matching_taggs_id['fluxTags'])
 
       // Update taggs
       to_remove
@@ -607,7 +590,7 @@ export class Class_Sankey {
     if (mode.includes('tagData') || all) {
 
       // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = get_sync_lists(this._data_taggs, other_sankey._data_taggs, matching_taggs_id['dataTags'])
+      const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(this._data_taggs, other_sankey._data_taggs, matching_taggs_id['dataTags'])
 
       // Update taggs
       to_remove
@@ -642,7 +625,7 @@ export class Class_Sankey {
       sync_nodes_attr ||
       all
     ) {
-      const [to_remove, to_add, to_update] = get_sync_lists(this._nodes, other_sankey._nodes, matching_nodes_id)
+      const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(this._nodes, other_sankey._nodes, matching_nodes_id)
 
       // Add nodes that are in other sankey but not in this sankey
       if (add_nodes || all) {
@@ -722,7 +705,7 @@ export class Class_Sankey {
       sync_flux_attr ||
       all
     ) {
-      const [to_remove, to_add, to_update] = get_sync_lists(this._links, other_sankey._links, matching_links_id)
+      const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(this._links, other_sankey._links, matching_links_id)
 
       // Add link in new that are not in current then add them
       if (add_flux || all) {
@@ -970,6 +953,43 @@ export class Class_Sankey {
       })
     })
   }
+  public create_node_internal_style(id: NodeStyleKey, configs: NodeStyleConfigsDict) {
+    if (this._node_styles[id]) {
+      return
+    }
+    const new_style = this.createNewNodeStyle(id, id, true)
+    const config = configs[id].config
+    const position = configs[id].position
+    Object.keys(config).forEach(key => {
+      new_style.customisable_attribute[key as Type_customisable_node_style_attr] = true
+      //@ts-expect-error xxx
+      new_style[key] = config[key]
+    }
+    )
+    if (position) {
+      Object.keys(position).forEach(key => {
+        //@ts-expect-error xxx
+        new_style.position[key] = position[key]
+      }
+      )
+    }
+    this._node_styles[id] = new_style
+  }
+  public create_link_internal_style(id: LinkStyleKey, configs: LinkStyleConfigsDict) {
+    if (this._link_styles[id]) {
+      return
+    }
+    const new_style = this.createNewLinkStyle(id, id, true)
+    const config = configs[id].config
+    Object.keys(config).forEach(key => {
+      new_style.customisable_attribute[key as Type_customisable_flow_style_attr] = true
+      //@ts-expect-error xxx
+      new_style[key] = config[key]
+    }
+    )
+    this._link_styles[id] = new_style
+  }
+
   /**
    * Extract sankey as a JSON struct
    *
@@ -1165,177 +1185,9 @@ export class Class_Sankey {
         })
       // Create default style for 'Type de noeud' if they don't exist
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
-        const nodeStyleConfigs = [
-          {
-            id: 'NodeProductStyle',
-            config: { 'shape_type': 'ellipse' },
-            position: {}
-          },
-          {
-            id: 'NodeSectorStyle',
-            config: { 'shape_type': 'rect' },
-            position: {}
-          },
-          {
-            id: 'NodeImportExportCloseStyle',
-            config: {
-              'name_label_is_visible': false,
-              'shape_visible': false,
-              'shape_min_width': 1,
-              'name_label_box_width': 300
-              // 'name_label_vert': 'middle',
-              // 'name_label_horiz': 'left'
-            },
-            position: {
-              'type': 'relative',
-              'dy': 20,
-            }
-          },
-          {
-            id: 'NodeImportExportAboveBelowStyle',
-            config: {
-              'min_width': 40,
-              'name_label_is_visible': true,
-              'shape_visible': false,
-              'shape_min_height': 1,
-              'value_label_is_visible': true,
-              'value_label_vert': 'middle',
-              'name_label_vert': 'middle',
-              'name_label_separator': ' - '
-            },
-            position: {
-              'type': 'parametric'
-            }
-          },
-          {
-            id: 'NodeImportCloseStyle',
-            config: {},
-            position: {
-              'dx': -100,
-              'dy': -50
-            }
-          },
-          {
-            id: 'NodeImportAboveStyle',
-            config: {
-              'name_label_horiz': 'left',
-              //'name_label_horiz_shift' : -200,
-              'value_label_horiz': 'left',
-              'value_label_horiz_shift': 40,
-            },
-            position: {
-              'dx': -200,
-              'dy': 20
-            }
-          },
-          {
-            id: 'NodeExportCloseStyle',
-            config: {},
-            position: {
-              'dx': 100,
-              'dy': 50
-            }
-          },
-          {
-            id: 'NodeExportBelowStyle',
-            config: {
-              'name_label_horiz': 'right',
-              //'name_label_horiz_shift' : 200,
-              'value_label_horiz': 'right',
-              'value_label_horiz_shift': -40,
-
-            },
-            position: {
-              'dx': 200,
-              'dy': 20
-            }
-          }
-        ]
-        nodeStyleConfigs.forEach(({ id, config, position }) => {
-          if (this._node_styles[id]) {
-            return
-          }
-          const new_style = this.createNewNodeStyle(id, id, true)
-          Object.keys(config).forEach(key => {
-            new_style.customisable_attribute[key as Type_customisable_node_style_attr] = true
-            //@ts-expect-error xxx
-            new_style[key] = config[key]
-          }
-          )
-          Object.keys(position).forEach(key => {
-            // new_style.customisable_attribute[key as Type_customisable_node_style_attr] = true
-            //@ts-expect-error xxx
-            new_style.position[key] = position[key]
-          }
-          )
-          this._node_styles[id] = new_style
-        })
-
-
-
-        const linkStyleConfigs = [
-          {
-            id: 'LinkImportExportCloseStyle',
-            config: {
-              'value_label_is_visible': true,
-              //'value_label_position' : 'end',
-              'value_label_on_path': true
-
-            }
-          },
-          {
-            id: 'LinkImportCloseStyle',
-            config: {
-              'shape_orientation': 'vh',
-              'shape_starting_tangeant': 1,
-              'shape_ending_tangeant': 0.25
-            }
-          },
-          {
-            id: 'LinkExportCloseStyle',
-            config: {
-              'shape_orientation': 'hv',
-              'shape_starting_tangeant': 0.25,
-              'shape_ending_tangeant': 1
-            }
-          },
-          {
-            id: 'LinkImportExportAboveBelowStyle',
-            config: {
-              'shape_starting_point': 0.25,
-              'shape_starting_tangeant': 0.5,
-              'shape_ending_tangeant': 0.5,
-              'shape_ending_point': 0.75,
-              'value_label_is_visible': false,
-              //'value_label_position' : 'end',
-              'value_label_on_path': true
-
-            }
-          },
-          {
-            id: 'LinkImportAboveStyle',
-            config: {
-            }
-          },
-          {
-            id: 'LinkExportBelowStyle',
-            config: {
-            }
-          }]
-        linkStyleConfigs.forEach(({ id, config }) => {
-          if (this._link_styles[id]) {
-            return
-          }
-          const new_style = this.createNewLinkStyle(id, id, true)
-          Object.keys(config).forEach(key => {
-            new_style.customisable_attribute[key as Type_customisable_flow_style_attr] = true
-            //@ts-expect-error xxx
-            new_style[key] = config[key]
-          }
-          )
-
-          this._link_styles[id] = new_style
-        })
+        product_sector_styles.forEach(style_id => this.create_node_internal_style(style_id, nodeStyleConfigs))
+        node_exchanges_style.forEach(style_id => this.create_node_internal_style(style_id, nodeStyleConfigs))
+        link_exchanges_style.forEach(style_id => this.create_link_internal_style(style_id, linkStyleConfigs))
       }
     }
     json_entry = 'fluxTags'

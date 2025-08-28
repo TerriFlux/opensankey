@@ -65,7 +65,7 @@ import { Type_AdditionalMenus } from '../../types/MenuConfig'
 export const SankeyModalStyleNode = ({
   new_data,
   additionalMenus
-}:{
+}: {
   new_data: Class_ApplicationData
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
@@ -200,7 +200,7 @@ export const SankeyModalStyleNode = ({
   </>
 }
 
-export const WrapperNodeStyleSelector = ({ new_data, children }:{
+export const WrapperNodeStyleSelector = ({ new_data, children }: {
   new_data: Class_ApplicationData
   children: JSX.Element
 }) => {
@@ -335,7 +335,7 @@ export const WrapperNodeStyleSelector = ({ new_data, children }:{
 export const SankeyModalStyleLink = ({
   new_data,
   additionalMenus
-}:{
+}: {
   new_data: Class_ApplicationData
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
@@ -473,7 +473,7 @@ export const SankeyModalStyleLink = ({
   </>
 }
 
-export const WrapperLinkStyleSelector = ({ new_data, children }:{
+export const WrapperLinkStyleSelector = ({ new_data, children }: {
   new_data: Class_ApplicationData
   children: JSX.Element
 }) => {
@@ -610,7 +610,10 @@ export const ConfigMenuStyleElement = ({ app_data, selected_elements, config, ca
   const { t, icon_library, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
   const { ref_selected_style_link, ref_selected_style_node, dict_setter_show_dialog } = menu_configuration
-  const { ref_setter_show_modal_styles_links_visual, ref_setter_show_modal_styles_nodes_visual } = dict_setter_show_dialog
+  const {
+    ref_setter_show_modal_styles_links_visual, ref_setter_show_modal_styles_nodes_visual,
+    ref_setter_show_modal_styles_links_labels, ref_setter_show_modal_styles_nodes_labels,
+  } = dict_setter_show_dialog
 
   const element_ref = selected_elements[0]
 
@@ -659,10 +662,15 @@ export const ConfigMenuStyleElement = ({ app_data, selected_elements, config, ca
                 ref_selected_style_link.current = [...style].reverse()[0].id
             }
           }
-          if (nodesOrLinks == 'nodes') app_data.menu_configuration.updateComponentRelatedToNodesStyles()
-          else app_data.menu_configuration.updateComponentRelatedToLinksStyles()
-          if (nodesOrLinks == 'nodes') ref_setter_show_modal_styles_nodes_visual.current(true)
-          else ref_setter_show_modal_styles_links_visual.current(true)
+          if (nodesOrLinks == 'nodes') {
+            app_data.menu_configuration.updateComponentRelatedToNodesStyles()
+            if (categories.includes('shape')) ref_setter_show_modal_styles_nodes_visual.current(true)
+            else ref_setter_show_modal_styles_nodes_labels.current(true)
+          } else {
+            app_data.menu_configuration.updateComponentRelatedToLinksStyles()
+            if (categories.includes('shape')) ref_setter_show_modal_styles_links_visual.current(true)
+            else ref_setter_show_modal_styles_links_labels.current(true)
+          }
 
         }}
       >

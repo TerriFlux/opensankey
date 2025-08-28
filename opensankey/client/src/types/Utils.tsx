@@ -29,8 +29,24 @@ import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
+import { Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 
-// SPECIFIC TYPES ************************************************************************
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      publish: boolean
+      logo: string
+    }
+  }
+
+export const default_save_only_visible_elements = false
+export const default_save_with_values = true
+export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
+export const default_file_name = 'Diagramme de Sankey'
+
+export const default_toast_duration: number = 1000 // 1sec
+export const default_toast_waiting_delay: number = 500 // 500ms
+export const toast_bypass: boolean = window.sankey?.publish??false
 
 /**
  * Define necessary properties for a position

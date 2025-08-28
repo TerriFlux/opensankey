@@ -1714,6 +1714,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public formatValueWithOption(value: number | string, option: ValueOptionType) {
+    if (option !== 'value' && value != 'unit_ratio') {
+      if (!this.source.hasInputLinks() || !this.target.hasOutputLinks() ) {
+        return value + '%'
+      }
+    }
     if (option == '%IS' && value) {
       return '→↕ ' + value + '%'
     } else if (option == '%OS' && value) {

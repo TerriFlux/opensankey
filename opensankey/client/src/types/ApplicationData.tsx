@@ -37,7 +37,7 @@ import { StepType } from '@reactour/tour'
 import { useToast } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { getStringFromJSON, randomId, Type_JSON } from './Utils'
+import { default_file_name, default_save_JSON_options, default_save_only_visible_elements, default_save_with_values, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { FType_RetrieveExcelResults, Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 import { JSONtoExcel, retrieveExcelResults } from '../Persistence/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
@@ -78,14 +78,7 @@ declare const window: Window &
   }
 // SPECIFIC CONSTANTS ******************************************************************/
 
-export const default_save_only_visible_elements = false
-export const default_save_with_values = true
-export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
-export const default_file_name = 'Diagramme de Sankey'
 
-const default_toast_duration: number = 1000 // 1sec
-const default_toast_waiting_delay: number = 500 // 500ms
-const toast_bypass: boolean = window.sankey?.publish??false
 
 export type FType_ProcessFunctions = {
   ref_processing: MutableRefObject<boolean>,
