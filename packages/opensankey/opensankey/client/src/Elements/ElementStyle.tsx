@@ -424,9 +424,9 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
   LinkImportExportAboveBelowStyle: {
     config: {
       'shape_starting_curve': 0.25,
-      'shape_starting_tangeant': 0.5,
-      'shape_ending_tangeant': 0.5,
-      'shape_ending_curve': 0.75,
+      'shape_starting_tangeant': 0.50,
+      'shape_ending_tangeant': 0.50,
+      'shape_ending_curve': 0.25,
       'value_label_is_visible': false,
       'value_label_on_path': true
     }
@@ -462,7 +462,8 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
 // Type des clés disponibles pour les liens
 export type LinkStyleKey = keyof typeof linkStyleConfigs
 export const link_exchanges_style: readonly NodeStyleKey[] = [
-  'LinkImportExportAboveBelowStyle', 'LinkExportCloseStyle', 'LinkImportCloseStyle', 'LinkImportExportCloseStyle'
+  'LinkImportExportAboveBelowStyle', 'LinkExportCloseStyle', 'LinkImportCloseStyle', 'LinkImportExportCloseStyle',
+  'LinkImportAboveStyle','LinkExportBelowStyle'
 ] as const
 export const link_unitary_styles: readonly NodeStyleKey[] = [
   'LinkInUnitaryStyle','LinkOutUnitaryStyle'
