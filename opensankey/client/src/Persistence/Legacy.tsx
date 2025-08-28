@@ -560,6 +560,10 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
             n.style.push('NodeExportCloseStyle')
             delete data_to_convert.links[n.inputLinksId[0]].local!['left_horiz_shift']
             delete data_to_convert.links[n.inputLinksId[0]].local!['right_horiz_shift']
+            delete data_to_convert.links[n.inputLinksId[0]].local!['starting_curve']
+            delete data_to_convert.links[n.inputLinksId[0]].local!['ending_curve']
+            delete data_to_convert.links[n.inputLinksId[0]].local!['starting_tangeant']
+            delete data_to_convert.links[n.inputLinksId[0]].local!['ending_tangeant']
           } else {
             //@ts-expect-error xxx
             data_to_convert.links[n.inputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkExportBelowStyle']
@@ -577,6 +581,10 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
             n.style.push('NodeImportCloseStyle')
             delete data_to_convert.links[n.outputLinksId[0]].local!['left_horiz_shift']
             delete data_to_convert.links[n.outputLinksId[0]].local!['right_horiz_shift']
+            delete data_to_convert.links[n.outputLinksId[0]].local!['starting_curve']
+            delete data_to_convert.links[n.outputLinksId[0]].local!['ending_curve']
+            delete data_to_convert.links[n.outputLinksId[0]].local!['starting_tangeant']
+            delete data_to_convert.links[n.outputLinksId[0]].local!['ending_tangeant']
           } else {
             //@ts-expect-error xxx
             data_to_convert.links[n.outputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkImportAboveStyle']
