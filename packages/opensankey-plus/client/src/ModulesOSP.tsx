@@ -109,6 +109,7 @@ import { checkForUrlToJSON, Type_JSON } from './deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/components/SankeyMenuTypes'
 import { initializePlusMenus } from './components/ContextMenuConfigs'
+import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
 
 declare const window: Window &
   typeof globalThis & {
@@ -385,7 +386,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       new_data_plus={new_data_plus}
     />,
     <ToolbarFilter
-      new_data={new_data_plus}
+      app_data={new_data_plus as unknown as Class_ApplicationData}
     />,
     <SupplyUseModelisationProd
       application_data_mfa={new_data_plus}

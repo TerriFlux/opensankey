@@ -8,43 +8,21 @@ import { ConfigMenuNumberInput } from '../deps/OpenSankey/components/configmenus
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
-import { Class_TagGroup, Class_DataTagGroup, Class_NodeTagGroup, Class_LevelTagGroup } from '../deps/OpenSankey/types/TagGroup'
-
-
-type FCType_CollapseButton = { new_data: Class_ApplicationDataOSP, isOpen: boolean, onToggle: () => void }
-
-type FCType_FilterTagGroup = {
-  new_data: Class_ApplicationDataOSP,
-  title: string,
-  children: ReactNode,
-
-}
-
-interface BaseComponentProps {
-  new_data: Class_ApplicationDataOSP
-}
-interface BaseComponentPropsPlus {
-  new_data_plus: Class_ApplicationDataOSP
-}
-/**
- * Type de base pour les composants avec niveau
- */
-export interface BaseLevelProps extends BaseComponentProps {
-  level: boolean
-}
+import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup } from '../deps/OpenSankey/types/TagGroup'
 
 const width_fitler_drawer = 270
 
 /**
  * Component that show filters for for link value and tag group (node,flow &  data)
  *
- * @param {*} { new_data }
+ * @param {*} { app_data }
  * @return {*} 
  */
-export const ToolbarFilter: FC<BaseComponentProps> = ({ new_data }) => {
+export const ToolbarFilter = ({ app_data }:{app_data:Class_ApplicationData}) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const width_drawer = (drawerOpen ? width_fitler_drawer + new_data.drawing_area.fit_margin / 2 : 0) + new_data.drawing_area.fit_margin / 2
-  new_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
+  const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
+  //@ts-ignore xxx
+  app_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
 
   return <>
     <Button
@@ -53,11 +31,13 @@ export const ToolbarFilter: FC<BaseComponentProps> = ({ new_data }) => {
       size='sizeToolbarButton'
       style={{
         left: width_drawer,
-        top: new_data.drawing_area.getNavBarHeight() + (new_data.drawing_area.fit_margin)
+        top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)
       }}
       onClick={() => setDrawerOpen(!drawerOpen)}
     >
-      {new_data.icon_library.icon_filter_tags}
+      {//@ts-ignore xxx
+      app_data.icon_library.icon_filter_tags
+      }
     </Button>
 
     <Drawer
@@ -82,42 +62,41 @@ export const ToolbarFilter: FC<BaseComponentProps> = ({ new_data }) => {
           height: 'fit-content',
           boxShadow: 'unset',
           maxWidth: 'unset',
-          left: new_data.drawing_area.fit_margin / 2,
-          maxHeight: new_data.drawing_area.window_fitting_height,
+          left: app_data.drawing_area.fit_margin / 2,
+          maxHeight: app_data.drawing_area.window_fitting_height,
           overflowY: 'auto',
-          marginTop: (new_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
+          marginTop: (app_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
         }}>
         <DrawerBody
           id='drawer_filter'
           style={{ padding: '0', width: width_fitler_drawer }}
         >
           <Box layerStyle='drawerFilterBox'>
-            <FilterDataType new_data={new_data} />
-            <FlowValueFilter new_data={new_data} />
-            <LevelTagFilter new_data_plus={new_data} />
-            <NodeTagGroupFilter new_data={new_data} level={false} />
-            <FlowTagGroupFilter new_data={new_data} />
-            <DataTagGroupFilter new_data={new_data} />
+            <FilterDataType app_data={app_data} />
+            <FlowValueFilter app_data={app_data} />
+            <LevelTagFilter app_data={app_data} />
+            <NodeTagGroupFilter app_data={app_data} level={false} />
+            <DataTagGroupFilter app_data={app_data} />
           </Box>
         </DrawerBody>
       </DrawerContent>
     </Drawer></>
 }
 
-const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
-  const { t } = new_data
+const FlowValueFilter = ({ app_data }:{app_data:Class_ApplicationData}) => {
+  const { t } = app_data
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
-  const max_link_value = Math.max(0, ...new_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.shape_local_link_scale ?? 1))) + 1
+  const max_link_value = Math.max(0, ...app_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.shape_local_link_scale ?? 1))) + 1
   const [, setCount] = useState(0)
-
-  new_data.menu_configuration_osp.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
+  //@ts-expect-error xxx
+  app_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
 
   // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
   const ref: RefObject<HTMLButtonElement> = useRef(null)
 
   return <FilterWrapperBox
-    new_data={new_data}
+    app_data={app_data}
     title={t('Banner.p_aff')}
   >
     <Box
@@ -131,11 +110,11 @@ const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
           variant='slider_filter_link_value'
           min={0}
           max={max_link_value}
-          value={new_data.drawing_area.filter_link_value}
+          value={app_data.drawing_area.filter_link_value}
           onChange={evt => {
-            new_data.drawing_area.filter_link_value = +evt
+            app_data.drawing_area.filter_link_value = +evt
             setCount(a => a + 1)
-            new_data.drawing_area.sankey.visible_links_list.forEach(link => {
+            app_data.drawing_area.sankey.visible_links_list.forEach(link => {
               link.draw()
               link.target.drawLinksArrow()
             })
@@ -148,16 +127,16 @@ const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
         </Slider>
 
         <ConfigMenuNumberInput
-          t={new_data.t}
-          default_value={new_data.drawing_area.filter_link_value}
+          t={app_data.t}
+          default_value={app_data.drawing_area.filter_link_value}
           function_on_blur={(value) => {
             if (value && value > max_link_value) {
               value = max_link_value
             }
             if (value) {
-              new_data.drawing_area.filter_link_value = value
+              app_data.drawing_area.filter_link_value = value
               setCount(a => a + 1)
-              new_data.drawing_area.sankey.draw()
+              app_data.drawing_area.sankey.draw()
             }
 
             ref.current?.focus() //avoid closure of popover
@@ -177,11 +156,11 @@ const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
           variant='slider_filter_link_value'
           min={0}
           max={max_link_value}
-          value={new_data.drawing_area.filter_label}
+          value={app_data.drawing_area.filter_label}
           onChange={(evt) => {
-            new_data.drawing_area.filter_label = +evt
+            app_data.drawing_area.filter_label = +evt
             setCount(a => a + 1)
-            new_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValue())
+            app_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValue())
           }}
         >
           <SliderTrack>
@@ -190,17 +169,17 @@ const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
           <SliderThumb />
         </Slider>
         <ConfigMenuNumberInput
-          t={new_data.t}
-          default_value={new_data.drawing_area.filter_label}
+          t={app_data.t}
+          default_value={app_data.drawing_area.filter_label}
           function_on_blur={(value) => {
 
             if (value) {
               if (value > max_link_value) {
                 value = max_link_value
               }
-              new_data.drawing_area.filter_label = value
+              app_data.drawing_area.filter_label = value
               setCount(a => a + 1)
-              new_data.drawing_area.sankey.links_list.forEach(link => link.drawValue())
+              app_data.drawing_area.sankey.links_list.forEach(link => link.drawValue())
             }
 
             ref.current?.focus() //avoid closure of popover
@@ -214,24 +193,31 @@ const FlowValueFilter: FC<BaseComponentProps> = ({ new_data }) => {
   </FilterWrapperBox>
 }
 
-export const CollapseButton: FC<FCType_CollapseButton> = ({ new_data, isOpen, onToggle }) => {
+export const CollapseButton = ({ app_data, isOpen, onToggle }:{
+   app_data: Class_ApplicationData, isOpen: boolean, onToggle: () => void 
+  }) => {
   return <Button variant='collapse_filter'
     size='sizeBtnCollapseFilter'
     onClick={onToggle}>
-    {isOpen ? new_data.icon_library.icon_collapse_up : new_data.icon_library.icon_collapse_down}
+    {isOpen ? app_data.icon_library.icon_collapse_up : app_data.icon_library.icon_collapse_down}
   </Button>
 }
 
-export const FilterWrapperBox: FC<FCType_FilterTagGroup> = ({
-  new_data,
+export const FilterWrapperBox = ({
+  app_data,
   title,
   children
+}:{
+  app_data: Class_ApplicationData,
+  title: string,
+  children: ReactNode,
+
 }) => {
   const { isOpen, onToggle } = useDisclosure()
   return <Box layerStyle={'filter_wrapper'}>
     <Box layerStyle='filter_head_box'>
       <Heading variant='title_filter_tagg'>{title}</Heading>
-      <CollapseButton new_data={new_data} isOpen={isOpen} onToggle={onToggle} />
+      <CollapseButton app_data={app_data} isOpen={isOpen} onToggle={onToggle} />
     </Box>
     <Collapse in={isOpen} animateOpacity>
       <Box className='content_filter'>
@@ -241,18 +227,18 @@ export const FilterWrapperBox: FC<FCType_FilterTagGroup> = ({
   </Box>
 }
 
-export const FilterDataType: FC<BaseComponentProps> = ({ new_data }) => {
-  const { t } = new_data
-  const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(new_data.drawing_area.type_data))
-  const data_type_not_reconcilied = ['data', 'structure'].includes(new_data.drawing_area.type_data)
-  const [s_type_value, sTypeValue] = useState<'data' | 'data_label' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (new_data.drawing_area.type_data as 'data' | 'structure' | 'reconciled') : 'reconciled')
+export const FilterDataType = ({ app_data }:{app_data:Class_ApplicationData}) => {
+  const { t } = app_data
+  const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(app_data.drawing_area.type_data))
+  const data_type_not_reconcilied = ['data', 'structure'].includes(app_data.drawing_area.type_data)
+  const [s_type_value, sTypeValue] = useState<'data' | 'data_label' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (app_data.drawing_area.type_data as 'data' | 'structure' | 'reconciled') : 'reconciled')
   const [, setCount] = useState(0)
-  new_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
+  app_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
 
   const redrawNodeLinkLegend = () => {
-    new_data.drawing_area.sankey.draw()
-    new_data.drawing_area.legend.draw()
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    app_data.drawing_area.sankey.draw()
+    app_data.drawing_area.legend.draw()
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
 
   const content = <>
@@ -265,7 +251,7 @@ export const FilterDataType: FC<BaseComponentProps> = ({ new_data }) => {
       <Select
         value={s_type_value}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          new_data.drawing_area.type_data = evt.target.value as 'data' | 'data_label' | 'structure' | 'reconciled'
+          app_data.drawing_area.type_data = evt.target.value as 'data' | 'data_label' | 'structure' | 'reconciled'
           sTypeValue(evt.target.value as 'data' | 'structure' | 'reconciled' | 'data_label')
           if (evt.target.value === 'reconciled') {
             sIsDataTypeReconcilied(true)
@@ -284,15 +270,15 @@ export const FilterDataType: FC<BaseComponentProps> = ({ new_data }) => {
 
     <Box
       layerStyle='menuconfig_grid'
-      display={s_is_data_type_reconcilied && new_data.is_reconcilied ? '' : 'none'}
+      display={s_is_data_type_reconcilied && app_data.is_reconcilied ? '' : 'none'}
     >
       <Box fontStyle='h3' >
         {t('Banner.indetermined_value')}
       </Box>
       <Select
-        value={new_data.drawing_area.type_data}
+        value={app_data.drawing_area.type_data}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          new_data.drawing_area.type_data = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
+          app_data.drawing_area.type_data = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
           setCount(a => a + 1)
           redrawNodeLinkLegend()
         }}>
@@ -303,13 +289,13 @@ export const FilterDataType: FC<BaseComponentProps> = ({ new_data }) => {
     </Box></>
 
   return <FilterWrapperBox
-    new_data={new_data}
+    app_data={app_data}
     title={t('Banner.title_data_type')}>
     {content}
   </FilterWrapperBox>
 }
 // Types pour la configuration des différents modes
-type TagFilterMode = 'node' | 'level' | 'data' | 'flow'
+type TagFilterMode = 'element' | 'level' | 'data'
 interface TagFilterConfig {
   mode: TagFilterMode
   title_key: string
@@ -320,8 +306,8 @@ interface TagFilterConfig {
   ref_updater_key: string
 }
 const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
-  node: {
-    mode: 'node',
+  element: {
+    mode: 'element',
     title_key: 'fdn',
     show_title_column: true,
     show_palette_switch: true,
@@ -347,67 +333,68 @@ const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
     update_method: 'updateAllComponentsRelatedToDataTags',
     ref_updater_key: 'ref_to_datatag_filter_updater'
   },
-  flow: {
-    mode: 'flow',
-    title_key: 'fdf',
-    show_title_column: true,
-    show_palette_switch: true,
-    show_type_selection_header: false,
-    update_method: 'updateAllComponentsRelatedToFluxTags',
-    ref_updater_key: 'ref_to_fluxtag_filter_updater'
-  }
+  // flow: {
+  //   mode: 'flow',
+  //   title_key: 'fdf',
+  //   show_title_column: true,
+  //   show_palette_switch: true,
+  //   show_type_selection_header: false,
+  //   update_method: 'updateAllComponentsRelatedToFluxTags',
+  //   ref_updater_key: 'ref_to_fluxtag_filter_updater'
+  // }
 }
-interface UnifiedTagGroupFilterProps {
-  new_data: Class_ApplicationData
-  mode: TagFilterMode
-  level?: boolean // Pour compatibilité avec l'ancien code
-}
+
 /**
  * Composant unifié pour filtrer tous les types de tags
  */
 
-export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data, mode, level = false }) => {
+export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }:{
+  app_data: Class_ApplicationData
+  mode: TagFilterMode
+  level?: boolean // Pour compatibilité avec l'ancien code
+}) => {
   const config = TAG_FILTER_CONFIGS[mode]
-  const { t } = new_data
-
+  const { t,drawing_area } = app_data
+  const { sankey } = drawing_area
   // Component updater
   const [, setCount] = useState(0)
 
   // Configuration du updater selon le mode
-  if (config.ref_updater_key && new_data.menu_configuration[config.ref_updater_key as keyof typeof new_data.menu_configuration]) {
+  if (config.ref_updater_key && app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration]) {
     //@ts-expect-error xxx
-    new_data.menu_configuration[config.ref_updater_key as keyof typeof new_data.menu_configuration].current = () => setCount(a => a + 1)
+    app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration].current = () => setCount(a => a + 1)
   }
 
   // Récupération des tags selon le mode
   const getTagsForMode = (): Class_TagGroup[] => {
     switch (mode) {
-      case 'node':
-        return Object.values(new_data.drawing_area.sankey.node_taggs_dict)
+      case 'element':
+        return [...Object.values(sankey.node_taggs_dict),...Object.values(sankey.flux_taggs_dict)]
           .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
       case 'level':
-        const level_taggs = new_data.drawing_area.sankey.level_taggs_dict
+        const level_taggs = sankey.level_taggs_dict
         const nb_of_level_taggs = Object.values(level_taggs).filter(tagg => tagg.has_tags).length
         return Object.values(level_taggs).filter(tagg => tagg.has_tags) as unknown as Class_TagGroup[]
       case 'data':
-        return Object.values(new_data.drawing_area.sankey.data_taggs_dict)
+        return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
           .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
-      case 'flow':
-        return Object.values(new_data.drawing_area.sankey.flux_taggs_dict)
-          .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
+      // case 'flow':
+      //   return Object.values(app_data.drawing_area.sankey.flux_taggs_dict)
+      //     .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
       default:
         return [] as unknown as Class_TagGroup[]
     }
   }
   const updateComponents = () => {
     if (config.update_method == 'updateAllComponentsRelatedToNodeTags') {
-      new_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
-    } else if (config.update_method == 'updateAllComponentsRelatedToFluxTags') {
-      new_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+      app_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
+      app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
+    // } else if (config.update_method == 'updateAllComponentsRelatedToFluxTags') {
+    //   app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
     } else if (config.update_method == 'updateAllComponentsRelatedToDataTags') {
-      new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+      app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
     } else if (config.update_method == 'updateAllComponentsRelatedToLevelTags') {
-      new_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
+      app_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
     }
   }
 
@@ -415,9 +402,7 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
 
   // Fonction générique pour appliquer une palette
   const setApplyTagGroupPalette = (tagg: Class_TagGroup, checked: boolean) => {
-    const taggs_dict = mode === 'node'
-      ? new_data.drawing_area.sankey.node_taggs_dict
-      : new_data.drawing_area.sankey.flux_taggs_dict
+    const taggs_dict = {...sankey.node_taggs_dict,...sankey.flux_taggs_dict}
 
     const dict_old_val = Object.fromEntries(Object.values(taggs_dict).map(t => [t.id, t.use_colors]))
 
@@ -426,20 +411,20 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
       if (checked) {
         tagg.use_colors = true
       }
-      new_data.drawing_area.legend.draw()
+      app_data.drawing_area.legend.draw()
       updateComponents()
     }
 
     const revertPalette = () => {
       Object.values(taggs_dict).forEach(t => t.use_colors = dict_old_val[t.id])
-      new_data.drawing_area.legend.draw()
+      app_data.drawing_area.legend.draw()
       updateComponents()
 
 
     }
 
-    new_data.history.saveUndo(revertPalette)
-    new_data.history.saveRedo(applyPalette)
+    app_data.history.saveUndo(revertPalette)
+    app_data.history.saveRedo(applyPalette)
     applyPalette()
   }
 
@@ -453,16 +438,15 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
 
     // Actions spécifiques selon le mode
     switch (mode) {
-      case 'node':
       case 'level':
-        new_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-        new_data.drawing_area.draw()
+        app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+        app_data.drawing_area.draw()
         break
       case 'data':
         handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
         break
-      case 'flow':
-        new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+      case 'element':
+        app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
         break
     }
     updateComponents()
@@ -470,7 +454,7 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
 
   // Logique spécifique pour les data tags
   const handleDataTagSelection = (tagg: Class_DataTagGroup, entries: string[]) => {
-    new_data.drawing_area.sankey.links_list.forEach(l => {
+    app_data.drawing_area.sankey.links_list.forEach(l => {
       if (l.is_multi_link) return
 
       if (entries.length === 1) {
@@ -487,16 +471,16 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
         })
         tagg.selected_tags_list.forEach(tag => {
           if (tag.id in l.child_links || l.is_multi_link) return
-          const child_link = new_data.drawing_area.sankey.addNewLink(l.source, l.target)
+          const child_link = app_data.drawing_area.sankey.addNewLink(l.source, l.target)
           child_link.copyFrom(l)
           l.addChildLink(child_link, tag)
         })
       }
     })
 
-    new_data.drawing_area.draw()
-    new_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
-    new_data.drawing_area.orderElementOnDA()
+    app_data.drawing_area.draw()
+    app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+    app_data.drawing_area.orderElementOnDA()
   }
 
   // Création du sélecteur selon le type de banner
@@ -540,15 +524,15 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
 
   // Création du bouton switch/checkbox selon le mode
   const createActionButton = (tagg: Class_TagGroup) => {
-    if (mode === 'node' && config.show_palette_switch) {
-      const casted_tag = tagg as Class_NodeTagGroup
+    if (mode === 'element' && config.show_palette_switch) {
+      //const casted_tag = tagg as Class_NodeTagGroup
       return (
         <Switch
           justifySelf='end'
           alignSelf='center'
           height='1rem'
-          isChecked={casted_tag.use_colors}
-          onChange={evt => setApplyTagGroupPalette(casted_tag, evt.target.checked)} />
+          isChecked={tagg.use_colors}
+          onChange={evt => setApplyTagGroupPalette(tagg, evt.target.checked)} />
       )
     } else if (mode === 'level' && tagg instanceof Class_LevelTagGroup && (tagg as Class_LevelTagGroup).has_tags) {
       const level_tagg = tagg as Class_LevelTagGroup
@@ -561,8 +545,8 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
-            new_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-            new_data.drawing_area.draw()
+            app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+            app_data.drawing_area.draw()
             updateComponents()
           } } />
       ) : <></>
@@ -576,19 +560,20 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
           onChange={evt => {
             tagg.banner = evt.target.checked ? 'multi' : 'one'
             if (tagg.banner === 'one') {
-              new_data.drawing_area.sankey.remove_child_links()
+              app_data.drawing_area.sankey.remove_child_links()
             }
             tagg.selectTagsFromId(tagg.tags_list[0].id)
             updateComponents()
           } } />
       )
-    } else if (mode === 'flow' && config.show_palette_switch) {
-      return (
-        <Switch
-          isChecked={tagg.use_colors}
-          onChange={evt => setApplyTagGroupPalette(tagg, evt.target.checked)} />
-      )
     }
+    // } else if (mode === 'flow' && config.show_palette_switch) {
+    //   return (
+    //     <Switch
+    //       isChecked={tagg.use_colors}
+    //       onChange={evt => setApplyTagGroupPalette(tagg, evt.target.checked)} />
+    //   )
+    // }
     return <></>
   }
 
@@ -620,9 +605,9 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
     )
   })
 
-  const title_filter_column = (new_data: Class_ApplicationDataOSP) => <Box layerStyle='filter_grid_row'>
+  const title_filter_column = (app_data: Class_ApplicationDataOSP) => <Box layerStyle='filter_grid_row'>
     <Box></Box>
-    <Box justifySelf='end' alignSelf='center'>{new_data.t('Menu.color')}</Box>
+    <Box justifySelf='end' alignSelf='center'>{app_data.t('Menu.color')}</Box>
   </Box>
 
   // En-tête spécial pour les data tags
@@ -634,8 +619,8 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
 
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
-    <FilterWrapperBox new_data={new_data as Class_ApplicationDataOSP} title={t(`Banner.${config.title_key}`)}>
-      {config.show_title_column ? title_filter_column(new_data as Class_ApplicationDataOSP) : null}
+    <FilterWrapperBox app_data={app_data} title={t(`Banner.${config.title_key}`)}>
+      {config.show_title_column ? title_filter_column(app_data as unknown as  Class_ApplicationDataOSP) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}
     </FilterWrapperBox>
@@ -643,24 +628,23 @@ export const UnifiedTagGroupFilter: FC<UnifiedTagGroupFilterProps> = ({ new_data
 }
 // Composants wrapper pour maintenir la compatibilité avec l'API existante
 
-export const NodeTagGroupFilter: FC<BaseLevelProps> = ({ new_data, level }) => (
-  <UnifiedTagGroupFilter new_data={new_data} mode={level ? 'level' : 'node'} />
+export const NodeTagGroupFilter = ({ app_data, level }:{app_data:Class_ApplicationData,level:boolean}) => (
+  <UnifiedTagGroupFilter app_data={app_data} mode={level ? 'level' : 'element'} />
 )
 
-export const LevelTagFilter: FC<BaseComponentPropsPlus> = ({ new_data_plus }) => {
+export const LevelTagFilter = ({ app_data }:{app_data:Class_ApplicationData}) => {
   const [, setCount] = useState(0)
-  new_data_plus.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
+  app_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
 
-  const level_filter = Object.entries(new_data_plus.drawing_area.sankey.level_taggs_dict).length > 0
-  const content_popover = <UnifiedTagGroupFilter new_data={new_data_plus} mode="level" />
+  const level_filter = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length > 0
+  const content_popover = <UnifiedTagGroupFilter app_data={app_data} mode="level" />
 
   return level_filter ? content_popover : <></>
 }
 
-export const DataTagGroupFilter: FC<BaseComponentProps> = ({ new_data }) => (
-  <UnifiedTagGroupFilter new_data={new_data} mode="data" />
-)
+export const DataTagGroupFilter = ({ app_data }:{app_data:Class_ApplicationData}) =>
+  <UnifiedTagGroupFilter app_data={app_data} mode="data" />
 
-export const FlowTagGroupFilter: FC<BaseComponentProps> = ({ new_data }) => (
-  <UnifiedTagGroupFilter new_data={new_data} mode="flow" />
-)
+// export const FlowTagGroupFilter = ({ app_data }:{app_data:Class_ApplicationData}) => 
+//   <UnifiedTagGroupFilter app_data={app_data} mode="element" />
+// )

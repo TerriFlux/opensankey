@@ -1280,7 +1280,7 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
   }
 
   return <Box display={'grid'} gridRowGap='0.2rem'>
-    <FilterWrapperBox new_data={new_data_plus} title={t('view.title_rule_modal_unit')}>
+    <FilterWrapperBox app_data={new_data_plus} title={t('view.title_rule_modal_unit')}>
       <ul style={{ display: 'grid', gridRowGap: '0.2rem' }}>
         <li>-{t('view.rule_modal_unit_1')}</li>
         <li>-{t('view.rule_modal_unit_2')}</li>
@@ -1289,7 +1289,7 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
     </FilterWrapperBox>
 
     {/* LevelTagFilter for current imported data */}
-    <LevelTagFilter new_data_plus={new_data_plus} />
+    <LevelTagFilter app_data={new_data_plus} />
 
     {/* List of visible node for current imported data 
       (visible as it would be visible if imported data were displayed, depend in majority to level tag)*/}
@@ -1471,7 +1471,7 @@ const TabImportExcelDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP
     </> : <></>}
 
     {/* LevelTagFilter for current imported data */}
-    <LevelTagFilter new_data_plus={local_app_data.current} />
+    <LevelTagFilter app_data={local_app_data.current} />
 
     {/* List of visible node for current imported data 
       (visible as it would be visible if imported data were displayed, depend in majority to level tag)*/}
