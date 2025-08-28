@@ -1,17 +1,17 @@
 import { getNumberFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils';
 import { Class_LinkElement } from './Link';
 import { Class_LinkAttribute, AttributeKey as LinkAttributeKey } from './LinkAttributes';
-import { LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig';
+import { AttributeTypes as LinkAttributeTypes, LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig';
 import { Class_NodeElement } from './Node';
 import { Class_NodeAttribute, default_dx, default_dy } from './NodeAttributes';
-import { AttributeKey as NodeAttributeKey, NODES_ATTRIBUTES_CONFIG } from './NodeAttributesConfig';
+import { AttributeTypes as NodeAttributeTypes, AttributeKey as NodeAttributeKey, NODES_ATTRIBUTES_CONFIG } from './NodeAttributesConfig';
 
 
 export class Class_LinkStyle extends Class_LinkAttribute {
   private _id: string
   private _name: string
   private _is_deletable: boolean
-  private _references: { [_: string]: Class_LinkElement}  = {};
+  private _references: { [_: string]: Class_LinkElement } = {};
   private _customisable_attribute: {
     [K in LinkAttributeKey]: boolean
   }
@@ -107,7 +107,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   private _id: string
   private _name: string
   private _is_deletable: boolean
-  private _references: { [_: string]: Class_NodeElement}  = {};
+  private _references: { [_: string]: Class_NodeElement } = {};
   private _customisable_attribute: {
     [K in NodeAttributeKey]: boolean
   }
@@ -141,7 +141,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
       Object.entries(NODES_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
         //@ts-expect-error Default initialization
-        this._attributes[key as AttributeKey] = config.default
+        this._attributes[key as NodeAttributeKey] = config.default
       })
     }
   }
@@ -234,3 +234,236 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   public set position_dy(_) { this._position.dy = _ }
 }
 
+type NodeStyleConfig = Partial<{
+  [K in NodeAttributeKey]: NodeAttributeTypes[K]
+}>
+
+// Type pour les propriétés de position
+interface NodeStylePosition {
+  type?: 'relative' | 'parametric' | 'absolute'
+  dx?: number
+  dy?: number
+}
+
+// Type pour un élément de configuration de style (sans id)
+interface NodeStyleConfigItem {
+  config: NodeStyleConfig
+  position?: NodeStylePosition
+}
+
+// Type pour le dictionnaire complet
+export type NodeStyleConfigsDict = Record<string, NodeStyleConfigItem>
+
+
+
+export const nodeStyleConfigs: NodeStyleConfigsDict = {
+  NodeProductStyle: {
+    config: { 'shape_type': 'ellipse' },
+    position: {}
+  },
+  NodeSectorStyle: {
+    config: { 'shape_type': 'rect' },
+    position: {}
+  },
+  NodeImportExportCloseStyle: {
+    config: {
+      'name_label_is_visible': false,
+      'shape_visible': false,
+      'shape_min_width': 1,
+      'name_label_box_width': 300
+    },
+    position: {
+      'type': 'relative',
+      'dy': 20,
+    }
+  },
+  NodeImportExportAboveBelowStyle: {
+    config: {
+      'shape_min_width': 40,
+      'name_label_is_visible': true,
+      'shape_visible': false,
+      'shape_min_height': 1,
+      'value_label_is_visible': true,
+      'value_label_vert': 'middle',
+      'name_label_vert': 'middle',
+      'name_label_separator': ' - '
+    },
+    position: {
+      'type': 'parametric'
+    }
+  },
+  NodeImportCloseStyle: {
+    config: {},
+    position: {
+      'dx': -100,
+      'dy': -50
+    }
+  },
+  NodeImportAboveStyle: {
+    config: {
+      'name_label_horiz': 'left',
+      'value_label_horiz': 'left',
+      'value_label_horiz_shift': 40,
+    },
+    position: {
+      'dx': -200,
+      'dy': 20
+    }
+  },
+  NodeExportCloseStyle: {
+    config: {},
+    position: {
+      'dx': 100,
+      'dy': 50
+    }
+  },
+  NodeExportBelowStyle: {
+    config: {
+      'name_label_horiz': 'right',
+      'value_label_horiz': 'right',
+      'value_label_horiz_shift': -40,
+    },
+    position: {
+      'dx': 200,
+      'dy': 20
+    }
+  },
+  NodeUnitaryStyle: {
+    config: {
+      'name_label_is_visible': false
+    }
+  },
+  SankeyUnitaryNodeStyle: {
+    config: {
+      name_label_horiz: 'middle',
+      name_label_vert: 'bottom',
+      name_label_font_size: 40,
+      shape_min_width: 200,
+      name_label_bold: true,
+      name_label_uppercase: true,
+      name_label_box_width: 1000,
+    },
+    position: {
+      dx: 300
+    }
+  },
+  SankeyUnitaryNodeInputStyle: {
+    config: {
+      name_label_horiz: 'left',
+      name_label_vert: 'middle',
+      name_label_font_size: 40,
+      shape_min_width: 1,
+      shape_min_height: 1,
+      shape_visible: false,
+      name_label_box_width: 1000,
+    },
+    position: {
+      dx: 300
+    }
+  },
+  SankeyUnitaryNodeOutputStyle: {
+    config: {
+      name_label_horiz: 'right',
+      name_label_vert: 'middle',
+      name_label_font_size: 40,
+      shape_min_width: 1,
+      shape_min_height: 1,
+      shape_visible: false,
+      name_label_box_width: 1000
+    },
+    position: {
+      dx: 300
+    }
+  } as const
+}
+
+export type NodeStyleKey = keyof typeof nodeStyleConfigs
+export const product_sector_styles: readonly NodeStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
+export const node_exchanges_style: readonly NodeStyleKey[] = [
+    'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
+    'NodeImportExportAboveBelowStyle', 'NodeImporttExportCloseStyle'
+  ] as const
+export const node_unitary_styles: readonly NodeStyleKey[] = [
+  'SankeyUnitaryNodeOutputStyle','SankeyUnitaryNodeInputStyle','SankeyUnitaryNodeStyle'] as const
+
+// Vous aurez besoin d'un équivalent de LINKS_ATTRIBUTES_CONFIG pour les liens
+// En supposant qu'il existe, sinon remplacez par le type approprié
+type LinkStyleConfig = Partial<{
+    [K in LinkAttributeKey]: LinkAttributeTypes[K] // Adaptez selon votre config de liens
+  }>
+
+// Type pour un élément de configuration de style de lien (sans id)
+interface LinkStyleConfigItem {
+    config: LinkStyleConfig
+  }
+
+// Type pour le dictionnaire complet
+export type LinkStyleConfigsDict = Record<string, LinkStyleConfigItem>
+
+export const linkStyleConfigs: LinkStyleConfigsDict = {
+  LinkImportExportCloseStyle: {
+    config: {
+      'value_label_is_visible': true,
+      'value_label_on_path': true
+    }
+  },
+  LinkImportCloseStyle: {
+    config: {
+      'shape_orientation': 'vh',
+      'shape_starting_tangeant': 1,
+      'shape_ending_tangeant': 0.25
+    }
+  },
+  LinkExportCloseStyle: {
+    config: {
+      'shape_orientation': 'hv',
+      'shape_starting_tangeant': 0.25,
+      'shape_ending_tangeant': 1
+    }
+  },
+  LinkImportExportAboveBelowStyle: {
+    config: {
+      'shape_starting_curve': 0.25,
+      'shape_starting_tangeant': 0.5,
+      'shape_ending_tangeant': 0.5,
+      'shape_ending_curve': 0.75,
+      'value_label_is_visible': false,
+      'value_label_on_path': true
+    }
+  },
+  LinkImportAboveStyle: {
+    config: {}
+  },
+  LinkExportBelowStyle: {
+    config: {}
+  },
+  LinkInUnitaryStyle: {
+    config: {
+      value_label_font_size: 40,
+      value_label_bold: true,
+      value_label_horiz: 'left',
+      value_label_pos_auto: true,
+      value_label_unit_visible: true,
+      value_label_unit_type: '%OD'
+    }
+  },
+  LinkOutUnitaryStyle: {
+    config: {
+      value_label_font_size: 40,
+      value_label_bold: true,
+      value_label_horiz: 'right',
+      value_label_pos_auto: true,
+      value_label_unit_visible: true,
+      value_label_unit_type: '%IS'
+    }
+  }
+} as const
+
+// Type des clés disponibles pour les liens
+export type LinkStyleKey = keyof typeof linkStyleConfigs
+export const link_exchanges_style: readonly NodeStyleKey[] = [
+  'LinkImportExportAboveBelowStyle', 'LinkExportCloseStyle', 'LinkImportCloseStyle', 'LinkImportExportCloseStyle'
+] as const
+export const link_unitary_styles: readonly NodeStyleKey[] = [
+  'LinkInUnitaryStyle','LinkOutUnitaryStyle'
+] as const

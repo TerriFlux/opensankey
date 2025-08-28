@@ -5,20 +5,20 @@ import { MenuConfig } from "./SankeyMenuContext";
 export const ZDD_MENU_CONFIG: MenuConfig = {
   structure: [
     {
+      type: 'button',
+      actionName: 'from_new'
+    },
+    {
       type: 'submenu',
       titleKey: 'Positionnement',
       actions: [
         { actionName: 'computeAutoPosition' },
-        { actionName: 'arrangeNodesToGrid' },
         { actionName: 'toggleParametricMode' },
         { actionName: 'toggleAutoX' },
         { actionName: 'setTradeClose' },
-        { actionName: 'setTradeOpen' }
+        { actionName: 'setTradeOpen' },
+        { actionName: 'arrangeNodesToGrid' }
       ]
-    },
-    {
-      type: 'button',
-      actionName: 'from_new'
     },
     {
       type: 'submenu',
