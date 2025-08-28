@@ -7,15 +7,18 @@
 // All rights reserved for TerriFlux
 // ==================================================================================================
 
-// OpenSankey imports
-import { Class_ApplicationData, default_save_JSON_options, MenuColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
-import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
+
+import React, { CSSProperties, useState } from 'react'
+import { Box } from '@chakra-ui/react'
+import { ColorResult, SketchPicker, SwatchesPicker } from 'react-color'
+
+import { Class_ApplicationData, MenuColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
+import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON, default_save_JSON_options } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_IconLibraryOSP } from './IconLibrairieOSP'
-import { Box } from '@chakra-ui/react'
-import React, { CSSProperties, FC, useState } from 'react'
-import { ColorResult, SketchPicker, SwatchesPicker } from 'react-color'
+import { nodeStyleConfigs, linkStyleConfigs, node_unitary_styles, link_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
+
 import { Type_SaveDiagramOptions } from '../deps/OpenSankey/Persistence/SankeyPersistenceTypes'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
@@ -354,7 +357,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
  * @type {FC<MenuColorPickerProps>}
  * @memberof Class_ApplicationDataSA
  */
-  public override MenuColorPicker = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }:MenuColorPickerProps) => {
+  public override MenuColorPicker = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }: MenuColorPickerProps) => {
     const [displayColorPicker, setDisplayColorPicker] = useState(false)
     const [color, setColor] = useState(initialColor)
 
@@ -632,9 +635,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.fromJSON(copy) // /!\ CopyFrom overwrites drawing area's name
     new_drawing_area.name = name
 
-
-
-    // Edit view
+    node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, nodeStyleConfigs))
+    link_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_link_internal_style(style_id, linkStyleConfigs))
 
     new_drawing_area.removeMinimumLinkThickness()
     new_drawing_area.removeMaximumLinkThickness()
@@ -646,76 +648,35 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       new_drawing_area.deleteContainer(cont)
     })
 
-
-
-    // Create style for nodes linked to unitary node
-    const InNodeStyle = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeInputStyle', 'Input node')
-    InNodeStyle.name_label_horiz = 'left'
-    InNodeStyle.name_label_vert = 'middle'
-    InNodeStyle.name_label_font_size = 40
-    InNodeStyle.shape_min_width = 1
-    InNodeStyle.shape_min_height = 1
-    InNodeStyle.shape_visible = false
-    InNodeStyle.name_label_box_width = 1000
-    InNodeStyle.position_dx = 300
-
-    const OutNodeStyle = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeOutputStyle', 'Output node')
-    OutNodeStyle.name_label_horiz = 'right'
-    OutNodeStyle.name_label_vert = 'middle'
-    OutNodeStyle.name_label_font_size = 40
-    OutNodeStyle.shape_min_width = 1
-    OutNodeStyle.shape_min_height = 1
-    OutNodeStyle.shape_visible = false
-    OutNodeStyle.name_label_box_width = 1000
-    OutNodeStyle.position_dx = 300
-
-    const unitaryNode = new_drawing_area.sankey.addNewNodeStyle('SankeyUnitaryNodeStyle', 'Unitary node')
-    unitaryNode.name_label_horiz = 'middle'
-    unitaryNode.name_label_vert = 'bottom'
-    unitaryNode.name_label_font_size = 40
-    unitaryNode.shape_min_width = 200
-    unitaryNode.name_label_bold = true
-    unitaryNode.name_label_uppercase = true
-    unitaryNode.name_label_box_width = 1000
-    unitaryNode.position_dx = 300
-
-    const InLink = new_drawing_area.sankey.addNewLinkStyle('LinkInUnitaryStyle', 'Link In Unitary')
-    InLink.name_label_font_size = 40
-    InLink.value_label_horiz = 'left'
-    InLink.value_label_pos_auto = true
-    InLink.value_label_unit_type = '%OD'
-
-    const OutLink = new_drawing_area.sankey.addNewLinkStyle('LinkOutUnitaryStyle', 'Link Out Unitary')
-    OutLink.name_label_font_size = 40
-    OutLink.value_label_horiz = 'right'
-    OutLink.value_label_pos_auto = true
-    OutLink.value_label_unit_type = '%IS'
-
     const visible_links = new_drawing_area.sankey.visible_links_list.map(l => l.id)
-    let maxLinkValue = 1
+    //let link_value = 1
     new_drawing_area.sankey.links_list
       .forEach(link => {
         // Delete link node not attached to node_ref
         // Compare id instead of object because node_ref come from original DA while links come from copied DA
         // which wouldn't work as intended
+        link.resetAttributes()
         if ((link.source.id !== node_ref.id && link.target.id !== node_ref.id) || !visible_links.includes(link.id)) {
           new_drawing_area.deleteLink(link)
         } else {
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style.push(OutLink)
+            link.style.push(new_drawing_area.sankey.link_styles_dict['LinkOutUnitaryStyle'])
           } else {
-            link.style.push(InLink)
+            link.style.push(new_drawing_area.sankey.link_styles_dict['LinkInUnitaryStyle'])
           }
           // Search for max link value in unitary sankey to re-scale sankey
-          const link_val = link.getMaxValue() ?? 1
-          maxLinkValue = (link_val > maxLinkValue) ? link_val : maxLinkValue
+          //const link_val = link.getMaxValue() ?? 1
+          //maxLinkValue = (link_val > maxLinkValue) ? link_val : maxLinkValue
           link.shape_is_recycling = false
         }
       })
+
+    let scale =0
+    new_drawing_area.sankey.nodes_dict[node_ref.id].input_links_list.forEach(l=>scale+=l.valueCurrent!)
     // Set new scale for unitary sankey
-    new_drawing_area.scale = maxLinkValue / 2
+    new_drawing_area.scale = scale/3
 
     new_drawing_area.sankey.nodes_list
       .forEach(node => {
@@ -727,16 +688,16 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           node.resetAttributes()
           // Affect style depending on IO
           if (node.input_links_list.length == 0) {
-            node.style.push(InNodeStyle)
+            node.style.push(new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle'])
           } else if (node.output_links_list.length == 0) {
-            node.style.push(OutNodeStyle)
+            node.style.push(new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle'])
           }
-          node.dimensions_as_child.forEach(dim=>node.removeDimensionAsChild(dim))
-          node.dimensions_as_parent.forEach(dim=>node.removeDimensionAsParent(dim))
+          node.dimensions_as_child.forEach(dim => node.removeDimensionAsChild(dim))
+          node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
         }
       })
-    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [unitaryNode]
-
+    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeStyle']]
+    new_drawing_area.sankey.nodes_dict[node_ref.id].resetAttributes()
     // Remove tag group
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
       new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
@@ -764,6 +725,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const cont = new_drawing_area.sankey.addNewFreeLabel('unitary_container_')
 
     cont.tied_to_nodes = true
+    cont.margin_from_attached_nodes = 100
     new_drawing_area.sankey.nodes_list.forEach(node => {
       new_drawing_area.sankey.attachNodeToCont(node, cont)
     })

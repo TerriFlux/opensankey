@@ -211,7 +211,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       </MenuButton>
       <MenuList>
         <ButtonNodeContextStartAnimation new_data={new_data_plus} />
-        <ButtonNodeContextCreateUnitaryView new_data={new_data_plus} />
+        <ButtonNodeContextCreateUnitaryView app_data={new_data_plus} />
         <ButtonNodeContextCreateZDTAroundSelectedNode new_data={new_data_plus} />
       </MenuList>
     </Menu>

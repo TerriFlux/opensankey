@@ -594,25 +594,25 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
 }
 
 
-export const ButtonNodeContextCreateUnitaryView: FC<BaseComponentProps> = ({ new_data }) => {
-  const { t } = new_data
+export const ButtonNodeContextCreateUnitaryView = ({ app_data }:{app_data:Class_ApplicationDataOSP}) => {
+  const { t,drawing_area,menu_configuration_osp } = app_data
 
   const closeContextMenu = () => {
     // Unset contextualized node
-    new_data.drawing_area.node_contextualised = undefined
+    drawing_area.node_contextualised = undefined
     // Refresh this menu
-    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+    menu_configuration_osp.ref_to_menu_context_nodes_updater.current()
   }
 
   return <Button
     as={MenuItem}
     onClick={() => {
-      new_data.sendWaitingToast(
+      app_data.sendWaitingToast(
         () => {
-          if (new_data.drawing_area.node_contextualised)
-            new_data.createUnitaryNewView(new_data.drawing_area.node_contextualised)
-          new_data.menu_configuration_osp.updateComponentRelatedToViews()
-          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+          if (drawing_area.node_contextualised)
+            app_data.createUnitaryNewView(drawing_area.node_contextualised)
+          menu_configuration_osp.updateComponentRelatedToViews()
+          menu_configuration_osp.ref_to_save_in_cache_indicator.current(true)
           closeContextMenu()
 
         },
