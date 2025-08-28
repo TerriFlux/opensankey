@@ -2092,7 +2092,7 @@ export class Class_DrawingArea {
       }
       // Vertical displacement
       else {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, event.deltaY)
+        this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, -event.deltaY)
       }
     }
   }
