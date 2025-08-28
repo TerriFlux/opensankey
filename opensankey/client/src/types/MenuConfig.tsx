@@ -36,20 +36,20 @@ export type Type_AdditionalMenus = {
   external_file_export_item: JSX.Element[],
   externale_save_item: JSX.Element[],
   externale_navbar_item: { [_: string]: JSX.Element }
-  external_top_buttons_item: {[x:string]:JSX.Element},
+  external_top_buttons_item: { [x: string]: JSX.Element },
 
   // Config menu
-  additional_menu_type:{[x:string]:string}
-  additional_menu_button_element_configurable:typeButtonElementConfigurable
-  additional_menu_config_content:{
-    data:{[x:string]:JSX.Element},
-    context:{[x:string]:JSX.Element},
-    style:{[x:string]:JSX.Element},
+  additional_menu_type: { [x: string]: string }
+  additional_menu_button_element_configurable: typeButtonElementConfigurable
+  additional_menu_config_content: {
+    data: { [x: string]: JSX.Element },
+    context: { [x: string]: JSX.Element },
+    style: { [x: string]: JSX.Element },
   }
-  additional_new_menu_config_content:{[x:string]:{[x:string]:JSX.Element}}
-  additional_node_config_style:JSX.Element[]
+  additional_new_menu_config_content: { [x: string]: { [x: string]: JSX.Element } }
+  additional_node_config_style: JSX.Element[]
 
-  footer:JSX.Element[]
+  footer: JSX.Element[]
 
   // Mise en page
   extra_background_element: JSX.Element
@@ -67,8 +67,8 @@ export type Type_AdditionalMenus = {
   // Links
   additional_menu_configuration_links: { [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
-  additional_link_appearence_items: ((_:boolean)=>JSX.Element)[],
-  additional_link_appearence_value: ((_:boolean)=>JSX.Element)[],
+  additional_link_appearence_items: ((_: boolean) => JSX.Element)[],
+  additional_link_appearence_value: ((_: boolean) => JSX.Element)[],
   additional_link_visual_filter_content: JSX.Element[],
 
   // Preferences
@@ -170,6 +170,8 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   protected _type_menu_configuration_selected: keyTypeConfig = 'data'
+
+  protected _spreadsheet_freeze = false
 
   /**
    * Dict containing theme of menu according to _type_menu_configuration_selected & elements configurable
@@ -573,8 +575,8 @@ export class Class_MenuConfig {
     this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      this._type_menu_configuration_selected='presentation' as keyTypeConfig
-      this._elements_configurable_selected.presentation=['object' as keyTypeElements]
+      this._type_menu_configuration_selected = 'presentation' as keyTypeConfig
+      this._elements_configurable_selected.presentation = ['object' as keyTypeElements]
       this._ref_to_menu_config_updater.current()
     }, 200)
   }
@@ -1361,14 +1363,14 @@ export class Class_MenuConfig {
   public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
 
   public get ref_to_updater_modal_apply_layout_plus(): MutableRefObject<(() => void)> { return this._ref_to_updater_modal_apply_layout_plus }
-  
+
   public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> { return this._r_editor_content_fo_node_updater }
 
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 
   public get ref_to_menu_config_link_scientific_precision_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_link_scientific_precision_updater }
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
-  public get ref_to_menu_context_container_updater(){return this._ref_to_menu_context_container_updater}
+  public get ref_to_menu_context_container_updater() { return this._ref_to_menu_context_container_updater }
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
   /**
    * Order of buttons in top menu
@@ -1379,6 +1381,9 @@ export class Class_MenuConfig {
     return this._menu_top_order
   }
 
+  public get spreadsheet_freeze() { return this._spreadsheet_freeze }
+  public set spreadsheet_freeze(_) { this._spreadsheet_freeze = _ }
+
   public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
   public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }
 
@@ -1386,7 +1391,7 @@ export class Class_MenuConfig {
   public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
   public get shape_shape(): string[] { return this._shape_shape }
 
-  public get additionalMenus() {return this._additionalMenus}
+  public get additionalMenus() { return this._additionalMenus }
 
   /* ========================================
   Updater of component for containers related menus

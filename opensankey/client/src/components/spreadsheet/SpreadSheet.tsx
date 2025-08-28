@@ -25,30 +25,18 @@
 // ==================================================================================================
 
 // External imports
-import React, { FC, useState } from 'react'
+import React, { useState } from 'react'
+import {Checkbox} from '@chakra-ui/react'
 import {
-  ReactGrid,
-  Column,
-  Row,
-  CellChange,
-  TextCell,
-  NumberCell,
-  Id,
-  MenuOption,
-  SelectionMode,
-  Cell,
-  Compatible,
-  CellLocation
+  ReactGrid,Column,Row,CellChange,TextCell,NumberCell,Id,MenuOption,SelectionMode,
+  Cell,Compatible,CellLocation
 } from '@silevis/reactgrid'
 import '@silevis/reactgrid/styles.css'
 
-
 import { parseLocaleNumber, Type_JSON } from '../../types/Utils'
 import { Class_NodeElement } from '../../Elements/Node'
-import { Class_LinkElement, defaultLinkId } from '../../Elements/Link'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-
-
+import { defaultLinkId } from '../../Elements/Link'
 
 // Define the structure of a flux (flow) row in the spreadsheet
 interface IType_SpreadSheetFlux {
@@ -59,22 +47,22 @@ interface IType_SpreadSheetFlux {
   value_result?: number // Calculated value
 }
 
-
-
 // Main SpreadSheet component
-export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
-  { new_data }: { new_data: Class_ApplicationData }
+export const SpreadSheet = (
+  { app_data }: { app_data: Class_ApplicationData }
 ) => {
-  const { menu_configuration } = new_data
-
+  const { menu_configuration,drawing_area } = app_data
+  const { sankey} = drawing_area
+  const {nodes_dict, links_list, nodes_list} = sankey
+  const [freeze, set_freeze] = useState(menu_configuration.spreadsheet_freeze)
   // // Fonction pour déterminer si on doit afficher la colonne "Valeurs calculées"
   // const shouldShowCalculatedValues = (): boolean => {
-  //   return new_data.drawing_area.sankey.links_list.some(l => l.valueResult !== null && l.valueResult !== undefined)
+  //   return links_list.some(l => l.valueResult !== null && l.valueResult !== undefined)
   // }
 
   // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
-  const getFluxFromSankey = (new_data: Class_ApplicationData): IType_SpreadSheetFlux[] => {
-    const a: IType_SpreadSheetFlux[] = new_data.drawing_area.sankey.links_list
+  const getFluxFromSankey = (app_data: Class_ApplicationData): IType_SpreadSheetFlux[] => {
+    const a: IType_SpreadSheetFlux[] = links_list
       .map((l) => {
         return {
           id: l.id, //Link id
@@ -98,12 +86,12 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
       { columnId: 'value_data', width: innerW * 0.030, resizable: true },
       { columnId: 'value_result', width: innerW * 0.030, resizable: true } // Valeurs collectées
     ]
-    
+
     // Ajouter la colonne "Valeurs calculées" si nécessaire
     // if (shouldShowCalculatedValues()) {
     //   baseColumns.push({ columnId: 'valueResult', width: innerW * 0.045, resizable: true })
     // }
-    
+
     return baseColumns
   }
 
@@ -111,14 +99,14 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
   const headerRow: Row = {
     rowId: 'header', // Header row
     cells: [
-      { type: 'header', text: new_data.t('Flux.src') },
-      { type: 'header', text: new_data.t('Flux.trgt') },
-      { type: 'header', text: new_data.t('Flux.value') },
+      { type: 'header', text: app_data.t('Flux.src') },
+      { type: 'header', text: app_data.t('Flux.trgt') },
+      { type: 'header', text: app_data.t('Flux.value') },
       { type: 'header', text: 'Val. Calculée' }
     ]
   }
 
-    // Get all table rows
+  // Get all table rows
   const getRows = (all_flux: IType_SpreadSheetFlux[]): Row[] => [
     headerRow as Row,
     ...all_flux.map<Row>((flux, idx) => {
@@ -137,30 +125,30 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
   // const getRows = (all_flux: IType_SpreadSheetFlux[]): Row[] => {
   //   const headerRow = getHeaderRow()
   //   const showCalculated = shouldShowCalculatedValues()
-    
+
   //   const dataRows = all_flux.map<Row>((flux, idx) => {
   //     const baseCells = [
   //       { type: 'text', text: flux.source },
   //       { type: 'text', text: flux.target },
   //       { type: 'number', value: flux.valueData as number }
   //     ]
-      
+
   //     // Ajouter la cellule "Valeurs calculées" si nécessaire
   //     if (showCalculated) {
   //       baseCells.push({ type: 'number', value: flux.valueResult as number })
   //     }
-      
+
   //     return {
   //       rowId: idx,
   //       cells: baseCells
   //     }
   //   })
-    
+
   //   return [headerRow as Row, ...dataRows]
   // }
 
-// Define the spreadsheet rows and columns
-  const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey(new_data))
+  // Define the spreadsheet rows and columns
+  const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey(app_data))
   const rows = getRows(spreadSheetFlux)
   const [columns, setColumns] = useState<Column[]>(getColumns())
 
@@ -171,29 +159,23 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
 
   // Map node and link names to their IDs for quick lookups
   const name2id: { [_: string]: string } = {}
-  new_data.drawing_area.sankey.nodes_list.forEach(n => { name2id[n.name] = n.id })
-  new_data.drawing_area.sankey.links_list.forEach(l => { name2id[defaultLinkId(l.source, l.target)] = l.id })
+  nodes_list.forEach(n => { name2id[n.name] = n.id })
+  links_list.forEach(l => { name2id[defaultLinkId(l.source, l.target)] = l.id })
 
   // Function to synchronize spreadsheet data with Sankey data
   const synchronizeSpreadSheetWithSankey = () => {
-    setSpreadSheetFlux(getFluxFromSankey(new_data))
+    setSpreadSheetFlux(getFluxFromSankey(app_data))
     updateColumns() // Mettre à jour les colonnes aussi
   }
 
   // Provide a reference to update the spreadsheet externally
-  new_data.menu_configuration.ref_to_spreadsheet.current = () => {
-    synchronizeSpreadSheetWithSankey()
-  }
-
-
-  // Provide a reference to update the spreadsheet externally
-  new_data.menu_configuration.ref_to_spreadsheet.current = () => {
+  app_data.menu_configuration.ref_to_spreadsheet.current = () => {
     synchronizeSpreadSheetWithSankey()
   }
 
   // Function to add a new node to the Sankey diagram
   const addNode = (name: string) => {
-    const new_node = new_data.drawing_area.sankey.addNewNodeWithName(name)
+    const new_node = sankey.addNewNodeWithName(name)
     new_node.name = name // Set the name of the new node
     return new_node
   }
@@ -213,8 +195,8 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
 
     // Retrieve or create the source node
     let source_node: Class_NodeElement | undefined
-    if (new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]) {
-      source_node = new_data.drawing_area.sankey.nodes_dict[name2id[source_name]]
+    if (nodes_dict[name2id[source_name]]) {
+      source_node = nodes_dict[name2id[source_name]]
     }
     else {
       source_node = addNode(source_name)
@@ -224,8 +206,8 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
 
     // Retrieve or create the target node
     let target_node: Class_NodeElement | undefined
-    if (new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]) {
-      target_node = new_data.drawing_area.sankey.nodes_dict[name2id[target_name]]
+    if (nodes_dict[name2id[target_name]]) {
+      target_node = nodes_dict[name2id[target_name]]
     }
     else {
       target_node = addNode(target_name)
@@ -234,8 +216,8 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
     }
 
     // Add the link if it doesn't exist
-    if (!new_data.drawing_area.sankey.links_dict[defaultLinkId(source_node, target_node)]) {
-      const l = new_data.drawing_area.sankey.addNewLink(
+    if (!sankey.links_dict[defaultLinkId(source_node, target_node)]) {
+      const l = sankey.addNewLink(
         source_node,
         target_node
       )
@@ -269,32 +251,34 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
   }
 
   const redraw = () => {
-    new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
-    new_data.draw()
+    if (!app_data.menu_configuration.spreadsheet_freeze) {
+      drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
+    }
+    app_data.draw()
   }
 
 
   // Functions called in onCellChanges that can be undone ===============================================
 
-/**
-   * Function called in onChanges of Spreadsheet to change value of link
-   * MODIFIÉE pour gérer les deux types de valeurs
-   *
-   * @param {CellChange[]} changes
-   */
+  /**
+     * Function called in onChanges of Spreadsheet to change value of link
+     * MODIFIÉE pour gérer les deux types de valeurs
+     *
+     * @param {CellChange[]} changes
+     */
   const updateLinksValues = (changes: CellChange[]) => {
     const valueChanged = changes.filter(change => change.type === 'number')
     // Only excecute function & save undo if we have changed value cell
     if (valueChanged.length > 0) {
       const dict_old_val: { [x: string]: { value_data?: number | null, value_result?: number | null } } = {}
       const dict_new_val: { [x: string]: { value_data?: number | null, value_result?: number | null } } = {}
-      
+
       // Execute original function ----------------------------
       valueChanged.forEach(change => {
         const fluxIndex = change.rowId as number
-        const fieldName = change.columnId as 'value_data' | 'valueResult'
-        const l = new_data.drawing_area.sankey.links_list[fluxIndex]
-        
+        const fieldName = change.columnId as 'value_data' | 'value_result'
+        const l = links_list[fluxIndex]
+
         // Error can't find link
         if (l == undefined) {
           synchronizeSpreadSheetWithSankey()
@@ -319,7 +303,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
             dict_new_val[l.id].value_data = (change.newCell as NumberCell).value
           }
           spreadSheetFlux[fluxIndex].value_data = (change.newCell as NumberCell).value
-        } else if (fieldName === 'valueResult') {
+        } else if (fieldName === 'value_result') {
           dict_old_val[l.id].value_result = l.value?.valueResult
           if (isNaN((change.newCell as NumberCell).value)) {
             l.value!.valueResult = null
@@ -330,7 +314,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
           }
           spreadSheetFlux[fluxIndex].value_result = (change.newCell as NumberCell).value
         }
-        new_data.drawing_area.updateScaleAtLinkValueSetting()
+        drawing_area.updateScaleAtLinkValueSetting()
         l.source.draw()
         l.target.draw()
       })
@@ -338,7 +322,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
       // Create undo of original function ----------------------------
       const undoUpdateLinksValues = () => {
         Object.entries(dict_old_val).forEach(([linkId, values]) => {
-          const link = new_data.drawing_area.sankey.links_dict[linkId]
+          const link = sankey.links_dict[linkId]
           if (values.value_data !== undefined) {
             link.value!.valueData = values.value_data
           }
@@ -346,7 +330,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
             link.value!.valueResult = values.value_result
           }
         })
-        new_data.drawing_area.updateScaleAtLinkValueSetting()
+        drawing_area.updateScaleAtLinkValueSetting()
         synchronizeSpreadSheetWithSankey() // Utiliser la fonction complète pour mettre à jour les colonnes
         menu_configuration.updateComponentRelatedToLinksData()
       }
@@ -354,7 +338,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
       // Create redo of original function ----------------------------
       const redoUpdateLinksValues = () => {
         Object.entries(dict_new_val).forEach(([linkId, values]) => {
-          const link = new_data.drawing_area.sankey.links_dict[linkId]
+          const link = sankey.links_dict[linkId]
           if (values.value_data !== undefined) {
             link.value!.valueData = values.value_data
           }
@@ -362,31 +346,31 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
             link.value!.valueResult = values.value_result
           }
         })
-        new_data.drawing_area.updateScaleAtLinkValueSetting()
+        drawing_area.updateScaleAtLinkValueSetting()
         synchronizeSpreadSheetWithSankey() // Utiliser la fonction complète pour mettre à jour les colonnes
         menu_configuration.updateComponentRelatedToLinksData()
       }
 
       //Save undo/redo
-      new_data.history.saveUndo(undoUpdateLinksValues)
-      new_data.history.saveRedo(redoUpdateLinksValues)
+      app_data.history.saveUndo(undoUpdateLinksValues)
+      app_data.history.saveRedo(redoUpdateLinksValues)
 
       synchronizeSpreadSheetWithSankey() // Mettre à jour complètement (colonnes + données)
       menu_configuration.updateComponentRelatedToLinksData()
     }
   }
 
-// Dans la fonction newFlux, modifier la partie value :
+  // Dans la fonction newFlux, modifier la partie value :
   const newFlux = (changes: CellChange[]) => {
     const new_flux = changes.filter(change => change.type === 'text' && change.rowId == spreadSheetFlux.length - 1)
     const createdElements: [typeCreatedLink, typeCreatedNode[]][] = []
-    
+
     if (new_flux.length > 0) {
       new_flux.forEach(change => {
         const fluxIndex = change.rowId as number
         const fieldName = change.columnId as 'source' | 'target'
         spreadSheetFlux[fluxIndex][fieldName] = (change.newCell as TextCell).text
-        
+
         if (
           (spreadSheetFlux[fluxIndex]['target'] !== '') &&
           (spreadSheetFlux[fluxIndex]['source'] !== '')
@@ -398,7 +382,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
           redraw()
           menu_configuration.updateComponentRelatedToLinksData()
         } else {
-          synchronizeSpreadSheetWithSankey() // Mettre à jour complètement
+          setSpreadSheetFlux([...spreadSheetFlux])//Update Table
         }
       })
 
@@ -407,11 +391,11 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
         // Delete created elements 
         if (createdElements.length > 0) {
           createdElements.forEach(tupleElements => {
-            const l = new_data.drawing_area.sankey.links_dict[tupleElements[0].id]
-            new_data.drawing_area.deleteLink(l)
+            const l = sankey.links_dict[tupleElements[0].id]
+            drawing_area.deleteLink(l)
             tupleElements[1].forEach(nid => {
-              const n = new_data.drawing_area.sankey.nodes_dict[nid.id]
-              new_data.drawing_area.deleteNode(n)
+              const n = nodes_dict[nid.id]
+              drawing_area.deleteNode(n)
             })
           })
           redraw()
@@ -427,11 +411,11 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
           // Delete created elements 
           createdElements.forEach(line => {
             line[1].forEach(n => {
-              new_data.drawing_area.sankey.addNewNode(n.id, n.name)
+              sankey.addNewNode(n.id, n.name)
             })
-            const src = new_data.drawing_area.sankey.nodes_dict[line[0].idSrc]
-            const trgt = new_data.drawing_area.sankey.nodes_dict[line[0].idTrgt]
-            new_data.drawing_area.sankey.addNewLink(src, trgt)
+            const src = nodes_dict[line[0].idSrc]
+            const trgt = nodes_dict[line[0].idTrgt]
+            sankey.addNewLink(src, trgt)
           })
           redraw()
           menu_configuration.updateComponentRelatedToLinksData()
@@ -440,8 +424,8 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
         }
       }
       //Save undo/redo
-      new_data.history.saveUndo(undoNewFlux)
-      new_data.history.saveRedo(redoNewFlux)
+      app_data.history.saveUndo(undoNewFlux)
+      app_data.history.saveRedo(redoNewFlux)
     }
   }
 
@@ -465,13 +449,13 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
       modifFlux.forEach(change => {
         const fluxIndex = change.rowId as number
         const fieldName = change.columnId as 'source' | 'target'
-        const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+        const l = links_list[fluxIndex]
 
         const prevNode = l[fieldName]
         dict_old_id[l.id] = {}
         dict_old_id[l.id][fieldName] = l[fieldName].id//save old id of source
 
-        l[fieldName] = new_data.drawing_area.sankey.nodes_dict[name2id[(change.newCell as TextCell).text]]
+        l[fieldName] = nodes_dict[name2id[(change.newCell as TextCell).text]]
 
         dict_new_id[l.id] = {}
         dict_new_id[l.id][fieldName] = l[fieldName].id  //save new id of source
@@ -479,22 +463,22 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
         if (!prevNode.hasInputLinks() && !prevNode.hasOutputLinks()) {
           dict_old_id[l.id].deletedJSON = prevNode.toJSON()//save json of deleted node
           // Remove lone nodes
-          new_data.drawing_area.deleteNode(prevNode)
+          drawing_area.deleteNode(prevNode)
         }
         menu_configuration.updateComponentRelatedToLinksData()
       })
 
       // Create undo of original function ----------------------------
       const undoModifyFlux = () => {
-        const dict_l = new_data.drawing_area.sankey.links_dict
-        const dict_n = new_data.drawing_area.sankey.nodes_dict
+        const dict_l = sankey.links_dict
+        const dict_n = nodes_dict
 
         Object.entries(dict_old_id).forEach(ent_l => {
           if (ent_l[1].source !== undefined) {
             if (!(ent_l[1].source in dict_n)) {
               // If node was deleted, recreate it 
               const del_node_name = ent_l[1]?.deletedJSON?.name as string
-              new_data.drawing_area.sankey.addNewNode(ent_l[1].source, del_node_name)
+              sankey.addNewNode(ent_l[1].source, del_node_name)
               if (ent_l[1].deletedJSON)
                 dict_n[ent_l[1].source].fromJSON(ent_l[1].deletedJSON) //restore node deleted with json
             }
@@ -505,7 +489,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
             if (!(ent_l[1].target in dict_n)) {
               // If node was deleted, recreate it 
               const del_node_name = ent_l[1]?.deletedJSON?.name as string
-              new_data.drawing_area.sankey.addNewNode(ent_l[1].target, del_node_name)
+              sankey.addNewNode(ent_l[1].target, del_node_name)
               if (ent_l[1].deletedJSON)
                 dict_n[ent_l[1].target].fromJSON(ent_l[1].deletedJSON) //restore node deleted with json
             }
@@ -517,8 +501,8 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
 
       // Create redo of original function ----------------------------
       const redoModifyFlux = () => {
-        const dict_l = new_data.drawing_area.sankey.links_dict
-        const dict_n = new_data.drawing_area.sankey.nodes_dict
+        const dict_l = sankey.links_dict
+        const dict_n = nodes_dict
 
         Object.entries(dict_new_id).forEach(ent_l => {
           if (ent_l[1].source !== undefined) {
@@ -527,7 +511,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
             if (!prevSrc.hasInputLinks() && !prevSrc.hasOutputLinks()) {
               // delete lone node
               prevSrc.delete()
-              new_data.drawing_area.deleteNode(prevSrc)
+              drawing_area.deleteNode(prevSrc)
             }
           }
 
@@ -537,15 +521,15 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
             if (!prevTarget.hasInputLinks() && !prevTarget.hasOutputLinks()) {
               // delete lone node
               prevTarget.delete()
-              new_data.drawing_area.deleteNode(prevTarget)
+              drawing_area.deleteNode(prevTarget)
             }
           }
         })
         menu_configuration.updateComponentRelatedToLinksData()
       }
       //Save undo/redo
-      new_data.history.saveUndo(undoModifyFlux)
-      new_data.history.saveRedo(redoModifyFlux)
+      app_data.history.saveUndo(undoModifyFlux)
+      app_data.history.saveRedo(redoModifyFlux)
     }
   }
 
@@ -571,7 +555,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
         const _prev_node_name = (change.previousCell as TextCell).text
         const new_node_name = (change.newCell as TextCell).text
         spreadSheetFlux[fluxIndex][fieldName] = new_node_name
-        const l = new_data.drawing_area.sankey.links_list[fluxIndex]
+        const l = links_list[fluxIndex]
 
         if (fieldName == 'source') {
           dict_old_name[l.id] = { src: l.source.name, trgt: undefined }
@@ -589,10 +573,10 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
       const undoChangeNodeName = () => {
         Object.entries(dict_old_name).forEach(ent_l => {
           if (ent_l[1].src !== undefined) {
-            new_data.drawing_area.sankey.links_dict[ent_l[0]].source.name = ent_l[1].src
+            sankey.links_dict[ent_l[0]].source.name = ent_l[1].src
           }
           if (ent_l[1].trgt !== undefined) {
-            new_data.drawing_area.sankey.links_dict[ent_l[0]].target.name = ent_l[1].trgt
+            sankey.links_dict[ent_l[0]].target.name = ent_l[1].trgt
           }
         })
         menu_configuration.updateComponentRelatedToLinksData()
@@ -602,26 +586,27 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
       const redoChangeNodeName = () => {
         Object.entries(dict_new_name).forEach(ent_l => {
           if (ent_l[1].src !== undefined) {
-            new_data.drawing_area.sankey.links_dict[ent_l[0]].source.name = ent_l[1].src
+            sankey.links_dict[ent_l[0]].source.name = ent_l[1].src
           }
           if (ent_l[1].trgt !== undefined) {
-            new_data.drawing_area.sankey.links_dict[ent_l[0]].target.name = ent_l[1].trgt
+            sankey.links_dict[ent_l[0]].target.name = ent_l[1].trgt
           }
         })
         menu_configuration.updateComponentRelatedToLinksData()
       }
       //Save undo/redo
-      new_data.history.saveUndo(undoChangeNodeName)
-      new_data.history.saveRedo(redoChangeNodeName)
+      app_data.history.saveUndo(undoChangeNodeName)
+      app_data.history.saveRedo(redoChangeNodeName)
     }
   }
 
   // Render the ReactGrid component
-  return <ReactGrid
+  return <><ReactGrid
     rows={rows}
     columns={columns}
     onCellsChanged={
       (changes: CellChange[]) => {
+        drawing_area.setToModeEdition(false)
         // Four possible actions :
         // - Modifying link value
         // - New link 
@@ -661,7 +646,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
       return [
         {
           id: 'paste',
-          label: new_data.t('SpreadSheet.paste'),
+          label: app_data.t('SpreadSheet.paste'),
           handler: () => {
             if (window.navigator.userAgent.includes('Firefox')) {
               alert('Cette fonctionnalité ne fonctionne pas sur Firefox.')
@@ -675,7 +660,7 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
               }
 
               //Snapshot of current sankey before update 
-              const prevSankey = new_data.drawing_area.toJSON()
+              const prevSankey = drawing_area.toJSON()
 
               // Format spreadsheet with pasted rows =============================
 
@@ -688,19 +673,19 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
                 for (let i = current_row; i <= current_row + rows.length - 1; i++) {
                   // Go throught row from current row index to current row index + number of row to paste 
                   // If these row contain links content then add to delete list
-                  if (i < new_data.drawing_area.sankey.links_list.length) {
+                  if (i < links_list.length) {
                     //If we have a link to delete 
-                    const l = new_data.drawing_area.sankey.links_list[i]
+                    const l = links_list[i]
                     linksToRemove.push(l)
                   }
                 }
               }
 
-              linksToRemove.forEach(l => new_data.drawing_area.deleteLink(l))//delete links
-              new_data.drawing_area.sankey.nodes_list.forEach(n => {
+              linksToRemove.forEach(l => drawing_area.deleteLink(l))//delete links
+              nodes_list.forEach(n => {
                 if (!n.hasInputLinks() && !n.hasOutputLinks()) {
                   // Remove lone nodes
-                  new_data.drawing_area.deleteNode(n)
+                  drawing_area.deleteNode(n)
                 }
               })
               // If we paste more rows than there is available space then add rows on spreadsheet
@@ -734,20 +719,20 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
                 if (flux.value_data) {
                   flux.value_data = +flux.value_data
                 }
-                if (!((flux.id) in new_data.drawing_area.sankey.links_dict)) {
+                if (!((flux.id) in sankey.links_dict)) {
                   elementCreated.push(addLink(flux)) //add created element in list for undo
                   redraw = true
                 }
                 synchronizeSpreadSheet = true
               })
               //Snapshot of current sankey after update 
-              const nextSankey = new_data.drawing_area.toJSON()
+              const nextSankey = drawing_area.toJSON()
 
               // Post-paste functions ====================================
               if (redraw) {
-                new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
-                new_data.draw()
-                new_data.drawing_area.setToModeEdition(false)
+                drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
+                app_data.draw()
+                drawing_area.setToModeEdition(false)
                 menu_configuration.updateComponentRelatedToLinksData()
               }
               if (synchronizeSpreadSheet) {
@@ -762,29 +747,40 @@ export const SpreadSheet: FC<{ new_data: Class_ApplicationData }> = (
                   ec[1].forEach(node => {
                     // delete node from sankey.node_dict & not directly from elementCreated because
                     //  element in elementCreated can be element not refered in nodes_dict (especially after a redo, so we call an object with the same id)  
-                    new_data.drawing_area.sankey.deleteNode(new_data.drawing_area.sankey.nodes_dict[node.id])
+                    sankey.deleteNode(nodes_dict[node.id])
                   })
                 })
-                new_data.drawing_area.fromJSON(prevSankey, false)
+                drawing_area.fromJSON(prevSankey, false)
 
-                // new_data.drawing_area.computeAutoSankey(true)
-                new_data.draw()
+                // drawing_area.computeAutoSankey(true)
+                app_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()
               }
 
               const redoPaste = () => {
-                new_data.drawing_area.fromJSON(nextSankey, false)
-                new_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
-                new_data.draw()
+                drawing_area.fromJSON(nextSankey, false)
+                drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
+                app_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()
               }
               //Save undo/redo
-              new_data.history.saveUndo(undoPaste)
-              new_data.history.saveRedo(redoPaste)
+              app_data.history.saveUndo(undoPaste)
+              app_data.history.saveRedo(redoPaste)
             })
           }
         }
       ]
     }}
   />
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={menu_configuration.spreadsheet_freeze}
+      onChange={(evt) => {
+        set_freeze(evt.target.checked)
+        menu_configuration.spreadsheet_freeze = evt.target.checked
+      }}
+    >
+      {'Freeze'}
+    </Checkbox>
+  </>
 }
