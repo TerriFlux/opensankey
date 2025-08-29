@@ -1506,7 +1506,7 @@ const TabImportExcelDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP
                 local_app_data.current.createUnitaryNewView(element)
               })
               const obj_view: Type_JSON = {}
-              local_app_data.current.views.forEach(v => obj_view[v.id] = v.toJSON())
+              local_app_data.current.views.forEach(v => obj_view[v.id] = v.toJSON(false,false,true))
               new_data_plus.extractViewsFromJSON({ views: obj_view },true)
               new_data_plus.extractViewsFromJSON({ views: obj_view },false)
               new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()

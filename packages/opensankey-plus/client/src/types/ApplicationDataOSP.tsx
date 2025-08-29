@@ -273,7 +273,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         const json_entry_views = json_entry['views']
         // Go throught all view (except first since it's master data & already parsed in JSON)
         this._views_order.filter((id, i) => i !== 0).forEach(id => {
-          json_entry_views[id] = this._views[id].toJSON()
+          json_entry_views[id] = this._views[id].toJSON(false,false,true)
         })
         // Set current DA to active view before toJSON
         this._drawing_area = this._views[current_view]
@@ -631,7 +631,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const name = 'Unitary view of ' + node_ref.name
     const id = new_drawing_area.id
     const keep_siblings = true
-    const copy = base_drawing_area.toJSON(keep_siblings)
+    const copy = base_drawing_area.toJSON(keep_siblings,false,true)
     copy.id = id
     new_drawing_area.fromJSON(copy)
     new_drawing_area.name = name

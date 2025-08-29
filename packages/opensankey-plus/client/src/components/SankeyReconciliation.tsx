@@ -407,9 +407,9 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
     data_server.append('nb_realizations', String(nb_realizations))
     data_server.append('upper_level_file', (upper_level_file_ as unknown as HTMLFormElement).name)
     if (menu_configuration_osp.action_type === 'optim_sankey') {
-      const new_sankey_json_obj = JSON.parse(JSON.stringify(application_data_mfa.drawing_area.toJSON()))
+      const new_sankey_json_obj = JSON.parse(JSON.stringify(application_data_mfa.drawing_area.toJSON(false,false,true)))
       new_sankey_json_obj.icon_catalog = {}
-      data_server.append('sankey_data', JSON.stringify(application_data_mfa.drawing_area.toJSON()))
+      data_server.append('sankey_data', JSON.stringify(application_data_mfa.drawing_area.toJSON(false,false,true)))
     }
 
     // POST request for optimisation
