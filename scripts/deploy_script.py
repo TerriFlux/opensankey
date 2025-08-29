@@ -9,7 +9,7 @@ import subprocess
 import sys
 import os
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 def run_ssh_command(command: str, host: str, port: int = 22, user: str = "ubuntu") -> bool:
     """Exécute une commande via SSH"""
@@ -114,7 +114,7 @@ def deploy_opensankey(env: str = 'dev', ssh_host: str = "open-sankey.fr", ssh_po
         print(f"\n❌ Le déploiement a échoué pour l'environnement {env}!")
         return False
 
-def parse_ssh_connection(ssh_string: str) -> tuple[str, str, int]:
+def parse_ssh_connection(ssh_string: str) -> Tuple[str, str, int]:
     """Parse une chaîne de connexion SSH comme 'user@host:port' ou 'user@host'"""
     # Par défaut
     user = "ubuntu"
