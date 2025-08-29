@@ -96,9 +96,8 @@ def find_all_git_repos(root_path: Path) -> List[Path]:
     def scan_directory(path: Path):
         if is_git_repo(path):
             git_repos.append(path)
-            # Ne pas scanner à l'intérieur d'un dépôt git pour éviter les sous-modules
-            # qui seront traités séparément
-            return
+            # Pour les sous-modules, on continue à scanner même si on a trouvé un .git
+            # car il peut y avoir des sous-modules imbriqués
         
         try:
             for item in path.iterdir():
