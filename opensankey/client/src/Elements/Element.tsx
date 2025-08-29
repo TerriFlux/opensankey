@@ -323,7 +323,7 @@ export abstract class ClassTemplate_ProtoElement {
    * @memberof ClassTemplate_Element
    */
   public setEventsListeners() {
-    if (!this._drawing_area.static) {
+    //if (!this._drawing_area.static) {
       // Right mouse button clicks
       this.d3_selection?.on(
         'click',
@@ -380,7 +380,7 @@ export abstract class ClassTemplate_ProtoElement {
       else if (this.drawing_area.isInEditionMode()) {
         this.d3_selection?.on('mousedown.drag', null) // Remove dag event
       }
-    }
+    //}
   }
 
   // PROTECTED METHODS ==================================================================
