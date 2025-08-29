@@ -107,7 +107,7 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
    */
   public toJSON(only_visible_elements?: boolean, with_values?: boolean) {
     // Herited toJSON
-    const json_entry: Type_JSON = super.toJSON(only_visible_elements, with_values)
+    const json_entry: Type_JSON = super.toJSON(false,only_visible_elements, with_values)
 
     if (this.name != default_main_sankey_id) json_entry['name'] = this.name
     if (Object.keys(this._heredited_attr).length>0) json_entry['heredited_attr'] = this._heredited_attr
