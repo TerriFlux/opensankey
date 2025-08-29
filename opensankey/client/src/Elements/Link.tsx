@@ -1371,13 +1371,13 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventMouseOut(event)
-  // Utiliser la même logique de protection que pour les nœuds
-  const activeTooltip = (window as any).activeTooltip
-  if (!activeTooltip) {
-    // Pas de tooltip actif protégé, fermeture normale
-    d3.selectAll('.sankey-tooltip').remove()
-    this.d3_selection?.classed('tooltip_shown', false)
-  }
+    // Utiliser la même logique de protection que pour les nœuds
+    const activeTooltip = (window as any).activeTooltip
+    if (!activeTooltip) {
+      // Pas de tooltip actif protégé, fermeture normale
+      d3.selectAll('.sankey-tooltip').remove()
+      this.d3_selection?.classed('tooltip_shown', false)
+    }
 
     // reset link thickness
     if (this._artifical_enlargement) {
@@ -1717,10 +1717,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public formatValueWithOption(value: number | string, option: ValueOptionType) {
-    if (option !== 'value' && value != 'unit_ratio') {
-      if (!this.source.hasInputLinks() || !this.target.hasOutputLinks() ) {
-        return value + '%'
-      }
+    if (
+      this.style.includes(this.sankey.link_styles_dict['LinkInUnitaryStyle']) ||
+      this.style.includes(this.sankey.link_styles_dict['LinkOutUnitaryStyle'])
+    ) {
+      return value + '%'
     }
     if (option == '%IS' && value) {
       return '→↕ ' + value + '%'
