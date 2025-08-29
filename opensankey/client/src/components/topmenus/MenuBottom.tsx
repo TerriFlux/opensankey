@@ -2,6 +2,7 @@ import { Box, Button, ButtonGroup } from '@chakra-ui/react'
 import React, { FC, useState } from 'react'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 type FCType_ToolbarSubComponent = BaseApplicationDataType & {
   updateParentComponent: () => void
@@ -15,9 +16,7 @@ type FCType_ToolbarSubComponent = BaseApplicationDataType & {
  * }
  * @return {*}
  */
-export const ToolBarBottom: FC<BaseApplicationDataType> = ({
-  new_data
-}) => {
+export const ToolBarBottom = ({new_data}:{new_data:Class_ApplicationData}) => {
   const { t } = new_data
 
   // Local State to update this & subcomponent

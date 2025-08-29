@@ -1083,6 +1083,7 @@ export class NodePositioning {
     max_horizontal_index: number,
     echangeTag?: Class_Tag
   ) {
+
     const v_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
 
     let shift = 0
