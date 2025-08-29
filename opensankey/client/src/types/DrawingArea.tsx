@@ -1668,10 +1668,10 @@ export class Class_DrawingArea {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     event.preventDefault()
-    if (this.eventsEnabled()) {
+    //if (this.eventsEnabled()) {
       // Clear tooltips presents
       d3.selectAll('.sankey-tooltip').remove()
-    }
+    //}
   }
 
   /**
