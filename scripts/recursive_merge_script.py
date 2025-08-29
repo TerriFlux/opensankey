@@ -57,8 +57,9 @@ def run_git_command(command: List[str], cwd: Path, capture_output: bool = True) 
         return False, error_msg
 
 def is_git_repo(path: Path) -> bool:
-    """Vérifie si le chemin est un dépôt git"""
-    return (path / '.git').exists()
+    """Vérifie si le chemin est un dépôt git (dossier .git ou fichier .git pour sous-modules)"""
+    git_path = path / '.git'
+    return git_path.exists()  # Fonctionne pour les dossiers ET les fichiers .git
 
 def get_current_branch(repo_path: Path) -> Optional[str]:
     """Récupère la branche actuelle"""
