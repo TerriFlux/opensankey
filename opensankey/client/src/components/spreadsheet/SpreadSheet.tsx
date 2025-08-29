@@ -660,7 +660,7 @@ export const SpreadSheet = (
               }
 
               //Snapshot of current sankey before update 
-              const prevSankey = drawing_area.toJSON()
+              const prevSankey = drawing_area.toJSON(false,false,true)
 
               // Format spreadsheet with pasted rows =============================
 
@@ -726,7 +726,7 @@ export const SpreadSheet = (
                 synchronizeSpreadSheet = true
               })
               //Snapshot of current sankey after update 
-              const nextSankey = drawing_area.toJSON()
+              const nextSankey = drawing_area.toJSON(false,false,true)
 
               // Post-paste functions ====================================
               if (redraw) {

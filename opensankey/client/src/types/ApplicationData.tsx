@@ -574,6 +574,7 @@ export class Class_ApplicationData {
     return {
       ...json_object,
       ...this.drawing_area.toJSON(
+        false,
         this.options_save_json?.mode_visible_element ?? default_save_only_visible_elements,
         this.options_save_json?.mode_save ?? default_save_with_values
       )
