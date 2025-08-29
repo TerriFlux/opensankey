@@ -483,77 +483,140 @@ export class LinkDrawShape {
     }
   }
 
-  /**
-   * Return a svg path for link path drawing
-   * @public
-   * @return {*}
-   */
-  public getBezierPath(is_outline:boolean): string {
-    // Security
-    if (!this._link.shape_is_curved)
-      return this.getLinesPath()
+  public getBezierPath(is_outline: boolean): string {
+  if (!this._link.shape_is_curved)
+    return this.getLinesPath()
 
-    // Update control points
-    this._link_control_points.computeControlPoints()
+  this._link_control_points.computeControlPoints()
 
-    // Normal mode
-    if (!this._link.shape_is_recycling) {
-      // Get starting and ending position per type of shape
-      let x0 = this._link.position_x_start
-      let y0 = this._link.position_y_start
-      let x6 = this._link.position_x_end
-      let y6 = this._link.position_y_end
+  if (!this._link.shape_is_recycling) {
+    let x0 = this._link.position_x_start
+    let y0 = this._link.position_y_start
+    let x6 = this._link.position_x_end
+    let y6 = this._link.position_y_end
 
+    const x1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_x
+    const y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y
+    const x2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_x
+    const y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
+    const x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x
+    const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y
+    const x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
+    const y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y
+    const x3 = (x2 + x4) / 2
+    const y3 = (y2 + y4) / 2
+
+    if (!is_outline) {
+      return 'M ' + x0 + ',' + y0
+        + ' L ' + x1 + ',' + y1
+        + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
+        + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+        + ' L ' + x6 + ',' + y6
+    }
+
+    // Pour is_outline, différencier selon l'orientation
+    if (this._link.shape_orientation === 'hh' || this._link.shape_orientation === 'vv') {
+      // Ancien calcul pour hh et vv
       let shift_x = 0
-      if (is_outline) {
-        if (this._link.shape_orientation == 'vv' || this._link.shape_orientation == 'vh') {
-          shift_x = this._link.thickness / 2
-        }
+      if (this._link.shape_orientation == 'vv') {
+        shift_x = this._link.thickness / 2
       }
       let shift_y = 0
-      if (is_outline) {
-        if (this._link.shape_orientation == 'hh' || this._link.shape_orientation == 'hv') {
-          shift_y = this._link.thickness / 2
-        }
+      if (this._link.shape_orientation == 'hh') {
+        shift_y = this._link.thickness / 2
       }
 
       x0 = x0 - shift_x
       y0 = y0 - shift_y
       x6 = x6 - shift_x
       y6 = y6 - shift_y
-      // Get control points coordinates
-      const x1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_x - shift_x
-      const y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y - shift_y
-      const x2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_x - shift_x
-      const y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y - shift_y
-      const x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x - shift_x
-      const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y - shift_y
-      const x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x - shift_x
-      const y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y - shift_y
+      
+      const x1_shifted = x1 - shift_x
+      const y1_shifted = y1 - shift_y
+      const x2_shifted = x2 - shift_x
+      const y2_shifted = y2 - shift_y
+      const x4_shifted = x4 - shift_x
+      const y4_shifted = y4 - shift_y
+      const x5_shifted = x5 - shift_x
+      const y5_shifted = y5 - shift_y
+      const x3_shifted = (x2_shifted + x4_shifted) / 2
+      const y3_shifted = (y2_shifted + y4_shifted) / 2
 
-      // Center point
-      const x3 = (x2 + x4) / 2
-      const y3 = (y2 + y4) / 2
-
-      if (!is_outline) {
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1 + ',' + y1
-          + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
-          + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
-          + ' L ' + x6 + ',' + y6
-      }
       return 'M ' + x0 + ',' + y0
-        + ' L ' + x1 + ',' + y1
-        + ' Q ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3
-        + ' Q ' + x4 + ',' + y4 + ' ' + x5 + ',' + y5
+        + ' L ' + x1_shifted + ',' + y1_shifted
+        + ' Q ' + x2_shifted + ',' + y2_shifted + ' ' + x3_shifted + ',' + y3_shifted
+        + ' Q ' + x4_shifted + ',' + y4_shifted + ' ' + x5_shifted + ',' + y5_shifted
         + ' L ' + x6 + ',' + y6
         + ' L' + (x6 + 2 * shift_x) + ',' + (y6 + 2 * shift_y)
-        + ' L' + (x5 + 2 * shift_x) + ',' + (y5 + 2 * shift_y)
-        + ' Q ' + (x4 + 2 * shift_x) + ',' + (y4 + 2 * shift_y) + ' ' + (x3 + 2 * shift_x) + ',' + (y3 + 2 * shift_y)
-        + ' Q ' + (x2 + 2 * shift_x) + ',' + (y2 + 2 * shift_y) + ' ' + (x1 + 2 * shift_x) + ',' + (y1 + 2 * shift_y)
+        + ' L' + (x5_shifted + 2 * shift_x) + ',' + (y5_shifted + 2 * shift_y)
+        + ' Q ' + (x4_shifted + 2 * shift_x) + ',' + (y4_shifted + 2 * shift_y) + ' ' + (x3_shifted + 2 * shift_x) + ',' + (y3_shifted + 2 * shift_y)
+        + ' Q ' + (x2_shifted + 2 * shift_x) + ',' + (y2_shifted + 2 * shift_y) + ' ' + (x1_shifted + 2 * shift_x) + ',' + (y1_shifted + 2 * shift_y)
         + ' L ' + (x0 + 2 * shift_x) + ',' + (y0 + 2 * shift_y)
         + ' Z'
+    } else {
+      // Nouveau calcul pour vh et hv
+      const thickness = this._link.thickness
+      const halfThickness = thickness / 2
+
+      const getPerpendicularOffset = (x1: number, y1: number, x2: number, y2: number, offset: number) => {
+        const dx = x2 - x1
+        const dy = y2 - y1
+        const length = Math.sqrt(dx * dx + dy * dy)
+        if (length === 0) return { x: 0, y: 0 }
+        
+        const perpX = -dy / length * offset
+        const perpY = dx / length * offset
+        return { x: perpX, y: perpY }
+      }
+
+      const offset1 = getPerpendicularOffset(x0, y0, x1, y1, halfThickness)
+      const offsetCenter = getPerpendicularOffset(x2, y2, x4, y4, halfThickness)
+      const offset2 = getPerpendicularOffset(x5, y5, x6, y6, halfThickness)
+
+      const x0_up = x0 + offset1.x
+      const y0_up = y0 + offset1.y
+      const x1_up = x1 + offset1.x
+      const y1_up = y1 + offset1.y
+      const x2_up = x2 + offsetCenter.x
+      const y2_up = y2 + offsetCenter.y
+      const x3_up = x3 + offsetCenter.x
+      const y3_up = y3 + offsetCenter.y
+      const x4_up = x4 + offsetCenter.x
+      const y4_up = y4 + offsetCenter.y
+      const x5_up = x5 + offset2.x
+      const y5_up = y5 + offset2.y
+      const x6_up = x6 + offset2.x
+      const y6_up = y6 + offset2.y
+
+      const x0_down = x0 - offset1.x
+      const y0_down = y0 - offset1.y
+      const x1_down = x1 - offset1.x
+      const y1_down = y1 - offset1.y
+      const x2_down = x2 - offsetCenter.x
+      const y2_down = y2 - offsetCenter.y
+      const x3_down = x3 - offsetCenter.x
+      const y3_down = y3 - offsetCenter.y
+      const x4_down = x4 - offsetCenter.x
+      const y4_down = y4 - offsetCenter.y
+      const x5_down = x5 - offset2.x
+      const y5_down = y5 - offset2.y
+      const x6_down = x6 - offset2.x
+      const y6_down = y6 - offset2.y
+
+      return 'M ' + x0_up + ',' + y0_up
+        + ' L ' + x1_up + ',' + y1_up
+        + ' Q ' + x2_up + ',' + y2_up + ' ' + x3_up + ',' + y3_up
+        + ' Q ' + x4_up + ',' + y4_up + ' ' + x5_up + ',' + y5_up
+        + ' L ' + x6_up + ',' + y6_up
+        + ' L ' + x6_down + ',' + y6_down
+        + ' L ' + x5_down + ',' + y5_down
+        + ' Q ' + x4_down + ',' + y4_down + ' ' + x3_down + ',' + y3_down
+        + ' Q ' + x2_down + ',' + y2_down + ' ' + x1_down + ',' + y1_down
+        + ' L ' + x0_down + ',' + y0_down
+        + ' Z'
     }
+  }
+  
     // Recycling mode
     else {
       // Get starting and ending position per type of shape
