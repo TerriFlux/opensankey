@@ -327,7 +327,8 @@ export class Class_ApplicationData {
     // Get OpenSankey logo
     this._logo_opensankey = 'logos/logo_opensankey.png'
     // Get TerriFlux logo
-    this._logo_terriflux = 'logos/logo_terriflux.png'
+    if (published_mode) this._logo_terriflux = 'logo_terriflux.png'
+    else this._logo_terriflux = 'logos/logo_terriflux.png'
 
     // Excel processing function
     this._processFunction = {
