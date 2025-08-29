@@ -132,10 +132,8 @@ def merge_main_in_repo(repo_path: Path) -> bool:
     
     log_info(f"Branche actuelle dans {repo_name}: {current_branch}")
     
-    # Si on n'est pas sur main, on ne fait rien
-    if current_branch != 'main':
-        log_warning(f"{repo_name} n'est pas sur la branche main (actuellement sur {current_branch}), ignoré")
-        return True
+    # Afficher la branche actuelle pour info
+    log_info(f"Branche actuelle dans {repo_name}: {current_branch}")
     
     # Fetch pour avoir les dernières modifications
     log_info(f"Fetch des dernières modifications pour {repo_name}...")
@@ -253,4 +251,4 @@ def main():
         log_success("Tous les merges ont été préparés avec succès!")
 
 if __name__ == "__main__":
-    main() 
+    main()
