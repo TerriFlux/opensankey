@@ -57,8 +57,9 @@ def run_git_command(command: List[str], cwd: Path, capture_output: bool = True) 
         return False, error_msg
 
 def is_git_repo(path: Path) -> bool:
-    """Vérifie si le chemin est un dépôt git"""
-    return (path / '.git').exists()
+    """Vérifie si le chemin est un dépôt git (dossier .git ou fichier .git pour sous-modules)"""
+    git_path = path / '.git'
+    return git_path.exists()  # Fonctionne pour les dossiers ET les fichiers .git
 
 def get_current_branch(repo_path: Path) -> Optional[str]:
     """Récupère la branche actuelle"""
@@ -95,9 +96,8 @@ def find_all_git_repos(root_path: Path) -> List[Path]:
     def scan_directory(path: Path):
         if is_git_repo(path):
             git_repos.append(path)
-            # Ne pas scanner à l'intérieur d'un dépôt git pour éviter les sous-modules
-            # qui seront traités séparément
-            return
+            # Pour les sous-modules, on continue à scanner même si on a trouvé un .git
+            # car il peut y avoir des sous-modules imbriqués
         
         try:
             for item in path.iterdir():
