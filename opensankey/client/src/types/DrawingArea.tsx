@@ -449,9 +449,9 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public toJSON(
-    keep_siblings: boolean = false,
-    only_visible_elements: boolean = false,
-    with_values: boolean = true
+    keep_siblings: boolean,
+    only_visible_elements: boolean,
+    with_values: boolean
   ) {
     // Create json struct
     const json_object = {} as Type_JSON
