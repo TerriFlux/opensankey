@@ -188,7 +188,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     new_data_plus.menu_configuration.flow_color_origin_type.push('auto')
   }
 
-  if (has_sankey_afm) {
+  if (has_sankey_afm && !new_data.is_static) {
     additionalMenus.current.external_top_buttons_item['afm'] = <AFMEditionMenu
       app_data={new_data_plus}
     />
