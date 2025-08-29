@@ -2205,7 +2205,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       (this._datatags_fingerprint !== this.sankey.data_tags_fingerprint)
     ) {
       // Recompute visibility value
-      const is_not_null = (this.valueCurrent !== 0 && this.valueCurrent !== null)
+      const is_not_null = (this.valueCurrent !== 0 )
       // Update  fingerprint if needed
       // -> This condition allows to avoid unecessary visibility recomputing on related elements
       //    that check this link's visibility fingerprint
