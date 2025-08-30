@@ -46,15 +46,7 @@ import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FType_ClickSaveDiagram, FType_UploadExcelImpl } from '../../Persistence/SankeyPersistenceTypes'
 
-/**
- *
- * @type {{ ref_setter_show_modal_json_saver: any; set_show_save_json: any; sankey_data: any; set_sankey_data: any; ClickSaveDiagram: any; }}
- */
 
-type FCType_ApplySaveJSONDialog = {
-  new_data: Class_ApplicationData,
-  ClickSaveDiagram: FType_ClickSaveDiagram
-}
 /**
  *
  * @param  { ref_setter_show_modal_apply_layout, set_show_apply_layout, sankey_data, set_sankey_data }
@@ -531,10 +523,8 @@ export const ExcelModal = ({new_data,uploadExcelImpl,launch}:{
 
 }
 
-export const OpenSankeyDiagramSelector: FType_DiagramSelector = (
-  new_data
-) => {
-  const { t, data_var_to_update } = new_data
+export const OpenSankeyDiagramSelector = (app_data:Class_ApplicationData) => {
+  const { t } = app_data
   const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
   return <Box>
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
@@ -561,13 +551,14 @@ export const OpenSankeyDiagramSelector: FType_DiagramSelector = (
                   if (result) {
                     // TODO verifier fonctionnement de ce qui suit
                     result = String(result)
-                    const new_layout = JSON.parse(result)
-                    const tmp_DA = new_data.createNewDrawingArea()
-                    tmp_DA.fromJSON(new_layout)
-                    new_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
-                    new_data.drawing_area.drawElements()
-                    new_data.drawing_area.areaAutoFit(true)
-                    new_data.menu_configuration.updateAllMenuComponents()
+                    const json_object = JSON.parse(result)
+                    // const tmp_DA = app_data.createNewDrawingArea()
+                    // tmp_DA.fromJSON(new_layout)
+                    // app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
+                    app_data.fromJSON(json_object)
+                    // app_data.drawing_area.drawElements()
+                    // app_data.drawing_area.areaAutoFit(true)
+                    // app_data.menu_configuration.updateAllMenuComponents()
                   }
                 }
               )

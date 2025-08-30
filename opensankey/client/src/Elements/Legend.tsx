@@ -280,8 +280,9 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     this._info_link_value_void = getBooleanFromJSON(json_legend, 'info_link_value_void', this._info_link_value_void)
     this._stick_to_drawing = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', this._stick_to_drawing)
     // Var only present if json is legacy
-    this._pos_from_legacy = getBooleanFromJSON(json_legend, 'legacy_legend', this._pos_from_legacy)
-
+    if (!this._stick_to_drawing) {
+      this._stick_to_drawing = getBooleanFromJSON(json_legend, 'legacy_legend', this._stick_to_drawing)
+    }
   }
 
   // PUBLIC METHODS =====================================================================
@@ -410,14 +411,27 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   }
 
   protected override _initDraw() {
-    const d3_svg = this.drawing_area.d3_selection_zoom_area
-    if (d3_svg !== null) {
-      const d3_drawing_area_selection = d3_svg.selectAll(' #' + this._svg_parent_group)
-      if (d3_drawing_area_selection.nodes().length > 0) {
-        this.d3_selection = d3_drawing_area_selection.append('g')
-        this.d3_selection.attr('id', this.svg_group)
-          .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
+    if(!this.stick_to_drawing) {
+      const d3_svg = this.drawing_area.d3_selection_zoom_area
+      if (d3_svg !== null) {
+        const d3_drawing_area_selection = d3_svg.selectAll(' #' + this._svg_parent_group)
+        if (d3_drawing_area_selection.nodes().length > 0) {
+          this.d3_selection = d3_drawing_area_selection.append('g')
+          this.d3_selection.attr('id', this.svg_group)
+            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight()+')')  // init drawing area zone with a margin for taking into account the navbar
+        }
       }
+    } else {
+      const d3_svg = this.drawing_area.d3_selection
+      if (d3_svg !== null) {
+        const d3_drawing_area_selection = d3_svg.selectAll(' #' + this._svg_parent_group)
+        if (d3_drawing_area_selection.nodes().length > 0) {
+          const scale_da = this.drawing_area.getZoomScale()
+          this.d3_selection = d3_drawing_area_selection.append('g')
+          this.d3_selection.attr('id', this.svg_group)
+            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale('+1/scale_da+')')  // init drawing area zone with a margin for taking into account the navbar
+        }
+      }      
     }
   }
 
@@ -463,9 +477,10 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   protected override _applyPosition() {
     if (this.d3_selection !== null) {
       const position_y = this.position_y + this.drawing_area.getNavBarHeight()
+      const scale_da = this.drawing_area.getZoomScale()
       this.d3_selection.attr(
         'transform',
-        'translate(' + this.position_x + ', ' + position_y + ')')
+        'translate(' + this.position_x + ', ' + position_y + ') scale('+1/scale_da+')')
     }
   }
 

@@ -113,6 +113,7 @@ export function isPositionOverloaded(
 export class Class_NodeElement extends ClassTemplate_Element {
   // Shape attributes
   shape_visible!: NodeAttributeTypes['shape_visible']
+  orphan_node_visible!: NodeAttributeTypes['orphan_node_visible']
   shape_type!: NodeAttributeTypes['shape_type']
   shape_arrow_angle_factor!: NodeAttributeTypes['shape_arrow_angle_factor']
   shape_arrow_angle_direction!: NodeAttributeTypes['shape_arrow_angle_direction']
@@ -1881,10 +1882,11 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   private checkIfLinksVisibilitiesAreOK() {
     if (this.input_links_list.length + this.output_links_list.length == 0) {
-      return true
+      if (this.orphan_node_visible) return true
+      else return false
     }
     const input_links_visible = this.input_links_list.filter(link =>
-      link.is_not_null &&
+      link.is_not_zero &&
       link.are_related_flux_tags_selected &&
       link.source.are_related_node_tags_selected &&
       link.source.are_related_dimensions_selected
@@ -1893,7 +1895,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
       return true
     }
     const output_links_visible = this.output_links_list.filter(link =>
-      link.is_not_null &&
+      link.is_not_zero &&
       link.are_related_flux_tags_selected &&
       link.target.are_related_node_tags_selected &&
       link.target.are_related_dimensions_selected

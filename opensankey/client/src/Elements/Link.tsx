@@ -374,7 +374,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   // Visibility memorized - values
   protected _datatags_fingerprint: string = ''
-  protected _is_not_null: boolean | undefined = undefined
+  protected _is_not_zero: boolean | undefined = undefined
 
   // PRIVATE ATTRIBUTES =================================================================
   private _link_shape: LinkDrawShape
@@ -1466,7 +1466,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       Object.values(this._child_links).length == 0 &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
-      this.is_not_null
+      this.is_not_zero
     )
   }
 
@@ -2199,24 +2199,24 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @readonly
    * @memberof Class_LinkElement
    */
-  public get is_not_null(): boolean {
+  public get is_not_zero(): boolean {
     if (
-      (this._is_not_null === undefined) ||
+      (this._is_not_zero === undefined) ||
       (this._datatags_fingerprint !== this.sankey.data_tags_fingerprint)
     ) {
       // Recompute visibility value
-      const is_not_null = (this.valueCurrent !== 0 )
+      const is_not_zero = (this.valueCurrent !== 0 )
       // Update  fingerprint if needed
       // -> This condition allows to avoid unecessary visibility recomputing on related elements
       //    that check this link's visibility fingerprint
-      if (is_not_null !== this._is_not_null) {
+      if (is_not_zero !== this._is_not_zero) {
         this.updateVisibilityFingerprint()
       }
       // Update memorized values
-      this._is_not_null = is_not_null
+      this._is_not_zero = is_not_zero
       this._datatags_fingerprint = this.sankey.data_tags_fingerprint
     }
-    return this._is_not_null
+    return this._is_not_zero
   }
 
 
