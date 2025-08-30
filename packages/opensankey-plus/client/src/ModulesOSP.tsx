@@ -33,9 +33,6 @@ import {
 } from './deps/OpenSankey/components/topmenus/SankeyMenus'
 import { WrapperContentConfig } from './deps/OpenSankey/components/configmenus/MenuCommon'
 import {
-  OpenSankeyDiagramSelector
-} from './deps/OpenSankey/components/dialogs/SankeyMenuDialogs'
-import {
   IType_DictHookRefSetterShowDialogComponents
 } from './deps/OpenSankey/types/MenuConfig'
 import {
@@ -151,13 +148,6 @@ export const initializeApplicationDataOSP = (
   initializePlusMenus()
   return new_data_plus
 }
-
-export const initializeDiagrammSelectorOSP: FType_InitializeDiagrammSelector = (
-  _new_data
-) => {
-  return OpenSankeyDiagramSelector
-}
-
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
  *  we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
