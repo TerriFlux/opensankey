@@ -31,7 +31,6 @@ import OpenSankeyApp from './deps/LoginComponent//deps/OpenSankey+/deps/OpenSank
 
 import {
   initializeAdditionalMenusOSP,
-  initializeDiagrammSelectorOSP,
   moduleDialogsOSP,
 } from './deps/LoginComponent//deps/OpenSankey+/ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/ModalWelcomeOSP'
@@ -53,11 +52,12 @@ import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/San
 import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
 import { DrawerSequenceDataTagg } from './deps/LoginComponent/deps/OpenSankey+/components/UtilsOSP'
 import { Type_JSON, checkForUrlToJSON } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Modules'
+import { FType_ModuleDialogs, initializeDiagrammSelector } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Modules'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 import { ZDDModifierType } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextZDDConfig'
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
 import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
+
 
 // Specific methods ==================================================================================
 
@@ -99,7 +99,8 @@ export const initializeApplicationDataSA = (
   if (url_info) {
     new_data_app.readUrlJSON(url_info)
   } else if (initial_data !== undefined) {
-    new_data_app.fromJSON(initial_data)
+    new_data_app.fromJSON(JSON.parse(JSON.stringify(initial_data)))
+
   }
   initializePlusMenus()
   return new_data_app
@@ -254,7 +255,7 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
           setLicenses
         )
       }}
-      initializeDiagrammSelector={initializeDiagrammSelectorOSP}
+      initializeDiagrammSelector={initializeDiagrammSelector}
       moduleDialogs={moduleDialogsSA}
       ModalWelcome={ModalWelcomeBuilderOSP}
       ClickSaveDiagram={
