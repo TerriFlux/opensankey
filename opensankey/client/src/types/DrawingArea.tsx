@@ -576,7 +576,7 @@ export class Class_DrawingArea {
 
     // Fit area
     this.areaAutoFit(true)
-
+    this._legend.draw()
     // Added events listeners
     this.setEventsListeners()
 
@@ -1088,11 +1088,29 @@ export class Class_DrawingArea {
     recenter: boolean = false
   ) {
     // Get bounding box for all elements
-    const bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+    let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
 
     // No bounding box -> return
     if (bbox == undefined)
       return
+    if (this.legend.stick_to_drawing) {
+      const legendBbox = this.d3_selection_legend?.node()?.getBBox();
+      if (legendBbox) {
+        // Calculer la bounding box englobante
+        const minX = Math.min(bbox.x, legendBbox.x);
+        const minY = Math.min(bbox.y, legendBbox.y);
+        const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width);
+        const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height);
+
+        // Créer une nouvelle bbox combinée
+        bbox = {
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY
+        } as DOMRect;
+      }
+    }
 
     // Bounding box with no element -> default dims
     if ((bbox.width == 0) && (bbox.height == 0)) {
@@ -1647,15 +1665,15 @@ export class Class_DrawingArea {
         'contextmenu',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleRMBCLick(event))
-      // Zoom behavior(but can also drag drawing area in scroll zone)
-      this.d3_selection_zoom_area?.call(
-        this.zoomListener)
-        .on('dblclick.zoom', null) // deactivate dbl click zoom
-        .on('wheel.zoom', (event: WheelEvent) => {
-          event.preventDefault()
-          this.eventMouseScroll(event)
-        })
     }
+    // Zoom behavior(but can also drag drawing area in scroll zone)
+    this.d3_selection_zoom_area?.call(
+      this.zoomListener)
+      .on('dblclick.zoom', null) // deactivate dbl click zoom
+      .on('wheel.zoom', (event: WheelEvent) => {
+        event.preventDefault()
+        this.eventMouseScroll(event)
+      })
   }
 
   /**

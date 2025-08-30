@@ -57,7 +57,21 @@ export const NODES_ATTRIBUTES_CONFIG = {
       fr: 'Rend le/les noeud(s) selectionné(s) visible(s) ou invisible(s)'
     }
   } satisfies AttributeConfig<boolean>,
-
+  orphan_node_visible: {
+    default: true,
+    type: (() => true) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['draw'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Orphans Visible',
+      fr: 'Orphelins Visibles'
+    },
+    tooltips: {
+      en: 'Visibility of Orphans Nodes without input or output flux',
+      fr: 'Visibilité des Noeud orphelins sans flux entrants ni flux sortants'
+    }
+  } satisfies AttributeConfig<boolean>,
   shape_type: {
     default: 'rect' as Type_Shape,
     type: (() => 'rect') as (() => Type_Shape),
@@ -1110,6 +1124,7 @@ export abstract class NodeAttributeTypeScript implements INodeAttributesBase {
   
   // Shape attributes
   shape_visible!: AttributeTypes['shape_visible']
+  orphan_node_visible!: AttributeTypes['orphan_node_visible']
   shape_type!: AttributeTypes['shape_type']
   shape_arrow_angle_factor!: AttributeTypes['shape_arrow_angle_factor']
   shape_arrow_angle_direction!: AttributeTypes['shape_arrow_angle_direction']
