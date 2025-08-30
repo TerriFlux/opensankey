@@ -722,16 +722,16 @@ export class Class_LinkValue {
     json_object['id'] = this._id
     // Fill data
     json_object['id'] = this._id
-    if (this.data_value) json_object['data_value'] = this.data_value
-    if (this.data_min) json_object['data_min'] = this.data_min
-    if (this.data_max) json_object['data_max'] = this.data_max
+    if (this.data_value != null) json_object['data_value'] = this.data_value
+    if (this.data_min != null) json_object['data_min'] = this.data_min
+    if (this.data_max != null) json_object['data_max'] = this.data_max
 
-    if (this.result_value) json_object['result_value'] = this.result_value
+    if (this.result_value != null) json_object['result_value'] = this.result_value
     // if (kwargs && kwargs['has_results'] && this.valueResult) {
     //   json_object['result_value'] = this.valueResult!
     // }
-    if (this.result_min) json_object['result_min'] = this.result_min
-    if (this.result_max) json_object['result_max'] = this.result_max
+    if (this.result_min != null) json_object['result_min'] = this.result_min
+    if (this.result_max != null) json_object['result_max'] = this.result_max
 
     if (this.text_value) json_object['text_value'] = this.text_value
     if (this.value_option !== 'value') json_object['value_option'] = this.value_option
