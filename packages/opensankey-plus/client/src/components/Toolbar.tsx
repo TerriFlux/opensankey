@@ -203,16 +203,11 @@ export const CollapseButton = ({ app_data, isOpen, onToggle }:{
   </Button>
 }
 
-export const FilterWrapperBox = ({
-  app_data,
-  title,
-  children
-}:{
+export const FilterWrapperBox = ({app_data,title,children}:React.PropsWithChildren<{
   app_data: Class_ApplicationData,
   title: string,
-  children: ReactNode,
-
-}) => {
+  children: ReactNode
+}>) => {
   const { isOpen, onToggle } = useDisclosure()
   return <Box layerStyle={'filter_wrapper'}>
     <Box layerStyle='filter_head_box'>
