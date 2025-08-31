@@ -45,6 +45,7 @@ import { Class_IconLibrary } from '../css/IconLibrairie'
 import { MenuColorPicker } from '../components/configmenus/MenuColorPicker'
 import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
+import { decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -641,18 +642,45 @@ export class Class_ApplicationData {
 public readUrlJSON(url_data: string) {
     const root = window.location.origin
     const url = root + this.url_prefix + 'url/load_json'
-    
+   
     const form_data = new FormData()
     form_data.append('url', url_data)
-    
+   
     fetch(url, {
         method: 'POST',
         body: form_data
     })
-    .then(response => response.text()) // Le navigateur décompresse automatiquement
-    .then(text => {
-        const json_data = JSON.parse(text)
-        this.fromJSON(json_data)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        return response.arrayBuffer() // Utiliser arrayBuffer pour gérer binaire et texte
+    })
+    .then(arrayBuffer => {
+        // Convertir en text pour tester JSON
+        const decoder = new TextDecoder()
+        const text = decoder.decode(arrayBuffer)
+        
+        // Tester si c'est du JSON valide
+        try {
+            const json_data = JSON.parse(text)
+            this.fromJSON(json_data)
+        } catch (jsonError) {
+            console.log('Content is not valid JSON, attempting decompression...')
+            
+            // Créer un File à partir de l'ArrayBuffer pour la décompression
+            const filename = url_data.split('/').pop() || 'file'
+            const file = new File([arrayBuffer], filename)
+            
+            decompressUploadedFileUniversal(file)
+                .then(json_data => {
+                    this.fromJSON(json_data as Type_JSON)
+                })
+                .catch(decompressError => {
+                    console.error('Error in decompression:', decompressError)
+                    throw new Error(`Content is neither valid JSON nor valid compressed file`)
+                })
+        }
     })
     .catch((error) => {
         console.error('Error in readUrlJSON:', error)
