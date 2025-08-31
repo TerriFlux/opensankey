@@ -36,10 +36,10 @@ export const ToolBarBottom = ({new_data}:{new_data:Class_ApplicationData}) => {
     bottom={'calc(' + String(sizeBottomMenu + (new_data.drawing_area.fit_margin / 2)) + 'px + 1rem)'}
   >
     {btn_mouse_mode_edition}
-    <ComponentUndoRedo
+    {!new_data.is_static ?<ComponentUndoRedo
       new_data={new_data}
       updateParentComponent={refreshThis}
-    />
+    />:<></>}
     <ComponetStretchButtons
       new_data={new_data}
       updateParentComponent={refreshThis}
@@ -47,7 +47,7 @@ export const ToolBarBottom = ({new_data}:{new_data:Class_ApplicationData}) => {
     <OSTooltip
       placement='top'
       label={t('Banner.tooltipHelp')}
-      isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
+      isAlwaysOpen={!new_data.is_static && new_data.menu_configuration.show_splashscreen}
     >
       <Button
         variant='info'

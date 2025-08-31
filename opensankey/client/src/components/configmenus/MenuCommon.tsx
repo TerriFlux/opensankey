@@ -255,7 +255,10 @@ export const WrapperCheckBoxSubSectionMenu = ({title,open = true,onClick,childre
  * @param {*} { app_data, title, children, hide = false }
  * @return {*} 
  */
-export const WrapperContentConfig: FC<{ title: string; hide?: boolean; children: JSX.Element }> = ({ title, children, hide = false }) => {
+export const WrapperContentConfig = ({ title, children, hide = false }  :React.PropsWithChildren<
+  { title: string; hide?: boolean
+    children: JSX.Element 
+  }>) => {
   // If var hide is at true then return 'nothing'
   if (hide)
     return <></>
@@ -392,7 +395,7 @@ export const OSMultiSelect = ({ elements, onClick }: {
   </Menu>
 }
 
-export const BOX2COLS = ({ children }: { children: React.ReactNode }) => {
+export const BOX2COLS = ({ children }: React.PropsWithChildren<{ children: React.ReactNode }>) => {
   return (
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       {children}
@@ -400,10 +403,10 @@ export const BOX2COLS = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const BOX2COLSTITLEH4 = ({ title, children }: {
+export const BOX2COLSTITLEH4 = ({ title, children }: React.PropsWithChildren<{
   title: string
   children: React.ReactNode
-}) => {
+}>) => {
   return (
     <BOX2COLS>
       <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
@@ -416,11 +419,11 @@ export const BOX2COLSTITLEH4 = ({ title, children }: {
 
 export const RowSetter2Cols = ({
   attributePath, attributeKey, children
-}: {
+}: React.PropsWithChildren<{
   attributePath: string
   attributeKey: string
   children: React.ReactNode
-}) => {
+}>) => {
   const label = t(`${attributePath}.${String(attributeKey)}`)
   const tooltip = t(`${attributePath}.tooltips.${String(attributeKey)}`);
   return (
@@ -439,14 +442,14 @@ export const RowSetter2Cols = ({
 
 export const ElementAttrSetter2Cols = ({
   elements, attributePath, attributeKey, t, showTooltipOverload = true, children
-}: {
+}: React.PropsWithChildren<{
   elements: (Class_LinkElement | Class_NodeElement | Class_LinkStyle | Class_NodeStyle)[]; // Éléments pour vérifier l'overload
   attributePath: string,
   attributeKey: keyof (Class_LinkAttribute | Class_NodeAttribute); // Clé de l'attribut pour les traductions et overload
   t: TFunction; // Fonction de traduction
   showTooltipOverload?: boolean; // Optionnel - afficher le tooltip overload
   children: React.ReactNode; // Le composant enfant (Select, Input, etc.)
-}): JSX.Element => {
+}>) => {
 
   const label = t(`${String(attributePath)}.${String(attributeKey)}`);
   const tooltip = t(`${String(attributePath)}.tooltips.${String(attributeKey)}`);
@@ -624,17 +627,13 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 };
 
 
-export const OSTooltip = (
-  {
-    label, delay = 500, placement = 'auto', isAlwaysOpen = false, children
-  }:{
+export const OSTooltip = ({label, delay = 500, placement = 'auto', isAlwaysOpen = false, children}:React.PropsWithChildren<{
   delay?: number,
   label: string,
   placement?: PlacementWithLogical
-  children: ReactNode,
   isAlwaysOpen?: boolean
-}
-) => {
+  children: ReactNode
+}>) => {
   if (label === undefined) {
     return <>{children}</>
   }
@@ -718,14 +717,16 @@ export const TooltipElementOverloaded = ({
 }
 
 // Version refactorisée de MenuSectionCheckbox
-export const MenuSectionCheckbox = ({ app_data, elements,attributePath, attributeKey, refreshParentComponent, children }: {
+export const MenuSectionCheckbox = ({ 
+  app_data, elements,attributePath, attributeKey, refreshParentComponent, children 
+}: React.PropsWithChildren<{
   app_data: Class_ApplicationData
   elements: ElementsType[]
   attributePath: string,
   attributeKey: ValueKey
   refreshParentComponent: () => void
   children: React.ReactNode
-}) => {
+}>) => {
 
   const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig(app_data, elements)
   const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, attributeKey)

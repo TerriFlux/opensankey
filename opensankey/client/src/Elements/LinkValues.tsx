@@ -1,6 +1,6 @@
 import type { Class_DataTag, Class_ProtoTag, Class_Tag } from '../types/Tag'
 import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
-import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON } from '../types/Utils'
+import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON, getJSONOrUndefinedFromJSON } from '../types/Utils'
 import { Class_LinkElement } from './Link'
 
 // CLASS LINK TREE VALUE ****************************************************************
@@ -117,6 +117,20 @@ export class Class_LinkValueTree {
         has_result = has_result || child.has_result
       })
     return has_result
+  }
+
+  public get has_data() {
+    let has_data = false
+    Object.values(this.children)
+      .forEach(child => {
+        has_data = has_data || child.has_data
+      })
+    return has_data
+  }
+
+  public set_only_data() {
+    Object.values(this.children)
+      .forEach(child => child.set_only_data)
   }
 
   public addFrom(element: Class_LinkValueTree) {
@@ -525,6 +539,14 @@ export class Class_LinkValue {
     return this.result_value !== null || this.value_option != 'value'
   }
 
+  public get has_data() {
+    return this.data_value !== null || this.value_option != 'value'
+  }
+  public set_only_data() {
+    this.data_value = this.result_value
+    this.result_value = null
+  }
+
   public get valueResult(): number | null {
     if (this.result_value != undefined) {
       return this.result_value
@@ -751,8 +773,14 @@ export class Class_LinkValue {
   }
 
   private fromJSONLegacy(json_object: Type_JSON) {
-    this.data_value = getNumberOrNullFromJSON(json_object, 'value')
-    this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
+    const json_extension_object = getJSONOrUndefinedFromJSON(json_object, 'extension')
+    if (json_extension_object) {
+      this.data_value = getNumberOrNullFromJSON(json_extension_object, 'data_value')
+      this.result_value = getNumberOrNullFromJSON(json_object, 'value')
+    } else {
+      this.result_value = getNumberOrNullFromJSON(json_object, 'value')
+      this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
+    }
   }
 
   /**

@@ -309,15 +309,15 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
 
   }
 
-  /**
-   * _drawLegendBg with timeout
-   *
-   * @private
-   * @memberof ClassTemplate_Legend
-   */
-  public drawLegendBg() {
-    this._process_or_bypass(() => this._drawLegendBg())
-  }
+  // /**
+  //  * _drawLegendBg with timeout
+  //  *
+  //  * @private
+  //  * @memberof ClassTemplate_Legend
+  //  */
+  // public drawLegendBg() {
+  //   this._process_or_bypass(() => this._drawLegendBg())
+  // }
 
   /**
    * _drawTagDisplayed with timeout
@@ -441,7 +441,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_legend')
     // Draw Background
-    this._drawLegendBg()
+    // this._drawLegendBg()
     // Reset content positionning
     this._dx = 0
     this._dy = 0
@@ -465,7 +465,11 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     if (this._legend_show_constraints) {
       this._drawInfoConstraintLink()
     }
-    this._updateLegendHeight()
+  // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
+  requestAnimationFrame(() => {
+    this.updateDragZone();
+    this.drawing_area.checkAndUpdateAreaSize();
+  })
   }
 
   /**
@@ -609,12 +613,13 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    */
   private _drawLegendBg() {
     this.d3_selection?.select('.g_drag_zone_leg').remove()
+    let legendBbox = this.drawing_area.d3_selection_legend?.node()?.getBBox()
     this.d3_selection?.append('g')
       .attr('class', 'g_drag_zone_leg')
       .append('rect')
       .attr('class', 'zone_for_dragging')
-      .attr('width', this._width)
-      .attr('height', '0px')
+      .attr('width', legendBbox?.width!)
+      .attr('height', legendBbox?.height!)
       .attr('rx', '2px')
       .attr('ry', '2px')
       .attr('stroke-dasharray', () => '')
@@ -968,9 +973,26 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     this._dy += 20
   }
 
-  private _updateLegendHeight() {
-    d3.select('.zone_for_dragging').attr('height', this._dy + 5)
-  }
+  // private _updateLegendHeight() {
+  //       let legendBbox = this.drawing_area.d3_selection_legend?.node()?.getBBox()
+  //   this.d3_selection?.append('g')
+  //     .attr('class', 'g_drag_zone_leg')
+  //     .append('rect')
+  //     .attr('class', 'zone_for_dragging')
+  //     .attr('width', legendBbox?.width!)
+  //   //d3.select('.zone_for_dragging').attr('height', this._dy + 5)
+  // }
+
+  // private _updateLegendSize() {
+  //   d3.select('.zone_for_dragging').attr('width', 0)
+  //   d3.select('.zone_for_dragging').attr('height', 0)
+  //   let legendBbox = this.drawing_area.d3_selection_legend?.node()?.getBBox()
+  //   d3.select('.zone_for_dragging').attr('width', legendBbox?.width!)
+  //   d3.select('.zone_for_dragging').attr('height', legendBbox?.height!)
+  //   requestAnimationFrame(() => {
+  //       this.drawing_area.checkAndUpdateAreaSize()
+  //   })
+  // }
 
   /**
    * _updateLegendHeight with timeout
@@ -982,6 +1004,38 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     this._process_or_bypass(() => this.updateLegendHeight())
   }
 
+  /**
+ * Met à jour la taille de la zone de dragging après le rendu complet
+ */
+private updateDragZone(): void {
+  // S'assurer qu'on a une sélection valide
+  if (!this.d3_selection) return;
+  
+  // Supprimer l'ancienne zone
+  this.d3_selection.select('.g_drag_zone_leg').remove();
+  
+  // Calculer la bbox du contenu réel (sans la zone de drag)
+  const contentBbox = this.d3_selection.node()?.getBBox();
+  if (!contentBbox) return;
+  
+  // Créer la nouvelle zone avec les bonnes dimensions
+  const dragZone = this.d3_selection.insert('g', ':first-child') // Insérer en premier pour être en arrière-plan
+    .attr('class', 'g_drag_zone_leg');
+    
+  dragZone.append('rect')
+    .attr('class', 'zone_for_dragging')
+    .attr('width', contentBbox.width + 10) // Petit padding
+    .attr('height', contentBbox.height + 10)
+    .attr('x', contentBbox.x - 5)
+    .attr('y', contentBbox.y - 5)
+    .attr('rx', '2px')
+    .attr('ry', '2px')
+    .attr('stroke-dasharray', this.is_selected ? '6,6' : 'unherit')
+    .attr('stroke', (this._legend_bg_border || this.is_selected) ? this._legend_bg_color : 'none')
+    .attr('stroke-width', (this._legend_bg_border || this.is_selected) ? 1 : 0)
+    .attr('fill', this._legend_bg_color)
+    .attr('fill-opacity', this._legend_bg_opacity / 100);
+}
   // GETTERS / SETTERS ==================================================================
 
   public get is_visible(): boolean {
