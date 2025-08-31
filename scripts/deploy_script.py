@@ -79,15 +79,17 @@ def deploy_opensankey(env: str = 'dev', ssh_host: str = "open-sankey.fr", ssh_po
         return False
     
     # Préparer la liste des commandes à exécuter
+    base_env_name = f"{env}_opensankey"
+    
     commands = [
         # Navigation vers le bon répertoire
-        "cd ~/dev_opensankey/sankeyapplication",
+        f"cd ~/{base_env_name}/sankeyapplication",
         
         # Activation de l'environnement virtuel et configuration
-        "source ~/dev_opensankey/dev_opensankey/bin/activate",
+        f"source ~/{base_env_name}/{base_env_name}/bin/activate",
         
         # Configuration de la variable EIGEN_INCLUDE
-        "export EIGEN_INCLUDE=/home/ubuntu/dev_opensankey/sankeyapplication/submodules/MFAProblem/submodules/eigen",
+        f"export EIGEN_INCLUDE=/home/ubuntu/{base_env_name}/sankeyapplication/submodules/MFAProblem/submodules/eigen",
         
         # Git pull
         "git pull",
