@@ -40,7 +40,7 @@ type AFMSankeyShowMenuComponentsVarType ={
 export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   // Override order of top menu buttons to add OSP buttons components
-  protected override _menu_top_order=[...super.menu_top_order,['diagrams','views','afm']]
+  protected override _menu_top_order=[...super.menu_top_order,['diagrams','views','afm','edit']]
 
   private _dict_setter_show_dialog_afm: AFMSankeyShowMenuComponentsVarType
   private _action_type: string

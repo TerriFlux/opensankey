@@ -87,13 +87,11 @@ export const logo_view = <svg
  * }
  * @return {*}
  */
-export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
-  new_data_plus
-}) => {
+export const BannerViewsOSP = ({app_data}:{app_data:Class_ApplicationDataOSP}) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, icon_library } = new_data_plus
+  const { t, icon_library,menu_configuration_osp } = app_data
   const { icon_add_element, icon_remove_element, icon_welcome, icon_next, icon_previous, icon_attr_view, icon_unit_view, icon_copy, icon_locked, icon_collapse_down, icon_collapse_up } = icon_library
   // Component updater ------------------------------------------------------------------
 
@@ -104,10 +102,10 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
   const refreshThis = () => {
     setCount(a => a + 1)
   }
-  const drawing_area_plus = new_data_plus.drawing_area as Class_DrawingAreaOSP
+  const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
 
-  new_data_plus.menu_configuration_osp.ref_to_banner_views_opened.current = isOpen
-  new_data_plus.menu_configuration_osp.ref_to_banner_views_updater.current = refreshThis
+  menu_configuration_osp.ref_to_banner_views_opened.current = isOpen
+  menu_configuration_osp.ref_to_banner_views_updater.current = refreshThis
 
   // Ref to trigger other components ----------------------------------------------------
 
@@ -115,11 +113,12 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
 
   // Local variables --------------------------------------------------------------------
 
-  const has_sankey_plus = new_data_plus.has_sankey_plus
-  const has_views = new_data_plus.has_views
-  const is_view_master = new_data_plus.is_view_master
-  const has_view_before = new_data_plus.has_view_before
-  const has_view_after = new_data_plus.has_view_after
+  const has_sankey_plus = app_data.has_sankey_plus
+  const has_views = app_data.has_views
+  const is_view_master = app_data.is_view_master
+  const has_view_before = app_data.has_view_before
+  const has_view_after = app_data.has_view_after
+  const is_static = app_data
 
   // Button to create a view ------------------------------------------------------------
 
@@ -188,7 +187,7 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
       onClick={
         // Delete the view
         () => {
-          new_data_plus.deleteCurrentView()
+          app_data.deleteCurrentView()
         }
       }
     >
@@ -344,7 +343,7 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
       isDisabled={!activate_button_to_show_view_attr_transfert_modal}
       onClick={
         () => {
-          new_data_plus.menu_configuration_osp.ref_to_modal_view_attributes_switcher.current(true)
+          menu_configuration_osp.ref_to_modal_view_attributes_switcher.current(true)
         }
       }
     >
@@ -384,7 +383,7 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
       isDisabled={!has_sankey_plus}
       onClick={
         () => {
-          new_data_plus.menu_configuration_osp.ref_show_modal_unitary_view.current(true)
+          menu_configuration_osp.ref_show_modal_unitary_view.current(true)
         }
       }>
       <Box layerStyle='banner_view_buttons' >
@@ -467,11 +466,11 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
             const file_content = String((e.target as FileReader).result)
             const JSON_data = JSON.parse(file_content)
             // Extract view of files
-            new_data_plus.sendWaitingToast(
+            app_data.sendWaitingToast(
               () => {
                 drawing_area_plus.bypass_redraws = true
-                new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON,true)
-                new_data_plus.extractViewsFromJSON(JSON_data as Type_JSON,false)
+                app_data.extractViewsFromJSON(JSON_data as Type_JSON,true)
+                app_data.extractViewsFromJSON(JSON_data as Type_JSON,false)
               })
           }
         })()
@@ -500,14 +499,14 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
     }}
   >
     {/* Load + Save  */}
-    {new_data_plus.is_static ? <></> : input_loader_json_catalog}
-    {new_data_plus.is_static ? <></> : create_data_catalog}
+    {is_static ? <></> : input_loader_json_catalog}
+    {is_static ? <></> : create_data_catalog}
 
     {/* Return to Sankey master button */}
-    {new_data_plus.is_static ? <></> : button_to_return_to_master}
+    {is_static ? <></> : button_to_return_to_master}
 
     {/* Create, switch between or delete views */}
-    {new_data_plus.is_static ? <></> : button_to_create_view}
+    {app_data.is_static ? <></> : button_to_create_view}
     {button_to_prev_view}
     {button_to_next_view}
     <Box
@@ -516,11 +515,11 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
       alignSelf='center'
       alignContent='center'
     >
-      <SelecteurView new_data_plus={new_data_plus} />
+      <SelecteurView new_data_plus={app_data} />
 
     </Box>
     {
-      new_data_plus.is_static ?
+      app_data.is_static ?
         <></> :
         <>
           {button_to_delete_actual_view}
@@ -538,7 +537,7 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
 
   const buttonShowBanner = <OSTooltip placement='bottom' label={(!has_sankey_plus) ? (t('Menu.sankeyOSPDisabled')) : ''}>
     <Button
-      isDisabled={!new_data_plus.has_sankey_plus && !new_data_plus.has_views}
+      isDisabled={!app_data.has_sankey_plus || !app_data.has_views}
       variant={isOpen ? 'menutop_button_view_activated' : 'menutop_button'}
       size='sizeMenuTopButton'
       onClick={onToggle}
@@ -576,8 +575,8 @@ export const BannerViewsOSP: FC<BaseComponentPropsPlus> = ({
  * }
  * @return {*}
  */
-export const SelecteurView: FC<BaseComponentPropsPlus> = (
-  { new_data_plus }
+export const SelecteurView = (
+  { new_data_plus }:{new_data_plus:Class_ApplicationDataOSP}
 ) => {
 
   // Data -------------------------------------------------------------------------------
