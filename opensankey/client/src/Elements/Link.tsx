@@ -1329,7 +1329,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof ClassTemplate_Element
    */
-  protected eventMouseOver(
+  public eventMouseOver(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Apply parent behavior first
@@ -1337,8 +1337,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // ALT
     if (event.altKey) {
       // Show tooltip
-      this._link_tooltip.drawTooltip()
-      this.d3_selection?.classed('tooltip_shown', true)
+      // this._link_tooltip.drawTooltip()
+      // this.d3_selection?.classed('tooltip_shown', true)
 
     } else if (this.thickness < 15) {
       this._artifical_enlargement = true
@@ -1354,11 +1354,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
  * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
  * @memberof Class_LinkElement
  */
-  protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
+  public eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
-    if (event.altKey) {
-      this._link_tooltip.moveTooltip(event)
-    }
+    // if (event.altKey) {
+    //   this._link_tooltip.moveTooltip(event)
+    // }
   }
 
   /**
@@ -1367,23 +1367,23 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof ClassTemplate_Element
    */
-  protected eventMouseOut(
+  public eventMouseOut(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventMouseOut(event)
     // Utiliser la même logique de protection que pour les nœuds
-    const activeTooltip = (window as any).activeTooltip
-    if (!activeTooltip) {
-      // Pas de tooltip actif protégé, fermeture normale
-      d3.selectAll('.sankey-tooltip').remove()
-      this.d3_selection?.classed('tooltip_shown', false)
-    }
+    // const activeTooltip = (window as any).activeTooltip
+    // if (!activeTooltip) {
+    //   // Pas de tooltip actif protégé, fermeture normale
+    //   d3.selectAll('.sankey-tooltip').remove()
+    //   this.d3_selection?.classed('tooltip_shown', false)
+    // }
 
-    // reset link thickness
-    if (this._artifical_enlargement) {
-      this._artifical_enlargement = false
-      this.d3_selection?.select('.link_path').attr('stroke-width', this.thickness)
-    }
+    // // reset link thickness
+    // if (this._artifical_enlargement) {
+    //   this._artifical_enlargement = false
+    //   this.d3_selection?.select('.link_path').attr('stroke-width', this.thickness)
+    // }
 
   }
 

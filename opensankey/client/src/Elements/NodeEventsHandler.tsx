@@ -29,6 +29,7 @@ import * as d3 from 'd3'
 // Local modules
 import { Class_NodeElement } from './Node'
 import { ClassTemplate_GhostLinkElement } from './LinkGhostElement'
+import { TooltipEventManager } from './TooltipsConfig'
 
 /**
  * Class that handles all event operations for NodeElement
@@ -279,22 +280,15 @@ export class NodeEventsHandler {
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     // ALT + pas de tooltip déjà ouvert pour ce noeud
     if (event.altKey && (event.target as HTMLElement).tagName !== 'tspan') {
-      const existingTooltip = document.querySelector('.sankey-tooltip')
+      const existingTooltip = document.querySelector('.sankey-tooltip');
       if (!existingTooltip || !this._node.d3_selection?.classed('tooltip_shown')) {
-        // Fermer les autres tooltips d'abord
-        d3.selectAll('.sankey-tooltip').remove()
-        d3.selectAll('.tooltip_shown').classed('tooltip_shown', false)
-
         // Stocker la position de la souris pour l'ouverture
-        this.tooltipMouseX = event.pageX
-        this.tooltipMouseY = event.pageY
+        this.tooltipMouseX = event.pageX;
+        this.tooltipMouseY = event.pageY;
 
-        // Show tooltip à la position de la souris
-        this._node.drawTooltip()
-        this._node.d3_selection?.classed('tooltip_shown', true)
-
-        // Initialiser le click outside une seule fois
-        setTimeout(() => this.initTooltipClickOutside(), 100)
+        // Utiliser le système intégré
+        const tooltipManager = TooltipEventManager.getInstance();
+        tooltipManager.showTooltip(this._node, event.pageX, event.pageY);
       }
     }
   }
@@ -320,18 +314,18 @@ export class NodeEventsHandler {
   /**
    * Vérifie si la souris survole le tooltip
    */
-  private isMouseOverTooltip(event: React.MouseEvent): boolean {
-    const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement
-    if (!tooltip) return false
+  // private isMouseOverTooltip(event: React.MouseEvent): boolean {
+  //   const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement
+  //   if (!tooltip) return false
 
-    const rect = tooltip.getBoundingClientRect()
-    return (
-      event.clientX >= rect.left &&
-      event.clientX <= rect.right &&
-      event.clientY >= rect.top &&
-      event.clientY <= rect.bottom
-    )
-  }
+  //   const rect = tooltip.getBoundingClientRect()
+  //   return (
+  //     event.clientX >= rect.left &&
+  //     event.clientX <= rect.right &&
+  //     event.clientY >= rect.top &&
+  //     event.clientY <= rect.bottom
+  //   )
+  // }
 
   /**
    * Optionnel : fermer le tooltip quand on clique ailleurs

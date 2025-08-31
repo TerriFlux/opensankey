@@ -44,6 +44,7 @@ import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { MenuColorPicker } from '../components/configmenus/MenuColorPicker'
 import { Class_DrawingArea } from './DrawingArea'
+import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -90,6 +91,8 @@ export type FType_ProcessFunctions = {
   launch: (path: string) => void,
   retrieveExcelResults: FType_RetrieveExcelResults
 }
+
+initializeTooltipSystem()
 // CLASS APPLICATION DATA **************************************************************/
 
 /**

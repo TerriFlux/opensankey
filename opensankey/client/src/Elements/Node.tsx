@@ -209,7 +209,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   private _nodeDrawShape: NodeDrawShape
   private _nodeDrawNameLabel: NodeDrawNameLabel
   private _nodeDrawValueLabel: NodeDrawValueLabel
-  private _nodeTooltip: NodeTooltip
+  public _nodeTooltip: NodeTooltip
   public _nodeEventsHandler: NodeEventsHandler
   private _nodeTagsManager: NodeTagsManager
   private _nodeDimensionsManager: NodeDimensionsManager
@@ -1301,17 +1301,17 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this._nodeEventsHandler.handleSimpleRMBClick(event)
   }
 
-  protected eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseOver(event)
     this._nodeEventsHandler.handleMouseOver(event)
   }
 
-  protected eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  public eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseMove(event)
     this._nodeEventsHandler.handleMouseMove(event)
   }
 
-  protected eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  public eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseOut(event)
     this._nodeEventsHandler.handleMouseOut()
   }

@@ -196,8 +196,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       <Select
         value={compute_value_option(value_type, node_ref, dir)}
         onChange={(evt) => {
-          const value_option = compute_value_option(value_type, node_ref, evt.target.value)
-          selected_links.forEach(l => l.value!.value_option = value_option as ValueOptionType)
+          //const value_option = compute_value_option(value_type, node_ref, evt.target.value)
+          selected_links.forEach(l => l.value!.value_option = evt.target.value as ValueOptionType)
           set_dir(evt.target.value)
           refreshThisAndUpdateRelatedComponents()
         }}
