@@ -501,8 +501,8 @@ export class LinkDrawShape {
     const y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
     const x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x
     const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y
-    const x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
-    const y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y
+    let x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
+    let y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y
     const x3 = (x2 + x4) / 2
     const y3 = (y2 + y4) / 2
 
@@ -556,6 +556,12 @@ export class LinkDrawShape {
     } else {
       // Nouveau calcul pour vh et hv
       const thickness = this._link.thickness
+      if (is_outline) {
+        x5=x4
+        if (y5>y4) y5=y4+2
+        else y5=y4-2
+      }
+
       const halfThickness = thickness / 2
 
       const getPerpendicularOffset = (x1: number, y1: number, x2: number, y2: number, offset: number) => {
