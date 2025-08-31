@@ -54,7 +54,6 @@ export const setDiagram = (
   new_data: Class_ApplicationData
 ) => {
   const sous_filieres = window.sankey.sous_filieres
-  new_data.file_name = the_diagram
   console.log(new_data.file_name)
   const new_data_as_json = JSON.parse(
     JSON.stringify(
@@ -62,6 +61,7 @@ export const setDiagram = (
     )
   )
   new_data.fromJSON(new_data_as_json)
+  new_data.file_name = sous_filieres[the_diagram]
 }
 
 

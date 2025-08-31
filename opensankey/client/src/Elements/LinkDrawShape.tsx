@@ -85,7 +85,7 @@ export class LinkDrawShape {
       const xf = this._link.position_x_end
       const yf = this._link.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
-      const show_as_path = show_as_dash || yf - y0<50 || ((dist / thickness) > 1.1) || this._link.shape_is_recycling
+      const show_as_path = show_as_dash || Math.abs(yf - y0)<50 || ((dist / thickness) > 1.1) || this._link.shape_is_recycling
       // Show as full shape for specific shapes
       if (!show_as_path && this._link.shape_shape !== 'bezier_outline') {
         // Which shape to use
