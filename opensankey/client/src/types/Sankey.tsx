@@ -1246,6 +1246,11 @@ export class Class_Sankey {
           )
         }
       })
+    let has_data = false
+    this.links_list.forEach(l => has_data = has_data || l.has_data)
+    if (!has_data) {
+      this.links_list.forEach(l=> l.set_only_data())
+    }
     // Then read nodes
     const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
     Object.entries(json_node_object)

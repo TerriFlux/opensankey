@@ -1456,6 +1456,12 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get has_result() {
     return this._values.has_result
   }
+  public get has_data() {
+    return this._values.has_data
+  }
+  public set_only_data() {
+    return this._values.set_only_data()
+  }
 
   public get child_links() { return this._child_links }
   public get is_multi_link() { return this._is_multi_link }
