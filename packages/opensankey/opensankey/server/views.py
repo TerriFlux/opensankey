@@ -54,7 +54,7 @@ from PIL import Image
 from threading import Thread
 
 # Flask modules imports
-from flask import abort
+from flask import abort, make_response
 from flask import Blueprint
 from flask import current_app
 from flask import render_template
@@ -1088,32 +1088,28 @@ def clean_file(filename, fctname):
 @opensankey.route("/url/load_json", methods=["POST"])
 def url_load_json():
     """
-    HTTP POST request to get json from url path
-
+    HTTP POST request to get file from url path
     Input : None
-
-    Output : data (json) from url as string
-
+    Output : file content (raw, let browser handle decompression)
     """
     try:
         url_front = request.form["url"]
-        # Requête HTTP pour récupérer le fichier compressé
+        # Requête HTTP pour récupérer le fichier
         response = requests.get(url_front)
-        response.raise_for_status()  # Lève une exception en cas d'erreur HTTP
-
-        # Décompression avec gzip via un flux mémoire
-        with gzip.GzipFile(fileobj=BytesIO(response.content)) as fichier_gzip:
-            contenu_json = fichier_gzip.read().decode("utf-8")  # Décodage en texte
-            donnees = json.loads(contenu_json)  # Conversion en objet Python
-            return donnees
-
-    except requests.exceptions.RequestException as e:
-        print(f"Erreur de requête : {e}")
-    except gzip.BadGzipFile as e:
-        print(f"Fichier Gzip invalide : {e}")
-    except json.JSONDecodeError as e:
-        print(f"Erreur de décodage JSON : {e}")
+        response.raise_for_status()
+        
+        # Retourner le contenu brut du fichier
+        flask_response = make_response(response.content)
+        
+        # Important: NE PAS définir Content-Encoding: gzip
+        # Laisser le navigateur gérer automatiquement la décompression
+        if url_front.endswith('.gz'):
+            flask_response.headers['Content-Type'] = 'application/json'  # Type final attendu
+        else:
+            flask_response.headers['Content-Type'] = 'application/json'
+        
+        return flask_response
+        
     except Exception as e:
-        print(f"Erreur inattendue : {e}")
-
-    return None
+        print(f"Erreur : {e}")
+        return {"error": str(e)}, 500
