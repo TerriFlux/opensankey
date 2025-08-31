@@ -39,7 +39,6 @@ import imgkit
 import pdfkit
 import re
 import pandas as pd
-from io import BytesIO
 import requests
 
 try:
@@ -1097,19 +1096,19 @@ def url_load_json():
         # Requête HTTP pour récupérer le fichier
         response = requests.get(url_front)
         response.raise_for_status()
-        
+
         # Retourner le contenu brut du fichier
         flask_response = make_response(response.content)
-        
+
         # Important: NE PAS définir Content-Encoding: gzip
         # Laisser le navigateur gérer automatiquement la décompression
         if url_front.endswith('.gz'):
             flask_response.headers['Content-Type'] = 'application/json'  # Type final attendu
         else:
             flask_response.headers['Content-Type'] = 'application/json'
-        
+
         return flask_response
-        
+
     except Exception as e:
         print(f"Erreur : {e}")
         return {"error": str(e)}, 500
