@@ -64,6 +64,7 @@ import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { ClassTemplate_Handler } from '../Elements/Handler'
 import { Class_ApplicationData } from './ApplicationData'
+import { TooltipEventManager } from '../Elements/TooltipsConfig'
 
 
 declare const window: Window &
@@ -1686,10 +1687,9 @@ export class Class_DrawingArea {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     event.preventDefault()
-    //if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
-    //}
+    // Fermer les tooltips via le système intégré
+    const tooltipManager = TooltipEventManager.getInstance();
+    tooltipManager.closeTooltip();
   }
 
   /**
@@ -1715,8 +1715,9 @@ export class Class_DrawingArea {
   ) {
     event.preventDefault()
     if (this.eventsEnabled()) {
-      // Clear tooltips presents
-      d3.selectAll('.sankey-tooltip').remove()
+      // Fermer les tooltips via le système intégré
+      const tooltipManager = TooltipEventManager.getInstance();
+      tooltipManager.closeTooltip();
       this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this.is_drawing_area_contextualised = true
       this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
@@ -1735,7 +1736,9 @@ export class Class_DrawingArea {
   ) {
     event.preventDefault()
     // Clear tooltips presents
-    d3.selectAll('.sankey-tooltip').remove()
+    // Fermer les tooltips via le système intégré
+    // const tooltipManager = TooltipEventManager.getInstance();
+    // tooltipManager.closeTooltip();
     // EDITION MODE =============================================================
     // event.button==0 check if we use LMB
     if (this.isInEditionMode() && event.button == 0 && this.eventsEnabled()) {
