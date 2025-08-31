@@ -1378,6 +1378,7 @@ export class Class_DrawingArea {
    */
   public areaAutoFit(autocenter: boolean) {
     this._process_or_bypass(() => {
+      if (this.application_data.is_static) this.areaFitVertically(autocenter)
       // Ratios
       const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
       const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width

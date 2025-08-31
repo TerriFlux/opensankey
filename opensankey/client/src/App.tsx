@@ -106,8 +106,10 @@ export const OpenSankeyApp = ({
   // Initialize data
   const app_data = initializeApplicationData(initial_data)
   /*************************************************************************************************/
-
-
+  if (window.sankey && window.sankey.diagram) {
+    //@ts-expect-error xxx
+    app_data.file_name = window.sankey.diagram_name
+  }
 
   const mode_pref = sessionStorage.getItem('modepref')
   const menu_config = app_data.menu_configuration

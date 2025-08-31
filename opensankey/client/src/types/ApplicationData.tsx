@@ -638,32 +638,26 @@ export class Class_ApplicationData {
  * @param {string} url_data
  * @memberof Class_ApplicationData
  */
-  public readUrlJSON(url_data: string) {
-    if (url_data.includes('.gz')) {
-      // Create url request
-      const root = window.location.origin
-      const url = root + this.url_prefix + 'url/load_json'
-      // Add a form data that contains url to json file
-      const form_data = new FormData()
-      form_data.append('url', url_data)
-
-      fetch(url, {
+public readUrlJSON(url_data: string) {
+    const root = window.location.origin
+    const url = root + this.url_prefix + 'url/load_json'
+    
+    const form_data = new FormData()
+    form_data.append('url', url_data)
+    
+    fetch(url, {
         method: 'POST',
         body: form_data
-      }).then(response => {
-        response
-          .text()
-          .then(text => {
-            const json_data = JSON.parse(text)
-            this.fromJSON(json_data)
-          })
-          .catch((error) => {
-            console.error('Error in fetchExamples - ' + error.toString())
-
-          })
-      })
-    }
-  }
+    })
+    .then(response => response.text()) // Le navigateur décompresse automatiquement
+    .then(text => {
+        const json_data = JSON.parse(text)
+        this.fromJSON(json_data)
+    })
+    .catch((error) => {
+        console.error('Error in readUrlJSON:', error)
+    })
+}
 
   /**
    * Postprocessing drawing area after JSON affectation

@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React,{FC,useState,useRef,MutableRefObject,ChangeEvent,Fragment} from 'react'
+import React, { FC, useState, useRef, MutableRefObject, ChangeEvent, Fragment } from 'react'
 import ReactCountryFlag from 'react-country-flag'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
@@ -107,7 +107,7 @@ export const GoToUserDoc = () => {
  * }
  * @return {*}
  */
-export const OpenSankeySaveButton = ({new_data}:BaseApplicationDataType) => {
+export const OpenSankeySaveButton = ({ new_data }: BaseApplicationDataType) => {
   const { t } = new_data
 
   const [save_boolean, setSaveBoolean] = useState(true)
@@ -627,7 +627,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopButtonsStatic = ({ new_data, additionalMenus }:{
+export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
   new_data: Class_ApplicationData,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
@@ -706,10 +706,26 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }:{
             {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name}>{name}</option>)) : (<React.Fragment key={'dshfjhfsdkjh'}></React.Fragment>)}
           </Select></FormControl>) : (<React.Fragment key={'sqtyutsugh'} />)}
     </Box>
+
   }
+
+  let edit_button = new_data.is_static ? <Button
+    onClick={() => {
+      // Si vous êtes sur: https://terriflux.com/portfolios/SOCLE/Cereales/diagrams.html
+      // Et que new_data.file_name = "SOCLE_FR_Cereales_Ble_tendre."
+
+      const currentPath = window.location.pathname // "/portfolios/SOCLE/Cereales/diagrams.html"
+      const basePath = currentPath.substring(0, currentPath.lastIndexOf('/')) // "/portfolios/SOCLE/Cereales"
+      const fileUrl = window.location.origin + basePath + '/' + new_data.file_name + '.json.gz'
+      const url = 'https://dev.open-sankey.fr/?url=' + fileUrl
+
+      window.open(url, '_blank')
+    }}
+  >Edit</Button> : <></>
 
   const dict_components_menu_top: { [x: string]: React.JSX.Element; } = {
     'diagrams': diagrams_element,
+    'edit': edit_button,
     ...additionalMenus.current.external_top_buttons_item
   }
 
@@ -756,7 +772,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }:{
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopNavBar = ({ new_data, additionalMenus }:{
+export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   new_data: Class_ApplicationData,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
@@ -830,7 +846,8 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }:{
             justifySelf='center'
           >
             <Text
-              fontStyle='h1'
+              fontWeight='bold'
+              fontSize='24px'
             >
               {window.sankey.header}
             </Text>
