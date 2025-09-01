@@ -2100,7 +2100,7 @@ export class Class_DrawingArea {
         // Avoid CTRL + Scroll default behavior in Browser
         event.preventDefault()
         // Get Scrolling factor ; either 1.1 or 0.9
-        const scale = 1 + (event.deltaY / Math.abs(event.deltaY)) / 10
+        const scale = 1 - (event.deltaY / Math.abs(event.deltaY)) / 10
         // Apply scaling
         this.zoomListener.scaleBy(
           this.d3_selection_zoom_area,

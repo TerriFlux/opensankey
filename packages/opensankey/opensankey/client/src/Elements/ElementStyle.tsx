@@ -161,7 +161,10 @@ export class Class_NodeStyle extends Class_NodeAttribute {
    */
   public fromJSON(json_local_object: Type_JSON): void {
     // 1. Appeler la logique parente (fait tout le mapping)
-    super.fromJSON(json_local_object)
+    super.fromJSON(
+      json_local_object,
+      null
+    )
 
     // 2. Gestion spécifique des positions
     this._position.type = getStringOrUndefinedFromJSON(json_local_object, 'position') as Type_Position
@@ -270,7 +273,9 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       'name_label_is_visible': false,
       'shape_visible': false,
       'shape_min_width': 1,
-      'name_label_box_width': 300
+      'name_label_box_width': 300,
+      'name_label_separator': ' - ',
+      'name_label_separator_part': 'before'
     },
     position: {
       'type': 'relative',
@@ -404,7 +409,7 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
   LinkImportExportCloseStyle: {
     config: {
       'value_label_is_visible': true,
-      'value_label_on_path': true
+      'value_label_on_path': true,
     }
   },
   LinkImportCloseStyle: {

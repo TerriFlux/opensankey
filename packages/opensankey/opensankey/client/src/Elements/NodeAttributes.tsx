@@ -27,6 +27,7 @@
 import {
   Type_JSON,
 } from '../types/Utils'
+import { Class_NodeElement } from './Node'
 import { AttributeKey, AttributeTypes, NodeAttributeTypeScript, NODES_ATTRIBUTES_CONFIG } from './NodeAttributesConfig'
 
 // SPECIFIC CONSTANTS *******************************************************************
@@ -58,7 +59,7 @@ class NodeAttributeMappings {
     shape_color: 'color',
     shape_opacity: 'opacity',
     shape_color_sustainable: 'colorSustainable',
-  
+
   }
 
   // Mapping legacy: ancienne clé JSON -> attribut interne
@@ -76,7 +77,7 @@ class NodeAttributeMappings {
     'label_background': 'name_label_background',
     'label_background_color': 'name_label_background_color',
     'label_box_width': 'name_label_box_width',
-    
+
     // Value label legacy
     'show_value': 'value_label_is_visible',
     'value_font_size': 'value_label_font_size',
@@ -90,7 +91,7 @@ class NodeAttributeMappings {
     'label_unit_visible': 'value_label_unit_visible',
     'label_unit': 'value_label_unit',
     'label_unit_factor': 'value_label_unit_factor',
-    
+
     // Shape legacy (fusion avec MAIN_MAPPING)
     'shape': 'shape_type',
     'node_arrow_angle_factor': 'shape_arrow_angle_factor',
@@ -113,8 +114,8 @@ class NodeAttributeMappings {
    * Retourne le mapping pour fromJSON (JSON -> attribut)
    * Combine legacy + main mapping inversé
    */
-  static getFromJsonMapping(): { [key: string]: string } {
-    return { ...this.LEGACY_MAPPING }
+  static getFromJsonMapping() {
+    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: AttributeKey }
   }
 
 
@@ -218,24 +219,26 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
   /**
    * Conversion depuis JSON - gère legacy + OSP automatiquement
    */
-  public fromJSON(json_local_object: Type_JSON) {
+  public fromJSON(json_local_object: Type_JSON, node: Class_NodeElement | null) {
     const fromJsonMapping = NodeAttributeMappings.getFromJsonMapping()
 
     // Mapping principal depuis JSON (inclut OSP et legacy)
     Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-      if (json_local_object[jsonKey] !== undefined && 
-          json_local_object[jsonKey] !== NODES_ATTRIBUTES_CONFIG[attrKey as AttributeKey].default) {
-        //@ts-expect-error JSON assignment
-        this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
+      if (json_local_object[jsonKey] !== undefined) {
+        if ( node == null || (node != null && json_local_object[jsonKey] !== node.getStyleProperty(attrKey))) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[jsonKey]
+        }
       }
-    })
+    });
 
     // Attributs directs (même nom)
-    Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
-      if (json_local_object[key] !== undefined && 
-          json_local_object[key] !== NODES_ATTRIBUTES_CONFIG[key as AttributeKey].default) {
-        //@ts-expect-error JSON assignment
-        this._attributes[key as AttributeKey] = json_local_object[key]
+    (Object.keys(NODES_ATTRIBUTES_CONFIG) as [AttributeKey]).forEach(key => {
+      if (json_local_object[key] !== undefined) {
+        if (node == null || json_local_object[key] !== node.getStyleProperty(key)) {
+          //@ts-expect-error JSON assignment
+          this._attributes[key as AttributeKey] = json_local_object[key]
+        }
       }
     })
   }
