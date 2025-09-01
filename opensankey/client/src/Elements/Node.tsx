@@ -412,7 +412,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     OSPFormatConverter.convertNodeFromOSPFormat(json_node_object)
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object)
+      this._display.attributes.fromJSON(json_local_object,this)
       this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
       this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
     }
@@ -1756,7 +1756,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   // GETTERS/SETTERS ===================================================
 
-  private getStyleProperty(propertyName: keyof typeof NODES_ATTRIBUTES_CONFIG) {
+  public getStyleProperty(propertyName: keyof typeof NODES_ATTRIBUTES_CONFIG) {
     if (this._display.attributes[propertyName] !== undefined) {
       return this._display.attributes[propertyName]
     }
