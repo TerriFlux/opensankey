@@ -496,9 +496,9 @@ export class LinkDrawShape {
     let y6 = this._link.position_y_end
 
     const x1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_x
-    const y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y
+    let y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y
     const x2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_x
-    const y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
+    let y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
     const x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x
     const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y
     let x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
@@ -557,9 +557,14 @@ export class LinkDrawShape {
       // Nouveau calcul pour vh et hv
       const thickness = this._link.thickness
       if (is_outline) {
-        x5=x4
-        if (y5>y4) y5=y4+2
-        else y5=y4-2
+        // x5=x4
+        if (this._link.shape_orientation === 'hv') {
+          if (y5>y4) y5=y4+2
+          else y5=y4-2
+        } else if (this._link.shape_orientation === 'vh') {
+          if (y1>y2) y1=y2+2
+          else y1=y2-2
+        }      
       }
 
       const halfThickness = thickness / 2
