@@ -282,10 +282,10 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
     alignSelf='center'
     justifySelf='center'
   ><FormControl key={'1'} >
-      <Select style={{ width: '200px', color:'black' }}
-        onChange={evt=> {
+      <Select style={{ width: '200px', color: 'black' }}
+        onChange={evt => {
           sDiagram(evt.target.value)
-          setDiagram(evt.target.value, set_data, convert_data,get_default_data)
+          setDiagram(evt.target.value, set_data, convert_data, get_default_data)
         }}
         value={s_diagram}>
         {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name} >{name}</option>)}
@@ -293,38 +293,38 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
     </FormControl></Box> : <React.Fragment key={'1'} />
 
   if (window.SankeyToolsStatic && sous_filieres && is_split) {
-    diagrams_element =<Box
+    diagrams_element = <Box
       margin='0.25rem'
       alignSelf='center'
       justifySelf='center'
     >
       <FormControl key={'1'} >
-        <Select style={{ width: '200px', color:'black' }}
-          onChange={(evt:React.ChangeEvent<HTMLSelectElement>)=>{
+        <Select style={{ width: '200px', color: 'black' }}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             sDiagram(evt.target.value)
-            const diagram_path = evt.target.value+'/'+diagrams[evt.target.value][0]
-            setDiagram(diagram_path, set_data,convert_data,get_default_data)
+            const diagram_path = evt.target.value + '/' + diagrams[evt.target.value][0]
+            setDiagram(diagram_path, set_data, convert_data, get_default_data)
           }}
           value={s_diagram}>
           {Object.keys(diagrams).map((name, i) => <option key={i} value={name} >{name}</option>)}
         </Select>
       </FormControl>
       {is_split ?
-        (  <FormControl key={'2'} >
-          <Select style={{ width: '200px', color:'black' }}
-            onChange={(evt:React.ChangeEvent<HTMLSelectElement>) => {
+        (<FormControl key={'2'} >
+          <Select style={{ width: '200px', color: 'black' }}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
               sDiagram2(evt.target.value)
-              const diagram_path = s_diagram+'/'+evt.target.value
-              setDiagram(diagram_path, set_data,convert_data,get_default_data)
+              const diagram_path = s_diagram + '/' + evt.target.value
+              setDiagram(diagram_path, set_data, convert_data, get_default_data)
             }}
             value={s_diagram_2}>
-            {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)):(<React.Fragment></React.Fragment>)}
-          </Select></FormControl>) :(<React.Fragment />)
+            {diagrams[s_diagram] ? (Object.values(diagrams[s_diagram]).map((name, i) => <option key={i} value={name} >{name}</option>)) : (<React.Fragment></React.Fragment>)}
+          </Select></FormControl>) : (<React.Fragment />)
       }
     </Box>
   }
 
-  if ((Object.keys(diagrams).length > 0)) ui['diagramme']=[diagrams_element]
+  if ((Object.keys(diagrams).length > 0)) ui['diagramme'] = [diagrams_element]
 
 
   if (!window.SankeyToolsStatic) {
@@ -344,7 +344,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               gridRow="1"
             >
               <FontAwesomeIcon
-                style={{'height':'2rem', 'width':'2rem'}}
+                style={{ 'height': '2rem', 'width': '2rem' }}
                 icon={faPlus}
               />
             </Box>
@@ -361,7 +361,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               width="1rem"
             >
               <ChevronDownIcon
-                style={{'height':'1rem', 'width':'1rem'}}
+                style={{ 'height': '1rem', 'width': '1rem' }}
               />
             </Box>
           </MenuButton>
@@ -372,7 +372,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             onClick={Reinitialization}
           >
             <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faFile}
             />
             {t('Menu.from_new')}
@@ -400,7 +400,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                 gridRow="1"
               >
                 <FontAwesomeIcon
-                  style={{'height':'2rem', 'width':'2rem'}}
+                  style={{ 'height': '2rem', 'width': '2rem' }}
                   icon={faFolderOpen}
                 />
               </Box>
@@ -417,7 +417,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                 width="1rem"
               >
                 <ChevronDownIcon
-                  style={{'height':'1rem', 'width':'1rem'}}
+                  style={{ 'height': '1rem', 'width': '1rem' }}
                 />
               </Box>
             </MenuButton>
@@ -431,7 +431,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                 }
               }}>
               <FontAwesomeIcon
-                style={{'height':'1rem', 'width':'1rem'}}
+                style={{ 'height': '1rem', 'width': '1rem' }}
                 icon={faFile}
               />
               {t('Menu.open_json')}
@@ -464,7 +464,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                       margin_top = test[0].getBoundingClientRect().height
                       d3.select(' .opensankey #svg-container').style('margin-top', margin_top + 'px')
                     }
-                    
+
                     // SplitTrade(new_data)
                     // applicationData.data = new_data
                     // ArrangeTrade(applicationData,true)
@@ -478,7 +478,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               onClick={() => dict_hook_ref_setter_show_dialog_components.ref_setter_show_excel_dialog.current!(true)}
             >
               <FontAwesomeIcon
-                style={{'height':'1rem', 'width':'1rem'}}
+                style={{ 'height': '1rem', 'width': '1rem' }}
                 icon={faTable}
               />
               {t('Menu.open_excel')}
@@ -500,7 +500,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               gridRow="1"
             >
               <FontAwesomeIcon
-                style={{'height':'2rem', 'width':'2rem'}}
+                style={{ 'height': '2rem', 'width': '2rem' }}
                 icon={faDownload}
               />
             </Box>
@@ -517,7 +517,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               width="1rem"
             >
               <ChevronDownIcon
-                style={{'height':'1rem', 'width':'1rem'}}
+                style={{ 'height': '1rem', 'width': '1rem' }}
               />
             </Box>
           </MenuButton>
@@ -527,7 +527,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             dict_hook_ref_setter_show_dialog_components.ref_setter_show_save_json.current!(true)
           }} >
             <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faFile}
             />
             {t('Menu.open_json')}
@@ -536,7 +536,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             onClick={() => ClickSaveExcel('/opensankey/', data)}
           >
             <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faTable}
             />
             {t('Menu.open_excel')}
@@ -558,7 +558,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               gridRow="1"
             >
               <FontAwesomeIcon
-                style={{'height':'2rem', 'width':'2rem'}}
+                style={{ 'height': '2rem', 'width': '2rem' }}
                 icon={faFileExport}
               />
             </Box>
@@ -575,7 +575,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               width="1rem"
             >
               <ChevronDownIcon
-                style={{'height':'1rem', 'width':'1rem'}}
+                style={{ 'height': '1rem', 'width': '1rem' }}
               />
             </Box>
           </MenuButton>
@@ -587,7 +587,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             dict_hook_ref_setter_show_dialog_components.ref_setter_show_resolution_save_png.current!(true)
           }}>
             <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faImage}
             />
             PNG
@@ -596,7 +596,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
             onClick={() => clickSavePDF(data)}
           >
             <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faFile}
             />
             PDF
@@ -624,7 +624,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
                 padding="0.1rem 0 0.1rem 0"
               >
                 <FontAwesomeIcon
-                  style={{'height':'2rem', 'width':'3rem'}}
+                  style={{ 'height': '2rem', 'width': '3rem' }}
                   icon={faGears}
                 />
               </Box>
@@ -656,7 +656,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               padding="0.1rem 0 0.1rem 0"
             >
               <FontAwesomeIcon
-                style={{'height':'2rem', 'width':'3rem'}}
+                style={{ 'height': '2rem', 'width': '3rem' }}
                 icon={faFileInvoice}
               />
             </Box>
@@ -685,7 +685,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               gridRow="1"
             >
               <FontAwesomeIcon
-                style={{'height':'2rem', 'width':'2rem'}}
+                style={{ 'height': '2rem', 'width': '2rem' }}
                 icon={faPenToSquare}
               />
             </Box>
@@ -702,7 +702,7 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
               width="1rem"
             >
               <ChevronDownIcon
-                style={{'height':'1rem', 'width':'1rem'}}
+                style={{ 'height': '1rem', 'width': '1rem' }}
               />
             </Box>
           </MenuButton>
@@ -711,14 +711,14 @@ export const OpenSankeyMenus: OpenSankeyMenusFType = (
         <MenuList>
           <MenuItem onClick={() => { ref_setter_show_style_node.current(true) }}>
             <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faShapes}
             />
             {t('Menu.esn')}
           </MenuItem>
           <MenuItem onClick={() => { ref_setter_show_style_link.current(true) }}>
             <FontAwesomeIcon
-              style={{'height':'1rem', 'width':'1rem'}}
+              style={{ 'height': '1rem', 'width': '1rem' }}
               icon={faShareNodes}
             />
             {t('Menu.esf')}
@@ -1124,7 +1124,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                     <Badge>
                       Dev
                     </Badge>
-                  </Box>:
+                  </Box> :
                   <></>
               }
               {applicationContext.t('Menu.' + m)}
@@ -1175,10 +1175,10 @@ export const Menu: FunctionComponent<MenuTypes> = (
   let DDDT = <></>
   let menutop_grid_template = 'minmax(7vw, 150px) minmax(7vw, 150px) minmax(51rem, 70vw) auto auto 13rem'
   if (window.SankeyToolsStatic) {
-    menutop_grid_template = '100px 30fr auto '+ data_rem + ' ' + unit_rem + ' ' + excel_rem
+    menutop_grid_template = '100px 30fr auto ' + data_rem + ' ' + unit_rem + ' ' + excel_rem
     // Cartofob menutop_grid_template = '400px 30fr auto '+ data_rem + ' ' + unit_rem + ' ' + excel_rem
   }
-  if (show_data && Object.keys(data_tags).length <=2) {
+  if (show_data && Object.keys(data_tags).length <= 2) {
     DDDT = <DataTagSelector
       applicationData={applicationData}
       node_function={node_function}
@@ -1186,7 +1186,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
       applicationDraw={applicationDraw}
       ComponentUpdater={ComponentUpdater}
       in_popover={false}
-    />    
+    />
   }
   const modal_resolution_png = Modale_resolution_png(applicationContext.t,
     dict_hook_ref_setter_show_dialog_components, applicationData, contextMenu.pointer_pos
@@ -1269,7 +1269,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
                 >
                   {window.sankey.header}
                 </Text>
-              </Box>:
+              </Box> :
               <></>
           }
           {
@@ -1306,7 +1306,7 @@ export const Menu: FunctionComponent<MenuTypes> = (
             justifySelf='center'
           >
             {menus['excel']}
-          </Box>: <></>}
+          </Box> : <></>}
 
           <Box
             margin='0.25rem'
@@ -1393,10 +1393,10 @@ export const Menu: FunctionComponent<MenuTypes> = (
         isAttached
         //ButtonGroup don't have variants theming so we modify directly the style
         style={{
-          right:0,
-          top:(window.innerHeight/4),
-          position:'fixed',
-          zIndex:1
+          right: 0,
+          top: (window.innerHeight / 4),
+          position: 'fixed',
+          zIndex: 1
         }}
       >
         {menus['toolbar']}
@@ -1544,7 +1544,7 @@ export const OpenSankeySaveButton: FunctionComponent<OpenSankeySaveButtonFType> 
       color={color_icon}
     >
       <FontAwesomeIcon
-        style={{'height':'0.75em', 'width':'0.75rem'}}
+        style={{ 'height': '0.75em', 'width': '0.75rem' }}
         icon={forceUpdate ? faCheck : faExclamation}
       />
     </Box>
@@ -1574,7 +1574,7 @@ export const OpenSankeySaveButton: FunctionComponent<OpenSankeySaveButtonFType> 
           justifySelf='end'
         >
           <FontAwesomeIcon
-            style={{'height':'2.5rem', 'width':'2rem'}}
+            style={{ 'height': '2.5rem', 'width': '2rem' }}
             icon={faCloudArrowUp}
           />
         </Box>
@@ -1752,20 +1752,20 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
 
   const tuto_sub_nav: { [s: string]: JSX.Element } = {}
 
-  Object.entries(new_array_for_exemple).forEach(d=>{
-    if ((d[1] as {['Files']:string[]})['Files'] == undefined) {
+  Object.entries(new_array_for_exemple).forEach(d => {
+    if ((d[1] as { ['Files']: string[] })['Files'] == undefined) {
       return <></>
     }
-    tuto_sub_nav[d[0]]=<>
-      {(d[1] as {['Files']:string[]})['Files'].filter((f:string)=>!f.includes('.xlsx')).map((dd:string)=>{
+    tuto_sub_nav[d[0]] = <>
+      {(d[1] as { ['Files']: string[] })['Files'].filter((f: string) => !f.includes('.xlsx')).map((dd: string) => {
         return <Card variant='card_icon_not_selected'>
           <CardBody>
             <Stack>
               <Image className='img-card'
-                src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('_layout.json', '')) + '.png'}
+                src={'/fm/userfiles/Formations/Tutoriels/' + (d[0]) + '/images/' + (dd.replace('.json', '')) + '.png'}
                 style={{ 'objectFit': 'contain' }}
               />
-              <Heading>{dd.replace('_layout.json', '').replaceAll('_', ' ')}</Heading>
+              <Heading>{dd.replace('.json', '').replaceAll('_', ' ')}</Heading>
             </Stack>
           </CardBody>
           <CardFooter>
@@ -1774,7 +1774,7 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
               <Button variant='toolbar_button_6'
                 onClick={() => {
                   UploadExemple(
-                    ('Formations/Tutoriels/'+(d[0])+'/'+dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data,Reinitialization,convert_data,applicationData.get_default_data
+                    ('Formations/Tutoriels/' + (d[0]) + '/' + dd), applicationContext.url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
                   )
                   applicationData.set_data({ ...applicationData.data })
                   set_show_tuto(false)
@@ -1782,12 +1782,12 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
               >{applicationContext.t('useTutoJSON')}</Button>
 
               {/* Button to open the Excel file */}
-              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '.xlsx')) ?
+              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json', '.xlsx')) ?
                 <Button variant='toolbar_button_6'
                   onClick={() => {
-                    processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'))
+                    processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json', '.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json', '.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
                     )
                     set_show_tuto(false)
                   }
@@ -1796,12 +1796,12 @@ export const ModalTuto: FunctionComponent<ModalTutoType> = ({
                 : <></>}
 
               {/* Button to open the Excel file reconcilied */}
-              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('_layout.json', '_reconciled.xlsx')) ?
+              {(d[1] as { ['Files']: string[] })['Files'].includes(dd.replace('.json', '_reconciled.xlsx')) ?
                 <Button variant='toolbar_button_6'
                   onClick={() => {
-                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'))
+                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('.json', '_reconciled.xlsx'))
                     UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('_layout.json', '_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json', '_reconciled.xlsx'), applicationContext.url_prefix, applicationData.data, applicationData.set_data, Reinitialization, convert_data, applicationData.get_default_data
                     )
                     set_show_tuto(false)
                   }

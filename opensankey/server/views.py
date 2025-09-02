@@ -271,9 +271,9 @@ def upload_excel_thread(
     if use_layout_file:
         # Try to get layout from another file
         if '_reconciled' in trace_filename:
-            layout_filename = os.path.splitext(trace_filename)[0].replace('_reconciled',  '_layout')+'.json'
+            layout_filename = os.path.splitext(trace_filename)[0].replace('_reconciled',  '')+'.json'
         else:
-            layout_filename = os.path.splitext(trace_filename)[0] + '_layout.json'
+            layout_filename = os.path.splitext(trace_filename)[0] + '.json'
         # Start extracting layout
         trace.logger.info('{:-<{w}}'.format('Extract diagram layout ', w=max_line_length))
         try:
@@ -420,7 +420,7 @@ def parse_folder(current_dir, menus, key=None):
             or 'sankeylayout' in file_or_folder or '.git' in file_or_folder or '.md' in file_or_folder\
                 or 'Archive' in file_or_folder or 'new' in file_or_folder or 'prev' in file_or_folder\
                 or 'artefacts' in file_or_folder or 'Old' in file_or_folder or 'old' in file_or_folder\
-                or 'Matériaux' in file_or_folder:
+                or 'Matériaux' in file_or_folder or 'Documents' in file_or_folder:
             continue
         if '.xlsx' in file_or_folder and 'old.' not in file_or_folder:
             if key not in menus:
@@ -435,7 +435,7 @@ def parse_folder(current_dir, menus, key=None):
             menus[key]['Files'].sort()
             exemple_found = True
             continue
-        if 'layout.json' in file_or_folder:
+        if '.json' in file_or_folder:
             if key not in menus:
                 menus[key] = {}
             if 'Files' not in menus[key]:
