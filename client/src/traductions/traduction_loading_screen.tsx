@@ -42,7 +42,7 @@ export const resources_loading_screen = {
           text_3: 'Controlez',
           text_4: 'Quantifiez',
           text_5: 'Visualisez',
-          text_6: 'Synthetisez',
+          text_6: 'Synthétisez',
           text_7: 'Justifiez',
         },
         end: {
