@@ -427,6 +427,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     s[1].scientific_precision = true
     //@ts-expect-error xxx
     s[1].gradient = false
+    s[1].nb_digit = 0
   })
   if (data_to_convert.style_node === undefined) {
     data_to_convert.style_node = {}
@@ -450,6 +451,10 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     if (s[1].label_horiz_shift) {
       s[1].name_label_horiz_shift = s[1].label_horiz_shift
     }
+    //@ts-expect-error xxx
+    s[1].name_label_separator = ' - '
+    //@ts-expect-error xxx
+    s[1].name_label_separator_part = 'before'
   })
 
   const attributes_to_remove = [
@@ -535,7 +540,9 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   json_object.legend['legacy_legend'] = true
 
   clean_data_local(data_to_convert)
-
+  delete data_to_convert.style_link['LinkExportStyle']
+  delete data_to_convert.style_link['LinkImportStyle']
+  
   Object.values(data_to_convert.nodes).forEach(n => {
     // Change style if node has default style & 'Type de noeud' tags
     if (n.tags['type de noeud']) {
@@ -614,7 +621,11 @@ const clean_data_local = (data: SankeyData) => {
       Object.keys(n.local).forEach((k_l: string) => {
         const k_l_c = k_l as keyof SankeyNodeAttrLocal
         const k_s_c = k_l as keyof SankeyNodeStyle
-
+        // if (!data.style_node[n.style]) {
+        //   console.log('Node style ' + n.style)
+        //   console.log('Styles ' + Object.values(data.style_node).map(s=>s.idNode))
+        //   return          
+        // }
         if (n.local && n.local[k_l_c] == data.style_node[n.style][k_s_c]) {
           delete n.local[k_l_c]
         }
@@ -953,8 +964,7 @@ const convert_tags: convert_tagsFuncType = (
         data.fluxTags[key].banner = 'none'
       }
       if (tags_group.banner == 'movie') {
-        (tags_group as TagsGroup & { is_sequence: boolean }).is_sequence = true
-        tags_group.banner = 'one'
+        tags_group.banner = 'sequence'
         Object.values(tags_group.tags).forEach((tag, idx) => {
           tag.selected = idx == 0
         })
@@ -1304,6 +1314,7 @@ const convert_tags: convert_tagsFuncType = (
   })
   Object.values(data.levelTags).forEach(t => {
     t.use_colors = t.show_legend
+    t.banner = 'one'
   })
 }
 
@@ -2558,6 +2569,8 @@ const convert_links: convert_linksFuncType = (
         if ((data.links[link.idLink] as unknown as ConvertSankeyLink).value2) {
           delete (data.links[link.idLink] as unknown as { value2?: SankeyLinkValueDict }).value2
         }
+        if (link.style == 'LinkExportStyle') link.style = 'LinkExportCloseStyle'
+        if (link.style == 'LinkImportStyle') link.style = 'LinkImportCloseStyle'
       }
     )
   }
