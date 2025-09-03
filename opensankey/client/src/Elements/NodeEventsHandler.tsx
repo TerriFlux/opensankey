@@ -278,8 +278,9 @@ export class NodeEventsHandler {
    * Define event when mouse moves over element
    */
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    const show_tooltip = this._node.sankey.drawing_area.application_data.is_static && !event.shiftKey || event.altKey
     // ALT + pas de tooltip déjà ouvert pour ce noeud
-    if (event.altKey && (event.target as HTMLElement).tagName !== 'tspan') {
+    if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
       const existingTooltip = document.querySelector('.sankey-tooltip');
       if (!existingTooltip || !this._node.d3_selection?.classed('tooltip_shown')) {
         // Stocker la position de la souris pour l'ouverture
@@ -297,8 +298,6 @@ export class NodeEventsHandler {
    * Define event when mouse moves in the element
    */
   public handleMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    // Ne plus faire bouger le tooltip du tout une fois créé
-    // Le tooltip reste fixe à sa position initiale
     return;
   }
 
@@ -306,90 +305,8 @@ export class NodeEventsHandler {
    * Define event when mouse leaves element
    */
   public handleMouseOut() {
-    // Ne plus fermer automatiquement le tooltip
-    // L'utilisateur devra utiliser ESC ou cliquer sur X
     return;
   }
-
-  /**
-   * Vérifie si la souris survole le tooltip
-   */
-  // private isMouseOverTooltip(event: React.MouseEvent): boolean {
-  //   const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement
-  //   if (!tooltip) return false
-
-  //   const rect = tooltip.getBoundingClientRect()
-  //   return (
-  //     event.clientX >= rect.left &&
-  //     event.clientX <= rect.right &&
-  //     event.clientY >= rect.top &&
-  //     event.clientY <= rect.bottom
-  //   )
-  // }
-
-  /**
-   * Optionnel : fermer le tooltip quand on clique ailleurs
-   */
-  public initTooltipClickOutside() {
-    // Éviter les event listeners multiples en utilisant body
-    if (!document.body.hasAttribute('data-tooltip-click-handler')) {
-      document.body.setAttribute('data-tooltip-click-handler', 'true')
-
-      const clickHandler = (event: Event) => {
-        const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement
-        if (tooltip && !tooltip.contains(event.target as Node)) {
-          // Vérifier que ce n'est pas un clic sur un autre noeud avec ALT
-          const target = event.target as HTMLElement
-          const isNodeClick = target.closest('[class*="node"]') && (event as MouseEvent).altKey
-
-          if (!isNodeClick) {
-            tooltip.remove()
-            d3.selectAll('.tooltip_shown').classed('tooltip_shown', false)
-
-            // Nettoyer l'handler
-            document.removeEventListener('click', clickHandler)
-            document.body.removeAttribute('data-tooltip-click-handler')
-          }
-        }
-      }
-
-      document.addEventListener('click', clickHandler)
-    }
-  }
-  /**
-   * Define event when mouse moves over element
-   */
-  // public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-  //   // ALT
-  //   if (event.altKey && (event.target as HTMLElement).tagName !== 'tspan') {
-  //     // Show tooltip
-  //     this._node.drawTooltip()
-  //     this._node.d3_selection?.classed('tooltip_shown', true)
-  //   }
-  // }
-
-  // /**
-  //  * Define event when mouse moves in the element
-  //  */
-  // public handleMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-  //   if (event.altKey) {
-  //     // Move tooltip to follow cursor
-  //     d3.selectAll('.sankey-tooltip')
-  //       .style('top', event.pageY + 'px')
-  //       .style('left', event.pageX + 'px')
-  //   }
-  // }
-
-  // /**
-  //  * Define event when mouse leaves element
-  //  */
-  // public handleMouseOut() {
-  //   // Clear tooltip
-  //   d3.selectAll('.sankey-tooltip').remove()
-  //   this._node.d3_selection?.classed('tooltip_shown', false)
-  // }
-
-  // PRIVATE HELPER METHODS =============================================================
 
   /**
    * Add or remove node from selection

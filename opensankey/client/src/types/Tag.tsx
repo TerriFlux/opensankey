@@ -44,7 +44,7 @@ import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup, Class_LevelTag
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type tag_banner_type = 'none' | 'one' | 'multi' | 'level'
+export type tag_banner_type = 'none' | 'one' | 'multi' | 'sequence'
 
 // CLASS PROTO TAG ***********************************************************************
 
