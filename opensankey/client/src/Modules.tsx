@@ -24,10 +24,8 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { OpenSankeyDiagramSelector } from './components/dialogs/SankeyMenuDialogs'
 import { checkForUrlToJSON, Type_JSON } from './types/Utils'
 import { Class_ApplicationData, FType_ProcessFunctions } from './types/ApplicationData'
-import { FType_InitializeDiagrammSelector } from './components/SankeyMenuTypes'
 import type { MutableRefObject } from 'react'
 import { Type_AdditionalMenus } from './types/MenuConfig'
 
@@ -78,12 +76,6 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenus = (
   _new_data
 ) => {
   //  No menu is added in OS via this function
-}
-
-export const initializeDiagrammSelector: FType_InitializeDiagrammSelector = (
-  _new_data
-) => {
-  return OpenSankeyDiagramSelector
 }
 
 export type FType_ModuleDialogs = (
