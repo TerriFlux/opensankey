@@ -226,7 +226,7 @@ export const DrawerSequenceDataTagg: FC<FCType_DrawerSequenceDataTagg> = ({ new_
   new_data.menu_configuration_osp.ref_to_drawer_sequence_data_tag_updater.current = () => setUpdate(a => a + 1)
   const [active_grp, setActiveGrp] = useState('')
 
-  const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).is_sequence)
+  const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).banner=='sequence')
   const dict_data_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
   const list_grp_seq_id = list_grp_seq.map(grp => grp.id)
   const has_sequence = list_grp_seq.length > 0
@@ -330,10 +330,9 @@ export const DrawerSequenceDataTagg: FC<FCType_DrawerSequenceDataTagg> = ({ new_
     </Box>
   ) : <></>
 }
-type FCType_StepperDataTagg = { new_data: Class_ApplicationDataOSP, DataGroup: Class_DataTagGroup }
 
 // Compoenent returing a stepper of a dataTagg where each step is a tag of the group with visual indication to which tag is selected
-const StepperDataTagg: FC<FCType_StepperDataTagg> = ({ new_data, DataGroup }) => {
+const StepperDataTagg = ({ new_data, DataGroup }:{ new_data: Class_ApplicationDataOSP, DataGroup: Class_DataTagGroup }) => {
   const stepper_sequence = DataGroup.tags_list.map((tag, idx) => { return { id_tag: tag.id, title: tag.name, selected: tag.is_selected, id: idx } })
   const selected_id = stepper_sequence.find(el => el.selected)?.id ?? -1
   const { activeStep, setActiveStep } = useSteps({

@@ -41,6 +41,7 @@
   text-align: left;
   white-space: pre-wrap;
   word-wrap: break-word;
+  font-size: 16px
 }
 
 /* Custom max size for editor in config menu */

@@ -215,13 +215,13 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
 
     const old_val: typeDictTag
       = {
-        id: tag.id,
-        name: tag.name,
-        elementsRef: dict_ref_element,
-        grp: tag.group,
-        color: tag.color,
-        dict_link_value: {}
-      }
+      id: tag.id,
+      name: tag.name,
+      elementsRef: dict_ref_element,
+      grp: tag.group,
+      color: tag.color,
+      dict_link_value: {}
+    }
 
     if (tag instanceof Class_DataTag) {
       // Save value of each links in dict
@@ -296,13 +296,13 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
 
     const old_val: typeDictTag
       = {
-        id: tagg.id,
-        name: tagg.name,
-        activated: tagg.use_colors,
-        banner: tagg.banner,
-        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
-        dict_link_value: {}
-      }
+      id: tagg.id,
+      name: tagg.name,
+      activated: tagg.use_colors,
+      banner: tagg.banner,
+      dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+      dict_link_value: {}
+    }
 
     if (tagg instanceof Class_DataTagGroup) {
       new_data.drawing_area.sankey.links_list.forEach(l => {
@@ -788,9 +788,9 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
               </Th>
               {/* Autre entetes  */}
               <Th>{t('Tags.Nom')}</Th>
-              {(elementTagNameProp !== 'level_taggs')&&(elementTagNameProp !== 'data_taggs') ? <Th>{t('Tags.Bannière')}</Th> : <></>}
-              {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.sequence')}</Th> : <></>}
-              {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.unit')}</Th> : <></>}
+              <Th>{t('Tags.Bannière')}</Th>
+              {/* {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.sequence')}</Th> : <></>} */}
+              {elementTagNameProp == 'data_taggs' ? <Th>{t('Tags.unit')}</Th> : <></>}
             </Tr>
           </Thead>
           {/* Liste des groupes d'étiquettes  */}
@@ -801,23 +801,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                 let dataTagg_special_column = <></>
                 const tag_group_as_data_grp = tag_group as Class_DataTagGroup
                 if (elementTagNameProp == 'data_taggs') {
-                  dataTagg_special_column =<>
-                    <OSTooltip label={t('Tags.tooltips.sequence')}>
-                      <Td>
-                        <Switch
-                          justifySelf='end'
-                          alignSelf='center'
-                          height='1.5rem'
-                          isChecked={tag_group_as_data_grp.is_sequence}
-                          onChange={evt => {
-                            tag_group_as_data_grp.is_sequence = evt.target.checked
-                            new_data.menu_configuration_osp.ref_to_drawer_sequence_data_tag_updater.current()
-                            // Update menus
-                            updateThisAndRelatedComponents()
-                          }}
-                        />
-                      </Td>
-                    </OSTooltip>
+                  dataTagg_special_column = <>
                     <OSTooltip label={t('Tags.tooltips.unit')}>
                       <Td>
                         <Switch
@@ -834,7 +818,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                         />
                       </Td>
                     </OSTooltip>
-                    </>
+                  </>
 
                 }
                 return (
@@ -875,7 +859,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                       </OSTooltip>
                     </Td>
                     {/* Banniere  */}
-                    {(elementTagNameProp !== 'level_taggs')&&(elementTagNameProp !== 'data_taggs') ? <Td><OSTooltip label={t('Tags.tooltips.banner')}>
+                    <Td><OSTooltip label={t('Tags.tooltips.banner')}>
                       <Select
                         variant='menuconfigpanel_option_select_table'
                         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
@@ -902,10 +886,17 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                           value='multi'
                         >
                           {t('Tags.Multiple')}
-                        </option>
+                        </option>:<></>
+                        {elementTagNameProp == 'data_taggs' ? <option
+                          key={'sequence' + tag_group.id}
+                          id='SequenceBaner'
+                          value='sequence'
+                        >
+                          {t('Tags.Sequence')}
+                        </option> : <></>}
                       </Select>
                     </OSTooltip>
-                    </Td> : <></>}
+                    </Td>
                     {/* is Sequence  */}
                     {dataTagg_special_column}
                   </Tr>
