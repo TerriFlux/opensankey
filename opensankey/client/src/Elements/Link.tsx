@@ -1335,12 +1335,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Apply parent behavior first
     super.eventMouseOver(event)
     // ALT
-    if (event.altKey) {
-      // Show tooltip
-      // this._link_tooltip.drawTooltip()
-      // this.d3_selection?.classed('tooltip_shown', true)
-
-    } else if (this.thickness < 15) {
+    if (this.thickness < 15) {
       this._artifical_enlargement = true
       // Artificially enlarge link thickness if too thin
       this.d3_selection?.select('.link_path').attr('stroke-width', 15)
@@ -1356,9 +1351,6 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
  */
   public eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>): void {
     super.eventMouseMove(event)
-    // if (event.altKey) {
-    //   this._link_tooltip.moveTooltip(event)
-    // }
   }
 
   /**
@@ -1379,11 +1371,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     //   this.d3_selection?.classed('tooltip_shown', false)
     // }
 
-    // // reset link thickness
-    // if (this._artifical_enlargement) {
-    //   this._artifical_enlargement = false
-    //   this.d3_selection?.select('.link_path').attr('stroke-width', this.thickness)
-    // }
+    // reset link thickness
+    if (this._artifical_enlargement) {
+      this._artifical_enlargement = false
+      this.d3_selection?.select('.link_path').attr('stroke-width', this.thickness)
+    }
 
   }
 
@@ -1691,6 +1683,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Cast as number
     if (value !== null) {
       value.valueData = _
+      value.valueResult = null
       this.redrawNodesSourceTarget()
     }
   }
