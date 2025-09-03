@@ -27,7 +27,7 @@
 import React from 'react'
 import { ChakraProvider } from '@chakra-ui/react'
 import { opensankey_theme } from './css/Theme'
-import { initializeAdditionalMenus, initializeApplicationData, initializeDiagrammSelector, moduleDialogs } from './Modules'
+import { initializeAdditionalMenus, initializeApplicationData, moduleDialogs } from './Modules'
 import { ClickSaveDiagram } from './Persistence/SankeyPersistence'
 import { ModalWelcomeBuilder } from './components/welcome/ModalWelcome'
 import OpenSankeyApp from './App'
@@ -42,12 +42,6 @@ export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
 
     // Ref to some key ui element in the application
     initializeAdditionalMenus={initializeAdditionalMenus}
-
-    // Input data used for updateLayout
-    // (OS only use data from imported file
-    // but OSP can use its view as imported data
-    // )
-    initializeDiagrammSelector={initializeDiagrammSelector}
 
     // Submenus to add in the application
     moduleDialogs={moduleDialogs}

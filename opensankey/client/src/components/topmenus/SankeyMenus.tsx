@@ -107,11 +107,9 @@ export const Menu = (
   {
     app_data,
     external_modal,
-    additionalMenus,
-    diagramSelector,
+    additionalMenus
   }: {
     app_data: Class_ApplicationData,
-    diagramSelector: FType_DiagramSelector,
     external_modal: JSX.Element[],
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
   }
@@ -312,7 +310,6 @@ export const Menu = (
       }
       <ApplyLayoutDialog
         new_data={app_data}
-        diagramSelector={diagramSelector}
       />
 
       <ExcelModal

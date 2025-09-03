@@ -42,8 +42,7 @@ import OpenSankeyApp from './App'
 import {
   initializeApplicationData,
   initializeAdditionalMenus,
-  moduleDialogs,
-  initializeDiagrammSelector
+  moduleDialogs
 } from './Modules'
 import {
   ClickSaveDiagram
@@ -74,12 +73,6 @@ root.render(
 
       // Ref to some key ui element in the application
       initializeAdditionalMenus={initializeAdditionalMenus}
-
-      // Input data used for updateLayout
-      // (OS only use data from imported file
-      // but OSP can use its view as imported data
-      // )
-      initializeDiagrammSelector={initializeDiagrammSelector}
 
       // Submenus to add in the application
       moduleDialogs={moduleDialogs}
