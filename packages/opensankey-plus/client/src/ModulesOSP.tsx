@@ -235,16 +235,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     />
   )
 
-  // add option for updateLayout (OSP var to update)
-  // (Only add these options if connected with OSP)
-
-  // Add buttons in the menu transformation for adding ZDT and views as variable transferable in SuiteUpdateLayout
-  additionalMenus.current.apply_transformation_additional_elements.push(
-    <TransformationElementsOSP
-      new_data_plus={new_data_plus}
-    />
-  )
-
   //Add data sequence in footer
   additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus} />)
 
