@@ -50,9 +50,8 @@ import i18next from 'i18next'
 import { ClickSaveDiagram } from './deps/LoginComponent//deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
-import { DrawerSequenceDataTagg } from './deps/LoginComponent/deps/OpenSankey+/components/UtilsOSP'
 import { Type_JSON, checkForUrlToJSON } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { FType_ModuleDialogs, initializeDiagrammSelector } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Modules'
+import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Modules'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 import { ZDDModifierType } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextZDDConfig'
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
@@ -246,7 +245,6 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
           setLicenses
         )
       }}
-      initializeDiagrammSelector={initializeDiagrammSelector}
       moduleDialogs={moduleDialogsSA}
       ModalWelcome={ModalWelcomeBuilderOSP}
       ClickSaveDiagram={
