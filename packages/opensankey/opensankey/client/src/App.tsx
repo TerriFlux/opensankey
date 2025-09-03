@@ -67,7 +67,6 @@ declare const window: Window &
 export const OpenSankeyApp = ({
   initializeApplicationData,
   initializeAdditionalMenus,
-  initializeDiagrammSelector,
   moduleDialogs,
   ModalWelcome,
   ClickSaveDiagram,
@@ -78,7 +77,6 @@ export const OpenSankeyApp = ({
 }:{
   initializeApplicationData: FType_InitializeApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
-  initializeDiagrammSelector: FType_InitializeDiagrammSelector,
   moduleDialogs: FType_ModuleDialogs,
   ModalWelcome: React.ComponentType<{ new_data: Class_ApplicationData }>
   ClickSaveDiagram: FType_ClickSaveDiagram,
@@ -180,7 +178,6 @@ export const OpenSankeyApp = ({
             additionalMenus={
               app_data.menu_configuration.additionalMenus
             }
-            diagramSelector={initializeDiagrammSelector(app_data)}
           />
         </>
         <ApplySaveJSONDialog
