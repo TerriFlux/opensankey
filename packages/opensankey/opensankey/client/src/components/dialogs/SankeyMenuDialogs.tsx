@@ -36,7 +36,8 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  ModalCloseButton} from '@chakra-ui/react'
+  ModalCloseButton
+} from '@chakra-ui/react'
 
 
 import { default_style_id } from '../../types/Utils'
@@ -54,12 +55,10 @@ import { FType_ClickSaveDiagram, FType_UploadExcelImpl } from '../../Persistence
  */
 export const ApplyLayoutDialog = ({
   new_data,
-  diagramSelector,
-  apply_transformation_additional_elements
+  diagramSelector
 }: {
   new_data: Class_ApplicationData
-  diagramSelector: FType_DiagramSelector,
-  apply_transformation_additional_elements: JSX.Element[],
+  diagramSelector: FType_DiagramSelector
 }) => {
   const { data_var_to_update, t, menu_configuration } = new_data
   const { node_styles_dict } = new_data.drawing_area.sankey
@@ -80,7 +79,7 @@ export const ApplyLayoutDialog = ({
     'attrDrawingArea'
   ]
   const default_element_to_transform = [
-    'posNode','posFlux',
+    'posNode', 'posFlux',
     'attrNode', 'attrFlux',
     'attrDrawingArea'
   ]
@@ -381,9 +380,23 @@ export const ApplyLayoutDialog = ({
           >{data_var_to_update.current.includes('attrDrawingArea') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
         </Box>
       </Box></OSTooltip>
-    {mode_trans == 'expert' ? apply_transformation_additional_elements.map((c: JSX.Element, i: number) => {
-      return <React.Fragment key={i}>{c}</React.Fragment>
-    }) : <></>}
+    {mode_trans == 'expert' ? <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.freeLabels')}</Box>
+      <Box layerStyle='options_4cols' >
+        <Button
+          variant={data_var_to_update.current.includes('freeLabels') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          onClick={() => {
+            if (!data_var_to_update.current.includes('freeLabels')) {
+              data_var_to_update.current.push('freeLabels')
+            } else {
+              data_var_to_update.current.splice(data_var_to_update.current.indexOf('freeLabels'), 1)
+            }
+            menu_configuration.updateComponentApplyLayout()
+          }
+          }
+        >{data_var_to_update.current.includes('freeLabels') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
+      </Box>
+    </Box> : <></>}
   </Box>
 
   const dragLayout = <MenuDraggable
@@ -401,7 +414,7 @@ export const ApplyLayoutDialog = ({
  * @param {FCType_ApplySaveJSONDialog}
  * @returns {*}
  */
-export const ApplySaveJSONDialog = ({new_data,ClickSaveDiagram} : {
+export const ApplySaveJSONDialog = ({ new_data, ClickSaveDiagram }: {
   new_data: Class_ApplicationData,
   ClickSaveDiagram: FType_ClickSaveDiagram
 }
@@ -473,11 +486,11 @@ export const ApplySaveJSONDialog = ({new_data,ClickSaveDiagram} : {
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
  * @returns
  */
-export const ExcelModal = ({new_data,uploadExcelImpl,launch}:{
-    new_data: Class_ApplicationData,
-    uploadExcelImpl: FType_UploadExcelImpl,
-    launch: (path: string) => void,
-  }
+export const ExcelModal = ({ new_data, uploadExcelImpl, launch }: {
+  new_data: Class_ApplicationData,
+  uploadExcelImpl: FType_UploadExcelImpl,
+  launch: (path: string) => void,
+}
 ) => {
   const { t, url_prefix } = new_data
   const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
@@ -523,7 +536,7 @@ export const ExcelModal = ({new_data,uploadExcelImpl,launch}:{
 
 }
 
-export const OpenSankeyDiagramSelector = (app_data:Class_ApplicationData) => {
+export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
   const { t } = app_data
   const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
   return <Box>

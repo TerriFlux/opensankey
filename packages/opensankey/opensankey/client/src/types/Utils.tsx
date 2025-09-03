@@ -418,7 +418,6 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
 
     // Mise en page
     extra_background_element: <></>,
-    apply_transformation_additional_elements: [<></>],
 
     // Nodes
     advanced_appearence_content: [],
