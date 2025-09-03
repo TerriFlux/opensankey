@@ -108,13 +108,11 @@ export const Menu = (
     app_data,
     external_modal,
     additionalMenus,
-    apply_transformation_additional_elements,
     diagramSelector,
   }: {
     app_data: Class_ApplicationData,
     diagramSelector: FType_DiagramSelector,
     external_modal: JSX.Element[],
-    apply_transformation_additional_elements: JSX.Element[],
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
   }
 ) => {
@@ -314,7 +312,6 @@ export const Menu = (
       }
       <ApplyLayoutDialog
         new_data={app_data}
-        apply_transformation_additional_elements={apply_transformation_additional_elements}
         diagramSelector={diagramSelector}
       />
 

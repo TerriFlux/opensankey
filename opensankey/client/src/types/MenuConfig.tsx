@@ -53,7 +53,6 @@ export type Type_AdditionalMenus = {
 
   // Mise en page
   extra_background_element: JSX.Element
-  apply_transformation_additional_elements: JSX.Element[]
 
   // Nodes
   advanced_appearence_content: JSX.Element[],
@@ -381,7 +380,6 @@ export class Class_MenuConfig {
 
     // Mise en page
     extra_background_element: <></>,
-    apply_transformation_additional_elements: [<></>],
 
     // Nodes
     advanced_appearence_content: [],
