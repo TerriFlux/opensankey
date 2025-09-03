@@ -45,7 +45,8 @@ import {
   getJSONFromJSON,
   getJSONOrUndefinedFromJSON,
   getNumberOrUndefinedFromJSON,
-  getStringListFromJSON
+  getStringListFromJSON,
+  getStringFromJSON
 } from '../types/Utils'
 import {
   Class_LinkAttribute,
@@ -693,6 +694,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       matching_taggs_id,
       matching_tags_id
     )
+    this._link_tooltip.tooltip_text = getStringFromJSON(json_object, 'tooltip_text', '')
   }
 
   // PUBLIC METHODS =====================================================================
