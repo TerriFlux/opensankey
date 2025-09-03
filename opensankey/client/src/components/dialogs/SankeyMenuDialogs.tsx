@@ -75,12 +75,12 @@ export const ApplyLayoutDialog = ({
   }
 
   const simple_element_to_transform = [
-    'posNode',
+    'posNode', 'posFlux',
     'attrNode', 'attrFlux',
     'attrDrawingArea'
   ]
   const default_element_to_transform = [
-    'posNode',
+    'posNode','posFlux',
     'attrNode', 'attrFlux',
     'attrDrawingArea'
   ]
