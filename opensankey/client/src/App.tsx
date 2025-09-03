@@ -180,7 +180,6 @@ export const OpenSankeyApp = ({
             additionalMenus={
               app_data.menu_configuration.additionalMenus
             }
-            apply_transformation_additional_elements={app_data.menu_configuration.additionalMenus.current.apply_transformation_additional_elements}
             diagramSelector={initializeDiagrammSelector(app_data)}
           />
         </>

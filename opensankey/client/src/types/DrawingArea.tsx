@@ -1184,6 +1184,8 @@ export class Class_DrawingArea {
 
       const x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x * k
       const y0 = Math.max(this._fit_margin / 2, (this.window_fitting_height - this.height * k) / 2) + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
+      //onst x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x * k
+      //const y0 = this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
@@ -1205,6 +1207,8 @@ export class Class_DrawingArea {
       const k = this.window_fitting_height / this.height
       const x0 = Math.max(this._fit_margin / 2, (this.window_fitting_width - k * this.width) / 2) - this._background_d3_groups_shift_x * k
       const y0 = this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
+      //const x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x * k
+      //const y0 = this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
