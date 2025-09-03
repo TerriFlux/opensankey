@@ -122,15 +122,6 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   new_data_app,
   setLicenses
 ) => {
-
-  // No initialisation if static --------------------------------------------------------
-
-  //Add user_data sequence in footer
-  additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_app} />)
-  // new_data_app.login_component.checkTokens(setLicenses)
-
-  // OpenSankey+ initialisation ----------------------------------------------------------
-
   initializeAdditionalMenusOSP(
     additionalMenus,
     new_data_app
