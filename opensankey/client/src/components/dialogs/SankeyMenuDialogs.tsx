@@ -54,11 +54,9 @@ import { FType_ClickSaveDiagram, FType_UploadExcelImpl } from '../../Persistence
  * @returns {*}
  */
 export const ApplyLayoutDialog = ({
-  new_data,
-  diagramSelector
+  new_data
 }: {
   new_data: Class_ApplicationData
-  diagramSelector: FType_DiagramSelector
 }) => {
   const { data_var_to_update, t, menu_configuration } = new_data
   const { node_styles_dict } = new_data.drawing_area.sankey
@@ -87,7 +85,7 @@ export const ApplyLayoutDialog = ({
 
 
   const content_modal_layout = <Box layerStyle='menuconfigpanel_grid' >
-    {diagramSelector(new_data)}
+    {OpenSankeyDiagramSelector(new_data)}
 
     <hr style={{ borderStyle: 'none', margin: '10px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -537,7 +535,7 @@ export const ExcelModal = ({ new_data, uploadExcelImpl, launch }: {
 }
 
 export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
-  const { t } = app_data
+  const { t, data_var_to_update } = app_data
   const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
   return <Box>
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
@@ -565,10 +563,10 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
                     // TODO verifier fonctionnement de ce qui suit
                     result = String(result)
                     const json_object = JSON.parse(result)
-                    // const tmp_DA = app_data.createNewDrawingArea()
-                    // tmp_DA.fromJSON(new_layout)
-                    // app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
-                    app_data.fromJSON(json_object)
+                    const tmp_DA = app_data.createNewDrawingArea()
+                    tmp_DA.fromJSON(json_object)
+                    app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
+                    //app_data.fromJSON(json_object)
                     // app_data.drawing_area.drawElements()
                     // app_data.drawing_area.areaAutoFit(true)
                     // app_data.menu_configuration.updateAllMenuComponents()
