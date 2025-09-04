@@ -424,10 +424,10 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     }
     // Change default behavior on right shift for link
     s[1].right_horiz_shift = 1.0 - s[1].right_horiz_shift
-    s[1].scientific_precision = true
+    //s[1].scientific_precision = true
     //@ts-expect-error xxx
     s[1].gradient = false
-    s[1].nb_digit = 0
+    //s[1].nb_digit = 0
   })
   if (data_to_convert.style_node === undefined) {
     data_to_convert.style_node = {}
@@ -438,7 +438,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     if (s[1].idNode === 'par défaut') {
       s[1].idNode = 'default'
     }
-    s[1].label_background = true
+    //s[1].label_background = true
     if (s[1].label_horiz_valeur_shift) {
       s[1].value_label_horiz_shift = s[1].label_horiz_valeur_shift
     }

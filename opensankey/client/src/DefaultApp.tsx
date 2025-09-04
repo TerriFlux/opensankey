@@ -50,7 +50,6 @@ export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
     ModalWelcome={ModalWelcomeBuilder}
 
     // BackEnd
-    ClickSaveDiagram={ClickSaveDiagram}
     createZDDModifier={createZDDModifier}
     ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
       //@ts-expect-error xxx

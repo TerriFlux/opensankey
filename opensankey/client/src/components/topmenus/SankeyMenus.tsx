@@ -54,7 +54,7 @@ import {
 import { ExcelModalSaver } from '../dialogs/ExcelModalSaver'
 import { uploadExcelImpl, DownloadExamples } from '../../Persistence/SankeyPersistence'
 
-import { ToolBarBottom } from './MenuBottom'
+import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
@@ -67,18 +67,13 @@ import { MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurati
 import { MenuConfigurationNodeContext } from '../configmenus/SankeyMenuConfigurationNodesLabel'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FType_DiagramSelector } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
-
-
-/*************************************************************************************************/
 
 export declare const window: Window &
   typeof globalThis & {
     sankey: {
       header?: string
-      sous_filieres: { [key: string]: string }
       help: { [key: string]: string }
       excel: string
       structure: boolean
@@ -89,12 +84,7 @@ export declare const window: Window &
     }
   }
 
-/*************************************************************************************************/
-
 export const menu_config_width = 20
-
-/*************************************************************************************************/
-
 
 /**
  * Description placeholder
@@ -186,54 +176,54 @@ export const Menu = (
 
       {/* Bottom Navbar with some more info */}
       {
-        (
+        <Box
+          className='BottomMenu'
+          zIndex='1'
+          position='fixed'
+          bottom='0'
+          layerStyle='menubottom_layout_style'
+        >
+          <DrawerSequenceDataTagg new_data={app_data} />
+          {(
           (!app_data.is_static) ||
           (window.sankey && window.sankey.footer)
-        ) ?
-          <Box
-            className='BottomMenu'
-            zIndex='1'
-            position='fixed'
-            bottom='0'
-            layerStyle='menubottom_layout_style'
+          ) ?<Box
+            display='grid'
+            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
+            margin='0.2rem'
           >
-            {additionalMenus.current.footer.map((add_footer, idx) => <Fragment key={'additional_footer_' + idx}>{add_footer}</Fragment>)}
             <Box
-              display='grid'
-              gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-              margin='0.2rem'
+              layerStyle='menubottom_item_style'
+              justifySelf='start'
             >
-              <Box
-                layerStyle='menubottom_item_style'
-                justifySelf='start'
-              >
-                ©
-                <img
-                  width={75}
-                  src={logo_terriflux}
-                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-                />
-                - {t('tdr')}
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                {app_name}
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                <a href='mailto:support@open-sankey.fr	'>support@terriflux.fr</a>
-              </Box>
-              <Box
-                layerStyle='menubottom_item_style'
-                justifySelf='end'
-                paddingRight='1.5rem'
-              >
-                12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
-              </Box>
+              ©
+              <img
+                width={75}
+                src={logo_terriflux}
+                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+              />
+              - {t('tdr')}
             </Box>
-          </Box> :
+            <Box layerStyle='menubottom_item_style'>
+              {app_name}
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              <a href='mailto:support@open-sankey.fr	'>support@terriflux.fr</a>
+            </Box>
+            <Box
+              layerStyle='menubottom_item_style'
+              justifySelf='end'
+              paddingRight='1.5rem'
+            >
+              12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
+            </Box>
+          </Box>:
           <></>
+        }
+        </Box>
       }
 
       {
@@ -315,7 +305,6 @@ export const Menu = (
       <ExcelModal
         new_data={app_data}
         launch={app_data.processFunction.launch}
-        uploadExcelImpl={uploadExcelImpl}
       />
       <ExcelModalSaver app_data={app_data} />
 
