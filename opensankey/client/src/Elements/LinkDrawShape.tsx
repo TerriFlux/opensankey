@@ -87,8 +87,8 @@ export class LinkDrawShape {
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
       const show_as_path = show_as_dash || Math.abs(yf - y0) < 50 || ((dist / thickness) > 1.1) || this._link.shape_is_recycling
       // Show as full shape for specific shapes
-      if (!show_as_path && this._link.shape_shape !== 'bezier_outline') {
-        // Which shape to use
+      if (!show_as_path && this._link.shape_shape !== 'bezier_outline' && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {
+
         const shape = this.getBezierPath(true)
         this._link.d3_selection?.append('path')
           .classed('link', true)
@@ -104,8 +104,11 @@ export class LinkDrawShape {
           .attr('stroke-width', '0')
       }
       else {
-        // Which path to use
-        const path = this.getBezierPath(this._link.shape_shape == 'bezier_outline')
+        let path = ''
+        if (this._link.shape_orientation == 'vh') path = this.getBezierPathHV()
+        else if (this._link.shape_orientation == 'hv') path = this.getBezierPathVH()
+        else path = this.getBezierPath(this._link.shape_shape == 'bezier_outline')
+
         const da = this._link.sankey.drawing_area
         da.type_data
         // Add new path
@@ -562,11 +565,11 @@ export class LinkDrawShape {
             if (y5 > y4) y5 = y4 + 2
             else y5 = y4 - 2
           } else if (this._link.shape_orientation === 'vh') {
-              y1 = y4
-              y2 = y4
-              y3 = y4
-              x3 = x5
-              x4 = x5
+            y1 = y4
+            y2 = y4
+            y3 = y4
+            x3 = x5
+            x4 = x5
           }
         }
 
@@ -722,6 +725,94 @@ export class LinkDrawShape {
         + ' Q ' + x9 + ',' + y9 + ' ' + x10 + ',' + y10
         + ' L ' + xf + ',' + yf
       return path
+    }
+  }
+
+  /**
+ * Fonction pour dessiner les liens VH (Vertical vers Horizontal)
+ * Utilise seulement starting_curve_point et ending_curve_point
+ * Basée sur bezier_link_classic_vh
+ */
+  public getBezierPathVH() {
+    const x0 = this._link.position_x_start
+    const y0 = this._link.position_y_start
+    const x5 = this._link.position_x_end
+    const y5 = this._link.position_y_end
+
+    // Utilise les points de contrôle existants au lieu de les recalculer
+    // const starting_curve = this._link_control_points_internal.controlPoints.starting_curve_point
+    // const ending_curve = this._link_control_points_internal.controlPoints.ending_curve_point
+
+    // Points intermédiaires basés sur l'ancien code
+    let x1
+    if (this._link.shape_is_curved) {
+      x1 = x0 + (x5 - x0) * 2 / 3
+    } else {
+      x1 = x5
+    }
+    const y1 = y0
+    const x4 = x5
+    let y4
+    if (this._link.shape_is_curved) {
+      y4 = y5 - (y5 - y0) * 2 / 3
+    } else {
+      y4 = y0
+    }
+
+    // Points de contrôle pour les courbes de Bézier
+    const curvature = 0.5 // Paramètre par défaut, peut être rendu configurable
+    const x2 = x1 + (x4 - x1) * curvature + 1
+    const y2 = y1
+    const x3 = x4
+    const y3 = y1 + (y4 - y1) * (1 - curvature) - 1
+
+    if (this._link.shape_is_curved) {
+      return 'M ' + x0 + ',' + y0 + ' L ' + x1 + ',' + y1 +
+        ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4 +
+        ' L ' + x5 + ',' + y5
+    } else {
+      return 'M ' + x0 + ',' + y0 + ' L ' + x1 + ',' + y1 +
+        ' L ' + x5 + ',' + y5
+    }
+  }
+
+  /**
+   * Fonction pour dessiner les liens HV (Horizontal vers Vertical)
+   * Utilise seulement starting_curve_point et ending_curve_point
+   * Basée sur bezier_link_classic_hv
+   */
+  public getBezierPathHV() {
+    const x0 = this._link.position_x_start
+    const y0 = this._link.position_y_start
+    const x5 = this._link.position_x_end
+    const y5 = this._link.position_y_end
+
+    // Points intermédiaires basés sur l'ancien code
+    const x1 = x0
+    let x4, y1
+    if (this._link.shape_is_curved) {
+      y1 = y0 + (y5 - y0) * 2 / 3
+      x4 = x5 - (x5 - x0) * 2 / 3
+    } else {
+      y1 = y5
+      x4 = x0
+    }
+    const y4 = y5
+
+    // Points de contrôle pour les courbes de Bézier
+    const curvature = 0.5 // Paramètre par défaut, peut être rendu configurable
+    const x2 = x1
+    const y2 = y1 + (y4 - y1) * curvature + 1
+    const x3 = x1 + (x4 - x1) * (1 - curvature) - 1
+    const y3 = y4
+
+    if (this._link.shape_is_curved) {
+      return 'M ' + x0 + ',' + y0 + ' L ' + x1 + ',' + y1 +
+        ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4 +
+        ' L ' + x5 + ',' + y5
+    } else {
+      return 'M ' + x0 + ',' + y0 + ' L ' + x1 + ',' + y1 +
+        ' L ' + x5 + ',' + y5
     }
   }
 

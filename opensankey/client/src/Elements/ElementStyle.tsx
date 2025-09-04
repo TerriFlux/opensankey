@@ -329,7 +329,9 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   NodeExportCloseStyle: {
-    config: {},
+    config: {
+      'name_label_vert' : 'bottom'
+    },
     position: {
       'dx': 100,
       'dy': 50
