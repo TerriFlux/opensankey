@@ -57,7 +57,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
   const [uncertainty, setUncertainty] = useState(false)
   const [nb_realizations, setNbRealizations] = useState(100)
   const [input_file_name, setInputFileName] = useState('sankey.xlsx')
-  const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
+  // const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
   const [input_file, set_input_file] = useState<Blob | undefined>(undefined)
   const _load_excel = useRef<HTMLInputElement>(null)
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true })
@@ -93,9 +93,9 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
     set_input_file((evt.target as HTMLFormElement).files[0])
   }
 
-  const setLayoutFile = (evt: ChangeEvent) => {
-    set_layout_file((evt.target as HTMLFormElement).files[0])
-  }
+  // const setLayoutFile = (evt: ChangeEvent) => {
+  //   set_layout_file((evt.target as HTMLFormElement).files[0])
+  // }
 
   // const setRegionFile = (evt: ChangeEvent) => {
   //   upper_level_file_ = (evt.target as HTMLFormElement).files[0]
@@ -247,26 +247,6 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
         return
       }
       else {
-        // Get Layout from file if asked
-        if (layout_file !== undefined) {
-          const reader = new FileReader()
-          // Reader behavior on layout reading
-          reader.onload = (() => {
-            return (
-              (e: ProgressEvent<FileReader>) => {
-                let result = (e.target as FileReader).result
-                if (result) {
-                  result = String(result)
-                  // const layout = JSON.parse(result) as Type_JSON
-                  //(data as AFMSankeyData & { layout?: AFMSankeyData }).layout = layout
-                }
-              }
-            )
-          })
-          // Read layout
-          reader.readAsText(layout_file)
-        }
-
         // Update displayed Sankey
         const root = window.location.origin
         const url_optimize_display_results = root + '/optimize/display_results'
@@ -512,7 +492,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
           />
         </Box>
 
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        {/* <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
           <Box layerStyle='menuconfigpanel_suboption_name'>
             {t('ModalAFM.input_layout')}
           </Box>
@@ -522,7 +502,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
             fontSize='0.6rem'
             onChange={setLayoutFile}
           />
-        </Box>
+        </Box> */}
       </Box>
     </Collapse>
   </Box>
@@ -549,7 +529,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
 
             {menu_configuration_osp.action_type !== 'optim_sankey' ? (content_import_excel) : (<></>)}
 
-            {menu_configuration_osp.action_type === 'optim' ? (<>
+            {/* {menu_configuration_osp.action_type === 'optim' ? (<>
               <Box layerStyle='menu_sub_section'>
                 <Box layerStyle='menu_sub_section_title'>
                   <Checkbox
@@ -576,7 +556,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
                   </Box>) : (<></>)}
               </Box>
             </>
-            ) : (<></>)}
+            ) : (<></>)} */}
 
             <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
 
