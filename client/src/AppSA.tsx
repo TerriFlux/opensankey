@@ -247,9 +247,6 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
       }}
       moduleDialogs={moduleDialogsSA}
       ModalWelcome={ModalWelcomeBuilderOSP}
-      ClickSaveDiagram={
-        (new_data_app) => { ClickSaveDiagram(new_data_app) }
-      }
       createZDDModifier={createZDDModifierPlus as unknown as ZDDModifierType}
       ZDD_MENU_CONFIG={ZDD_MENU_CONFIG_PLUS()}
       //@ts-expect-error xxx

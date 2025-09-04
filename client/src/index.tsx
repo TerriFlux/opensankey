@@ -18,9 +18,7 @@ declare const window: Window &
       diagram?: string,
       header?: string,
       has_header?: boolean,
-      footer?: boolean,
       logo_width?: number,
-      excel?: string,
       publish?: boolean
       logo?: string
     }
