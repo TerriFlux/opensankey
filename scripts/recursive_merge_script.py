@@ -67,9 +67,15 @@ def get_current_branch(repo_path: Path) -> Optional[str]:
     return branch if success else None
 
 def has_uncommitted_changes(repo_path: Path) -> bool:
-    """Vérifie s'il y a des modifications non committées"""
-    success, _ = run_git_command(['diff-index', '--quiet', 'HEAD', '--'], repo_path)
-    return not success
+    """Version alternative : vérifie seulement l'index et le working tree sans sous-modules"""
+    # Vérifier l'index (fichiers staged)
+    success_index, _ = run_git_command(['diff-index', '--quiet', '--cached', 'HEAD', '--'], repo_path)
+    
+    # Vérifier le working tree (fichiers modifiés mais pas staged)
+    success_worktree, _ = run_git_command(['diff-files', '--quiet', '--ignore-submodules'], repo_path)
+    
+    # S'il y a des changements dans l'index OU dans le working tree
+    return not success_index or not success_worktree
 
 def remote_branch_exists(repo_path: Path, branch: str = 'origin/main') -> bool:
     """Vérifie si une branche distante existe"""
@@ -160,7 +166,7 @@ def merge_main_in_repo(repo_path: Path) -> bool:
     
     # Effectuer le merge sans commit et sans fast-forward
     log_info(f"Merge de origin/main dans {repo_name} (sans commit, sans fast-forward)...")
-    success, error = run_git_command(['merge', '--no-commit', '--no-ff', 'origin/main'], repo_path)
+    success, error = run_git_command(['merge', '--no-commit', '--no-ff', 'origin/main'], repo_path, False)
     
     if success:
         log_success(f"Merge préparé avec succès pour {repo_name}")
@@ -227,13 +233,15 @@ def main():
     success_count = 0
     failed_repos = []
     
-    for repo_path in git_repos:
+    for repo_path in reversed(git_repos):
         print(f"{'='*60}")
         if merge_main_in_repo(repo_path):
             success_count += 1
         else:
             failed_repos.append(repo_path)
         print()
+        # Pause avec possibilité de continuer ou d'arrêter
+        input("Appuyez sur Entrée pour continuer vers le prochain dépôt...")
     
     # Résumé final
     print(f"{'='*60}")
