@@ -44,21 +44,18 @@ import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs
 
 import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
-import { FType_InitializeDiagrammSelector } from './components/SankeyMenuTypes'
 import { Class_ApplicationData } from './types/ApplicationData'
-import { FType_ClickSaveDiagram } from './Persistence/SankeyPersistenceTypes'
 import { FType_InitializeAdditionalMenus, FType_InitializeApplicationData, FType_ModuleDialogs } from './Modules'
 import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
+import { decompressUploadedFileUniversal, loadUniversalJSON } from './Persistence/UniversalJSONCompression'
 
 declare const window: Window &
   typeof globalThis & {
     sankey: {
-      diagram?: Type_JSON,
+      diagram?: string,
       header?: string,
       has_header?: boolean,
-      footer?: boolean,
       logo_width?: number,
-      excel?: string,
       publish?: boolean
       logo?: string
     }
@@ -69,7 +66,6 @@ export const OpenSankeyApp = ({
   initializeAdditionalMenus,
   moduleDialogs,
   ModalWelcome,
-  ClickSaveDiagram,
   createZDDModifier,
   ZDD_MENU_CONFIG,
   createLinkModifier,
@@ -79,7 +75,6 @@ export const OpenSankeyApp = ({
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   moduleDialogs: FType_ModuleDialogs,
   ModalWelcome: React.ComponentType<{ new_data: Class_ApplicationData }>
-  ClickSaveDiagram: FType_ClickSaveDiagram,
   createZDDModifier: ZDDModifierType,
   ZDD_MENU_CONFIG: MenuConfig,
   createLinkModifier: ZDDModifierType,
@@ -97,16 +92,15 @@ export const OpenSankeyApp = ({
     const app_data = JSON.parse(json_data)
     initial_data = app_data
   }
-  if (window.sankey && window.sankey.diagram) {
-    initial_data = window.sankey.diagram
-  }
-
   // Initialize data
   const app_data = initializeApplicationData(initial_data)
-  /*************************************************************************************************/
   if (window.sankey && window.sankey.diagram) {
-    //@ts-expect-error xxx
-    app_data.file_name = window.sankey.diagram_name
+    console.log(window.sankey.diagram)
+    app_data.file_name = window.sankey.diagram
+    loadUniversalJSON(window.sankey.diagram as string).then(data=>{
+      app_data.fromJSON(data as Type_JSON)
+      app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
+    }).catch(e=>console.log(e))
   }
 
   const mode_pref = sessionStorage.getItem('modepref')
@@ -182,7 +176,6 @@ export const OpenSankeyApp = ({
         </>
         <ApplySaveJSONDialog
           new_data={app_data}
-          ClickSaveDiagram={ClickSaveDiagram}
         />
       </div>
       <ContextMenuNode

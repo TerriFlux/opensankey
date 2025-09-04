@@ -1043,12 +1043,12 @@ export class Class_Sankey {
     // Add Styles
     json_object['style_node'] = json_object_styles_nodes
     this.node_styles_list.forEach(style => {
-      json_object_styles_nodes[style.id] = style.toJSON();
+      json_object_styles_nodes[style.id] = style.toJSON(null,style.id != 'default' ? this._node_styles['default']:null);
       (json_object_styles_nodes[style.id] as Type_JSON)['name'] = style.name
     })
     json_object['style_link'] = json_object_styles_links
     this.link_styles_list.forEach(style => {
-      json_object_styles_links[style.id] = style.toJSON();
+      json_object_styles_links[style.id] = style.toJSON(null,style.id != 'default' ? this._link_styles['default']:null);
       (json_object_styles_links[style.id] as Type_JSON)['name'] = style.name
 
     })
@@ -1131,7 +1131,7 @@ export class Class_Sankey {
           // Create a node style
           const new_style = this._node_styles[style_id] ?? this.createNewNodeStyle(style_id, style_id, true)
           // Set node style value to node from JSON
-          new_style.fromJSON(style_json as Type_JSON)
+          new_style.fromJSON(style_json as Type_JSON,null,style_id!='default'?this._node_styles['default']:null)
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
           // Add node style to sankey
           this._node_styles[style_id] = new_style
@@ -1144,7 +1144,7 @@ export class Class_Sankey {
           // Create a link style
           const new_style = this._link_styles[style_id] ?? this.createNewLinkStyle(style_id, style_id, true)
           // Set link style value to link style from JSON
-          new_style.fromJSON(style_json as Type_JSON)
+          new_style.fromJSON(style_json as Type_JSON,null,style_id!='default'?this._link_styles['default']:null)
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
           // Add link style to sankey
           this._link_styles[style_id] = new_style

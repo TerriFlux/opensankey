@@ -82,6 +82,8 @@ export class LinkTooltip {
     html += '<div class="tooltip-content">'
     html += '<table class="tooltip-table">'
     
+    const data_label_visible = this._link.value_label_is_visible
+    this._link.value_label_is_visible = true
     // Valeur du lien
     const prev_type = this._link.drawing_area.type_data
     this._link.drawing_area.type_data = 'reconciled'
@@ -97,7 +99,8 @@ export class LinkTooltip {
       html += `<td>${this._link.data_label}</td>`
       html += '</tr>'
     }
-
+    this._link.value_label_is_visible = data_label_visible
+    
     this._link.drawing_area.type_data = prev_type
     // Tags de flux
     this._link.flux_taggs_list.forEach(tagg => {
