@@ -415,6 +415,14 @@ export class Class_NodeElement extends ClassTemplate_Element {
       this._display.attributes.fromJSON(json_local_object,this,null)
       this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
       this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
+      const relative_dx = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dx')
+      if (relative_dx) {
+        this._display.position.dx = relative_dx
+      }
+      const relative_dy = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dy')
+      if (relative_dy) {
+        this._display.position.dy = relative_dy
+      }
     }
 
 
