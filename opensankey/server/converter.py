@@ -431,7 +431,7 @@ class SankeyToJson(object):
                 "name": dimension.name,
                 "show_legend": False,
                 "tags": tags,
-                "banner": "level",
+                "banner": "one",
                 "activated": dimension not in unactivated_dimensions,
                 "siblings": [_.id for _ in siblings],
             }
@@ -964,7 +964,7 @@ class SankeyToJson(object):
                     "name": "Primaire",
                     "show_legend": False,
                     "tags": {},
-                    "banner": "level",
+                    "banner": "one",
                     "activated": True,
                 }
                 for tag in range(1, sankey.max_nodes_level + 1):
