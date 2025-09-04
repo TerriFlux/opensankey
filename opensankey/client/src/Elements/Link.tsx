@@ -631,8 +631,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     json_object['idTarget'] = this._target.sibling ? this._target.sibling.id : this._target.id
     // Fill style & local attributes
     if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
-    const attr_json = this._display.attributes.toJSON()
-    if (Object.keys(attr_json).length > 0) json_object['local'] = this._display.attributes.toJSON()
+    const attr_json = this._display.attributes.toJSON(this,null)
+    if (Object.keys(attr_json).length > 0) json_object['local'] = this._display.attributes.toJSON(this,null)
     // Fill positions attributes
     if (this._display.position_offset_value !== undefined) json_object['position_offset_label'] = this._display.position_offset_value
     if (this._display.position_offset_name !== undefined) json_object['position_offset_label'] = this._display.position_offset_name
@@ -675,7 +675,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object)
+      this._display.attributes.fromJSON(json_local_object,this,null)
       // If local attribute have key local_scale then update local scale domain
       if (this._display.attributes.shape_local_link_scale) {
         this.setDomainLocalScale(this._display.attributes.shape_local_link_scale)
@@ -1914,13 +1914,15 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   //   this.redrawNodesSourceTarget()
   // }
 
-  // ------------ Decorator about shape attribute -------------
-  private getStyleProperty(propertyName: StyleProperty) {
+  private getLinkProperty(propertyName: StyleProperty) {
     // Vérifier d'abord dans les attributs
     if (this._display.attributes[propertyName] !== undefined) {
       return this._display.attributes[propertyName]
     }
+    return this.getStyleProperty(propertyName)
+  }
 
+  public getStyleProperty(propertyName: StyleProperty) {
     // Ensuite dans le style
     const valueOfStyle = this.getStyleWithAttr(propertyName)
     if (valueOfStyle[propertyName] !== undefined) {
@@ -1937,35 +1939,6 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public get is_vertical() { return this.shape_orientation === 'vv' }
   public get is_horizontal_vertical() { return this.shape_orientation === 'hv' }
   public get is_vertical_horizontal() { return this.shape_orientation === 'vh' }
-
-  // public get shape_is_structure() {
-  //   if (this.sankey.drawing_area.type_data == 'structure') return true
-  //   if (this.sankey.drawing_area.type_data == 'data') {
-  //     if (this.value?.value_option != 'value' || this.value.valueData == null) return true
-  //   }
-  //   if (this.sankey.drawing_area.type_data == 'free_value' || this.sankey.drawing_area.type_data == 'free_interval') {
-  //     if (this.valueCurrent == null) return true
-  //   }
-  //   if (this.sankey.drawing_area.type_data == 'reconciled') {
-  //     if (this.value?.result_min !== null) return true
-  //   }
-
-  //   if (this._display.attributes.shape_is_structure !== undefined) {
-  //     return this._display.attributes.shape_is_structure
-  //   }
-  //   const valueOfStyle = this.getStyleWithAttr('shape_is_structure')
-
-  //   if (valueOfStyle.shape_is_structure !== undefined) {
-  //     return valueOfStyle.shape_is_structure
-  //   }
-  //   return LINKS_ATTRIBUTES_CONFIG.shape_is_structure.default
-  // }
-
-  // public set shape_is_structure(_: boolean) {
-  //   this._display.attributes.shape_is_structure = _
-  //   this.drawWithNodes()
-  //   this._link_control_points.drawControlPoint()
-  // }
 
   /**
    * Set and redraw d3 path for link arrow

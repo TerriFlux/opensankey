@@ -38,8 +38,8 @@ import { useToast } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
 import { default_file_name, default_save_JSON_options, default_save_only_visible_elements, default_save_with_values, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
-import { FType_RetrieveExcelResults, Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
-import { JSONtoExcel, retrieveExcelResults } from '../Persistence/SankeyPersistence'
+import { Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
+import { JSONtoExcel } from '../Persistence/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { MenuColorPicker } from '../components/configmenus/MenuColorPicker'
@@ -89,8 +89,7 @@ export type FType_ProcessFunctions = {
   not_started: MutableRefObject<boolean>,
   ref_result: MutableRefObject<Dispatch<SetStateAction<string>>>,
   path: MutableRefObject<string>,
-  launch: (path: string) => void,
-  retrieveExcelResults: FType_RetrieveExcelResults
+  launch: (path: string) => void
 }
 
 initializeTooltipSystem()
@@ -342,7 +341,6 @@ export class Class_ApplicationData {
       not_started: useRef(true),
       ref_result: useRef<Dispatch<SetStateAction<string>>>(() => null),
       path: useRef(''),
-      retrieveExcelResults,
       launch: (cur_path: string) => {
         this._processFunction.path.current = cur_path
         this.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)

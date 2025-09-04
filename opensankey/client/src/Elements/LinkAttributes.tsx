@@ -34,6 +34,8 @@ import {
   getBooleanFromJSON,
 } from '../types/Utils'
 import { LinkAttributeTypeScript, LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig'
+import { Class_LinkElement } from './Link'
+import { Class_LinkStyle } from './ElementStyle'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -209,13 +211,20 @@ export class Class_LinkAttribute extends LinkAttributeTypeScript {
     this.update()
   }
 
-    // Méthode protégée pour personnaliser la condition de sauvegarde
-  protected shouldSaveAttribute(key: AttributeKey, value: any): boolean {
-    return value !== undefined && value != LINKS_ATTRIBUTES_CONFIG[key].default
+  // Méthode protégée pour personnaliser la condition de sauvegarde
+  protected shouldSaveAttribute(
+    key: AttributeKey,
+    value: any,
+    link: Class_LinkElement | null,
+    default_style: Class_LinkStyle | null
+  ): boolean {
+    if (link) return value !== undefined && value !== link.getStyleProperty(key)
+    else if (default_style) return value !== undefined && value !== default_style[key]
+    else return value !== undefined && value !== LINKS_ATTRIBUTES_CONFIG[key].default
   }
 
   // Méthodes JSON simplifiées
-  public toJSON(): Type_JSON {
+  public toJSON(link:Class_LinkElement|null,default_style:Class_LinkStyle| null): Type_JSON {
     const json_object = {} as Type_JSON
 
     // Mapping JSON pour éviter la répétition
@@ -241,7 +250,7 @@ export class Class_LinkAttribute extends LinkAttributeTypeScript {
     }
 
     Object.entries(this._attributes).forEach(([key, value]) => {
-      if (this.shouldSaveAttribute(key as AttributeKey, value)) {
+      if (this.shouldSaveAttribute(key as AttributeKey, value,link,default_style)) {
         const jsonKey = jsonMapping[key] || key
         json_object[jsonKey] = value
       }
@@ -291,11 +300,11 @@ export class Class_LinkAttribute extends LinkAttributeTypeScript {
     }
   }
 
-  public fromJSON(json_local_object: Type_JSON) {
+  public fromJSON(json_local_object: Type_JSON, link: Class_LinkElement | null, default_style: Class_LinkStyle | null) {
     this.fromLegacyJSON(json_local_object)
 
     // Mapping inverse pour fromJSON
-    const fromJsonMapping: { [key: string]: string } = {
+    const fromJsonMapping: { [key: string]: AttributeKey } = {
       'user_scale': 'shape_local_link_scale',
       'curved': 'shape_is_curved',
       'curvature': 'shape_curvature',
@@ -317,16 +326,32 @@ export class Class_LinkAttribute extends LinkAttributeTypeScript {
 
     Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
       if (json_local_object[jsonKey] !== undefined) {
-        //@ts-expect-error xxx
-        this._attributes[attrKey as AttributeKey] = json_local_object[jsonKey]
+        if ((link != null && json_local_object[jsonKey] !== link.getStyleProperty(attrKey))) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[jsonKey]
+        } else if (link == null && default_style && json_local_object[jsonKey] !== default_style[attrKey]) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[jsonKey]
+        } else if (link == null && json_local_object[jsonKey] !== LINKS_ATTRIBUTES_CONFIG[attrKey].default) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[jsonKey]
+        }
       }
-    })
+    });
 
     // Traitement des attributs directs (même nom)
-    Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
+    (Object.keys(LINKS_ATTRIBUTES_CONFIG) as [AttributeKey]).forEach(key => {
       if (json_local_object[key] !== undefined) {
-        //@ts-expect-error xxx
-        this._attributes[key as AttributeKey] = json_local_object[key]
+        if ((link != null && json_local_object[key] !== link.getStyleProperty(key))) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[jsonKey]
+        } else if (link == null && default_style && json_local_object[key] !== default_style[key]) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[jsonKey]
+        } else if (link == null && json_local_object[key] !== LINKS_ATTRIBUTES_CONFIG[key].default) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[key]
+        }
       }
     })
   }

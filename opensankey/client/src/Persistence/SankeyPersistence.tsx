@@ -24,8 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FC, useEffect, useState, } from 'react'
-import * as d3 from 'd3'
+import React, { useEffect, useState, } from 'react'
 import FileSaver from 'file-saver'
 
 import {
@@ -40,17 +39,6 @@ import {
   Spinner
 } from '@chakra-ui/react'
 
-/*************************************************************************************************/
-
-import type {
-  FType_ClickSaveDiagram,
-  FCType_Counter,
-  FType_DownloadExamples,
-  FType_RetrieveExcelResults,
-  FType_UploadExcelImpl,
-  FType_UploadExemple,
-  FType_JSONtoExcel
-} from './SankeyPersistenceTypes'
 import { type Type_JSON } from '../types/Utils'
 import { Class_ApplicationData, FType_ProcessFunctions } from '../types/ApplicationData'
 import { applyRandomColors } from '../Algorithms/Colors'
@@ -121,7 +109,7 @@ interface PakoInflate {
  * }
  * @return {*}
  */
-const SankeyLoad = ({new_data,successAction,processFunctions}:{
+const SankeyLoad = ({ new_data, successAction, processFunctions }: {
   new_data: Class_ApplicationData,
   successAction: () => void,
   processFunctions: FType_ProcessFunctions
@@ -294,12 +282,18 @@ export default SankeyLoad
  * }
  * @return {*}
  */
-export const Counter: FC<FCType_Counter> = ({
+export const Counter = ({
   url_prefix,
   finishReconciliation,
   value,
   result,
   set_result
+}: {
+  url_prefix: string,
+  finishReconciliation: (x: boolean) => void,
+  value: number[],
+  result: string,
+  set_result: (_: string) => void
 }) => {
   useEffect(() => {
     const interval = setInterval(() => {
@@ -355,11 +349,11 @@ export const Counter: FC<FCType_Counter> = ({
  * @param {*} url_prefix
  * @param {string} [file_name='sankey']
  */
-export const JSONtoExcel: FType_JSONtoExcel = (
-  data_as_json,
-  url_prefix,
-  file_name,
-  save_options
+export const JSONtoExcel = (
+  data_as_json: Type_JSON,
+  url_prefix: string,
+  file_name: string,
+  save_options: JSON
 ) => {
 
   let root = window.location.origin
@@ -404,7 +398,7 @@ export const JSONtoExcel: FType_JSONtoExcel = (
  * @param {Blob} input_file
  * @param {string} the_url_prefix
  */
-export const uploadExcelImpl: FType_UploadExcelImpl = (
+export const uploadExcelImpl = (
   set_show_excel_dialog: (b: boolean) => void,
   input_file: Blob,
   the_url_prefix: string
@@ -429,8 +423,8 @@ export const uploadExcelImpl: FType_UploadExcelImpl = (
  * @param {*} applicationData
  * @param {string} text
  */
-export const retrieveExcelResults: FType_RetrieveExcelResults = (
-  new_data,
+export const retrieveExcelResults = (
+  app_data: Class_ApplicationData,
   text: string,
 ) => {
   // Failsafe
@@ -438,13 +432,13 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
     return
   // Extract JSON struct
   const data_as_json = JSON.parse(text) as Type_JSON
-  data_as_json['version'] = new_data.version // Avoid converter process
+  data_as_json['version'] = app_data.version // Avoid converter process
   // Extract sankey datas from JSON
-  new_data.fromJSON(data_as_json, false)
-  new_data.sendWaitingToast(
+  app_data.fromJSON(data_as_json, false)
+  app_data.sendWaitingToast(
     () => {
-      new_data.drawing_area.sankey.nodes_list.forEach(n => {
-        const tagg = new_data.drawing_area.sankey.node_taggs_dict['type de noeud']
+      app_data.drawing_area.sankey.nodes_list.forEach(n => {
+        const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
         if (!tagg) {
           return
         }
@@ -452,31 +446,31 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
         const sector_tag = tagg.tags_dict['secteur']
         //const echange_tag = tagg.tags_dict['echange']
         if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [new_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
+          n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
         } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [new_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
+          n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
         }
       })
-      new_data.drawing_area.legend.masked = false
-      if (new_data.drawing_area.sankey.flux_taggs_list.length > 0) {
-        new_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
-      } else if (new_data.drawing_area.sankey.node_taggs_list.length == 0) {
-        applyRandomColors(new_data, new_data.drawing_area.sankey.links_list)
+      app_data.drawing_area.legend.masked = false
+      if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
+        app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
+      } else if (app_data.drawing_area.sankey.node_taggs_list.length == 0) {
+        applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
       }
-      const unit_taggs = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-      if (unit_taggs.length>0) {
-        new_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_type = 'unit_tag'
-        new_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_visible = true
+      const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+      if (unit_taggs.length > 0) {
+        app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_type = 'unit_tag'
+        app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_visible = true
       }
     })
   // Case 1 : Apply extracted layout if present -> contains positions
   if (data_as_json['layout']) {
-    new_data.updateFromJSON(data_as_json)
+    app_data.updateFromJSON(data_as_json)
   }
   // Case 2 :: No layout -> compute default positions & characteristics
   else {
     // Recompute all positions
-    new_data.computeAutoFullSankey()
+    app_data.computeAutoFullSankey()
   }
 }
 
@@ -489,11 +483,11 @@ export const retrieveExcelResults: FType_RetrieveExcelResults = (
  * @param {*} new_data
  * @param {*} options
  */
-export const ClickSaveDiagram: FType_ClickSaveDiagram = (
-  new_data
+export const ClickSaveDiagram = (
+  app_data: Class_ApplicationData
 ): void => {
   // Convert all datas as JSON
-  new_data.saveToJSON()
+  app_data.saveToJSON()
 }
 
 /* EXAMPLES PROCESSING *****************************************************************/
@@ -506,7 +500,7 @@ export const ClickSaveDiagram: FType_ClickSaveDiagram = (
  * @param {string} filetype
  */
 
-export const DownloadExamples: FType_DownloadExamples = (
+export const DownloadExamples = (
   file_name: string,
   filetype: string
 ): void => {
@@ -574,15 +568,15 @@ function getErrorDetails(error: unknown): { name: string; message: string; toStr
  * @param {string} file_name
  * @param {Class_ApplicationData} new_data
  */
-export const UploadExemple: FType_UploadExemple = (
+export const UploadExemple = (
   file_name: string,
-  new_data: Class_ApplicationData
+  applicationData: Class_ApplicationData
 ): void => {
   let root = window.location.origin
   if (root.includes('dashboard')) {
     root = root.replace('dashboard', '')
   }
-  const url = root + new_data.url_prefix + '/example/upload'
+  const url = root + applicationData.url_prefix + '/example/upload'
   const fetchData = {
     method: 'POST',
     body: file_name
@@ -607,7 +601,7 @@ export const UploadExemple: FType_UploadExemple = (
 
       if (isCompressedFile) {
         console.log('📦 Fichier compressé détecté (nouveaux headers)')
-        await handleCompressedFile(response, file_name, new_data)
+        await handleCompressedFile(response, file_name, applicationData)
       } else {
         console.log('📄 Réponse JSON classique')
         const text = await response.text()
@@ -620,7 +614,7 @@ export const UploadExemple: FType_UploadExemple = (
         }
 
         if (!file_name.includes('.xlsx')) {
-          new_data.fromJSON(JSON_data as Type_JSON)
+          applicationData.fromJSON(JSON_data as Type_JSON)
         }
       }
 

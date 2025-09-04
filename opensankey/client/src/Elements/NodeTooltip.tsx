@@ -108,7 +108,10 @@ export class NodeTooltip {
       const ratio = totalVal > 0 ? Math.round(((link.valueCurrent ?? 0) / totalVal) * 100) + '%' : '-';
       let row = '<tr>';
       row += `<td>${nodeName}</td>`;
+      const  data_label_visible = link.value_label_is_visible
+      link.value_label_is_visible = true
       row += `<td class="value">${link.data_label}</td>`;
+       link.value_label_is_visible = data_label_visible
       row += `<td class="ratio">${ratio}</td>`;
       this._node.sankey.flux_taggs_list.forEach(tagg => {
         const names: string[] = [];

@@ -29,6 +29,8 @@ import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } 
 
 import { Type_MacroTagGroup } from '../types/Utils'
 import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
+import { Class_DataTagGroup } from './TagGroup'
+import { Class_DataTag } from './Tag'
 
 export type Type_AdditionalMenus = {
   // Top Menu
@@ -82,6 +84,9 @@ export type Type_AdditionalMenus = {
 
   formations_menu: object,
   template_module_key: string[]
+
+
+
 }
 
 export type keyTypeConfig = 'data' | 'context' | 'style'
@@ -130,6 +135,8 @@ export class Class_MenuConfig {
   /* ========================================
     Configuration menu
     ========================================*/
+    // Timeout between steps in sequence (in ms)
+  private _timeout_sequence: number = 2000
 
   /**
    * Order of buttons in top menu
@@ -417,7 +424,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   constructor() {
-
+    this._ref_to_drawer_sequence_data_tag_updater = useRef(() => null)
     // Init menu component updater ------------------------------------------------------
     this._ref_rerender_submodules_menus = useRef(() => null)
     this._ref_to_splashscreen_updater = useRef(() => null)
@@ -1014,6 +1021,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksData()
     this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['data_taggs'].current()
+        this._ref_to_drawer_sequence_data_tag_updater.current()
   }
 
   public updateAllComponentsRelatedToTagsType(type: Type_MacroTagGroup) {
@@ -1088,6 +1096,50 @@ export class Class_MenuConfig {
       this
     )
   }
+  private _ref_to_drawer_sequence_data_tag_updater: MutableRefObject<(() => void)>
+  /**
+   * Launch datatagg sequence, it go through each tag of a group and draw sankey
+   *
+   * @param {Class_DataTagGroup} tagg
+   * @memberof Class_MenuConfigOSP
+   */
+  public launchDataSequence(tagg: Class_DataTagGroup) {
+    const curr_tag = tagg.first_selected_tags as Class_DataTag | undefined
+    const tagg_list = tagg.tags_list
+
+    if (curr_tag && this._is_playing_sequence && tagg_list.length > 1) {
+      const idx_curr_tag = tagg_list.indexOf(curr_tag)
+
+      if (idx_curr_tag < tagg_list.length - 1) {
+        // Draw sankey with next tag selected
+        const next_tag = tagg_list[idx_curr_tag + 1]
+        tagg.selectTagsFromId(next_tag.id)
+        // Lauch timeout to recursively call launchDataSequence
+        setTimeout(() => {
+          this.updateAllComponentsRelatedToDataTags()
+          this.launchDataSequence(tagg)
+        }, this._timeout_sequence)
+
+      }
+      //If we are at the last tag of the group & loop sequence is at true then select first tag of the group
+      else if (this._is_sequence_loop && idx_curr_tag == tagg_list.length - 1) {
+        // Draw sankey with first tag of the group
+        const first_tag = tagg_list[0]
+        tagg.selectTagsFromId(first_tag.id)
+        // Lauch timeout to recursively call launchDataSequence
+        setTimeout(() => {
+          this.updateAllComponentsRelatedToDataTags()
+          this.launchDataSequence(tagg)
+        }, this._timeout_sequence)
+      } else {//get here when there is no next tag
+        this._is_playing_sequence = false
+        this.updateAllComponentsRelatedToDataTags()
+      }
+    } else {//get here when there curr_tag is undefined wich can be an error or we stop the sequence
+      this._is_playing_sequence = false
+      this.updateAllComponentsRelatedToDataTags()
+    }
+  }
 
   /**
    * Cancel a timed out process - It wont happen
@@ -1105,9 +1157,20 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_nodes_apparence_context_updater.current()
   }
 
-  // GETTERS / SETTERS ==================================================================
+  //Var used for the dataTagg sequence component
+  private _is_playing_sequence: boolean = false
+  private _is_sequence_loop: boolean = false
 
-  // Main menu component ----------------------------------------------------------------
+  public get ref_to_drawer_sequence_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_drawer_sequence_data_tag_updater }
+
+  public get is_playing_sequence(): boolean { return this._is_playing_sequence }
+  public set is_playing_sequence(b: boolean) { this._is_playing_sequence = b }
+
+  public get is_sequence_loop(): boolean { return this._is_sequence_loop }
+  public set is_sequence_loop(value: boolean) { this._is_sequence_loop = value }
+
+  public get timeout_sequence(): number { return this._timeout_sequence }
+  public set timeout_sequence(value: number) { this._timeout_sequence = value }
 
   public get ref_rerender_submodules_menus() {
     return this._ref_rerender_submodules_menus

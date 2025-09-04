@@ -1,12 +1,12 @@
-import { Box, Button, ButtonGroup } from '@chakra-ui/react'
-import React, { FC, useState } from 'react'
+import React, { useState, useRef } from 'react'
+import { 
+  Box, Button, ButtonGroup,MenuItem,MenuDivider,MenuButton,Menu,MenuList,
+  useSteps,Stepper,Step,StepIndicator,StepStatus,StepSeparator,StepTitle 
+} from '@chakra-ui/react'
 import { OSTooltip } from '../configmenus/MenuCommon'
-import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-
-type FCType_ToolbarSubComponent = BaseApplicationDataType & {
-  updateParentComponent: () => void
-}
+import { Class_DataTagGroup } from '../../types/TagGroup'
+import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 
 /**
  * Bottom toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
@@ -26,7 +26,7 @@ export const ToolBarBottom = ({new_data}:{new_data:Class_ApplicationData}) => {
 
   let btn_mouse_mode_edition = <></>
   if (!new_data.is_static) {
-    btn_mouse_mode_edition = <ComponentMouseMode new_data={new_data} updateParentComponent={refreshThis} />
+    btn_mouse_mode_edition = <ComponentMouseMode app_data={new_data} updateParentComponent={refreshThis} />
   }
 
   // Get height of bottom menu to correctly place the toolbar above
@@ -37,11 +37,11 @@ export const ToolBarBottom = ({new_data}:{new_data:Class_ApplicationData}) => {
   >
     {btn_mouse_mode_edition}
     {!new_data.is_static ?<ComponentUndoRedo
-      new_data={new_data}
+      app_data={new_data}
       updateParentComponent={refreshThis}
     />:<></>}
     <ComponetStretchButtons
-      new_data={new_data}
+      app_data={new_data}
       updateParentComponent={refreshThis}
     />
     <OSTooltip
@@ -60,39 +60,40 @@ export const ToolBarBottom = ({new_data}:{new_data:Class_ApplicationData}) => {
   </Box>
 }
 
-const ComponentMouseMode: FC<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
-  const { t } = new_data
+const ComponentMouseMode = (
+  { app_data, updateParentComponent }:{app_data:Class_ApplicationData,updateParentComponent: () => void}) => {
+  const { t,menu_configuration,drawing_area,icon_library } = app_data
 
   { /* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */ }
   return <OSTooltip
     placement='top'
     label={t('Banner.tooltipLiason')}
-    isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
+    isAlwaysOpen={menu_configuration.show_splashscreen}
   >
     <ButtonGroup isAttached>
       <Button
-        variant={new_data.drawing_area.isInEditionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        variant={drawing_area.isInEditionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
         id='button_selection_edition'
         size='sizeToolbarButton'
         onClick={() => {
-          if (!new_data.drawing_area.isInEditionMode()) {
-            new_data.drawing_area.switchMode()
+          if (!drawing_area.isInEditionMode()) {
+            drawing_area.switchMode()
             updateParentComponent()
           }
         }}>
-        {new_data.icon_library.icon_DA_edit}
+        {icon_library.icon_DA_edit}
       </Button>
       <Button
-        variant={new_data.drawing_area.isInSelectionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        variant={drawing_area.isInSelectionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
         id='button_selection_edition'
         size='sizeToolbarButton'
         onClick={() => {
-          if (!new_data.drawing_area.isInSelectionMode()) {
-            new_data.drawing_area.switchMode()
+          if (!drawing_area.isInSelectionMode()) {
+            drawing_area.switchMode()
             updateParentComponent()
           }
         }}>
-        {new_data.icon_library.icon_DA_selection}
+        {icon_library.icon_DA_selection}
       </Button>
     </ButtonGroup>
 
@@ -106,31 +107,31 @@ const ComponentMouseMode: FC<FCType_ToolbarSubComponent> = ({ new_data, updatePa
  * @param {*} {new_data}
  * @return {*}
  */
-const ComponentUndoRedo: FC<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
-
+const ComponentUndoRedo= ({ app_data, updateParentComponent }:{app_data:Class_ApplicationData,updateParentComponent: () => void}) => {
+  const { history,icon_library} = app_data
   { /* Buttons to apply undo or redo function */ }
   return <ButtonGroup isAttached>
     <Button
-      variant={new_data.history.can_undo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
-      isDisabled={!new_data.history.can_undo}
+      variant={history.can_undo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
+      isDisabled={!history.can_undo}
       id='button_selection_edition'
       size='sizeToolbarButton'
       onClick={() => {
-        new_data.history.applyUndo()
+        history.applyUndo()
         updateParentComponent()
       }}>
-      {new_data.icon_library.icon_undo}
+      {icon_library.icon_undo}
     </Button>
     <Button
-      variant={new_data.history.can_redo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
-      isDisabled={!new_data.history.can_redo}
+      variant={history.can_redo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
+      isDisabled={!history.can_redo}
       id='button_selection_edition'
       size='sizeToolbarButton'
       onClick={() => {
-        new_data.history.applyRedo()
+        history.applyRedo()
         updateParentComponent()
       }}>
-      {new_data.icon_library.icon_redo}
+      {icon_library.icon_redo}
     </Button>
   </ButtonGroup>
 
@@ -142,11 +143,11 @@ const ComponentUndoRedo: FC<FCType_ToolbarSubComponent> = ({ new_data, updatePar
  * @param {*} { new_data, updateParentComponent }
  * @return {*}
  */
-const ComponetStretchButtons: FC<FCType_ToolbarSubComponent> = ({ new_data, updateParentComponent }) => {
+const ComponetStretchButtons = ({ app_data, updateParentComponent }:{app_data:Class_ApplicationData,updateParentComponent: () => void}) => {
   // Use variable from class
-  const { t } = new_data
+  const { t } = app_data
 
-  const logo_btn_fs = document.fullscreenElement ? new_data.icon_library.icon_enter_fullscreen : new_data.icon_library.icon_exit_fullscreen
+  const logo_btn_fs = document.fullscreenElement ? app_data.icon_library.icon_enter_fullscreen : app_data.icon_library.icon_exit_fullscreen
 
   const tmp = new KeyboardEvent('keydown', { key: 'F', ctrlKey: true })
   const doc = document
@@ -162,15 +163,15 @@ const ComponetStretchButtons: FC<FCType_ToolbarSubComponent> = ({ new_data, upda
     <OSTooltip placement='top' label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
         size='sizeToolbarButton'
-        onClick={() => new_data.drawing_area.areaFitHorizontally(true)}>
-        {new_data.icon_library.icon_area_fit_horiz}
+        onClick={() => app_data.drawing_area.areaFitHorizontally(true)}>
+        {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
     <OSTooltip placement='top' label={t('Banner.tooltipAdjustV')}>
       <Button variant='toolbar_button_6'
         size='sizeToolbarButton'
-        onClick={() => new_data.drawing_area.areaFitVertically(true)}>
-        {new_data.icon_library.icon_area_fit_vert}
+        onClick={() => app_data.drawing_area.areaFitVertically(true)}>
+        {app_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>
 
@@ -188,4 +189,205 @@ const ComponetStretchButtons: FC<FCType_ToolbarSubComponent> = ({ new_data, upda
       </Button>
     </OSTooltip>
   </ButtonGroup>
+}
+
+export const DrawerSequenceDataTagg = ({ new_data }:{ new_data: Class_ApplicationData }) => {
+  const { icon_library } = new_data
+  const { icon_repeat_sequence, icon_play, icon_pause, icon_activated, icon_open_selector } = icon_library
+  const [, setUpdate] = useState(0)
+  new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater.current = () => setUpdate(a => a + 1)
+  const [active_grp, setActiveGrp] = useState('')
+
+  const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).banner=='sequence')
+  const dict_data_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
+  const list_grp_seq_id = list_grp_seq.map(grp => grp.id)
+  const has_sequence = list_grp_seq.length > 0
+
+  if (has_sequence && !list_grp_seq_id.includes(active_grp)) {
+    setActiveGrp(list_grp_seq_id[0])
+  }
+  const ref_set_number_input = useRef((_: string | null | undefined) => null)
+  ref_set_number_input.current(String(new_data.menu_configuration.timeout_sequence))
+
+  // Create stepper of active groupe
+  const stepper_sequence: JSX.Element = <StepperDataTagg new_data={new_data} DataGroup={dict_data_grp[active_grp] as Class_DataTagGroup} />
+
+  // Logo of the button to start/pause the sequence
+  const logo_btn = !new_data.menu_configuration.is_playing_sequence ? icon_play : icon_pause
+  const setter_timeout = <Box layerStyle='config_timeout_sequence' >
+    <Box layerStyle='menuconfigpanel_option_name'>
+      {new_data.t('Tags.sequence_timeout')}
+    </Box>
+
+    <ConfigMenuNumberInput
+      t={new_data.t}
+      default_value={new_data.menu_configuration.timeout_sequence}
+      minimum_value={1}
+      function_on_blur={(value) => {
+        if (value) {
+          if (value > 0) {
+            new_data.menu_configuration.timeout_sequence = value
+          }
+        }
+      }}
+      unit_text='ms'
+    />
+  </Box>
+
+  // If multiple dataTagg are a sequence we can add a Menu to choose which one we want to launch
+  const select_active_grp = list_grp_seq.length > 1 ? <>
+    {list_grp_seq.map((el, idx) => {
+      return <MenuItem
+        key={'select_grp_seq_' + idx}
+        onClick={() => setActiveGrp(el.id)}
+        icon={active_grp === el.id ? icon_activated : <></>}
+        style={{ display: 'block' }}
+      >
+        {el.name}
+      </MenuItem>
+    })}
+    <MenuDivider />
+  </> : <></>
+
+  // Menu with option like selective active sequence & timeout between steps
+  const option_btn = <Menu>
+    <MenuButton
+      as={Button}
+      isDisabled={new_data.menu_configuration.is_playing_sequence}
+      variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_menu_play' : 'button_dataTagg_sequence_menu_pause'}
+    >
+      {icon_open_selector}
+    </MenuButton>
+    <MenuList>
+      {select_active_grp}
+      {setter_timeout}
+    </MenuList>
+  </Menu>
+
+  return has_sequence ? (
+    <Box
+      layerStyle='box_sequence'
+    >
+      <ButtonGroup isAttached>
+        <Button
+          variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
+          onClick={() => {
+            // Either launch or stop data sequence
+            if (new_data.menu_configuration.is_playing_sequence) {
+              // Stop sequence
+              new_data.menu_configuration.is_playing_sequence = false
+            } else {
+              // Start sequence
+              new_data.menu_configuration.is_playing_sequence = true
+              const curr_active_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')[active_grp] as Class_DataTagGroup
+              new_data.menu_configuration.launchDataSequence(curr_active_grp)
+            }
+            setUpdate(a => a + 1)
+          }}
+        >
+          {logo_btn}
+        </Button>
+        <Button
+          variant={new_data.menu_configuration.is_sequence_loop ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
+          onClick={() => {
+            // Switch 'is sequence loop' value
+            new_data.menu_configuration.is_sequence_loop = !new_data.menu_configuration.is_sequence_loop
+            setUpdate(a => a + 1)
+          }}>
+          {icon_repeat_sequence}
+        </Button>
+        {option_btn}
+      </ButtonGroup>
+      {stepper_sequence}
+    </Box>
+  ) : <></>
+}
+
+// Compoenent returing a stepper of a dataTagg where each step is a tag of the group with visual indication to which tag is selected
+const StepperDataTagg = ({ new_data, DataGroup }:{ new_data: Class_ApplicationData, DataGroup: Class_DataTagGroup }) => {
+  const stepper_sequence = DataGroup.tags_list.map((tag, idx) => { return { id_tag: tag.id, title: tag.name, selected: tag.is_selected, id: idx } })
+  const selected_id = stepper_sequence.find(el => el.selected)?.id ?? -1
+  const { activeStep, setActiveStep } = useSteps({
+    index: selected_id,
+    count: stepper_sequence.length,
+  })
+
+  if (activeStep !== -1 && activeStep !== selected_id) {
+    setActiveStep(selected_id)
+  }
+  // Fucntion used when we click on a step to manually switch to clicked tag
+  const switchCurrTag = (idx: number) => {
+    DataGroup.selectTagsFromId(stepper_sequence[idx].id_tag)
+    new_data.drawing_area.checkAndUpdateAreaSize()
+    new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
+  }
+
+  return <Box layerStyle='box_stepper'>
+    {/* First stepper that have progression bar of the sequence with steps */}
+    <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
+      {stepper_sequence.map((step, index) => (
+        <Step key={index} onClick={() => switchCurrTag(index)}>
+          <>
+            <Box width='100%'>
+              <Box display='flex' alignItems='center'>
+                <StepIndicator
+                  sx={{
+                    '[data-status=complete] &': {
+                      background: 'white',
+                      borderWidth: '2px',
+                      borderColor: 'secondaire.3',
+                    },
+                    '[data-status=active] &': {
+                      background: 'primaire.3',
+                      borderColor: 'secondaire.3',
+                    },
+                    '[data-status=incomplete] &': {
+                      background: 'white',
+                      borderColor: 'secondaire.3',
+                    },
+                  }}
+                >
+                  <StepStatus />
+
+                </StepIndicator>
+
+                <StepSeparator
+                  sx={{
+                    '[data-status=complete] &': {
+                      background: 'lightgrey',
+                    },
+                    '[data-status=active] &': {
+                      background: 'lightgrey',
+                    },
+                    '[data-status=incomplete] &': {
+                      background: 'lightgrey',
+                    },
+                  }} />
+              </Box>
+
+            </Box>
+          </>
+        </Step>
+      ))}
+    </Stepper>
+
+    {/* Second stepper just to have text well aligned with indicator */}
+    <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
+      {stepper_sequence.map((step, index) => (
+        <Step key={index} onClick={() => switchCurrTag(index)}>
+          <>
+            <Box width='100%'>
+              <Box display='flex' alignItems='center'>
+
+                <StepTitle >{step.title}</StepTitle>
+              </Box>
+
+            </Box>
+          </>
+
+        </Step>
+
+      ))}
+    </Stepper>
+  </Box>
 }

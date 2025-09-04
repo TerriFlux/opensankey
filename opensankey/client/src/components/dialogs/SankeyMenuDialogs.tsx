@@ -42,10 +42,9 @@ import {
 
 import { default_style_id } from '../../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
-import { FType_DiagramSelector } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FType_ClickSaveDiagram, FType_UploadExcelImpl } from '../../Persistence/SankeyPersistenceTypes'
+import { ClickSaveDiagram, uploadExcelImpl } from '../../Persistence/SankeyPersistence'
 
 
 /**
@@ -412,9 +411,8 @@ export const ApplyLayoutDialog = ({
  * @param {FCType_ApplySaveJSONDialog}
  * @returns {*}
  */
-export const ApplySaveJSONDialog = ({ new_data, ClickSaveDiagram }: {
-  new_data: Class_ApplicationData,
-  ClickSaveDiagram: FType_ClickSaveDiagram
+export const ApplySaveJSONDialog = ({ new_data }: {
+  new_data: Class_ApplicationData
 }
 ) => {
   const { t } = new_data
@@ -484,9 +482,8 @@ export const ApplySaveJSONDialog = ({ new_data, ClickSaveDiagram }: {
  * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
  * @returns
  */
-export const ExcelModal = ({ new_data, uploadExcelImpl, launch }: {
+export const ExcelModal = ({ new_data, launch }: {
   new_data: Class_ApplicationData,
-  uploadExcelImpl: FType_UploadExcelImpl,
   launch: (path: string) => void,
 }
 ) => {

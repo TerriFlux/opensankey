@@ -1,3 +1,4 @@
+import { Class_Sankey } from '../types/Sankey';
 import { getNumberFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils';
 import { Class_LinkElement } from './Link';
 import { Class_LinkAttribute, AttributeKey as LinkAttributeKey } from './LinkAttributes';
@@ -39,11 +40,16 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     }
   }
 
-  // ✅ OVERRIDE: Condition personnalisée pour Class_LinkStyle
-  protected shouldSaveAttribute(key: LinkAttributeKey, value: any): boolean {
-    return value !== undefined &&
-      this._customisable_attribute[key] &&
-      value != LINKS_ATTRIBUTES_CONFIG[key].default
+  protected shouldSaveAttribute(
+    key: LinkAttributeKey, 
+    value: any,
+    link:Class_LinkElement|null,
+    default_style:Class_LinkStyle| null
+  ) {
+    if (default_style) { 
+      return value !== undefined && this._customisable_attribute[key] && value !== default_style[key]
+    }
+    return value !== undefined && this._customisable_attribute[key] && value !== LINKS_ATTRIBUTES_CONFIG[key].default
   }
 
   public delete() {
@@ -65,8 +71,8 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     }
   }
 
-  public fromJSON(json_local_object: Type_JSON): void {
-    super.fromJSON(json_local_object)
+  public fromJSON(json_local_object: Type_JSON, link: Class_LinkElement | null, default_style: Class_LinkStyle | null) {
+    super.fromJSON(json_local_object,link,default_style)
     Object.keys(this._attributes).forEach(([jsonKey, attrKey]) => {
       if (json_local_object[jsonKey] !== undefined) {
         this._customisable_attribute[attrKey as LinkAttributeKey] = true
@@ -150,20 +156,27 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   /**
    * Override: condition spécifique pour les styles
    */
-  protected shouldSaveAttribute(key: NodeAttributeKey, value: any): boolean {
-    return value !== undefined &&
-      this._customisable_attribute[key] &&
-      value !== NODES_ATTRIBUTES_CONFIG[key].default
+  protected shouldSaveAttribute(
+    key: NodeAttributeKey, 
+    value: any,
+    node:Class_NodeElement|null,
+    default_style:Class_NodeStyle| null
+  ) {
+    if (default_style) { 
+      return value !== undefined && this._customisable_attribute[key] && value !== default_style[key]
+    }
+    return value !== undefined && this._customisable_attribute[key] && value !== NODES_ATTRIBUTES_CONFIG[key].default
   }
 
   /**
    * Override: fromJSON avec gestion des customisable_attribute + position
    */
-  public fromJSON(json_local_object: Type_JSON): void {
+  public fromJSON(json_local_object: Type_JSON, node: Class_NodeElement | null, default_style:Class_NodeStyle| null): void {
     // 1. Appeler la logique parente (fait tout le mapping)
     super.fromJSON(
       json_local_object,
-      null
+      null,
+      default_style
     )
 
     // 2. Gestion spécifique des positions
@@ -182,8 +195,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   /**
    * Override: toJSON avec ajout des informations de position
    */
-  public toJSON(): Type_JSON {
-    const json_object = super.toJSON()
+  public toJSON(node:Class_NodeElement|null,default_style:Class_NodeStyle| null): Type_JSON {
+    const json_object = super.toJSON(null,default_style)
 
     // Ajouter les informations de position
     if (this.position.type) json_object['position'] = this.position.type

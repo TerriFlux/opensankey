@@ -27,6 +27,7 @@
 import {
   Type_JSON,
 } from '../types/Utils'
+import { Class_NodeStyle } from './ElementStyle'
 import { Class_NodeElement } from './Node'
 import { AttributeKey, AttributeTypes, NodeAttributeTypeScript, NODES_ATTRIBUTES_CONFIG } from './NodeAttributesConfig'
 
@@ -195,19 +196,25 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
   /**
    * Condition personnalisable pour savoir si un attribut doit être sauvegardé
    */
-  protected shouldSaveAttribute(key: AttributeKey, value: any): boolean {
-    return value !== undefined && value !== NODES_ATTRIBUTES_CONFIG[key].default
+  protected shouldSaveAttribute(
+    key: AttributeKey, 
+    value: any,node:Class_NodeElement|null,
+    default_style:Class_NodeStyle| null
+  ): boolean {
+    if (node) return value !== undefined && value !== node.getStyleProperty(key)
+    else if (default_style) return value !== undefined && value !== default_style[key]
+    else return value !== undefined && value !== NODES_ATTRIBUTES_CONFIG[key].default
   }
 
   /**
    * Conversion vers JSON - utilise le mapping centralisé
    */
-  public toJSON(): Type_JSON {
+  public toJSON(node:Class_NodeElement|null,default_style:Class_NodeStyle| null): Type_JSON {
     const json_object = {} as Type_JSON
     const mapping = NodeAttributeMappings.getToJsonMapping()
 
     Object.entries(this._attributes).forEach(([key, value]) => {
-      if (this.shouldSaveAttribute(key as AttributeKey, value)) {
+      if (this.shouldSaveAttribute(key as AttributeKey, value,node,default_style)) {
         const jsonKey = mapping[key] || key
         json_object[jsonKey] = value
       }
@@ -219,13 +226,19 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
   /**
    * Conversion depuis JSON - gère legacy + OSP automatiquement
    */
-  public fromJSON(json_local_object: Type_JSON, node: Class_NodeElement | null) {
+  public fromJSON(json_local_object: Type_JSON, node: Class_NodeElement | null, default_style:Class_NodeStyle| null) {
     const fromJsonMapping = NodeAttributeMappings.getFromJsonMapping()
 
     // Mapping principal depuis JSON (inclut OSP et legacy)
     Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
       if (json_local_object[jsonKey] !== undefined) {
-        if ( node == null || (node != null && json_local_object[jsonKey] !== node.getStyleProperty(attrKey))) {
+        if ((node != null && json_local_object[jsonKey] !== node.getStyleProperty(attrKey))) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[jsonKey]
+        } else if ( node == null && default_style && json_local_object[jsonKey] !== default_style[attrKey]) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[attrKey] = json_local_object[jsonKey]
+        } else if ( node == null && json_local_object[jsonKey] !== NODES_ATTRIBUTES_CONFIG[attrKey].default) {
           //@ts-expect-error JSON assignment    
           this._attributes[attrKey] = json_local_object[jsonKey]
         }
@@ -235,9 +248,15 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
     // Attributs directs (même nom)
     (Object.keys(NODES_ATTRIBUTES_CONFIG) as [AttributeKey]).forEach(key => {
       if (json_local_object[key] !== undefined) {
-        if (node == null || json_local_object[key] !== node.getStyleProperty(key)) {
+        if (node != null && json_local_object[key] !== node.getStyleProperty(key)) {
           //@ts-expect-error JSON assignment
           this._attributes[key as AttributeKey] = json_local_object[key]
+        }else if ( node == null && default_style && json_local_object[key] !== default_style[key]) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[key] = json_local_object[key]
+        } else if ( node == null && json_local_object[key] !== NODES_ATTRIBUTES_CONFIG[key].default) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[key] = json_local_object[key]
         }
       }
     })

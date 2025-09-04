@@ -55,12 +55,12 @@ import { useTour } from '@reactour/tour'
 
 import { Type_JSON } from '../../types/Utils'
 
-import { setDiagram } from './SankeyMenuBanner'
 import { clickSavePDF } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
 import {
   decompressUploadedFileUniversal,
+  loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
@@ -74,15 +74,21 @@ declare const window: Window &
     sankey: {
       header?: string
       sous_filieres: { [key: string]: string }
-      help: { [key: string]: string }
-      excel: string
-      structure: boolean,
-      advanced: boolean,
-      footer: boolean,
-      toolbar: true
+      diagram: string
     }
   }
+  
+export const setDiagram = (
+  diagram_url: string,
+  app_data: Class_ApplicationData
+) => {
+  const diagrams = window.sankey.sous_filieres
+  loadUniversalJSON(diagrams[diagram_url]+'.json.gz').then(data=>{
+      app_data.fromJSON(data as Type_JSON)
+      app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
+    }).catch(e=>console.log(e))
 
+}
 
 export const GoToUserDoc = () => {
   const path = window.location.origin
@@ -716,43 +722,35 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
 
       const currentPath = window.location.pathname // "/portfolios/SOCLE/Cereales/diagrams.html"
       const basePath = currentPath.substring(0, currentPath.lastIndexOf('/')) // "/portfolios/SOCLE/Cereales"
-      const fileUrl = window.location.origin + basePath + '/' + new_data.file_name + '.json.gz'
+      const fileUrl = window.location.origin + basePath + '/' + new_data.file_name
       const url = 'https://dev.open-sankey.fr/?url=' + fileUrl
 
       window.open(url, '_blank')
     }}
-  >Edit</Button> : <></>
+  >Edition</Button> : <></>
 
-  const dict_components_menu_top: { [x: string]: React.JSX.Element; } = {
-    'diagrams': diagrams_element,
-    'edit': edit_button,
-    ...additionalMenus.current.external_top_buttons_item
-  }
-
+  let dict_components_menu_top: { [x: string]: React.JSX.Element; } = {}
+  if (new_data.is_static && sous_filieres) dict_components_menu_top['diagrams'] = diagrams_element
+  dict_components_menu_top['edit'] = edit_button
+  dict_components_menu_top={...dict_components_menu_top,...additionalMenus.current.external_top_buttons_item}
+  
   return <Box
     display='grid'
     gridAutoFlow='column'
-    gridTemplateColumns={'repeat(' + String(new_data.menu_configuration.menu_top_order.length) + ', max-content 3px)'}
+    gridTemplateColumns={'repeat(' + String(Object.values(dict_components_menu_top).length) + ', max-content 3px)'}
   >
     {
-      new_data.menu_configuration.menu_top_order
-        .map((arr, i) => {
+      Object.values(dict_components_menu_top)
+        .map((c, i) => {
           return <Fragment key={'top_grp_' + i}>
             <ButtonGroup
               marginRight='1rem'
               marginLeft='1rem'
             >
-              {
-                arr.map((k, i) => {
-                  return <React.Fragment
-                    key={'menutop_button_' + i}>
-                    {dict_components_menu_top[k]}
-                  </React.Fragment>
-                })
-              }
+                    {c}
             </ButtonGroup>
             {
-              (i < (new_data.menu_configuration.menu_top_order.length)) ?
+              (i < (Object.values(dict_components_menu_top).length)) ?
                 <Divider
                   orientation='vertical'
                   margin='0'
@@ -894,7 +892,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
  * @param {Class_ApplicationData} new_data
  * @return {*}  {JSX.Element}
  */
-export const ButtonLaunchGuide: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
+export const ButtonLaunchGuide = ({ new_data }:{ new_data: Class_ApplicationData }) => {
   const { setIsOpen } = useTour()
   return <OSTooltip
     label={new_data.t('guide.tooltip.guide')}

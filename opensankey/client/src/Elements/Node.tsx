@@ -377,7 +377,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
 
     if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
-    json_object['local'] = this._display.attributes.toJSON()
+    json_object['local'] = this._display.attributes.toJSON(this,null)
     if (this._display.position.dx) json_object['local']['dx'] = this._display.position.dx
     if (this._display.position.dy) json_object['local']['dy'] = this._display.position.dy
 
@@ -412,7 +412,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     OSPFormatConverter.convertNodeFromOSPFormat(json_node_object)
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object,this)
+      this._display.attributes.fromJSON(json_local_object,this,null)
       this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
       this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
     }
@@ -1754,12 +1754,14 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this.applyPosition()
   }
 
-  // GETTERS/SETTERS ===================================================
-
-  public getStyleProperty(propertyName: keyof typeof NODES_ATTRIBUTES_CONFIG) {
+  public getNodeProperty(propertyName: keyof typeof NODES_ATTRIBUTES_CONFIG) {
     if (this._display.attributes[propertyName] !== undefined) {
       return this._display.attributes[propertyName]
     }
+    return this.getStyleProperty(propertyName)
+  }
+
+  public getStyleProperty(propertyName: keyof typeof NODES_ATTRIBUTES_CONFIG) {
     const valueOfStyle = this.getStyleWithAttr(propertyName as keyof Class_NodeStyle)
     if (valueOfStyle[propertyName] !== undefined) {
       return valueOfStyle[propertyName]

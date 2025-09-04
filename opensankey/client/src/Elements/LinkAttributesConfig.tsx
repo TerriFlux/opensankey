@@ -867,7 +867,7 @@ export class LinkSetterGenerator {
       const config = LINKS_ATTRIBUTES_CONFIG[key]
       
       Object.defineProperty(instance, key, {
-        get: () => instance.getStyleProperty(key),
+        get: () => instance.getLinkProperty(key),
         set: (value: any) => {
           // 1. Setter personnalisé si défini
           //@ts-expect-error xxx

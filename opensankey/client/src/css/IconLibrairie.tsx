@@ -23,12 +23,19 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-
-import { faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand, faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat, faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
-import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaAngleDoubleDown, FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDoubleUp, FaAngleDown, FaAngleUp, FaArrowAltCircleDown, FaArrowAltCircleUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp, FaBold, FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaEye, FaEyeSlash, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus } from 'react-icons/fa'
-
+import { 
+  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand, 
+  faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat, 
+  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark 
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { 
+  FaAlignCenter, FaAlignLeft, FaAlignRight, FaAngleDoubleDown, FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDoubleUp, FaAngleDown, FaAngleUp, 
+  FaArrowAltCircleDown, FaArrowAltCircleUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp, FaBold, 
+  FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaEye, FaEyeSlash, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus 
+} from 'react-icons/fa'
+import { FaPause, FaPlay} from 'react-icons/fa'
 // Hand made icon ===========================================================================
 // Logo for sub-nav 'aide'
 const logo_home = <svg
@@ -424,6 +431,9 @@ export class Class_IconLibrary {
 
   protected _icon_to_the_left=logo_to_the_left
   protected _icon_to_the_right=logo_to_the_right
+  protected _icon_repeat_sequence = <FontAwesomeIcon icon={faRepeat} />
+  protected _icon_play = <FaPlay />
+  protected _icon_pause = <FaPause />
 
   // Constructor ===================================
   constructor() {
@@ -500,6 +510,9 @@ export class Class_IconLibrary {
   public get icon_collapse_down() { return this._icon_collapse_down }
   public get icon_open_close_config() { return this._icon_open_close_config }
 
+  public get icon_repeat_sequence() { return this._icon_repeat_sequence }
+  public get icon_play() { return this._icon_play }
+  public get icon_pause() { return this._icon_pause }
 
   public get icon_flow() { return this._icon_flow }
   public get icon_graph() { return this._icon_graph }
