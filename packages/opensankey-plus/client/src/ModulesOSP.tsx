@@ -88,12 +88,7 @@ import {
 import {
   SankeySettingsEditionElementTags
 } from './components/SankeyPlusMenuConfigurationTags'
-
 import {
-  TransformationElementsOSP
-} from './components/ConvertOSP'
-import {
-  DrawerSequenceDataTagg,
   ImportImageAsSvgBg,
 } from './components/UtilsOSP'
 import { ToolbarFilter } from './components/Toolbar'
@@ -234,13 +229,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       new_data_plus={new_data_plus}
     />
   )
-
-  //Add data sequence in footer
-  additionalMenus.current.footer.push(<DrawerSequenceDataTagg new_data={new_data_plus} />)
-
-
-
-
   additionalMenus.current.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
   additionalMenus.current.additional_node_config_style.push(<NodeForeignObjectOSP new_data_plus={new_data_plus} />)
 

@@ -704,8 +704,6 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
   protected _icon_attr_view = <FontAwesomeIcon icon={faListCheck} />
   protected _icon_copy = <FontAwesomeIcon icon={faCopy} />
 
-  protected _icon_repeat_sequence = <FontAwesomeIcon icon={faRepeat} />
-
   protected _icon_delete = <FontAwesomeIcon icon={faDeleteLeft} />
 
   protected _icon_filter_tags = <FaFilter />
@@ -713,8 +711,6 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
   protected _icon_palette_color = <FaPalette />
   protected _icon_random = <FaRandom />
 
-  protected _icon_play = <FaPlay />
-  protected _icon_pause = <FaPause />
   protected _icon_object = logo_object
   protected _icon_view = logo_view
 
@@ -746,13 +742,10 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
   public get icon_next() { return this._icon_next }
   public get icon_attr_view() { return this._icon_attr_view }
   public get icon_copy() { return this._icon_copy }
-  public get icon_repeat_sequence() { return this._icon_repeat_sequence }
   public get icon_delete() { return this._icon_delete }
   public get icon_filter_tags() { return this._icon_filter_tags }
   public get icon_palette_color() { return this._icon_palette_color }
   public get icon_random() { return this._icon_random }
-  public get icon_play() { return this._icon_play }
-  public get icon_pause() { return this._icon_pause }
   public get icon_object() { return this._icon_object }
   public get icon_view() { return this._icon_view }
   public get icon_data_tag_diabled() { return this._icon_data_tag_diabled }

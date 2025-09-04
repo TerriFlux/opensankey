@@ -36,9 +36,6 @@ export const OpenSankeyPlusApp = <ChakraProvider theme={ThemeOSP}>
     initializeAdditionalMenus={initializeAdditionalMenusOSP}
     moduleDialogs={moduleDialogsOSP}
     ModalWelcome={ModalWelcomeBuilderOSP}
-    ClickSaveDiagram={
-      (new_data) => { ClickSaveDiagram(new_data) }
-    }
     //@ts-expect-error xxx
     createZDDModifier={createZDDModifierPlus}
     ZDD_MENU_CONFIG={ZDD_MENU_CONFIG_PLUS()}

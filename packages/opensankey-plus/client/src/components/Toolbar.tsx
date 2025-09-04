@@ -19,7 +19,7 @@ const width_fitler_drawer = 270
  * @return {*} 
  */
 export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [drawerOpen, setDrawerOpen] = useState(app_data.is_static ? true : false)
+  const [drawerOpen, setDrawerOpen] = useState(app_data.is_static ? false : false)
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
   //@ts-ignore xxx
   app_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
