@@ -2413,7 +2413,18 @@ const convert_links: convert_linksFuncType = (
     if (l.drag_label_offset) {
       l.position_offset_label = l.drag_label_offset
     }
-
+    if (l.local.label_position  == 'frozen') {
+      //@ts-expect-error xxx
+      l.local.name_label_pos_auto = true
+    }
+    if (l.x_label) {
+      //@ts-expect-error xxx
+      l.position_x_label = l.x_label
+    }    
+    if (l.y_label) {
+      //@ts-expect-error xxx
+      l.position_y_label = l.y_label
+    }
     if (objectReturn['hide_value'] === true) {
       l.local['value_label_is_visible'] = false
     }
