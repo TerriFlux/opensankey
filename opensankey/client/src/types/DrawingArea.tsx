@@ -601,6 +601,9 @@ export class Class_DrawingArea {
       .attr('width', '100%')
       .attr('height', height)
       .attr('transform', 'translate(0, 0)') // Avoid NaN when Zooming
+      // Ajouter les propriétés pour gérer le débordement
+      .style('overflow', 'auto') // Permet les scrollbars
+      .style('display', 'block') // Assure l'affichage en bloc
 
     // Init drawing area
     const x = this._fit_margin / 2
@@ -2099,6 +2102,8 @@ export class Class_DrawingArea {
     if (
       this.d3_selection_zoom_area
     ) {
+      const x = this._fit_margin / 2
+      const y = this._fit_margin / 2 + this.getNavBarHeight()
       // Zoom in / out
       if (event.ctrlKey) {
         // Avoid CTRL + Scroll default behavior in Browser
@@ -2109,7 +2114,7 @@ export class Class_DrawingArea {
         this.zoomListener.scaleBy(
           this.d3_selection_zoom_area,
           scale,
-          [event.x, event.y]
+          [x, y]
         )
       }
       // Horizontal displacement
@@ -2139,6 +2144,17 @@ export class Class_DrawingArea {
       this.d3_selection
         .attr('transform', event.transform.toString())
 
+    const zoomScale = event.transform.k
+    const newWidth = this.width * zoomScale
+    if (this.d3_selection_zoom_area) {
+      const minWidth = this.window_fitting_width
+      const finalWidth = Math.max(newWidth, minWidth)
+
+
+      this.d3_selection_zoom_area
+        .attr('width', finalWidth)
+    }
+
       // Launch waiting process to redraw handler with corresponding size (it take into account DA zoom scale)
       // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
       this.application_data._add_waiting_process('redraw_handler', () => {
@@ -2149,10 +2165,6 @@ export class Class_DrawingArea {
       }, 500)
     }
   }
-
-  // GETTERS / SETTERS ==================================================================
-
-  // Mode
 
   public isInSelectionMode() { return this._mode === 'selection' }
   protected setSelectionMode() {
