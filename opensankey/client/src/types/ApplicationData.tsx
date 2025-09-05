@@ -895,8 +895,8 @@ public readUrlJSON(url_data: string) {
     return <MenuColorPicker
       isDisabled={isDisabled}
       initialColor={initialColor}
-      functionOnBlur={functionOnBlur}
-      textDisabled={textDisabled}
+      onColorChange={functionOnBlur}
+      label={textDisabled}
     />
   }
 

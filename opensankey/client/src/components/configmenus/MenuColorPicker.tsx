@@ -1,65 +1,100 @@
-import { Box } from '@chakra-ui/react'
-import React, { CSSProperties, FC, useState } from 'react'
+import { Box, HStack, Text, IconButton, Button } from '@chakra-ui/react'
+import React, { CSSProperties, FC, useState, useEffect } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
-import { OSTooltip } from './MenuCommon';
+import { OSTooltip } from './MenuCommon'
 
-// Necessary props to call Class
-type MenuColorPickerProps = {
-  initialColor: string;
-  functionOnBlur: (x: string) => void;
-  isDisabled?: boolean,
-  textDisabled?: string
+// Déclaration du type pour l'EyeDropper API
+declare global {
+  interface Window {
+    EyeDropper?: {
+      new(): EyeDropper
+    }
+  }
 }
 
-export const MenuColorPicker: FC<MenuColorPickerProps> = ({ initialColor, functionOnBlur, isDisabled,textDisabled=''}) => {
+interface EyeDropper {
+  open(): Promise<{ sRGBHex: string }>
+}
+
+
+export const MenuColorPicker = ({
+  initialColor,
+  label = '',
+  onColorChange,
+  isDisabled = false,
+  disabledTooltip = '',
+  showLabel = true,
+  size = 'md',
+  showEyeDropper = true
+}: {
+  initialColor: string
+  label?: string
+  onColorChange: (color: string) => void
+  isDisabled?: boolean
+  disabledTooltip?: string
+  showLabel?: boolean
+  size?: 'sm' | 'md' | 'lg'
+  showEyeDropper?: boolean
+}) => {
   const [displayColorPicker, setDisplayColorPicker] = useState(false)
   const [color, setColor] = useState(initialColor)
+  const [isEyeDropperSupported, setIsEyeDropperSupported] = useState(false)
+
+  // Vérifier si l'EyeDropper API est supportée
+  useEffect(() => {
+    setIsEyeDropperSupported('EyeDropper' in window)
+  }, [])
 
   // Update swatch color when we change color from outside picker
-  if(!displayColorPicker && color !==initialColor){
+  if (!displayColorPicker && color !== initialColor) {
     setColor(initialColor)
   }
 
   /**
-   *Event when we click on the 'button
-   *
-   * @private
-   * @memberof MenuColorPicker
+   * Utiliser l'EyeDropper natif du navigateur
    */
-  const handleClick = () => {
-    if (isDisabled !== true)
-      setDisplayColorPicker(!displayColorPicker)
+  const useEyeDropper = async () => {
+    if (!window.EyeDropper || isDisabled) return
+
+    try {
+      const eyeDropper = new window.EyeDropper()
+      const result = await eyeDropper.open()
+      const newColor = result.sRGBHex
+      setColor(newColor)
+      onColorChange(newColor)
+    } catch (error) {
+      // L'utilisateur a annulé ou une erreur s'est produite
+      console.log('EyeDropper cancelled or failed:', error)
+    }
   }
 
   /**
-   *Event when we close the picker
-   *
-   * @private
-   * @memberof MenuColorPicker
+   * Event when we click on the color button
+   */
+  const handleClick = () => {
+    if (!isDisabled) {
+      setDisplayColorPicker(!displayColorPicker)
+    }
+  }
+
+  /**
+   * Event when we close the picker
    */
   const handleClose = () => {
     setDisplayColorPicker(false)
-    functionOnBlur(color)
+    onColorChange(color)
   }
 
-
   /**
-   * event when we change color of picker
-   *
-   * @private
-   * @param {ColorResult} color
-   * @memberof MenuColorPicker
+   * Event when we change color in picker
    */
   const handleChange = (color: ColorResult) => {
     setColor(color.hex)
   }
 
-
-
-
-  // Style of button to open picker, popover containing picker & 'backgroung overlay' that close picker when clicked
-  const styles: { [x: string]: CSSProperties; } = {
-    color: {
+  // Styles for the color picker components
+  const styles: { [x: string]: CSSProperties } = {
+    colorPreview: {
       width: '100%',
       height: '1rem',
       borderRadius: '2px',
@@ -73,7 +108,9 @@ export const MenuColorPicker: FC<MenuColorPickerProps> = ({ initialColor, functi
       background: '#fff',
       borderRadius: '1px',
       boxShadow: '0 0 0 1px rgba(124, 104, 104, 0.1)',
-      display: 'inline-block',
+      display: 'grid',
+      gridTemplateColumns: '7fr 1fr',
+      gridColumnGap: '0.25rem',
     },
     popover: {
       position: 'absolute',
@@ -90,16 +127,56 @@ export const MenuColorPicker: FC<MenuColorPickerProps> = ({ initialColor, functi
     },
   }
 
-  return (<Box>
-    <OSTooltip label={isDisabled?textDisabled:''}>
-      <Box style={styles.swatch} onClick={handleClick}>
-        <Box style={styles.color} />
-      </Box>
-    </OSTooltip>
-    {displayColorPicker ? <Box style={styles.popover}>
-      <Box style={styles.cover} onClick={handleClose} />
-      <SketchPicker color={color} onChange={handleChange} />
-    </Box> : null}
-  </Box>
+  return (
+    <Box>
+
+      {showLabel && (
+        <Text fontSize="sm" color={isDisabled ? 'gray.400' : 'gray.700'} minW="fit-content">
+          {label}
+        </Text>
+      )}
+
+      <OSTooltip label={isDisabled ? disabledTooltip : `Cliquer pour changer la couleur`}>
+        <Box style={styles.swatch} onClick={handleClick}>
+          <Box style={styles.colorPreview} />
+
+
+          {/* Bouton EyeDropper */}
+          {showEyeDropper && (
+            <OSTooltip label={
+              !isEyeDropperSupported
+                ? "Pipette non supportée dans ce navigateur"
+                : isDisabled
+                  ? disabledTooltip
+                  : "Sélectionner une couleur à l'écran"
+            }>
+              <Box
+                onClick={useEyeDropper}
+              >✏️</Box>
+            </OSTooltip>
+          )}
+        </Box>
+      </OSTooltip>
+
+      {/* Color Picker Popover */}
+      {displayColorPicker && (
+        <Box style={styles.popover}>
+          <Box style={styles.cover} onClick={handleClose} />
+          <SketchPicker
+            color={color}
+            onChange={handleChange}
+            disableAlpha={false}
+          />
+          {/* {this._user_preferences.color.length > 0 ? <SwatchesPicker colors={list_colors} onChange={handleChange} /> : <></>} */}
+        </Box>
+      )}
+
+      {/* Message si EyeDropper n'est pas supporté */}
+      {showEyeDropper && !isEyeDropperSupported && (
+        <Text fontSize="xs" color="orange.500" mt={1}>
+          💡 La pipette nécessite Chrome/Edge 95+ ou Firefox avec flag activé
+        </Text>
+      )}
+    </Box>
   )
 }

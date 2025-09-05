@@ -23,7 +23,7 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-import React, { FC, useState, useMemo, ChangeEvent,ReactNode } from 'react'
+import React, { FC, useRef,useState, useMemo, ChangeEvent,ReactNode,useEffect,MutableRefObject } from 'react'
 import { t, TFunction } from 'i18next'
 import {
   Box,
@@ -40,6 +40,7 @@ import {
   Tooltip,
   Select,
   PlacementWithLogical,
+  Textarea
 } from '@chakra-ui/react'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
@@ -61,6 +62,8 @@ import { default_style_id } from '../../types/Utils'
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { MenuColorPicker } from './MenuColorPicker'
 import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
+import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
+import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 
 
 // ✅ Union de tous vos éléments
@@ -868,7 +871,7 @@ export const CheckboxWithColorPicker = ({
         <MenuColorPicker
           isDisabled={!disable_attr_props[inputAttributeKey as keyof typeof disable_attr_props]}
           initialColor={attribute_value}
-          functionOnBlur={(new_color) => {
+          onColorChange={(new_color) => {
             updateElements(app_data, elements, inputAttributeKey, new_color,refreshParentComponent)
           }} />
         </OSTooltip>
@@ -913,3 +916,208 @@ export const SimpleElementCheckbox = ({
   )
 }
 
+interface TooltipElement {
+  id: string
+  tooltip_text?: string
+}
+
+/**
+ * Composant générique pour éditer les tooltips des noeuds et liens
+ */
+export const TooltipEditor = ({app_data,elements,updaterRef}:{
+  app_data: Class_ApplicationData
+  elements: TooltipElement[]
+  updaterRef: React.MutableRefObject<(() => void) | null>
+}) => {
+  const { t,menu_configuration,history } = app_data
+
+  // Editor state
+  const [editor_content_tooltip, setEditorContentTooltip] = useState('')
+  const [isInitialized, setIsInitialized] = useState(false)
+  const [, setCount] = useState(0)
+  const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
+
+  // Fonction pour obtenir le texte du tooltip selon le type d'élément
+  const getTooltipText = (element: TooltipElement): string => {
+    return element.tooltip_text || ''
+  }
+
+  // Fonction pour définir le texte du tooltip selon le type d'élément
+  const setTooltipText = (element: TooltipElement, text: string): void => {
+      element.tooltip_text = text
+  }
+
+  // Fonction pour obtenir le texte initial
+  const getInitialTooltipText = (): string => {
+    if (elements.length > 0) {
+      return getTooltipText(elements[0])
+    }
+    return ''
+  }
+
+  // Fonction de mise à jour complète
+  const updateEditorContent = () => {
+    const initialText = getInitialTooltipText()
+    setEditorContentTooltip(initialText)
+    if (inputRef.current) {
+      inputRef.current.value = initialText
+    }
+    setIsInitialized(true)
+  }
+
+  // useEffect pour l'initialisation et les changements de sélection
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateEditorContent()
+    }, 10)
+
+    return () => clearTimeout(timer)
+  }, [elements.length, elements[0]?.id])
+
+  // Force une mise à jour si le contenu n'est pas initialisé et qu'on a des éléments
+  useEffect(() => {
+    if (!isInitialized && elements.length > 0) {
+      updateEditorContent()
+    }
+  })
+
+  // Check if there is difference between original text and current editor content
+  const originalText = elements.length > 0 ? getTooltipText(elements[0]) : ''
+  const hasChanges = originalText !== editor_content_tooltip
+
+  const applyEditor = () => {
+    const dict_old_value: { [x: string]: string } = {}
+    elements.forEach(element => {
+      dict_old_value[element.id] = getTooltipText(element)
+    })
+
+    const _applyEditor = () => {
+      elements.forEach(element => {
+        setTooltipText(element, editor_content_tooltip)
+      })
+      // Toggle saving indicator
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+    
+    const inv_applyEditor = () => {
+      elements.forEach(element => {
+        setTooltipText(element, dict_old_value[element.id])
+      })
+      updateEditorContent()
+    }
+
+    history.saveUndo(inv_applyEditor)
+    history.saveRedo(_applyEditor)
+
+    _applyEditor()
+  }
+
+  // Reset to original values
+  const resetTextEditor = () => {
+    updateEditorContent()
+  }
+
+  // Link with new_data components updater
+  updaterRef.current = () => { 
+    setCount(a => a + 1)
+    setIsInitialized(false)
+    setTimeout(() => {
+      updateEditorContent()
+    }, 20)
+  }
+
+  // Handle textarea changes
+  const handleTextareaChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditorContentTooltip(evt.target.value)
+  }
+
+  // Render only if we have elements
+  if (elements.length === 0) {
+    return null
+  }
+
+  return (
+    <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.IB')}>
+      <>
+        <OSTooltip label={t('Flux.tooltips.IB')}>
+          <Textarea
+            rows={5}
+            ref={inputRef}
+            value={editor_content_tooltip}
+            onChange={handleTextareaChange}
+          />
+        </OSTooltip>
+        <Box as='span' layerStyle='options_2cols'>
+          <Button
+            variant='menuconfigpanel_option_button_left'
+            isDisabled={!hasChanges}
+            backgroundColor='red.200'
+            onClick={resetTextEditor}
+          >
+            {t('Menu.annuler')}
+          </Button>
+          <Button
+            variant='menuconfigpanel_option_button_right'
+            isDisabled={!hasChanges}
+            onClick={applyEditor}
+          >
+            {t('Menu.submit')}
+          </Button>
+        </Box>
+      </>
+    </WrapperBoxSubSectionMenu>
+  )
+}
+
+// Export de composants spécialisés pour faciliter l'utilisation
+const NodeTooltipEditor: FC<{
+  app_data: Class_ApplicationData
+  elements: TooltipElement[]
+  updaterRef: React.MutableRefObject<(() => void) | null>
+}> = (props) => <TooltipEditor {...props}/>
+
+const LinkTooltipEditor: FC<{
+  app_data: Class_ApplicationData
+  elements: TooltipElement[]
+  updaterRef: React.MutableRefObject<(() => void) | null>
+}> = (props) => <TooltipEditor {...props}/>
+
+export const MenuConfigurationNodesTooltip = ({new_data}: {new_data: Class_ApplicationData}) => {
+  let selected_nodes
+  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
+    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+  } else {
+    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+  }
+
+  return (
+    <>
+      <SankeyNodeSelectionSimple new_data={new_data} />
+      <NodeTooltipEditor 
+       app_data={new_data}
+        elements={selected_nodes}
+        updaterRef={new_data.menu_configuration.ref_to_menu_config_nodes_tooltips_updater}
+      />
+    </>
+  )
+}
+
+export const MenuConfigurationLinksTooltip = ({app_data}: {app_data: Class_ApplicationData}) => {
+  let selected_links
+  if (!app_data.menu_configuration.is_selector_only_for_visible_links) {
+    selected_links = app_data.drawing_area.selected_links_list_sorted
+  } else {
+    selected_links = app_data.drawing_area.visible_and_selected_links_list_sorted
+  }
+
+  return (
+    <>
+      <SankeyLinkSelectionSimple new_data={app_data} />
+      <LinkTooltipEditor 
+        app_data={app_data}
+        elements={selected_links}
+        updaterRef={app_data.menu_configuration.ref_to_menu_config_links_tooltips_updater}
+      />
+    </>
+  )
+}
