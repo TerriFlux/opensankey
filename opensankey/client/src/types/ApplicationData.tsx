@@ -45,7 +45,7 @@ import { Class_IconLibrary } from '../css/IconLibrairie'
 import { MenuColorPicker } from '../components/configmenus/MenuColorPicker'
 import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
-import { decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
+import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -500,12 +500,20 @@ export class Class_ApplicationData {
     this.drawing_area.bypass_redraws = true
     const json_data = this._toJSON()
     this.drawing_area.draw()
-    // Prepare JSON for saving
-    const json_data_str = JSON.stringify(json_data, null, 2)
-    const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
-
-    // Trigger file download
-    FileSaver.saveAs(blob, this._file_name + '.json')
+    if (this.options_save_json?.mode_compressed) {
+      const compressed = compressJSONToGzip(json_data)
+      const blob = new Blob([compressed], { type: 'application/gzip' })
+      const gzFilename = this._file_name.endsWith('.json') 
+        ? this._file_name.replace('.json', '.json.gz')
+        : this._file_name + '.json.gz'
+      
+      console.log(`💾 Sauvegarde compressée: ${gzFilename} (${(blob.size / 1024).toFixed(1)}KB)`)
+      FileSaver.saveAs(blob, gzFilename)      
+    } else {
+      const json_data_str = JSON.stringify(json_data, null, 2)
+      const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
+      FileSaver.saveAs(blob, this._file_name + '.json')
+    }
   }
 
   /**
