@@ -261,3 +261,12 @@ export const compressJSON = (data: DecompressedJSONData, type: CompressionType =
     throw new Error(`Compression ${type} non implémentée côté client`)
   }
 }
+
+/**
+ * Compresse des données JSON en format gzip
+ */
+export const compressJSONToGzip = (data: object): Uint8Array => {
+  const jsonString = JSON.stringify(data, null, 2)
+  return pako.gzip(jsonString)
+}
+
