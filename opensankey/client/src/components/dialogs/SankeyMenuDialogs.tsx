@@ -449,6 +449,12 @@ export const ApplySaveJSONDialog = ({ new_data }: {
             onChange={(evt) => { new_data.options_save_json.mode_visible_element = evt.target.checked; setCount(a => a + 1) }}>
             {t('Menu.VisibleElement')}
           </Checkbox>
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isChecked={new_data.options_save_json.mode_compressed}
+            onChange={(evt) => { new_data.options_save_json.mode_compressed = evt.target.checked; setCount(a => a + 1) }}>
+            {'ZIP file'}
+          </Checkbox>
           {new_data.menu_configuration.additionalMenus.current.additional_file_save_json_option.map(el => <React.Fragment key={'add_save_'}>{el}</React.Fragment>)}
         </Box>
       </ModalBody>

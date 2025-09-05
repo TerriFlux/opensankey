@@ -41,7 +41,11 @@ declare const window: Window &
 
 export const default_save_only_visible_elements = false
 export const default_save_with_values = true
-export const default_save_JSON_options: Type_SaveDiagramOptions = { mode_save: default_save_with_values }
+export const default_save_JSON_options: Type_SaveDiagramOptions = { 
+  mode_save: default_save_with_values,
+  mode_visible_element: false,
+  mode_compressed:true 
+}
 export const default_file_name = 'Diagramme de Sankey'
 
 export const default_toast_duration: number = 1000 // 1sec
