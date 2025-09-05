@@ -71,9 +71,6 @@ import {
   NodeForeignObjectOSP
 } from './components/SankeyPlusForeignObject'
 import {
-  MenuConfLinkApparenceDashedOSP,
-} from './components/SankeyPlusLink'
-import {
   SankeyMenuConfigurationNodesTags
 } from './components/SankeyPlusMenuConfigurationNodesTags'
 import {
@@ -201,14 +198,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Get index of seprator in context node that come after masking node shape/label so we can then insert a button to mask value (OSP functionality)
   const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
   additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'osp_context')
-
-  // Add dashed config
-  additionalMenus.current.additional_link_appearence_items.push(
-    (menu_for_style: boolean) => <MenuConfLinkApparenceDashedOSP
-      new_data_plus={new_data_plus}
-      menu_for_style={menu_for_style}
-    />)
-
 
   //additionalMenus.current.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
 
