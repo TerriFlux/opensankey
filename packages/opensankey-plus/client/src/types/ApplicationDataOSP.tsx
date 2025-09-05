@@ -596,10 +596,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
     // Create the new sankey
     const new_drawing_area = this.createNewDrawingArea(makeId('view'))
-    // Copy current sankey
-    const name = new_drawing_area.name
     new_drawing_area.copyFrom(base_drawing_area) // /!\ CopyFrom overwrites drawing area's name
-    new_drawing_area.name = name
+    new_drawing_area.name = "Copie de "+this.drawing_area.name
     // Add new sankey to views
     this._views[new_drawing_area.id] = new_drawing_area
     this.pushViewIdInViewOrder(new_drawing_area.id)
