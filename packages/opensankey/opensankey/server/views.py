@@ -1102,10 +1102,12 @@ def url_load_json():
 
         # Important: NE PAS définir Content-Encoding: gzip
         # Laisser le navigateur gérer automatiquement la décompression
-        if url_front.endswith('.gz'):
-            flask_response.headers['Content-Type'] = 'application/json'  # Type final attendu
+        if url_front.endswith(".gz"):
+            flask_response.headers["Content-Type"] = (
+                "application/json"  # Type final attendu
+            )
         else:
-            flask_response.headers['Content-Type'] = 'application/json'
+            flask_response.headers["Content-Type"] = "application/json"
 
         return flask_response
 
