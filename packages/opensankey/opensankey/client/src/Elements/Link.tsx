@@ -356,6 +356,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
     position_offset_label?: number // optional var used when label is dragged (if label follow link path)
   }
+  private _tooltip_text: string = ''
 
   public parallel_curve: Class_LinkElement | undefined
   public sibling: Class_LinkElement | undefined
@@ -551,7 +552,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this._display.position_y_name = _._display.position_y_name
     this._display.position_offset_name = _._display.position_offset_name
     // Tooltips
-    this._link_tooltip.tooltip_text = _._link_tooltip.tooltip_text
+    this.tooltip_text = _.tooltip_text
   }
 
   protected _copyFrom(_: Class_LinkElement) {
@@ -631,8 +632,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     json_object['idTarget'] = this._target.sibling ? this._target.sibling.id : this._target.id
     // Fill style & local attributes
     if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
-    const attr_json = this._display.attributes.toJSON(this,null)
-    if (Object.keys(attr_json).length > 0) json_object['local'] = this._display.attributes.toJSON(this,null)
+    const attr_json = this._display.attributes.toJSON(this, null)
+    if (Object.keys(attr_json).length > 0) json_object['local'] = this._display.attributes.toJSON(this, null)
     // Fill positions attributes
     if (this._display.position_offset_value !== undefined) json_object['position_offset_label'] = this._display.position_offset_value
     if (this._display.position_offset_name !== undefined) json_object['position_offset_label'] = this._display.position_offset_name
@@ -642,7 +643,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (this._display.position_y_name !== undefined) json_object['position_y_name'] = this._display.position_y_name
 
     // Tooltips
-    if (this._link_tooltip.tooltip_text) json_object['tooltip_text'] = this._link_tooltip.tooltip_text
+    if (this.tooltip_text) json_object['tooltip_text'] = this.tooltip_text
     // Values
     if (!(kwargs && kwargs['without_values']))
       json_object['value'] = this._values.toJSON(kwargs)
@@ -675,7 +676,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object,this,null)
+      this._display.attributes.fromJSON(json_local_object, this, null)
       // If local attribute have key local_scale then update local scale domain
       if (this._display.attributes.shape_local_link_scale) {
         this.setDomainLocalScale(this._display.attributes.shape_local_link_scale)
@@ -694,7 +695,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       matching_taggs_id,
       matching_tags_id
     )
-    this._link_tooltip.tooltip_text = getStringFromJSON(json_object, 'tooltip_text', '')
+    this.tooltip_text = getStringFromJSON(json_object, 'tooltip_text', '')
   }
 
   // PUBLIC METHODS =====================================================================
@@ -2179,7 +2180,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       (this._datatags_fingerprint !== this.sankey.data_tags_fingerprint)
     ) {
       // Recompute visibility value
-      const is_not_zero = (this.valueCurrent !== 0 )
+      const is_not_zero = (this.valueCurrent !== 0)
       // Update  fingerprint if needed
       // -> This condition allows to avoid unecessary visibility recomputing on related elements
       //    that check this link's visibility fingerprint
@@ -2243,5 +2244,12 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     } else {
       return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
     }
+  }
+  public get tooltip_text(): string {
+    return this._tooltip_text
+  }
+
+  public set tooltip_text(value: string) {
+    this._tooltip_text = value
   }
 }

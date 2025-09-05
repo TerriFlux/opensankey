@@ -268,7 +268,7 @@ export class Class_MenuConfig {
   // Update component SankeyMenuConfigurationNodesIO
   private _ref_to_menu_config_nodes_io_updater: MutableRefObject<(() => void)>
 
-  // Update component SankeyMenuConfigurationNodesTooltip
+  // Update component MenuConfigurationNodesTooltip
   private _ref_to_menu_config_nodes_tooltips_updater: MutableRefObject<(() => void)>
 
   // Update component SankeyMenuConfigurationLinks
@@ -917,7 +917,7 @@ export class Class_MenuConfig {
    * - OpenSankeyConfigurationNodesAttributes
    * - OpenSankeyConfigurationNodesTags
    * - SankeyMenuConfigurationNodesIO
-   * - SankeyMenuConfigurationNodesTooltip
+   * - MenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToNodes() {
@@ -932,7 +932,7 @@ export class Class_MenuConfig {
    * - OpenSankeyConfigurationNodesAttributes
    * - OpenSankeyConfigurationNodesTags
    * - SankeyMenuConfigurationNodesIO
-   * - SankeyMenuConfigurationNodesTooltip
+   * - MenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToNodesConfig() {

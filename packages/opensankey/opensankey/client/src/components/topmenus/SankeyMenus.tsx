@@ -134,7 +134,7 @@ export const Menu = (
       fontStyle='h4'
     >
       {t('Menu.support_explication').split('[]')[0]}
-      <a href='mailto:support@open-sankey.fr	'>support@open-sankey.fr</a>
+      <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
       {t('Menu.support_explication').split('[]')[1]}
     </Text>
   </>
@@ -211,7 +211,7 @@ export const Menu = (
               <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
             </Box>
             <Box layerStyle='menubottom_item_style'>
-              <a href='mailto:support@open-sankey.fr	'>support@terriflux.fr</a>
+              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
             </Box>
             <Box
               layerStyle='menubottom_item_style'
