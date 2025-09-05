@@ -2366,7 +2366,7 @@ const layerStyles = {
     display: 'grid',
     gridRowGap: '0.2rem',
     color: 'primaire.5',
-    overflowY: 'auto',
+    // overflowY: 'auto',
   },
 
   element_box: {
