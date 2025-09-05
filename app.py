@@ -14,11 +14,11 @@ except Exception:
     from doc import doc as doc_blueprint
 
 app = create_app()
-app.register_blueprint(doc_blueprint, url_prefix='/doc')
+app.register_blueprint(doc_blueprint, url_prefix="/doc")
 app.secret_key = secrets.token_urlsafe(64)
-app.config['SESSION_TYPE'] = 'filesystem'
-mfa_data_dir = os.environ.get('MFAData')
-app.config['FLASKFILEMANAGER_FILE_PATH'] = os.path.join(mfa_data_dir)
+app.config["SESSION_TYPE"] = "filesystem"
+mfa_data_dir = os.environ.get("MFAData")
+app.config["FLASKFILEMANAGER_FILE_PATH"] = os.path.join(mfa_data_dir)
 flaskfilemanager.init(app)
 
 if __name__ == "__main__":
