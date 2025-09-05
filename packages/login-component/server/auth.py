@@ -259,40 +259,59 @@ def is_connected():
 def has_license():
     try:
         if not current_user.is_authenticated:
-            return jsonify({"error": "User not authenticated", "code": "AUTH_REQUIRED"}), 401
+            return (
+                jsonify({"error": "User not authenticated", "code": "AUTH_REQUIRED"}),
+                401,
+            )
 
         response = {}
 
         # Vérifier si l'utilisateur a des licences
-        if not hasattr(current_user, 'user_licenses') or not current_user.user_licenses:
+        if not hasattr(current_user, "user_licenses") or not current_user.user_licenses:
             return jsonify({"licenses": {}, "message": "No licenses found"}), 200
 
         for user_license in current_user.user_licenses:
             try:
                 # Récupérer le nom de la licence selon votre structure de données
-                license_name = user_license.license.name if hasattr(user_license, 'license') else str(user_license)
-                response[license_name] = current_user.has_valid_license(user_license.license.name)
+                license_name = (
+                    user_license.license.name
+                    if hasattr(user_license, "license")
+                    else str(user_license)
+                )
+                response[license_name] = current_user.has_valid_license(
+                    user_license.license.name
+                )
             except AttributeError as e:
-                return jsonify({
-                    "error": f"License structure error: {str(e)}",
-                    "code": "LICENSE_STRUCTURE_ERROR"
-                }), 500
+                return (
+                    jsonify(
+                        {
+                            "error": f"License structure error: {str(e)}",
+                            "code": "LICENSE_STRUCTURE_ERROR",
+                        }
+                    ),
+                    500,
+                )
 
         return jsonify({"licenses": response, "message": "Success"}), 200
 
     except AttributeError as e:
-        return jsonify({
-            "error": f"User attribute error: {str(e)}",
-            "code": "USER_ATTRIBUTE_ERROR"
-        }), 500
+        return (
+            jsonify(
+                {
+                    "error": f"User attribute error: {str(e)}",
+                    "code": "USER_ATTRIBUTE_ERROR",
+                }
+            ),
+            500,
+        )
 
     except Exception as e:
         # Log l'erreur complète côté serveur
         print(f"Unexpected error in has_license: {str(e)}")
-        return jsonify({
-            "error": "Internal server error",
-            "code": "INTERNAL_ERROR"
-        }), 500
+        return (
+            jsonify({"error": "Internal server error", "code": "INTERNAL_ERROR"}),
+            500,
+        )
 
 
 @auth_blueprint.route("/auth/forgot_pw", methods=["POST"])
