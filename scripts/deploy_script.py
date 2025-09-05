@@ -10,9 +10,7 @@ import sys
 from typing import List, Tuple
 
 
-def run_ssh_command(
-    command: str, host: str, port: int = 22, user: str = "ubuntu"
-) -> bool:
+def run_ssh_command(command: str, host: str, port: int = 22, user: str = "ubuntu") -> bool:
     """Exécute une commande via SSH"""
     ssh_cmd = ["ssh", "-p", str(port), f"{user}@{host}", command]
 
@@ -25,9 +23,7 @@ def run_ssh_command(
         return False
 
 
-def run_ssh_commands_batch(
-    commands: List[str], host: str, port: int = 22, user: str = "ubuntu"
-) -> bool:
+def run_ssh_commands_batch(commands: List[str], host: str, port: int = 22, user: str = "ubuntu") -> bool:
     """Exécute plusieurs commandes via SSH dans une seule session"""
     # Joindre toutes les commandes avec &&
     full_command = " && ".join(commands)

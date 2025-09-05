@@ -46,9 +46,7 @@ def run_command(command: List[str], cwd: Optional[Path] = None) -> bool:
     Exécute une commande et retourne True si succès
     """
     try:
-        result = subprocess.run(
-            command, cwd=cwd, capture_output=True, text=True, check=True
-        )
+        result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=True)
         return True
     except subprocess.CalledProcessError as e:
         log_error(f"Command failed: {' '.join(command)}")
@@ -111,9 +109,7 @@ def format_files_batch(files: List[Path], batch_size: int = 10) -> bool:
 
     # Limiter la taille des lots pour éviter les lignes de commande trop longues
     if len(files) > 20:
-        log_warning(
-            f"Lot de {len(files)} fichiers trop important, division en sous-lots"
-        )
+        log_warning(f"Lot de {len(files)} fichiers trop important, division en sous-lots")
 
         success = True
         for i in range(0, len(files), 20):
@@ -130,37 +126,39 @@ def format_files_batch(files: List[Path], batch_size: int = 10) -> bool:
         print(f"  - {f.name}")  # Afficher seulement le nom pour économiser l'espace
 
     success_count = 0
-    total_commands = 4
+    total_commands = 5  # Ajout de flake8
 
     # 1. Format with black
     print(f"\n▶️ Running: black {len(files)} file(s)")
-    if run_command(["black"] + file_paths):
+    if run_command(["black", "--line-length", "120"] + file_paths):
         success_count += 1
         log_success("Black terminé")
 
     # 2. Format with autopep8
     print(f"\n▶️ Running: autopep8 {len(files)} file(s)")
-    autopep8_cmd = [
-        "autopep8",
-        "--in-place",
-        "--aggressive",
-        "--aggressive",
-    ] + file_paths
+    autopep8_cmd = ["autopep8", "--in-place", "--aggressive", "--aggressive", "--max-line-length", "120"] + file_paths
     if run_command(autopep8_cmd):
         success_count += 1
         log_success("Autopep8 terminé")
 
     # 3. Fix lint issues with ruff
     print(f"\n▶️ Running: ruff check --fix {len(files)} file(s)")
-    if run_command(["ruff", "check", "--fix"] + file_paths):
+    if run_command(["ruff", "check", "--fix", "--line-length", "120"] + file_paths):
         success_count += 1
         log_success("Ruff --fix terminé")
 
     # 4. Show remaining issues with ruff
     print(f"\n▶️ Running: ruff check {len(files)} file(s)")
-    if run_command(["ruff", "check"] + file_paths):
+    if run_command(["ruff", "check", "--line-length", "120"] + file_paths):
         success_count += 1
         log_success("Ruff check terminé")
+
+    # 5. Check with flake8
+    print(f"\n▶️ Running: flake8 {len(files)} file(s)")
+    flake8_cmd = ["flake8", "--max-line-length", "120"] + file_paths
+    if run_command(flake8_cmd):
+        success_count += 1
+        log_success("Flake8 check terminé")
 
     if success_count == total_commands:
         log_success(f"Lot de {len(files)} fichier(s) formaté avec succès")
@@ -172,7 +170,7 @@ def format_files_batch(files: List[Path], batch_size: int = 10) -> bool:
 
 def check_tools_installed() -> bool:
     """Vérifie que tous les outils nécessaires sont installés"""
-    tools = ["black", "autopep8", "ruff"]
+    tools = ["black", "autopep8", "ruff", "flake8"]
     missing_tools = []
 
     for tool in tools:
@@ -264,19 +262,14 @@ def main():
     print(f"Total: {len(python_files)} fichier(s) Python")
 
     # Demander confirmation
-    response = input(
-        f"\nVoulez-vous formater ces {len(python_files)} fichiers ? (y/N): "
-    )
+    response = input(f"\nVoulez-vous formater ces {len(python_files)} fichiers ? (y/N): ")
     if response.lower() not in ["y", "yes", "oui", "o"]:
         log_info("Opération annulée")
         return
 
     # Demander la taille des lots
     try:
-        batch_size = int(
-            input("Taille des lots (défaut: 10, 0 pour tout traiter d'un coup): ")
-            or "10"
-        )
+        batch_size = int(input("Taille des lots (défaut: 10, 0 pour tout traiter d'un coup): ") or "10")
         if batch_size <= 0:
             batch_size = len(python_files)
     except ValueError:
@@ -307,9 +300,7 @@ def main():
         # Pause sauf pour le dernier lot
         if i + batch_size < len(python_files):
             try:
-                response = input(
-                    "\nAppuyez sur Entrée pour continuer (q pour quitter): "
-                )
+                response = input("\nAppuyez sur Entrée pour continuer (q pour quitter): ")
                 if response.lower() == "q":
                     log_info("Arrêt demandé par l'utilisateur")
                     break
@@ -324,16 +315,12 @@ def main():
 
     if failed_batches > 0:
         log_error(f"Lots avec erreurs: {failed_batches}")
-        log_info(
-            "Note: Même les lots avec erreurs peuvent avoir formaté certains fichiers avec succès"
-        )
+        log_info("Note: Même les lots avec erreurs peuvent avoir formaté certains fichiers avec succès")
 
     if failed_batches == 0:
         log_success("Tous les fichiers ont été formatés avec succès!")
     else:
-        log_warning(
-            "Certains lots ont eu des erreurs, mais le formatage peut avoir réussi partiellement"
-        )
+        log_warning("Certains lots ont eu des erreurs, mais le formatage peut avoir réussi partiellement")
         sys.exit(1)
 
 

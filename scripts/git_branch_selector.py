@@ -207,27 +207,19 @@ def delete_branch(branch_name, repo_path=None, delete_remote=False):
         print(f"🌐 Suppression de '{branch_name}' sur le remote...")
 
         # Vérifier d'abord si la branche existe sur le remote
-        remote_check = run_command(
-            f"git ls-remote --heads origin {branch_name}", cwd=repo_path
-        )
+        remote_check = run_command(f"git ls-remote --heads origin {branch_name}", cwd=repo_path)
 
         if remote_check and remote_check.strip():
             # La branche existe sur le remote, la supprimer
-            remote_result = run_command(
-                f"git push origin --delete {branch_name}", cwd=repo_path
-            )
+            remote_result = run_command(f"git push origin --delete {branch_name}", cwd=repo_path)
             if remote_result is None:
                 print(f"❌ Échec de la suppression remote de '{branch_name}'")
-                print(
-                    "   (peut-être que la branche n'existe pas sur le remote ou problème de permissions)"
-                )
+                print("   (peut-être que la branche n'existe pas sur le remote ou problème de permissions)")
                 return True  # On retourne True car la suppression locale a réussi
             else:
                 print(f"✅ Branche '{branch_name}' supprimée sur le remote")
         else:
-            print(
-                f"ℹ️  Branche '{branch_name}' n'existe pas sur le remote (déjà supprimée ?)"
-            )
+            print(f"ℹ️  Branche '{branch_name}' n'existe pas sur le remote (déjà supprimée ?)")
 
     return True
 
@@ -359,14 +351,8 @@ def main():
         print("\n🔍 Affichage des branches orphelines uniquement")
     elif not args.show_all:
         # Par défaut, exclure les branches trackées normales
-        branches = [
-            b
-            for b in all_branches
-            if b["status"] in ["orpheline", "courante", "locale"]
-        ]
-        print(
-            "\n🔍 Exclusion des branches trackées (utilisez --show-all pour les inclure)"
-        )
+        branches = [b for b in all_branches if b["status"] in ["orpheline", "courante", "locale"]]
+        print("\n🔍 Exclusion des branches trackées (utilisez --show-all pour les inclure)")
     else:
         branches = all_branches
         print("\n🔍 Affichage de toutes les branches")

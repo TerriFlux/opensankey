@@ -51,9 +51,7 @@ template_folder = os.path.join(
 )
 static_folder = os.path.join(
     os.path.join(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"
-        ),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"),
         "build",
     ),
     "static",
@@ -156,33 +154,21 @@ def solve_optimisation_problem(
     # Optimisation process
     t_prev = time.time()
     try:
-        ok = mfa_problem_main.optimisation(
-            model_name, sankey, uncertainty, nb_realizations, downscale
-        )
+        ok = mfa_problem_main.optimisation(model_name, sankey, uncertainty, nb_realizations, downscale)
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in optimisation process.")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
         trace.logger.debug("-- UNEXPECTED ERROR {}".format(e))
-        trace.logger.info(
-            "{:-<{w}}".format(
-                " [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH
-            )
-        )
+        trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
         return
     if not ok:
         trace.logger.error("-- ERROR in optimisation process.")
-        trace.logger.info(
-            "{:-<{w}}".format(
-                " [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH
-            )
-        )
+        trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
         return
     t = time.time()
     trace.logger.debug("-- Optimisation process completed")
     trace.logger.debug(
-        "-- Optimisation process took {0} / {1} sec --".format(
-            round((t - t_prev), 2), round((t - t_start), 2)
-        )
+        "-- Optimisation process took {0} / {1} sec --".format(round((t - t_prev), 2), round((t - t_start), 2))
     )
     t_prev = t
     # Write output in Excel
@@ -207,11 +193,7 @@ def solve_optimisation_problem(
         return
     t = time.time()
     trace.logger.info("-- Write results to excel")
-    trace.logger.debug(
-        "-- Write results took {0} / {1} sec --".format(
-            round((t - t_prev), 2), round((t - t_start), 2)
-        )
-    )
+    trace.logger.debug("-- Write results took {0} / {1} sec --".format(round((t - t_prev), 2), round((t - t_start), 2)))
     # JSON
     try:
         sankey_json = extract_json_from_sankey(sankey)
@@ -232,9 +214,7 @@ def solve_optimisation_problem(
     # Ending
     trace.logger.info(
         "{:-<{w}}".format(
-            " [COMPLETED] Overall optimisation process succesfully ended, took {0} sec".format(
-                round(t - t_start, 2)
-            ),
+            " [COMPLETED] Overall optimisation process succesfully ended, took {0} sec".format(round(t - t_start, 2)),
             w=MAX_LINE_LENGTH,
         )
     )
@@ -274,9 +254,7 @@ def optimize_launch():
         if session["optim_sankey"] is False:
             # Get Excel file and save it in temp dir
             excel_input_file = request.files["input_file"]
-            session["input_excel_file_abspath"] = os.path.join(
-                session["tmp_dir"], excel_input_file.filename
-            )
+            session["input_excel_file_abspath"] = os.path.join(session["tmp_dir"], excel_input_file.filename)
             excel_input_file.save(session["input_excel_file_abspath"])
             session["model_name"] = excel_input_file.filename
             # Get Excel upper region file and save it in temp dir
@@ -290,9 +268,7 @@ def optimize_launch():
         else:
             # Optimize directly from json data -> no Excel to save
             # But prepare the excel filename for output later
-            session["input_excel_file_abspath"] = os.path.join(
-                session["tmp_dir"], "tutu.xlsx"
-            )
+            session["input_excel_file_abspath"] = os.path.join(session["tmp_dir"], "tutu.xlsx")
             session["model_name"] = "local sankey model"
         # output files
         session["output_excel_file_abspath"] = session["input_excel_file_abspath"]
@@ -303,24 +279,18 @@ def optimize_launch():
         trace.logger.error("UNEXPECTED ERROR when reading params.")
         trace.logger.error("Please report this issue to support@open-sankey.fr")
         trace.logger.debug("UNEXPECTED ERROR {}".format(e))
-        trace.logger.info(
-            "{:-<{w}}".format(" [FAILED] Internal error", w=MAX_LINE_LENGTH)
-        )
+        trace.logger.info("{:-<{w}}".format(" [FAILED] Internal error", w=MAX_LINE_LENGTH))
         # TODO : Comment ça se passe si ça plante ici ? Il n'y a pas de log pour le client
         err_msg = "ERROR: "
         err_msg += "optimize_prod_init - erreur fatale. "
         err_msg += "{}. ".format(e)
         err_msg += "Le dossier courant est {}".format(session["tmp_dir"])
-        return Response(
-            json.dumps({"output": err_msg}), status=500, mimetype="application/json"
-        )
+        return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
 
     # Start process
     t_start = time.time()
     t_prev = time.time()
-    trace.logger.info(
-        "{:-<{w}}".format("[INITIALIZING] Loading datas ", w=MAX_LINE_LENGTH)
-    )
+    trace.logger.info("{:-<{w}}".format("[INITIALIZING] Loading datas ", w=MAX_LINE_LENGTH))
     trace.logger.debug("Temporary datas are in {}".format(session["tmp_dir"]))
 
     # Load Sankey data
@@ -351,9 +321,7 @@ def optimize_launch():
             err_msg = "UNEXPECTED ERROR: "
             err_msg += "load_sankey_from_excel_file - erreur fatale. "
             err_msg += "{}".format(e)
-            return Response(
-                json.dumps({"output": err_msg}), status=500, mimetype="application/json"
-            )
+            return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
         if not ok:
             # logging error that are anticipated
             trace.logger.error("ERROR in input file.")
@@ -369,9 +337,7 @@ def optimize_launch():
             err_msg = "ERROR: "
             err_msg += "load_sankey_from_excel_file - "
             err_msg += "{}".format(msg)
-            return Response(
-                json.dumps({"output": err_msg}), status=500, mimetype="application/json"
-            )
+            return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
     else:
         # Load from input json data
         excel_sheets_to_remove = []
@@ -384,27 +350,17 @@ def optimize_launch():
             trace.logger.error("UNEXPECTED ERROR in datas extraction")
             trace.logger.error("Please report this issue to support@open-sankey.fr")
             trace.logger.debug("UNEXPECTED ERROR {}".format(e))
-            trace.logger.info(
-                "{:-<{w}}".format(
-                    "[FAILED] Could not read datas from Sankey ", w=MAX_LINE_LENGTH
-                )
-            )
+            trace.logger.info("{:-<{w}}".format("[FAILED] Could not read datas from Sankey ", w=MAX_LINE_LENGTH))
             # Return response
             err_msg = "UNEXPECTED ERROR: "
             err_msg += "extract_sankey_from_json - erreur fatale. "
             err_msg += "{}".format(e)
-            return Response(
-                json.dumps({"output": err_msg}), status=500, mimetype="application/json"
-            )
+            return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
 
     # Time logging
     t = time.time()
-    trace.logger.info(
-        "{:-<{w}}".format("[OK] Loaded Datas succesfully ", w=MAX_LINE_LENGTH)
-    )
-    trace.logger.debug(
-        "Took {} / {} sec".format(round((t - t_prev), 2), round((t - t_start), 2))
-    )
+    trace.logger.info("{:-<{w}}".format("[OK] Loaded Datas succesfully ", w=MAX_LINE_LENGTH))
+    trace.logger.debug("Took {} / {} sec".format(round((t - t_prev), 2), round((t - t_start), 2)))
     t_prev = t
 
     # # 2. Reconciliation
@@ -468,9 +424,7 @@ def optimize_launch():
         t = time.time()
         trace.logger.info(
             "{:-<{w}}".format(
-                "[COMPLETED] Check input file finished, took {} sec ".format(
-                    round((t - t_start), 2)
-                ),
+                "[COMPLETED] Check input file finished, took {} sec ".format(round((t - t_start), 2)),
                 w=MAX_LINE_LENGTH,
             )
         )
@@ -490,22 +444,14 @@ def optimize_launch():
             # Logging unexpected error
             trace.logger.error("UNEXPECTED ERROR when writing output file.")
             trace.logger.debug("{}".format(e))
-            trace.logger.info(
-                "{:-<{w}}".format(
-                    "[FAILED] Could not generate the output file ", w=MAX_LINE_LENGTH
-                )
-            )
+            trace.logger.info("{:-<{w}}".format("[FAILED] Could not generate the output file ", w=MAX_LINE_LENGTH))
             # Return response
             err_msg = "UNEXPECTED ERROR: "
             err_msg += "write_excel_from_sankey - erreur fatale. "
             err_msg += "{}".format(e)
-            return Response(
-                json.dumps({"output": err_msg}), status=500, mimetype="application/json"
-            )
+            return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
         # Json output
-        session["output_json_file_abspath"] = os.path.join(
-            session["tmp_dir"], "tutu.json"
-        )
+        session["output_json_file_abspath"] = os.path.join(session["tmp_dir"], "tutu.json")
         try:
             sankey_json = extract_json_from_sankey(sankey)
             json_data = json.dumps(sankey_json)
@@ -525,30 +471,22 @@ def optimize_launch():
         # Time logging
         t = time.time()
         trace.logger.info("Updated tables in excel file")
-        trace.logger.debug(
-            "Took {} / {} sec".format(round((t - t_prev), 2), round((t - t_start), 2))
-        )
+        trace.logger.debug("Took {} / {} sec".format(round((t - t_prev), 2), round((t - t_start), 2)))
         trace.logger.info(
             "{:-<{w}}".format(
-                "[COMPLETED] Tables creation finished, took {} sec ".format(
-                    round((t - t_start), 2)
-                ),
+                "[COMPLETED] Tables creation finished, took {} sec ".format(round((t - t_start), 2)),
                 w=MAX_LINE_LENGTH,
             )
         )
         # Return Updated file
-        return Response(
-            json.dumps({"output": "OK"}), status=200, mimetype="application/json"
-        )
+        return Response(json.dumps({"output": "OK"}), status=200, mimetype="application/json")
 
     # 2.4 reconciliation
     write_mode = "a"
     if session["optim_sankey"] is True:
         write_mode = "w"
     session["output_json_file_abspath"] = os.path.join(session["tmp_dir"], "tutu.json")
-    trace.logger.info(
-        "{:-<{w}}".format("[STARTING] Optimisation process ", w=MAX_LINE_LENGTH)
-    )
+    trace.logger.info("{:-<{w}}".format("[STARTING] Optimisation process ", w=MAX_LINE_LENGTH))
     thread = Thread(
         target=solve_optimisation_problem,
         args=(
@@ -569,9 +507,7 @@ def optimize_launch():
     trace.logger.debug("Optimisation thread created")
     thread.start()
     # Return Updated file
-    return Response(
-        json.dumps({"output": "OK"}), status=200, mimetype="application/json"
-    )
+    return Response(json.dumps({"output": "OK"}), status=200, mimetype="application/json")
 
 
 @sankeyapp.route("/optimize/check_process", methods=["POST"])
@@ -589,21 +525,13 @@ def optimize_check_process():
             return Response(json_data, status=200, mimetype="application/json")
         else:
             return Response(
-                json.dumps(
-                    {
-                        "output": "ERROR: /optimize/check_process: le fichier tmp_log n'existe pas."
-                    }
-                ),
+                json.dumps({"output": "ERROR: /optimize/check_process: le fichier tmp_log n'existe pas."}),
                 status=500,
                 mimetype="application/json",
             )
     except Exception:
         return Response(
-            json.dumps(
-                {
-                    "output": "ERROR:/optimize/check_process: le fichier tmp_log ne peut pas être ouvert."
-                }
-            ),
+            json.dumps({"output": "ERROR:/optimize/check_process: le fichier tmp_log ne peut pas être ouvert."}),
             status=500,
             mimetype="application/json",
         )
@@ -620,13 +548,9 @@ def optimize_retrieves_result():
 @sankeyapp.route("/optimize/display_results", methods=["POST"])
 def optimize_display_results():
     try:
-        with open(
-            session["output_json_file_abspath"], encoding="utf-8", mode="r"
-        ) as json_file:
+        with open(session["output_json_file_abspath"], encoding="utf-8", mode="r") as json_file:
             json_data = json.load(json_file)
-        response = Response(
-            response=json.dumps(json_data), status=200, mimetype="application/json"
-        )
+        response = Response(response=json.dumps(json_data), status=200, mimetype="application/json")
         return response
     except Exception as e:
         err_msg = "Json dumps failed: {}".format(e)

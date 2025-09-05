@@ -41,9 +41,7 @@ def log_error(message: str) -> None:
     print(f"{Colors.RED}[ERROR]{Colors.NC} {message}")
 
 
-def run_git_command(
-    command: List[str], cwd: Path, capture_output: bool = True
-) -> Tuple[bool, str]:
+def run_git_command(command: List[str], cwd: Path, capture_output: bool = True) -> Tuple[bool, str]:
     """
     Exécute une commande git
 
@@ -79,14 +77,10 @@ def get_current_branch(repo_path: Path) -> Optional[str]:
 def has_uncommitted_changes(repo_path: Path) -> bool:
     """Version alternative : vérifie seulement l'index et le working tree sans sous-modules"""
     # Vérifier l'index (fichiers staged)
-    success_index, _ = run_git_command(
-        ["diff-index", "--quiet", "--cached", "HEAD", "--"], repo_path
-    )
+    success_index, _ = run_git_command(["diff-index", "--quiet", "--cached", "HEAD", "--"], repo_path)
 
     # Vérifier le working tree (fichiers modifiés mais pas staged)
-    success_worktree, _ = run_git_command(
-        ["diff-files", "--quiet", "--ignore-submodules"], repo_path
-    )
+    success_worktree, _ = run_git_command(["diff-files", "--quiet", "--ignore-submodules"], repo_path)
 
     # S'il y a des changements dans l'index OU dans le working tree
     return not success_index or not success_worktree
@@ -94,17 +88,13 @@ def has_uncommitted_changes(repo_path: Path) -> bool:
 
 def remote_branch_exists(repo_path: Path, branch: str = "origin/main") -> bool:
     """Vérifie si une branche distante existe"""
-    success, _ = run_git_command(
-        ["show-ref", "--verify", "--quiet", f"refs/remotes/{branch}"], repo_path
-    )
+    success, _ = run_git_command(["show-ref", "--verify", "--quiet", f"refs/remotes/{branch}"], repo_path)
     return success
 
 
 def get_commits_behind_count(repo_path: Path) -> int:
     """Récupère le nombre de commits en retard par rapport à origin/main"""
-    success, output = run_git_command(
-        ["rev-list", "--count", "--left-right", "HEAD...origin/main"], repo_path
-    )
+    success, output = run_git_command(["rev-list", "--count", "--left-right", "HEAD...origin/main"], repo_path)
     if not success:
         return 0
 
@@ -189,21 +179,15 @@ def merge_main_in_repo(repo_path: Path) -> bool:
         return True
 
     # Effectuer le merge sans commit et sans fast-forward
-    log_info(
-        f"Merge de origin/main dans {repo_name} (sans commit, sans fast-forward)..."
-    )
-    success, error = run_git_command(
-        ["merge", "--no-commit", "--no-ff", "origin/main"], repo_path, False
-    )
+    log_info(f"Merge de origin/main dans {repo_name} (sans commit, sans fast-forward)...")
+    success, error = run_git_command(["merge", "--no-commit", "--no-ff", "origin/main"], repo_path, False)
 
     if success:
         log_success(f"Merge préparé avec succès pour {repo_name}")
 
         # Afficher le statut pour information
         print(f"Statut après merge dans {repo_name}:")
-        status_success, status_output = run_git_command(
-            ["status", "--short"], repo_path
-        )
+        status_success, status_output = run_git_command(["status", "--short"], repo_path)
         if status_success:
             print(status_output if status_output else "Aucune modification")
         print()
@@ -211,14 +195,10 @@ def merge_main_in_repo(repo_path: Path) -> bool:
         return True
     else:
         log_error(f"Conflit lors du merge dans {repo_name}")
-        log_info(
-            "Résolvez les conflits manuellement, puis utilisez 'git add' et 'git commit'"
-        )
+        log_info("Résolvez les conflits manuellement, puis utilisez 'git add' et 'git commit'")
 
         # Afficher les fichiers en conflit
-        conflict_success, conflict_output = run_git_command(
-            ["diff", "--name-only", "--diff-filter=U"], repo_path
-        )
+        conflict_success, conflict_output = run_git_command(["diff", "--name-only", "--diff-filter=U"], repo_path)
         if conflict_success and conflict_output:
             print("Fichiers en conflit:")
             for file in conflict_output.split("\n"):
@@ -259,9 +239,7 @@ def main():
     print()
 
     # Demander confirmation
-    response = input(
-        f"Voulez-vous merger origin/main dans ces {len(git_repos)} dépôts ? (y/N): "
-    )
+    response = input(f"Voulez-vous merger origin/main dans ces {len(git_repos)} dépôts ? (y/N): ")
     if response.lower() not in ["y", "yes", "oui", "o"]:
         log_info("Opération annulée")
         return
