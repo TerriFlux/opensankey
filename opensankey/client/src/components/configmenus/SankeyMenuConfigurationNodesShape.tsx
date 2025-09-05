@@ -39,6 +39,7 @@ import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_style_id } from '../../types/Utils'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
+import { MenuColorPicker } from './MenuColorPicker'
 
 export const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
 export const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -70,7 +71,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
   menu_for_style: boolean,
   additional_menus : MutableRefObject<Type_AdditionalMenus>
 }) => {
-  const { t, drawing_area, menu_configuration, icon_library, MenuColorPicker } = app_data
+  const { t, drawing_area, menu_configuration, icon_library } = app_data
   const { sankey, selected_nodes_list_sorted, visible_and_selected_nodes_list_sorted } = drawing_area
   const { ref_selected_style_node, is_selector_only_for_visible_nodes } = menu_configuration
   const { icon_direction_down, icon_direction_left, icon_direction_rift, icon_direction_up, icon_locked, icon_unlocked } = icon_library
@@ -162,7 +163,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
               <MenuColorPicker
                 isDisabled={!disable_attr_props['shape_color']}
                 initialColor={shape_color}
-                functionOnBlur={(new_color) => {
+                onColorChange={(new_color) => {
                   updateElements(app_data, elements, 'shape_color' as ValueKey, new_color, refreshThisAndUpdateRelatedComponents)
                 }}
               />

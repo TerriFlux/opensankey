@@ -40,6 +40,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import {BaseApplicationDataType } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
+import { MenuColorPicker } from './MenuColorPicker'
 
 
 // Utils functions -------------------------------------------------------------------
@@ -80,7 +81,7 @@ export const DrawingAreaStyle = ({ new_data, extra_background_element }:{
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, MenuColorPicker } = new_data
+  const { t } = new_data
 
   // Components updaters ---------------------------------------------------------------
 
@@ -154,7 +155,7 @@ export const DrawingAreaStyle = ({ new_data, extra_background_element }:{
           <Box>
             <MenuColorPicker
               initialColor={new_data.drawing_area.color}
-              functionOnBlur={eventBgColor}
+              onColorChange={eventBgColor}
             />
           </Box>
         </OSTooltip>

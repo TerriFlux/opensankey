@@ -3,7 +3,7 @@ import { Class_LinkElement } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 
 export class LinkTooltip {
-  private _tooltip_text: string = ''
+
   private _link: Class_LinkElement;
   public behaviorManager?: TooltipBehaviorManager;
     // ✅ AJOUT : Propriété pour stocker la position de la souris
@@ -73,8 +73,8 @@ export class LinkTooltip {
     html += '<button class="tooltip-close">&times;</button>'
     html += `<h4 class="tooltip-title">${this._link.source.name.split('\\n').join(' ')} → ${this._link.target.name.split('\\n').join(' ')}</h4>`
     
-    if (this.tooltip_text) {
-      html += `<p class="tooltip-subtitle">${this.tooltip_text.split('\n').join('<br>')}</p>`
+    if (this._link.tooltip_text) {
+      html += `<p class="tooltip-subtitle">${this._link.tooltip_text.split('\n').join('<br>')}</p>`
     }
     html += '</div>'
 
@@ -117,13 +117,5 @@ export class LinkTooltip {
 
     html += '</table></div>'
     return html
-  }
-
-  public get tooltip_text(): string { 
-    return this._tooltip_text 
-  }
-
-  public set tooltip_text(value: string) {
-    this._tooltip_text = value
   }
 }

@@ -40,6 +40,7 @@ import { svg_label_upper } from './SankeyMenuConfigurationNodesShape'
 import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
 import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { MenuColorPicker } from './MenuColorPicker'
 
 
 export const SankeyMenuLabelComponent = ({
@@ -50,7 +51,6 @@ export const SankeyMenuLabelComponent = ({
   refreshParentComponent: () => void,
   prefix: 'name_' | 'value_'
 }) => {
-  const { MenuColorPicker } = new_data;
   const { ref_selected_style_node, ref_selected_style_link } = new_data.menu_configuration;
   const { node_styles_dict, link_styles_dict } = new_data.drawing_area.sankey;
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle);
@@ -333,7 +333,7 @@ export const SankeyMenuLabelComponent = ({
         <MenuColorPicker
           isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_color')}
           initialColor={label_color}
-          functionOnBlur={(new_color) => {
+          onColorChange={(new_color) => {
             updateElements(new_data, elements, prefix + 'label_color' as ValueKey, new_color, refreshParentComponent);
 
           }} />

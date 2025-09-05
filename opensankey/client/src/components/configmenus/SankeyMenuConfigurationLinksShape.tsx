@@ -48,6 +48,7 @@ import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
+import { MenuColorPicker } from './MenuColorPicker'
 
 export type keyStyle = keyof Class_LinkStyle
 export type valStyle = Class_LinkStyle[keyStyle]
@@ -63,7 +64,7 @@ export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_s
   // Datas ------------------------------------------------------------------------------
 
   // Get traduction function
-  const { t, icon_library, MenuColorPicker, drawing_area } = new_data
+  const { t, icon_library, drawing_area } = new_data
   const { sankey } = drawing_area
 
   const { icon_redo, icon_orientation_hh, icon_orientation_hv, icon_orientation_vh, icon_orientation_vv } = icon_library
@@ -251,10 +252,10 @@ export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_s
           <MenuColorPicker
             isDisabled={shape_color_rule !== 'flow' || !disable_attr_props['shape_color']}
             initialColor={shape_color}
-            functionOnBlur={(new_color) => {
+            onColorChange={(new_color) => {
               updateElements('shape_color', new_color)
             }}
-            textDisabled={t('Flux.apparence.tooltips.color_source.disabled')}
+            disabledTooltip={t('Flux.apparence.tooltips.color_source.disabled')}
           />
         </Box>
       </Box>
