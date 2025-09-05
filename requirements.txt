@@ -9,3 +9,6 @@ pdfkit
 imgkit
 webcolors
 uwsgi
+black
+autopep8
+ruff
