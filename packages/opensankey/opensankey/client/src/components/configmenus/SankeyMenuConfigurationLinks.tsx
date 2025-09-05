@@ -1,30 +1,5 @@
-// ==================================================================================================
-// The MIT License (MIT)
-// ==================================================================================================
-// Copyright (c) 2025 TerriFlux
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-// ==================================================================================================
-// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
-// ==================================================================================================
-
 import React, { FC, useState } from 'react'
+import { MultiSelect } from 'react-multi-select-component'
 
 import {
   Box,
@@ -35,12 +10,10 @@ import {
 } from '@chakra-ui/react'
 
 /*************************************************************************************************/
-import { OSMultiSelect, typeElementSelectable } from './MenuCommon'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from './MenuCommon'
-
 
 /*************************************************************************************************/
 export const SankeyLinkSelection: FC<BaseApplicationDataType> = (
@@ -54,6 +27,7 @@ export const SankeyLinkSelection: FC<BaseApplicationDataType> = (
   // Traduction
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_repeat, icon_element_visible, icon_element_invisible } = icon_library
+  
   // Links to display in selection menus ------------------------------------------------
 
   let links: Class_LinkElement[]
@@ -68,7 +42,15 @@ export const SankeyLinkSelection: FC<BaseApplicationDataType> = (
     links = new_data.drawing_area.sankey.visible_links_list
     selected_links = new_data.drawing_area.visible_and_selected_links_list
   }
-  const entries_for_links = links.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_links.includes(d) } })
+
+  // Préparation des options pour MultiSelect
+  const INITIAL_OPTIONS_LINKS = links.map((d) => { 
+    return { 'label': d.name, 'value': d.id } 
+  })
+
+  const selected_for_multiselect = selected_links.map((d) => { 
+    return { 'label': d.name, 'value': d.id } 
+  })
 
   // Nodes to display in selection menus ------------------------------------------------
 
@@ -117,11 +99,56 @@ export const SankeyLinkSelection: FC<BaseApplicationDataType> = (
     refreshThisAndToggleSaving()
   }
 
+  // MultiSelect dropdown component pour les liens ------------------------------------
+  const dropdownMultiLinks = () => {
+    return (
+      <Box
+        layerStyle='submenuconfig_droplist'
+
+      >
+        {/* Position custom pour MultiSelect */}
+        <Box
+        >
+          <MultiSelect
+            options={INITIAL_OPTIONS_LINKS}
+            value={selected_for_multiselect}
+            labelledBy={t('Flux.TS') || 'Sélection des flux'}
+            onChange={(selected: [{ label: string, value: string }]) => {
+              const new_sel = selected.map(d => d.value)
+              
+              // Mise à jour de la sélection
+              links.forEach(link => {
+                if (new_sel.includes(link.id)) {
+                  new_data.drawing_area.addLinkToSelection(link)
+                } else {
+                  new_data.drawing_area.removeLinkFromSelection(link)
+                }
+              })
+
+              // Update all menus
+              refreshThisAndUpdateRelatedComponents()
+            }}
+            valueRenderer={(selected: { label: string, value: string }[]) => {
+              return selected.length ? selected.map(({ label }) => label + ', ') : t('Flux.NS') || 'Aucun flux sélectionné'
+            }}
+            overrideStrings={{
+              'selectAll': t('Flux.selectAll') || 'Tout sélectionner',
+              'allItemsAreSelected': t('Flux.allSelected') || 'Tous les éléments sont sélectionnés',
+              'clearSearch': t('Flux.clearSearch') || 'Effacer la recherche',
+              'noOptions': t('Flux.noOptions') || 'Aucune option',
+              'search': t('Flux.search') || 'Rechercher',
+              'selectSomeItems': t('Flux.selectSomeItems') || 'Sélectionner des éléments'
+            }}
+          />
+        </Box>
+      </Box>
+    )
+  }
+
   // Sub-menus --------------------------------------------------------------------------
 
   /**
    * Create new link
-   *
    */
   const addLinkConfig = () => {
     const sankey = new_data.drawing_area.sankey
@@ -159,10 +186,6 @@ export const SankeyLinkSelection: FC<BaseApplicationDataType> = (
     _addLinkConfig()
   }
 
-  // Selection menu for links -----------------------------------------------------------
-
-
-
   // Links upper menu -------------------------------------------------------------------
   return (<Box layerStyle='menuconfigpanel_grid'>
     <Box
@@ -182,24 +205,8 @@ export const SankeyLinkSelection: FC<BaseApplicationDataType> = (
 
       {/* Selection d'un flux  */}
       <OSTooltip label={t('Menu.tooltips.flux.slct')}>
-        <OSMultiSelect
-          t={new_data.t}
-          elements={entries_for_links}
-          onClick={(entries: typeElementSelectable) => {
-            // Update selection list
-            const entries_values = entries.map(d => d.value)
-            links.forEach(n => {
-              if (entries_values.includes(n.id)) {
-                new_data.drawing_area.addLinkToSelection(n)
-              }
-              else {
-                new_data.drawing_area.removeLinkFromSelection(n)
-              }
-            })
-            // Update all menus
-            refreshThisAndUpdateRelatedComponents()
-          }}
-        />      </OSTooltip>
+        {dropdownMultiLinks()}
+      </OSTooltip>
 
       {/* Suppression d'un flux  */}
       <OSTooltip label={t('Menu.tooltips.flux.rm')}>
@@ -314,6 +321,7 @@ export const SankeyLinkSelection: FC<BaseApplicationDataType> = (
     </Box>
   </Box>)
 }
+
 export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
   {
     new_data,
@@ -325,6 +333,7 @@ export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
   // Traduction
   const { t, icon_library } = new_data
   const { icon_element_visible, icon_element_invisible } = icon_library
+  
   // Links to display in selection menus ------------------------------------------------
 
   let links: Class_LinkElement[]
@@ -340,7 +349,14 @@ export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
     selected_links = new_data.drawing_area.visible_and_selected_links_list
   }
 
-  const entries_for_links = links.map((d) => { return { 'label': d.name, 'value': d.id, selected: selected_links.includes(d) } })
+  // Préparation des options pour MultiSelect
+  const INITIAL_OPTIONS_LINKS = links.map((d) => { 
+    return { 'label': d.name, 'value': d.id } 
+  })
+
+  const selected_for_multiselect = selected_links.map((d) => { 
+    return { 'label': d.name, 'value': d.id } 
+  })
 
   // Components updaters ----------------------------------------------------------------
   // Boolean used to force this component to reload
@@ -364,6 +380,50 @@ export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
     refreshThisAndToggleSaving()
   }
 
+  // MultiSelect dropdown component pour version simple ----------------------------
+  const dropdownMultiLinksSimple = () => {
+    return (
+      <Box
+        layerStyle='submenuconfig_droplist'
+      >
+        <Box
+        >
+          <MultiSelect
+            options={INITIAL_OPTIONS_LINKS}
+            value={selected_for_multiselect}
+            labelledBy={t('Flux.TS') || 'Sélection des flux'}
+            onChange={(selected: [{ label: string, value: string }]) => {
+              const new_sel = selected.map(d => d.value)
+              
+              // Mise à jour de la sélection
+              links.forEach(link => {
+                if (new_sel.includes(link.id)) {
+                  new_data.drawing_area.addLinkToSelection(link)
+                } else {
+                  new_data.drawing_area.removeLinkFromSelection(link)
+                }
+              })
+
+              // Update all menus
+              refreshThisAndUpdateRelatedComponents()
+            }}
+            valueRenderer={(selected: { label: string, value: string }[]) => {
+              return selected.length ? selected.map(({ label }) => label + ', ') : t('Flux.NS') || 'Aucun flux sélectionné'
+            }}
+            // overrideStrings={{
+            //   'selectAll': t('Flux.selectAll') || 'Tout sélectionner',
+            //   'allItemsAreSelected': t('Flux.allSelected') || 'Tous les éléments sont sélectionnés',
+            //   'clearSearch': t('Flux.clearSearch') || 'Effacer la recherche',
+            //   'noOptions': t('Flux.noOptions') || 'Aucune option',
+            //   'search': t('Flux.search') || 'Rechercher',
+            //   'selectSomeItems': t('Flux.selectSomeItems') || 'Sélectionner des éléments'
+            // }}
+          />
+        </Box>
+      </Box>
+    )
+  }
+
   // Sub-menus --------------------------------------------------------------------------
   // Links upper menu -------------------------------------------------------------------
   return (<Box layerStyle='menuconfigpanel_grid'>
@@ -373,24 +433,7 @@ export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
     >
       {/* Selection d'un flux  */}
       <OSTooltip label={t('Menu.tooltips.flux.slct')}>
-        <OSMultiSelect
-          t={new_data.t}
-          elements={entries_for_links}
-          onClick={(entries: typeElementSelectable) => {
-            // Update selection list
-            const entries_values = entries.map(d => d.value)
-            links.forEach(n => {
-              if (entries_values.includes(n.id)) {
-                new_data.drawing_area.addLinkToSelection(n)
-              }
-              else {
-                new_data.drawing_area.removeLinkFromSelection(n)
-              }
-            })
-            // Update all menus
-            refreshThisAndUpdateRelatedComponents()
-          }}
-        />
+        {dropdownMultiLinksSimple()}
       </OSTooltip>
 
       {/* Activer / Désactiver selection uniquement des flux actuellement visibles */}
