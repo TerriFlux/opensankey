@@ -484,11 +484,7 @@ def create_json_flow(org_id: str, dest_id: str, value: str, color: str):
 def sum_node_value_from_list_node_dict(nodes: List[dict]):
     col_val = 0
     for node in nodes:
-        node_val = (
-            node["input_value"]
-            if node["input_value"] > node["output_value"]
-            else node["output_value"]
-        )
+        node_val = node["input_value"] if node["input_value"] > node["output_value"] else node["output_value"]
         col_val += node_val
     return col_val
 

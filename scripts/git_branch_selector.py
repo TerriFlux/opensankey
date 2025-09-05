@@ -57,14 +57,10 @@ def get_local_branches(repo_path=None):
         if line:
             # Enlever l'astérisque et les espaces pour la branche courante
             clean_branch = line.lstrip("* ").strip()
-            if clean_branch and not clean_branch.startswith(
-                "("
-            ):  # Ignorer "(HEAD detached...)"
+            if clean_branch and not clean_branch.startswith("("):  # Ignorer "(HEAD detached...)"
                 branches.append(clean_branch)
 
-    print(
-        f"🔍 DEBUG - Lignes brutes git branch: {output.split(chr(10))}"
-    )  # Toutes les lignes
+    print(f"🔍 DEBUG - Lignes brutes git branch: {output.split(chr(10))}")  # Toutes les lignes
     return branches
 
 
@@ -82,9 +78,7 @@ def get_remote_branches(repo_path=None):
             clean_branch = line[7:]  # Enlever 'origin/'
             branches.append(clean_branch)
 
-    print(
-        f"🔍 DEBUG - Lignes brutes git branch -r: {output.split(chr(10))[:5]}..."
-    )  # Première 5 lignes
+    print(f"🔍 DEBUG - Lignes brutes git branch -r: {output.split(chr(10))[:5]}...")  # Première 5 lignes
     return branches
 
 
@@ -122,9 +116,7 @@ def get_remote_only_branches(repo_path=None):
 
 def get_last_commit_date_remote(branch_name, repo_path=None):
     """Obtient la date du dernier commit d'une branche distante"""
-    date_output = run_command(
-        f'git log -1 --format="%ci" origin/{branch_name}', cwd=repo_path
-    )
+    date_output = run_command(f'git log -1 --format="%ci" origin/{branch_name}', cwd=repo_path)
     if date_output:
         try:
             from datetime import datetime
@@ -316,15 +308,11 @@ def delete_remote_branch(branch_name, repo_path=None):
     print(f"🌐 Suppression de '{branch_name}' sur le remote...")
 
     # Vérifier d'abord si la branche existe sur le remote
-    remote_check = run_command(
-        f"git ls-remote --heads origin {branch_name}", cwd=repo_path
-    )
+    remote_check = run_command(f"git ls-remote --heads origin {branch_name}", cwd=repo_path)
 
     if remote_check and remote_check.strip():
         # La branche existe sur le remote, la supprimer
-        remote_result = run_command(
-            f"git push origin --delete {branch_name}", cwd=repo_path
-        )
+        remote_result = run_command(f"git push origin --delete {branch_name}", cwd=repo_path)
         if remote_result is None:
             print(f"❌ Échec de la suppression remote de '{branch_name}'")
             print("   (problème de permissions ou de connexion ?)")
@@ -333,9 +321,7 @@ def delete_remote_branch(branch_name, repo_path=None):
             print(f"✅ Branche '{branch_name}' supprimée sur le remote")
             return True
     else:
-        print(
-            f"ℹ️  Branche '{branch_name}' n'existe pas sur le remote (déjà supprimée ?)"
-        )
+        print(f"ℹ️  Branche '{branch_name}' n'existe pas sur le remote (déjà supprimée ?)")
         return True
 
 
@@ -485,14 +471,8 @@ def main():
             branches = [b for b in all_branches if b["status"] == "orpheline"]
             print("\n🔍 Mode: branches locales orphelines uniquement")
         elif not args.show_all:
-            branches = [
-                b
-                for b in all_branches
-                if b["status"] in ["orpheline", "courante", "locale"]
-            ]
-            print(
-                "\n🔍 Mode: branches locales (exclusion des trackées - utilisez --show-all pour les inclure)"
-            )
+            branches = [b for b in all_branches if b["status"] in ["orpheline", "courante", "locale"]]
+            print("\n🔍 Mode: branches locales (exclusion des trackées - utilisez --show-all pour les inclure)")
         else:
             branches = all_branches
             print("\n🔍 Mode: toutes les branches locales")

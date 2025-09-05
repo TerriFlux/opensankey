@@ -35,9 +35,7 @@ def fetch_and_prune(repo_path=None):
     print("🔄 Mise à jour des références distantes...")
     result = run_command("git fetch --prune", capture_output=False, cwd=repo_path)
     if result is None:
-        print(
-            "⚠️  Avertissement lors de la mise à jour des références (peut être dû à HEAD détaché)"
-        )
+        print("⚠️  Avertissement lors de la mise à jour des références (peut être dû à HEAD détaché)")
         print("🔄 Tentative de continuation...")
         return True  # Continue même en cas d'erreur
     print("✅ Références mises à jour")
@@ -99,9 +97,7 @@ def delete_branches(branches, repo_path=None, force=False, dry_run=False):
 
     print(f"\n🗑️  Branches à supprimer ({len(branches)}):")
     for branch in branches:
-        status = (
-            " (branche courante - sera ignorée)" if branch == current_branch else ""
-        )
+        status = " (branche courante - sera ignorée)" if branch == current_branch else ""
         print(f"  - {branch}{status}")
 
     if dry_run:
@@ -112,9 +108,7 @@ def delete_branches(branches, repo_path=None, force=False, dry_run=False):
 
     # Demander confirmation
     if not force:
-        response = input(
-            f"\n❓ Supprimer ces {len(branches)} branches ? (y/N): "
-        ).lower()
+        response = input(f"\n❓ Supprimer ces {len(branches)} branches ? (y/N): ").lower()
         if response not in ["y", "yes", "o", "oui"]:
             print("❌ Suppression annulée")
             return
@@ -259,9 +253,7 @@ def main():
 
     # Option pour voir toutes les branches avant nettoyage
     if not args.force and not args.list and not args.dry_run:
-        response = input(
-            "\n📋 Afficher toutes les branches avant nettoyage ? (y/N): "
-        ).lower()
+        response = input("\n📋 Afficher toutes les branches avant nettoyage ? (y/N): ").lower()
         if response in ["y", "yes", "o", "oui"]:
             list_all_branches(repo_path)
 
@@ -299,9 +291,7 @@ def main():
 
         print("\n✅ Nettoyage terminé !")
     else:
-        print(
-            "\n🧪 Simulation terminée ! Utilisez sans --dry-run pour effectuer les suppressions."
-        )
+        print("\n🧪 Simulation terminée ! Utilisez sans --dry-run pour effectuer les suppressions.")
 
 
 if __name__ == "__main__":
