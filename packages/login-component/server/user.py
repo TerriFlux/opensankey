@@ -80,9 +80,7 @@ def user_infos():
         "email": current_user.email,
         "name": current_user.name,
         "firstname": current_user.firstname,
-        "license_opensankeyplus_validity": current_user.has_valid_license(
-            "OpenSankey+"
-        ),
+        "license_opensankeyplus_validity": current_user.has_valid_license("OpenSankey+"),
         "license_opensankeyplus_expiry": license_exp,
         "license_sankeysuite_validity": current_user.has_valid_license("terriflux"),
         "license_sankeysuite_expiry": "",
@@ -108,16 +106,12 @@ def modify_email():
     password = request.json.get("password")
 
     # Check if other user already have this email
-    other_user = User.query.filter(
-        func.lower(User.email) == func.lower(new_email)
-    ).first()
+    other_user = User.query.filter(func.lower(User.email) == func.lower(new_email)).first()
     if other_user is not None:
         return "email_in_use", 400
 
     # Check if email is coherent
-    if (current_user.email.lower() == email.lower()) and (
-        check_password_hash(current_user.password, password)
-    ):
+    if (current_user.email.lower() == email.lower()) and (check_password_hash(current_user.password, password)):
         current_user.email = new_email
         db.session.commit()
         return "ok", 200
@@ -144,12 +138,8 @@ def trigger_modify_pwd():
     # Verify email - if OK create reseting url
     try:
         if current_user.email.lower() == request.json.get("email").lower():
-            current_user.secret_token = "".join(
-                secrets.choice(string.digits) for i in range(6)
-            )
-            current_user.secret_expiry = (
-                datetime.now() + timedelta(minutes=10)
-            ).isoformat()
+            current_user.secret_token = "".join(secrets.choice(string.digits) for i in range(6))
+            current_user.secret_expiry = (datetime.now() + timedelta(minutes=10)).isoformat()
             send_pw_modification_email(current_user, request.json.get("lang"))
             db.session.commit()
     except Exception as e:
@@ -182,9 +172,7 @@ def modify_pwd():
         return "token_expired", 400
 
     # Ok token, apply new password
-    current_user.password = generate_password_hash(
-        request.json.get("new_password"), method="sha256"
-    )
+    current_user.password = generate_password_hash(request.json.get("new_password"), method="sha256")
 
     # Clear token
     current_user.secret_token = None

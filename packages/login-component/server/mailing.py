@@ -93,11 +93,7 @@ def send(msg):
     if not DBG_MODE:
         mail.send(msg)
     else:
-        print(
-            "To : {0}\nSubject: {1}\nBody: \n{2}".format(
-                msg.recipients, msg.subject, msg.body
-            )
-        )
+        print("To : {0}\nSubject: {1}\nBody: \n{2}".format(msg.recipients, msg.subject, msg.body))
 
 
 def send_account_confirm_mail(user_infos, confirm_sub_url):
@@ -130,9 +126,7 @@ def send_account_confirm_mail(user_infos, confirm_sub_url):
     # Add body to msg
     file = "register_mail/account_confirm_{}".format(user_infos["lang"])
     confirm_url = "{0}{1}".format(CLIENT_ROOT_URL, confirm_sub_url)
-    msg.body = render_template(
-        file + ".txt", first_name=user_infos["firstname"], confirm_url=confirm_url
-    )
+    msg.body = render_template(file + ".txt", first_name=user_infos["firstname"], confirm_url=confirm_url)
     msg.html = render_template(
         file + ".html",
         logo_OS="cid:logo_OS",
@@ -194,9 +188,7 @@ def send_welcome_mail(user, language="fr"):
     # Add body to msg
     file = "register_mail/welcome_mail_{}".format(language)
     login_url = "{0}login".format(CLIENT_ROOT_URL)
-    msg.body = render_template(
-        file + ".txt", first_name=user.firstname, login_url=login_url
-    )
+    msg.body = render_template(file + ".txt", first_name=user.firstname, login_url=login_url)
     msg.html = render_template(
         file + ".html",
         logo_OS="cid:logo_OS",
@@ -317,9 +309,7 @@ def send_pw_modification_email(user, language="fr"):
     )
     # Add body to msg
     file = "password_modification_mail/password_modification_mail_{}".format(language)
-    msg.body = render_template(
-        file + ".txt", first_name=user.firstname, token=user.secret_token
-    )
+    msg.body = render_template(file + ".txt", first_name=user.firstname, token=user.secret_token)
     msg.html = render_template(
         file + ".html",
         logo_OS="cid:logo_OS",

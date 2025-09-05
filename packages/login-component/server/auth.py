@@ -107,9 +107,7 @@ def signup_post():
         return jsonify(response), 200
 
     # if this returns a user, then the email already exists in database
-    user = User.query.filter(
-        func.lower(User.email) == func.lower(user_infos["email"])
-    ).first()
+    user = User.query.filter(func.lower(User.email) == func.lower(user_infos["email"])).first()
     if user:
         # if a user is found, we want to redirect back to signup page
         # so user can try again
@@ -273,14 +271,8 @@ def has_license():
         for user_license in current_user.user_licenses:
             try:
                 # Récupérer le nom de la licence selon votre structure de données
-                license_name = (
-                    user_license.license.name
-                    if hasattr(user_license, "license")
-                    else str(user_license)
-                )
-                response[license_name] = current_user.has_valid_license(
-                    user_license.license.name
-                )
+                license_name = user_license.license.name if hasattr(user_license, "license") else str(user_license)
+                response[license_name] = current_user.has_valid_license(user_license.license.name)
             except AttributeError as e:
                 return (
                     jsonify(
@@ -341,9 +333,7 @@ def forgot():
         try:
             email = request.json.get("email")
             if is_email_valid(email):
-                user = User.query.filter(
-                    func.lower(User.email) == func.lower(email)
-                ).first()
+                user = User.query.filter(func.lower(User.email) == func.lower(email)).first()
                 if user is not None:
                     response["user_exists"] = True
                     send_pw_reset_email(user, request.json.get("lang"))
@@ -383,9 +373,7 @@ def reset(token):
         try:
             user = User.verify_pwd_reset_token(token)
             if user is not None:
-                user.password = generate_password_hash(
-                    request.json.get("password"), method="sha256"
-                )
+                user.password = generate_password_hash(request.json.get("password"), method="sha256")
                 db.session.commit()
                 response["passwd_is_updated"] = True
         except Exception as excpt:

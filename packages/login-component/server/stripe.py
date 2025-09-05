@@ -95,9 +95,7 @@ def create_checkout_session():
             client_reference_id=current_user.id,
             customer_email=current_user.email,
             billing_address_collection="required",
-            return_url=(
-                CLIENT_ROOT_URL + "license/return?session_id={CHECKOUT_SESSION_ID}"
-            ),
+            return_url=(CLIENT_ROOT_URL + "license/return?session_id={CHECKOUT_SESSION_ID}"),
             payment_method_types=["card"],
             mode="subscription",
             allow_promotion_codes=True,
@@ -163,9 +161,7 @@ def stripe_webhook():
 
     # Stripe checks
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, STRIPE_KEYS["endpoint_secret"]
-        )
+        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_KEYS["endpoint_secret"])
     except ValueError:
         # Invalid payload
         return "Invalid payload", 400
@@ -225,9 +221,7 @@ def handle_customer_creation(session):
     """
     object = session["object"]
     user_name = object["name"].split()
-    return create_user_from_stripe(
-        object["email"], user_name[0], " ".join(user_name[1:]), object["id"]
-    )
+    return create_user_from_stripe(object["email"], user_name[0], " ".join(user_name[1:]), object["id"])
 
 
 def handle_customer_deletion(session):
@@ -442,9 +436,7 @@ def handle_invoice_created(session):
     if sub_id is None:
         sub_id = object["id"]
     # Create / update user_license object
-    return set_license_invoice_created(
-        object["customer_email"], object["customer"], prod_id, sub_id
-    )
+    return set_license_invoice_created(object["customer_email"], object["customer"], prod_id, sub_id)
 
 
 def handle_invoice_paid(session):
