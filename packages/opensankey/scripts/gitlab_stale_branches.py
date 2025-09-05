@@ -84,12 +84,7 @@ def get_branch_info(branch_name, repo_path=None, is_remote=False):
 
     for main_branch in main_branches:
         # Vérifier si la branche principale existe
-        if (
-            run_command(
-                f"git show-ref --verify --quiet refs/heads/{main_branch}", cwd=repo_path
-            )
-            is not None
-        ):
+        if run_command(f"git show-ref --verify --quiet refs/heads/{main_branch}", cwd=repo_path) is not None:
             continue
         if (
             run_command(
@@ -101,9 +96,7 @@ def get_branch_info(branch_name, repo_path=None, is_remote=False):
             continue
 
         # Vérifier si mergée
-        merge_check = run_command(
-            f"git merge-base --is-ancestor {ref} origin/{main_branch}", cwd=repo_path
-        )
+        merge_check = run_command(f"git merge-base --is-ancestor {ref} origin/{main_branch}", cwd=repo_path)
         if merge_check is not None:  # Code de retour 0 = mergée
             is_merged = True
             merged_into = main_branch
@@ -145,9 +138,7 @@ def classify_stale_branches(all_branches, repo_path=None, stale_days=30):
     local_branches = get_local_branches(repo_path)
     remote_branches = all_branches
 
-    print(
-        f"🔍 Analyse de {len(local_branches)} branches locales et {len(remote_branches)} branches distantes..."
-    )
+    print(f"🔍 Analyse de {len(local_branches)} branches locales et {len(remote_branches)} branches distantes...")
 
     # 1. BRANCHES LOCALES ORPHELINES
     for local_branch in local_branches:
@@ -171,10 +162,7 @@ def classify_stale_branches(all_branches, repo_path=None, stale_days=30):
         branch_info = get_branch_info(branch_name, repo_path, is_remote=is_remote)
 
         # Vérifier si ancienne
-        if (
-            branch_info["last_commit_date"]
-            and branch_info["last_commit_date"] < cutoff_date
-        ):
+        if branch_info["last_commit_date"] and branch_info["last_commit_date"] < cutoff_date:
             branch_info["reason"] = f"No activity for {stale_days}+ days"
             stale_branches["old"].append(branch_info)
 
@@ -185,23 +173,15 @@ def classify_stale_branches(all_branches, repo_path=None, stale_days=30):
 
     # 3. BRANCHES QUI N'EXISTENT QUE EN REMOTE
     for remote_branch in remote_branches:
-        if (
-            remote_branch not in local_branches
-            and remote_branch not in protected_branches
-        ):
+        if remote_branch not in local_branches and remote_branch not in protected_branches:
             branch_info = get_branch_info(remote_branch, repo_path, is_remote=True)
 
             # Les ajouter seulement si elles sont anciennes ou mergées
-            if (
-                branch_info["last_commit_date"]
-                and branch_info["last_commit_date"] < cutoff_date
-            ):
+            if branch_info["last_commit_date"] and branch_info["last_commit_date"] < cutoff_date:
                 branch_info["reason"] = f"Remote-only branch, {stale_days}+ days old"
                 stale_branches["remote_only"].append(branch_info)
             elif branch_info["is_merged"]:
-                branch_info["reason"] = (
-                    f"Remote-only branch, merged into {branch_info['merged_into']}"
-                )
+                branch_info["reason"] = f"Remote-only branch, merged into {branch_info['merged_into']}"
                 stale_branches["remote_only"].append(branch_info)
 
     return stale_branches
@@ -236,9 +216,7 @@ def display_stale_branches(stale_branches):
         for branch in branches:
             print(f"🌿 {branch['name']}")
             if branch["last_commit_date"]:
-                print(
-                    f"   📅 Dernier commit: {branch['last_commit_date'].strftime('%Y-%m-%d %H:%M')}"
-                )
+                print(f"   📅 Dernier commit: {branch['last_commit_date'].strftime('%Y-%m-%d %H:%M')}")
             if branch["last_author"]:
                 print(f"   👤 Auteur: {branch['last_author']}")
             if branch["last_message"]:
@@ -269,9 +247,7 @@ def delete_branches_interactive(stale_branches, repo_path=None):
         print(f"📍 Type: {'Remote' if branch['is_remote'] else 'Local'}")
         print(f"ℹ️  Raison: {branch['reason']}")
         if branch["last_commit_date"]:
-            print(
-                f"📅 Dernier commit: {branch['last_commit_date'].strftime('%Y-%m-%d %H:%M')}"
-            )
+            print(f"📅 Dernier commit: {branch['last_commit_date'].strftime('%Y-%m-%d %H:%M')}")
 
         while True:
             print(f"\n❓ Supprimer '{branch['name']}' ?")
@@ -307,17 +283,13 @@ def delete_branches_interactive(stale_branches, repo_path=None):
                     f"git checkout -b {branch['name']} origin/{branch['name']}",
                     cwd=repo_path,
                 ):
-                    success = delete_branch(
-                        branch, repo_path, delete_remote=True, delete_local=True
-                    )
+                    success = delete_branch(branch, repo_path, delete_remote=True, delete_local=True)
                     if success:
                         deleted_remote += 1
                         deleted_local += 1
                 break
             elif choice == "r" and not branch["is_remote"]:
-                success = delete_branch(
-                    branch, repo_path, delete_remote=True, delete_local=True
-                )
+                success = delete_branch(branch, repo_path, delete_remote=True, delete_local=True)
                 if success:
                     deleted_local += 1
                     deleted_remote += 1
@@ -374,21 +346,15 @@ def delete_branch(branch_info, repo_path=None, delete_remote=False, delete_local
 
 def main():
     """Fonction principale"""
-    parser = argparse.ArgumentParser(
-        description="Gestionnaire de branches périmées GitLab"
-    )
-    parser.add_argument(
-        "repo_path", nargs="?", default=".", help="Chemin vers le dépôt Git"
-    )
+    parser = argparse.ArgumentParser(description="Gestionnaire de branches périmées GitLab")
+    parser.add_argument("repo_path", nargs="?", default=".", help="Chemin vers le dépôt Git")
     parser.add_argument(
         "--stale-days",
         type=int,
         default=30,
         help="Nombre de jours pour considérer une branche comme ancienne",
     )
-    parser.add_argument(
-        "--show-only", action="store_true", help="Afficher seulement, ne pas supprimer"
-    )
+    parser.add_argument("--show-only", action="store_true", help="Afficher seulement, ne pas supprimer")
     parser.add_argument(
         "--category",
         choices=["orphaned", "old", "merged", "remote_only"],
@@ -409,9 +375,7 @@ def main():
     remote_branches = fetch_all_remote_branches(args.repo_path)
 
     # Classifier les branches périmées
-    stale_branches = classify_stale_branches(
-        remote_branches, args.repo_path, args.stale_days
-    )
+    stale_branches = classify_stale_branches(remote_branches, args.repo_path, args.stale_days)
 
     # Filtrer par catégorie si demandé
     if args.category:
@@ -425,13 +389,9 @@ def main():
     if not args.show_only:
         total_branches = sum(len(branches) for branches in stale_branches.values())
         if total_branches > 0:
-            proceed = input(
-                f"\n🤔 Procéder à la suppression interactive de {total_branches} branche(s)? (y/N): "
-            )
+            proceed = input(f"\n🤔 Procéder à la suppression interactive de {total_branches} branche(s)? (y/N): ")
             if proceed.lower() in ["y", "yes"]:
-                deleted_local, deleted_remote = delete_branches_interactive(
-                    stale_branches, args.repo_path
-                )
+                deleted_local, deleted_remote = delete_branches_interactive(stale_branches, args.repo_path)
                 print("\n📊 Résumé:")
                 print(f"  🗑️ Branches locales supprimées: {deleted_local}")
                 print(f"  🌐 Branches distantes supprimées: {deleted_remote}")
