@@ -1,41 +1,17 @@
-// External imports
-import React, { FC, MutableRefObject, useRef, useState } from 'react'
-import {
-  Box,
-  Button,
-  Textarea
-} from '@chakra-ui/react'
+import React, { FC, MutableRefObject, useRef, useState, useEffect } from 'react'
+import {Box,Button,Textarea} from '@chakra-ui/react'
 
-// Local functions
 import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
-interface BaseComponentProps {
-  new_data: Class_ApplicationDataOSP
-}
-
 /**
  * Create tootltip modification menu
- *
- * @param {*} {
- *   new_data,
- *   menu_for_modal
- * }
- * @return {*}
  */
-export const MenuConfigurationLinksTooltip: FC<BaseComponentProps> = ({
-  new_data,
-}) => {
-
-  // Data -------------------------------------------------------------------------------
-
-  // Get necessary infos
+export const MenuConfigurationLinksTooltip = ({new_data}:{new_data: Class_ApplicationDataOSP}) => {
   const { t } = new_data
-
-  // Selected links ---------------------------------------------------------------------
 
   let selected_links: Class_LinkElement[]
   if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
@@ -48,34 +24,69 @@ export const MenuConfigurationLinksTooltip: FC<BaseComponentProps> = ({
   }
 
   // Editor state ----------------------------------------------------------------------
-
-  // State & refs for text input
   const [editor_content_tooltip, setEditorContentTooltip] = useState('')
+  const [isInitialized, setIsInitialized] = useState(false)
   const [, setCount] = useState(0)
   const inputRef = useRef() as MutableRefObject<HTMLTextAreaElement>
-  let tmp_editor_content_tooltip = editor_content_tooltip
 
-  // Check if there is difference between text in editor and link tooltips
-  let s_tmp_editor_content_changed = false
-  if (selected_links.length > 0) {
-    if (selected_links[0]._link_tooltip.tooltip_text !== editor_content_tooltip) {
-      s_tmp_editor_content_changed = true
+  // Fonction pour obtenir le texte initial
+  const getInitialTooltipText = (): string => {
+    if (selected_links.length > 0 && selected_links[0]._link_tooltip.tooltip_text) {
+      return selected_links[0]._link_tooltip.tooltip_text
     }
+    return ''
   }
+
+  // Fonction de mise à jour complète
+  const updateEditorContent = () => {
+    const initialText = getInitialTooltipText()
+    setEditorContentTooltip(initialText)
+    if (inputRef.current) {
+      inputRef.current.value = initialText
+    }
+    setIsInitialized(true)
+  }
+
+  // useEffect pour l'initialisation et les changements de sélection
+  useEffect(() => {
+    // Force la mise à jour après le prochain render
+    const timer = setTimeout(() => {
+      updateEditorContent()
+    }, 10) // Petit délai pour s'assurer que les liens sont à jour
+
+    return () => clearTimeout(timer)
+  }, [selected_links.length, selected_links[0]?.id]) // Dépend aussi de l'ID du premier lien
+
+  // Force une mise à jour si le contenu n'est pas initialisé et qu'on a des liens
+  useEffect(() => {
+    if (!isInitialized && selected_links.length > 0) {
+      updateEditorContent()
+    }
+  })
+
+  // Check if there is difference between original text and current editor content
+  const originalText = selected_links.length > 0 ? (selected_links[0]._link_tooltip.tooltip_text || '') : ''
+  const hasChanges = originalText !== editor_content_tooltip
 
   const applyEditor = () => {
     const dict_old_value: { [x: string]: string } = {}
-    selected_links.map(link => dict_old_value[link.id] = link._link_tooltip.tooltip_text)
+    selected_links.forEach(link => {
+      dict_old_value[link.id] = link._link_tooltip.tooltip_text || ''
+    })
 
     const _applyEditor = () => {
-      selected_links.map(link => link._link_tooltip.tooltip_text = tmp_editor_content_tooltip)
-      setEditorContentTooltip(tmp_editor_content_tooltip)
-      // Toogle saving indicator
+      selected_links.forEach(link => {
+        link._link_tooltip.tooltip_text = editor_content_tooltip
+      })
+      // Toggle saving indicator
       new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     }
+    
     const inv_applyEditor = () => {
-      selected_links.map(link => link._link_tooltip.tooltip_text = dict_old_value[link.id])
-      setEditorContentTooltip(selected_links[0]._link_tooltip.tooltip_text)
+      selected_links.forEach(link => {
+        link._link_tooltip.tooltip_text = dict_old_value[link.id]
+      })
+      updateEditorContent()
     }
 
     new_data.history.saveUndo(inv_applyEditor)
@@ -84,92 +95,62 @@ export const MenuConfigurationLinksTooltip: FC<BaseComponentProps> = ({
     _applyEditor()
   }
 
-  // Components updaters ---------------------------------------------------------------
-
-  // Update what is displayed in text editor
+  // Reset to original values
   const resetTextEditor = () => {
-    if (selected_links.length > 0) {
-      if (typeof selected_links[0]._link_tooltip.tooltip_text !== 'undefined') {
-        // Reset textaera
-        if (typeof inputRef.current !== 'undefined') {
-          if (inputRef.current !== null) {
-            inputRef.current.value = selected_links[0]._link_tooltip.tooltip_text
-          }
-        }
-        // Reset state value
-        setEditorContentTooltip(selected_links[0]._link_tooltip.tooltip_text)
-      }
-      else {
-        // Reset textaera
-        if (typeof inputRef.current !== 'undefined') {
-          if (inputRef.current !== null) {
-            inputRef.current.value = ''
-          }
-        }
-        // Reset state value
-        setEditorContentTooltip('')
-      }
-    }
-    else {
-      // Reset textaera
-      if (typeof inputRef.current !== 'undefined') {
-        if (inputRef.current !== null) {
-          inputRef.current.value = ''
-        }
-      }
-      // Reset state value
-      setEditorContentTooltip('')
-    }
+    updateEditorContent()
   }
 
   // Link with new_data components updater
-  new_data.menu_configuration.ref_to_menu_config_links_tooltips_updater.current = () => { setCount(a => a + 1); resetTextEditor() }
+  new_data.menu_configuration.ref_to_menu_config_links_tooltips_updater.current = () => { 
+    setCount(a => a + 1)
+    setIsInitialized(false) // Force la réinitialisation
+    // Double délai pour s'assurer que tout est mis à jour
+    setTimeout(() => {
+      updateEditorContent()
+    }, 20)
+  }
+
+  // Handle textarea changes
+  const handleTextareaChange = (evt: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditorContentTooltip(evt.target.value)
+  }
 
   // JSX Components ---------------------------------------------------------------------
-
-  const content = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.IB')}><>
-    <OSTooltip label={new_data.has_sankey_plus ? t('Flux.tooltips.IB') : t('Menu.sankeyOSPDisabled')}>
-      <Textarea
-        isDisabled={!new_data.has_sankey_plus}
-        rows={5}
-        ref={inputRef}
-        defaultValue={editor_content_tooltip}
-        onChange={(evt) => {
-          tmp_editor_content_tooltip = evt.target.value
-          if (!s_tmp_editor_content_changed) {
-            setEditorContentTooltip(tmp_editor_content_tooltip)
-          }
-        }}
-        onBlur={() => {
-          setEditorContentTooltip(tmp_editor_content_tooltip)
-        }}
-      />
-    </OSTooltip>
-    <Box
-      as='span'
-      layerStyle='options_2cols'
-    >
-      <Button
-        variant='menuconfigpanel_option_button_left'
-        isDisabled={!s_tmp_editor_content_changed}
-        backgroundColor='red.200'
-        onClick={() => {
-          resetTextEditor()
-        }}
-      >
-        {t('Menu.annuler')}
-      </Button>
-      <Button
-        variant='menuconfigpanel_option_button_right'
-        isDisabled={!s_tmp_editor_content_changed}
-        onClick={applyEditor}
-      >
-        {t('Menu.submit')}
-      </Button>
-    </Box>
-  </>
+  const content = <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.IB')}>
+    <>
+      <OSTooltip label={new_data.has_sankey_plus ? t('Flux.tooltips.IB') : t('Menu.sankeyOSPDisabled')}>
+        <Textarea
+          isDisabled={!new_data.has_sankey_plus}
+          rows={5}
+          ref={inputRef}
+          value={editor_content_tooltip}
+          onChange={handleTextareaChange}
+        />
+      </OSTooltip>
+      <Box as='span' layerStyle='options_2cols'>
+        <Button
+          variant='menuconfigpanel_option_button_left'
+          isDisabled={!hasChanges}
+          backgroundColor='red.200'
+          onClick={resetTextEditor}
+        >
+          {t('Menu.annuler')}
+        </Button>
+        <Button
+          variant='menuconfigpanel_option_button_right'
+          isDisabled={!hasChanges}
+          onClick={applyEditor}
+        >
+          {t('Menu.submit')}
+        </Button>
+      </Box>
+    </>
   </WrapperBoxSubSectionMenu>
-  return <><SankeyLinkSelectionSimple new_data={new_data} />
-    {selected_links.length > 0 ? content : <></>}
-  </>
+
+  return (
+    <>
+      <SankeyLinkSelectionSimple new_data={new_data} />
+      {selected_links.length > 0 ? content : null}
+    </>
+  )
 }
