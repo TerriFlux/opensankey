@@ -26,7 +26,7 @@
 
 
 import React, { useState, MutableRefObject } from 'react'
-import { Box, Button, Slider, SliderFilledTrack, SliderMark, SliderThumb, SliderTrack, } from '@chakra-ui/react'
+import { Box, Button, Slider, SliderFilledTrack, SliderMark, SliderThumb, SliderTrack,Checkbox } from '@chakra-ui/react'
 
 import { Class_NodeElement } from '../../Elements/Node'
 import { default_dy, default_position_type, default_dx, } from '../../Elements/NodeAttributes'
@@ -91,6 +91,11 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
   const shape_arrow_angle_factor = (element_ref?.shape_arrow_angle_factor ?? NODES_ATTRIBUTES_CONFIG.shape_arrow_angle_factor.default)
   const shape_arrow_angle_direction = (element_ref?.shape_arrow_angle_direction ?? NODES_ATTRIBUTES_CONFIG.shape_arrow_angle_direction.default)
   const shape_color_sustainable = (element_ref?.shape_color_sustainable ?? NODES_ATTRIBUTES_CONFIG.shape_color_sustainable.default)
+  const orphan_node_visible = (element_ref?.orphan_node_visible ?? NODES_ATTRIBUTES_CONFIG.orphan_node_visible.default)
+  const check_indeterminate = (curr: Class_NodeElement) => {
+    return (selected_nodes[0].orphan_node_visible == curr.orphan_node_visible)
+  }
+  const is_indeterminate = !selected_nodes.every(check_indeterminate)
 
   const position_type = menu_for_style ?
     ((element_ref as Class_NodeStyle)?.position.type ?? default_position_type) :
@@ -382,6 +387,18 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
         maximum_value={1}
         step={0.1}
         stepper={true} />
+        
+        <Checkbox
+          isDisabled={!disable_attr_props['orphan_node_visible']}
+          variant='menuconfigpanel_option_checkbox'
+          isIndeterminate={is_indeterminate}
+          isChecked={orphan_node_visible}
+          onChange={(evt) => { updateElements(app_data,elements,'orphan_node_visible' as ValueKey, evt.target.checked,refreshThisAndUpdateRelatedComponents) }}>
+          <OSTooltip label={t('Noeud.apparence.tooltips.orphan_node_visible')}>
+            {t('Noeud.apparence.orphan_node_visible')}
+            <TooltipElementOverloaded elements={selected_nodes} t={t} k={'orphan_node_visible'} />
+          </OSTooltip>
+        </Checkbox>
     </> : <></>}
   </MenuSectionCheckbox>
 

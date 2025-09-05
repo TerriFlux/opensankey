@@ -430,7 +430,6 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
     // Links
     additional_menu_configuration_links: {},
     additional_data_element: [],
-    additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
     // context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'changePlan', 'mask_attr', 'edit_value', 'sep_3', 'assign_tag', 'sep_4'],
