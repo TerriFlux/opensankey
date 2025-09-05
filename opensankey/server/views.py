@@ -83,9 +83,7 @@ template_folder = os.path.join(
 
 static_folder = os.path.join(
     os.path.join(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"
-        ),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"),
         "build",
     ),
     "static",
@@ -101,9 +99,7 @@ opensankey = Blueprint(
 
 image_template_folder = os.path.join(
     os.path.join(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"
-        ),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "client"),
         "src",
     ),
     "images",
@@ -154,9 +150,7 @@ def save_excel():
         cwd = os.getcwd()
         excel_filename = os.path.join(cwd, "tutu.xlsx")
         io_excel = IOExcel()
-        io_excel.write_excel_from_sankey(
-            excel_filename, sankey, mode="w", **options_save_excel
-        )
+        io_excel.write_excel_from_sankey(excel_filename, sankey, mode="w", **options_save_excel)
         if options_save_excel["layout"]:
             # Ajoute le fichier json dans un onglet layout
             wb = openpyxl.load_workbook(excel_filename)
@@ -170,9 +164,7 @@ def save_excel():
             wb.save("tutu.xlsx")
         return send_file(excel_filename, as_attachment=True)
     except Exception as excpt:
-        response = Response(
-            response="write_excel_from_sankey : " + str(excpt), status=500
-        )
+        response = Response(response="write_excel_from_sankey : " + str(excpt), status=500)
         return response
     return Response(status=200)
 
@@ -221,21 +213,13 @@ def excel_check_process():
             return Response(json_data, status=200, mimetype="application/json")
         else:
             return Response(
-                json.dumps(
-                    {
-                        "output": "ERROR: excel/upload/check_process: le fichier tmp_log n'existe pas."
-                    }
-                ),
+                json.dumps({"output": "ERROR: excel/upload/check_process: le fichier tmp_log n'existe pas."}),
                 status=500,
                 mimetype="application/json",
             )
     except json.JSONDecodeError:
         return Response(
-            json.dumps(
-                {
-                    "output": "ERROR: excel/upload/check_process: le fichier tmp_log ne peut pas être ouvert."
-                }
-            ),
+            json.dumps({"output": "ERROR: excel/upload/check_process: le fichier tmp_log ne peut pas être ouvert."}),
             status=500,
             mimetype="application/json",
         )
@@ -248,9 +232,7 @@ def load_retrieves_result():
         json_file = open(session["output_file_name"], encoding="utf-8", mode="r")
         json_data = json.load(json_file)
         json_file.close()
-        response = Response(
-            json.dumps(json_data), status=200, mimetype="application/json"
-        )
+        response = Response(json.dumps(json_data), status=200, mimetype="application/json")
         return response
     except Exception:
         trace.logger.error("load_retrieves_result failed")
@@ -364,9 +346,7 @@ def upload_excel_thread(
         return
     # Step 2 : Extract sankey data
     sankey = io_excel.sankey
-    trace.logger.info(
-        "{:-<{w}}".format("Extract diagram structure ", w=max_line_length)
-    )
+    trace.logger.info("{:-<{w}}".format("Extract diagram structure ", w=max_line_length))
     try:
         sankey_json = converter_funct["extract_json_from_sankey"](sankey)
         trace.logger.info("{:->{w}}".format(" Success", w=max_line_length))
@@ -378,20 +358,13 @@ def upload_excel_thread(
     if use_layout_file:
         # Try to get layout from another file
         if "_reconciled" in trace_filename:
-            layout_filename = (
-                os.path.splitext(trace_filename)[0].replace("_reconciled", "_layout")
-                + ".json"
-            )
+            layout_filename = os.path.splitext(trace_filename)[0].replace("_reconciled", "_layout") + ".json"
         else:
             layout_filename = os.path.splitext(trace_filename)[0] + "_layout.json"
         # Start extracting layout
-        trace.logger.info(
-            "{:-<{w}}".format("Extract diagram layout ", w=max_line_length)
-        )
+        trace.logger.info("{:-<{w}}".format("Extract diagram layout ", w=max_line_length))
         try:
-            sankey_folder = os.path.join(
-                os.path.dirname(excel_input_filename), "sankey"
-            )
+            sankey_folder = os.path.join(os.path.dirname(excel_input_filename), "sankey")
             layout_filename = os.path.join(sankey_folder, layout_filename)
             if os.path.exists(layout_filename):
                 layout_file = open(layout_filename, encoding="utf-8", mode="r")
@@ -410,12 +383,8 @@ def upload_excel_thread(
             # If it has been read before, we will never have any issue here
             layout_table = pd.read_excel(excel_input_filename, "layout")
             layout_table_present = True
-            trace.logger.info(
-                "{:-<{w}}".format("Extract diagram layout ", w=max_line_length)
-            )
-            layout_json_str = layout_table.columns[0] + "".join(
-                [layout_table.iloc[_][0] for _ in layout_table.index]
-            )
+            trace.logger.info("{:-<{w}}".format("Extract diagram layout ", w=max_line_length))
+            layout_json_str = layout_table.columns[0] + "".join([layout_table.iloc[_][0] for _ in layout_table.index])
             layout_json = json.loads(layout_json_str)
             sankey_json["layout"] = layout_json
             trace.logger.info("{:->{w}}".format(" Success", w=max_line_length))
@@ -537,16 +506,12 @@ def handle_json_or_compressed(data_folder, exemple, exemple_file_path):
 
         # Si pas de .json.gz, vérifier si le .json existe
         elif os.path.exists(json_path):
-            trace.logger.debug(
-                f"Fichier JSON trouvé, compression à la volée: {json_path}"
-            )
+            trace.logger.debug(f"Fichier JSON trouvé, compression à la volée: {json_path}")
             return compress_and_serve_json(json_path, json_gz_path)
 
         else:
             # Aucun fichier trouvé
-            error_msg = (
-                f"Fichier non trouvé: {exemple} (ni {json_path} ni {json_gz_path})"
-            )
+            error_msg = f"Fichier non trouvé: {exemple} (ni {json_path} ni {json_gz_path})"
             trace.logger.error(error_msg)
             return Response(
                 response=json.dumps({"error": error_msg}),
@@ -572,9 +537,7 @@ def serve_compressed_file(json_gz_path):
             compressed_data = f.read()
 
         file_size = len(compressed_data)
-        trace.logger.debug(
-            f"Fichier compressé servi: {json_gz_path} ({file_size} bytes)"
-        )
+        trace.logger.debug(f"Fichier compressé servi: {json_gz_path} ({file_size} bytes)")
 
         return Response(
             response=compressed_data,
@@ -623,9 +586,7 @@ def compress_and_serve_json(json_path, json_gz_path):
         compressed_size = len(compressed_data)
         ratio = (1 - compressed_size / original_size) * 100
 
-        trace.logger.debug(
-            f"Compression: {original_size} → {compressed_size} bytes ({ratio:.1f}% économie)"
-        )
+        trace.logger.debug(f"Compression: {original_size} → {compressed_size} bytes ({ratio:.1f}% économie)")
 
         # Sauvegarder
         try:
@@ -633,9 +594,7 @@ def compress_and_serve_json(json_path, json_gz_path):
                 f.write(compressed_data)
             trace.logger.debug(f"Fichier compressé sauvegardé: {json_gz_path}")
         except Exception as save_error:
-            trace.logger.warning(
-                f"Impossible de sauvegarder {json_gz_path}: {str(save_error)}"
-            )
+            trace.logger.warning(f"Impossible de sauvegarder {json_gz_path}: {str(save_error)}")
 
         # ✅ HEADERS CORRIGÉS :
         return Response(
@@ -736,15 +695,11 @@ def parse_folder(current_dir, menus, key=None):
         if key is not None:
             if key not in menus:
                 menus[key] = {}
-            folder_found = parse_folder(
-                os.path.join(current_dir, file_or_folder), menus[key], child_key
-            )
+            folder_found = parse_folder(os.path.join(current_dir, file_or_folder), menus[key], child_key)
             if folder_found:
                 exemple_found = True
         else:
-            folder_found = parse_folder(
-                os.path.join(current_dir, file_or_folder), menus, child_key
-            )
+            folder_found = parse_folder(os.path.join(current_dir, file_or_folder), menus, child_key)
             if folder_found:
                 exemple_found = True
 
@@ -768,9 +723,7 @@ def menus_templates():
     data_index = {}
     with open(data_folder + "index.json") as file_index:
         data_index = json.load(file_index)
-    response = Response(
-        response=json.dumps(data_index), status=200, mimetype="application/json"
-    )
+    response = Response(response=json.dumps(data_index), status=200, mimetype="application/json")
     return response
 
 
@@ -804,15 +757,10 @@ def menus_examples():
         if "MFAData" in list_in_folder and "image_preview" in os.listdir(
             current_folder + "\\MFAData\\Formations\\Démos\\OpenSankey\\"
         ):
-            folder_image = (
-                current_folder
-                + "\\MFAData\\Formations\\Démos\\OpenSankey\\image_preview"
-            )
+            folder_image = current_folder + "\\MFAData\\Formations\\Démos\\OpenSankey\\image_preview"
             for i in os.listdir(folder_image):
                 if i not in os.listdir(image_template_folder):
-                    os.symlink(
-                        folder_image + "\\" + i, image_template_folder + "\\" + i
-                    )
+                    os.symlink(folder_image + "\\" + i, image_template_folder + "\\" + i)
     except Exception as expt:
         print(str(expt))
         response = Response(response=str(expt), status=500, mimetype="application/json")
@@ -859,9 +807,7 @@ def open_sankeymatic():
             print(msg)
         clean_file(text_input_filename, "Clean_TXT")
 
-        response = Response(
-            response=json.dumps(json_obj), status=200, mimetype="application/json"
-        )
+        response = Response(response=json.dumps(json_obj), status=200, mimetype="application/json")
         return response
     except Exception as e:
         current_app.logger.error("OPEN SANKEY MATIC | {0}".format(e))
@@ -932,15 +878,8 @@ def _html_to_image(
         if output_format == "pdf":
             pdfkit.from_string(html_as_str, output_filename, css=css, options=options)
         else:
-            pdfkit.from_string(
-                html_as_str, output_filename + ".pdf", css=css, options=options
-            )
-            os.system(
-                "inkscape "
-                + "--export-filename={0} {1}".format(
-                    output_filename, output_filename + ".pdf"
-                )
-            )
+            pdfkit.from_string(html_as_str, output_filename + ".pdf", css=css, options=options)
+            os.system("inkscape " + "--export-filename={0} {1}".format(output_filename, output_filename + ".pdf"))
             os.remove(output_filename + ".pdf")
 
 
@@ -1103,9 +1042,7 @@ def url_load_json():
         # Important: NE PAS définir Content-Encoding: gzip
         # Laisser le navigateur gérer automatiquement la décompression
         if url_front.endswith(".gz"):
-            flask_response.headers["Content-Type"] = (
-                "application/json"  # Type final attendu
-            )
+            flask_response.headers["Content-Type"] = "application/json"  # Type final attendu
         else:
             flask_response.headers["Content-Type"] = "application/json"
 

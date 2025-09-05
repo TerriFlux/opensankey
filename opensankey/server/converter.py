@@ -420,11 +420,7 @@ class SankeyToJson(object):
                 for level in range(1, dimension.depth + 1)
             }
             # Siblings
-            siblings = [
-                _
-                for _ in sankey.dimensions.values()
-                if (dimension.is_antagonist(_) and _ != dimension)
-            ]
+            siblings = [_ for _ in sankey.dimensions.values() if (dimension.is_antagonist(_) and _ != dimension)]
             unactivated_dimensions += siblings
             # Dimension dict
             level_tags_json[dimension.id] = {
@@ -536,13 +532,9 @@ class SankeyToJson(object):
             # Update fluxtags struct
             default_data_strct["tags"][tagg_name] = []  # tag_name
         # Create the links json struct
-        self._create_links_with_datas_json(
-            sankey, default_data_strct, links_with_datas_json
-        )
+        self._create_links_with_datas_json(sankey, default_data_strct, links_with_datas_json)
 
-    def _create_links_with_datas_json(
-        self, sankey: Sankey, default_data_json: dict, links_with_datas_json: dict
-    ):
+    def _create_links_with_datas_json(self, sankey: Sankey, default_data_json: dict, links_with_datas_json: dict):
         """
         Extract all nodes from sankey object to update json data format.
 
@@ -565,9 +557,7 @@ class SankeyToJson(object):
         """
         # Go trough all links
         for flux in sankey.flux.values():
-            links_with_datas_json[flux.id] = self._create_link_with_datas_json(
-                sankey, flux, default_data_json
-            )
+            links_with_datas_json[flux.id] = self._create_link_with_datas_json(sankey, flux, default_data_json)
 
     def _create_link_with_datas_json(
         self,
@@ -619,9 +609,7 @@ class SankeyToJson(object):
         # Then create link struct
         return {"idSource": flux.orig.id, "idTarget": flux.dest.id, "value": datas_json}
 
-    def _parse_datas_or_results(
-        self, sankey: Sankey, flux, default_data_strct: dict, datas_json: dict
-    ):
+    def _parse_datas_or_results(self, sankey: Sankey, flux, default_data_strct: dict, datas_json: dict):
         """
         Choose the way to parse datas or results from flux
 
@@ -677,18 +665,14 @@ class SankeyToJson(object):
             for result in flux.results:
                 has_data |= result.data_value is not None
                 raw_data = result.alterego
-                self._parse_result(
-                    sankey, result, raw_data, default_data_strct, datas_json
-                )
+                self._parse_result(sankey, result, raw_data, default_data_strct, datas_json)
         elif flux.has_data():
             for data in flux.datas:
                 has_data |= data.data_value is not None
                 self._parse_data(sankey, data, default_data_strct, datas_json)
         return has_data
 
-    def _parse_data(
-        self, sankey: Sankey, data, default_data_strct: dict, datas_json: dict
-    ):
+    def _parse_data(self, sankey: Sankey, data, default_data_strct: dict, datas_json: dict):
         """
         Extract datas from link struct for json data format.
 
@@ -756,9 +740,7 @@ class SankeyToJson(object):
         data_json = self._init_data_struct(sankey, data, default_data_strct)
         _update_dict_if_value(data_json, "data_value", data.data_value)
         # Reference data struct from data tags
-        tags = [
-            tag for tag in data.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)
-        ]
+        tags = [tag for tag in data.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)]
         add_data_to_datas(tags, datas_json, data_json)
 
     def _init_data_struct(self, sankey, data, default_data_strct):
@@ -831,9 +813,9 @@ class SankeyToJson(object):
                     tag_name = tag.name
                     if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
                         tagg_name = "flux_types"
-                        tag_name = tag_name.replace(
-                            CONST_IO_XL.DATA_COLLECTED, "initial_data"
-                        ).replace(CONST_IO_XL.DATA_COMPUTED, "computed_data")
+                        tag_name = tag_name.replace(CONST_IO_XL.DATA_COLLECTED, "initial_data").replace(
+                            CONST_IO_XL.DATA_COMPUTED, "computed_data"
+                        )
                     # Update fluxtags struct
                     data_json["tags"][tagg_name].append(tag_name)
         return data_json
@@ -929,9 +911,7 @@ class SankeyToJson(object):
             _update_dict_if_value(data_strct, "data_source", raw_data.source)
             _update_dict_if_value(data_strct, "value_option", raw_data.value_option)
         # Reference result struct from data tags
-        tags = [
-            tag for tag in result.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)
-        ]
+        tags = [tag for tag in result.tags if (tag.group.type == CONST_IO_XL.TAG_TYPE_DATA)]
         add_data_to_datas(tags, datas_strct, data_strct)
 
     def parse_nodes(self, sankey: Sankey, nodes: dict, levelTags):
@@ -1078,9 +1058,7 @@ class SankeyToJson(object):
                 is_root_child = children is None
                 node_json["dimensions"][id]["parent_tag"] = str(level - 1)
                 if is_root_child:
-                    node_json["dimensions"][id]["children_tags"] = [
-                        str(_) for _ in range(level, dimension.depth + 1)
-                    ]
+                    node_json["dimensions"][id]["children_tags"] = [str(_) for _ in range(level, dimension.depth + 1)]
                 else:
                     node_json["dimensions"][id]["children_tags"] = [str(level)]
             elif children is not None:
@@ -1312,9 +1290,7 @@ class JsonToSankey(object):
                 continue
             for dimension_id, dimension in node_json["dimensions"].items():
                 if "parent_name" in dimension.keys():
-                    all_dim_parent_child.append(
-                        (dimension_id, dimension["parent_name"], node_id)
-                    )
+                    all_dim_parent_child.append((dimension_id, dimension["parent_name"], node_id))
         # Apply all dimensions
         for dim_parent_child in all_dim_parent_child:
             dim_id, parent_id, child_id = dim_parent_child
@@ -1397,14 +1373,10 @@ class JsonToSankey(object):
                             for tag_id in flux_json["value"]["tags"][tagg_id]:
                                 if tag_id in self._fluxtags_id_corresp[tagg_id].keys():
                                     tag = self._fluxtags_id_corresp[tagg_id][tag_id]
-                                    flux = self.sankey.get_or_create_flux(
-                                        orig_node.name, dest_node.name, tag
-                                    )
+                                    flux = self.sankey.get_or_create_flux(orig_node.name, dest_node.name, tag)
                                     self._extract_data(flux_json["value"], flux, False)
                 else:
-                    flux = self.sankey.get_or_create_flux(
-                        orig_node.name, dest_node.name
-                    )
+                    flux = self.sankey.get_or_create_flux(orig_node.name, dest_node.name)
                     self._extract_data(flux_json["value"], flux, False)
 
         self.sankey.autocompute_nodes_types()
@@ -1420,19 +1392,13 @@ class JsonToSankey(object):
                             for tag_id in flux_json["value"]["tags"][tagg_id]:
                                 if tag_id in self._fluxtags_id_corresp[tagg_id].keys():
                                     tag = self._fluxtags_id_corresp[tagg_id][tag_id]
-                                    flux = self.sankey.get_or_create_flux(
-                                        orig_node.name, dest_node.name, tag
-                                    )
+                                    flux = self.sankey.get_or_create_flux(orig_node.name, dest_node.name, tag)
                                     self._extract_data(flux_json["value"], flux, True)
                 else:
-                    flux = self.sankey.get_or_create_flux(
-                        orig_node.name, dest_node.name
-                    )
+                    flux = self.sankey.get_or_create_flux(orig_node.name, dest_node.name)
                     self._extract_data(flux_json["value"], flux, True)
 
-    def _extract_data(
-        self, datas_json, flux, read_constraint, datatags_list=[], datataggs_list=None
-    ):
+    def _extract_data(self, datas_json, flux, read_constraint, datatags_list=[], datataggs_list=None):
         """
         Extract all datas (recursively) from json flux struct to fill a Sankey struct.
 
@@ -1487,20 +1453,12 @@ class JsonToSankey(object):
                 for fluxtagg_id in datas_json["tags"].keys():
                     # Get all tags related to this taggroup and to this flux
                     for fluxtag_id in datas_json["tags"][fluxtagg_id]:
-                        if (
-                            fluxtag_id == "initial_data"
-                            or fluxtag_id == "computed_data"
-                        ):
+                        if fluxtag_id == "initial_data" or fluxtag_id == "computed_data":
                             continue
-                        if (
-                            fluxtag_id
-                            not in self._fluxtags_id_corresp[fluxtagg_id].keys()
-                        ):
+                        if fluxtag_id not in self._fluxtags_id_corresp[fluxtagg_id].keys():
                             # sanity check
                             continue
-                        fluxtags_list.append(
-                            self._fluxtags_id_corresp[fluxtagg_id][fluxtag_id]
-                        )
+                        fluxtags_list.append(self._fluxtags_id_corresp[fluxtagg_id][fluxtag_id])
             # Check if data is result or not
             # data_is_computed = False
             # if "flux_types" in datas_json["tags"].keys():
@@ -1510,10 +1468,7 @@ class JsonToSankey(object):
 
             if "value_option" in datas_json:
                 data.value_option = datas_json["value_option"]
-            if (
-                read_constraint
-                and data.value_option in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS
-            ):
+            if read_constraint and data.value_option in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS:
                 self.sankey.ratio_node(flux, datas_json)
             if not read_constraint:
                 if "data_value" in datas_json:
@@ -1541,14 +1496,10 @@ class JsonToSankey(object):
         elif "datatag_group" in datas_json.keys():
             curr_datatagg_id = datas_json["datatag_group"]
             # Recursive calls on all datatags
-            for datatag_id, datatag in self._datatags_id_corresp[
-                curr_datatagg_id
-            ].items():
+            for datatag_id, datatag in self._datatags_id_corresp[curr_datatagg_id].items():
                 # Temporary copy of datatags_list
                 new_datatags_list = datatags_list.copy()
                 new_datatags_list.append(datatag)
                 # Recurse
-                self._extract_data(
-                    datas_json[datatag_id], flux, read_constraint, new_datatags_list
-                )
+                self._extract_data(datas_json[datatag_id], flux, read_constraint, new_datatags_list)
         return

@@ -128,9 +128,7 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
         if len(node["inputLinksId"]) == 0 and len(node["outputLinksId"]) > 0:
             # get current node horizontal index (eg longest branch length)
             starting_index = 0
-            computeHorizontalIndex(
-                node, nodes, links, starting_index, [], horizontal_indexes_per_nodes_ids
-            )
+            computeHorizontalIndex(node, nodes, links, starting_index, [], horizontal_indexes_per_nodes_ids)
 
         else:
             # Lone node case
@@ -179,31 +177,19 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
                     ):
                         return
 
-                    if (
-                        horizontal_indexes_per_nodes_ids[target_node["id"]]
-                        < min_next_horizontal_index
-                    ):
-                        min_next_horizontal_index = horizontal_indexes_per_nodes_ids[
-                            target_node["id"]
-                        ]
+                    if horizontal_indexes_per_nodes_ids[target_node["id"]] < min_next_horizontal_index:
+                        min_next_horizontal_index = horizontal_indexes_per_nodes_ids[target_node["id"]]
 
-                if (
-                    horizontal_indexes_per_nodes_ids[node["id"]]
-                    < min_next_horizontal_index - 1
-                ):
+                if horizontal_indexes_per_nodes_ids[node["id"]] < min_next_horizontal_index - 1:
                     to_splice.append(node)
                     # Il semblerait que dans certains cas nodes2horizontal_indices
                     #  de certains noeuds peuvent devenir négatif
                     # ce qui lors de l'affectation difference'une position x, ceux-ci sont négatif
-                    horizontal_indexes_per_nodes_ids[node["id"]] = (
-                        min_next_horizontal_index - 1
-                    )
+                    horizontal_indexes_per_nodes_ids[node["id"]] = min_next_horizontal_index - 1
                     if not nodes_per_horizontal_indexes[min_next_horizontal_index - 1]:
                         nodes_per_horizontal_indexes[min_next_horizontal_index - 1] = []
 
-                    nodes_per_horizontal_indexes[min_next_horizontal_index - 1].append(
-                        node
-                    )
+                    nodes_per_horizontal_indexes[min_next_horizontal_index - 1].append(node)
 
         for node in to_splice:
             nodes_per_horizontal_indexes[horizontal_index].remove(node)
@@ -228,15 +214,12 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
     greatestNodeCount = max([len(v) for k, v in nodes_per_horizontal_indexes.items()])
     vert_space = DA_height - DA_margin_top - DA_margin_bottom
     allAvailablePadding = max(2, vert_space - greatestNodeCount)
-    maximumNodeSpacing = ((1 - node_height / 100) * allAvailablePadding) / (
-        greatestNodeCount - 1
-    )
+    maximumNodeSpacing = ((1 - node_height / 100) * allAvailablePadding) / (greatestNodeCount - 1)
     actualNodeSpacing = maximumNodeSpacing * node_spacing
 
     ky = min(
         [
-            (vert_space - (len(v) - 1) * maximumNodeSpacing)
-            / sankeymatic_utils.sum_node_value_from_list_node_dict(v)
+            (vert_space - (len(v) - 1) * maximumNodeSpacing) / sankeymatic_utils.sum_node_value_from_list_node_dict(v)
             for k, v in nodes_per_horizontal_indexes.items()
         ]
     )
@@ -250,10 +233,7 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
     opposite_stage = "left" if first_stage == "right" else "left"
 
     # Column height (sum of node height of the col)
-    height_cumul_per_indexes = [
-        (len(v) - 1) * actualNodeSpacing
-        for k, v in nodes_per_horizontal_indexes.items()
-    ]
+    height_cumul_per_indexes = [(len(v) - 1) * actualNodeSpacing for k, v in nodes_per_horizontal_indexes.items()]
     # Tallest colmun height
     max_height_cumul = max(height_cumul_per_indexes)
     # Place node according the horizontal index
@@ -264,25 +244,17 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
         uniqueSrc = [node["inputLinksId"] for node in ndes_list]
         n_set = set([x for xs in uniqueSrc for x in xs])
         uniqueSrc = list(n_set)
-        uniqueNodesInPrevCol = [
-            nodes[links[idLink]["idSource"]] for idLink in uniqueSrc
-        ]
+        uniqueNodesInPrevCol = [nodes[links[idLink]["idSource"]] for idLink in uniqueSrc]
         if len(uniqueNodesInPrevCol) > 0:
-            y_shift = min([node["y"] for node in uniqueNodesInPrevCol]) - (
-                height_cumul_per_indexes[k] / 2
-            )
+            y_shift = min([node["y"] for node in uniqueNodesInPrevCol]) - (height_cumul_per_indexes[k] / 2)
         else:
-            y_shift = (
-                actualNodeSpacing + (max_height_cumul - height_cumul_per_indexes[k]) / 2
-            )
+            y_shift = actualNodeSpacing + (max_height_cumul - height_cumul_per_indexes[k]) / 2
 
         for node in ndes_list:
             node["x"] = x_shift
             node["y"] = y_shift
             # Update y_shift for next node in col
-            y_shift += (
-                max(node["input_value"], node["output_value"]) / DA_scale
-            ) + actualNodeSpacing
+            y_shift += (max(node["input_value"], node["output_value"]) / DA_scale) + actualNodeSpacing
             # Set label position
             node["local"]["label_vert"] = "middle"
             node["local"]["label_vert_valeur"] = "middle"
@@ -314,17 +286,13 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
 
     # Go throught all node & set some var
     for k, node in nodes.items():
-        node["local"]["value_label_vert_shift"] = fontSize + (
-            fontSize * label_linespaceing
-        )
+        node["local"]["value_label_vert_shift"] = fontSize + (fontSize * label_linespaceing)
         # Set random color to node if they haven't one define in sankeymatic file
         if "color" not in node["local"]:
             node["local"]["color"] = sankeymatic_utils.generate_hexa_color()
         # Reorganize node IO links if setting var is at true
         if setting["layout_order"] == "automatic":
-            node["inputLinksId"].sort(
-                reverse=False, key=lambda k: nodes[links[k]["idSource"]]["y"]
-            )
+            node["inputLinksId"].sort(reverse=False, key=lambda k: nodes[links[k]["idSource"]]["y"])
             node["outputLinksId"].sort(key=lambda k: nodes[links[k]["idTarget"]]["y"])
             node["links_order"] = node["inputLinksId"] + node["outputLinksId"]
 
@@ -343,11 +311,7 @@ def computeSankeyPosition(nodes: dict, links: dict, setting: dict):
                 ) / 2
                 sourceColor = nodes[link["idSource"]]["local"]["color"]
                 lMidInftoStageMid = flowMidpoint <= stagesMidpoint
-                link["local"]["color"] = (
-                    sourceColor
-                    if lMidInftoStageMid
-                    else nodes[link["idTarget"]]["local"]["color"]
-                )
+                link["local"]["color"] = sourceColor if lMidInftoStageMid else nodes[link["idTarget"]]["local"]["color"]
 
     return DA_scale * 100
 
@@ -471,9 +435,7 @@ def parse_sankeymatic_text(lines: str):
             else:
                 node_dest = nodes[dest_id]
 
-            new_flow = sankeymatic_utils.create_json_flow(
-                node_org["id"], node_dest["id"], value, color
-            )
+            new_flow = sankeymatic_utils.create_json_flow(node_org["id"], node_dest["id"], value, color)
             links[new_flow["id"]] = new_flow
 
             node_org["outputLinksId"].append(new_flow["id"])
@@ -497,9 +459,7 @@ def parse_sankeymatic_text(lines: str):
             curr_dest = link["idTarget"]
             value = link["value"]["data_value"]
             color = link["local"]["color"]
-            new_flow_inv = sankeymatic_utils.create_json_flow(
-                curr_dest, curr_org, value, color
-            )
+            new_flow_inv = sankeymatic_utils.create_json_flow(curr_dest, curr_org, value, color)
             del links[link["id"]]
             links[new_flow_inv["id"]] = new_flow_inv
 
