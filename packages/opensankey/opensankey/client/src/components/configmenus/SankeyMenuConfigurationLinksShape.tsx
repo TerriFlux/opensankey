@@ -55,6 +55,77 @@ export type valStyle = Class_LinkStyle[keyStyle]
 export type keyLink = keyof Class_LinkElement
 export type valLink = Class_LinkElement[keyLink]
 
+export const MenuConfLinkApparenceDashed = ({ app_data, menu_for_style }: {
+  app_data: Class_ApplicationData,
+  menu_for_style: boolean
+}) => {
+
+  const { ref_selected_style_link } = app_data.menu_configuration
+
+  const { t } = app_data
+  const [forceUpdate, setForceUpdate] = useState(false)
+
+  // Selected links
+  let selected_links
+  if (!app_data.menu_configuration.is_selector_only_for_visible_links) {
+    // All availables links
+    selected_links = app_data.drawing_area.selected_links_list_sorted
+  }
+  else {
+    // Only visible links
+    selected_links = app_data.drawing_area.visible_and_selected_links_list_sorted
+  }
+
+  // Elements on which menu modification applies
+  let elements: Class_LinkStyle[] | Class_LinkElement[]
+  if (menu_for_style) {
+    elements = [app_data.drawing_area.sankey.link_styles_dict[ref_selected_style_link.current]]
+  }
+  else {
+    elements = selected_links
+  }
+
+  const shape_is_dashed = (elements[0]?.shape_is_dashed ?? LINKS_ATTRIBUTES_CONFIG.shape_is_dashed.default)
+
+
+  // Function that can be undone ===================================
+  const updateDashedLinks = (_: boolean) => {
+    const dict_old_val = Object.fromEntries(elements.map(el => [el.id, el.shape_is_dashed]))
+
+    const _updateDashedLinks = () => {
+      elements.forEach(element => element.shape_is_dashed = _)
+      setForceUpdate(!forceUpdate)
+    }
+    const inv_updateDashedLinks = () => {
+      elements.forEach(element => element.shape_is_dashed = dict_old_val[element.id])
+      setForceUpdate(!forceUpdate)
+    }
+
+    // Save undo/redo in data history
+    app_data.history.saveUndo(inv_updateDashedLinks)
+    app_data.history.saveRedo(_updateDashedLinks)
+    // Execute original attr mutation
+    _updateDashedLinks()
+  }
+
+  const check_indeterminate = (curr: Class_LinkElement) => {
+    return (selected_links[0].shape_is_dashed == curr.shape_is_dashed)
+  }
+  const is_indeterminate = !selected_links.every(check_indeterminate)
+  return <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isIndeterminate={is_indeterminate}
+    isChecked={shape_is_dashed}
+    onChange={(evt) => {
+      updateDashedLinks(evt.target.checked)
+    }}>
+      <OSTooltip label={t('Flux.apparence.tooltips.shape_is_dashed')}>
+        {t('Flux.apparence.shape_is_dashed')}
+        <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_is_dashed'} />
+      </OSTooltip>
+  </Checkbox>
+}
+
 export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_style }: {
   new_data: Class_ApplicationData
   menu_for_style: boolean
@@ -284,8 +355,10 @@ export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_s
           </OSTooltip>
         </InputGroup>
       </Box>
-
-      {additionMenus.current.additional_link_appearence_items.map((el, idx) => <Fragment key={'additional_apparence_' + idx}>{el(menu_for_style)}</Fragment>/*<React.Fragment key={'additional_config_link_' + i}>{el}</React.Fragment>*/)}
+     <MenuConfLinkApparenceDashed
+      app_data={new_data}
+      menu_for_style={menu_for_style}
+    />
     </>
   </WrapperBoxSubSectionMenu>
 

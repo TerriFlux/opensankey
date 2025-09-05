@@ -68,7 +68,6 @@ export type Type_AdditionalMenus = {
   // Links
   additional_menu_configuration_links: { [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
-  additional_link_appearence_items: ((_: boolean) => JSX.Element)[],
   additional_link_appearence_value: ((_: boolean) => JSX.Element)[],
   additional_link_visual_filter_content: JSX.Element[],
 
@@ -395,7 +394,6 @@ export class Class_MenuConfig {
     // Links
     additional_menu_configuration_links: {},
     additional_data_element: [],
-    additional_link_appearence_items: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
 
