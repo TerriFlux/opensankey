@@ -357,99 +357,99 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
  * @type {FC<MenuColorPickerProps>}
  * @memberof Class_ApplicationDataSA
  */
-  public override MenuColorPicker = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }: MenuColorPickerProps) => {
-    const [displayColorPicker, setDisplayColorPicker] = useState(false)
-    const [color, setColor] = useState(initialColor)
+  // public override MenuColorPicker = ({ initialColor, functionOnBlur, isDisabled, textDisabled = '' }: MenuColorPickerProps) => {
+  //   const [displayColorPicker, setDisplayColorPicker] = useState(false)
+  //   const [color, setColor] = useState(initialColor)
 
-    // Update swatch color when we change color from outside picker
-    if (!displayColorPicker && color !== initialColor) {
-      setColor(initialColor)
-    }
+  //   // Update swatch color when we change color from outside picker
+  //   if (!displayColorPicker && color !== initialColor) {
+  //     setColor(initialColor)
+  //   }
 
-    /**
-     *Event when we click on the 'button
-     *
-     * @private
-     * @memberof MenuColorPicker
-     */
-    const handleClick = () => {
-      if (isDisabled !== true)
-        setDisplayColorPicker(!displayColorPicker)
-    }
+  //   /**
+  //    *Event when we click on the 'button
+  //    *
+  //    * @private
+  //    * @memberof MenuColorPicker
+  //    */
+  //   const handleClick = () => {
+  //     if (isDisabled !== true)
+  //       setDisplayColorPicker(!displayColorPicker)
+  //   }
 
-    /**
-     *Event when we close the picker
-     *
-     * @private
-     * @memberof MenuColorPicker
-     */
-    const handleClose = () => {
-      setDisplayColorPicker(false)
-      functionOnBlur(color)
-    }
+  //   /**
+  //    *Event when we close the picker
+  //    *
+  //    * @private
+  //    * @memberof MenuColorPicker
+  //    */
+  //   const handleClose = () => {
+  //     setDisplayColorPicker(false)
+  //     functionOnBlur(color)
+  //   }
 
-    /**
-     * event when we change color of picker
-     *
-     * @private
-     * @param {ColorResult} color
-     * @memberof MenuColorPicker
-     */
-    const handleChange = (_: ColorResult) => {
-      setColor(_.hex)
-      functionOnBlur(_.hex)
-    }
+  //   /**
+  //    * event when we change color of picker
+  //    *
+  //    * @private
+  //    * @param {ColorResult} color
+  //    * @memberof MenuColorPicker
+  //    */
+  //   const handleChange = (_: ColorResult) => {
+  //     setColor(_.hex)
+  //     functionOnBlur(_.hex)
+  //   }
 
-    // Style of button to open picker, popover containing picker & 'backgroung overlay' that close picker when clicked
-    const styles: { [x: string]: CSSProperties; } = {
-      color: {
-        width: '100%',
-        height: '1rem',
-        borderRadius: '2px',
-        background: `${color}`,
-      },
-      swatch: {
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        width: '100%',
-        height: '1.5rem',
-        padding: '5px',
-        background: '#fff',
-        borderRadius: '1px',
-        boxShadow: '0 0 0 1px rgba(124, 104, 104, 0.1)',
-        display: 'inline-block',
-      },
-      popover: {
-        position: 'absolute',
-        left: '-20%',
-        top: '20%',
-        zIndex: '2',
-      },
-      cover: {
-        position: 'fixed',
-        top: '0px',
-        right: '0px',
-        bottom: '0px',
-        left: '0px',
-      },
-    }
-    const list_colors = this._user_preferences.color.map(palette => palette.colors)
+  //   // Style of button to open picker, popover containing picker & 'backgroung overlay' that close picker when clicked
+  //   const styles: { [x: string]: CSSProperties; } = {
+  //     color: {
+  //       width: '100%',
+  //       height: '1rem',
+  //       borderRadius: '2px',
+  //       background: `${color}`,
+  //     },
+  //     swatch: {
+  //       cursor: isDisabled ? 'not-allowed' : 'pointer',
+  //       width: '100%',
+  //       height: '1.5rem',
+  //       padding: '5px',
+  //       background: '#fff',
+  //       borderRadius: '1px',
+  //       boxShadow: '0 0 0 1px rgba(124, 104, 104, 0.1)',
+  //       display: 'inline-block',
+  //     },
+  //     popover: {
+  //       position: 'absolute',
+  //       left: '-20%',
+  //       top: '20%',
+  //       zIndex: '2',
+  //     },
+  //     cover: {
+  //       position: 'fixed',
+  //       top: '0px',
+  //       right: '0px',
+  //       bottom: '0px',
+  //       left: '0px',
+  //     },
+  //   }
+  //   const list_colors = this._user_preferences.color.map(palette => palette.colors)
 
-    return (<Box>
-      <OSTooltip label={isDisabled ? textDisabled : ''}>
-        <Box style={styles.swatch} onClick={handleClick}>
-          <Box style={styles.color} />
-        </Box>
-      </OSTooltip>
-      {displayColorPicker ? <Box style={styles.popover}>
-        <Box style={styles.cover} onClick={handleClose} />
-        <Box display={'flex'}>
-          <SketchPicker color={color} onChange={handleChange} />
-          {this._user_preferences.color.length > 0 ? <SwatchesPicker colors={list_colors} onChange={handleChange} /> : <></>}
-        </Box>
-      </Box> : null}
-    </Box>
-    )
-  }
+  //   return (<Box>
+  //     <OSTooltip label={isDisabled ? textDisabled : ''}>
+  //       <Box style={styles.swatch} onClick={handleClick}>
+  //         <Box style={styles.color} />
+  //       </Box>
+  //     </OSTooltip>
+  //     {displayColorPicker ? <Box style={styles.popover}>
+  //       <Box style={styles.cover} onClick={handleClose} />
+  //       <Box display={'flex'}>
+  //         <SketchPicker color={color} onChange={handleChange} />
+  //         {this._user_preferences.color.length > 0 ? <SwatchesPicker colors={list_colors} onChange={handleChange} /> : <></>}
+  //       </Box>
+  //     </Box> : null}
+  //   </Box>
+  //   )
+  // }
 
   // PROTECTED METHODS ==================================================================
 

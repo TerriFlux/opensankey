@@ -14,6 +14,7 @@ import {
 
 import { CustomFaEyeCheckIcon, OSTooltip, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
 
 interface BaseComponentProps {
   new_data: Class_ApplicationDataOSP
@@ -25,7 +26,7 @@ interface BaseComponentPropsPlus {
 export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
-  const { t, icon_library, MenuColorPicker } = new_data_plus
+  const { t, icon_library } = new_data_plus
   const { icon_locked, icon_unlocked, icon_import_file_image } = icon_library
   const is_activated = new_data_plus.has_sankey_plus
 
@@ -340,7 +341,7 @@ export const NodeIconOSP: FC<BaseComponentPropsPlus> = ({
                     initialColor={(selected_nodes.length === 1 && selected_nodes[0].icon_color) ?
                       selected_nodes[0].icon_color :
                       '#ffffff'}
-                    functionOnBlur={(new_color) => {
+                    onColorChange={(new_color) => {
                       updateNodeIconColor(new_color)
                     }}
                   />

@@ -31,7 +31,7 @@ import React from 'react'
 import {
   MenuDraggable
 } from './deps/OpenSankey/components/topmenus/SankeyMenus'
-import { WrapperContentConfig } from './deps/OpenSankey/components/configmenus/MenuCommon'
+import { WrapperContentConfig,MenuConfigurationLinksTooltip,MenuConfigurationNodesTooltip } from './deps/OpenSankey/components/configmenus/MenuCommon'
 import {
   IType_DictHookRefSetterShowDialogComponents
 } from './deps/OpenSankey/types/MenuConfig'
@@ -63,9 +63,7 @@ import {
   ViewsConfig,
   ModalCreateUnitaryViewOSP,
 } from './components/SankeyPlusViews'
-import {
-  SankeyMenuConfigurationNodesTooltip
-} from './components/SankeyPlusMenuConfigurationNodesTooltip'
+
 import {
   ModalSelectionIconsOSP
 } from './components/SankeyPlusCatalogIcon'
@@ -73,7 +71,6 @@ import {
   NodeForeignObjectOSP
 } from './components/SankeyPlusForeignObject'
 import {
-  ButtonLinkContextAssignTag,
   MenuConfLinkApparenceDashedOSP,
 } from './components/SankeyPlusLink'
 import {
@@ -82,9 +79,6 @@ import {
 import {
   MenuConfigurationLinksTags
 } from './components/SankeyPlusMenuConfigurationLinksTags'
-import {
-  MenuConfigurationLinksTooltip
-} from './components/SankeyPlusMenuConfigurationLinksTooltip'
 import {
   SankeySettingsEditionElementTags
 } from './components/SankeyPlusMenuConfigurationTags'
@@ -251,13 +245,13 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     </WrapperContentConfig>,
 
     'node': <WrapperContentConfig title={t('Flux.IS')}><>
-      <SankeyMenuConfigurationNodesTooltip new_data={new_data_plus} />
+      <MenuConfigurationNodesTooltip new_data={new_data_plus} />
       <NodeHyperLinkOSP new_data_plus={new_data_plus} />
     </>
     </WrapperContentConfig>,
 
     'flow': <WrapperContentConfig title={t('Noeud.IS')}>
-      <MenuConfigurationLinksTooltip new_data={new_data_plus} />
+      <MenuConfigurationLinksTooltip app_data={new_data_plus} />
     </WrapperContentConfig>,
     'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
       <>

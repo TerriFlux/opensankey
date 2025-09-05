@@ -39,6 +39,7 @@ import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_Node
 
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
 
 export type FType_SankeySettingsEditionElementTags = {
   new_data: Class_ApplicationDataOSP,
@@ -77,7 +78,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, icon_library, MenuColorPicker } = new_data
+  const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible, icon_random, icon_palette_color } = icon_library
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
@@ -746,7 +747,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                               <Box>
                                 <MenuColorPicker
                                   initialColor={tag.color}
-                                  functionOnBlur={(new_color) => {
+                                  onColorChange={(new_color) => {
                                     handleTagColor(tag, new_color)
                                   }}
                                 /></Box>

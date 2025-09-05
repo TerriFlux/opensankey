@@ -23,6 +23,7 @@ import { OSMultiSelect } from '../deps/OpenSankey/components/configmenus/MenuCom
 import { listOptionSizeQuill } from './UtilsOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -40,7 +41,7 @@ export interface selected_type { 'label': string; 'value': string }
 export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
-  const { t, icon_library, MenuColorPicker } = new_data_plus
+  const { t, icon_library } = new_data_plus
   const { icon_add_element, icon_remove_element,  icon_to_the_left, icon_to_the_right, icon_text_vert_pos_top, icon_text_vert_pos_bottom } = icon_library
   const selected_zdt = new_data_plus.drawing_area.selected_containers_list
 
@@ -867,7 +868,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
         <MenuColorPicker
           isDisabled={disable_options}
           initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
-          functionOnBlur={(new_color) => {
+          onColorChange={(new_color) => {
             selected_zdt.map(d => d.color = new_color)
             redrawAndRefresh()
           }}
@@ -905,7 +906,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
           <MenuColorPicker
             isDisabled={!new_data_plus.has_sankey_plus && !valAllLabelBorderTransparent}
             initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
-            functionOnBlur={(new_color) => {
+            onColorChange={(new_color) => {
               selected_zdt.map(d => d.color_border = new_color)
               redrawAndRefresh()
             }}
@@ -929,10 +930,10 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
 }
 
 
-export const ContextZDTOSP: FC<BaseComponentPropsPlus> = (
-  { new_data_plus }
+export const ContextZDTOSP = (
+  { new_data_plus }:{new_data_plus:Class_ApplicationDataOSP}
 ) => {
-  const { t, MenuColorPicker, drawing_area } = new_data_plus
+  const { t, drawing_area } = new_data_plus
 
   const selected_zdt = new_data_plus.drawing_area.selected_containers_list
   const zdt_to_contextualise = new_data_plus.drawing_area.contextualised_container
@@ -1028,7 +1029,7 @@ export const ContextZDTOSP: FC<BaseComponentPropsPlus> = (
         <label style={{ margin: 0 }}>{t('LL.cfl')}</label>
         <MenuColorPicker
           initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
-          functionOnBlur={(new_color) => {
+          onColorChange={(new_color) => {
             selected_zdt.map(d => d.color = new_color)
             redrawAndRefresh()
           }}
