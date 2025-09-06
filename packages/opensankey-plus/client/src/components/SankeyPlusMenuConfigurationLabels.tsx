@@ -24,6 +24,7 @@ import { listOptionSizeQuill } from './UtilsOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
+import { default_font_size } from '../deps/OpenSankey/css/Theme'
 
 const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -830,7 +831,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
         readOnly={disable_options}
         style={{
           'height': '300px',
-          fontSize: '0.6rem',
+          fontSize: default_font_size,
           color: (disable_options) ? '#666666' : '',
           backgroundColor: (disable_options) ? '#cccccc' : '',
           overflowY: 'scroll'

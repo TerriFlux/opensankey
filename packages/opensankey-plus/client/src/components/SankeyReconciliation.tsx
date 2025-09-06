@@ -1,36 +1,14 @@
 // External libs
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  ChangeEvent,
-  FC
-} from 'react'
+import React, {useEffect,useState,useRef,ChangeEvent,FC} from 'react'
 import FileSaver from 'file-saver'
 
-import {
-  Alert,
-  AlertIcon,
-  Box,
-  Button,
-  Checkbox,
-  Collapse,
-  Divider,
-  Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
-  useDisclosure
+import {Alert,AlertIcon,Box,Button,Collapse,Divider,Input,Modal,
+  ModalBody,ModalCloseButton,ModalContent,ModalHeader,ModalOverlay,useDisclosure
 } from '@chakra-ui/react'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { default_font_size } from '../deps/OpenSankey/css/Theme'
 
-export interface IType_SupplyUseModelisationProd {
-  application_data_mfa: Class_ApplicationDataOSP,
-  launch: (path: string) => void
-}
+
 
 /**
  *
@@ -42,9 +20,12 @@ export interface IType_SupplyUseModelisationProd {
  * }
  * @return {*}
  */
-export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
+export const SupplyUseModelisationProd = ({
   application_data_mfa,
   launch
+}:{
+  application_data_mfa: Class_ApplicationDataOSP,
+  launch: (path: string) => void
 }) => {
   const { t } = application_data_mfa
   const { menu_configuration_osp } = application_data_mfa
@@ -485,7 +466,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
           </Box>
           <Input
             type="file"
-            fontSize='0.6rem'
+            fontSize={default_font_size}
             accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
             ref={_load_excel}
             onChange={setInputFile}
@@ -499,7 +480,7 @@ export const SupplyUseModelisationProd: FC<IType_SupplyUseModelisationProd> = ({
 
           <Input
             type="file"
-            fontSize='0.6rem'
+            fontSize='0.8rem'
             onChange={setLayoutFile}
           />
         </Box> */}
