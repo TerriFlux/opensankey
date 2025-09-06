@@ -7,12 +7,7 @@
 // All rights reserved for TerriFlux
 // ==================================================================================================
 
-
-import React, { CSSProperties, useState } from 'react'
-import { Box } from '@chakra-ui/react'
-import { ColorResult, SketchPicker, SwatchesPicker } from 'react-color'
-
-import { Class_ApplicationData, MenuColorPickerProps } from '../deps/OpenSankey/types/ApplicationData'
+import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON, default_save_JSON_options } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
@@ -24,7 +19,6 @@ import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
 import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
-import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 declare const window: Window &
   typeof globalThis & {
@@ -529,8 +523,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     if (this._has_sankey_plus && evtCtrlX) {
       // Prevent default event on ctrl + a
       evt.preventDefault()
-      // Create a new view from current displayed sankey
-      this.createNewView()
+      const view_id = makeId('view')
+      this.createNewView(view_id,true)
+      this._views[view_id].name = "Copie de "+this.drawing_area.name
+      this.setCurrentView(view_id)
     }
 
     // Changing view to is_master ---------------------------------------------------------------
@@ -584,25 +580,24 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @memberof Class_DrawingAreaOSP
    */
   public createNewView(
-    base_drawing_area: Class_DrawingArea | undefined = undefined
+    view_name:string, copy: boolean
   ) {
-    // If no base sankey is given, we take the currently active sankey
-    if (base_drawing_area === undefined)
-      base_drawing_area = this._drawing_area
     // If no view existed previously, we add the active sankey as master sankey
     if (this.views.length === 0) {
       this._views[default_main_sankey_id] = this._drawing_area
       this.pushViewIdInViewOrder(default_main_sankey_id)
     }
     // Create the new sankey
-    const new_drawing_area = this.createNewDrawingArea(makeId('view'))
-    new_drawing_area.copyFrom(base_drawing_area) // /!\ CopyFrom overwrites drawing area's name
-    new_drawing_area.name = "Copie de "+this.drawing_area.name
+    const new_drawing_area = this.createNewDrawingArea(view_name/*makeId('view')*/)
+    new_drawing_area.bypass_redraws = true
+    if (copy) new_drawing_area.copyFrom(this.drawing_area) // /!\ CopyFrom overwrites drawing area's name
+    //new_drawing_area.name = "Copie de "+this.drawing_area.name
     // Add new sankey to views
     this._views[new_drawing_area.id] = new_drawing_area
     this.pushViewIdInViewOrder(new_drawing_area.id)
     // Shown sankey = new sanke
-    this.setCurrentView(new_drawing_area.id)
+    //this.setCurrentView(new_drawing_area.id)
+    return new_drawing_area
   }
 
   /**
@@ -818,7 +813,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   public setCurrentViewToMaster() {
-    if (this.has_views && !this.is_view_master) {
+    if (!this.is_view_master) {
       this.setCurrentView(default_main_sankey_id)
     }
   }
@@ -863,6 +858,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         this.deleteCurrentOriginalView()
         this._drawing_area.delete() // Delete view
         this.setCurrentViewToMaster()
+        this.menu_configuration.updateAllMenuComponents()
+        this.menu_configuration_osp.updateComponentRelatedToViews()
       }
     }
   }

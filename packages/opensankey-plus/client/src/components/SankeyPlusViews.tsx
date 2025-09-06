@@ -51,6 +51,7 @@ import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { LevelTagFilter } from './Toolbar'
+import { decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 
 interface BaseComponentPropsPlus {
   new_data_plus: Class_ApplicationDataOSP
@@ -87,11 +88,11 @@ export const logo_view = <svg
  * }
  * @return {*}
  */
-export const BannerViewsOSP = ({app_data}:{app_data:Class_ApplicationDataOSP}) => {
+export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOSP }) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, icon_library,menu_configuration_osp } = app_data
+  const { t, icon_library, menu_configuration_osp } = app_data
   const { icon_add_element, icon_remove_element, icon_welcome, icon_next, icon_previous, icon_attr_view, icon_unit_view, icon_copy, icon_locked, icon_collapse_down, icon_collapse_up } = icon_library
   // Component updater ------------------------------------------------------------------
 
@@ -118,7 +119,7 @@ export const BannerViewsOSP = ({app_data}:{app_data:Class_ApplicationDataOSP}) =
   const is_view_master = app_data.is_view_master
   const has_view_before = app_data.has_view_before
   const has_view_after = app_data.has_view_after
-  const is_static = app_data
+  const is_static = app_data.is_static
 
   // Button to create a view ------------------------------------------------------------
 
@@ -457,28 +458,24 @@ export const BannerViewsOSP = ({app_data}:{app_data:Class_ApplicationDataOSP}) =
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
-
-      // Parcours tous les element de l'objet (contient le blob des fichiers mais aussi une variable length)
-      for (const i in files) {
-        const reader = new FileReader()
-        reader.onload = (() => {
-          return (e: ProgressEvent<FileReader>) => {
-            const file_content = String((e.target as FileReader).result)
-            const JSON_data = JSON.parse(file_content)
-            // Extract view of files
-            app_data.sendWaitingToast(
-              () => {
-                drawing_area_plus.bypass_redraws = true
-                app_data.extractViewsFromJSON(JSON_data as Type_JSON,true)
-                app_data.extractViewsFromJSON(JSON_data as Type_JSON,false)
-              })
-          }
-        })()
-        // Permet d'executer la transformation des blob en vues tout en evitant la var length
-        //   files : {0:Blob,1:Blob,2:...,n:Blob, length:n-1}
-        if (!isNaN(+i)) {
-          reader.readAsText(files[i])
-        }
+      for (let i = 0; i < files.length; i++) {
+        decompressUploadedFileUniversal(files[i]).then(JSON_data => {
+          // Extract view of files
+          app_data.sendWaitingToast(
+            () => {
+              drawing_area_plus.bypass_redraws = true
+              const v = app_data.createNewView(files[i].name,false)
+              // const drawing_area_view = app_data.createNewDrawingArea(files[i].name)
+              // drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
+              v.fromJSON(JSON_data as Type_JSON)
+              // drawing_area_view.nodePositioning.arrangeTrade(false)
+              // app_data.views[files[i].name] = drawing_area_view
+              // app_data.pushViewIdInViewOrder(files[i].name)
+              app_data.menu_configuration.updateAllMenuComponents()
+              app_data.menu_configuration_osp.updateComponentRelatedToViews()
+              app_data.menu_configuration.updateComponentSaveDiagramJSON()
+            })
+        })
       }
     }}
   />
@@ -537,7 +534,7 @@ export const BannerViewsOSP = ({app_data}:{app_data:Class_ApplicationDataOSP}) =
 
   const buttonShowBanner = <OSTooltip placement='bottom' label={(!has_sankey_plus) ? (t('Menu.sankeyOSPDisabled')) : ''}>
     <Button
-      isDisabled={!app_data.has_sankey_plus || !app_data.has_views}
+      isDisabled={!app_data.has_sankey_plus}
       variant={isOpen ? 'menutop_button_view_activated' : 'menutop_button'}
       size='sizeMenuTopButton'
       onClick={onToggle}
@@ -576,7 +573,7 @@ export const BannerViewsOSP = ({app_data}:{app_data:Class_ApplicationDataOSP}) =
  * @return {*}
  */
 export const SelecteurView = (
-  { new_data_plus }:{new_data_plus:Class_ApplicationDataOSP}
+  { new_data_plus }: { new_data_plus: Class_ApplicationDataOSP }
 ) => {
 
   // Data -------------------------------------------------------------------------------
@@ -632,7 +629,7 @@ export const SelecteurView = (
   </Select>
 
   const text_input = <ConfigMenuTextInput
-    default_value={cur_view.name }
+    default_value={cur_view.name}
     function_on_blur={(_) => {
       // Update text for links
       if ((_ !== undefined) && (_ !== null)) {
@@ -1505,9 +1502,9 @@ const TabImportExcelDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP
                 local_app_data.current.createUnitaryNewView(element)
               })
               const obj_view: Type_JSON = {}
-              local_app_data.current.views.forEach(v => obj_view[v.id] = v.toJSON(false,false,true))
-              new_data_plus.extractViewsFromJSON({ views: obj_view },true)
-              new_data_plus.extractViewsFromJSON({ views: obj_view },false)
+              local_app_data.current.views.forEach(v => obj_view[v.id] = v.toJSON(false, false, true))
+              new_data_plus.extractViewsFromJSON({ views: obj_view }, true)
+              new_data_plus.extractViewsFromJSON({ views: obj_view }, false)
               new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
             },
             {
