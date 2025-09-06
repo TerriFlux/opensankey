@@ -272,12 +272,12 @@ export class NodeDimensionsManager{
                   if (children_tags_ids && parent_tag_id) {
                     children_tags = children_tags_ids
                       .map(_ => {
-                        const child_tag_id = matching_tags_id[tagg_id][_] ?? _
+                        const child_tag_id = matching_tags_id[tagg_id] ? matching_tags_id[tagg_id][_] ?? _ : _
                         if (tagg.tags_dict[child_tag_id] === undefined)
                           tagg.addTag(child_tag_id, child_tag_id)
                         return tagg.tags_dict[child_tag_id]
                       })
-                    parent_tag = tagg.tags_dict[(matching_tags_id[tagg_id][parent_tag_id] ?? parent_tag_id)]
+                    parent_tag = tagg.tags_dict[(matching_tags_id[tagg_id] ? matching_tags_id[tagg_id][parent_tag_id] ?? parent_tag_id : parent_tag_id)]
                     
                     // If tags has been found,
                     // create a new dimension OR add parent & child relation to an existing dimension

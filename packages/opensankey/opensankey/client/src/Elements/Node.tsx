@@ -311,7 +311,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this.copyAttrFrom(_)
     this._tooltip_text = _._tooltip_text
     this._nodeTagsManager.copyTagsFrom(_)
-    this._nodeDimensionsManager.copyDimensionsFrom(_)
+    this.copyDimensionsFrom(_)
   }
 
   /**
@@ -360,7 +360,11 @@ export class Class_NodeElement extends ClassTemplate_Element {
   }
 
   public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
-    this._nodeDimensionsManager.copyDimensionsFrom(node_to_copy)
+    const json_object = {}
+    node_to_copy._nodeDimensionsManager.toJSON(json_object)
+    this._nodeDimensionsManager.fromJSON(json_object)
+    //this.copyDimensionsFrom(node_to_copy)
+    //this._nodeDimensionsManager.copyDimensionsFrom(node_to_copy)
   }
 
   // SAVING METHODS =====================================================================
