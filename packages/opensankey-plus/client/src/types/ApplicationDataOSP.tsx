@@ -784,6 +784,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         // we change view and don't want to save current modification
         if (id !== default_main_sankey_id) {
           // Update view with attr heredited from master
+          this._drawing_area.bypass_redraws = true
           this._drawing_area.updateFrom(this._views[default_main_sankey_id], drawing_area_plus.heredited_attr)
           this.options_save_json = default_save_JSON_options
           // Create a clone of current view's DA
@@ -797,6 +798,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         // Reset to Edition mode
         this._drawing_area.setToModeEdition(false)
         // Draw new-sankey
+        this._drawing_area.draw()
         this._drawing_area.draw()
 
         this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
