@@ -1,5 +1,4 @@
 import { extendTheme } from '@chakra-ui/react'
-import { ThemeOSP } from '../deps/OpenSankey+/css/ThemeOSP'
 import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 
 import {
@@ -42,6 +41,7 @@ import {
 } from './InputStyles'
 import { tabs_variant_preference, tabs_variant_preference_style, tabs_variant_preference_tags } from './TabStyle'
 import { cards_user, cards_user_import } from './CardsStyles'
+import { opensankey_theme } from '../deps/OpenSankey+/deps/OpenSankey/css/Theme'
 
 const _text_style_log = {
   fontFamily: 'Open Sans,sans-serif',
@@ -203,6 +203,6 @@ const deep_assign = (s: Type_JSON, t: Type_JSON) => {
   })
 }
 
-deep_assign(ThemeOSP, Theme)
+deep_assign(opensankey_theme, Theme)
 deep_assign(Theme_SA, Theme)
 export const Theme_SankeyApplication = extendTheme({ ...Theme })
