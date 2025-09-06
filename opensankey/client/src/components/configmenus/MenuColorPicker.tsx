@@ -1,5 +1,5 @@
-import { Box, HStack, Text, IconButton, Button } from '@chakra-ui/react'
-import React, { CSSProperties, FC, useState, useEffect } from 'react'
+import { Box, Text } from '@chakra-ui/react'
+import React, { CSSProperties, useState, useEffect } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
 import { OSTooltip } from './MenuCommon'
 
@@ -54,6 +54,7 @@ export const MenuColorPicker = ({
    * Utiliser l'EyeDropper natif du navigateur
    */
   const useEyeDropper = async () => {
+
     if (!window.EyeDropper || isDisabled) return
 
     try {
@@ -63,8 +64,7 @@ export const MenuColorPicker = ({
       setColor(newColor)
       onColorChange(newColor)
     } catch (error) {
-      // L'utilisateur a annulé ou une erreur s'est produite
-      console.log('EyeDropper cancelled or failed:', error)
+
     }
   }
 
@@ -136,47 +136,49 @@ export const MenuColorPicker = ({
         </Text>
       )}
 
-      <OSTooltip label={isDisabled ? disabledTooltip : `Cliquer pour changer la couleur`}>
-        <Box style={styles.swatch} onClick={handleClick}>
-          <Box style={styles.colorPreview} />
 
+      <Box style={styles.swatch} >
+        <OSTooltip label={isDisabled ? disabledTooltip : `Cliquer pour changer la couleur`}>
+          <Box style={styles.colorPreview} onClick={handleClick} />
+        </OSTooltip>
+        {/* Bouton EyeDropper */}
+        {showEyeDropper && (
+          <OSTooltip label={
+            !isEyeDropperSupported
+              ? "Pipette non supportée dans ce navigateur"
+              : isDisabled
+                ? disabledTooltip
+                : "Sélectionner une couleur à l'écran"
+          }>
+            <Box
+              onClick={useEyeDropper}
+            >✏️</Box>
+          </OSTooltip>
+        )}
+      </Box>
 
-          {/* Bouton EyeDropper */}
-          {showEyeDropper && (
-            <OSTooltip label={
-              !isEyeDropperSupported
-                ? "Pipette non supportée dans ce navigateur"
-                : isDisabled
-                  ? disabledTooltip
-                  : "Sélectionner une couleur à l'écran"
-            }>
-              <Box
-                onClick={useEyeDropper}
-              >✏️</Box>
-            </OSTooltip>
-          )}
-        </Box>
-      </OSTooltip>
 
       {/* Color Picker Popover */}
-      {displayColorPicker && (
-        <Box style={styles.popover}>
-          <Box style={styles.cover} onClick={handleClose} />
-          <SketchPicker
-            color={color}
-            onChange={handleChange}
-            disableAlpha={false}
-          />
-          {/* {this._user_preferences.color.length > 0 ? <SwatchesPicker colors={list_colors} onChange={handleChange} /> : <></>} */}
-        </Box>
-      )}
+      {
+        displayColorPicker && (
+          <Box style={styles.popover}>
+            <Box style={styles.cover} onClick={handleClose} />
+            <SketchPicker
+              color={color}
+              onChange={handleChange}
+              disableAlpha={false}
+            />
+            {/* {this._user_preferences.color.length > 0 ? <SwatchesPicker colors={list_colors} onChange={handleChange} /> : <></>} */}
+          </Box>
+        )
+      }
 
-      {/* Message si EyeDropper n'est pas supporté */}
+      {/* Message si EyeDropper n'est pas supporté
       {showEyeDropper && !isEyeDropperSupported && (
         <Text fontSize="xs" color="orange.500" mt={1}>
           💡 La pipette nécessite Chrome/Edge 95+ ou Firefox avec flag activé
         </Text>
-      )}
-    </Box>
+      )} */}
+    </Box >
   )
 }
