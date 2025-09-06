@@ -1062,10 +1062,10 @@ export class Class_Sankey {
     nodes_list
       .forEach(node => {
         if (!keep_sibling && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
-          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON()
+          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON({ 'only_visible_elements': only_visible_elements})
           return
         }
-        json_object_nodes[node.id] = node.toJSON()
+        json_object_nodes[node.id] = node.toJSON({ 'only_visible_elements': only_visible_elements})
       })
     // Add links
     json_object['links'] = json_object_links
