@@ -5,9 +5,6 @@ import {
 } from '@chakra-ui/anatomy'
 import { createMultiStyleConfigHelpers, defineStyle, extendTheme } from '@chakra-ui/react'
 
-
-
-// Fonction helper pour créer les multi-style configs
 const createHelpers = () => ({
   tag: createMultiStyleConfigHelpers(tagAnatomy.keys),
   slider: createMultiStyleConfigHelpers(sliderAnatomy.keys),
@@ -50,7 +47,7 @@ const COLORS = {
   }
 }
 
-const default_font_size = '0.7rem'
+export const default_font_size = '0.7rem'
 
 // Styles de base communs
 const BASE_STYLES = {
