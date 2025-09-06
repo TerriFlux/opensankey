@@ -1,11 +1,10 @@
-import { Class_Sankey } from '../types/Sankey';
 import { getNumberFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils';
 import { Class_LinkElement } from './Link';
 import { Class_LinkAttribute, AttributeKey as LinkAttributeKey } from './LinkAttributes';
 import { AttributeTypes as LinkAttributeTypes, LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig';
 import { Class_NodeElement } from './Node';
 import { Class_NodeAttribute, default_dx, default_dy } from './NodeAttributes';
-import { AttributeTypes as NodeAttributeTypes, AttributeKey as NodeAttributeKey, NODES_ATTRIBUTES_CONFIG } from './NodeAttributesConfig';
+import { AttributeTypes as NodeAttributeTypes, AttributeKey as NodeAttributeKey, NODES_ATTRIBUTES_CONFIG, AttributeKey } from './NodeAttributesConfig';
 
 
 export class Class_LinkStyle extends Class_LinkAttribute {
@@ -40,13 +39,22 @@ export class Class_LinkStyle extends Class_LinkAttribute {
     }
   }
 
+  public copyFrom(element: Class_LinkStyle) {
+    Object.keys(element._attributes).forEach(key => {
+      //@ts-expect-error xxx
+      this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
+    })
+    this._customisable_attribute = {...element._customisable_attribute}
+  }
+
+
   protected shouldSaveAttribute(
-    key: LinkAttributeKey, 
+    key: LinkAttributeKey,
     value: any,
-    link:Class_LinkElement|null,
-    default_style:Class_LinkStyle| null
+    link: Class_LinkElement | null,
+    default_style: Class_LinkStyle | null
   ) {
-    if (default_style) { 
+    if (default_style) {
       return value !== undefined && this._customisable_attribute[key] && value !== default_style[key]
     }
     return value !== undefined && this._customisable_attribute[key] && value !== LINKS_ATTRIBUTES_CONFIG[key].default
@@ -72,10 +80,10 @@ export class Class_LinkStyle extends Class_LinkAttribute {
   }
 
   public fromJSON(json_local_object: Type_JSON, link: Class_LinkElement | null, default_style: Class_LinkStyle | null) {
-    super.fromJSON(json_local_object,link,default_style)
-    Object.keys(this._attributes).forEach(([jsonKey, attrKey]) => {
-      if (json_local_object[jsonKey] !== undefined) {
-        this._customisable_attribute[attrKey as LinkAttributeKey] = true
+    super.fromJSON(json_local_object, link, default_style)
+    Object.keys(this._attributes).forEach(key => {
+      if (this._attributes[key as LinkAttributeKey] !== undefined) {
+        this._customisable_attribute[key as LinkAttributeKey] = true
       }
     })
   }
@@ -152,17 +160,29 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     }
   }
 
+  public copyFrom(element: Class_NodeStyle) {
+    Object.keys(element._attributes).forEach(key => {
+      //@ts-expect-error xxx
+      this._attributes[key as NodeAttributeKey] = element._attributes[key as NodeAttributeKey]
+    })
+    this._customisable_attribute = {...element._customisable_attribute}
+
+    this._position.type = element.position.type
+    this._position.dx = element.position.dx
+    this._position.dy = element.position.dy
+  }
+
   // =================== OVERRIDE METHODS ===================
   /**
    * Override: condition spécifique pour les styles
    */
   protected shouldSaveAttribute(
-    key: NodeAttributeKey, 
+    key: NodeAttributeKey,
     value: any,
-    node:Class_NodeElement|null,
-    default_style:Class_NodeStyle| null
+    node: Class_NodeElement | null,
+    default_style: Class_NodeStyle | null
   ) {
-    if (default_style) { 
+    if (default_style) {
       return value !== undefined && this._customisable_attribute[key] && value !== default_style[key]
     }
     return value !== undefined && this._customisable_attribute[key] && value !== NODES_ATTRIBUTES_CONFIG[key].default
@@ -171,7 +191,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   /**
    * Override: fromJSON avec gestion des customisable_attribute + position
    */
-  public fromJSON(json_local_object: Type_JSON, node: Class_NodeElement | null, default_style:Class_NodeStyle| null): void {
+  public fromJSON(json_local_object: Type_JSON, node: Class_NodeElement | null, default_style: Class_NodeStyle | null): void {
     // 1. Appeler la logique parente (fait tout le mapping)
     super.fromJSON(
       json_local_object,
@@ -195,8 +215,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   /**
    * Override: toJSON avec ajout des informations de position
    */
-  public toJSON(node:Class_NodeElement|null,default_style:Class_NodeStyle| null): Type_JSON {
-    const json_object = super.toJSON(null,default_style)
+  public toJSON(node: Class_NodeElement | null, default_style: Class_NodeStyle | null): Type_JSON {
+    const json_object = super.toJSON(null, default_style)
 
     // Ajouter les informations de position
     if (this.position.type) json_object['position'] = this.position.type
@@ -330,7 +350,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
   },
   NodeExportCloseStyle: {
     config: {
-      'name_label_vert' : 'bottom'
+      'name_label_vert': 'bottom'
     },
     position: {
       'dx': 100,
@@ -400,22 +420,22 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
 export type NodeStyleKey = keyof typeof nodeStyleConfigs
 export const product_sector_styles: readonly NodeStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
 export const node_exchanges_style: readonly NodeStyleKey[] = [
-    'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
-    'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
-  ] as const
+  'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
+  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
+] as const
 export const node_unitary_styles: readonly NodeStyleKey[] = [
-  'SankeyUnitaryNodeOutputStyle','SankeyUnitaryNodeInputStyle','SankeyUnitaryNodeStyle'] as const
+  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryNodeStyle'] as const
 
 // Vous aurez besoin d'un équivalent de LINKS_ATTRIBUTES_CONFIG pour les liens
 // En supposant qu'il existe, sinon remplacez par le type approprié
 type LinkStyleConfig = Partial<{
-    [K in LinkAttributeKey]: LinkAttributeTypes[K] // Adaptez selon votre config de liens
-  }>
+  [K in LinkAttributeKey]: LinkAttributeTypes[K] // Adaptez selon votre config de liens
+}>
 
 // Type pour un élément de configuration de style de lien (sans id)
 interface LinkStyleConfigItem {
-    config: LinkStyleConfig
-  }
+  config: LinkStyleConfig
+}
 
 // Type pour le dictionnaire complet
 export type LinkStyleConfigsDict = Record<string, LinkStyleConfigItem>
@@ -483,8 +503,8 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
 export type LinkStyleKey = keyof typeof linkStyleConfigs
 export const link_exchanges_style: readonly NodeStyleKey[] = [
   'LinkImportExportAboveBelowStyle', 'LinkExportCloseStyle', 'LinkImportCloseStyle', 'LinkImportExportCloseStyle',
-  'LinkImportAboveStyle','LinkExportBelowStyle'
+  'LinkImportAboveStyle', 'LinkExportBelowStyle'
 ] as const
 export const link_unitary_styles: readonly NodeStyleKey[] = [
-  'LinkInUnitaryStyle','LinkOutUnitaryStyle'
+  'LinkInUnitaryStyle', 'LinkOutUnitaryStyle'
 ] as const

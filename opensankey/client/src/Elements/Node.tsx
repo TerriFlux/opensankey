@@ -388,9 +388,15 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this._nodeDimensionsManager.toJSON(json_object)
 
     // 🔄 LINKS JSON - RÉINTÉGRÉ DIRECTEMENT  
-    json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
-    json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
-    json_object['links_order'] = this._links_order.map(link => link.id)
+    if (kwargs && kwargs['only_visible_elements']) {
+      json_object['inputLinksId'] = this.input_links_list.filter(l=>l.is_visible).map(l => l.id)
+      json_object['outputLinksId'] = this.output_links_list.filter(l=>l.is_visible).map(l => l.id)
+      json_object['links_order'] = this._links_order.filter(l=>l.is_visible).map(link => link.id)
+    } else {
+      json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
+      json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
+      json_object['links_order'] = this._links_order.map(link => link.id)
+    }
   }
 
   /**
@@ -1641,7 +1647,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
       super.is_visible &&
       this.are_related_node_tags_selected &&
       this.are_related_dimensions_selected &&
-      (this.are_links_visibilities_ok || this.orphan_node_visible)
+      this.are_links_visibilities_ok
     )
   }
 
@@ -1892,7 +1898,8 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   private checkIfLinksVisibilitiesAreOK() {
     if (this.input_links_list.length + this.output_links_list.length == 0) {
-      return false
+      if (this.orphan_node_visible) return true
+      else return false
     }
     const input_links_visible = this.input_links_list.filter(link =>
       link.is_not_zero &&

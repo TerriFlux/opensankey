@@ -344,13 +344,13 @@ export class Class_LinkAttribute extends LinkAttributeTypeScript {
       if (json_local_object[key] !== undefined) {
         if ((link != null && json_local_object[key] !== link.getStyleProperty(key))) {
           //@ts-expect-error JSON assignment    
-          this._attributes[attrKey] = json_local_object[jsonKey]
+          this._attributes[key] = json_local_object[key]
         } else if (link == null && default_style && json_local_object[key] !== default_style[key]) {
           //@ts-expect-error JSON assignment    
-          this._attributes[attrKey] = json_local_object[jsonKey]
+          this._attributes[key] = json_local_object[key]
         } else if (link == null && json_local_object[key] !== LINKS_ATTRIBUTES_CONFIG[key].default) {
           //@ts-expect-error JSON assignment    
-          this._attributes[attrKey] = json_local_object[key]
+          this._attributes[key] = json_local_object[key]
         }
       }
     })
