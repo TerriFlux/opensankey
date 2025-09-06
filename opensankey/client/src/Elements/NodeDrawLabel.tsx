@@ -184,7 +184,9 @@ export class NodeDrawNameLabel {
         .on('input', (evt) => { 
           // Access node through closure rather than 'this'
           const node = this._node
+          this._node.sankey.drawing_area.bypass_redraws = true
           node.name = evt.target.value 
+          this._node.sankey.drawing_area.bypass_redraws = false
         })
         .on('blur', () => this.setInputLabelInvisible())
 
