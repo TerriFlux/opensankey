@@ -119,7 +119,7 @@ export const resources_app_elements = {
         animate: 'Launch animation',
         create_tied_zdt: 'Create a container tied to selected nodes',
         SND: 'Select descendant nodes of selected nodes',
-        osp_context:'Opensankey+\'s features',
+        osp_context:'Actions',
 
         tabs: {
           'icon': 'Icon',
@@ -546,7 +546,7 @@ export const resources_app_elements = {
         animate: 'Lancer animation',
         create_tied_zdt: 'Créer un cadre géométrique',
         SND: 'Selectionne tous les descendants',
-        osp_context:'Fonctionnalité d\'OpenSankey+',
+        osp_context:'Actions',
         tabs: {
           'icon': 'Icône',
           'illustration': 'Illustration',
