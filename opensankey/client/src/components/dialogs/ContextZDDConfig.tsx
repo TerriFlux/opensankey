@@ -6,56 +6,53 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
   structure: [
     {
       type: 'button',
-      actionName: 'from_new'
+      actionName: 'fromNew'
     },
     {
       type: 'submenu',
       titleKey: 'Positionnement',
-      actions: [
-        { actionName: 'computeAutoPosition' },
-        { actionName: 'toggleParametricMode' },
-        { actionName: 'toggleAutoX' },
-        { actionName: 'setTradeClose' },
-        { actionName: 'setTradeOpen' },
-        { actionName: 'arrangeNodesToGrid' }
+      children: [
+        { type: 'button', actionName: 'computeAutoPosition' },
+        { type: 'button', actionName: 'toggleParametricMode' },
+        { type: 'button', actionName: 'toggleAutoX' },
+        { type: 'button', actionName: 'setTradeClose' },
+        { type: 'button', actionName: 'setTradeOpen' },
+        { type: 'button', actionName: 'arrangeNodesToGrid' }
       ]
     },
     {
       type: 'submenu',
       titleKey: 'ZoneDessin',
-      actions: [
-        { actionName: 'bgGrid' },
-        { actionName: 'maskLegend' }
+      children: [
+        { type: 'button', actionName: 'bgGrid' },
+        { type: 'button', actionName: 'maskLegend' }
       ]
     },
     {
       type: 'submenu',
       titleKey: 'GestionCouleurs',
-      actions: [
-        { actionName: 'applyRandomNodeColors' },
-        { actionName: 'applyRandomLinkColors' },
-        { actionName: 'resetNodeColors' },
-        { actionName: 'resetLinkColors' }
+      children: [
+        { type: 'button', actionName: 'applyRandomNodeColors' },
+        { type: 'button', actionName: 'applyRandomLinkColors' },
+        { type: 'button', actionName: 'resetNodeColors' },
+        { type: 'button', actionName: 'resetLinkColors' }
       ]
     },
     {
       type: 'submenu',
       titleKey: 'Style',
-      actions: [
-        { actionName: 'openNodeVisualStyleModal' },
-        { actionName: 'openNodeLabelsStyleModal' },
-        { actionName: 'openLinkVisualStyleModal' },
-        { actionName: 'openLinkLabelsStyleModal' }
+      children: [
+        { type: 'button', actionName: 'openNodeVisualStyleModal' },
+        { type: 'button', actionName: 'openNodeLabelsStyleModal' },
+        { type: 'button', actionName: 'openLinkVisualStyleModal' },
+        { type: 'button', actionName: 'openLinkLabelsStyleModal' }
       ]
     }
   ],
 
-  // Configuration des actions (votre ZDD_CONFIG existant)
   actions: {
-    from_new: {
+    fromNew: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Empty diagram',
         fr: 'Nouveau diagramme'
@@ -67,9 +64,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     },
 
     bgGrid: {
-      type: 'action',
-      showCheck: true,
-      toggle: false,
+      type: 'toggle',
       labels: {
         en: 'Grid',
         fr: 'Quadrillage'
@@ -77,13 +72,13 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       tooltips: {
         en: 'Show or hide the background grid',
         fr: 'Afficher ou masquer la grille de fond'
-      }
+      },
+      getToggleValue: 'bgGridValue',
+      showCheck: true
     },
 
     maskLegend: {
       type: 'toggle',
-      showCheck: false,
-      toggle: true,
       labels: {
         en: 'Legend',
         fr: 'Légende'
@@ -101,13 +96,12 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       tooltips: {
         en: 'Toggle the visibility of the legend',
         fr: 'Basculer la visibilité de la légende'
-      }
+      },
+      getToggleValue: 'maskLegendValue'
     },
 
     computeAutoPosition: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Auto position',
         fr: 'Positionnement auto'
@@ -120,8 +114,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     arrangeNodesToGrid: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Align to grid',
         fr: 'Aligner sur grille'
@@ -134,11 +126,9 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     toggleParametricMode: {
       type: 'toggle',
-      showCheck: false,
-      toggle: true,
       labels: {
-        en: 'Position mode',
-        fr: 'Mode position'
+        en: 'Absolute Coordinate',
+        fr: 'Coordonnées absolues'
       },
       labelsToggle: {
         en: {
@@ -153,13 +143,12 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       tooltips: {
         en: 'Toggle between parametric and absolute positioning mode',
         fr: 'Basculer entre le mode paramétrique et absolu'
-      }
+      },
+      getToggleValue: 'toggleParametricModeValue'
     },
 
     toggleAutoX: {
       type: 'toggle',
-      showCheck: false,
-      toggle: true,
       labels: {
         en: 'Auto X position',
         fr: 'Position X auto'
@@ -177,13 +166,12 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       tooltips: {
         en: 'Toggle automatic horizontal positioning of nodes',
         fr: 'Basculer le positionnement horizontal automatique des nœuds'
-      }
+      },
+      getToggleValue: 'toggleAutoXValue'
     },
 
     setTradeClose: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Import/export close',
         fr: 'Import/export proche'
@@ -196,8 +184,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     setTradeOpen: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Import/export top/bottom',
         fr: 'Import/export haut/bas'
@@ -210,8 +196,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     applyRandomNodeColors: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Random node colors',
         fr: 'Couleurs aléatoires nœuds'
@@ -224,8 +208,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     applyRandomLinkColors: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Random link colors',
         fr: 'Couleurs aléatoires flux'
@@ -238,8 +220,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     resetNodeColors: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Default node colors',
         fr: 'Couleurs par défaut nœuds'
@@ -252,8 +232,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     resetLinkColors: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Default link colors',
         fr: 'Couleurs par défaut flux'
@@ -266,8 +244,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     openNodeVisualStyleModal: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Node appearance',
         fr: 'Formes des nœuds'
@@ -280,8 +256,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     openNodeLabelsStyleModal: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Node labels',
         fr: 'Libellés des nœuds'
@@ -294,8 +268,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     openLinkVisualStyleModal: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Flow appearance',
         fr: 'Formes des flux'
@@ -308,8 +280,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
 
     openLinkLabelsStyleModal: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Flow labels',
         fr: 'Libellés des flux'
@@ -321,7 +291,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     }
   },
 
-  // Traductions pour les titres des sections
   sectionTitles: {
     ZoneDessin: {
       en: 'Drawing zone',
@@ -355,7 +324,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const getNodeStyle = () => sankey.node_styles_dict['default']
 
   return {
-    from_new: () => app_data.reinitialization(),
+    fromNew: () => app_data.reinitialization(),
     bgGrid: () => drawing_area.bgGrid(),
     bgGridValue: () => drawing_area.grid_visible,
     maskLegend: () => drawing_area.maskLegend(),
@@ -378,4 +347,3 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     openLinkLabelsStyleModal: () => ref_setter_show_modal_styles_links_labels.current(true)
   }
 }
-export type ZDDModifierType = typeof createZDDModifier

@@ -26,22 +26,23 @@
 
 // Local modules
 import { Class_NodeElement } from './Node'
-import { 
-  Class_LevelTag} from '../types/Tag'
+import {
+  Class_LevelTag
+} from '../types/Tag'
 import { Class_LevelTagGroup } from '../types/TagGroup'
 import { Class_NodeDimension } from './NodeDimension'
-import { 
-  Type_JSON, 
-  getBooleanFromJSON, 
-  getJSONOrUndefinedFromJSON, 
-  getStringListOrUndefinedFromJSON, 
-  getStringOrUndefinedFromJSON 
+import {
+  Type_JSON,
+  getBooleanFromJSON,
+  getJSONOrUndefinedFromJSON,
+  getStringListOrUndefinedFromJSON,
+  getStringOrUndefinedFromJSON
 } from '../types/Utils'
 
 /**
  * Class that handles all dimension management operations for NodeElement
  */
-export class NodeDimensionsManager{
+export class NodeDimensionsManager {
 
   private _node: Class_NodeElement
 
@@ -53,7 +54,7 @@ export class NodeDimensionsManager{
 
   public cleanForDeletion() {
     const dimensionsData = this._node.internalDimensionsData
-    
+
     // Remove dims
     dimensionsData.leveltaggs_as_antitagged.forEach(tag => tag.removeAntiTaggedRef(this._node))
     dimensionsData.leveltaggs_as_antitagged = []
@@ -157,7 +158,7 @@ export class NodeDimensionsManager{
           }
         }
       })
-    
+
     // Check antitags
     node_to_copy.level_taggs_list
       .forEach((level_tagg_to_copy) => {
@@ -174,9 +175,9 @@ export class NodeDimensionsManager{
 
   public toJSON(json_object: Type_JSON) {
     const dimensionsData = this._node.internalDimensionsData
-    
+
     let dimensions: { [_: string]: Type_JSON } = {}
-    
+
     // On parse les tags groupes et on écrit la dimension pour ce tag groupe.
     // Pour une dimension dans le json peut correspondre plusieurs class_NodeDimension correspondant aux noeuds multi niveaux
     const all_child_taggs = [...new Set(Object.values(dimensionsData.dimensions_as_child).map(dim => dim.related_level_tagg.id))]
@@ -197,7 +198,7 @@ export class NodeDimensionsManager{
           }
         })
     })
-    
+
     // we write parent dimensions for which the node is a root.
     const parent_dimensions = Object.fromEntries(
       Object.values(dimensionsData.dimensions_as_parent).filter(dim => !all_child_taggs.includes(dim.parent_level_tag.group.id))
@@ -207,7 +208,7 @@ export class NodeDimensionsManager{
         ])
     )
     dimensions = { ...dimensions, ...parent_dimensions }
-    
+
     // Dimensions - antitag
     dimensionsData.leveltaggs_as_antitagged
       .forEach(leveltagg => {
@@ -216,7 +217,7 @@ export class NodeDimensionsManager{
         }
         dimensions[leveltagg.id]['antitag'] = true
       })
-    
+
     // Dimension
     if (Object.keys(dimensions).length > 0) json_object['dimensions'] = dimensions
   }
@@ -232,7 +233,7 @@ export class NodeDimensionsManager{
     if (dimensions_as_JSON && Object.keys(dimensions_as_JSON).length > 1) {
       delete dimensions_as_JSON['Primaire']
     }
-    
+
     // For each dimension in dimensions JSON Struct, create the parent / child relation
     if (dimensions_as_JSON) {
       Object.keys(dimensions_as_JSON)
@@ -249,7 +250,7 @@ export class NodeDimensionsManager{
               const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
               const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
               const anti_tag = getBooleanFromJSON(dimension_as_json, 'antitag', false)
-              
+
               // Case 1 : We found parent and level ids -> get or create related tags
               if (
                 (parent_id !== undefined) &&
@@ -260,12 +261,12 @@ export class NodeDimensionsManager{
                 // Get parent
                 parent_id = matching_nodes_id[parent_id] ?? parent_id
                 const parent = this._node.sankey.nodes_dict[parent_id] ?? this._node.sankey.addNewNode(parent_id, parent_id)
-                
+
                 // Get child & parent tags
                 if (parent) {
                   let children_tags: Class_LevelTag[] | undefined
                   let parent_tag: Class_LevelTag | undefined
-                  
+
                   // Use tags id in priority if existing
                   const children_tags_ids = getStringListOrUndefinedFromJSON(dimension_as_json, 'children_tags')
                   const parent_tag_id = getStringOrUndefinedFromJSON(dimension_as_json, 'parent_tag')
@@ -278,7 +279,7 @@ export class NodeDimensionsManager{
                         return tagg.tags_dict[child_tag_id]
                       })
                     parent_tag = tagg.tags_dict[(matching_tags_id[tagg_id] ? matching_tags_id[tagg_id][parent_tag_id] ?? parent_tag_id : parent_tag_id)]
-                    
+
                     // If tags has been found,
                     // create a new dimension OR add parent & child relation to an existing dimension
                     if (children_tags && parent_tag) {
@@ -354,6 +355,9 @@ export class NodeDimensionsManager{
       if (!this._node.master_node) {
         _.removeNodeAsParent(this._node)
       }
+      // //if (this._node.master_node == undefined) {
+      // _.removeNodeAsParent(this._node)
+      // //}
     }
   }
 
@@ -364,6 +368,9 @@ export class NodeDimensionsManager{
       if (!this._node.master_node) {
         _.removeNodeFromChildren(this._node)
       }
+      // //if (this._node.master_node == undefined) {
+      // _.removeNodeFromChildren(this._node)
+      // //}
     }
   }
 
@@ -397,7 +404,7 @@ export class NodeDimensionsManager{
    */
   public checkIfRelatedDimensionsAreSelected(): boolean {
     const dimensionsData = this._node.internalDimensionsData
-    
+
     // Draw by default if there is no dimensions
     // that relates to this node
     if (
@@ -407,18 +414,18 @@ export class NodeDimensionsManager{
     ) {
       return true
     }
-    
+
     // First check if activated tag group is in antitaggs
     const is_antitagged = (dimensionsData.leveltaggs_as_antitagged
       .filter(tagg => tagg.activated)
       .length > 0)
-    
+
     // If there is any dimension - check them
     let has_activated_dimensions: boolean = false
     let ok_activated_dimensions: boolean = true
     let has_forced_dimensions: boolean = false
     let ok_forced_dimensions: boolean = true
-    
+
     // Check dimensions where node is tagged as a child
     const group_to_children_dim: { [_: string]: Class_NodeDimension[] } = {}
     const all_child_taggs = [...new Set(Object.values(dimensionsData.dimensions_as_child)
@@ -431,7 +438,7 @@ export class NodeDimensionsManager{
         }
         return dim.related_level_tagg.id
       }))]
-    
+
     all_child_taggs.forEach(child_tagg => {
       let child_tag_activated_dimensions = false
       let child_ok_forced_dimensions = true
@@ -449,7 +456,7 @@ export class NodeDimensionsManager{
       ok_activated_dimensions = ok_activated_dimensions && child_tag_activated_dimensions
       ok_forced_dimensions = ok_forced_dimensions && child_ok_forced_dimensions
     })
-    
+
     // Check dimensions where node is tagged as a parent
     this.dimensions_as_parent_pure
       .forEach(dim => {
@@ -527,7 +534,7 @@ export class NodeDimensionsManager{
   public get level_tags_list() {
     const dimensionsData = this._node.internalDimensionsData
     const level_tags_list: Class_LevelTag[] = []
-    
+
     Object.values(dimensionsData.dimensions_as_parent)
       .forEach(dimension => {
         level_tags_list.push(dimension.parent_level_tag as Class_LevelTag)
@@ -536,7 +543,7 @@ export class NodeDimensionsManager{
       .forEach(dimension => {
         level_tags_list.push(dimension.child_level_tag as Class_LevelTag)
       })
-    
+
     return [...new Set(level_tags_list)]
   }
 

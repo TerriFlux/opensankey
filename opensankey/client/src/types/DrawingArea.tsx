@@ -717,18 +717,23 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public closeAllContextMenus() {
-    // Reset contextulised elements
+    const just_closed = this.node_contextualised != undefined || 
+      this.link_contextualised != undefined || 
+      this.is_drawing_area_contextualised != false ||
+      this.contextualised_container != undefined
+
     this.node_contextualised = undefined
     this.link_contextualised = undefined
     this.is_drawing_area_contextualised = false
+    this.contextualised_container = undefined
     // Update components
     this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
     this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
     this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
     // Reset contextualised elements
     this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
-    // Update components
-    this.contextualised_container = undefined
+    
+    return just_closed
   }
 
 
@@ -1707,6 +1712,7 @@ export class Class_DrawingArea {
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO Ajouter déclemenchement editeur nom de noeud
+    this._selection_zone.reset()
   }
 
   /**
@@ -1831,7 +1837,7 @@ export class Class_DrawingArea {
     else if (this.isInSelectionMode()) {
       if (event.button === 0) {
         // Close context menus
-        this.closeAllContextMenus()
+
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
         mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
@@ -1985,7 +1991,8 @@ export class Class_DrawingArea {
       }
     } else if (this.isInSelectionMode() && event.button == 0) {
       if ((!event.shiftKey) && (!event.ctrlKey)) {
-        this.purgeSelection()
+        const just_closed = this.closeAllContextMenus()
+        if (!just_closed) this.purgeSelection()
       }
       // Select element inside the selection zone & reset it (hide the zone)
       const nb_type_el_sel = this._selection_zone.selectElementsInside()

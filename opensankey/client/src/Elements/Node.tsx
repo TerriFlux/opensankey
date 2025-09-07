@@ -1094,7 +1094,9 @@ export class Class_NodeElement extends ClassTemplate_Element {
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
-            }
+            } /*else {
+              this._display.position.y =
+            }*/
             if (this.position_auto_x) {
               this._display.position.x = this._display.position.u * this.position_dx
             }

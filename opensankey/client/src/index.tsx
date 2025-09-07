@@ -52,7 +52,9 @@ import {
 } from './components/welcome/ModalWelcome'
 import { opensankey_theme } from './css/Theme'
 import { createZDDModifier, ZDD_MENU_CONFIG } from './components/dialogs/ContextZDDConfig'
-import { LINK_MENU_CONFIG } from './components/dialogs/ContextLinkConfig'
+import { createLinkModifier, LINK_MENU_CONFIG } from './components/dialogs/ContextLinkConfig'
+import { createNodeModifier } from './components/dialogs/NodeActions'
+import { NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
 
 // CONSTANTS =========================================================================================
 
@@ -80,12 +82,12 @@ root.render(
       // Welcome modal
       ModalWelcome={ModalWelcomeBuilder}
 
-      // BackEnd
       createZDDModifier={createZDDModifier}
       ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
-      //@ts-expect-error xxx
       createLinkModifier={createLinkModifier}
       LINK_MENU_CONFIG={LINK_MENU_CONFIG}
+      NODE_MENU_CONFIG={NODE_MENU_CONFIG}
+      createNodeModifier={(app_data) => createNodeModifier(app_data)}
     />
   </ChakraProvider>
 )

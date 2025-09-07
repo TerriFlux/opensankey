@@ -283,6 +283,7 @@ interface NodeStylePosition {
 
 // Type pour un élément de configuration de style (sans id)
 interface NodeStyleConfigItem {
+  name: string,
   config: NodeStyleConfig
   position?: NodeStylePosition
 }
@@ -294,14 +295,17 @@ export type NodeStyleConfigsDict = Record<string, NodeStyleConfigItem>
 
 export const nodeStyleConfigs: NodeStyleConfigsDict = {
   NodeProductStyle: {
+    name: 'Produit',
     config: { 'shape_type': 'ellipse' },
     position: {}
   },
   NodeSectorStyle: {
+    name: 'Secteur',
     config: { 'shape_type': 'rect' },
     position: {}
   },
   NodeImportExportCloseStyle: {
+    name: 'Import export collés',
     config: {
       'name_label_is_visible': false,
       'shape_visible': false,
@@ -316,6 +320,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   NodeImportExportAboveBelowStyle: {
+    name: 'Import export dessus dessous',
     config: {
       'shape_min_width': 40,
       'name_label_is_visible': true,
@@ -331,13 +336,15 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   NodeImportCloseStyle: {
+    name: 'Import collés',
     config: {},
     position: {
       'dx': -100,
       'dy': -50
     }
   },
-  NodeImportAboveStyle: {
+  NodeImportAboveStyle: {    
+    name: 'Import au dessus',
     config: {
       'name_label_horiz': 'left',
       'value_label_horiz': 'left',
@@ -349,6 +356,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   NodeExportCloseStyle: {
+    name: 'Export collés',
     config: {
       'name_label_vert': 'bottom'
     },
@@ -358,6 +366,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   NodeExportBelowStyle: {
+    name: 'Export au dessous',
     config: {
       'name_label_horiz': 'right',
       'value_label_horiz': 'right',
@@ -369,11 +378,13 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   NodeUnitaryStyle: {
+    name: "Unitaire",
     config: {
       'name_label_is_visible': false
     }
   },
-  SankeyUnitaryNodeStyle: {
+  SankeyUnitaryNodeStyle: {    
+    name: "Unitaire",
     config: {
       name_label_horiz: 'middle',
       name_label_vert: 'bottom',
@@ -388,6 +399,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   SankeyUnitaryNodeInputStyle: {
+    name: "Unitaire entrée",
     config: {
       name_label_horiz: 'left',
       name_label_vert: 'middle',
@@ -402,6 +414,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   SankeyUnitaryNodeOutputStyle: {
+    name: "Unitaire sortie",
     config: {
       name_label_horiz: 'right',
       name_label_vert: 'middle',

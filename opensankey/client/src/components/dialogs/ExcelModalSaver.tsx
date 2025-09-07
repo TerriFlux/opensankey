@@ -38,7 +38,7 @@ import type { TFunction } from 'i18next';
 import { Class_ApplicationData } from '../../types/ApplicationData';
 import { WrapperCheckBoxSubSectionMenu, OSMultiSelect, typeElementSelectable, OSTooltip } from '../configmenus/MenuCommon';
 import { MenuDraggable } from '../topmenus/SankeyMenus';
-import { checked } from './SankeyMenuContextLink';
+import { checked } from './MenuContextWidgetFactory';
 import { Class_LevelTagGroup, Class_ProtoTagGroup } from '../../types/TagGroup';
 
 // Interface pour la configuration d'un attribut Excel

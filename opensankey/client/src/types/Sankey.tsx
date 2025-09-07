@@ -957,7 +957,7 @@ export class Class_Sankey {
     if (this._node_styles[id]) {
       return
     }
-    const new_style = this.createNewNodeStyle(id, id, true)
+    const new_style = this.createNewNodeStyle(id, configs[id].name, true)
     const config = configs[id].config
     const position = configs[id].position
     Object.keys(config).forEach(key => {
