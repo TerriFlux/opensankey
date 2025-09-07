@@ -727,6 +727,7 @@ export class Class_LinkValue {
       this.value_option = element.value_option
       this.data_value = element.data_value
     }
+    this.data_value = element.valueData === null ? null : this.data_value! + element.valueData!
     this.result_value = element.valueResult === null ? null : this.result_value! + element.valueResult!
   }
 

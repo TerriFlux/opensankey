@@ -37,7 +37,6 @@ import { TourProvider } from '@reactour/tour'
 import { Menu } from './components/topmenus/SankeyMenus'
 
 import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesShape'
-import { ContextMenuNode } from './components/dialogs/SankeyMenuContextNode'
 import { ContextMenu, MenuConfig } from './components/dialogs/SankeyMenuContext'
 import { ApplySaveJSONDialog } from './components/dialogs/SankeyMenuDialogs'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
@@ -46,8 +45,7 @@ import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
 import { Class_ApplicationData } from './types/ApplicationData'
 import { FType_InitializeAdditionalMenus, FType_InitializeApplicationData, FType_ModuleDialogs } from './Modules'
-import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
-import { decompressUploadedFileUniversal, loadUniversalJSON } from './Persistence/UniversalJSONCompression'
+import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
 
 declare const window: Window &
   typeof globalThis & {
@@ -69,16 +67,20 @@ export const OpenSankeyApp = ({
   createZDDModifier,
   ZDD_MENU_CONFIG,
   createLinkModifier,
-  LINK_MENU_CONFIG
+  LINK_MENU_CONFIG,
+  NODE_MENU_CONFIG,
+  createNodeModifier
 }:{
   initializeApplicationData: FType_InitializeApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   moduleDialogs: FType_ModuleDialogs,
   ModalWelcome: React.ComponentType<{ new_data: Class_ApplicationData }>
-  createZDDModifier: ZDDModifierType,
+  createZDDModifier: (app_data: Class_ApplicationData) => any,
   ZDD_MENU_CONFIG: MenuConfig,
-  createLinkModifier: ZDDModifierType,
-  LINK_MENU_CONFIG: MenuConfig
+  createLinkModifier: (app_data: Class_ApplicationData) => any,
+  LINK_MENU_CONFIG: MenuConfig,
+  NODE_MENU_CONFIG: MenuConfig,
+  createNodeModifier: (app_data: Class_ApplicationData) => any,
 }) => {
 
   // Datas init -------------------------------------------------------------------------
@@ -178,9 +180,13 @@ export const OpenSankeyApp = ({
           new_data={app_data}
         />
       </div>
-      <ContextMenuNode
-        new_data={app_data}
-        additionalMenus={app_data.menu_configuration.additionalMenus}
+      <ContextMenu
+        app_data={app_data}
+        createModifier={createNodeModifier}
+        menuConfig={NODE_MENU_CONFIG}
+        attr_is_contextualised="node_contextualised"
+        attr_updater="ref_to_menu_context_nodes_updater"
+        path="ContextMenuNodes"
       />
       <ContextMenu
         app_data={app_data}

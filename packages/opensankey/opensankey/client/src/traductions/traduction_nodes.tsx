@@ -56,7 +56,7 @@ export const resources_nodes = {
         firstPlan: 'Move elements in the foreground',
         lastPlan: 'Move elements in the last plane',
         changePlan: 'Change plan of nodes',
-        mask_attr: 'Change an attribute of node',
+        mask_attr: 'Elements display',
         tooltips: {
           Nom: 'Change the name of the selected node. If several nodes are selected, this field is disabled',
           AS: 'Allow to apply a predefined style in the preference menu to the selected node(s)',
@@ -261,7 +261,7 @@ export const resources_nodes = {
         firstPlan: 'Mettre les éléments au premier plan',
         lastPlan: 'Mettre les éléments au dernier plan',
         changePlan: 'Modifier le plan des noeud',
-        mask_attr: 'Changer un attribut du noeud',
+        mask_attr: 'Affichage des éléments',
         tooltips: {
           Nom: 'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
           AS: 'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
