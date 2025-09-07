@@ -415,7 +415,9 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
       data_to_convert.display_style.unit = true
     }
   }
-
+  if (data_to_convert.style_link === undefined) {
+    data_to_convert.style_link = {}
+  }
   Object.entries(data_to_convert.style_link).forEach(s => {
     //s[1] = Object.assign(JSON.parse(JSON.stringify(defaut_data.style_link['default'])), s[1])
     //data_to_convert.style_link[s[0]] = s[1]
@@ -504,8 +506,10 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   }
 
   // Convert name variable for data version>0.9
-  data_to_convert.filter_link_value = data_to_convert.display_style.filter
-  data_to_convert.filter_label = data_to_convert.display_style.filter_label
+  if (data_to_convert.display_style ) {
+    data_to_convert.filter_link_value = data_to_convert.display_style.filter
+    data_to_convert.filter_label = data_to_convert.display_style.filter_label
+  }
 
   // If data doesn't have var mask legend but show color palette of some grp tag then show legend
   if (data_to_convert.mask_legend === undefined) {
@@ -626,7 +630,8 @@ const clean_data_local = (data: SankeyData) => {
         //   console.log('Styles ' + Object.values(data.style_node).map(s=>s.idNode))
         //   return          
         // }
-        if (n.local && n.local[k_l_c] == data.style_node[n.style][k_s_c]) {
+
+        if (data.style_node[n.style] && n.local && n.local[k_l_c] == data.style_node[n.style][k_s_c]) {
           delete n.local[k_l_c]
         }
       })
@@ -638,7 +643,7 @@ const clean_data_local = (data: SankeyData) => {
       Object.keys(l.local).forEach((k_l: string) => {
         const k_l_c = k_l as keyof SankeyLinkAttrLocal
         const k_s_c = k_l as keyof SankeyLinkStyle
-        if (l.local && (l.local[k_l_c] == data.style_link[l.style][k_s_c])) {
+        if (data.style_link[l.style] && l.local && (l.local[k_l_c] == data.style_link[l.style][k_s_c])) {
           delete l.local[k_l_c]
         }
       })
@@ -731,12 +736,13 @@ export const ReturnLocalNodeValue: ReturnLocalNodeValueFuncType = (n: SankeyNode
 // Return the value of an attribute from link :
 // - If the link has local attribute and local has "k" attribute then it return the local attribute (local or k can be undefined)
 // - Else it return the attribute from the style the link has (a link always has a style )
-export const ReturnValueLink: ReturnValueLinkFuncType = (data: SankeyData, l: SankeyLink, k: keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle): string | number | boolean => {
+export const ReturnValueLink = (data: SankeyData, l: SankeyLink, k: keyof SankeyLinkAttrLocal | keyof SankeyLinkStyle): string | number | boolean => {
   let value = ReturnLocalLinkValue(l, k as keyof SankeyLinkAttrLocal)
   if (value === undefined || value === null) {
     const ks = k as keyof SankeyLinkStyle
-    value = l.style in data.style_link ? data.style_link[l.style][ks] : data.style_link['default'][ks]
+    value = l.style in data.style_link ? data.style_link[l.style][ks] : (data.style_link['default'] ? data.style_link['default'][ks] :null)
   }
+  //@ts-expect-error xxx
   return value
 }
 

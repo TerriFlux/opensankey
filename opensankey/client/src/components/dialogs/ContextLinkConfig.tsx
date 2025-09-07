@@ -6,47 +6,33 @@ import { Class_LinkAttribute } from "../../Elements/LinkAttributes";
 export const LINK_MENU_CONFIG: MenuConfig = {
   structure: [
     {
-      type: 'button',
-      actionName: 'inverseIO'
-    },
-    {
       type: 'submenu',
       titleKey: 'EditStyle',
-      actions: [
-        { actionName: 'resetAttr' },
-        { actionName: 'selectStyle' }
-      ]
-    },
-    {
-      type: 'submenu',
-      titleKey: 'ChangePlan',
-      actions: [
-        { actionName: 'moveToFirstPlan' },
-        { actionName: 'moveToLastPlan' }
+      children: [
+        { type: 'widget', widgetName: 'MenuContextLinksData', widgetProps: {} },
+        { type: 'button', actionName: 'resetAttr' },
+        { type: 'widget', widgetName: 'selectStyle' }
       ]
     },
     {
       type: 'submenu',
       titleKey: 'MaskAttr',
-      actions: [
-        { actionName: 'toggleNameVisibility' },
-        { actionName: 'toggleValueVisibility' }
+      children: [
+        { type: 'button', actionName: 'toggleNameVisibility' },
+        { type: 'button', actionName: 'toggleValueVisibility' },
+        { type: 'button', actionName: 'moveToFirstPlan' },
+        { type: 'button', actionName: 'moveToLastPlan' }
       ]
     },
     {
-      type: 'submenu',
-      titleKey: 'EditValue',
-      actions: [
-        { actionName: 'editValue' }
-      ]
+      type: 'button',
+      actionName: 'inverseIO'
     }
   ],
 
   actions: {
     inverseIO: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Inverse source/target',
         fr: 'Inverser source/cible'
@@ -59,36 +45,32 @@ export const LINK_MENU_CONFIG: MenuConfig = {
 
     resetAttr: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Reset attributes',
-        fr: 'Réinitialiser attributs'
+        fr: 'Réinit. valeurs styles'
       },
       tooltips: {
         en: 'Reset all local attributes to default values',
         fr: 'Remettre tous les attributs locaux aux valeurs par défaut'
-      }
+      },
+      undoable: true
     },
 
     selectStyle: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
-        en: 'Select style',
-        fr: 'Sélectionner style'
+        en: 'Styles',
+        fr: 'Styles'
       },
       tooltips: {
-        en: 'Choose a style to apply to the selected link(s)',
-        fr: 'Choisir un style à appliquer au(x) flux sélectionné(s)'
-      }
+        en: 'Choose styles to apply to the selected link(s)',
+        fr: 'Choisir les styles à appliquer au(x) flux sélectionné(s)'
+      },
+      undoable: true
     },
 
     moveToFirstPlan: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Move to front',
         fr: 'Premier plan'
@@ -101,8 +83,6 @@ export const LINK_MENU_CONFIG: MenuConfig = {
 
     moveToLastPlan: {
       type: 'action',
-      showCheck: false,
-      toggle: false,
       labels: {
         en: 'Move to back',
         fr: 'Arrière plan'
@@ -115,8 +95,6 @@ export const LINK_MENU_CONFIG: MenuConfig = {
 
     toggleNameVisibility: {
       type: 'toggle',
-      showCheck: false,
-      toggle: true,
       labels: {
         en: 'Name label',
         fr: 'Libellé nom'
@@ -134,13 +112,13 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       tooltips: {
         en: 'Toggle the visibility of the name label',
         fr: 'Basculer la visibilité du libellé nom'
-      }
+      },
+      getToggleValue: 'toggleNameVisibilityValue',
+      undoable: true
     },
 
     toggleValueVisibility: {
       type: 'toggle',
-      showCheck: false,
-      toggle: true,
       labels: {
         en: 'Value label',
         fr: 'Libellé valeur'
@@ -158,32 +136,16 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       tooltips: {
         en: 'Toggle the visibility of the value label',
         fr: 'Basculer la visibilité du libellé valeur'
-      }
-    },
-
-    editValue: {
-      type: 'widget',
-      widgetName: 'MenuContextLinksData',  // Nom du widget dans le registry
-      widgetProps: {
-        // Props spécifiques au widget
       },
-      showCheck: false,
-      toggle: false,
-      labels: {
-        en: 'Edit value',
-        fr: 'Éditer valeur'
-      },
-      tooltips: {
-        en: 'Edit the value of the selected link',
-        fr: 'Éditer la valeur du flux sélectionné'
-      }
+      getToggleValue: 'toggleValueVisibilityValue',
+      undoable: true
     }
   },
 
   sectionTitles: {
     EditStyle: {
-      en: 'Edit Style',
-      fr: 'Éditer Style'
+      en: 'Edition',
+      fr: 'Édition'
     },
     ChangePlan: {
       en: 'Change Layer',
@@ -191,7 +153,7 @@ export const LINK_MENU_CONFIG: MenuConfig = {
     },
     MaskAttr: {
       en: 'Mask Attributes',
-      fr: 'Masquer Attributs'
+      fr: 'Affichage des éléments'
     },
     EditValue: {
       en: 'Edit Value',
@@ -216,7 +178,6 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
         drawing_area.sankey.switchLinkStyle(sl, flow_ref_has_style)
       })
       refreshThisAndToggleSaving()
-
     }
 
     const inv_updateStyle = () => {
@@ -225,23 +186,15 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
       })
       refreshThisAndToggleSaving()
     }
-    // Save undo/redo in data history
     history.saveUndo(inv_updateStyle)
     history.saveRedo(_updateStyle)
-    // Execute original attr mutation
     _updateStyle()
-    //closeContextMenu()
   }
 
   const refreshThisAndToggleSaving = () => {
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
     menu_configuration.ref_to_menu_context_links_updater.current()
   }
-
-  // const closeContextMenu = () => {
-  //   drawing_area.link_contextualised = undefined
-  //   menu_configuration.ref_to_menu_context_links_updater.current()
-  // }
 
   const executeWithUndo = (
     actionFn: () => void,
@@ -281,8 +234,6 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     },
 
     selectStyle: () => {
-      // Cette action nécessite un sous-menu dynamique avec les styles disponibles
-      // Pour l'instant, on peut appliquer le premier style disponible
       const firstStyle = drawing_area.sankey.link_styles_list[0]
       if (firstStyle) {
         updateStyle(firstStyle)
@@ -363,39 +314,8 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
     toggleValueVisibilityValue: () => {
       return contextualised_link?.value_label_is_visible ?? false
-    },
-
-    // Edit value (custom logic needed)
-    editValue: () => {
-      // Cette action nécessite un composant personnalisé (MenuContextLinksData)
-      // Pour l'instant, on peut juste fermer le menu
-    },
-
-    // Helper method for style updates
-    updateStyle: (sl: Class_LinkStyle) => {
-      const dict_old_value: { [x: string]: Class_LinkStyle[] } = {}
-      selected_links.forEach(l => {
-        dict_old_value[l.id] = l.style
-      })
-
-      const doUpdate = () => {
-        selected_links.forEach(_ => {
-          const flow_ref_has_style = selected_links[0].style.includes(sl) ?? false
-          drawing_area.sankey.switchLinkStyle(sl, flow_ref_has_style)
-        })
-        refreshThisAndToggleSaving()
-      }
-
-      const undoUpdate = () => {
-        selected_links.forEach(l => {
-          l.style = dict_old_value[l.id]
-        })
-        refreshThisAndToggleSaving()
-      }
-
-      executeWithUndo(doUpdate, undoUpdate)
     }
   }
 }
 
-export type LinkModifierType = typeof createLinkModifier
+export type LinkModifierType = ReturnType<typeof createLinkModifier>

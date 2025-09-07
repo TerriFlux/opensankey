@@ -33,6 +33,8 @@ import { ModalWelcomeBuilder } from './components/welcome/ModalWelcome'
 import OpenSankeyApp from './App'
 import { createZDDModifier, ZDD_MENU_CONFIG } from './components/dialogs/ContextZDDConfig'
 import { createLinkModifier, LINK_MENU_CONFIG } from './components/dialogs/ContextLinkConfig'
+import { NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
+import { createNodeModifier } from './components/dialogs/NodeActions'
 /*************************************************************************************************/
 export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
   <OpenSankeyApp
@@ -50,11 +52,12 @@ export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
     ModalWelcome={ModalWelcomeBuilder}
 
     // BackEnd
-    createZDDModifier={createZDDModifier}
+    createZDDModifier={(app_data) => createZDDModifier(app_data)}
     ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
-      //@ts-expect-error xxx
-    createLinkModifier={createLinkModifier}
+    createLinkModifier={(app_data) => createLinkModifier(app_data)}
     LINK_MENU_CONFIG={LINK_MENU_CONFIG}
+    NODE_MENU_CONFIG={NODE_MENU_CONFIG}
+    createNodeModifier={(app_data) => createNodeModifier(app_data)}
   />
 </ChakraProvider>
 
