@@ -34,7 +34,7 @@ import {
   moduleDialogsOSP,
 } from './deps/LoginComponent//deps/OpenSankey+/ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/ModalWelcomeOSP'
-import { createZDDModifierPlus, ZDD_MENU_CONFIG_PLUS, LINK_MENU_CONFIG_PLUS, initializePlusMenus } from './deps/LoginComponent/deps/OpenSankey+/components/ContextMenuConfigs'
+import { createZDDModifierPlus, NODE_MENU_CONFIG_PLUS, ZDD_MENU_CONFIG_PLUS, LINK_MENU_CONFIG_PLUS } from './deps/LoginComponent/deps/OpenSankey+/components/ContextMenuConfigs'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { Theme_SankeyApplication } from './chakra/Theme'
@@ -47,15 +47,15 @@ import { PublicRoute } from './deps/LoginComponent/Routes/PublicRoutes'
 import { PaiementCheckout, PaiementPage, PaiementReturn } from './deps/LoginComponent/Paiement/Paiement'
 import { MetaTags } from './components/MetaTags'
 import i18next from 'i18next'
-import { ClickSaveDiagram } from './deps/LoginComponent//deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
 import { Type_JSON, checkForUrlToJSON } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Modules'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
-import { ZDDModifierType } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextZDDConfig'
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
 import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
+import { Class_ApplicationData } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
+import { createNodeModifier } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/NodeActions'
 
 
 // Specific methods ==================================================================================
@@ -101,7 +101,6 @@ export const initializeApplicationDataSA = (
     new_data_app.fromJSON(JSON.parse(JSON.stringify(initial_data)))
 
   }
-  initializePlusMenus()
   return new_data_app
 }
 
@@ -247,11 +246,14 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
       }}
       moduleDialogs={moduleDialogsSA}
       ModalWelcome={ModalWelcomeBuilderOSP}
-      createZDDModifier={createZDDModifierPlus as unknown as ZDDModifierType}
+      createZDDModifier={(app_data) => createZDDModifierPlus(app_data as Class_ApplicationDataSA)}
       ZDD_MENU_CONFIG={ZDD_MENU_CONFIG_PLUS()}
       //@ts-expect-error xxx
-      createLinkModifier={createLinkModifier}
+      createLinkModifier={(app_data) => createLinkModifier(app_data as Class_ApplicationData)}
       LINK_MENU_CONFIG={LINK_MENU_CONFIG_PLUS()}
+      NODE_MENU_CONFIG={NODE_MENU_CONFIG_PLUS()}
+      //@ts-expect-error xxx
+      createNodeModifier={(app_data) => createNodeModifier(app_data as Class_ApplicationData)}
     />
 
   if (new_data_app.is_static)
