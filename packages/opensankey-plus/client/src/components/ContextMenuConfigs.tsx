@@ -1,24 +1,12 @@
 // ==================================================================================================
-// MenuConfigExtensions.tsx - Extension propre des configurations de menu
+// MenuConfigExtensions.tsx - Extension propre des configurations de menu ( Version)
 // ==================================================================================================
 
 import { LINK_MENU_CONFIG } from "../deps/OpenSankey/components/dialogs/ContextLinkConfig"
+import { NODE_MENU_CONFIG } from "../deps/OpenSankey/components/dialogs/ContextNodeConfig"
 import { createZDDModifier, ZDD_MENU_CONFIG } from "../deps/OpenSankey/components/dialogs/ContextZDDConfig"
-import { widgetRegistry, MenuConfig } from "../deps/OpenSankey/components/dialogs/SankeyMenuContext"
+import { MenuConfig } from "../deps/OpenSankey/components/dialogs/SankeyMenuContext"
 import { Class_ApplicationDataOSP } from "../types/ApplicationDataOSP"
-import { ButtonLinkContextAssignTag } from "./SankeyPlusLink"
-
-// ==================================================================================================
-// Widget Registration (fait une seule fois à l'initialisation)
-// ==================================================================================================
-
-export const registerPlusWidgets = () => {
-  widgetRegistry.register('ButtonLinkContextAssignTag', ButtonLinkContextAssignTag)
-}
-
-// ==================================================================================================
-// Extended Menu Configurations (immutables, pas de mutation des originaux)
-// ==================================================================================================
 
 // Extension de la config ZDD
 export const createZDDMenuConfigPlus = (): MenuConfig => {
@@ -28,15 +16,13 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
       ...ZDD_MENU_CONFIG.structure,
       { 
         type: 'button', 
-        actionName: 'afm_reconciliation' 
+        actionName: 'afmReconciliation' 
       }
     ],
     actions: {
       ...ZDD_MENU_CONFIG.actions,
-      afm_reconciliation: {
+      afmReconciliation: {
         type: 'action',
-        showCheck: false,
-        toggle: false,
         labels: {
           en: 'Reconciling actual sankey diagram',
           fr: 'Ajuster et compléter le diagramme'
@@ -58,25 +44,33 @@ export const createLinkMenuConfigPlus = (): MenuConfig => {
       ...LINK_MENU_CONFIG.structure,
       {
         type: 'widget',
-        widgetName: 'ButtonLinkContextAssignTag'
+        widgetName: 'ButtonLinkContextAssignTag',
+        widgetProps: {}
       }
     ],
     actions: {
-      ...LINK_MENU_CONFIG.actions,
-      assign_flux_tag: {
+      ...LINK_MENU_CONFIG.actions
+      // Note: Les widgets n'ont plus besoin d'actions définies dans le nouveau système
+      // Le widget se gère lui-même
+    }
+  }
+}
+
+export const createNodeMenuConfigPlus = (): MenuConfig => {
+  return {
+    ...NODE_MENU_CONFIG,
+    structure: [
+      ...NODE_MENU_CONFIG.structure,
+      {
         type: 'widget',
-        widgetName: 'ButtonLinkContextAssignTag',
-        showCheck: false,
-        toggle: false,
-        labels: {
-          en: 'Assign a tag',
-          fr: 'Assigner une étiquette'
-        },
-        tooltips: {
-          en: 'Assign a tag',
-          fr: 'Assigner une étiquette'
+        widgetName: 'ButtonNodeContextAssignTag', // Réutiliser le même widget
+        widgetProps: { 
+          context: 'node' // Pour différencier le contexte si nécessaire
         }
       }
+    ],
+    actions: {
+      ...NODE_MENU_CONFIG.actions
     }
   }
 }
@@ -92,7 +86,7 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
   
   return {
     ...baseModifiers,
-    afm_reconciliation: () => {
+    afmReconciliation: () => {
       app_data.menu_configuration_osp.action_type = 'optim_sankey'
       dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current(true)
       app_data.drawing_area.is_drawing_area_contextualised = false
@@ -101,18 +95,16 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
   }
 }
 
-// ==================================================================================================
-// Configuration Builder (pour une approche plus flexible)
-// ==================================================================================================
-
-export class MenuConfigBuilder {
+class MenuConfigBuilder {
   private config: MenuConfig
 
   constructor(baseConfig: MenuConfig) {
     this.config = {
       structure: [...baseConfig.structure],
       actions: { ...baseConfig.actions },
-      sectionTitles: { ...baseConfig.sectionTitles }
+      sectionTitles: { ...baseConfig.sectionTitles },
+      globalConditions: baseConfig.globalConditions ? [...baseConfig.globalConditions] : undefined,
+      maxDepth: baseConfig.maxDepth
     }
   }
 
@@ -121,30 +113,46 @@ export class MenuConfigBuilder {
       type: 'button',
       actionName
     })
-    this.config.actions[actionName] = actionConfig
+    this.config.actions[actionName] = {
+      ...actionConfig,
+      type: 'action' // S'assurer que le type est défini
+    }
     return this
   }
 
-  addWidget(widgetName: string, actionName: string, actionConfig: any, widgetProps: any = {}): this {
+  addWidget(widgetName: string, widgetProps: any = {}): this {
     this.config.structure.push({
       type: 'widget',
       widgetName,
       widgetProps
     })
-    this.config.actions[actionName] = {
-      ...actionConfig,
-      type: 'widget',
-      widgetName,
-      widgetProps
-    }
+    // Les widgets n'ont plus besoin d'actions dans le nouveau système
     return this
   }
 
-  addSubmenu(titleKey: string, actions: Array<{ actionName: string }>): this {
+  addSubmenu(titleKey: string, children: any[]): this {
     this.config.structure.push({
       type: 'submenu',
       titleKey,
-      actions
+      children: children.map(child => ({
+        type: 'button',
+        actionName: child.actionName,
+        visibilityConditions: child.visibilityConditions
+      }))
+    })
+    return this
+  }
+
+  addSubmenuWithConditions(titleKey: string, children: any[], visibilityConditions?: any[]): this {
+    this.config.structure.push({
+      type: 'submenu',
+      titleKey,
+      children: children.map(child => ({
+        type: 'button',
+        actionName: child.actionName,
+        visibilityConditions: child.visibilityConditions
+      })),
+      visibilityConditions
     })
     return this
   }
@@ -156,21 +164,49 @@ export class MenuConfigBuilder {
     return this
   }
 
+  addConditionalButton(actionName: string, actionConfig: any, visibilityConditions: any[]): this {
+    this.config.structure.push({
+      type: 'button',
+      actionName,
+      visibilityConditions
+    })
+    this.config.actions[actionName] = {
+      ...actionConfig,
+      type: 'action'
+    }
+    return this
+  }
+
+  addToggleButton(actionName: string, actionConfig: any, getToggleValue: string): this {
+    this.config.structure.push({
+      type: 'button',
+      actionName
+    })
+    this.config.actions[actionName] = {
+      ...actionConfig,
+      type: 'toggle',
+      getToggleValue
+    }
+    return this
+  }
+
+  addSectionTitle(key: string, en: string, fr: string): this {
+    this.config.sectionTitles[key] = { en, fr }
+    return this
+  }
+
   build(): MenuConfig {
     return { ...this.config }
   }
 }
 
 // ==================================================================================================
-// Factory Functions (approche recommandée)
+// Factory Functions  (approche recommandée)
 // ==================================================================================================
 
 export const createExtendedZDDConfig = (): MenuConfig => {
   return new MenuConfigBuilder(ZDD_MENU_CONFIG)
-    .addButton('afm_reconciliation', {
-      type: 'action',
-      showCheck: false,
-      toggle: false,
+    .addButton('afmReconciliation', {
       labels: {
         en: 'Reconciling actual sankey diagram',
         fr: 'Ajuster et compléter le diagramme'
@@ -185,35 +221,25 @@ export const createExtendedZDDConfig = (): MenuConfig => {
 
 export const createExtendedLinkConfig = (): MenuConfig => {
   return new MenuConfigBuilder(LINK_MENU_CONFIG)
-    .addWidget('ButtonLinkContextAssignTag', 'assign_flux_tag', {
-      showCheck: false,
-      toggle: false,
-      labels: {
-        en: 'Assign a tag',
-        fr: 'Assigner une étiquette'
-      },
-      tooltips: {
-        en: 'Assign a tag',
-        fr: 'Assigner une étiquette'
-      }
+    .addWidget('ButtonLinkContextAssignTag', {
+      // Props spécifiques au widget si nécessaire
     })
+    .addSectionTitle('TagAssignment', 'Tag Assignment', 'Attribution d\'étiquettes')
     .build()
 }
 
-// ==================================================================================================
-// Initialization Function (à appeler une seule fois dans votre app)
-// ==================================================================================================
-
-export const initializePlusMenus = () => {
-  registerPlusWidgets()
+export const createExtendedNodeConfig = (): MenuConfig => {
+  return new MenuConfigBuilder(NODE_MENU_CONFIG)
+    .addWidget('ButtonNodeContextAssignTag', {
+      context: 'node' // Indiquer que c'est pour les nœuds
+    })
+    .addSectionTitle('TagAssignment', 'Tag Assignment', 'Attribution d\'étiquettes')
+    .build()
 }
 
-// ==================================================================================================
-// Clean Exports
-// ==================================================================================================
 
 export {
   createExtendedZDDConfig as ZDD_MENU_CONFIG_PLUS,
   createExtendedLinkConfig as LINK_MENU_CONFIG_PLUS,
-  createZDDModifierPlus as ZDD_MODIFIER_PLUS
+  createExtendedNodeConfig as NODE_MENU_CONFIG_PLUS
 }

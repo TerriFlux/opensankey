@@ -90,8 +90,6 @@ import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { checkForUrlToJSON, Type_JSON } from './deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
-import { FType_InitializeDiagrammSelector } from './deps/OpenSankey/components/SankeyMenuTypes'
-import { initializePlusMenus } from './components/ContextMenuConfigs'
 import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
 
 declare const window: Window &
@@ -131,7 +129,6 @@ export const initializeApplicationDataOSP = (
   } else if (initial_data !== undefined) {
     new_data_plus.fromJSON(initial_data)
   }
-  initializePlusMenus()
   return new_data_plus
 }
 /**
