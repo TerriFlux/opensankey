@@ -235,7 +235,7 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
         if ((node != null && json_local_object[jsonKey] !== node.getStyleProperty(attrKey))) {
           //@ts-expect-error JSON assignment    
           this._attributes[attrKey] = json_local_object[jsonKey]
-        } else if ( node == null && default_style && json_local_object[jsonKey] !== default_style[attrKey]) {
+        } else if ( node == null && default_style /*&& json_local_object[jsonKey] !== default_style[attrKey]*/) {
           //@ts-expect-error JSON assignment    
           this._attributes[attrKey] = json_local_object[jsonKey]
         } else if ( node == null && json_local_object[jsonKey] !== NODES_ATTRIBUTES_CONFIG[attrKey].default) {
@@ -251,7 +251,7 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
         if (node != null && json_local_object[key] !== node.getStyleProperty(key)) {
           //@ts-expect-error JSON assignment
           this._attributes[key as AttributeKey] = json_local_object[key]
-        }else if ( node == null && default_style && json_local_object[key] !== default_style[key]) {
+        }else if ( node == null && default_style /*&& json_local_object[key] !== default_style[key]*/) {
           //@ts-expect-error JSON assignment    
           this._attributes[key] = json_local_object[key]
         } else if ( node == null && json_local_object[key] !== NODES_ATTRIBUTES_CONFIG[key].default) {

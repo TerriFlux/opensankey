@@ -435,12 +435,12 @@ export class LinkControlPoints {
     const yf = this.link.position_y_end
     // Compute ref points
     const x_ref = (x0 + xf) / 2
-    const y_ref = (y0 + yf) / 2
+    const y_ref = Math.max(y0,yf)
     // Compute point
     let x_mid, y_mid
     if (this.link.is_horizontal) {
       x_mid = x_ref
-      y_mid = y_ref + this.link.shape_middle_recycling
+      y_mid = y_ref + this.link.shape_middle_recycling + 2 *this.link.thickness
     }
     else if (this.link.is_vertical) {
       x_mid = x_ref + this.link.shape_middle_recycling
@@ -664,13 +664,13 @@ export class LinkControlPoints {
           const handle_new_pos_y = this._control_points.middle_recycling_point.position_y + event.dy
           const y0 = this.link.position_y_start
           const yf = this.link.position_y_end
-          this.link.shape_middle_recycling = handle_new_pos_y - (y0 + yf) / 2
+          this.link.shape_middle_recycling += event.dy
         }
         else if (this.link.is_vertical) {
           const handle_new_pos_x = this._control_points.middle_recycling_point.position_x + event.dx
           const x0 = this.link.position_x_start
           const xf = this.link.position_x_end
-          this.link.shape_middle_recycling = handle_new_pos_x - (x0 + xf) / 2
+          this.link.shape_middle_recycling = handle_new_pos_x - Math.max(x0,xf)
         }
         else {
           // Starting & Ending positions
