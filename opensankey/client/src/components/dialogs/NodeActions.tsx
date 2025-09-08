@@ -479,34 +479,7 @@ node.name_label_is_visible = dict_old_value[node.id]
     }
 
     this.executeWithUndo(doReset, undoReset)
-    //this.closeContextMenu()
   }
-
-  // selectStyle = () => {
-  //   const firstStyle = this.drawing_area.sankey.node_styles_list_sorted[0]
-  //   if (firstStyle) {
-  //     const dict_old_value: { [x: string]: Class_NodeStyle[] } = {}
-  //     this.selected_nodes.forEach(n => {
-  //       dict_old_value[n.id] = n.style
-  //     })
-
-  //     const doUpdate = () => {
-  //       const node_ref_has_style = this.selected_nodes[0].style.includes(firstStyle) ?? false
-  //       this.drawing_area.sankey.switchNodeStyle(firstStyle, node_ref_has_style)
-  //       this.refreshAndSave()
-  //     }
-
-  //     const undoUpdate = () => {
-  //       this.selected_nodes.forEach(n => {
-  //         n.style = dict_old_value[n.id]
-  //       })
-  //       this.refreshAndSave()
-  //     }
-
-  //     this.executeWithUndo(doUpdate, undoUpdate)
-  //   }
-  //   //this.closeContextMenu()
-  // }
 
   reorg = () => {
     const dict_old_io: { [x: string]: string[] } = {}
@@ -557,42 +530,6 @@ node.name_label_is_visible = dict_old_value[node.id]
     this.refreshAndSave()
   }
 
-  // Actions dynamiques pour la sélection de style
-// private createStyleActions = () => {
-//   const sankey = this.drawing_area.sankey
-//   const actions: Record<string, () => void> = {}
-  
-//   sankey.node_styles_list_sorted.forEach((style) => {
-//     actions[`selectStyle_${style.id}`] = () => {
-//       const dict_old_value: { [x: string]: Class_NodeStyle[] } = {}
-//       this.selected_nodes.forEach(n => {
-//         dict_old_value[n.id] = n.style
-//       })
-
-//       const doUpdate = () => {
-//         const node_ref_has_style = this.selected_nodes[0].style.includes(style) ?? false
-//         this.drawing_area.sankey.switchNodeStyle(style, node_ref_has_style)
-//         this.refreshAndSave()
-//       }
-
-//       const undoUpdate = () => {
-//         this.selected_nodes.forEach(n => {
-//           n.style = dict_old_value[n.id]
-//         })
-//         this.refreshAndSave()
-//       }
-
-//       this.executeWithUndo(doUpdate, undoUpdate)
-//       //this.closeContextMenu()
-//     }
-//   })
-  
-//   return actions
-// }
-  // ==================================================================================================
-  // FACTORY POUR CRÉER LE MODIFIER COMPATIBLE
-  // ==================================================================================================
-
   static createModifier = (app_data: Class_ApplicationData) => {
     const nodeActions = new NodeActions(app_data)
     
@@ -641,7 +578,7 @@ node.name_label_is_visible = dict_old_value[node.id]
       // Autres actions
       editName: nodeActions.editName,
       resetAttr: nodeActions.resetAttr,
-      // selectStyle: nodeActions.selectStyle,
+
       reorg: nodeActions.reorg,
       moveToFirstPlan: nodeActions.moveToFirstPlan,
       moveToLastPlan: nodeActions.moveToLastPlan,

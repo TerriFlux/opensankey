@@ -30,7 +30,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_DrawingArea } from '../../types/DrawingArea'
-import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag } from './MenuContextWidgetFactory'
+import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag, ButtonLinkContextAssignStyle } from './MenuContextWidgetFactory'
 
 // ==================================================================================================
 // TYPES ET INTERFACES
@@ -676,6 +676,7 @@ export class WidgetRegistry {
 const widgetRegistry = WidgetRegistry.getInstance()
 widgetRegistry.register('MenuContextLinksData', MenuContextLinksData)
 widgetRegistry.register('ButtonNodeContextAssignStyle', ButtonNodeContextAssignStyle)
+widgetRegistry.register('ButtonLinkContextAssignStyle', ButtonLinkContextAssignStyle)
 widgetRegistry.register('ButtonLinkContextAssignTag', ButtonLinkContextAssignTag)
 widgetRegistry.register('ButtonNodeContextAssignTag', ButtonNodeContextAssignTag)
 
