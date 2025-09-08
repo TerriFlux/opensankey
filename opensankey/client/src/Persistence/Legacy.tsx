@@ -2374,41 +2374,20 @@ const convert_links: convert_linksFuncType = (
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
           dist = Math.max(20, Math.abs(target_node.x - source_node.x)) // Avoid div per 0
         }
-        // Recompute shift & tangeant
-        const curve_coef = (l.local.curvature ?? 0.5)
-        const curve_dist_min = 20 // px
-        const curve_dist_max = 40 // px
-        const shift_dist_min = 40 // px
-        if (l.local.vert_shift !== undefined) {
-          const scale = d3.scaleLinear()
-            .range([0, 100])
-            .domain([0, data.user_scale])
 
-          const source_y = data.nodes[l.idSource].y
-          const target_y = data.nodes[l.idTarget].y
-          const middle_y = (target_y + source_y) / 2
-          const global_position_y = Math.max(source_y, target_y) + l.local.vert_shift + scale(2 * +GetLinkValue(data, l.idLink).value)
-          const new_vert_shift = global_position_y - middle_y
-          AssignLinkLocalAttribute(l, 'vert_shift', new_vert_shift) // value in [0; +oo]
-        }
-        if (l.local.left_horiz_shift !== undefined) {
-          // Avoid having too big curbe
-          const original_dist = Math.abs(l.local.left_horiz_shift)
-          const curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
-          const shift_dist = Math.max(shift_dist_min, original_dist - curve_dist) // Approx to keep general shape
-          // Assign new values
+        const shift_dist_min = 200
+        const left_horiz_shift = l.local.left_horiz_shift ? l.local.left_horiz_shift-50 : -50
+          let original_dist = Math.abs(left_horiz_shift)
+          let shift_dist = Math.max(shift_dist_min, original_dist) // Approx to keep general shape
+          AssignLinkLocalAttribute(l, 'right_horiz_shift',shift_dist / dist) // value in [0; +oo]
+          AssignLinkLocalAttribute(l, 'ending_tangeant', 0.01) // value in [0; +oo]
+        // }
+        const right_horiz_shift = l.local.right_horiz_shift ? l.local.right_horiz_shift+50 : 50
+          original_dist = Math.abs(right_horiz_shift)
+          //curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
+          shift_dist = Math.max(shift_dist_min, original_dist) // Approx to keep general shape
           AssignLinkLocalAttribute(l, 'left_horiz_shift', shift_dist / dist) // value in [0; +oo]
-          AssignLinkLocalAttribute(l, 'starting_tangeant', curve_dist / dist) // value in [0; +oo]
-        }
-        if (l.local.right_horiz_shift !== undefined) {
-          // Avoid having too big curbe
-          const original_dist = Math.abs(l.local.right_horiz_shift)
-          const curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
-          const shift_dist = Math.max(shift_dist_min, original_dist - curve_dist) // Approx to keep general shape
-          // Assign new values
-          AssignLinkLocalAttribute(l, 'right_horiz_shift', shift_dist / dist) // value in [0; +oo]
-          AssignLinkLocalAttribute(l, 'ending_tangeant', curve_dist / dist) // value in [0; +oo]
-        }
+          AssignLinkLocalAttribute(l, 'starting_tangeant', 0.01) // value in [0; +oo]
       }
     }
 

@@ -183,7 +183,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     default_style: Class_NodeStyle | null
   ) {
     if (default_style) {
-      return value !== undefined && this._customisable_attribute[key] && value !== default_style[key]
+      return value !== undefined && this._customisable_attribute[key] //&& value !== default_style[key]
     }
     return value !== undefined && this._customisable_attribute[key] && value !== NODES_ATTRIBUTES_CONFIG[key].default
   }
