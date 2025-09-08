@@ -588,14 +588,14 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       undoable: true
     },
 
-    selectStyle: {
-      type: 'widget',
-      widgetName: 'ButtonNodeContextAssignStyle',
-      widgetProps: {},
-      labels: { en: 'Select style', fr: 'Styles' },
-      tooltips: { en: 'Choose a style', fr: 'Styles' },
-      // Cette action sera gérée dynamiquement pour créer des boutons pour chaque style
-    },
+    // selectStyle: {
+    //   type: 'widget',
+    //   widgetName: 'ButtonNodeContextAssignStyle',
+    //   widgetProps: {},
+    //   labels: { en: 'Select style', fr: 'Styles' },
+    //   tooltips: { en: 'Choose a style', fr: 'Styles' },
+    //   // Cette action sera gérée dynamiquement pour créer des boutons pour chaque style
+    // },
 
     reorg: {
       type: 'action',

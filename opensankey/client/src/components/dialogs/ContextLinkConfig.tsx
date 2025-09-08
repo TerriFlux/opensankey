@@ -11,7 +11,7 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       children: [
         { type: 'widget', widgetName: 'MenuContextLinksData', widgetProps: {} },
         { type: 'button', actionName: 'resetAttr' },
-        { type: 'widget', widgetName: 'selectStyle' }
+        { type: 'widget', widgetName: 'ButtonLinkContextAssignStyle' }
       ]
     },
     {
@@ -56,18 +56,14 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       undoable: true
     },
 
-    selectStyle: {
-      type: 'action',
-      labels: {
-        en: 'Styles',
-        fr: 'Styles'
-      },
-      tooltips: {
-        en: 'Choose styles to apply to the selected link(s)',
-        fr: 'Choisir les styles à appliquer au(x) flux sélectionné(s)'
-      },
-      undoable: true
-    },
+    // selectStyle: {
+    //   type: 'widget',
+    //   widgetName: 'ButtonLinkContextAssignStyle',
+    //   widgetProps: {},
+    //   labels: { en: 'Select style', fr: 'Styles' },
+    //   tooltips: { en: 'Choose a style', fr: 'Styles' },
+    //   // Cette action sera gérée dynamiquement pour créer des boutons pour chaque style
+    // },
 
     moveToFirstPlan: {
       type: 'action',
@@ -231,13 +227,6 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
       }
 
       executeWithUndo(doReset, undoReset)
-    },
-
-    selectStyle: () => {
-      const firstStyle = drawing_area.sankey.link_styles_list[0]
-      if (firstStyle) {
-        updateStyle(firstStyle)
-      }
     },
 
     // Plan actions

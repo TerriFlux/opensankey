@@ -24,8 +24,8 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, {useState } from 'react'
-import { MenuList, MenuButton, MenuItem,Menu } from '@chakra-ui/react'
+import React, { useState } from 'react'
+import { MenuList, MenuButton, MenuItem, Menu } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Button } from '@chakra-ui/react'
 
@@ -48,7 +48,7 @@ export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto'
  * @param {app_data}
  * @return {JSX.Elmement}
  */
-export const MenuContextLinksData = ({ app_data  }: { app_data: Class_ApplicationData }) => {
+export const MenuContextLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, menu_configuration } = app_data
   const { selected_links_list_sorted, visible_and_selected_links_list_sorted } = drawing_area
   const {
@@ -259,7 +259,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
                   if (!has_style) {
                     contextualised_node.style.push(_)
                   } else {
-                    contextualised_node.style = contextualised_node.style.filter(style => style !== _)                 
+                    contextualised_node.style = contextualised_node.style.filter(style => style !== _)
                   }
                   setUpdate(a => a + 1)
                 }}
@@ -274,3 +274,48 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
     <></>
 }
 
+export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area } = app_data
+  const [, setUpdate] = useState(0)
+  const contextualised_link = drawing_area.link_contextualised
+  const has_node_style = drawing_area.sankey.link_styles_list.length > 0
+  return (
+    (contextualised_link !== undefined) &&
+    (has_node_style)
+  ) ? <>
+    <Menu placement='end'>
+      <MenuButton
+        variant='contextmenu_button'
+        as={Button}
+        rightIcon={<ChevronRightIcon />}
+        className="dropdown-basic"
+      >
+        {'Assigner styles'}
+      </MenuButton>
+
+      <MenuList>
+        {
+          drawing_area.sankey.link_styles_list
+            .map((_, i) => {
+              const has_style = contextualised_link.style.includes(_)
+              return <MenuItem
+                display='flex'
+                closeOnSelect={false}
+                onClick={() => {
+                  if (!has_style) {
+                    contextualised_link.style.push(_)
+                  } else {
+                    contextualised_link.style = contextualised_link.style.filter(style => style !== _)
+                  }
+                  setUpdate(a => a + 1)
+                }}
+              >
+                {_.name}
+                {checked(has_style)}
+              </MenuItem>
+            })
+        }
+      </MenuList>
+    </Menu></> :
+    <></>
+}
