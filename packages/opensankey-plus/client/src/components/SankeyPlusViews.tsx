@@ -558,7 +558,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   </OSTooltip>
 
   return <>
-    {buttonShowBanner}
+    {!app_data.is_static || app_data.has_views ? buttonShowBanner :<></>}
     <Fade in={isOpen} style={{ display: isOpen ? 'unset' : 'none' }} >
       {buttonGroupView}
     </Fade>
@@ -615,14 +615,20 @@ export const SelecteurView = (
     }
     value={cur_view.id}
   >
+    <option
+      hidden
+      value={default_main_sankey_id}
+    >
+      {t('view.actual')}
+    </option>
     {
-      new_data_plus.views
-        .map(view => {
+      Object.entries(new_data_plus.views_dict).filter(([key,value])=> key !== default_main_sankey_id)
+        .map(([key,view]) => {
           return <option
             key={view.id}
             value={view.id}
           >
-            {view.id === default_main_sankey_id ? t('view.actual') : view.name}
+            {view.name}
           </option>
         })
     }
@@ -652,32 +658,32 @@ export const SelecteurView = (
  * }
  * @return {*}
  */
-export const ViewsConfig: FC<BaseComponentPropsPlus> = (
-  { new_data_plus }
+export const ViewsConfig = (
+  { app_data } : {app_data: Class_ApplicationDataOSP}
 ) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, icon_library } = new_data_plus
+  const { t, icon_library,menu_configuration_osp,drawing_area } = app_data
   const { icon_remove_element, icon_move_element_up, icon_move_element_down } = icon_library
 
   // Components updaters ----------------------------------------------------------------
 
   const [, setCount] = useState(0)
   const refreshThis = () => setCount(a => a + 1)
-  new_data_plus.menu_configuration_osp.ref_to_views_config_updater.current = refreshThis
+  menu_configuration_osp.ref_to_views_config_updater.current = refreshThis
 
   // Local variables --------------------------------------------------------------------
-  const drawing_area_plus = new_data_plus.drawing_area as Class_DrawingAreaOSP
-  const is_activated = new_data_plus.has_sankey_plus
+  const drawing_area_plus =drawing_area as Class_DrawingAreaOSP
+  const is_activated = app_data.has_sankey_plus
   const curr_view = drawing_area_plus
-  const list_view = new_data_plus.views //include master
+  const list_view = app_data.views_order //include master
 
   // JSX elements -----------------------------------------------------------------------
 
   // Popover used to select a view or master we want to take the layout from. (color,font-size,position,...)
 
-  return <WrapperBoxSubSectionMenu new_data={new_data_plus} title={t('view.storytelling')}>
+  return <WrapperBoxSubSectionMenu new_data={app_data} title={t('view.storytelling')}>
     <Box layerStyle='menuconfigpanel_grid'>
 
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
@@ -686,7 +692,7 @@ export const ViewsConfig: FC<BaseComponentPropsPlus> = (
         </Box>
         <InputGroup
           variant='menuconfigpanel_option_input'>
-          <SelecteurView new_data_plus={new_data_plus} />
+          <SelecteurView new_data_plus={app_data} />
         </InputGroup>
       </Box>
       <Table variant='table_view' size='sm'>
@@ -698,33 +704,33 @@ export const ViewsConfig: FC<BaseComponentPropsPlus> = (
           </Tr>
         </Thead>
         <Tbody>
-          {list_view.map((d, idx) => {
+          {list_view.map((view_id,idx) => {
             return (
               <React.Fragment key={idx}>
-                <Tr style={{ 'border': (d.id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
+                <Tr style={{ 'border': (view_id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
                   <Td>
                     <Input
                       variant='menuconfigpanel_option_input'
-                      value={d.name}
-                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                      value={app_data.views_dict[view_id].name}
+                      isDisabled={!is_activated || (view_id == default_main_sankey_id)}
                       onChange={evt => {
-                        d.name = evt.target.value
+                        app_data.views_dict[view_id].name = evt.target.value
                         refreshThis()
                       }}
                       onBlur={() => {
-                        new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
+                        menu_configuration_osp.updateComponentRelatedToViews()
                       }}
                     />
                   </Td>
                   <Td>
                     {/* Change the position of the view in the liste of view from master data */}
-                    <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                      onClick={() => { new_data_plus.moveViewUpInOrder(d.id); new_data_plus.menu_configuration_osp.updateComponentRelatedToViews() }}
+                    <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (view_id == default_main_sankey_id)}
+                      onClick={() => { app_data.moveViewUpInOrder(view_id); menu_configuration_osp.updateComponentRelatedToViews() }}
                     >
                       {icon_move_element_up}
                     </Button>
-                    <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (d.id == default_main_sankey_id)}
-                      onClick={() => { new_data_plus.moveViewDownInOrder(d.id); new_data_plus.menu_configuration_osp.updateComponentRelatedToViews() }}
+                    <Button variant='menuconfigpanel_option_button_in_table' isDisabled={!is_activated || (view_id == default_main_sankey_id)}
+                      onClick={() => { app_data.moveViewDownInOrder(view_id); menu_configuration_osp.updateComponentRelatedToViews() }}
                     >
                       {icon_move_element_down}
                     </Button>
@@ -732,12 +738,12 @@ export const ViewsConfig: FC<BaseComponentPropsPlus> = (
                   <Td>
                     <Button
                       variant='menuconfigpanel_del_button_in_table'
-                      isDisabled={!is_activated || (d.id == default_main_sankey_id)}
+                      isDisabled={!is_activated || (view_id == default_main_sankey_id)}
                       onClick={
                         // Delete the view
                         () => {
-                          new_data_plus.deleteView(d.id)
-                          new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
+                          app_data.deleteView(view_id)
+                          menu_configuration_osp.updateComponentRelatedToViews()
                         }
                       }
                     >
@@ -1345,7 +1351,7 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
  * @param {*} { new_data_plus }
  * @return {*} 
  */
-const TabImportExcelDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = ({ new_data_plus }) => {
+const TabImportExcelDataForUnitary = ({ new_data_plus }:{ new_data_plus: Class_ApplicationDataOSP }) => {
   const { t, url_prefix } = new_data_plus
   const [input_file_blob, set_input_file_blob] = useState<Blob | undefined>(undefined)
   const [checkStatus, setCheckStatus] = useState(false)
@@ -1502,9 +1508,8 @@ const TabImportExcelDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP
                 local_app_data.current.createUnitaryNewView(element)
               })
               const obj_view: Type_JSON = {}
-              local_app_data.current.views.forEach(v => obj_view[v.id] = v.toJSON(false, false, true))
-              new_data_plus.extractViewsFromJSON({ views: obj_view }, true)
-              new_data_plus.extractViewsFromJSON({ views: obj_view }, false)
+              Object.values(local_app_data.current.views_dict).forEach(v => obj_view[v.id] = v.toJSON(false, false, true))
+              new_data_plus.extractViewsFromJSON({ views: obj_view })
               new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
             },
             {

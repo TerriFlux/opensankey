@@ -152,9 +152,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   const new_data_plus = new_data as Class_ApplicationDataOSP
   const { t, has_sankey_plus, has_sankey_afm, icon_library } = new_data_plus
 
-  // Add Buttons to open banner of views
-  if (!new_data_plus.is_static || new_data_plus.has_views)
-    additionalMenus.current.external_top_buttons_item['views'] = <BannerViewsOSP app_data={new_data_plus} />
+
+
+  additionalMenus.current.external_top_buttons_item['views'] = <BannerViewsOSP app_data={new_data_plus} />
 
   // Add an option for flow color rule
   if (has_sankey_plus) {
@@ -261,7 +261,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
     </WrapperContentConfig>,
 
     'view': <WrapperContentConfig title={t('view.storytelling')}>
-      <ViewsConfig new_data_plus={new_data_plus}
+      <ViewsConfig app_data={new_data_plus}
       />
     </WrapperContentConfig>,
   }

@@ -53,6 +53,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   protected _views: { [id: string]: Class_DrawingArea } = {}
   protected _views_order: string[] = []
+  public get views_order() { return this._views_order} 
 
   protected _original_current_view: Class_DrawingArea | undefined
 
@@ -288,7 +289,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Read views parts
     // this.deleteCurrentOriginalView() // TODO est-ce vraiment necessaire ?
 
-    this.extractViewsFromJSON(json_object, true)
+    this.extractViewsFromJSON(json_object)
     // Set view to the one active when saved
     const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
     if (
@@ -298,9 +299,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       this._drawing_area = this._views[active_view_id]
     }
     // Exécution asynchrone à la fin
-    setTimeout(() => {
-      this.extractViewsFromJSON(json_object, false)
-    }, 0)
+    //setTimeout(() => {
+    //this.extractViewsFromJSON(json_object, false)
+    //}, 0)
   }
 
 
@@ -310,7 +311,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationDataOSP
    */
-  public extractViewsFromJSON(json_object: Type_JSON, current_view: boolean) {
+  public extractViewsFromJSON(json_object: Type_JSON) {
     const views = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views) {
       return
@@ -320,18 +321,6 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     Object.entries(views)
       .forEach(([view_id, view_json]) => {
         if (view_id !== default_main_sankey_id) {
-          if (current_view) {
-            const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
-            if (view_id !== active_view_id) {
-              return
-            }
-          } else {
-            const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
-            if (view_id === active_view_id) {
-              return
-            }
-          }
-          // Create and populate drawing area
           console.log('Charging ' + (view_json as Type_JSON).name)
           const drawing_area_view = this.createNewDrawingArea(view_id)
           drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
@@ -583,7 +572,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     view_name:string, copy: boolean
   ) {
     // If no view existed previously, we add the active sankey as master sankey
-    if (this.views.length === 0) {
+    if (!this.has_views) {
       this._views[default_main_sankey_id] = this._drawing_area
       this.pushViewIdInViewOrder(default_main_sankey_id)
     }
@@ -613,7 +602,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const base_drawing_area = this._drawing_area
     base_drawing_area.purgeSelection()
     // If no view existed previously, we add the active sankey as master sankey
-    if (this.views.length === 0) {
+    if (!this.has_views) {
       this._views[default_main_sankey_id] = this._drawing_area
       this.pushViewIdInViewOrder(default_main_sankey_id)
     }
@@ -963,8 +952,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public get icon_library(): Class_IconLibraryOSP { return this._icon_library as Class_IconLibraryOSP }
 
   // Views
-  public get views(): Class_DrawingArea[] {
-    return Object.values(this._views)
+  public get views_dict() {
+    return this._views
   }
 
   public get master_view(): Class_DrawingArea | undefined {
