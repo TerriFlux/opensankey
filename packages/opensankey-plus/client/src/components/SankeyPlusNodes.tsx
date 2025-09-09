@@ -564,7 +564,7 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
             variant='menuconfigpanel_option_input'
           >
             <Input
-              placeholder={node_hyperlink}
+              value={node_hyperlink}
               isDisabled={!is_activated}
               onChange={(evt) => {
                 updateHyperlinkValue(evt.target.value)
