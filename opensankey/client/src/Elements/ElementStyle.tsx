@@ -390,6 +390,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       name_label_vert: 'bottom',
       name_label_font_size: 40,
       shape_min_width: 200,
+      shape_type: 'rect',
       name_label_bold: true,
       name_label_uppercase: true,
       name_label_box_width: 1000,

@@ -239,6 +239,7 @@ export class Class_DrawingArea {
    * @memberof Class_Sankey
    */
   protected _containers: { [_: string]: Class_ContainerElement } = {}
+  protected _container_activated : boolean = true
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -810,6 +811,8 @@ export class Class_DrawingArea {
     if (this._legend.isMouseOver()) {
       return false
     }
+    if (!this.container_activated) return true
+
     mouse_over_nodes = this.isMouseOverAnExistingContainer()
     if (mouse_over_nodes === true) {
       return false
@@ -1754,6 +1757,7 @@ export class Class_DrawingArea {
   ) {
     event.preventDefault()
     // Fermer les tooltips via le système intégré
+    this.closeAllMenus()
     const tooltipManager = TooltipEventManager.getInstance();
     tooltipManager.closeTooltip();
   }
@@ -1767,7 +1771,7 @@ export class Class_DrawingArea {
   private eventDoubleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    // TODO Ajouter déclemenchement editeur nom de noeud
+    this.closeAllMenus()
     this._selection_zone.reset()
   }
 
@@ -1783,8 +1787,9 @@ export class Class_DrawingArea {
     event.preventDefault()
     if (this.eventsEnabled()) {
       // Fermer les tooltips via le système intégré
-      const tooltipManager = TooltipEventManager.getInstance();
-      tooltipManager.closeTooltip();
+      const tooltipManager = TooltipEventManager.getInstance()
+      tooltipManager.closeTooltip()
+      this.closeAllContextMenus()
       this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this.is_drawing_area_contextualised = true
       this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
@@ -2920,4 +2925,7 @@ export class Class_DrawingArea {
 
   public get background_image(): string { return this._background_image }
   public set background_image(value: string) { this._background_image = value }
+
+  public get container_activated() { return this._container_activated }
+  public set container_activated(_) { this._container_activated = _ }
 }
