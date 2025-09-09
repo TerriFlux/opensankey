@@ -47,10 +47,36 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'openLinkVisualStyleModal' },
         { type: 'button', actionName: 'openLinkLabelsStyleModal' }
       ]
+    },
+    {
+      type: 'button',
+      actionName: 'toggleZDTActivated'
     }
   ],
 
   actions: {
+    toggleZDTActivated: {
+      type: 'toggle',
+      labels: {
+        en: 'ZDT',
+        fr: 'ZDT'
+      },
+      tooltips: {
+        en: 'ZDT',
+        fr: 'ZDT'
+      },
+      labelsToggle: {
+        en: {
+          true: 'Deactivate ZDT ',
+          false: 'Activate ZDT'
+        },
+        fr: {
+          true: 'Désactiver ZDT',
+          false: 'Activer ZDT'
+        }
+      },
+      getToggleValue: 'toggleZDTActivatedValue'
+    },
     fromNew: {
       type: 'action',
       labels: {
@@ -344,6 +370,11 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     openNodeVisualStyleModal: () => ref_setter_show_modal_styles_nodes_visual.current(true),
     openNodeLabelsStyleModal: () => ref_setter_show_modal_styles_nodes_labels.current(true),
     openLinkVisualStyleModal: () => ref_setter_show_modal_styles_links_visual.current(true),
-    openLinkLabelsStyleModal: () => ref_setter_show_modal_styles_links_labels.current(true)
+    openLinkLabelsStyleModal: () => ref_setter_show_modal_styles_links_labels.current(true),
+    toggleZDTActivated: () => {
+      app_data.drawing_area.container_activated = !app_data.drawing_area.container_activated
+      app_data.drawing_area.draw()
+    },
+    toggleZDTActivatedValue: () => app_data.drawing_area.container_activated
   }
 }
