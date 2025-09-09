@@ -34,7 +34,10 @@ import {
   moduleDialogsOSP,
 } from './deps/LoginComponent//deps/OpenSankey+/ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/ModalWelcomeOSP'
-import { createZDDModifierPlus, NODE_MENU_CONFIG_PLUS, ZDD_MENU_CONFIG_PLUS, LINK_MENU_CONFIG_PLUS } from './deps/LoginComponent/deps/OpenSankey+/components/ContextMenuConfigs'
+import { 
+  createZDDModifierPlus,createNodeModifierPlus, 
+  createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus 
+} from './deps/LoginComponent/deps/OpenSankey+/components/ContextMenuConfigs'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { Theme_SankeyApplication } from './chakra/Theme'
@@ -193,15 +196,8 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
     ...moduleDialogsSA
   ]
 }
-// OpenSankeyApp for OpenSankey+ ========================================================================
 
-type FCType_SankeyApp = {
-  new_data_app: Class_ApplicationDataSA
-}
-
-export const SankeyApp: FC<FCType_SankeyApp> = (
-  { new_data_app }
-) => {
+export const SankeyApp = ({ new_data_app } : {new_data_app: Class_ApplicationDataSA}) => {
 
   const setLicenses = useRef(() => {
     console.log('=== setLicenses function called ===')
@@ -247,13 +243,11 @@ export const SankeyApp: FC<FCType_SankeyApp> = (
       moduleDialogs={moduleDialogsSA}
       ModalWelcome={ModalWelcomeBuilderOSP}
       createZDDModifier={(app_data) => createZDDModifierPlus(app_data as Class_ApplicationDataSA)}
-      ZDD_MENU_CONFIG={ZDD_MENU_CONFIG_PLUS()}
-      //@ts-expect-error xxx
-      createLinkModifier={(app_data) => createLinkModifier(app_data as Class_ApplicationData)}
-      LINK_MENU_CONFIG={LINK_MENU_CONFIG_PLUS()}
-      NODE_MENU_CONFIG={NODE_MENU_CONFIG_PLUS()}
-      //@ts-expect-error xxx
-      createNodeModifier={(app_data) => createNodeModifier(app_data as Class_ApplicationData)}
+      ZDD_MENU_CONFIG={createZDDMenuConfigPlus()}
+      createLinkModifier={(app_data) => createLinkModifier(app_data as unknown as Class_ApplicationData)}
+      LINK_MENU_CONFIG={createLinkMenuConfigPlus()}
+      NODE_MENU_CONFIG={createNodeMenuConfigPlus()}
+      createNodeModifier={(app_data) => createNodeModifierPlus(app_data as Class_ApplicationDataSA)}
     />
 
   if (new_data_app.is_static)
