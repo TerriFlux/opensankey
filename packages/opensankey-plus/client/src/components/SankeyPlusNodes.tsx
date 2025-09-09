@@ -593,7 +593,6 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
 
 }
 
-
 export const ButtonNodeContextCreateUnitaryView = ({ app_data }:{app_data:Class_ApplicationDataOSP}) => {
   const { t,drawing_area,menu_configuration_osp } = app_data
 
@@ -632,56 +631,3 @@ export const ButtonNodeContextCreateUnitaryView = ({ app_data }:{app_data:Class_
   </Button>
 }
 
-export const ButtonNodeContextCreateZDTAroundSelectedNode: FC<BaseComponentProps> = ({ new_data }) => {
-  const { t } = new_data
-
-  const closeContextMenu = () => {
-    // Unset contextualized node
-    new_data.drawing_area.node_contextualised = undefined
-    // Refresh this menu
-    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-  }
-
-  return <Button
-    as={MenuItem}
-    onClick={() => {
-      const cont = new_data.drawing_area.sankey.addNewDefaultFreeLabel()
-      cont.tied_to_nodes = true
-      new_data.drawing_area.selected_nodes_list.forEach(node => {
-        node.getListDescendantOfNode().forEach(n => {
-          new_data.drawing_area.sankey.attachNodeToCont(n, cont)
-          //new_data_plus.drawing_area.addNodeToSelection(node)
-        })
-        new_data.drawing_area.sankey.attachNodeToCont(node,cont)
-      })
-      cont.draw()
-      closeContextMenu()
-    }}
-    variant='contextmenu_button'
-  >
-    {t('Noeud.create_tied_zdt')}
-  </Button>
-}
-
-export const ButtonNodeContextStartAnimation: FC<BaseComponentProps> = ({ new_data }) => {
-  const { t } = new_data
-
-  const closeContextMenu = () => {
-    // Unset contextualized node
-    new_data.drawing_area.node_contextualised = undefined
-    // Refresh this menu
-    new_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-  }
-
-  return <Button
-    as={MenuItem}
-    onClick={() => {
-      new_data.drawing_area.purgeSelection()
-      new_data.drawing_area.node_contextualised?.launchAnimation() //launch sankey animation form contextualised node
-      closeContextMenu()
-    }}
-    variant='contextmenu_button'
-  >
-    {t('Noeud.animate')}
-  </Button>
-}

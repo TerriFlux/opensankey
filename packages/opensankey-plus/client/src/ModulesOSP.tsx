@@ -49,8 +49,6 @@ import {
 } from './components/SankeyPlusMenuConfigurationLabels'
 import {
   ButtonNodeContextCreateUnitaryView,
-  ButtonNodeContextCreateZDTAroundSelectedNode,
-  ButtonNodeContextStartAnimation,
   NodeHyperLinkOSP,
   NodeIconOSP
 } from './components/SankeyPlusNodes'
@@ -185,9 +183,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         {t('Noeud.osp_context')}
       </MenuButton>
       <MenuList>
-        <ButtonNodeContextStartAnimation new_data={new_data_plus} />
         <ButtonNodeContextCreateUnitaryView app_data={new_data_plus} />
-        <ButtonNodeContextCreateZDTAroundSelectedNode new_data={new_data_plus} />
       </MenuList>
     </Menu>
   }

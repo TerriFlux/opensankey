@@ -42,7 +42,7 @@ export class Class_ZoneSelectionOSP extends Class_ZoneSelection {
     // Get OpenSankey standard elements
     const nbtype=super.selectElementsInside()
     // Adds OpenSankey+ elements
-    this.drawing_area.sankey.containers_list
+    this.drawing_area.containers_list
       .filter(container => {
         // Check if node is horizontally in selection zone
         const is_node_horizontally_in_zone = (

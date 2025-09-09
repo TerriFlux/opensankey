@@ -50,7 +50,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
   const zdt_or_image = (selected_zdt.length > 0 ? (selected_zdt[0].is_image === true ? 'image' : 'text') : 'text')
   const [button_text_or_image, set_button_text_or_image] = useState<'text' | 'image'>(zdt_or_image)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
-  const options_selector = new_data_plus.drawing_area.sankey.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id, selected: d.is_selected } })
+  const options_selector = new_data_plus.drawing_area.containers_list_sorted.map((d) => { return { 'label': d.title, 'value': d.id, selected: d.is_selected } })
 
 
   const [forceUpdate, setForceUpdate] = useState(false)
@@ -77,7 +77,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
           onClick={(entries) => {
             // Update selection list
             const entries_values = entries.map(d => d.value)
-            new_data_plus.drawing_area.sankey.containers_list.forEach(zdt => {
+            new_data_plus.drawing_area.containers_list.forEach(zdt => {
               if (entries_values.includes(zdt.id)) {
                 new_data_plus.drawing_area.addContainerToSelection(zdt)
               }
@@ -255,7 +255,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
     let new_element: Class_ContainerElement
 
     const _addFreeLAbel = () => {// Create default node
-      new_element = new_data_plus.drawing_area.sankey.addNewDefaultFreeLabel()
+      new_element = new_data_plus.drawing_area.addNewDefaultFreeLabel()
       //Deselect previously selected container
       new_data_plus.drawing_area.purgeSelectionOfContainer()
       // Add node to selection
@@ -284,7 +284,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
     const _deleteSelectedLabels = () => {
       dict_old_element = Object.fromEntries(new_data_plus.drawing_area.selected_containers_list.map(cont => [cont.id, cont.toJSON()]))
       // Delete all selected nodes
-      new_data_plus.drawing_area.sankey.deleteSelectedFreeLabels()
+      new_data_plus.drawing_area.deleteSelectedFreeLabels()
       // Update all menus
       redrawAndRefresh()
     }
@@ -292,7 +292,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
     const inv_deleteSelectedLabels = () => {
       Object.values(dict_old_element).forEach(cont => {
         const n_id = (cont as Type_JSON)['id'] as string
-        const new_element = new_data_plus.drawing_area.sankey.addNewFreeLabel(n_id)
+        const new_element = new_data_plus.drawing_area.addNewFreeLabel(n_id)
         new_element.fromJSON(cont as Type_JSON)
         new_data_plus.drawing_area.addContainerToSelection(new_element)
 
@@ -691,9 +691,9 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
         const entries_values = entries.map(d => d.value)
         new_data_plus.drawing_area.sankey.nodes_list.forEach(node => {
           if (entries_values.includes(node.id)) {
-            new_data_plus.drawing_area.selected_containers_list.forEach(zdt => { new_data_plus.drawing_area.sankey.attachNodeToCont(node, zdt) })
+            new_data_plus.drawing_area.selected_containers_list.forEach(zdt => { new_data_plus.drawing_area.attachNodeToCont(node, zdt) })
           } else {
-            new_data_plus.drawing_area.selected_containers_list.forEach(zdt => { new_data_plus.drawing_area.sankey.dettachNodeFromCont(node, zdt) })
+            new_data_plus.drawing_area.selected_containers_list.forEach(zdt => { new_data_plus.drawing_area.dettachNodeFromCont(node, zdt) })
           }
         })
         redrawAndRefresh()
@@ -1053,7 +1053,7 @@ export const ContextZDTOSP = (
   const button_detach_all_tied_nodes = <Button onClick={() => {
     // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array 
     for (let i = zdt_to_contextualise.attached_node.length - 1; i >= 0; i--) {
-      new_data_plus.drawing_area.sankey.dettachNodeFromCont(zdt_to_contextualise.attached_node[i], zdt_to_contextualise)
+      new_data_plus.drawing_area.dettachNodeFromCont(zdt_to_contextualise.attached_node[i], zdt_to_contextualise)
     }
     zdt_to_contextualise.tied_to_nodes = false
     zdt_to_contextualise.draw()
@@ -1070,10 +1070,10 @@ export const ContextZDTOSP = (
     getNodeInsideContextZDT()
       .forEach(n => {
         n.getListDescendantOfNode().forEach(node => {
-          sankey.attachNodeToCont(node, zdt_to_contextualise)
+          new_data_plus.drawing_area.attachNodeToCont(node, zdt_to_contextualise)
           //new_data_plus.drawing_area.addNodeToSelection(node)
         })
-        sankey.attachNodeToCont(n,zdt_to_contextualise)
+        new_data_plus.drawing_area.attachNodeToCont(n,zdt_to_contextualise)
       })
     zdt_to_contextualise.draw()
     closeContextMenu()

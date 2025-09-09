@@ -53,7 +53,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   protected _views: { [id: string]: Class_DrawingArea } = {}
   protected _views_order: string[] = []
-  public get views_order() { return this._views_order} 
+  public get views_order() { return this._views_order }
 
   protected _original_current_view: Class_DrawingArea | undefined
 
@@ -268,7 +268,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         const json_entry_views = json_entry['views']
         // Go throught all view (except first since it's master data & already parsed in JSON)
         this._views_order.filter((id, i) => i !== 0).forEach(id => {
-          json_entry_views[id] = this._views[id].toJSON(false,false,true)
+          json_entry_views[id] = this._views[id].toJSON(false, false, true)
         })
         // Set current DA to active view before toJSON
         this._drawing_area = this._views[current_view]
@@ -513,8 +513,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Prevent default event on ctrl + a
       evt.preventDefault()
       const view_id = makeId('view')
-      this.createNewView(view_id,true)
-      this._views[view_id].name = "Copie de "+this.drawing_area.name
+      this.createNewView(view_id, true)
+      this._views[view_id].name = "Copie de " + this.drawing_area.name
       this.setCurrentView(view_id)
     }
 
@@ -569,7 +569,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @memberof Class_DrawingAreaOSP
    */
   public createNewView(
-    view_name:string, copy: boolean
+    view_name: string, copy: boolean
   ) {
     // If no view existed previously, we add the active sankey as master sankey
     if (!this.has_views) {
@@ -613,7 +613,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const name = 'Unitary view of ' + node_ref.name
     const id = new_drawing_area.id
     const keep_siblings = true
-    const copy = base_drawing_area.toJSON(keep_siblings,false,true)
+    const copy = base_drawing_area.toJSON(keep_siblings, false, true)
     copy.id = id
     new_drawing_area.fromJSON(copy)
     new_drawing_area.name = name
@@ -627,7 +627,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.filter_label = 0
     new_drawing_area.filter_link_value = 0
 
-    new_drawing_area.sankey.containers_list.forEach(cont => {
+    new_drawing_area.containers_list.forEach(cont => {
       new_drawing_area.deleteContainer(cont)
     })
 
@@ -640,7 +640,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         // Compare id instead of object because node_ref come from original DA while links come from copied DA
         // which wouldn't work as intended
         link.resetAttributes()
-        if ((link.source.id !== node_ref.id && link.target.id !== node_ref.id) || !visible_links.includes(link.id)) {
+        if ((link.source.id !== node_ref.id && link.target.id !== node_ref.id) /*|| !visible_links.includes(link.id)*/) {
           new_drawing_area.deleteLink(link)
         } else {
           // Normalize attribute
@@ -657,31 +657,30 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         }
       })
 
-    let scale =0
-    new_drawing_area.sankey.nodes_dict[node_ref.id].input_links_list.forEach(l=>scale+=l.valueCurrent!)
+    let scale = 0
+    new_drawing_area.sankey.nodes_dict[node_ref.id].input_links_list.forEach(l => scale += l.valueCurrent!)
     // Set new scale for unitary sankey
-    new_drawing_area.scale = scale/3
+    new_drawing_area.scale = scale / 3
 
     new_drawing_area.sankey.nodes_list
       .forEach(node => {
         // Delete nodes without IO links
         if (node.links_order.length == 0) {
           new_drawing_area.deleteNode(node)
-        } else {
-          // Normalize attribute
-          node.resetAttributes()
-          // Affect style depending on IO
-          if (node.input_links_list.length == 0) {
-            node.style=[new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
-          } else if (node.output_links_list.length == 0) {
-            node.style=[new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
-          }
-          node.dimensions_as_child.forEach(dim => node.removeDimensionAsChild(dim))
-          node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
+          return 
+        }
+        if (node.input_links_list.length == 0) {
+          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
+        } else if (node.output_links_list.length == 0) {
+          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
         }
       })
     new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeStyle']]
-    new_drawing_area.sankey.nodes_dict[node_ref.id].resetAttributes()
+    new_drawing_area.sankey.default_node_style.position_type = 'parametric'
+    new_drawing_area.nodePositioning.computeAutoSankey(false, false)
+    new_drawing_area.sankey.nodes_list
+      .forEach(node => {node.position_v = -1})
+    new_drawing_area.nodePositioning.computeParametrization()
     // Remove tag group
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
       new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
@@ -690,28 +689,44 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.sankey.flux_taggs_list.forEach(tagg => {
       tagg.use_colors = false
     })
-    new_drawing_area.sankey.level_taggs_list.forEach(tagg => {
-      new_drawing_area.sankey.removeTagGroup('level_taggs', tagg)
-    })
+    // new_drawing_area.sankey.level_taggs_list.forEach(tagg => {
+    //   new_drawing_area.sankey.removeTagGroup('level_taggs', tagg)
+    // })
     new_drawing_area.sankey.data_taggs_list.forEach(tagg => {
       tagg.use_colors = false
     })
 
+    new_drawing_area.sankey.nodes_dict[node_ref.id].resetAttributes()
+    new_drawing_area.sankey.nodes_list
+      .forEach(node => {
 
-    new_drawing_area.callComputeAutoSankey(false)
+        // Normalize attribute
+        node.resetAttributes()
+        // Affect style depending on IO
+        if (node.input_links_list.length == 0) {
+          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
+        } else if (node.output_links_list.length == 0) {
+          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
+        }
+        //node.dimensions_as_child.forEach(dim => node.removeDimensionAsChild(dim))
+        //node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
+
+      })
+    //new_drawing_area.sankey.default_node_style.position.auto_x = true
+
     new_drawing_area.sankey.nodes_list
       .forEach(node => {
         node.reorganizeIOLinks()
         node.position_y += 50
         node.position_x -= 100
       })
-
-    const cont = new_drawing_area.sankey.addNewFreeLabel('unitary_container_')
+    new_drawing_area.legend.stick_to_drawing = false
+    const cont = new_drawing_area.addNewFreeLabel('unitary_container_')
 
     cont.tied_to_nodes = true
     cont.margin_from_attached_nodes = 100
     new_drawing_area.sankey.nodes_list.forEach(node => {
-      new_drawing_area.sankey.attachNodeToCont(node, cont)
+      new_drawing_area.attachNodeToCont(node, cont)
     })
 
     cont.content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
@@ -719,6 +734,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Add new sankey to views
     this._views[new_drawing_area.id] = new_drawing_area
     this.pushViewIdInViewOrder(new_drawing_area.id)
+    this.menu_configuration_osp.updateComponentRelatedToViews()
   }
 
   public setCurrentView(id: string) {
@@ -791,7 +807,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         this._drawing_area.draw()
 
         this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
-
+        this._drawing_area.orderElementOnDA()
         this._history = new Class_ApplicationHistory(this._menu_configuration)
 
         // Update components related to viewss

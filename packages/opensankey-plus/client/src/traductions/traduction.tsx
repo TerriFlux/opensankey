@@ -5,9 +5,10 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import { deep_assign_resources, resources_opensankey,use_context_config } from '../deps/OpenSankey/traductions/traduction'
 import { resources_app_elements } from './traduction_app_elements'
 import { resources_template } from './traduction_templates'
-import { ZDD_MENU_CONFIG_PLUS } from '../components/ContextMenuConfigs'
+import { createZDDMenuConfigPlus,createNodeMenuConfigPlus } from '../components/ContextMenuConfigs'
 
-use_context_config(resources_opensankey,ZDD_MENU_CONFIG_PLUS(),'ContextMenuZDD')
+use_context_config(resources_opensankey,createZDDMenuConfigPlus(),'ContextMenuZDD')
+use_context_config(resources_opensankey,createNodeMenuConfigPlus(),'ContextMenuNodes')
 // Traduction increment for OpenSankey+
 export const resources_opensankeyplus = {}
 deep_assign_resources(resources_opensankey, resources_opensankeyplus)
