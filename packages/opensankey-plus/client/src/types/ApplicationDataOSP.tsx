@@ -674,18 +674,23 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         } else if (node.output_links_list.length == 0) {
           node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
         }
+        node.resetAttributes()
+        //node.resetPositionAttributes()
       })
     new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeStyle']]
     new_drawing_area.sankey.default_node_style.position_type = 'parametric'
-    new_drawing_area.nodePositioning.computeAutoSankey(false, false)
-    new_drawing_area.sankey.nodes_list
-      .forEach(node => {node.position_v = -1})
-    new_drawing_area.nodePositioning.computeParametrization()
-    // Remove tag group
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
       new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
       tagg.use_colors = false
     })
+    new_drawing_area.nodePositioning.computeAutoSankey(false, false)
+    new_drawing_area.sankey.nodes_list
+      .forEach(node => {node.position_v = -1})
+
+    new_drawing_area.nodePositioning.computeParametrization()
+    new_drawing_area.container_activated = false
+    // Remove tag group
+
     new_drawing_area.sankey.flux_taggs_list.forEach(tagg => {
       tagg.use_colors = false
     })
