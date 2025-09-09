@@ -55,23 +55,23 @@ export const createLinkMenuConfigPlus = (): MenuConfig => {
   }
 }
 
+const new_structure = [...NODE_MENU_CONFIG.structure]
+new_structure[0].children!.push({
+  type: 'widget',
+  widgetName: 'ButtonNodeContextAssignTag', // Réutiliser le même widget
+  widgetProps: {
+    context: 'node' // Pour différencier le contexte si nécessaire
+  }
+})
+new_structure[5].children!.push({
+  type: 'button',
+  actionName: 'createUnitarySankey'
+})
+
 export const createNodeMenuConfigPlus = (): MenuConfig => {
   return {
     ...NODE_MENU_CONFIG,
-    structure: [
-      ...NODE_MENU_CONFIG.structure,
-      {
-        type: 'widget',
-        widgetName: 'ButtonNodeContextAssignTag', // Réutiliser le même widget
-        widgetProps: {
-          context: 'node' // Pour différencier le contexte si nécessaire
-        }
-      },
-      {
-        type: 'button',
-        actionName: 'createUnitarySankey'
-      }
-    ],
+    structure: new_structure,
     actions: {
       ...NODE_MENU_CONFIG.actions,
       createUnitarySankey: {
@@ -88,7 +88,7 @@ export const createNodeMenuConfigPlus = (): MenuConfig => {
     },
     sectionTitles: {
       ...NODE_MENU_CONFIG.sectionTitles,
-      createUnitarySankey: {fr:"Créer sankey unitaire",en:"Creates unitary sankey"}
+      createUnitarySankey: { fr: "Créer sankey unitaire", en: "Creates unitary sankey" }
     }
   }
 }
