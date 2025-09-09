@@ -1782,6 +1782,7 @@ export const drawerStyles = {
       body: {
         padding: '0'
       },
+    }),
     drawer_menu_filter: defineStyle({
       dialog: {
         maxWidth: 'inherit',
