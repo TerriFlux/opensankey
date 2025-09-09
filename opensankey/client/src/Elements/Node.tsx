@@ -607,6 +607,11 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this.draw()
   }
 
+  public resetPositionAttributes() {
+    this._display.position = default_element_position
+    this.draw()
+  }
+
   public isAttributeOverloaded(attr: keyof Class_NodeAttribute) {
     if (this._display.attributes[attr] === undefined) return false
     if (this._display.attributes[attr] === this.getStyleWithAttr(attr)[attr]) return false

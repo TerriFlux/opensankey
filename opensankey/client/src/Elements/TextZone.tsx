@@ -284,6 +284,13 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     this._drawContent()
     this.d3_selection?.lower()
   }
+
+  public setEventsListeners() {
+    if (this.drawing_area.container_activated) {
+      super.setEventsListeners()
+    }
+  }
+
   /**
    * Draw ZDT shape (a rectangle with custom size,bg color, bg opacity,border color, ...)
    *
@@ -635,6 +642,7 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventSimpleLMBCLick(event)
+
 
     // Get related drawing area
     const drawing_area = this.drawing_area
