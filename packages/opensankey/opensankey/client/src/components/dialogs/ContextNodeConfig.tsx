@@ -651,7 +651,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     editStyle: { en: 'Edition', fr: 'Édition' },
     maskAttr: { en: 'Display', fr: 'Affichage' },
     changePlan: { en: 'Change plan', fr: 'Changer plan' },
-    associatedElements: { en: 'Associated Elements', fr: 'Elements associés' }
+    associatedElements: { en: 'Associated Elements', fr: 'Élements associés' }
   },
 
   maxDepth: 5
