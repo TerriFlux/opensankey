@@ -268,7 +268,7 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     const present_node_id = this.drawing_area.sankey.nodes_dict
     list_id_nodes.forEach(id_n => {
       if (id_n in present_node_id) {
-        this.drawing_area.sankey.attachContToNode(this, this.drawing_area.sankey.nodes_dict[id_n])
+        this.drawing_area.attachContToNode(this, this.drawing_area.sankey.nodes_dict[id_n])
       }
     })
     this._at_extremity_of_attached_nodes = getBooleanFromJSON(json_object, 'attachedNodesExtremity', this._at_extremity_of_attached_nodes)
