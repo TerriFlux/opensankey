@@ -37,6 +37,7 @@ import {
   default_grid_color,
   default_main_sankey_id,
   getBooleanFromJSON,
+  getJSONFromJSON,
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
@@ -231,6 +232,13 @@ export class Class_DrawingArea {
 
   protected _sankey: Class_Sankey
   protected _legend: ClassTemplate_Legend
+  /**
+   * Contains dict of Free Labels elements
+   * @protected
+   * @type {{ [_: string]: Class_ContainerElement<Class_DrawingArea, Class_Sankey<Class_DrawingArea, Class_NodeElement, Class_LinkElement>> }}
+   * @memberof Class_Sankey
+   */
+  protected _containers: { [_: string]: Class_ContainerElement } = {}
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -363,6 +371,7 @@ export class Class_DrawingArea {
     this._selection_zone = this.createNewSelectionZone()
     this.nodePositioning = new NodePositioning(this)
     this._group_to_select += ',.gg_labels'
+    this._containers = {}
   }
 
   // CLEANING METHODS ===================================================================
@@ -380,6 +389,9 @@ export class Class_DrawingArea {
     // this._sankey.delete() TODO Trop lourd + bug suppression vues
     this._legend.delete()
     this._selection_zone.delete()
+        // Properly delete containers
+    this.containers_list.forEach(container => container.delete())
+    this._containers = {}
     // Clean drawing area
     this.unDraw()
   }
@@ -393,7 +405,11 @@ export class Class_DrawingArea {
     this._copyAttrFrom(drawing_area_to_copy)
     // Copy Sankey
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
-
+    Object.entries(this._containers)
+      .forEach(([idx, container_to_copy]) => {
+        this.addNewFreeLabel(idx)
+          .copyFrom(container_to_copy)
+      })
     //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
     this._legend = new ClassTemplate_Legend(this, this._sankey, this.application_data.menu_configuration)
     // Copy Legend
@@ -438,6 +454,29 @@ export class Class_DrawingArea {
     }
     // Transfert Sankey Attributes
     this.sankey.updateFrom(other_drawing_area.sankey, mode)
+      // Update Containers
+    const list_curr_container = this.containers_list
+    const list_new_container = other_drawing_area.containers_list
+    if (mode.includes('freeLabels') || all) {
+      // Add new container present in new but not current
+      list_new_container.filter(new_cont => !list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
+        .forEach(cont => {
+          this.addNewFreeLabel(cont.id)
+          this.containers_dict[cont.id].copyFrom(cont)
+        })
+
+      // Delete container present in current but not new
+      list_curr_container.filter(curr_cont => !list_new_container.map(new_cont => new_cont.id).includes(curr_cont.id))
+        .forEach(cont => {
+          this.deleteContainer(cont)
+        })
+
+      // Update container in current that are also in new
+      list_new_container.filter(new_cont => list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
+        .forEach(cont => {
+          this.containers_dict[cont.id].copyFrom(cont)
+        })
+    }
   }
 
   // SAVING METHODS =====================================================================
@@ -486,6 +525,13 @@ export class Class_DrawingArea {
         only_visible_elements,
         with_values
       )
+    }
+    if (this.containers_list.length > 0) {
+      const json_object_labels = {} as Type_JSON
+      json_object['labels'] = json_object_labels
+      this.containers_list.forEach(obj => {
+        json_object_labels[obj.id] = obj.toJSON()
+      })
     }
     out['order_g_elements'] = this._list_g_element_id // Order elements by id 
     return out
@@ -546,7 +592,14 @@ export class Class_DrawingArea {
 
     // Update Sankey
     this.sankey.fromJSON(json_object, match_and_update)
-
+    // Class container
+    const json_container_object = getJSONFromJSON(json_object, 'labels', {})
+    Object.entries(json_container_object)
+      .forEach(([_, container_json]) => {
+        const container = this.addNewFreeLabel(_)
+        // Set container value to node from JSON
+        container.fromJSON(container_json as Type_JSON)
+      })
     this._list_g_element_id = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element_id)
 
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
@@ -689,7 +742,7 @@ export class Class_DrawingArea {
     // Draw legend
     this._legend.draw()
     this.drawBgImage()
-    this.sankey.containers_list.forEach(container => container.draw())
+    this.containers_list.forEach(container => container.draw())
   }
 
   public drawSelected() {
@@ -717,8 +770,8 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public closeAllContextMenus() {
-    const just_closed = this.node_contextualised != undefined || 
-      this.link_contextualised != undefined || 
+    const just_closed = this.node_contextualised != undefined ||
+      this.link_contextualised != undefined ||
       this.is_drawing_area_contextualised != false ||
       this.contextualised_container != undefined
 
@@ -732,7 +785,7 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
     // Reset contextualised elements
     this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
-    
+
     return just_closed
   }
 
@@ -794,6 +847,7 @@ export class Class_DrawingArea {
     this.removeNodeFromSelection(node)
     // Remove node from sankey
     this.sankey.deleteNode(node)
+    this._list_g_element_id = this._list_g_element_id.filter(id => id != node.id)
     // Self delete node
     node.delete()
     // Update related menus
@@ -827,6 +881,7 @@ export class Class_DrawingArea {
     this.removeLinkFromSelection(link)
     // Remove link from sankey
     this.sankey.removeLink(link)
+    this._list_g_element_id = this._list_g_element_id.filter(id => id != link.id)
     // Self delete node
     link.delete()
     // Update related menus
@@ -1335,8 +1390,9 @@ export class Class_DrawingArea {
 
   public callComputeAutoSankey(
     launched_from_process: boolean,
+    optimise_crossings: boolean
   ) {
-    this.nodePositioning.computeAutoSankeyWithToast(launched_from_process)
+    this.nodePositioning.computeAutoSankeyWithToast(launched_from_process, optimise_crossings)
   }
 
   /**
@@ -1417,8 +1473,8 @@ export class Class_DrawingArea {
     if (id in this._sankey.links_dict) {
       return this._sankey.links_dict[id]
     }
-    if (id in this._sankey.containers_dict) {
-      const cont = this._sankey.containers_dict[id]
+    if (id in this.containers_dict) {
+      const cont = this.containers_dict[id]
       return { id: cont.id, name: cont.title, is_selected: cont.is_selected, is_visible: cont.is_visible }
     }
 
@@ -2184,7 +2240,7 @@ export class Class_DrawingArea {
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
     this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
-    this.sankey.containers_list.forEach(lab => lab.setEventsListeners())
+    this.containers_list.forEach(lab => lab.setEventsListeners())
   }
 
   public setToModeEdition(_: boolean) {
@@ -2204,6 +2260,135 @@ export class Class_DrawingArea {
     const mode_edition = this.isInEditionMode()
     this.d3_selection?.classed('edition_mode', mode_edition)
     this.d3_selection?.classed('selection_mode', !mode_edition)
+  }
+
+
+
+  /**
+   * Add node ref to container attribute attached_node
+   *
+   * @param {Class_NodeElement} node
+   * @param {Type_GenericContainerElement} cont
+   * @memberof Class_Sankey
+   */
+  public attachNodeToCont(node: Class_NodeElement, cont: Class_ContainerElement) {
+    if (!cont.attached_node.includes(node)) {
+      cont.attached_node.push(node)
+      this.attachContToNode(cont, node)
+    }
+  }
+
+  /**
+   * Add container ref to node attribute attached_container
+   *
+   * @param {Type_GenericContainerElement} cont
+   * @param {Class_NodeElement} node
+   * @memberof Class_Sankey
+   */
+  public attachContToNode(cont: Class_ContainerElement, node: Class_NodeElement): void {
+    if (!node.attached_container.includes(cont)) {
+      node.attached_container.push(cont)
+      this.attachNodeToCont(node, cont)
+    }
+  }
+
+  /**
+   * Remove ref of container in node attached_node attribute
+   *
+   * @param {Class_NodeElement} node
+   * @param {Type_GenericContainerElement} cont
+   * @memberof Class_SankeyOSP
+   */
+  public dettachNodeFromCont(node: Class_NodeElement, cont: Class_ContainerElement) {
+    if (cont.attached_node.includes(node)) {
+      const idx = cont.attached_node.indexOf(node)
+      cont.attached_node.splice(idx, 1)
+      this.dettachNodeFromCont(node, cont)
+    }
+  }
+
+  /**
+   * Remove ref of container in node attached_container attribute
+   *
+   * @param {Type_GenericContainerElement} cont
+   * @param {Class_NodeElement} node
+   * @memberof Class_SankeyOSP
+   */
+  public dettachContFromNode(cont: Class_ContainerElement, node: Class_NodeElement): void {
+    if (node.attached_container.includes(cont)) {
+      const idx = node.attached_container.indexOf(cont)
+      node.attached_container.splice(idx, 1)
+      this.dettachContFromNode(cont, node)
+    }
+  }
+
+  // PUBLIC METHODS =====================================================================
+
+  // New --------------------------------------------------------------------------------
+
+  /**
+   * Add a given zdt to Sankey
+   * @param {Class_ContainerElement<Class_DrawingArea, Class_Sankey<Class_DrawingArea, Class_NodeElement, Class_LinkElement>>} node
+   * @memberof Class_Sankey
+   */
+  private _addLabel(zdt: Class_ContainerElement) {
+    this._containers[zdt.id] = zdt
+  }
+
+  /**
+   * Create and add a node for this Sankey
+   * @param {string} id
+   * @param {string} name
+   * @return {Class_Node}
+   * @memberof Class_Sankey
+   */
+  public addNewFreeLabel(id: string): Class_ContainerElement {
+    if (!this._containers[id]) {
+      // Create node
+      const zdt = new Class_ContainerElement(
+        id,
+        this.application_data.menu_configuration,
+        this)
+      // Set node to default position
+      zdt.initDefaultPosXY()
+      // Update registry of nodes
+      this._addLabel(zdt)
+      return zdt
+    }
+    else {
+      return this.addNewFreeLabel(id + '_0')
+    }
+  }
+
+  /**
+   * Create and add a node for this Sankey with default name
+   * @return {*}
+   * @memberof Class_Sankey
+   */
+  public addNewDefaultFreeLabel() {
+    const n = String(Object.values(this._containers).length)
+    const id = 'free_label' + n
+    return this.addNewFreeLabel(id)
+  }
+
+  /**
+   * Permanently delete selected nodes
+   * @memberof Class_DrawingArea
+   */
+  public deleteSelectedFreeLabels() {
+    // Get copy of selected nodes
+    const selected_labels = this.selected_containers_list as Class_ContainerElement[]
+    // Delete each one of them
+    selected_labels.forEach(selected_label => { this.deleteContainer(selected_label) })
+    // Then let garbage collector do the rest...
+  }
+
+  // Free labels
+  public get containers_dict() { return this._containers }
+  public get containers_list() { return Object.values(this._containers) }
+  public get containers_list_sorted() { return this.containers_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
+  public get visible_containers_list() {
+    return this.containers_list.filter(zdt => zdt.is_visible)
   }
 
   /**
@@ -2410,7 +2595,12 @@ export class Class_DrawingArea {
     // Remove from selection if necessary
     this.removeContainerFromSelection(container)
     // Remove container from sankey
-    this.sankey.deleteContainer(container)
+    if (this._containers[container.id] !== undefined) {
+      // Delete node in sankey
+      const _ = this._containers[container.id]
+      delete this._containers[container.id]
+      _.delete()
+    }
     // Self delete container
     container.delete()
     // Update related menus
@@ -2542,7 +2732,7 @@ export class Class_DrawingArea {
      * @memberof Class_DrawingArea
      */
   public addAllVisibleContainersToSelection() {
-    this.sankey.visible_containers_list
+    this.visible_containers_list
       .forEach(container => this.addContainerToSelection(container))
   }
 
@@ -2706,8 +2896,8 @@ export class Class_DrawingArea {
    */
   private isMouseOverAnExistingContainer(): boolean {
     let cont_id: string
-    for (cont_id in this.sankey.containers_dict) {
-      if (this.sankey.containers_dict[cont_id].isMouseOver())
+    for (cont_id in this.containers_dict) {
+      if (this.containers_dict[cont_id].isMouseOver())
         return true
     }
     return false
@@ -2718,7 +2908,7 @@ export class Class_DrawingArea {
   public set name(name: string) { this._sankey.name = name }
 
   public get selected_containers_list(): Class_ContainerElement[] {
-    return this.sankey.containers_list.filter(container => container.is_selected) as Class_ContainerElement[]
+    return this.containers_list.filter(container => container.is_selected) as Class_ContainerElement[]
   }
   public get selected_containers_list_sorted() { return this.selected_containers_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
 

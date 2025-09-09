@@ -252,7 +252,7 @@ export const SpreadSheet = (
 
   const redraw = () => {
     if (!app_data.menu_configuration.spreadsheet_freeze) {
-      drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
+      drawing_area.nodePositioning.computeAutoSankeyWithToast(true,true)
     }
     app_data.draw()
   }
@@ -730,7 +730,7 @@ export const SpreadSheet = (
 
               // Post-paste functions ====================================
               if (redraw) {
-                drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
+                drawing_area.nodePositioning.computeAutoSankeyWithToast(true,true)
                 app_data.draw()
                 drawing_area.setToModeEdition(false)
                 menu_configuration.updateComponentRelatedToLinksData()
@@ -759,7 +759,7 @@ export const SpreadSheet = (
 
               const redoPaste = () => {
                 drawing_area.fromJSON(nextSankey, false)
-                drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
+                drawing_area.nodePositioning.computeAutoSankeyWithToast(true,true)
                 app_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()
               }
