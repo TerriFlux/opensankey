@@ -40,11 +40,12 @@ import {
 } from '@chakra-ui/react'
 
 
-import { default_style_id } from '../../types/Utils'
+import { default_style_id, Type_JSON } from '../../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { ClickSaveDiagram, uploadExcelImpl } from '../../Persistence/SankeyPersistence'
+import { DecompressedJSONData, decompressUploadedFileUniversal, detectCompressionType } from '../../Persistence/UniversalJSONCompression'
 
 
 /**
@@ -539,55 +540,84 @@ export const ExcelModal = ({ new_data, launch }: {
 
 export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
   const { t, data_var_to_update } = app_data
-  const [file_layout, set_file_layout] = useState<Blob[] | undefined>(undefined)
-  return <Box>
-    <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-      {t('Menu.Transformation.fmep')}
-    </Box>
-    <Box layerStyle='menuconfigpanel_row_2cols'>
-      <Input
-        type="file"
-        aria-label=''
-        onChange={(evt: React.ChangeEvent) => set_file_layout((evt.target as HTMLFormElement).files)} />
-      <Box layerStyle='options_2cols' >
-        <Button
-          variant='menuconfigpanel_option_button'
-          onClick={() => {
-            if (file_layout === undefined) {
-              return
-            }
+  const [file_layout, set_file_layout] = useState<FileList | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
 
-            const reader = new FileReader()
-            reader.onload = (() => {
-              return (
-                (e: ProgressEvent<FileReader>) => {
-                  let result = (e.target as FileReader).result
-                  if (result) {
-                    // TODO verifier fonctionnement de ce qui suit
-                    result = String(result)
-                    const json_object = JSON.parse(result)
-                    const tmp_DA = app_data.createNewDrawingArea()
-                    tmp_DA.fromJSON(json_object)
-                    app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
-                    //app_data.fromJSON(json_object)
-                    // app_data.drawing_area.drawElements()
-                    // app_data.drawing_area.areaAutoFit(true)
-                    // app_data.menu_configuration.updateAllMenuComponents()
-                  }
-                }
-              )
-            })()
-            reader.readAsText(file_layout[0])
-          }}>{t('Menu.Transformation.ad')}
-        </Button>
-        <Button
-          variant='menuconfigpanel_option_button'
-          onClick={() => {
-            // set_sankey_data(JSON.parse(JSON.stringify(prev_sankey_data)))
-          }}>{t('Menu.Transformation.undo')}
-        </Button>
+  const handleFileLoad = async () => {
+    if (!file_layout || file_layout.length === 0) {
+      console.warn('Aucun fichier sélectionné')
+      return
+    }
+
+    const file = file_layout[0]
+    setIsProcessing(true)
+
+    try {
+      console.log(`📁 Traitement du fichier: ${file.name}`)
+      
+      // Détecter le type de compression
+      const compressionType = detectCompressionType(file.name)
+      console.log(`🔍 Type de compression détecté: ${compressionType}`)
+
+      // Décompresser et parser le fichier
+      const json_object: DecompressedJSONData = await decompressUploadedFileUniversal(file)
+      
+      console.log('✅ Fichier traité avec succès, application des données...')
+
+      // Appliquer les données comme dans votre code original
+      const tmp_DA = app_data.createNewDrawingArea()
+      tmp_DA.bypass_redraws = true
+      tmp_DA.fromJSON(json_object as Type_JSON)
+      app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
+
+      console.log('✅ Données appliquées avec succès')
+
+    } catch (error) {
+      console.error('❌ Erreur lors du traitement du fichier:', error)
+      
+      // Optionnel: afficher une notification d'erreur à l'utilisateur
+      // Vous pouvez adapter selon votre système de notifications
+      alert(`Erreur lors du chargement du fichier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
+      
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  return (
+    <Box>
+      <Box as='span' layerStyle='menuconfigpanel_part_title_2'>
+        {t('Menu.Transformation.fmep')}
+      </Box>
+      <Box layerStyle='menuconfigpanel_row_2cols'>
+        <Input
+          type="file"
+          aria-label=''
+          accept=".json,.json.gz,.json.zip,.json.br,.json.deflate,.gz,.zip,.br,.deflate"
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => 
+            set_file_layout(evt.target.files)
+          }
+        />
+        <Box layerStyle='options_2cols'>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={handleFileLoad}
+            isLoading={isProcessing}
+            loadingText="Traitement..."
+            disabled={!file_layout || file_layout.length === 0}
+          >
+            {t('Menu.Transformation.ad')}
+          </Button>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={() => {
+              // set_sankey_data(JSON.parse(JSON.stringify(prev_sankey_data)))
+            }}
+          >
+            {t('Menu.Transformation.undo')}
+          </Button>
+        </Box>
       </Box>
     </Box>
-  </Box>
+  )
 }
-
