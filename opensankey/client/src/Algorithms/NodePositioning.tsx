@@ -469,7 +469,10 @@ export class NodePositioning {
    * Version améliorée de computeAutoSankey qui corrige le positionnement
    * en gardant la logique existante
    */
-  public computeAutoSankey(launched_from_process: boolean) {
+  public computeAutoSankey(
+    launched_from_process: boolean,
+    optimize_crossing:boolean
+  ) {
     console.log('🔧 Calcul automatique des positions - version améliorée')
 
     // Calculate max value of flows (inchangé)
@@ -623,7 +626,7 @@ export class NodePositioning {
       nodes_per_horizontal_indexes,
       horizontal_indexes_per_nodes_ids,
       max_horizontal_index,
-      launched_from_process
+      optimize_crossing
     )
 
     const tmp = this.drawingArea.sankey.nodes_list.filter(n =>
@@ -744,7 +747,7 @@ export class NodePositioning {
     nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] },
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
     max_horizontal_index: number,
-    launched_from_process: boolean
+    optimize_crossing: boolean
   ) {
     // Utiliser la logique existante de positionnement vertical
     // mais avec les corrections de la méthode updateNodesPositions précédente
@@ -815,7 +818,7 @@ export class NodePositioning {
       max_horizontal_index,
       echangeTag
     )
-    this.optimizeCrossingsPositioning(true)
+    this.optimizeCrossingsPositioning(optimize_crossing)
   }
 
   /**
@@ -1575,7 +1578,7 @@ export class NodePositioning {
 
     nodes_to_process.forEach(node => {
       const node_index = horizontal_indexes_per_nodes_ids[node.id]
-      if (node_index) node.display.position.u = node_index + 1
+      node.display.position.u = node_index + 1
     })
 
     this.computeParametricV()
@@ -1758,7 +1761,7 @@ export class NodePositioning {
   /**
    * Auto-compute sankey with waiting toast
    */
-  public computeAutoSankeyWithToast(launched_from_process: boolean) {
+  public computeAutoSankeyWithToast(launched_from_process: boolean,optimize_crossing:boolean) {
     this.drawingArea.application_data.sendWaitingToast(
       () => {
         // If it's not launched_from_process then we assume it's user input so we save it undoing
@@ -1782,7 +1785,7 @@ export class NodePositioning {
         }
 
         // Compute auto pos of nodes
-        this.computeAutoSankey(launched_from_process)
+        this.computeAutoSankey(launched_from_process,optimize_crossing)
         this.computeParametrization()
 
         if (launched_from_process) {

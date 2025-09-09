@@ -329,7 +329,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     bgGridValue: () => drawing_area.grid_visible,
     maskLegend: () => drawing_area.maskLegend(),
     maskLegendValue: () => drawing_area.legend.masked,
-    computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false); saveToCache() },
+    computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false,true); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
     toggleParametricMode: () => drawing_area.setParametricMode(),
     toggleParametricModeValue: () => getNodeStyle().position_type === 'parametric',

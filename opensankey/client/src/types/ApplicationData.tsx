@@ -780,7 +780,7 @@ public readUrlJSON(url_data: string) {
   public computeAutoFullSankey() {
     this.sendWaitingToast(
       () => {
-        this.drawing_area.nodePositioning.computeAutoSankeyWithToast(true)
+        this.drawing_area.nodePositioning.computeAutoSankeyWithToast(true,true)
       },
       {
         success: {

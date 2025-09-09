@@ -497,7 +497,9 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
       value_label_horiz: 'left',
       value_label_pos_auto: true,
       value_label_unit_visible: true,
-      value_label_unit_type: '%OD'
+      value_label_unit_type: '%OD',
+      value_label_significant_digits: true,
+      value_label_nb_significant_digits: 3
     }
   },
   LinkOutUnitaryStyle: {
@@ -507,7 +509,9 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
       value_label_horiz: 'right',
       value_label_pos_auto: true,
       value_label_unit_visible: true,
-      value_label_unit_type: '%IS'
+      value_label_unit_type: '%IS',
+      value_label_significant_digits: true,
+      value_label_nb_significant_digits: 3
     }
   }
 } as const

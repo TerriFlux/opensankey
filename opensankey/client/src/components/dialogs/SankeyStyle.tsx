@@ -147,7 +147,7 @@ export const SankeyModalStyleNode = ({
         {
           Object.entries(style_select.customisable_attribute).map(ent => {
             // Early return to not show props for shape
-            if (ent[0].includes('shape_'))
+              if (ent[0].includes('shape_'))
               return <></>
 
             const labelOrValue = ent[0].includes('name_') ? 'name_label_is_visible' : 'value_label_is_visible'

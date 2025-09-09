@@ -411,14 +411,14 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   }
 
   protected override _initDraw() {
-    if(!this.stick_to_drawing) {
+    if (!this.stick_to_drawing) {
       const d3_svg = this.drawing_area.d3_selection_zoom_area
       if (d3_svg !== null) {
         const d3_drawing_area_selection = d3_svg.selectAll(' #' + this._svg_parent_group)
         if (d3_drawing_area_selection.nodes().length > 0) {
           this.d3_selection = d3_drawing_area_selection.append('g')
           this.d3_selection.attr('id', this.svg_group)
-            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight()+')')  // init drawing area zone with a margin for taking into account the navbar
+            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')')  // init drawing area zone with a margin for taking into account the navbar
         }
       }
     } else {
@@ -429,9 +429,9 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
           const scale_da = this.drawing_area.getZoomScale()
           this.d3_selection = d3_drawing_area_selection.append('g')
           this.d3_selection.attr('id', this.svg_group)
-            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale('+1/scale_da+')')  // init drawing area zone with a margin for taking into account the navbar
+            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
         }
-      }      
+      }
     }
   }
 
@@ -465,11 +465,11 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     if (this._legend_show_constraints) {
       this._drawInfoConstraintLink()
     }
-  // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
-  requestAnimationFrame(() => {
-    this.updateDragZone();
-    this.drawing_area.checkAndUpdateAreaSize();
-  })
+    // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
+    requestAnimationFrame(() => {
+      this.updateDragZone();
+      this.drawing_area.checkAndUpdateAreaSize();
+    })
   }
 
   /**
@@ -484,7 +484,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       const scale_da = this.drawing_area.getZoomScale()
       this.d3_selection.attr(
         'transform',
-        'translate(' + this.position_x + ', ' + position_y + ') scale('+1/scale_da+')')
+        'translate(' + this.position_x + ', ' + position_y + ') scale(' + 1 / scale_da + ')')
     }
   }
 
@@ -1007,35 +1007,35 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   /**
  * Met à jour la taille de la zone de dragging après le rendu complet
  */
-private updateDragZone(): void {
-  // S'assurer qu'on a une sélection valide
-  if (!this.d3_selection) return;
-  
-  // Supprimer l'ancienne zone
-  this.d3_selection.select('.g_drag_zone_leg').remove();
-  
-  // Calculer la bbox du contenu réel (sans la zone de drag)
-  const contentBbox = this.d3_selection.node()?.getBBox();
-  if (!contentBbox) return;
-  
-  // Créer la nouvelle zone avec les bonnes dimensions
-  const dragZone = this.d3_selection.insert('g', ':first-child') // Insérer en premier pour être en arrière-plan
-    .attr('class', 'g_drag_zone_leg');
-    
-  dragZone.append('rect')
-    .attr('class', 'zone_for_dragging')
-    .attr('width', contentBbox.width + 10) // Petit padding
-    .attr('height', contentBbox.height + 10)
-    .attr('x', contentBbox.x - 5)
-    .attr('y', contentBbox.y - 5)
-    .attr('rx', '2px')
-    .attr('ry', '2px')
-    .attr('stroke-dasharray', this.is_selected ? '6,6' : 'unherit')
-    .attr('stroke', (this._legend_bg_border || this.is_selected) ? this._legend_bg_color : 'none')
-    .attr('stroke-width', (this._legend_bg_border || this.is_selected) ? 1 : 0)
-    .attr('fill', this._legend_bg_color)
-    .attr('fill-opacity', this._legend_bg_opacity / 100);
-}
+  private updateDragZone(): void {
+    // S'assurer qu'on a une sélection valide
+    if (!this.d3_selection) return;
+
+    // Supprimer l'ancienne zone
+    this.d3_selection.select('.g_drag_zone_leg').remove();
+
+    // Calculer la bbox du contenu réel (sans la zone de drag)
+    const contentBbox = this.d3_selection.node()?.getBBox();
+    if (!contentBbox) return;
+
+    // Créer la nouvelle zone avec les bonnes dimensions
+    const dragZone = this.d3_selection.insert('g', ':first-child') // Insérer en premier pour être en arrière-plan
+      .attr('class', 'g_drag_zone_leg');
+
+    dragZone.append('rect')
+      .attr('class', 'zone_for_dragging')
+      .attr('width', contentBbox.width + 10) // Petit padding
+      .attr('height', contentBbox.height + 10)
+      .attr('x', contentBbox.x - 5)
+      .attr('y', contentBbox.y - 5)
+      .attr('rx', '2px')
+      .attr('ry', '2px')
+      .attr('stroke-dasharray', this.is_selected ? '6,6' : 'unherit')
+      .attr('stroke', (this._legend_bg_border || this.is_selected) ? this._legend_bg_color : 'none')
+      .attr('stroke-width', (this._legend_bg_border || this.is_selected) ? 1 : 0)
+      .attr('fill', this._legend_bg_color)
+      .attr('fill-opacity', this._legend_bg_opacity / 100);
+  }
   // GETTERS / SETTERS ==================================================================
 
   public get is_visible(): boolean {
@@ -1076,17 +1076,5 @@ private updateDragZone(): void {
   public set info_link_value_void(_) { this._info_link_value_void = _; this.draw() }
 
   public get stick_to_drawing(): boolean { return this._stick_to_drawing }
-  public set stick_to_drawing(_) {
-    this._stick_to_drawing = _
-    const da = this.drawing_area
-    if (this.stick_to_drawing) {
-      this.drawing_area.d3_selection_zoom_area?.select('#grp_legend').remove()
-      da.d3_selection_legend = da.d3_selection!.append('g').attr('id', 'grp_legend')
-    } else {
-      this.drawing_area.d3_selection?.select('#grp_legend').remove()
-      da.d3_selection_legend = da.d3_selection_zoom_area!.append('g').attr('id', 'grp_legend')
-      this.posIfFromLegacy(true)
-    }
-    this.draw()
-  }
+  public set stick_to_drawing(_) {this._stick_to_drawing = _;this.draw()}
 }

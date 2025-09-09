@@ -12,7 +12,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'resetAttr' },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
       ]
-    },
+    },   
     {
       type: 'submenu',
       titleKey: 'maskAttr',
@@ -345,13 +345,15 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     },
     {
       type: 'submenu',
-      titleKey: 'selectLinks',
+      titleKey: 'associatedElements',
       children: [
+        { type: 'button', actionName: 'createTiedZdt' },
         { type: 'button', actionName: 'reorg' },
         { type: 'button', actionName: 'selectOutputLinks' },
         { type: 'button', actionName: 'selectInputLinks' }
       ]
-    }
+    },
+    { type: 'button', actionName: 'startAnimation' }
   ],
 
   actions: {
@@ -581,21 +583,24 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       closeMenuAfter: true
     },
 
+    startAnimation: {
+      type: 'action',
+      labels: { en: 'Launch animation', fr: 'Lancer animation' },
+      tooltips: { en: 'Launch animation', fr: 'Lancer animation' },
+      closeMenuAfter: true
+    },
+    createTiedZdt: {
+      type: 'action',
+      labels: { en: 'Creates geometric frame', fr: 'Créer un cadre géométrique' },
+      tooltips: { en: 'Creates geometric frame', fr: 'Créer un cadre géométrique' },
+      closeMenuAfter: true
+    },
     resetAttr: {
       type: 'action',
       labels: { en: 'Reset attributes', fr: 'Réinit. valeurs styles' },
       tooltips: { en: 'Reset all attributes', fr: 'Réinitialiser tous les attributs' },
       undoable: true
     },
-
-    // selectStyle: {
-    //   type: 'widget',
-    //   widgetName: 'ButtonNodeContextAssignStyle',
-    //   widgetProps: {},
-    //   labels: { en: 'Select style', fr: 'Styles' },
-    //   tooltips: { en: 'Choose a style', fr: 'Styles' },
-    //   // Cette action sera gérée dynamiquement pour créer des boutons pour chaque style
-    // },
 
     reorg: {
       type: 'action',
@@ -606,13 +611,13 @@ export const NODE_MENU_CONFIG: MenuConfig = {
 
     moveToFirstPlan: {
       type: 'action',
-      labels: { en: 'Move to front', fr: 'Mettre au premier plan' },
+      labels: { en: 'Move to front', fr: 'Premier plan' },
       tooltips: { en: 'Move to foreground', fr: 'Déplacer au premier plan' },
     },
 
     moveToLastPlan: {
       type: 'action',
-      labels: { en: 'Move to back', fr: 'Mettre au dernier plan' },
+      labels: { en: 'Move to back', fr: 'Dernier plan' },
       tooltips: { en: 'Move to background', fr: 'Déplacer à l\'arrière plan' }
     },
 
@@ -646,7 +651,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     editStyle: { en: 'Edition', fr: 'Édition' },
     maskAttr: { en: 'Display', fr: 'Affichage' },
     changePlan: { en: 'Change plan', fr: 'Changer plan' },
-    selectLinks: { en: 'Select links', fr: 'Flux associés' }
+    associatedElements: { en: 'Associated Elements', fr: 'Elements associés' }
   },
 
   maxDepth: 5
