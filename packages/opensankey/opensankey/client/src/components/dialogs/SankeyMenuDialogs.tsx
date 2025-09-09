@@ -569,7 +569,7 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
       tmp_DA.bypass_redraws = true
       tmp_DA.fromJSON(json_object as Type_JSON)
       app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
-
+      app_data.drawing_area.draw()
       console.log('✅ Données appliquées avec succès')
 
     } catch (error) {
