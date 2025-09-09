@@ -1289,8 +1289,16 @@ export class Class_NodeElement extends ClassTemplate_Element {
     super.eventSimpleLMBCLick(event)
     this._nodeEventsHandler.handleSimpleLMBClick(event)
     // OSP Extension - Ajouter cette section
-    if (this.drawing_area.static && this.hyperlink) {
+    if (this.hyperlink) {
       window.open(this.hyperlink)
+    }
+  }
+
+  public eventDoubleLMBCLick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    if (this.hyperlink) {
+      window.open(this.hyperlink, '_blank', 'noopener,noreferrer')
     }
   }
 

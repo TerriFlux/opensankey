@@ -1757,7 +1757,7 @@ export class Class_DrawingArea {
   ) {
     event.preventDefault()
     // Fermer les tooltips via le système intégré
-    this.closeAllMenus()
+    this.closeAllContextMenus()
     const tooltipManager = TooltipEventManager.getInstance();
     tooltipManager.closeTooltip();
   }
