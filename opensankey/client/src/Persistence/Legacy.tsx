@@ -1653,6 +1653,7 @@ const convert_nodes: convert_nodesFuncType = (
       let children = Object.values(data.nodes).filter(nn => dim in nn.dimensions)
       children = children.filter(nn => nn.dimensions[dim].parent_name == node.idNode)
       children.forEach(child => {
+        if (child == node) return
         child.dimensions[dim].force_show_parent = true
         treatExchangeNodes(data, child, dim, false)
         if (!NodeHasDisplayedLevel(data, child)) {
