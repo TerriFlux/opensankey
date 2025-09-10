@@ -68,13 +68,14 @@ export class LinkDrawLabel {
     this._link.d3_selection?.selectAll('.link_label').remove()
 
     const link_text = this._link.text_value
-
+    const link_val = this._link.valueCurrent
     // =======================DRAW TEXT LABEL ============================
     if (
       (this._link.drawing_area.type_data !== 'structure') &&
       (this._link.name_label_is_visible) &&
       ((link_text ?? '') !== '')
     ) {
+      if ((link_val ?? 0) <= this._link.drawing_area.filter_label)  return
       if (this._link.source && this._link.target) {
         // Compute label to display
         const label_to_display = link_text
