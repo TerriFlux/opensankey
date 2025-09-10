@@ -406,7 +406,7 @@ export class Class_DrawingArea {
     this._copyAttrFrom(drawing_area_to_copy)
     // Copy Sankey
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
-    Object.entries(this._containers)
+    Object.entries(drawing_area_to_copy._containers)
       .forEach(([idx, container_to_copy]) => {
         this.addNewFreeLabel(idx)
           .copyFrom(container_to_copy)
