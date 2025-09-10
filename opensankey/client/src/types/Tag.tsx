@@ -721,16 +721,7 @@ export class Class_LevelTag {
   // PUBLIC METHODES ====================================================================
 
   public update() {
-    // this.dimensions_list_as_tag_for_children.forEach(dim => {
-    //   if (dim.parent_level_tag.group.activated) {
-    //     dim.showAccordingToLevelTags()
-    //   }
-    // })
-    // this.dimensions_list_as_tag_for_parent.forEach(dim => {
-    //   if (dim.parent_level_tag.group.activated) {
-    //     dim.showAccordingToLevelTags()
-    //   }
-    // })
+    this._ref_sankey.showAccordingToLevelTags()
   }
 
   public setSelected() {
