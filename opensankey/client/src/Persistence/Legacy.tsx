@@ -429,6 +429,8 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     //s[1].scientific_precision = true
     //@ts-expect-error xxx
     s[1].gradient = false
+    //@ts-expect-error xxx
+    s[1].name_label_vert = 'middle'
     //s[1].nb_digit = 0
   })
   if (data_to_convert.style_node === undefined) {
