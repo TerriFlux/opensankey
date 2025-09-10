@@ -442,6 +442,21 @@ export class Class_DrawingArea {
     this._background_image = drawing_area_to_copy._background_image
   }
 
+  /**
+   * Postprocessing drawing area after JSON affectation
+   * @protected
+   * @memberof Class_ApplicationData
+   */
+  public afterFromJSON() {
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const exchanges_nodes = this.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!))
+    if (exchanges_nodes.length > 0 && (exchanges_nodes[0].input_links_list.length>1 || exchanges_nodes[0].output_links_list.length>1)) {
+      this.nodePositioning.splitTrade()
+    }
+    this.nodePositioning.arrangeTrade(true)
+  }
+
+
   public updateFrom(
     other_drawing_area: Class_DrawingArea,
     mode: string[]

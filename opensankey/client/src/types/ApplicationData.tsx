@@ -586,8 +586,8 @@ export class Class_ApplicationData {
       ...json_object,
       ...this.drawing_area.toJSON(
         false,
-        this.options_save_json?.mode_visible_element ?? default_save_only_visible_elements,
-        this.options_save_json?.mode_save ?? default_save_with_values
+        this.options_save_json.mode_visible_element,
+        this.options_save_json.mode_save
       )
     }
   }
@@ -700,12 +700,7 @@ public readUrlJSON(url_data: string) {
    */
   protected _afterFromJSON() {
     this._drawing_area.setToModeEdition(false) // Default mode after reading json is Selection
-    const echangeTag = this._drawing_area.sankey.node_taggs_dict['type de noeud'] ? this._drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
-    const exchanges_nodes = this._drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!))
-    if (exchanges_nodes.length > 0 && (exchanges_nodes[0].input_links_list.length>1 || exchanges_nodes[0].output_links_list.length>1)) {
-      this._drawing_area.nodePositioning.splitTrade()
-    }
-    this._drawing_area.nodePositioning.arrangeTrade(true)
+    this._drawing_area.afterFromJSON()
     if (this._language !== undefined && i18next.language !== this.language)
       i18next.changeLanguage(this.language)
 
