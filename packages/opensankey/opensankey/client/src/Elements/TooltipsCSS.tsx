@@ -107,6 +107,7 @@ export class TooltipBehaviorManager {
   }
 }
 
+
 export const TOOLTIP_STYLES = `
   .sankey-tooltip {
     position: fixed !important;
@@ -116,7 +117,7 @@ export const TOOLTIP_STYLES = `
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 12px;
-    width: 600px;
+    width: 800px;
     max-width: 90vw;
     max-height: 80vh;
     z-index: 10000;
@@ -157,8 +158,7 @@ export const TOOLTIP_STYLES = `
     width: 100%; 
     border-collapse: collapse; 
     font-size: 11px;
-    white-space: nowrap; 
-    table-layout: auto; /* un seul tableau => alignement naturel */
+    table-layout: fixed; /* un seul tableau => alignement naturel */
   }
   .tooltip-table td.value,
   .tooltip-table td.ratio,
@@ -176,6 +176,11 @@ export const TOOLTIP_STYLES = `
     position: sticky; 
     top: var(--sticky-top, 0px); 
     z-index: 1;
+    width: 100px; 
+    /* ✅ AJOUTÉ : Permettre le retour à la ligne dans les headers */
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   .tooltip-table th:first-child {
     position: sticky; 
@@ -183,14 +188,20 @@ export const TOOLTIP_STYLES = `
     z-index: 3; 
     background: #f9f9f9;
     box-shadow: 2px 0 4px rgba(0,0,0,0.1); 
-    min-width: 120px; 
-    width: auto;
+    /* ✅ MODIFIÉ : Largeur fixe plus raisonnable */
+    width: 140px; 
+    max-width: 140px;
   }
   .tooltip-table td {
     padding: 8px 18px; 
     border-bottom: 1px solid #f0f0f0; 
     border-right: 1px solid #e8e8e8; 
     background: white;
+    
+    /* ✅ AJOUTÉ : Permettre le retour à la ligne dans toutes les cellules */
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   .tooltip-table td:first-child {
     position: sticky; 
@@ -199,9 +210,16 @@ export const TOOLTIP_STYLES = `
     background: white;
     box-shadow: 2px 0 4px rgba(0,0,0,0.05); 
     font-weight: 500;
-    min-width: 120px; 
-    width: auto; 
+    /* ✅ MODIFIÉ : Largeur fixe identique au header */
+    width: 140px; 
+    max-width: 140px;
     text-align: left !important;
+    /* ✅ AJOUTÉ : Styles spécifiques pour la première colonne */
+    white-space: normal !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.3;
+    vertical-align: top;
   }
   .tooltip-table tr:hover td { 
     background: #fafafa; 
@@ -229,6 +247,10 @@ export const TOOLTIP_STYLES = `
     position: sticky; 
     left: 0; 
     z-index: 2;
+    /* ✅ AJOUTÉ : Permettre le retour à la ligne dans les headers de section */
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   /* Scrollbar custom */
   .tooltip-content::-webkit-scrollbar { 
@@ -257,9 +279,24 @@ export const TOOLTIP_STYLES = `
     color: #666;
     padding: 4px;
     border-radius: 4px;
+    /* ✅ AJOUT : S'assurer que le bouton est au-dessus de tout */
+    z-index: 10001;
+    pointer-events: auto;
+    /* ✅ AJOUT : Styles pour améliorer la visibilité */
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
   }
   .tooltip-close:hover {
     background: #f0f0f0;
     color: #333;
+  }
+  /* ✅ AJOUT : Focus pour l'accessibilité */
+  .tooltip-close:focus {
+    outline: 2px solid #4a9eff;
+    outline-offset: 2px;
   }
 `;
