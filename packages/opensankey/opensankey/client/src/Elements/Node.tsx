@@ -381,7 +381,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
 
     if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
-    json_object['local'] = this._display.attributes.toJSON(this,null)
+    json_object['local'] = this._display.attributes.toJSON(this, null)
     if (this._display.position.dx) json_object['local']['dx'] = this._display.position.dx
     if (this._display.position.dy) json_object['local']['dy'] = this._display.position.dy
 
@@ -393,9 +393,9 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
     // 🔄 LINKS JSON - RÉINTÉGRÉ DIRECTEMENT  
     if (kwargs && kwargs['only_visible_elements']) {
-      json_object['inputLinksId'] = this.input_links_list.filter(l=>l.is_visible).map(l => l.id)
-      json_object['outputLinksId'] = this.output_links_list.filter(l=>l.is_visible).map(l => l.id)
-      json_object['links_order'] = this._links_order.filter(l=>l.is_visible).map(link => link.id)
+      json_object['inputLinksId'] = this.input_links_list.filter(l => l.is_visible).map(l => l.id)
+      json_object['outputLinksId'] = this.output_links_list.filter(l => l.is_visible).map(l => l.id)
+      json_object['links_order'] = this._links_order.filter(l => l.is_visible).map(link => link.id)
     } else {
       json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
       json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
@@ -422,7 +422,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     OSPFormatConverter.convertNodeFromOSPFormat(json_node_object)
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
     if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object,this,null)
+      this._display.attributes.fromJSON(json_local_object, this, null)
       this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
       this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
       const relative_dx = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dx')

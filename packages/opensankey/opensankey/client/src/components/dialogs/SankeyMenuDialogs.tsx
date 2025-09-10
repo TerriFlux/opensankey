@@ -554,31 +554,33 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
 
     try {
       console.log(`📁 Traitement du fichier: ${file.name}`)
-      
+
       // Détecter le type de compression
       const compressionType = detectCompressionType(file.name)
       console.log(`🔍 Type de compression détecté: ${compressionType}`)
 
       // Décompresser et parser le fichier
       const json_object: DecompressedJSONData = await decompressUploadedFileUniversal(file)
-      
+
       console.log('✅ Fichier traité avec succès, application des données...')
 
       // Appliquer les données comme dans votre code original
       const tmp_DA = app_data.createNewDrawingArea()
       tmp_DA.bypass_redraws = true
       tmp_DA.fromJSON(json_object as Type_JSON)
+      tmp_DA.afterFromJSON()
+      app_data.drawing_area.bypass_redraws = true
       app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
       app_data.drawing_area.draw()
       console.log('✅ Données appliquées avec succès')
 
     } catch (error) {
       console.error('❌ Erreur lors du traitement du fichier:', error)
-      
+
       // Optionnel: afficher une notification d'erreur à l'utilisateur
       // Vous pouvez adapter selon votre système de notifications
       alert(`Erreur lors du chargement du fichier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
-      
+
     } finally {
       setIsProcessing(false)
     }
@@ -594,7 +596,7 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
           type="file"
           aria-label=''
           accept=".json,.json.gz,.json.zip,.json.br,.json.deflate,.gz,.zip,.br,.deflate"
-          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => 
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) =>
             set_file_layout(evt.target.files)
           }
         />
