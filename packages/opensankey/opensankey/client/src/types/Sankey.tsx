@@ -75,11 +75,31 @@ export class Class_Sankey {
   protected _link_styles: { [_: string]: Class_LinkStyle } = {}
   protected _node_styles: { [_: string]: Class_NodeStyle } = {}
 
-  public _nodes_dimensions: Class_NodeDimension[] = []
+  protected _nodes_dimensions: {[_:string]:Class_NodeDimension} = {}
 
   public name: string
 
   public normalised_link?: Class_LinkElement
+
+  public addNodeDimension(dim:Class_NodeDimension) {
+    if (this._nodes_dimensions[dim.id]) {
+      return
+    }
+    this._nodes_dimensions[dim.id] = dim
+  }
+  
+  public removeNodeDimension(dim:Class_NodeDimension) {
+    if (!this._nodes_dimensions[dim.id]) {
+      return
+    }
+    delete this._nodes_dimensions[dim.id]
+  }
+
+  public showAccordingToLevelTags() {
+    Object.values(this._nodes_dimensions).forEach(dim=>{
+      dim.unsetForcingToShow()
+  })
+  }
 
   protected createNewNode(id: string, name: string): Class_NodeElement {
     const node = new Class_NodeElement(id, name, this.drawing_area, this._menu_config)

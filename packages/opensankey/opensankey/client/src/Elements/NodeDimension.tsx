@@ -107,6 +107,7 @@ export class Class_NodeDimension {
     // - Children tag are not of the same group
     // - Parent & children tags groups are not the same
     // - Children list is empty
+    this.parent.sankey.addNodeDimension(this)
 
     if (
       (parent_level_tag.group !== this.child_level_tag.group) ||
@@ -135,6 +136,8 @@ export class Class_NodeDimension {
       this._child_level_tag.removeChildrenLevel(this)
       //this._child_level_tag = ''
       // Garbage collector will do the rest ...
+          // - Children list is empty
+      this.parent.sankey.removeNodeDimension(this)
     }
   }
 
@@ -204,17 +207,6 @@ export class Class_NodeDimension {
     }
   }
 
-  // public showAccordingToLevelTags() {
-  //   // Unset booleans
-  //   const nodes_to_redraw = this._unsetForcingToShow()
-  //   // Redraw
-  //   nodes_to_redraw
-  //     .forEach(node => {
-  //       node.dimensionsUpdated()
-  //       node.draw()
-  //   })
-  // }
-
   /**
    * Force to set this dimension's parent as visible
    * @memberof Class_NodeDimension
@@ -278,12 +270,12 @@ export class Class_NodeDimension {
       ...this._children
     ])
     // Unset forcing to show children on all other parent node's dimensions where he is parent
-    this.parent.dimensions_as_parent
-      .forEach(dim => {
-        if (dim !== this) {
-          nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
-        }
-      })
+    // this.parent.dimensions_as_parent
+    //   .forEach(dim => {
+    //     if (dim !== this) {
+    //       nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
+    //     }
+    //   })
     // Redraw
     if (!fromJSON) { //when called in dimensionsFromJSON, we don't reorganise link order as it's informed by node json
       nodes_to_redraw
@@ -304,40 +296,11 @@ export class Class_NodeDimension {
     this._children.forEach(child => child.dimensionsUpdated())
   }
 
-  protected _unsetForcingToShow() {
-    // Protection against infinite recursion
-    if (this._is_currently_in_unsetting_recursion)
-      return new Set([])
-    // Otherwise - continue
-    // Set protection
-    this._is_currently_in_unsetting_recursion = true
-    // Set booleans accordingly
+  public unsetForcingToShow() {
+
     this._force_show_children = false
     this._force_show_parent = false
     this._updated()
-    // Unsetting boolean are propagated through childrens
-    let nodes_to_redraw = new Set([
-      this._parent,
-      ...this._children
-    ])
-    if (this.children.length == 0) {
-      return nodes_to_redraw
-    }
-    if (this.children[0].id !== this.parent.id) {
-      this._children
-        .forEach(child => {
-          child.dimensions_as_child
-            .forEach(dim => {
-              if (dim !== this && dim.parent_level_tag.group.activated) {
-                nodes_to_redraw = nodes_to_redraw.union((dim as Class_NodeDimension)._unsetForcingToShow())
-              }
-            })
-        })
-    }
-    // Unset protection
-    this._is_currently_in_unsetting_recursion = false
-    // Return set of all nodes that need to be redrawn
-    return nodes_to_redraw
   }
 
   /**
