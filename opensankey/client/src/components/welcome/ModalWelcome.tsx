@@ -24,48 +24,24 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, {useState} from 'react'
+import React, { useState, useEffect } from 'react'
 import { Carousel } from 'react-bootstrap'
-
-// Imported libs
 import {
-  Box,
-  Heading,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  Tab,
-  Tabs,
-  Table,
-  TabList,
-  TabPanel,
-  TabPanels,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
-  ModalOverlay,
-  ModalHeader
+  Box, Heading, Modal, ModalBody, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader,
+  Tab, Tabs, Table, TabList, TabPanel, TabPanels, Tbody, Td, Text, Th, Thead, Tr,
 } from '@chakra-ui/react'
-
-
-import resources from './resources.json'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 
-
-export const ModalWelcome = ({new_data, external_pagination, external_content}: {
-    new_data: Class_ApplicationData
-   external_pagination: { [x: string]: JSX.Element; };
-    external_content: { [x: string]: JSX.Element; };
-  }) => {
-  const { t } = new_data
+export const ModalWelcome = ({ app_data, external_pagination, external_content }: {
+  app_data: Class_ApplicationData
+  external_pagination: { [x: string]: JSX.Element; };
+  external_content: { [x: string]: JSX.Element; };
+}) => {
+  const { t, menu_configuration, is_static } = app_data
   const [show_welcome, set_show_welcome] = useState(false)
   const [current_header, setCurrentHeader] = useState<string>(Object.keys(external_pagination)[0] as string)
 
-  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current = set_show_welcome
+  menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current = set_show_welcome
 
   const content_rc_static = <>
     <Heading variant='heading_welcome_style' >{t('Menu.rcc_titre_princ')}</Heading>
@@ -77,7 +53,7 @@ export const ModalWelcome = ({new_data, external_pagination, external_content}: 
     <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
   </>
 
-  external_content['rc'] = new_data.is_static ? content_rc_static : external_content['rc']
+  external_content['rc'] = is_static ? content_rc_static : external_content['rc']
 
   const content = <Modal
     isOpen={show_welcome}
@@ -125,35 +101,55 @@ export const ModalWelcome = ({new_data, external_pagination, external_content}: 
   return content
 }
 
-export const ModalWelcomeBuilder = ({ new_data } : { new_data: Class_ApplicationData }) => {
+export const ModalWelcomeBuilder = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const [, setCount] = useState(0)
-  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current = () => setCount(a => a + 1)
+  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current = () => setCount(a => a + 1)
 
-  const [page_links, page_content] = ModalWelcomeContent(
-    new_data,
-  )
+  const [page_links, page_content] = ModalWelcomeContent(app_data)
 
   return <ModalWelcome
-    new_data={new_data}
+    app_data={app_data}
     external_pagination={page_links}
     external_content={page_content}
   />
 }
+interface Resources {
+  images_carousel_paths: string[]
+  carousel_data: {
+    [key: string]: {
+      title: string;
+      description: string
+    }
+  }
+}
 
-export const ModalWelcomeContent = (new_data: Class_ApplicationData) => {
-  const { t, static_path } = new_data
-  const welcome_text = (new_data.options?.welcome_text as string) ?? ''
+export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
+  const { t, static_path } = app_data
+  const [resources, setResources] = useState<Resources | null>(null)
+  const welcome_text = (app_data.options?.welcome_text as string) ?? ''
   const has_welcome_text = welcome_text.length > 0
+  const src_intro_static = 'intro.png'
+  // Ajouter cet useEffect
+  useEffect(() => {
+    const loadResources = async () => {
+      try {
+        const response = await fetch('/resources.json')
+        const data = await response.json()
+        setResources(data)
+      } catch (error) {
+        console.error('Erreur lors du chargement de resources.json:', error)
+      }
+    }
+    loadResources()
+  }, [])
 
-  const images_paths = resources['images_carousel_paths'].map(image_path => {
+  const images_paths = resources?.['images_carousel_paths']?.map(image_path => {
     const path = window.location.href
     if (!path.includes('localhost')) {
       image_path = image_path.replace('static/', static_path)
     }
     return image_path
   })
-
-  const src_intro_static = 'welcome/intro_static.png'
 
   const page_links: { [x: string]: JSX.Element } = {}
   const page_content: { [x: string]: JSX.Element } = {}
@@ -171,7 +167,7 @@ export const ModalWelcomeContent = (new_data: Class_ApplicationData) => {
     height='100%'
   >
     {
-      new_data.is_static ?
+      app_data.is_static ?
         <img
           src={src_intro_static}
           alt='intro carousel'
@@ -182,9 +178,12 @@ export const ModalWelcomeContent = (new_data: Class_ApplicationData) => {
           style={{ 'height': '100%' }}
         >
           {
-            (images_paths as string[]).map((_, idx) => {
-              let title = _.split('/').pop()
+            (images_paths as string[])?.map((imagePath, idx) => {
+              let title = imagePath.split('/').pop()
               title = title!.split('.').splice(0, 1).join('')
+
+              const carouselItem = resources?.carousel_data?.[title]
+
               return (
                 <Carousel.Item key={idx} style={{ 'height': '100%' }}>
                   <Box
@@ -199,11 +198,11 @@ export const ModalWelcomeContent = (new_data: Class_ApplicationData) => {
                       alignSelf='bottom'
                       textAlign='center'
                     >
-                      {t('welcome.caroussel.' + title)}
+                      {carouselItem?.title}
                     </Text>
                     <img
                       alt={title}
-                      src={_}
+                      src={imagePath}
                       style={{
                         'objectFit': 'scale-down',
                         'justifySelf': 'center',
@@ -219,7 +218,7 @@ export const ModalWelcomeContent = (new_data: Class_ApplicationData) => {
                       alignSelf='bottom'
                       textAlign='center'
                     >
-                      {t('welcome.caroussel.descr.' + title)}
+                      {carouselItem?.description}
                     </Text>
                   </Box>
                 </Carousel.Item>

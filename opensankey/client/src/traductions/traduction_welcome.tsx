@@ -10,25 +10,7 @@ export const resources_welcome = {
           //licence: 'Licences',
         },
         read_me: 'Read me',
-        intro: 'Quick overview of the application\'s functionalities',
-        caroussel: {
-          Image1: 'Understand your flows, represent them with Sankey diagrams',
-          Image2: 'Quickly import your data or draw your diagrams directly',
-          Image3: 'Clarify the information represented',
-          Image40: 'Give the necessary depth of understanding',
-          Image41: 'Give the necessary depth to understanding',
-          Image5: 'Create interactive & didactic infographics',
-          Image6: 'Create interactive & didactic infographics',
-          descr: {
-            Image1: 'In this representation mode, the thickness of each arrow is proportional to the value of the flow it represents',
-            Image2: 'Create your diagrams from Excel spreadsheets or via the interactive drawing area',
-            Image3: 'Make your diagrams easy to read with integrated node, flow and data labeling',
-            Image40: 'Aggregation levels allow you to represent your flows in several levels of detail',
-            Image41: 'Each level of detail can be directly selected to display only what is useful',
-            Image5: 'Explain your achievements simply with the automatic legend system and the addition of text boxes',
-            Image6: 'Create beautiful diagrams by directly integrating images or icons'
-          }
-        },
+        intro: 'Feature Guide',
         interface: 'Interface\'s buttons explained',
         rc: 'Keyboard Shortcuts',
         licence: 'Licences',
@@ -80,25 +62,7 @@ export const resources_welcome = {
           //licence: 'Licences',
         },
         read_me: 'Lisez moi',
-        intro: 'Présentation des fonctionnalités de l\'outil',
-        caroussel: {
-          Image1: 'Comprenez vos flux, Représentez les avec des diagrammes de Sankey',
-          Image2: 'Importez rapidement vos données ou tracez directement vos diagrammes',
-          Image3: 'Clarifiez l\'information représentée',
-          Image40: 'Donnez la profondeur nécessaire à la compréhension',
-          Image41: 'Donnez la profondeur nécessaire à la compréhension',
-          Image5: 'Créez de véritables infographies didactiques',
-          Image6: 'Créez de véritables infographies didactiques',
-          descr: {
-            Image1: 'Dans ce mode de réprésentation, l\'épaisseur de chaque flèche est proportionnelle à la valeur du flux qu\'elle représente.',
-            Image2: 'Créez vos diagrammes à partir de tableurs Excel ou via l\'espace de dessin interactif',
-            Image3: 'Facilitez la lecture de vos diagrammes grâce au système intégré d\'étiquetage des noeuds, des flux et des données',
-            Image40: 'Les niveaux d\'agregations permettent de representer vos flux suivant plusieurs niveaux de détails',
-            Image41: 'Chaque niveau de détails peut être individuellement selectionnés pour afficher seulement ce qui est utile',
-            Image5: 'Expliquez simplement vos réalisations avec le système de légende automatique et l\'ajout de zones de texte',
-            Image6: 'Créez de beaux diagrammes en y intégrant directement des images ou des icônes'
-          }
-        },
+        intro: 'Guide des fonctionnalités',
         interface: 'Présentation des actions associées aux boutons et menus',
         rc: 'Pour plus de rapidité, des raccourcis clavier sont disponibles',
         licence: 'Optez pour la licence adaptée à votre usage',

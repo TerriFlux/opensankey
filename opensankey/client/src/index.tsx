@@ -45,9 +45,6 @@ import {
   moduleDialogs
 } from './Modules'
 import {
-  ClickSaveDiagram
-} from './Persistence/SankeyPersistence'
-import {
   ModalWelcomeBuilder
 } from './components/welcome/ModalWelcome'
 import { opensankey_theme } from './css/Theme'
