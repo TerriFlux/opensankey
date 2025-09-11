@@ -2034,7 +2034,7 @@ export const sizes = {
     padding: '0.2rem',
   }),
   sizeToolbarButton: defineStyle({
-    width: '3rem',
+    width: '2rem',
     height: '2rem',
     minW: 'unset',
     padding: '0.2rem',
