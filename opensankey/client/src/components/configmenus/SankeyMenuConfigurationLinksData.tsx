@@ -134,7 +134,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   })
 
   return <Box layerStyle='menu_sub_section'>
-    <SankeyLinkSelection new_data={app_data} />
+    <SankeyLinkSelection app_data={app_data} />
     {data_taggs_list.map(data_tagg => {
       return <BOX2COLSTITLEH4 title={data_tagg.name}>
         <Select
