@@ -43,17 +43,17 @@ export const ModalWelcome = ({ app_data, external_pagination, external_content }
 
   menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current = set_show_welcome
 
-  const content_rc_static = <>
-    <Heading variant='heading_welcome_style' >{t('Menu.rcc_titre_princ')}</Heading>
-    <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
-    <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
+  // const content_rc_static = <>
+  //   <Heading variant='heading_welcome_style' >{t('Menu.rcc_titre_princ')}</Heading>
+  //   <p><b>{t('Menu.rcc_cdn_bold')}</b>{t('Menu.rcc_cdn')}</p>
+  //   <p><b>{t('Menu.rcc_ctrl_scrll_bold')}</b>{t('Menu.rcc_ctrl_scrll')}</p>
 
-    <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
-    <p><b>{t('Menu.rcc_F8_bold')}</b>{t('Menu.rcc_F8')}</p>
-    <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
-  </>
+  //   <p><b>{t('Menu.rcc_F7_bold')}</b>{t('Menu.rcc_F7')}</p>
+  //   <p><b>{t('Menu.rcc_F8_bold')}</b>{t('Menu.rcc_F8')}</p>
+  //   <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
+  // </>
 
-  external_content['rc'] = is_static ? content_rc_static : external_content['rc']
+  //external_content['rc'] = is_static ? <></> : external_content['rc']
 
   const content = <Modal
     isOpen={show_welcome}
@@ -124,16 +124,16 @@ interface Resources {
 }
 
 export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
-  const { t, static_path } = app_data
+  const { t, static_path, is_static } = app_data
   const [resources, setResources] = useState<Resources | null>(null)
-  const welcome_text = (app_data.options?.welcome_text as string) ?? ''
-  const has_welcome_text = welcome_text.length > 0
-  const src_intro_static = 'intro.png'
+  // const welcome_text = (app_data.options?.welcome_text as string) ?? ''
+  // const has_welcome_text = welcome_text.length > 0
+  //const src_intro_static = 'intro.png'
   // Ajouter cet useEffect
   useEffect(() => {
     const loadResources = async () => {
       try {
-        const response = await fetch('/resources.json')
+        const response = await fetch('./resources.json')
         const data = await response.json()
         setResources(data)
       } catch (error) {
@@ -155,83 +155,98 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
   const page_content: { [x: string]: JSX.Element } = {}
 
   // Welcom text
-  if (has_welcome_text) {
-    page_links['read_me'] = <>{t('welcome.breadcrumbs.read_me')}</>
-    page_content['read_me'] = welcome_text ? <> parse(welcome_text) </> : <></>
-  }
+  // if (has_welcome_text) {
+  //   page_links['read_me'] = <>{t('welcome.breadcrumbs.read_me')}</>
+  //   page_content['read_me'] = welcome_text ? <> parse(welcome_text) </> : <></>
+  // }
 
   // Introduction to application
   page_links['intro'] = <> {t('welcome.breadcrumbs.intro')}</>
   page_content['intro'] = <Box
     display="block"
     height='100%'
+    maxHeight='60vh' // Limite la hauteur du carousel
+    overflow='hidden'
   >
-    {
-      app_data.is_static ?
-        <img
-          src={src_intro_static}
-          alt='intro carousel'
-          style={{ 'objectFit': 'contain', 'width': '100%' }}
-        /> :
-        <Carousel
-          variant='dark'
-          style={{ 'height': '100%' }}
-        >
-          {
-            (images_paths as string[])?.map((imagePath, idx) => {
-              let title = imagePath.split('/').pop()
-              title = title!.split('.').splice(0, 1).join('')
+    <Carousel
+      variant='dark'
+      style={{
+        height: '100%',
+        maxHeight: '60vh'
+      }}
+    >
+      {
+        (images_paths as string[])?.map((imagePath, idx) => {
+          let title = imagePath.split('/').pop()
+          title = title!.split('.').splice(0, 1).join('')
 
-              const carouselItem = resources?.carousel_data?.[title]
+          const carouselItem = resources?.carousel_data?.[title]
 
-              return (
-                <Carousel.Item key={idx} style={{ 'height': '100%' }}>
-                  <Box
-                    display='grid'
-                    width='100%'
-                    height='100%'
-                  >
-                    <Text
-                      textStyle='h2'
-                      padding='2rem'
-                      justifySelf='center'
-                      alignSelf='bottom'
-                      textAlign='center'
-                    >
-                      {carouselItem?.title}
-                    </Text>
-                    <img
-                      alt={title}
-                      src={imagePath}
-                      style={{
-                        'objectFit': 'scale-down',
-                        'justifySelf': 'center',
-                        'alignSelf': 'center',
-                        'maxWidth': '100%',
-                        'height': '100%'
-                      }}
-                    />
-                    <Text
-                      textStyle='h4'
-                      padding='2rem'
-                      justifySelf='center'
-                      alignSelf='bottom'
-                      textAlign='center'
-                    >
-                      {carouselItem?.description}
-                    </Text>
-                  </Box>
-                </Carousel.Item>
-              )
-            })
-          }
-        </Carousel>
-    }
+          return (
+            <Carousel.Item key={idx} style={{ height: '60vh', overflow: 'hidden' }}>
+              <Box
+                display='flex'
+                flexDirection='column'
+                width='100%'
+                height='100%'
+                overflow='hidden'
+              >
+                <Text
+                  textStyle='h2'
+                  padding='1rem'
+                  textAlign='center'
+                  flexShrink={0}
+                  maxHeight='8%'
+                  overflow='hidden'
+                >
+                  {carouselItem?.title}
+                </Text>
+
+                <Box
+                  flex={1}
+                  display='flex'
+                  alignItems='center'
+                  justifyContent='center'
+                  overflow='hidden'
+                  minHeight={0}
+                  maxHeight='82%'
+                >
+                  <img
+                    alt={title}
+                    src={imagePath}
+                    style={{
+                      objectFit: 'contain',
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      width: 'auto',
+                      height: 'auto',
+                      display: 'block'
+                    }}
+                  />
+                </Box>
+
+                <Text
+                  textStyle='h4'
+                  padding='1rem'
+                  textAlign='center'
+                  flexShrink={0}
+                  maxHeight='10%'
+                  overflow='hidden'
+                >
+                  {carouselItem?.description}
+                </Text>
+              </Box>
+            </Carousel.Item>
+          )
+        })
+      }
+    </Carousel>
   </Box>
 
   // Shortcuts
-  page_links['rc'] = <>{t('welcome.breadcrumbs.rc')}</>
-  page_content['rc'] = <Box
+  if (!is_static) {
+    page_links['rc'] = <>{t('welcome.breadcrumbs.rc')}</>
+    page_content['rc'] = <Box
     display="block"
     overflowY='scroll'
     overflowX='hidden'
@@ -285,6 +300,7 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
       </Table>
     </Box>
   </Box>
+  }
 
   return [
     page_links,
