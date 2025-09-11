@@ -58,7 +58,6 @@ import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/M
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
 import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 import { Class_ApplicationData } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
-import { createNodeModifier } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/NodeActions'
 
 
 // Specific methods ==================================================================================
@@ -79,32 +78,6 @@ function shuffle(array: number[]) {
   }
 
   return array
-}
-
-
-/**
- * Overrides : OS initializeApplicationData
- * Init user_data with JSON cache user_data if present.
- *
- * @param {Class_ApplicationDataSA} new_data_app
- * @param {(Type_JSON | undefined)} initial_data
- * @return {*}
- */
-export const initializeApplicationDataSA = (
-  new_data_app: Class_ApplicationDataSA,
-  initial_data: Type_JSON | undefined,
-
-) => {
-  console.log('initializeApplicationDataSA')
-  // Read user_data from cache if it exist
-  const url_info = checkForUrlToJSON()
-  if (url_info) {
-    new_data_app.readUrlJSON(url_info)
-  } else if (initial_data !== undefined) {
-    new_data_app.fromJSON(JSON.parse(JSON.stringify(initial_data)))
-
-  }
-  return new_data_app
 }
 
 type FType_InitializeAdditionalMenusSA = (
@@ -225,14 +198,7 @@ export const SankeyApp = ({ new_data_app } : {new_data_app: Class_ApplicationDat
   // Minimal app ------------------------------------------------------------------------------------
   const sankeyApp =
     <OpenSankeyApp
-      initializeApplicationData={
-        (initial_data) => {
-          return initializeApplicationDataSA(
-            new_data_app,
-            initial_data
-          )
-        }
-      }
+      initializeApplicationData={() => new_data_app}
       initializeAdditionalMenus={(additionalMenus, new_data) => {
         initializeAdditionalMenusSA(
           additionalMenus,
