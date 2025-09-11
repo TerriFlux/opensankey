@@ -64,7 +64,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
           maxWidth: 'unset',
           left: app_data.drawing_area.fit_margin / 2,
           maxHeight: app_data.drawing_area.window_fitting_height,
-          overflowY: 'auto',
+          //overflowY: 'auto',
           marginTop: (app_data.drawing_area.fit_margin) + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().y + document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height
         }}>
         <DrawerBody
