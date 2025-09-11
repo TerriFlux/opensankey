@@ -956,7 +956,6 @@ export const buttonStyles = {
   }),
   toolbar_button_open_filter: defineStyle({
     position: 'fixed',
-    left: '0',
     zIndex: '1',
     bgColor: 'primaire.6',
     borderColor: 'secondaire.6',
@@ -1770,36 +1769,36 @@ export const drawerStyles = {
       padding: '0',
       overflow: 'unset'
     }
-    }),
-    drawer_sequence: defineStyle({
-      dialog: {
-        maxWidth: 'inherit'
-      },
-      dialogContainer: {
-        width: 'inherit',
-        zIndex: 1
-      },
-      body: {
-        padding: '0'
-      },
-    }),
-    drawer_menu_filter: defineStyle({
-      dialog: {
-        maxWidth: 'inherit',
-        background: 'primaire.5',
-        borderRadius: '4px'
+  }),
+  drawer_sequence: defineStyle({
+    dialog: {
+      maxWidth: 'inherit'
+    },
+    dialogContainer: {
+      width: 'inherit',
+      zIndex: 1
+    },
+    body: {
+      padding: '0'
+    },
+  }),
+  drawer_menu_filter: defineStyle({
+    dialog: {
+      maxWidth: 'inherit',
+      background: 'primaire.5',
+      borderRadius: '4px'
 
-      },
-      dialogContainer: {
-        width: 'inherit',
-        background: 'none',
-        zIndex: 1
-      },
-      body: {
-        overflow: 'unset',
-        padding: '0',
-      }
-    })
+    },
+    dialogContainer: {
+      width: 'inherit',
+      background: 'none',
+      zIndex: 1
+    },
+    body: {
+      overflow: 'unset',
+      padding: '0',
+    }
+  })
 }
 
 // ===============================
@@ -1995,15 +1994,15 @@ export const tableStyles = {
       },
     },
   }),
-  table_view : table.definePartsStyle({
-  td: basic_td1,
-  th: basic_th1,
-  tr: {
-    minHeight: minHeightTableRow1,
-    gridTemplateColumns: '2fr 1fr 1fr',
-    display: 'grid',
-  },
-})
+  table_view: table.definePartsStyle({
+    td: basic_td1,
+    th: basic_th1,
+    tr: {
+      minHeight: minHeightTableRow1,
+      gridTemplateColumns: '2fr 1fr 1fr',
+      display: 'grid',
+    },
+  })
 }
 
 // ===============================
@@ -2028,8 +2027,14 @@ export const tagStyles = {
 // SIZES
 // ===============================
 export const sizes = {
+  sizeToolbarButtonStatic: defineStyle({
+    width: '3rem',
+    height: '3rem',
+    minW: 'unset',
+    padding: '0.2rem',
+  }),
   sizeToolbarButton: defineStyle({
-    width: '2rem',
+    width: '3rem',
     height: '2rem',
     minW: 'unset',
     padding: '0.2rem',
@@ -2267,14 +2272,14 @@ export const tabsStyles = {
       gridAutoFlow: 'row',
     }
   }),
-tabs_data_source_for_unitary : tabs.definePartsStyle({
-  root: {
-    width: '100%'
-  },
-  list: {
-    display: 'unset'
-  }
-})
+  tabs_data_source_for_unitary: tabs.definePartsStyle({
+    root: {
+      width: '100%'
+    },
+    list: {
+      display: 'unset'
+    }
+  })
 
 }
 
@@ -2693,6 +2698,18 @@ const layerStyles = {
     width: 'fit-content',
     left: '50%',
     transform: 'translate(-50%)'
+  },
+  toolbar_right: {
+    width:'3rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    position: 'fixed',
+    zIndex: 1,
+    height: 'fit-content',
+    right: '1rem',
+    top: '85%',
+    transform: 'translateY(-50%)'
   },
 
   config_menu_layout: {

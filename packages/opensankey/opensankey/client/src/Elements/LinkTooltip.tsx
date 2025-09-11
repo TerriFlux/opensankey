@@ -45,7 +45,7 @@ export class LinkTooltip {
       .style('opacity', 0)
       .style('top', y + 'px')
       .style('left', x + 'px')
-      .style('width', '400px') // Plus étroit que NodeTooltip
+      //.style('width', '400px') // Plus étroit que NodeTooltip
       .html(this.getTooltipHTML())
 
     // Animation d'apparition

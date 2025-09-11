@@ -531,7 +531,13 @@ export class Class_DrawingArea {
 
     if (this._show_background_image) json_object['show_background_image'] = this._show_background_image
     if (this._show_background_image) json_object['background_image'] = this._background_image
-
+    if (this.containers_list.length > 0) {
+      const json_object_labels = {} as Type_JSON
+      json_object['labels'] = json_object_labels
+      this.containers_list.forEach(obj => {
+        json_object_labels[obj.id] = obj.toJSON()
+      })
+    }
     // Dump with json of contained elements
     const out = {
       ...json_object,
@@ -542,13 +548,7 @@ export class Class_DrawingArea {
         with_values
       )
     }
-    if (this.containers_list.length > 0) {
-      const json_object_labels = {} as Type_JSON
-      json_object['labels'] = json_object_labels
-      this.containers_list.forEach(obj => {
-        json_object_labels[obj.id] = obj.toJSON()
-      })
-    }
+
     out['order_g_elements'] = this._list_g_element_id // Order elements by id 
     return out
   }
