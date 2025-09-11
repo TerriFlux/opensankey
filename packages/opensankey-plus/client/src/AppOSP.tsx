@@ -11,19 +11,21 @@
 import React from 'react'
 import { ChakraProvider } from '@chakra-ui/react'
 
-import { initializeApplicationDataOSP, initializeAdditionalMenusOSP, moduleDialogsOSP, } from './ModulesOSP'
+import { initializeAdditionalMenusOSP, moduleDialogsOSP, } from './ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './components/ModalWelcomeOSP'
 
 import OpenSankeyApp from './deps/OpenSankey/App'
 import { createLinkMenuConfigPlus, createNodeMenuConfigPlus, createZDDMenuConfigPlus, createZDDModifierPlus, } from './components/ContextMenuConfigs'
 import { createLinkModifier } from './deps/OpenSankey/components/dialogs/ContextLinkConfig'
 import { opensankey_theme } from './deps/OpenSankey/css/Theme'
+import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 
 // OpenSankeyApp for OpenSankey+ ========================================================================
 
 export const OpenSankeyPlusApp = <ChakraProvider theme={opensankey_theme}>
   <OpenSankeyApp
-    initializeApplicationData={initializeApplicationDataOSP}
+    //@ts-expect-error xxx
+    initializeApplicationData={()=>new Class_ApplicationDataOSP(window.sankey.publish)}
     initializeAdditionalMenus={initializeAdditionalMenusOSP}
     moduleDialogs={moduleDialogsOSP}
     ModalWelcome={ModalWelcomeBuilderOSP}

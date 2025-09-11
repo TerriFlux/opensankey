@@ -86,16 +86,9 @@ import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { SupplyUseModelisationProd } from './components/SankeyReconciliation'
 import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
-import { checkForUrlToJSON, Type_JSON } from './deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish: boolean
-    }
-  }
 /**
  * Generic Type that with given argument return a functionType that return a given type,
  * Useful when we want to only recast the returned value of OS function in submodule
@@ -110,25 +103,6 @@ type PType_InitializeAdditionalMenus = Parameters<FType_InitializeAdditionalMenu
 type PType_InitializeAdditionalMenusOSP = [...PType_InitializeAdditionalMenus]
 export type FType_InitializeAdditionalMenusOSP = RecastReturnTypeOfFunction<PType_InitializeAdditionalMenusOSP, void>
 
-/**
- * Application data initializer
- */
-
-export const initializeApplicationDataOSP = (
-  initial_data:Type_JSON | undefined
-) => {
-  console.log('initializeApplicationDataOSP')
-  // Init application data
-  const new_data_plus = new Class_ApplicationDataOSP(!!window.sankey?.publish)
-  // Read data from cache if it exist
-  const url_info = checkForUrlToJSON()
-  if (url_info) {
-    new_data_plus.readUrlJSON(url_info)
-  } else if (initial_data !== undefined) {
-    new_data_plus.fromJSON(initial_data)
-  }
-  return new_data_plus
-}
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
  *  we don't have to recast initializeAdditionalMenusType for more var or overwritting parameter types
