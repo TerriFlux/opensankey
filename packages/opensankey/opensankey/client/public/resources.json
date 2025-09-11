@@ -1,0 +1,41 @@
+{
+    "images_carousel_paths": [
+        "welcome/images_carousel/Image1.png",
+        "welcome/images_carousel/Image2.png",
+        "welcome/images_carousel/Image3.png",
+        "welcome/images_carousel/Image5.png",
+        "welcome/images_carousel/Image6.png",
+        "welcome/images_carousel/Image40.png",
+        "welcome/images_carousel/Image41.png"
+    ],
+    "carousel_data": {
+        "Image1": {
+            "title": "Understand your flows, represent them with Sankey diagrams",
+            "description": "In this representation mode, the thickness of each arrow is proportional to the value of the flow it represents"
+        },
+        "Image2": {
+            "title": "Quickly import your data or draw your diagrams directly",
+            "description": "Create your diagrams from Excel spreadsheets or via the interactive drawing area"
+        },
+        "Image3": {
+            "title": "Clarify the information represented",
+            "description": "Make your diagrams easy to read with integrated node, flow and data labeling"
+        },
+        "Image5": {
+            "title": "Create interactive & didactic infographics",
+            "description": "Explain your achievements simply with the automatic legend system and the addition of text boxes"
+        },
+        "Image6": {
+            "title": "Create interactive & didactic infographics",
+            "description": "Create beautiful diagrams by directly integrating images or icons"
+        },
+        "Image40": {
+            "title": "Give the necessary depth of understanding",
+            "description": "Aggregation levels allow you to represent your flows in several levels of detail"
+        },
+        "Image41": {
+            "title": "Give the necessary depth to understanding",
+            "description": "Each level of detail can be directly selected to display only what is useful"
+        }
+    }
+}

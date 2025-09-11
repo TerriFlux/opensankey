@@ -74,7 +74,7 @@ export const OpenSankeyApp = ({
   initializeApplicationData: FType_InitializeApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   moduleDialogs: FType_ModuleDialogs,
-  ModalWelcome: React.ComponentType<{ new_data: Class_ApplicationData }>
+  ModalWelcome: React.ComponentType<{ app_data: Class_ApplicationData }>
   createZDDModifier: (app_data: Class_ApplicationData) => any,
   ZDD_MENU_CONFIG: MenuConfig,
   createLinkModifier: (app_data: Class_ApplicationData) => any,
@@ -163,7 +163,7 @@ export const OpenSankeyApp = ({
             <></>
         }
         <ModalWelcome
-          new_data={app_data}
+          app_data={app_data}
         />
         <>
           <Menu

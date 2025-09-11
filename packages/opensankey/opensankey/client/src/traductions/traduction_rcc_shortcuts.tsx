@@ -64,7 +64,7 @@ export const rcc_shortcuts = {
   fr: {
     translation: {
       Menu: {
-        rcc_titre_princ: 'Raccourcis de l\'application OpenSankey',
+        rcc_titre_princ: 'Navigation',
         rcc_titre_select: 'Avec la souris en mode sélection',
         rcc_cn_bold: 'Click (noeuds)',
         rcc_cn: 'Sélectionne uniquement le noeud cliqué',
