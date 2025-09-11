@@ -74,6 +74,8 @@ export const resources_nodes = {
           result_value: 'Computed data',
           rat: 'Ratios',
           prov: 'Inputs',
+          values_tab: 'Values',
+          tags_tab: 'Other informations'
         },
         tabs: {
           apparence: 'Appearence',
@@ -279,6 +281,8 @@ export const resources_nodes = {
           rat: 'Ratios',
           prov: 'Entrées',
           dest: 'Sorties',
+          values_tab: 'Valeurs',
+          tags_tab: 'Autres informations'
         },
         tabs: {
           apparence: 'Apparence',

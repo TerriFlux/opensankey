@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
-import { 
-  Box, Button, ButtonGroup,MenuItem,MenuDivider,MenuButton,Menu,MenuList,
-  useSteps,Stepper,Step,StepIndicator,StepStatus,StepSeparator,StepTitle 
+import {
+  Box, Button, ButtonGroup, MenuItem, MenuDivider, MenuButton, Menu, MenuList,
+  useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -9,14 +9,14 @@ import { Class_DataTagGroup } from '../../types/TagGroup'
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 
 /**
- * Bottom toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
+ * Right toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
  *
  * @param {*} {
  *   new_data,
  * }
  * @return {*}
  */
-export const ToolBarBottom = ({new_data}:{new_data:Class_ApplicationData}) => {
+export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData }) => {
   const { t } = new_data
 
   // Local State to update this & subcomponent
@@ -28,53 +28,39 @@ export const ToolBarBottom = ({new_data}:{new_data:Class_ApplicationData}) => {
   if (!new_data.is_static) {
     btn_mouse_mode_edition = <ComponentMouseMode app_data={new_data} updateParentComponent={refreshThis} />
   }
-
-  // Get height of bottom menu to correctly place the toolbar above
   const sizeBottomMenu = document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height ?? 0
   return <Box
-    layerStyle={'toolbar_bottom'}
-    bottom={'calc(' + String(sizeBottomMenu + (new_data.drawing_area.fit_margin / 2)) + 'px + 1rem)'}
+    layerStyle={new_data.is_static ? 'toolbar_right' : 'toolbar_bottom'} // Changement du layerStyle
+    bottom={new_data.is_static ? '' : 'calc(' + String(sizeBottomMenu + (new_data.drawing_area.fit_margin / 2)) + 'px + 1rem)'}
   >
     {btn_mouse_mode_edition}
-    {!new_data.is_static ?<ComponentUndoRedo
+    {!new_data.is_static ? <ComponentUndoRedo
       app_data={new_data}
       updateParentComponent={refreshThis}
-    />:<></>}
+    /> : <></>}
     <ComponetStretchButtons
       app_data={new_data}
       updateParentComponent={refreshThis}
     />
-    <OSTooltip
-      placement='top'
-      label={t('Banner.tooltipHelp')}
-      isAlwaysOpen={!new_data.is_static && new_data.menu_configuration.show_splashscreen}
-    >
-      <Button
-        variant='info'
-        size='sizeToolbarButton'
-        onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
-      >
-        ?
-      </Button>
-    </OSTooltip>
+
   </Box>
 }
 
 const ComponentMouseMode = (
-  { app_data, updateParentComponent }:{app_data:Class_ApplicationData,updateParentComponent: () => void}) => {
-  const { t,menu_configuration,drawing_area,icon_library } = app_data
-
+  { app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
+  const { t, menu_configuration, drawing_area, icon_library } = app_data
+  const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   { /* Boutons permettant soit de passer la souris en mode sélection soit en mode création noeud/flux */ }
   return <OSTooltip
-    placement='top'
+    placement={app_data.is_static ? 'left' : 'top'}
     label={t('Banner.tooltipLiason')}
     isAlwaysOpen={menu_configuration.show_splashscreen}
   >
-    <ButtonGroup isAttached>
+    <ButtonGroup isAttached orientation={app_data.is_static ? "vertical" : 'horizontal'}> {/* Orientation verticale */}
       <Button
         variant={drawing_area.isInEditionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
         id='button_selection_edition'
-        size='sizeToolbarButton'
+        size={size}
         onClick={() => {
           if (!drawing_area.isInEditionMode()) {
             drawing_area.switchMode()
@@ -86,7 +72,7 @@ const ComponentMouseMode = (
       <Button
         variant={drawing_area.isInSelectionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
         id='button_selection_edition'
-        size='sizeToolbarButton'
+        size={size}
         onClick={() => {
           if (!drawing_area.isInSelectionMode()) {
             drawing_area.switchMode()
@@ -96,7 +82,6 @@ const ComponentMouseMode = (
         {icon_library.icon_DA_selection}
       </Button>
     </ButtonGroup>
-
   </OSTooltip>
 }
 
@@ -107,15 +92,16 @@ const ComponentMouseMode = (
  * @param {*} {new_data}
  * @return {*}
  */
-const ComponentUndoRedo= ({ app_data, updateParentComponent }:{app_data:Class_ApplicationData,updateParentComponent: () => void}) => {
-  const { history,icon_library} = app_data
+const ComponentUndoRedo = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
+  const { history, icon_library } = app_data
+  const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   { /* Buttons to apply undo or redo function */ }
-  return <ButtonGroup isAttached>
+  return <ButtonGroup isAttached orientation={app_data.is_static ? "vertical" : 'horizontal'}> {/* Orientation verticale */}
     <Button
       variant={history.can_undo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
       isDisabled={!history.can_undo}
       id='button_selection_edition'
-      size='sizeToolbarButton'
+      size={size}
       onClick={() => {
         history.applyUndo()
         updateParentComponent()
@@ -126,7 +112,7 @@ const ComponentUndoRedo= ({ app_data, updateParentComponent }:{app_data:Class_Ap
       variant={history.can_redo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
       isDisabled={!history.can_redo}
       id='button_selection_edition'
-      size='sizeToolbarButton'
+      size={size}
       onClick={() => {
         history.applyRedo()
         updateParentComponent()
@@ -134,7 +120,6 @@ const ComponentUndoRedo= ({ app_data, updateParentComponent }:{app_data:Class_Ap
       {icon_library.icon_redo}
     </Button>
   </ButtonGroup>
-
 }
 
 /**
@@ -143,10 +128,10 @@ const ComponentUndoRedo= ({ app_data, updateParentComponent }:{app_data:Class_Ap
  * @param {*} { new_data, updateParentComponent }
  * @return {*}
  */
-const ComponetStretchButtons = ({ app_data, updateParentComponent }:{app_data:Class_ApplicationData,updateParentComponent: () => void}) => {
+const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
   // Use variable from class
   const { t } = app_data
-
+  const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   const logo_btn_fs = document.fullscreenElement ? app_data.icon_library.icon_enter_fullscreen : app_data.icon_library.icon_exit_fullscreen
 
   const tmp = new KeyboardEvent('keydown', { key: 'F', ctrlKey: true })
@@ -159,30 +144,30 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }:{app_data:Cl
     updateParentComponent()
   }
 
-  return <ButtonGroup isAttached>
-    <OSTooltip placement='top' label={t('Banner.tooltipAdjustH')}>
+  return <ButtonGroup isAttached orientation={app_data.is_static ? "vertical" : 'horizontal'}>
+    <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
-        size='sizeToolbarButton'
+        size={size}
         onClick={() => app_data.drawing_area.areaFitHorizontally(true)}>
         {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
-    <OSTooltip placement='top' label={t('Banner.tooltipAdjustV')}>
+    <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustV')}>
       <Button variant='toolbar_button_6'
-        size='sizeToolbarButton'
+        size={size}
         onClick={() => app_data.drawing_area.areaFitVertically(true)}>
         {app_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>
 
     <OSTooltip
-      placement='top'
+      placement={app_data.is_static ? 'left' : 'top'}
       label={document.fullscreenElement ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}
     >
       <Button
         variant='toolbar_button_6'
         id='button_fullscreen'
-        size='sizeToolbarButton'
+        size={size}
         onClick={executeManualCtrlF}
       >
         {logo_btn_fs}
@@ -191,14 +176,14 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }:{app_data:Cl
   </ButtonGroup>
 }
 
-export const DrawerSequenceDataTagg = ({ new_data }:{ new_data: Class_ApplicationData }) => {
+export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_ApplicationData }) => {
   const { icon_library } = new_data
   const { icon_repeat_sequence, icon_play, icon_pause, icon_activated, icon_open_selector } = icon_library
   const [, setUpdate] = useState(0)
   new_data.menu_configuration.ref_to_drawer_sequence_data_tag_updater.current = () => setUpdate(a => a + 1)
   const [active_grp, setActiveGrp] = useState('')
 
-  const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).banner=='sequence')
+  const list_grp_seq = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(grp => (grp as Class_DataTagGroup).banner == 'sequence')
   const dict_data_grp = new_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')
   const list_grp_seq_id = list_grp_seq.map(grp => grp.id)
   const has_sequence = list_grp_seq.length > 0
@@ -304,7 +289,7 @@ export const DrawerSequenceDataTagg = ({ new_data }:{ new_data: Class_Applicatio
 }
 
 // Compoenent returing a stepper of a dataTagg where each step is a tag of the group with visual indication to which tag is selected
-const StepperDataTagg = ({ new_data, DataGroup }:{ new_data: Class_ApplicationData, DataGroup: Class_DataTagGroup }) => {
+const StepperDataTagg = ({ new_data, DataGroup }: { new_data: Class_ApplicationData, DataGroup: Class_DataTagGroup }) => {
   const stepper_sequence = DataGroup.tags_list.map((tag, idx) => { return { id_tag: tag.id, title: tag.name, selected: tag.is_selected, id: idx } })
   const selected_id = stepper_sequence.find(el => el.selected)?.id ?? -1
   const { activeStep, setActiveStep } = useSteps({

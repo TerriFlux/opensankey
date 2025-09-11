@@ -715,8 +715,14 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
 
   }
 
-  let edit_button = new_data.is_static ? <Button
-    onClick={() => {
+  const edit_button = <OSTooltip
+    placement='bottom'
+    label={new_data.t('Menu.tooltips.tuto')}
+  >
+    <Button
+      variant='menutop_button'
+      size='sizeMenuTopButton'
+      onClick={() => {
       // Si vous êtes sur: https://terriflux.com/portfolios/SOCLE/Cereales/diagrams.html
       // Et que new_data.file_name = "SOCLE_FR_Cereales_Ble_tendre."
 
@@ -727,13 +733,44 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
 
       window.open(url, '_blank')
     }}
-  >Edition</Button> : <></>
+    >
+      <Box
+        layerStyle='menutop_button_style'
+      >
+        <Box
+          gridRow='1'
+        >
+          <Image src='logo_opensankey.png'/>
+        </Box>
+        <Box
+          gridRow='2'
+        >
+          {'Éditer'}
+        </Box>
+      </Box>
+    </Button>
+  </OSTooltip>
+
+  const help_button =
+    <OSTooltip
+      placement={new_data.is_static ? 'left' : 'top'} // Changement du placement du tooltip vers la gauche
+      label={new_data.t('Banner.tooltipHelp')}
+      isAlwaysOpen={!new_data.is_static && new_data.menu_configuration.show_splashscreen}
+    >
+      <Button
+        variant='info'
+        onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
+      >
+        ?
+      </Button>
+    </OSTooltip>
 
   let dict_components_menu_top: { [x: string]: React.JSX.Element; } = {}
   if (new_data.is_static && sous_filieres) dict_components_menu_top['diagrams'] = diagrams_element
-  dict_components_menu_top['edit'] = edit_button
   dict_components_menu_top={...dict_components_menu_top,...additionalMenus.current.external_top_buttons_item}
-  
+  dict_components_menu_top['edit'] = edit_button
+  dict_components_menu_top['help'] = help_button
+
   return <Box
     display='grid'
     gridAutoFlow='column'
@@ -818,16 +855,16 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
       {
         // Application image that indicate which module is activated
         <Box
-          alignSelf='center'
-          justifySelf='center'
+          alignSelf='left'
+          justifySelf='left'
           display='inline-grid'
           height='100%'
         >
           {/* {!new_data.is_static ? */}
           <Image
             height='80%'
-            justifySelf='center'
-            alignSelf='center'
+            justifySelf='left'
+            alignSelf='left'
             src={logo} />
           {/* <Image
               height='5rem'
