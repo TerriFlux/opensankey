@@ -24,23 +24,13 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, {
-  FC,
-  useEffect
-} from 'react'
+import React, {useEffect} from 'react'
 import * as d3 from 'd3'
+import { Class_ApplicationData } from './types/ApplicationData'
 
-import { Type_JSON } from './types/Utils'
-
-import { initializeApplicationData } from './Modules'
-
-/*************************************************************************************************/
-
-export const ViewerOpenSankeyApp: FC<{initial_data:Type_JSON}> = (
-  {initial_data}
-) => {
+export const ViewerOpenSankeyApp = () => {
   // Initialize data
-  const new_data = initializeApplicationData(initial_data)
+  const new_data = new Class_ApplicationData(true)
 
   /*************************************************************************************************/
 

@@ -41,10 +41,10 @@ import { ContextMenu, MenuConfig } from './components/dialogs/SankeyMenuContext'
 import { ApplySaveJSONDialog } from './components/dialogs/SankeyMenuDialogs'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
 
-import { Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
+import { checkForUrlToJSON, Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
 import { Class_ApplicationData } from './types/ApplicationData'
-import { FType_InitializeAdditionalMenus, FType_InitializeApplicationData, FType_ModuleDialogs } from './Modules'
+import { FType_InitializeAdditionalMenus, FType_ModuleDialogs } from './Modules'
 import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
 
 declare const window: Window &
@@ -70,8 +70,8 @@ export const OpenSankeyApp = ({
   LINK_MENU_CONFIG,
   NODE_MENU_CONFIG,
   createNodeModifier
-}:{
-  initializeApplicationData: FType_InitializeApplicationData,
+}: {
+  initializeApplicationData: () => Class_ApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   moduleDialogs: FType_ModuleDialogs,
   ModalWelcome: React.ComponentType<{ app_data: Class_ApplicationData }>
@@ -87,15 +87,9 @@ export const OpenSankeyApp = ({
 
   // Search if a data is stored in localStorage of the navigator
   const json_data = LZString.decompress(localStorage.getItem('data') as string)
-  let initial_data: Type_JSON | undefined = undefined
-
-  // If there is, store the data in the sankey_data
-  if (json_data !== null && json_data != '' && json_data != 'null') {
-    const app_data = JSON.parse(json_data)
-    initial_data = app_data
-  }
+  const url_info = checkForUrlToJSON()
   // Initialize data
-  const app_data = initializeApplicationData(initial_data)
+  const app_data = initializeApplicationData()
   if (window.sankey && window.sankey.diagram) {
     console.log(window.sankey.diagram)
     app_data.file_name = window.sankey.diagram
@@ -103,6 +97,12 @@ export const OpenSankeyApp = ({
       app_data.fromJSON(data as Type_JSON)
       app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
     }).catch(e=>console.log(e))
+  } else if (json_data !== null && json_data != '' && json_data != 'null') {
+    app_data.fromJSON(JSON.parse(json_data))   
+  }
+
+  if (url_info) {
+    app_data.readUrlJSON(url_info)
   }
 
   const mode_pref = sessionStorage.getItem('modepref')
@@ -141,7 +141,7 @@ export const OpenSankeyApp = ({
 
   /*************************************************************************************************/
   return <TourProvider steps={app_data.steps}>
-    <div id='sankey_app' style={{ 'backgroundColor': background_color, 'height' : '100%'}}>
+    <div id='sankey_app' style={{ 'backgroundColor': background_color, 'height': '100%' }}>
       <div className='div-Menu' style={{ 'backgroundColor': 'WhiteSmoke' }} >
         <WrapperInitializeAdditionalMenus
           new_data={app_data}
