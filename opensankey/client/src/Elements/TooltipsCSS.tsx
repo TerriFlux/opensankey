@@ -117,8 +117,9 @@ export const TOOLTIP_STYLES = `
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 12px;
-    width: 800px;
-    max-width: 90vw;
+    width: max-content;
+    min-width: 300px;
+    max-width: 800px;
     max-height: 80vh;
     z-index: 10000;
     overflow: visible;
@@ -155,7 +156,7 @@ export const TOOLTIP_STYLES = `
     position: relative; 
   }
   .tooltip-table {
-    width: 100%; 
+    width: auto; 
     border-collapse: collapse; 
     font-size: 11px;
     table-layout: fixed; /* un seul tableau => alignement naturel */

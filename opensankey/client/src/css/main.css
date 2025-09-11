@@ -94,7 +94,7 @@ body {
 /* ------------------------------------------------
  TOOLTIP
 ------------------------------------------------ */
-.sankey-tooltip {
+/* .sankey-tooltip {
   background-color: white;
   border: 1px solid #66a593;
   border-radius: 4px;
@@ -142,7 +142,7 @@ body {
 .sankey-tooltip ul {
   margin-bottom: 0;
   padding-left: 10px;
-}
+} */
 
 /* ====================== Scrollbar style ============================== */
 ::-webkit-scrollbar {
