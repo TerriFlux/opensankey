@@ -24,43 +24,9 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { checkForUrlToJSON, Type_JSON } from './types/Utils'
 import { Class_ApplicationData, FType_ProcessFunctions } from './types/ApplicationData'
 import type { MutableRefObject } from 'react'
 import { Type_AdditionalMenus } from './types/MenuConfig'
-
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish: boolean
-    }
-  }
-
-  export type FType_InitializeApplicationData = (
-  initial_data: Type_JSON | undefined
-) => Class_ApplicationData
-
-/**
- * Set up data with initial value as Type_JSON
- *
- * @param {*} initial_data
- * @return {*}
- */
-export const initializeApplicationData: FType_InitializeApplicationData = (
-  initial_data
-) => {
-  console.log('initializeApplicationData')
-  // Set openSankey
-  const application_data = new Class_ApplicationData(!!window.sankey?.publish)
-
-  const url_info = checkForUrlToJSON()
-  if (url_info) {
-    application_data.readUrlJSON(url_info)
-  } else if (initial_data !== undefined) {
-    application_data.fromJSON(initial_data)
-  }
-  return application_data
-}
 
 export type FType_InitializeAdditionalMenus = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
