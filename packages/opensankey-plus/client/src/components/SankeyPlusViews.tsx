@@ -1,7 +1,6 @@
 // Standard libs
 import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
-
-// Imported libs
+import { Properties } from 'csstype'
 import {
   Box,
   Checkbox,
@@ -464,7 +463,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
           app_data.sendWaitingToast(
             () => {
               drawing_area_plus.bypass_redraws = true
-              const v = app_data.createNewView(files[i].name,false)
+              const v = app_data.createNewView(files[i].name, false)
               // const drawing_area_view = app_data.createNewDrawingArea(files[i].name)
               // drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
               v.fromJSON(JSON_data as Type_JSON)
@@ -480,20 +479,22 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     }}
   />
 
+  const style = is_static ? {} : {
+    position: 'fixed',
+    top: drawing_area_plus.getNavBarHeight() + drawing_area_plus.fit_margin,
+    zIndex: '1',
+    background: 'white',
+    border: '1px solid',
+    borderRadius: '4px',
+    width: 'fit-content',
+    left: '50%',
+    transform: 'translate(-50%)'
+  } as Properties<string | number, string & {}>
+
   // ButtonsGrooup doesn't have variant so we set style here
   const buttonGroupView = <ButtonGroup
     className='BannerView'
-    style={{
-      position: 'fixed',
-      top: drawing_area_plus.getNavBarHeight() + drawing_area_plus.fit_margin,
-      zIndex: '1',
-      background: 'white',
-      border: '1px solid',
-      borderRadius: '4px',
-      width: 'fit-content',
-      left: '50%',
-      transform: 'translate(-50%)'
-    }}
+    style={style}
   >
     {/* Load + Save  */}
     {is_static ? <></> : input_loader_json_catalog}
@@ -524,12 +525,12 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
           {button_to_show_modal_create_unitary_view}
         </>
     }
-    <Button
+    {app_data.is_static ? <></>:<Button
       variant='button_collapse_banner_view'
       size='sizeMenuTopButton'
       onClick={onToggle}>
       {isOpen ? icon_collapse_up : icon_collapse_down}
-    </Button>
+    </Button>}
   </ButtonGroup>
 
   const buttonShowBanner = <OSTooltip placement='bottom' label={(!has_sankey_plus) ? (t('Menu.sankeyOSPDisabled')) : ''}>
@@ -556,13 +557,14 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
       </Box>
     </Button>
   </OSTooltip>
-
-  return <>
-    {!app_data.is_static || app_data.has_views ? buttonShowBanner :<></>}
+  if (app_data.is_static && app_data.has_views) return <>{buttonGroupView}</>
+  else if (!app_data.is_static) return <>
+    {buttonShowBanner}
     <Fade in={isOpen} style={{ display: isOpen ? 'unset' : 'none' }} >
       {buttonGroupView}
     </Fade>
   </>
+  return <></>
 }
 
 /**
@@ -622,8 +624,8 @@ export const SelecteurView = (
       {t('view.actual')}
     </option>
     {
-      Object.entries(new_data_plus.views_dict).filter(([key,value])=> key !== default_main_sankey_id)
-        .map(([key,view]) => {
+      Object.entries(new_data_plus.views_dict).filter(([key, value]) => key !== default_main_sankey_id)
+        .map(([key, view]) => {
           return <option
             key={view.id}
             value={view.id}
@@ -659,12 +661,12 @@ export const SelecteurView = (
  * @return {*}
  */
 export const ViewsConfig = (
-  { app_data } : {app_data: Class_ApplicationDataOSP}
+  { app_data }: { app_data: Class_ApplicationDataOSP }
 ) => {
 
   // Data -------------------------------------------------------------------------------
 
-  const { t, icon_library,menu_configuration_osp,drawing_area } = app_data
+  const { t, icon_library, menu_configuration_osp, drawing_area } = app_data
   const { icon_remove_element, icon_move_element_up, icon_move_element_down } = icon_library
 
   // Components updaters ----------------------------------------------------------------
@@ -674,7 +676,7 @@ export const ViewsConfig = (
   menu_configuration_osp.ref_to_views_config_updater.current = refreshThis
 
   // Local variables --------------------------------------------------------------------
-  const drawing_area_plus =drawing_area as Class_DrawingAreaOSP
+  const drawing_area_plus = drawing_area as Class_DrawingAreaOSP
   const is_activated = app_data.has_sankey_plus
   const curr_view = drawing_area_plus
   const list_view = app_data.views_order //include master
@@ -704,7 +706,7 @@ export const ViewsConfig = (
           </Tr>
         </Thead>
         <Tbody>
-          {list_view.map((view_id,idx) => {
+          {list_view.map((view_id, idx) => {
             return (
               <React.Fragment key={idx}>
                 <Tr style={{ 'border': (view_id === curr_view.id) ? '2px solid #5a9282' : 'none' }}>
@@ -1351,7 +1353,7 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
  * @param {*} { new_data_plus }
  * @return {*} 
  */
-const TabImportExcelDataForUnitary = ({ new_data_plus }:{ new_data_plus: Class_ApplicationDataOSP }) => {
+const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_ApplicationDataOSP }) => {
   const { t, url_prefix } = new_data_plus
   const [input_file_blob, set_input_file_blob] = useState<Blob | undefined>(undefined)
   const [checkStatus, setCheckStatus] = useState(false)

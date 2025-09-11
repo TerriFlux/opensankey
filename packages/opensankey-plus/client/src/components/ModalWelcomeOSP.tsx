@@ -78,21 +78,21 @@ const ShortcutsOSP = (
 }
 
 
-export const ModalWelcomeBuilderOSP = ({ new_data }: { new_data: Class_ApplicationData }) => {
+export const ModalWelcomeBuilderOSP = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const [, setCount] = useState(0)
-  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current = () => setCount(a => a + 1)
+  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current = () => setCount(a => a + 1)
 
   const [page_links, page_content] = ModalWelcomeContent(
-    new_data,
+    app_data
   )
 
   ShortcutsOSP(
-    new_data as Class_ApplicationDataOSP,
+    app_data as Class_ApplicationDataOSP,
     page_content
   )
 
   return <ModalWelcome
-    new_data={new_data}
+    app_data={app_data}
     external_pagination={page_links}
     external_content={page_content}
   />

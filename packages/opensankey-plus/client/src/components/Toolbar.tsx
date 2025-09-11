@@ -102,7 +102,7 @@ const FlowValueFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
     <Box
       layerStyle='menuconfigpanel_grid'>
 
-      <Text textStyle='h3'>
+      <Text >
         {t('Banner.filtre')}
       </Text>
       <Box layerStyle='filter_grid_row'>
@@ -147,7 +147,7 @@ const FlowValueFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
         />
       </Box>
 
-      <Text textStyle='h3'>
+      <Text>
         {t('Banner.fl')}
       </Text>
       <Box layerStyle='filter_grid_row'>
