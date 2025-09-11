@@ -42,7 +42,20 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
       app_data={new_data}
       updateParentComponent={refreshThis}
     />
-
+    {!new_data.is_static ? <OSTooltip
+      placement='top'
+      label={t('Banner.tooltipHelp')}
+      isAlwaysOpen={!new_data.is_static && new_data.menu_configuration.show_splashscreen}
+    >
+      <Button
+        variant='info'
+        size='sizeToolbarButton'
+        onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
+      >
+        ?
+      </Button>
+    </OSTooltip> : <></>
+    }
   </Box>
 }
 
