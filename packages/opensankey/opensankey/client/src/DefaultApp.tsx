@@ -27,20 +27,20 @@
 import React from 'react'
 import { ChakraProvider } from '@chakra-ui/react'
 import { opensankey_theme } from './css/Theme'
-import { initializeAdditionalMenus, initializeApplicationData, moduleDialogs } from './Modules'
-import { ClickSaveDiagram } from './Persistence/SankeyPersistence'
+import { initializeAdditionalMenus, moduleDialogs } from './Modules'
 import { ModalWelcomeBuilder } from './components/welcome/ModalWelcome'
 import OpenSankeyApp from './App'
 import { createZDDModifier, ZDD_MENU_CONFIG } from './components/dialogs/ContextZDDConfig'
 import { createLinkModifier, LINK_MENU_CONFIG } from './components/dialogs/ContextLinkConfig'
 import { NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
 import { createNodeModifier } from './components/dialogs/NodeActions'
+import { Class_ApplicationData } from './types/ApplicationData'
 /*************************************************************************************************/
 export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
   <OpenSankeyApp
 
-    //- Data
-    initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
+    //@ts-expect-error xxx
+    initializeApplicationData={()=>new Class_ApplicationData(window.sankey.publish)} // Data, displayed data, default data
 
     // Ref to some key ui element in the application
     initializeAdditionalMenus={initializeAdditionalMenus}

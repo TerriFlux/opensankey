@@ -40,7 +40,6 @@ import './traductions/traduction'
 
 import OpenSankeyApp from './App'
 import {
-  initializeApplicationData,
   initializeAdditionalMenus,
   moduleDialogs
 } from './Modules'
@@ -52,6 +51,7 @@ import { createZDDModifier, ZDD_MENU_CONFIG } from './components/dialogs/Context
 import { createLinkModifier, LINK_MENU_CONFIG } from './components/dialogs/ContextLinkConfig'
 import { createNodeModifier } from './components/dialogs/NodeActions'
 import { NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
+import { Class_ApplicationData } from './types/ApplicationData'
 
 // CONSTANTS =========================================================================================
 
@@ -67,8 +67,8 @@ root.render(
   <ChakraProvider theme={opensankey_theme}>
     <OpenSankeyApp
 
-      //- Data
-      initializeApplicationData={initializeApplicationData} // Data, displayed data, default data
+      //@ts-expect-error xxx
+      initializeApplicationData={()=>new Class_ApplicationData(window.sankey.publish)} // Data, displayed data, default data
 
       // Ref to some key ui element in the application
       initializeAdditionalMenus={initializeAdditionalMenus}
