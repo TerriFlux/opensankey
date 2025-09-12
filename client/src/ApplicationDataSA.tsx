@@ -1,9 +1,9 @@
 
+import { useToast } from '@chakra-ui/react'
 import { Class_MenuConfigSA } from './MenuConfigSA'
 import { Class_ApplicationDataLoginComponent} from './deps/LoginComponent/ApplicationDataLoginComponent'
-import { LoginComponent } from './deps/LoginComponent/LoginComponent'
-import { Class_MenuConfig } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
-//import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
+import { Class_ApplicationHistory } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationHistory'
+import { useTranslation } from 'react-i18next'
 
 declare const window: Window &
   typeof globalThis & {
@@ -33,7 +33,13 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataLoginComponent
   // PUBLIC METHODS =====================================================================
 
   public createNewMenuConfiguration() {
-    return new Class_MenuConfigSA() as Class_MenuConfig
+    this._toast = useToast()
+    this._t  =  useTranslation('translation', { useSuspense: false }).t  
+    this._i18n =  useTranslation('translation', { useSuspense: false }).i18n  
+    this._menu_configuration = new Class_MenuConfigSA()
+    //@ts-expect-error xxx
+    this._history = new Class_ApplicationHistory(this._menu_configuration)
+    return this._menu_configuration
   }
 
   // Overrride logo

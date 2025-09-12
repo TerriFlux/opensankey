@@ -25,8 +25,7 @@ import {
 import { Class_ApplicationDataSA } from '../ApplicationDataSA'
 import { UploadExemple } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 import { Type_JSON } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
-
-
+import { FType_ProcessFunctions } from '../deps/OpenSankey+/deps/OpenSankey/Modules'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -41,7 +40,8 @@ const logo_sankeytheque = <svg
 
 
 type FCType_ModalSankeyTheque = {
-  new_data: Class_ApplicationDataSA
+  new_data: Class_ApplicationDataSA,
+  processFunction: FType_ProcessFunctions
 }
 
 type FCType_SankeyThequeAccordionGenerator = {
@@ -53,6 +53,7 @@ type FCType_SankeyThequeAccordionGenerator = {
 
 type FCType_SankeyThequeCardsGenerator = {
   new_data: Class_ApplicationDataSA,
+  processFunction:FType_ProcessFunctions,
   theque_tree: object,
   path: string[],
 }
@@ -95,7 +96,7 @@ export const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA
  * @param {*} { new_data, additionalMenu }
  * @return {*}
  */
-export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data }) => {
+export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data,processFunction }) => {
   const [show_sankeytheque, set_show_sankeytheque] = useState(false)
   const [firstRender, setFirstRender] = useState(true)
   const [sankeytheque, setSankeyTheque] = useState({})
@@ -155,7 +156,7 @@ export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data }) =>
           <SankeyThequeAccordionGenerator new_data={new_data} theque_tree={sankeytheque} path={[]} setPathToCard={setPathToCard} />
         </Box>
         <Box layerStyle='cards_sankeytheque'>
-          <SankeyThequeCardsGenerator new_data={new_data} theque_tree={sankeytheque} path={path_to_card} />
+          <SankeyThequeCardsGenerator new_data={new_data} processFunction={processFunction} theque_tree={sankeytheque} path={path_to_card} />
         </Box>
       </ModalBody>
     </ModalContent>
@@ -288,7 +289,7 @@ const FileToCardsStructur = (files: string[]) => {
  * @param {*} { new_data, theque_tree, path }
  * @return {*}
  */
-const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new_data, theque_tree, path }) => {
+const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new_data, processFunction,theque_tree, path }) => {
   const folder = getFilesFromkeys(theque_tree as Type_JSON, path)
   const files: string[] | undefined = folder.Files as string[] | undefined
   if (files !== undefined) {
@@ -325,7 +326,7 @@ const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new
                 new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
 
                 const file_name = cardStruct[1].is_reconciled ? cardStruct[1].is_reconciled : cardStruct[1].is_excel
-                new_data.processFunction.launch([...path, file_name].join('/'))
+                processFunction.launch([...path, file_name].join('/'))
                 UploadExemple([...path, file_name].join('/'), new_data)
               }}>
               {new_data.t('useSankeyThequeEXCEL')}

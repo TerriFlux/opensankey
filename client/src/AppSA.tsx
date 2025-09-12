@@ -159,7 +159,7 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
 
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
-      <ModalSankeyTheque new_data={new_data_SA} />,
+      <ModalSankeyTheque new_data={new_data_SA} processFunction={processFunctions} />,
       <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
     )
   }
