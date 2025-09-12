@@ -80,14 +80,6 @@ export abstract class ClassTemplate_ProtoElement {
   protected _svg_parent_group: string
 
   /**
-   * Config menu ref to html element & function to update it
-   * @protected
-   * @type {string}
-   * @memberof ClassTemplate_Element
-   */
-  protected _menu_config: Class_MenuConfig
-
-  /**
    * Is element currently visually selected
    * @protected
    * @type {boolean}
@@ -158,7 +150,6 @@ export abstract class ClassTemplate_ProtoElement {
     id: string,
     drawing_area: Class_DrawingArea,
     sankey: Class_Sankey,
-    menu_config: Class_MenuConfig,
     svg_parent_group: string,
   ) {
     // Set values
@@ -166,11 +157,11 @@ export abstract class ClassTemplate_ProtoElement {
     this._drawing_area = drawing_area
     this._sankey = sankey
     this._svg_parent_group = svg_parent_group
-    this._menu_config = menu_config
+
     // Init visibility id
     this._visibility_fingerprint = randomId()
     // Element created -> set save indicator
-    this._menu_config.ref_to_save_in_cache_indicator.current(false)
+    //this._menu_config.ref_to_save_in_cache_indicator.current(false)
   }
 
   // DELETION METHODS ===================================================================
@@ -617,7 +608,7 @@ export abstract class ClassTemplate_ProtoElement {
   public get sankey() { return this._sankey }
 
   // Get application config menu
-  public get menu_config(): Class_MenuConfig { return this._menu_config }
+  //public get menu_config(): Class_MenuConfig { return this._menu_config }
 }
 
 // CLASS ELEMENT ************************************************************************
@@ -658,10 +649,9 @@ export class ClassTemplate_Element extends ClassTemplate_ProtoElement {
     id: string,
     drawing_area: Class_DrawingArea,
     sankey: Class_Sankey,
-    menu_config: Class_MenuConfig,
     svg_parent_group: string,
   ) {
-    super(id, drawing_area, sankey, menu_config, svg_parent_group)
+    super(id, drawing_area, sankey, svg_parent_group)
     this._display = {
       position: {
         type: 'absolute', // Default position type

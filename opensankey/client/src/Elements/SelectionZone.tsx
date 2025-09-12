@@ -69,11 +69,10 @@ export class Class_ZoneSelection extends ClassTemplate_Element {
    * @memberof Class_ZoneSelection
    */
   constructor(
-    drawing_area: Class_DrawingArea,
-    menu_config: Class_MenuConfig,
+    drawing_area: Class_DrawingArea
   ) {
     // Init parent class attributes
-    super('selection_zone',drawing_area,drawing_area.sankey, menu_config, 'g_select_zone')
+    super('selection_zone',drawing_area,drawing_area.sankey, 'g_select_zone')
     this._is_visible = false  // Invisible by default
     // Init other class attributes
     this._display = {

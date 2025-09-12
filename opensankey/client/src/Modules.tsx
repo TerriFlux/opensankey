@@ -24,9 +24,10 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Class_ApplicationData, FType_ProcessFunctions } from './types/ApplicationData'
+import { Class_ApplicationData } from './types/ApplicationData'
 import type { MutableRefObject } from 'react'
 import { Type_AdditionalMenus } from './types/MenuConfig'
+import React, { Dispatch, SetStateAction } from 'react'
 
 export type FType_InitializeAdditionalMenus = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
@@ -42,6 +43,15 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenus = (
   _new_data
 ) => {
   //  No menu is added in OS via this function
+}
+export type FType_ProcessFunctions = {
+  ref_processing: MutableRefObject<boolean>,
+  ref_setter_processing: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  failure: MutableRefObject<boolean>,
+  not_started: MutableRefObject<boolean>,
+  ref_result: MutableRefObject<Dispatch<SetStateAction<string>>>,
+  path: MutableRefObject<string>,
+  launch: (path: string) => void
 }
 
 export type FType_ModuleDialogs = (

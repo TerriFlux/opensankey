@@ -103,12 +103,12 @@ const default_DA_marging = 50
  */
 export class Class_DrawingArea {
   protected createNewSankey(id: string = default_main_sankey_id) {
-    const sankey = new Class_Sankey(this, this.application_data.menu_configuration, id)
+    const sankey = new Class_Sankey(this, id)
     return sankey
   }
 
   protected createNewSelectionZone() {
-    return new Class_ZoneSelection(this, this.application_data.menu_configuration)
+    return new Class_ZoneSelection(this)
   }
 
 
@@ -368,7 +368,7 @@ export class Class_DrawingArea {
     this._height = this.window_fitting_height
     this._width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
-    this._legend = new ClassTemplate_Legend(this, this._sankey, this.application_data.menu_configuration)
+    this._legend = new ClassTemplate_Legend(this, this._sankey)
     this._selection_zone = this.createNewSelectionZone()
     this.nodePositioning = new NodePositioning(this)
     this._group_to_select += ',.gg_labels'
@@ -412,7 +412,7 @@ export class Class_DrawingArea {
           .copyFrom(container_to_copy)
       })
     //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
-    this._legend = new ClassTemplate_Legend(this, this._sankey, this.application_data.menu_configuration)
+    this._legend = new ClassTemplate_Legend(this, this._sankey)
     // Copy Legend
     this._legend.copyFrom(drawing_area_to_copy._legend)
 
@@ -1855,8 +1855,7 @@ export class Class_DrawingArea {
           'ghost_link',
           source,
           target,
-          this,
-          this.application_data.menu_configuration)
+          this)
         this._ghost_link_source = source
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
 

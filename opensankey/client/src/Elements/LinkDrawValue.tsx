@@ -104,13 +104,13 @@ export class LinkDrawValue {
   }
 
   private dragValuePathEnd(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
-    this._link.menu_config.updateAllComponentsRelatedToLinks()
+    this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
 
     const new_val: [number | undefined, Type_PathLabelHPosition] = [this._link.display.position_offset_value, this._link.value_label_horiz]
     const _dragValuePathEnd = () => {
       this._link.display.position_offset_value = new_val[0]
       this._link.value_label_horiz = new_val[1]
-      this._link.menu_config.updateAllComponentsRelatedToLinks()
+      this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
 
     }
 
@@ -390,7 +390,7 @@ export class LinkDrawValue {
       this._link.display.position_x_value = old_val[0]
       this._link.display.position_y_value = old_val[1]
       this._link.drawValue()
-      this._link.menu_config.updateAllComponentsRelatedToLinks()
+      this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     }
 
     this._link.drawing_area.application_data.history.saveUndo(inv_dragValueStart)
@@ -410,7 +410,7 @@ export class LinkDrawValue {
   }
 
   private dragValueEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-    this._link.menu_config.updateAllComponentsRelatedToLinks()
+    this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
 
     const new_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [this._link.display.position_x_value, this._link.display.position_y_value, this._link.value_label_horiz, this._link.value_label_vert]
 
@@ -420,7 +420,7 @@ export class LinkDrawValue {
       this._link.display.position_x_value = new_val[0]
       this._link.display.position_y_value = new_val[1]
       this._link.drawValue()
-      this._link.menu_config.updateAllComponentsRelatedToLinks()
+      this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     }
 
     this._link.drawing_area.application_data.history.saveRedo(_dragValueEnd)

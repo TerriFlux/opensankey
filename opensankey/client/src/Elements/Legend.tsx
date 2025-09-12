@@ -162,13 +162,12 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
 
   constructor(
     drawing_area: Class_DrawingArea,
-    sankey: Class_Sankey,
-    menu_config: Class_MenuConfig,
+    sankey: Class_Sankey
   ) {
     // Init parent class attributes
 
     //TODO : rename grp_legend to g_legend when legacy code will be deleted as for now some legacy functions might be tirgered when interactiong with DA and look for g_legend
-    super('legend', drawing_area, sankey, menu_config, 'grp_legend')
+    super('legend', drawing_area, sankey, 'grp_legend')
     // Init other class attributes
     this._display = {
       position: {
@@ -183,7 +182,6 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       left: new ClassTemplate_Handler(
         'legend_left_handle_' + this.id,
         drawing_area,
-        menu_config,
         this,
         this.dragHandleStart(),
         this.dragLeftHandler(),
@@ -195,7 +193,6 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       right: new ClassTemplate_Handler(
         'legend_right_handle_' + this.id,
         drawing_area,
-        menu_config,
         this,
         this.dragHandleStart(),
         this.dragRightHandler(),

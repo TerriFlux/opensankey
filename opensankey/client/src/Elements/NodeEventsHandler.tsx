@@ -65,15 +65,15 @@ export class NodeEventsHandler {
           this._node.drawing_area.addNodeToSelection(this._node)
         }
         // Open related menu
-        this._node.menu_config.openConfigMenuElementsNodes()
+        this._node.drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
         // Update components related to node edition
-        this._node.menu_config.updateAllComponentsRelatedToNodes()
+        this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
       }
       // CTRL
       else if (event.ctrlKey) {
         this.addOrRemoveNodeFromSelection()
         // Update components related to node edition
-        this._node.menu_config.updateAllComponentsRelatedToNodes()
+        this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
       }
       // OTHERS
       else {
@@ -258,7 +258,7 @@ export class NodeEventsHandler {
         this._node,
         target,
         this._node.drawing_area,
-        this._node.menu_config)
+        )
     }
   }
 
@@ -271,9 +271,9 @@ export class NodeEventsHandler {
     if (!this._node.drawing_area.selected_nodes_list.includes(this._node)) {
       this._node.drawing_area.addNodeToSelection(this._node)
     }
-    this._node.menu_config.updateAllComponentsRelatedToNodes()
+    this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     this._node.drawing_area.node_contextualised = this._node
-    this._node.menu_config.ref_to_menu_context_nodes_updater.current()
+    this._node.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
     this._node.drawing_area.setToModeEdition(false)
   }
   // Getter pour la position de la souris

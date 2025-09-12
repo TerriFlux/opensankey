@@ -442,11 +442,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     id: string,
     source: Class_NodeElement,
     target: Class_NodeElement,
-    drawing_area: Class_DrawingArea,
-    menu_config: Class_MenuConfig,
+    drawing_area: Class_DrawingArea
   ) {
     // Init parent class attributes
-    super(id, drawing_area, drawing_area.sankey, menu_config, 'g_elements_sankey')
+    super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
     LinkSetterGenerator.generateSetters(this)
 
     this._link_control_points = new LinkControlPoints(this, drawing_area)
@@ -1277,15 +1276,15 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
           this.drawing_area.addLinkToSelection(this)
         }
         // Open related menu
-        this.menu_config.openConfigMenuElementsLinks()
+        this.drawing_area.application_data.menu_configuration.openConfigMenuElementsLinks()
         // Update components related to link edition
-        this.menu_config.updateAllComponentsRelatedToLinks()
+        this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
       // CTRL
       else if (event.ctrlKey) {
         this.addOrRemoveLinkFromSelection()
         // Update components related to link edition
-        this.menu_config.updateAllComponentsRelatedToLinks()
+        this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
       // OTHERS
       else {
@@ -1310,9 +1309,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     if (!this.drawing_area.selected_links_list.includes(this)) {
       this.drawing_area.addLinkToSelection(this)
     }
-    this.menu_config.updateAllComponentsRelatedToLinks()
+    this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     this.drawing_area.link_contextualised = this
-    this.menu_config.ref_to_menu_context_links_updater.current()
+    this.drawing_area.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
     this.drawing_area.setToModeEdition(false)
   }
 

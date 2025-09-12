@@ -19,7 +19,6 @@ import {
   EXPANSION_SUFFIXES
 } from "../../Algorithms/Hierarchies";
 import { Class_DrawingArea } from "../../types/DrawingArea";
-import { Class_MenuConfig } from "../../types/MenuConfig";
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -28,7 +27,6 @@ import { Class_MenuConfig } from "../../types/MenuConfig";
 export class NodeActions {
   private app_data: Class_ApplicationData
   private drawing_area: Class_DrawingArea
-  private menu_configuration: Class_MenuConfig
   private history: any
   private contextualised_node: Class_NodeElement | undefined
   private selected_nodes: Class_NodeElement[]
@@ -36,7 +34,6 @@ export class NodeActions {
   constructor(app_data: Class_ApplicationData) {
     this.app_data = app_data
     this.drawing_area = app_data.drawing_area
-    this.menu_configuration = app_data.menu_configuration
     this.history = app_data.history
     this.contextualised_node = this.drawing_area.node_contextualised
     this.selected_nodes = this.drawing_area.visible_and_selected_nodes_list
@@ -47,14 +44,14 @@ export class NodeActions {
   // ==================================================================================================
 
   private refreshAndSave = () => {
-    this.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    this.menu_configuration.ref_to_spreadsheet?.current()
-    this.menu_configuration.ref_to_menu_context_nodes_updater.current()
+    this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    this.drawing_area.application_data.menu_configuration.ref_to_spreadsheet?.current()
+    this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
   }
 
   private closeContextMenu = () => {
     this.drawing_area.node_contextualised = undefined
-    this.menu_configuration.ref_to_menu_context_nodes_updater.current()
+    this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
   }
 
   private executeWithUndo = (actionFn: () => void, undoFn: () => void) => {
@@ -271,7 +268,7 @@ export class NodeActions {
 
       applyDimension(this.app_data, this.selected_nodes, parent_level_tag, root_node, child_level_tag, tagg, expand_left)
       tagg.tags_list[0].setSelected()
-      this.menu_configuration.ref_to_leveltag_filter_updater.current()
+      this.drawing_area.application_data.menu_configuration.ref_to_leveltag_filter_updater.current()
       this.drawing_area.draw()
     }
   }
@@ -285,7 +282,7 @@ export class NodeActions {
     tagg.addTag('2', '2')
 
     create_parent(this.app_data, this.selected_nodes, tagg)
-    this.menu_configuration.ref_to_leveltag_filter_updater.current()
+    this.drawing_area.application_data.menu_configuration.ref_to_leveltag_filter_updater.current()
     this.drawing_area.draw()
   }
 

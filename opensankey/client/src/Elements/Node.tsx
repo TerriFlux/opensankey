@@ -244,11 +244,10 @@ export class Class_NodeElement extends ClassTemplate_Element {
   constructor(
     id: string,
     name: string,
-    drawing_area: Class_DrawingArea,
-    menu_config: Class_MenuConfig,
+    drawing_area: Class_DrawingArea
   ) {
     // Init parent class attributes
-    super(id, drawing_area, drawing_area.sankey, menu_config, 'g_elements_sankey')
+    super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
 
     NodeSetterGenerator.generateSetters(this)
 
@@ -1401,7 +1400,6 @@ export class Class_NodeElement extends ClassTemplate_Element {
     const handle = new ClassTemplate_Handler(
       ('handle_' + this.id + type + '_' + link.id),
       this.drawing_area,
-      this.menu_config,
       this,
       this.dragStartHandlerMoveLink,
       this.dragHandlerMoveLink,

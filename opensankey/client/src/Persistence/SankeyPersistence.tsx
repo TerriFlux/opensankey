@@ -40,9 +40,10 @@ import {
 } from '@chakra-ui/react'
 
 import { type Type_JSON } from '../types/Utils'
-import { Class_ApplicationData, FType_ProcessFunctions } from '../types/ApplicationData'
+import { Class_ApplicationData } from '../types/ApplicationData'
 import { applyRandomColors } from '../Algorithms/Colors'
 import { Class_DataTagGroup } from '../types/TagGroup'
+import { FType_ProcessFunctions } from '../Modules'
 
 declare global {
   interface Window {

@@ -102,12 +102,12 @@ export class Class_Sankey {
   }
 
   protected createNewNode(id: string, name: string): Class_NodeElement {
-    const node = new Class_NodeElement(id, name, this.drawing_area, this._menu_config)
+    const node = new Class_NodeElement(id, name, this.drawing_area)
     return node
   }
 
   protected createNewLink(id: string, source: Class_NodeElement, target: Class_NodeElement): Class_LinkElement {
-    const link = new Class_LinkElement(id, source, target, this.drawing_area, this._menu_config)
+    const link = new Class_LinkElement(id, source, target, this.drawing_area)
     return link
   }
 
@@ -135,13 +135,7 @@ export class Class_Sankey {
 
   // PROTECTED ATTRIBUTES ===============================================================
 
-  /**
-   * Config menu ref to html element & function to update it
-   * @protected
-   * @type {Class_MenuConfig}
-   * @memberof Class_Sankey
-   */
-  protected _menu_config: Class_MenuConfig
+
 
   /**
    * Use a status key to indicated that something has change on datatags
@@ -195,11 +189,9 @@ export class Class_Sankey {
    */
   constructor(
     drawing_area: Class_DrawingArea,
-    menu_config: Class_MenuConfig,
     id: string = default_main_sankey_id
   ) {
     this.drawing_area = drawing_area
-    this._menu_config = menu_config
     this._id = id
     // New attributes
     this.name = this.id  // Default name = id

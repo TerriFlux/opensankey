@@ -637,7 +637,7 @@ export const OSTooltip = ({label, delay = 500, placement = 'auto', isAlwaysOpen 
   isAlwaysOpen?: boolean
   children: ReactNode
 }>) => {
-  if (label === undefined) {
+  if (label === undefined || label === null ) {
     return <>{children}</>
   }
   const element_key = label.split(' ').join('_')

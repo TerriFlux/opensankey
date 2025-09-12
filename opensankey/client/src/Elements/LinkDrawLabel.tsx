@@ -276,7 +276,7 @@ export class LinkDrawLabel {
   }
 
   private dragTextPathEnd(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
-    this._link.menu_config.updateAllComponentsRelatedToLinks()
+    this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
 
     const new_val: [number | undefined, Type_PathLabelHPosition] = [this._link.display.position_offset_name, this._link.name_label_horiz]
     const _dragTextPathEnd = () => {
@@ -313,7 +313,7 @@ export class LinkDrawLabel {
       this._link.display.position_y_name = old_val[1]
       this._link.name_label_horiz = old_val[2]
       this._link.name_label_vert = old_val[3]
-      this._link.menu_config.updateAllComponentsRelatedToLinks()
+      this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this._link.drawValue()
     }
 
@@ -335,7 +335,7 @@ export class LinkDrawLabel {
 
   private dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
 
-    this._link.menu_config.updateAllComponentsRelatedToLinks()
+    this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
 
     const new_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [this._link.display.position_x_name, this._link.display.position_y_name, this._link.name_label_horiz, this._link.name_label_vert]
 
@@ -344,7 +344,7 @@ export class LinkDrawLabel {
       this._link.name_label_vert = new_val[3]
       this._link.display.position_x_name = new_val[0]
       this._link.display.position_y_name = new_val[1]
-      this._link.menu_config.updateAllComponentsRelatedToLinks()
+      this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this._link.drawValue()
     }
 
