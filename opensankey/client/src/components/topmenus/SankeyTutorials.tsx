@@ -54,7 +54,8 @@ import {
 // Local libs
 import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { ExempleMenuTypes } from '../welcome/MenuExamples'
-import { Class_ApplicationData, FType_ProcessFunctions } from '../../types/ApplicationData'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { FType_ProcessFunctions } from '../../Modules'
 
 
 // COMPONENTS ===========================================================================

@@ -76,7 +76,6 @@ export class ClassTemplate_Handler extends ClassTemplate_Element {
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
-    menu_config: Class_MenuConfig,
     ref: ClassTemplate_ProtoElement,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
@@ -86,7 +85,7 @@ export class ClassTemplate_Handler extends ClassTemplate_Element {
     custom_parent_grp?: string
   ) {
     // Init parent class attributes
-    super(id, drawing_area, drawing_area.sankey, menu_config, custom_parent_grp ? custom_parent_grp : 'g_handlers')
+    super(id, drawing_area, drawing_area.sankey, custom_parent_grp ? custom_parent_grp : 'g_handlers')
     this._ref_element = ref
     this._ref_element_optional = ref_optional
     this._custom_html_grp = custom_parent_grp !== undefined

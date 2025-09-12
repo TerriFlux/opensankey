@@ -29,10 +29,9 @@ export class ClassTemplate_GhostLinkElement
     id: string,
     source: Class_NodeElement,
     target: Class_NodeElement,
-    drawing_area: Class_DrawingArea,
-    menu_config: Class_MenuConfig
+    drawing_area: Class_DrawingArea
   ) {
-    super(id, source, target, drawing_area, menu_config)
+    super(id, source, target, drawing_area)
     // Display
     this._display = {
       drawing_area: drawing_area,

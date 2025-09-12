@@ -107,18 +107,18 @@ export const ApplyLayoutDialog = ({
           <Button
             variant='menuconfigpanel_option_button'
             onClick={() => {
-              data_var_to_update.current.length = 0
+              data_var_to_update.length = 0
               menu_configuration.updateComponentApplyLayout()
             }}
           >{t('Menu.Transformation.unSelectAll')}</Button>
           <Button
             variant='menuconfigpanel_option_button'
             onClick={() => {
-              data_var_to_update.current.length = 0
+              data_var_to_update.length = 0
               if (mode_trans === 'simple') {
-                simple_element_to_transform.forEach(el => data_var_to_update.current.push(el))
+                simple_element_to_transform.forEach(el => data_var_to_update.push(el))
               } else {
-                new_data.transform_layout_all_attr.forEach(el => data_var_to_update.current.push(el))
+                new_data.transform_layout_all_attr.forEach(el => data_var_to_update.push(el))
               }
               menu_configuration.updateComponentApplyLayout()
             }}
@@ -126,8 +126,8 @@ export const ApplyLayoutDialog = ({
           <Button
             variant='menuconfigpanel_option_button'
             onClick={() => {
-              data_var_to_update.current.length = 0
-              default_element_to_transform.forEach(el => data_var_to_update.current.push(el))
+              data_var_to_update.length = 0
+              default_element_to_transform.forEach(el => data_var_to_update.push(el))
               menu_configuration.updateComponentApplyLayout()
             }}
           >{t('Menu.Transformation.selectDefault')}</Button>
@@ -142,51 +142,51 @@ export const ApplyLayoutDialog = ({
           <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Topology')}</Box>
           <Box layerStyle='options_4cols' >
             <Button
-              variant={data_var_to_update.current.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('addNode')) {
-                  data_var_to_update.current.push('addNode')
+                if (!data_var_to_update.includes('addNode')) {
+                  data_var_to_update.push('addNode')
                   menu_configuration.updateComponentApplyLayout()
                 } else {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('addNode'), 1)
+                  data_var_to_update.splice(data_var_to_update.indexOf('addNode'), 1)
                   menu_configuration.updateComponentApplyLayout()
                 }
               }
               }
             >{t('Menu.Transformation.addNode')}</Button>
             <Button
-              variant={data_var_to_update.current.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('removeNode')) {
-                  data_var_to_update.current.push('removeNode')
+                if (!data_var_to_update.includes('removeNode')) {
+                  data_var_to_update.push('removeNode')
                   menu_configuration.updateComponentApplyLayout()
                 } else {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('removeNode'), 1)
+                  data_var_to_update.splice(data_var_to_update.indexOf('removeNode'), 1)
                   menu_configuration.updateComponentApplyLayout()
                 }
               }
               }
             >{t('Menu.Transformation.removeNode')}</Button>
             <Button
-              variant={data_var_to_update.current.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('addFlux')) {
-                  data_var_to_update.current.push('addFlux')
+                if (!data_var_to_update.includes('addFlux')) {
+                  data_var_to_update.push('addFlux')
                   menu_configuration.updateComponentApplyLayout()
                 } else {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('addFlux'), 1)
+                  data_var_to_update.splice(data_var_to_update.indexOf('addFlux'), 1)
                   menu_configuration.updateComponentApplyLayout()
                 }
               }
               }>{t('Menu.Transformation.addFlux')}</Button>
             <Button
-              variant={data_var_to_update.current.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('removeFlux')) {
-                  data_var_to_update.current.push('removeFlux')
+                if (!data_var_to_update.includes('removeFlux')) {
+                  data_var_to_update.push('removeFlux')
                   menu_configuration.updateComponentApplyLayout()
                 } else {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('removeFlux'), 1)
+                  data_var_to_update.splice(data_var_to_update.indexOf('removeFlux'), 1)
                   menu_configuration.updateComponentApplyLayout()
                 }
               }
@@ -200,25 +200,25 @@ export const ApplyLayoutDialog = ({
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Geometry')}</Box>
         <Box layerStyle='options_4cols' >
           <Button
-            variant={data_var_to_update.current.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            variant={data_var_to_update.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
             onClick={() => {
-              if (!data_var_to_update.current.includes('posNode')) {
-                data_var_to_update.current.push('posNode')
+              if (!data_var_to_update.includes('posNode')) {
+                data_var_to_update.push('posNode')
                 menu_configuration.updateComponentApplyLayout()
               } else {
-                data_var_to_update.current.splice(data_var_to_update.current.indexOf('posNode'), 1)
+                data_var_to_update.splice(data_var_to_update.indexOf('posNode'), 1)
                 menu_configuration.updateComponentApplyLayout()
               }
             }
             }>{t('Menu.Transformation.PosNoeud')}</Button>
           <Button
-            variant={data_var_to_update.current.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            variant={data_var_to_update.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
             onClick={() => {
-              if (!data_var_to_update.current.includes('posFlux')) {
-                data_var_to_update.current.push('posFlux')
+              if (!data_var_to_update.includes('posFlux')) {
+                data_var_to_update.push('posFlux')
                 menu_configuration.updateComponentApplyLayout()
               } else {
-                data_var_to_update.current.splice(data_var_to_update.current.indexOf('posFlux'), 1)
+                data_var_to_update.splice(data_var_to_update.indexOf('posFlux'), 1)
                 menu_configuration.updateComponentApplyLayout()
               }
             }
@@ -235,23 +235,23 @@ export const ApplyLayoutDialog = ({
           <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
           <Box layerStyle='options_4cols' >
             <Button
-              variant={data_var_to_update.current.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('Values')) {
-                  data_var_to_update.current.push('Values')
+                if (!data_var_to_update.includes('Values')) {
+                  data_var_to_update.push('Values')
                   // Also need dataTags because we can't only import values without the structur of dataTags
                   // (but we can import dataTags without values)
-                  if (!data_var_to_update.current.includes('tagData')) {
-                    data_var_to_update.current.push('tagData')
+                  if (!data_var_to_update.includes('tagData')) {
+                    data_var_to_update.push('tagData')
                   }
                   menu_configuration.updateComponentApplyLayout()
                 } else {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('Values'), 1)
+                  data_var_to_update.splice(data_var_to_update.indexOf('Values'), 1)
                   menu_configuration.updateComponentApplyLayout()
                 }
               }
               }
-            >{data_var_to_update.current.includes('Values') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
+            >{data_var_to_update.includes('Values') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
           </Box>
         </Box></OSTooltip> : <></>}
 
@@ -259,27 +259,27 @@ export const ApplyLayoutDialog = ({
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'><Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
         <Box layerStyle='options_4cols' >
           <Button
-            variant={data_var_to_update.current.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            variant={data_var_to_update.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
             onClick={() => {
-              if (!data_var_to_update.current.includes('attrNode')) {
-                data_var_to_update.current.push('attrNode')
+              if (!data_var_to_update.includes('attrNode')) {
+                data_var_to_update.push('attrNode')
                 menu_configuration.updateComponentApplyLayout()
 
               } else {
-                data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrNode'), 1)
+                data_var_to_update.splice(data_var_to_update.indexOf('attrNode'), 1)
                 menu_configuration.updateComponentApplyLayout()
               }
             }
             }
           >{t('Menu.Transformation.attrNode')}</Button>
           <Button
-            variant={data_var_to_update.current.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            variant={data_var_to_update.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
             onClick={() => {
-              if (!data_var_to_update.current.includes('attrFlux')) {
-                data_var_to_update.current.push('attrFlux')
+              if (!data_var_to_update.includes('attrFlux')) {
+                data_var_to_update.push('attrFlux')
                 menu_configuration.updateComponentApplyLayout()
               } else {
-                data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrFlux'), 1)
+                data_var_to_update.splice(data_var_to_update.indexOf('attrFlux'), 1)
                 menu_configuration.updateComponentApplyLayout()
               }
             }
@@ -295,13 +295,13 @@ export const ApplyLayoutDialog = ({
           <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
           <Box layerStyle='options_4cols' >
             <Button
-              variant={data_var_to_update.current.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('tagNode')) {
-                  data_var_to_update.current.push('tagNode')
+                if (!data_var_to_update.includes('tagNode')) {
+                  data_var_to_update.push('tagNode')
                   menu_configuration.updateComponentApplyLayout()
                 } else {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagNode'), 1)
+                  data_var_to_update.splice(data_var_to_update.indexOf('tagNode'), 1)
                   menu_configuration.updateComponentApplyLayout()
 
                 }
@@ -309,26 +309,26 @@ export const ApplyLayoutDialog = ({
               }
             >{t('Menu.Transformation.tagNode')}</Button>
             <Button
-              variant={data_var_to_update.current.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('tagFlux')) {
-                  data_var_to_update.current.push('tagFlux')
+                if (!data_var_to_update.includes('tagFlux')) {
+                  data_var_to_update.push('tagFlux')
                   menu_configuration.updateComponentApplyLayout()
                 } else {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagFlux'), 1)
+                  data_var_to_update.splice(data_var_to_update.indexOf('tagFlux'), 1)
                   menu_configuration.updateComponentApplyLayout()
                 }
               }
               }
             >{t('Menu.Transformation.tagFlux')}</Button>
             <Button
-              variant={data_var_to_update.current.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('tagData')) {
-                  data_var_to_update.current.push('tagData')
+                if (!data_var_to_update.includes('tagData')) {
+                  data_var_to_update.push('tagData')
                   menu_configuration.updateComponentApplyLayout()
-                } else if (!data_var_to_update.current.includes('Values')) {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagData'), 1)
+                } else if (!data_var_to_update.includes('Values')) {
+                  data_var_to_update.splice(data_var_to_update.indexOf('tagData'), 1)
                   menu_configuration.updateComponentApplyLayout()
                 }
               }
@@ -344,18 +344,18 @@ export const ApplyLayoutDialog = ({
           <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
           <Box layerStyle='options_4cols' >
             <Button
-              variant={data_var_to_update.current.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              variant={data_var_to_update.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
-                if (!data_var_to_update.current.includes('tagLevel')) {
-                  data_var_to_update.current.push('tagLevel')
+                if (!data_var_to_update.includes('tagLevel')) {
+                  data_var_to_update.push('tagLevel')
                   menu_configuration.updateComponentApplyLayout()
                 } else {
-                  data_var_to_update.current.splice(data_var_to_update.current.indexOf('tagLevel'), 1)
+                  data_var_to_update.splice(data_var_to_update.indexOf('tagLevel'), 1)
                   menu_configuration.updateComponentApplyLayout()
                 }
               }
               }
-            >{data_var_to_update.current.includes('tagLevel') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
+            >{data_var_to_update.includes('tagLevel') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
           </Box>
         </Box></OSTooltip> : <></>}
 
@@ -364,35 +364,35 @@ export const ApplyLayoutDialog = ({
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
         <Box layerStyle='options_4cols' >
           <Button
-            variant={data_var_to_update.current.includes('attrDrawingArea') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            variant={data_var_to_update.includes('attrDrawingArea') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
             onClick={() => {
-              if (!data_var_to_update.current.includes('attrDrawingArea')) {
-                data_var_to_update.current.push('attrDrawingArea')
+              if (!data_var_to_update.includes('attrDrawingArea')) {
+                data_var_to_update.push('attrDrawingArea')
                 menu_configuration.updateComponentApplyLayout()
               } else {
-                data_var_to_update.current.splice(data_var_to_update.current.indexOf('attrDrawingArea'), 1)
+                data_var_to_update.splice(data_var_to_update.indexOf('attrDrawingArea'), 1)
                 menu_configuration.updateComponentApplyLayout()
               }
             }
             }
-          >{data_var_to_update.current.includes('attrDrawingArea') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
+          >{data_var_to_update.includes('attrDrawingArea') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
         </Box>
       </Box></OSTooltip>
     {mode_trans == 'expert' ? <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.freeLabels')}</Box>
       <Box layerStyle='options_4cols' >
         <Button
-          variant={data_var_to_update.current.includes('freeLabels') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          variant={data_var_to_update.includes('freeLabels') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
           onClick={() => {
-            if (!data_var_to_update.current.includes('freeLabels')) {
-              data_var_to_update.current.push('freeLabels')
+            if (!data_var_to_update.includes('freeLabels')) {
+              data_var_to_update.push('freeLabels')
             } else {
-              data_var_to_update.current.splice(data_var_to_update.current.indexOf('freeLabels'), 1)
+              data_var_to_update.splice(data_var_to_update.indexOf('freeLabels'), 1)
             }
             menu_configuration.updateComponentApplyLayout()
           }
           }
-        >{data_var_to_update.current.includes('freeLabels') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
+        >{data_var_to_update.includes('freeLabels') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
       </Box>
     </Box> : <></>}
   </Box>
@@ -570,7 +570,7 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
       tmp_DA.fromJSON(json_object as Type_JSON)
       tmp_DA.afterFromJSON()
       app_data.drawing_area.bypass_redraws = true
-      app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update.current)
+      app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update)
       app_data.drawing_area.draw()
       console.log('✅ Données appliquées avec succès')
 

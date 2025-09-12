@@ -25,16 +25,16 @@
 // ==================================================================================================
 
 // External imports
-import React, { Dispatch, FC, MutableRefObject, SetStateAction, useRef } from 'react'
+//import React, { Dispatch, FC, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
-import i18next, { TFunction } from 'i18next'
+import i18next, { TFunction, i18n } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import * as d3 from 'd3'
 
 import FileSaver from 'file-saver'
 
 import { StepType } from '@reactour/tour'
-import { useToast } from '@chakra-ui/react'
+import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
 import { default_file_name, default_save_JSON_options, default_save_only_visible_elements, default_save_with_values, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
@@ -82,15 +82,15 @@ declare const window: Window &
 
 
 
-export type FType_ProcessFunctions = {
-  ref_processing: MutableRefObject<boolean>,
-  ref_setter_processing: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  failure: MutableRefObject<boolean>,
-  not_started: MutableRefObject<boolean>,
-  ref_result: MutableRefObject<Dispatch<SetStateAction<string>>>,
-  path: MutableRefObject<string>,
-  launch: (path: string) => void
-}
+// export type FType_ProcessFunctions = {
+//   ref_processing: MutableRefObject<boolean>,
+//   ref_setter_processing: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+//   failure: MutableRefObject<boolean>,
+//   not_started: MutableRefObject<boolean>,
+//   ref_result: MutableRefObject<Dispatch<SetStateAction<string>>>,
+//   path: MutableRefObject<string>,
+//   launch: (path: string) => void
+// }
 
 initializeTooltipSystem()
 // CLASS APPLICATION DATA **************************************************************/
@@ -106,7 +106,12 @@ export class Class_ApplicationData {
   // PUBLIC METHODS ====================================================================
 
   public createNewMenuConfiguration(): Class_MenuConfig {
-    return new Class_MenuConfig()
+    this._toast = useToast()
+    this._t  =  useTranslation('translation', { useSuspense: false }).t  
+    this._i18n =  useTranslation('translation', { useSuspense: false }).i18n  
+    this._menu_configuration = new Class_MenuConfig()
+    this._history = new Class_ApplicationHistory(this._menu_configuration)
+    return this._menu_configuration
   }
 
   public createNewDrawingArea(id?: string): Class_DrawingArea {
@@ -131,7 +136,7 @@ export class Class_ApplicationData {
   public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
 
   // Attributes to transfer between sankeys
-  public data_var_to_update: MutableRefObject<string[]> = React.useRef([])
+  public data_var_to_update: string[] = []
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
@@ -158,7 +163,7 @@ export class Class_ApplicationData {
    * @type {Class_ApplicationHistory}
    * @memberof Class_ApplicationData
    */
-  protected _history: Class_ApplicationHistory
+  protected _history?: Class_ApplicationHistory
 
   /**
    * Configuration Menu
@@ -167,7 +172,7 @@ export class Class_ApplicationData {
    * @type {Class_MenuConfig}
    * @memberof Class_ApplicationData
    */
-  protected _menu_configuration: Class_MenuConfig
+  protected _menu_configuration?: Class_MenuConfig
 
   /**
  * Librairie containing icon for the app
@@ -210,14 +215,16 @@ export class Class_ApplicationData {
    * @type {TFunction}
    * @memberof Class_ApplicationData
    */
-  private _t: TFunction = useTranslation('translation', { useSuspense: false }).t //traductor
+  //@ts-expect-error xxx
+  protected _t: TFunction = ()=>null//useTranslation('translation', { useSuspense: false }).t //traductor
 
   /**
    * i18n saved
    * @private
    * @memberof Class_ApplicationData
    */
-  private _i18n = useTranslation('translation', { useSuspense: false }).i18n //traductor
+  //@ts-expect-error xxx
+  protected _i18n: i18n = ()=>null//useTranslation('translation', { useSuspense: false }).i18n //traductor
 
   /**
    * Path to OpenSankey logo
@@ -269,14 +276,14 @@ export class Class_ApplicationData {
 
 
   // TODO ???
-  private _processFunction: FType_ProcessFunctions
+  //private _processFunction: FType_ProcessFunctions
 
   /**
    * Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
    * @private
    * @memberof Class_ApplicationData
    */
-  private _toast = useToast()
+  protected _toast :CreateToastFnReturn | null  = null
 
   /**
    * Queue of waiting processes for toast
@@ -317,9 +324,6 @@ export class Class_ApplicationData {
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications
-    this._menu_configuration = this.createNewMenuConfiguration()
-    // Init history
-    this._history = new Class_ApplicationHistory(this._menu_configuration)
     // Contains all drawn objects
     this._drawing_area = this.createNewDrawingArea()
     // For published mode only
@@ -333,23 +337,23 @@ export class Class_ApplicationData {
     if (published_mode) this._logo_terriflux = 'logo_terriflux.png'
     else this._logo_terriflux = 'logos/logo_terriflux.png'
 
-    // Excel processing function
-    this._processFunction = {
-      ref_processing: useRef(false),
-      ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      failure: useRef(false),
-      not_started: useRef(true),
-      ref_result: useRef<Dispatch<SetStateAction<string>>>(() => null),
-      path: useRef(''),
-      launch: (cur_path: string) => {
-        this._processFunction.path.current = cur_path
-        this.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)
-        this._processFunction.ref_setter_processing.current(true)
-        this._processFunction.failure.current = true
-        this._processFunction.not_started.current = false
-        this._processFunction.ref_result.current('')
-      }
-    }
+    // // Excel processing function
+    // this._processFunction = {
+    //   ref_processing: useRef(false),
+    //   ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+    //   failure: useRef(false),
+    //   not_started: useRef(true),
+    //   ref_result: useRef<Dispatch<SetStateAction<string>>>(() => null),
+    //   path: useRef(''),
+    //   launch: (cur_path: string) => {
+    //     this._processFunction.path.current = cur_path
+    //     this.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)
+    //     this._processFunction.ref_setter_processing.current(true)
+    //     this._processFunction.failure.current = true
+    //     this._processFunction.not_started.current = false
+    //     this._processFunction.ref_result.current('')
+    //   }
+    // }
     if (this.options.no_key_event === true) {
       return
     }
@@ -397,9 +401,9 @@ export class Class_ApplicationData {
     this._drawing_area.bypass_redraws = by_pass_redraw
 
     // Reset Class_DataHistory
-    this._history = new Class_ApplicationHistory(this._menu_configuration)
+    this._history = new Class_ApplicationHistory(this._menu_configuration!)
     // Update menus
-    this.menu_configuration.updateAllMenuComponents()
+    this.menu_configuration?.updateAllMenuComponents()
   }
 
   /**
@@ -721,7 +725,7 @@ public readUrlJSON(url_data: string) {
         // Processing
         this._updateFromJSON(json_object)
         this.drawing_area.draw()
-        this._menu_configuration.updateAllMenuComponents()
+        this._menu_configuration!.updateAllMenuComponents()
       })
   }
 
@@ -881,18 +885,9 @@ public readUrlJSON(url_data: string) {
     func: (_: TModel[TKey]) => void
   ) {
     const old_val = model[key]
-    this._history.saveUndo(() => { func(old_val) })
-    this._history.saveRedo(() => { func(value) })
+    this._history!.saveUndo(() => { func(old_val) })
+    this._history!.saveRedo(() => { func(value) })
     func(value)
-  }
-
-  public MenuColorPicker = ({ initialColor, functionOnBlur, isDisabled, textDisabled }:MenuColorPickerProps) => {
-    return <MenuColorPicker
-      isDisabled={isDisabled}
-      initialColor={initialColor}
-      onColorChange={functionOnBlur}
-      label={textDisabled}
-    />
   }
 
   /**
@@ -1089,12 +1084,12 @@ public readUrlJSON(url_data: string) {
     // Undo
     else if (evtCtrlZ) {
       evt.preventDefault()
-      this._history.applyUndo()
+      this._history!.applyUndo()
     }
     // Redo
     else if (evtCtrlY || evtCtrlShiftZ) {
       evt.preventDefault()
-      this._history.applyRedo()
+      this._history!.applyRedo()
     }
   }
 
@@ -1137,7 +1132,7 @@ public readUrlJSON(url_data: string) {
     }
     // Otherwise send
     else {
-      this._toast.promise(
+      this._toast!.promise(
         new Promise((resolve) => {
           setTimeout(() => {
             funct() // run
@@ -1210,7 +1205,7 @@ public readUrlJSON(url_data: string) {
   public get t(): TFunction { return this._t }
   public get is_static(): boolean { return this._drawing_area.static }
 
-  public get history(): Class_ApplicationHistory { return this._history }
+  public get history(): Class_ApplicationHistory { return this._history! }
   public get icon_library(): Class_IconLibrary { return this._icon_library }
 
   public get steps(): StepType[] { return this._steps }
@@ -1218,7 +1213,7 @@ public readUrlJSON(url_data: string) {
   public get drawing_area(): Class_DrawingArea { return this._drawing_area }
   protected set drawing_area(value: Class_DrawingArea) { this._drawing_area = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
-  public get menu_configuration(): Class_MenuConfig { return this._menu_configuration }
+  public get menu_configuration(): Class_MenuConfig { return this._menu_configuration! }
   protected set menu_configuration(value: Class_MenuConfig) { this._menu_configuration = value } // Only extended Class_ApplicationData instance can modify these parameter (for sub-module)
 
   public get url_prefix(): string { return this._url_prefix }
@@ -1239,7 +1234,7 @@ public readUrlJSON(url_data: string) {
   public get app_name(): string { return this._app_name }
   public set app_name(value: string) { this._app_name = value }
 
-  public get processFunction(): FType_ProcessFunctions { return this._processFunction }
+  //public get processFunction(): FType_ProcessFunctions { return this._processFunction }
 
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
 

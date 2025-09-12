@@ -69,6 +69,7 @@ import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
+import { FType_ProcessFunctions } from '../../Modules'
 
 export declare const window: Window &
   typeof globalThis & {
@@ -96,10 +97,12 @@ export const menu_config_width = 20
 export const Menu = (
   {
     app_data,
+    processFunction,
     external_modal,
     additionalMenus
   }: {
     app_data: Class_ApplicationData,
+    processFunction:FType_ProcessFunctions,
     external_modal: JSX.Element[],
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
   }
@@ -172,7 +175,8 @@ export const Menu = (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
-      {((!app_data.is_static) || (window.sankey && window.sankey.topbar != false)) ? <MenuTopNavBar new_data={app_data} additionalMenus={additionalMenus} /> : <></>}
+      {((!app_data.is_static) || (window.sankey && window.sankey.topbar != false)) ? 
+        <MenuTopNavBar new_data={app_data} processFunction={processFunction} additionalMenus={additionalMenus} /> : <></>}
 
       {/* Bottom Navbar with some more info */}
       {
@@ -292,7 +296,7 @@ export const Menu = (
       /> : <></>}
 
       {
-        app_data.processFunction.ref_processing.current ? (
+        processFunction.ref_processing.current ? (
           <Toast >
             <Button className='btn btn-sm btn-warning col-md-12'>
               <span className='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span> Processing...
@@ -304,17 +308,17 @@ export const Menu = (
 
       <ExcelModal
         new_data={app_data}
-        launch={app_data.processFunction.launch}
+        launch={processFunction.launch}
       />
       <ExcelModalSaver app_data={app_data} />
 
       <SankeyLoad
         new_data={app_data}
         successAction={() => DownloadExamples(
-          app_data.processFunction.path.current,
+          processFunction.path.current,
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )}
-        processFunctions={app_data.processFunction}
+        processFunctions={processFunction}
       />
 
       {modal_support}

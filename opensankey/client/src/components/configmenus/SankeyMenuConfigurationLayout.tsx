@@ -413,9 +413,9 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
  * @param {*} { new_data }
  * @return {*} 
  */
-export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => {
+export const LegendStyleConfig = ({ new_data }:{new_data:Class_ApplicationData}) => {
 
-  const { t, MenuColorPicker } = new_data
+  const { t } = new_data
   const [, setCount] = useState(0)
 
   /**
@@ -578,7 +578,7 @@ export const LegendStyleConfig: FC<BaseApplicationDataType> = ({ new_data }) => 
           <Box>
             <MenuColorPicker
               initialColor={new_data.drawing_area.legend.legend_bg_color}
-              functionOnBlur={eventGLegendBgColor}
+              onColorChange={eventGLegendBgColor}
             />
           </Box>
         </OSTooltip>

@@ -66,6 +66,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
+import { FType_ProcessFunctions } from '../../Modules'
 
 /*************************************************************************************************/
 
@@ -173,8 +174,9 @@ export const OpenSankeySaveButton = ({ new_data }: BaseApplicationDataType) => {
  * }
  * @return {*}
  */
-export const MenuTopButtons = ({ new_data, additionalMenus }: {
+export const MenuTopButtons = ({ new_data, processFunction,additionalMenus }: {
   new_data: Class_ApplicationData,
+  processFunction:FType_ProcessFunctions,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { t } = new_data
@@ -620,7 +622,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     />
     <ModalTuto
       new_data={new_data}
-      processFunctions={new_data.processFunction}
+      processFunctions={processFunction}
       show_tuto={show_tuto}
       set_show_tuto={set_show_tuto}
     />
@@ -807,8 +809,9 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopNavBar = ({ new_data, additionalMenus }: {
+export const MenuTopNavBar = ({ new_data, processFunction,additionalMenus }: {
   new_data: Class_ApplicationData,
+  processFunction: FType_ProcessFunctions,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { logo } = new_data
@@ -891,8 +894,8 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
       {
         // Top menu buttons to access general appliaction functionnalities
         new_data.is_static ?
-          <MenuTopButtonsStatic new_data={new_data} additionalMenus={additionalMenus} /> :
-          <MenuTopButtons new_data={new_data} additionalMenus={additionalMenus} />}
+          <MenuTopButtonsStatic new_data={new_data}  additionalMenus={additionalMenus} /> :
+          <MenuTopButtons new_data={new_data} processFunction={processFunction} additionalMenus={additionalMenus} />}
       <Box
         margin='0.25rem'
         alignSelf='center'
