@@ -107,8 +107,6 @@ export class Class_ApplicationData {
 
   public createNewMenuConfiguration(): Class_MenuConfig {
     this._toast = useToast()
-    this._t  =  useTranslation('translation', { useSuspense: false }).t  
-    this._i18n =  useTranslation('translation', { useSuspense: false }).i18n  
     this._menu_configuration = new Class_MenuConfig()
     this._history = new Class_ApplicationHistory(this._menu_configuration)
     return this._menu_configuration
@@ -1202,7 +1200,11 @@ public readUrlJSON(url_data: string) {
 
   // GETTERS / SETTERS ==================================================================
 
-  public get t(): TFunction { return this._t }
+  public get t() { return this._t }
+  public set t(_) { this._t = _ }
+  public get i18n() { return this._i18n }
+  public set i18n(_) { this._i18n = _ }
+
   public get is_static(): boolean { return this._drawing_area.static }
 
   public get history(): Class_ApplicationHistory { return this._history! }
@@ -1241,7 +1243,7 @@ public readUrlJSON(url_data: string) {
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }
 
-  public get i18n() { return this._i18n }
+
 
   public get is_reconcilied(): boolean { return this.drawing_area.sankey.linkValueHasReconciliedData() }
 
