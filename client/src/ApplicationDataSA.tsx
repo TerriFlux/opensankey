@@ -34,8 +34,6 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataLoginComponent
 
   public createNewMenuConfiguration() {
     this._toast = useToast()
-    this._t  =  useTranslation('translation', { useSuspense: false }).t  
-    this._i18n =  useTranslation('translation', { useSuspense: false }).i18n  
     this._menu_configuration = new Class_MenuConfigSA()
     //@ts-expect-error xxx
     this._history = new Class_ApplicationHistory(this._menu_configuration)

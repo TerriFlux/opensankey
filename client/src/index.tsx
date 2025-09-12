@@ -11,6 +11,7 @@ import { SankeyApp } from './AppSA'
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { loadUniversalJSON } from './deps/OpenSankey+/deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { useTranslation } from 'react-i18next'
 
 declare const window: Window &
   typeof globalThis & {
@@ -26,14 +27,18 @@ i18next.changeLanguage(navigator.language.includes('fr') ? 'fr' : 'en')
 const container = document.getElementById('react-container') as Element | DocumentFragment
 const root = createRoot(container)
 
+
+
 const App: FC = () => {
   const [dataApp, setDataApp] = useState<Class_ApplicationDataSA | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
+  const translation = useTranslation('translation', { useSuspense: false })
   useEffect(() => {
     const initializeApp = async () => {
       const newDataApp = new Class_ApplicationDataSA(!!window.sankey?.publish)
-
+      newDataApp.t = translation.t
+      newDataApp.i18n = translation.i18n
       if (window.sankey && window.sankey.diagram) {
         setIsLoading(true)
 
