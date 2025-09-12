@@ -65,12 +65,12 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
   // ABSTRACT METHODS ===================================================================
 
   protected createNewSankey(id?: string) {
-    const sankey = new Class_Sankey(this, this.application_data.menu_configuration, id)
+    const sankey = new Class_Sankey(this, id)
     return sankey
   }
 
   protected createNewSelectionZone(): Class_ZoneSelectionOSP {
-    return new Class_ZoneSelectionOSP(this, this.application_data.menu_configuration_osp)
+    return new Class_ZoneSelectionOSP(this)
   }
 
   // CLEANING METHODS ===================================================================

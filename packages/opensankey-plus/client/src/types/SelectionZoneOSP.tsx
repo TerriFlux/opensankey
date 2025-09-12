@@ -24,11 +24,10 @@ export class Class_ZoneSelectionOSP extends Class_ZoneSelection {
    * @memberof Class_ZoneSelection
    */
   constructor(
-    drawing_area: Class_DrawingArea,
-    menu_config: Class_MenuConfigOSP,
+    drawing_area: Class_DrawingArea
   ) {
     // Init parent class attributes
-    super(drawing_area, menu_config)
+    super(drawing_area)
   }
 
   // PUBLIC METHODS =====================================================================

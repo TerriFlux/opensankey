@@ -813,7 +813,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
         this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
         this._drawing_area.orderElementOnDA()
-        this._history = new Class_ApplicationHistory(this._menu_configuration)
+        this._history = new Class_ApplicationHistory(this._menu_configuration!)
 
         // Update components related to viewss
         this.menu_configuration.updateAllMenuComponents()

@@ -33,17 +33,17 @@ export const TransformationElementsOSP = ({
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.freeLabels')}</Box>
       <Box layerStyle='options_4cols' >
         <Button
-          variant={data_var_to_update.current.includes('freeLabels') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          variant={data_var_to_update.includes('freeLabels') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
           onClick={() => {
-            if (!data_var_to_update.current.includes('freeLabels')) {
-              data_var_to_update.current.push('freeLabels')
+            if (!data_var_to_update.includes('freeLabels')) {
+              data_var_to_update.push('freeLabels')
             } else {
-              data_var_to_update.current.splice(data_var_to_update.current.indexOf('freeLabels'), 1)
+              data_var_to_update.splice(data_var_to_update.indexOf('freeLabels'), 1)
             }
             menu_configuration.updateComponentApplyLayout()
           }
           }
-        >{data_var_to_update.current.includes('freeLabels') ? icon_activated : icon_unactivated}</Button>
+        >{data_var_to_update.includes('freeLabels') ? icon_activated : icon_unactivated}</Button>
       </Box>
     </Box>
 
@@ -54,17 +54,17 @@ export const TransformationElementsOSP = ({
         <Box layerStyle='options_4cols' >
           <Button
             isDisabled={!is_master}
-            variant={is_master && data_var_to_update.current.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
+            variant={is_master && data_var_to_update.includes('Views')?'menuconfigpanel_option_button_activated':'menuconfigpanel_option_button'}
             onClick={() => {
-              if(!data_var_to_update.current.includes('Views')){
-                data_var_to_update.current.push('Views')
+              if(!data_var_to_update.includes('Views')){
+                data_var_to_update.push('Views')
                 setForceUpdate(!forceUpdate)
               }else{
-                data_var_to_update.current.splice(data_var_to_update.current.indexOf('Views'),1)
+                data_var_to_update.splice(data_var_to_update.indexOf('Views'),1)
                 setForceUpdate(!forceUpdate)
               }}
             }
-          >{is_master && data_var_to_update.current.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
+          >{is_master && data_var_to_update.includes('Views')?<FaCheck/>:<FontAwesomeIcon icon={faXmark}/>}</Button>
         </Box>
       </Box>
     </OSTooltip> */}
@@ -74,17 +74,17 @@ export const TransformationElementsOSP = ({
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.list_icon')}</Box>
         <Box layerStyle='options_4cols' >
           <Button
-            variant={data_var_to_update.current.includes('icon_catalog') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            variant={data_var_to_update.includes('icon_catalog') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
             onClick={() => {
-              if (!data_var_to_update.current.includes('icon_catalog')) {
-                data_var_to_update.current.push('icon_catalog')
+              if (!data_var_to_update.includes('icon_catalog')) {
+                data_var_to_update.push('icon_catalog')
               } else {
-                data_var_to_update.current.splice(data_var_to_update.current.indexOf('icon_catalog'), 1)
+                data_var_to_update.splice(data_var_to_update.indexOf('icon_catalog'), 1)
               }
               menu_configuration.updateComponentApplyLayout()
             }
             }
-          >{data_var_to_update.current.includes('icon_catalog') ? icon_activated : icon_unactivated}</Button>
+          >{data_var_to_update.includes('icon_catalog') ? icon_activated : icon_unactivated}</Button>
         </Box>
       </Box>
     </OSTooltip></>

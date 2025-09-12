@@ -497,14 +497,14 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     style={style}
   >
     {/* Load + Save  */}
-    {is_static ? <></> : input_loader_json_catalog}
-    {is_static ? <></> : create_data_catalog}
+    {is_static || !app_data.has_sankey_plus ? <></> : input_loader_json_catalog}
+    {is_static || !app_data.has_sankey_plus? <></> : create_data_catalog}
 
     {/* Return to Sankey master button */}
     {is_static ? <></> : button_to_return_to_master}
 
     {/* Create, switch between or delete views */}
-    {app_data.is_static ? <></> : button_to_create_view}
+    {is_static || !app_data.has_sankey_plus ? <></> : button_to_create_view}
     {button_to_prev_view}
     {button_to_next_view}
     <Box
@@ -517,7 +517,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 
     </Box>
     {
-      app_data.is_static ?
+      app_data.is_static || !app_data.has_sankey_plus ?
         <></> :
         <>
           {button_to_delete_actual_view}
@@ -533,9 +533,8 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     </Button>}
   </ButtonGroup>
 
-  const buttonShowBanner = <OSTooltip placement='bottom' label={(!has_sankey_plus) ? (t('Menu.sankeyOSPDisabled')) : ''}>
+  const buttonShowBanner = <OSTooltip placement='bottom' label={''}>
     <Button
-      isDisabled={!app_data.has_sankey_plus}
       variant={isOpen ? 'menutop_button_view_activated' : 'menutop_button'}
       size='sizeMenuTopButton'
       onClick={onToggle}

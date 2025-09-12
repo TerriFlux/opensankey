@@ -1,4 +1,4 @@
-import React, { FC, useState, RefObject, useRef, ReactNode } from 'react'
+import React, { FC, useState, RefObject, useRef, ReactNode,useEffect } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch
@@ -19,10 +19,13 @@ const width_fitler_drawer = 270
  * @return {*} 
  */
 export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [drawerOpen, setDrawerOpen] = useState(app_data.is_static ? false : false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
   //@ts-ignore xxx
   app_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
+  useEffect(() => {
+    if (app_data.is_static) setDrawerOpen(true)
+  },[app_data.is_static])
 
   return <>
     <Button
@@ -203,12 +206,13 @@ export const CollapseButton = ({ app_data, isOpen, onToggle }: {
   </Button>
 }
 
-export const FilterWrapperBox = ({ app_data, title, children }: React.PropsWithChildren<{
+export const FilterWrapperBox = ({ app_data, title, defaultOpen,children }: React.PropsWithChildren<{
   app_data: Class_ApplicationData,
   title: string,
+  defaultOpen?: boolean
   children: ReactNode
 }>) => {
-  const { isOpen, onToggle } = useDisclosure()
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: defaultOpen })
   return <Box layerStyle={'filter_wrapper'}>
     <Box layerStyle='filter_head_box'>
       <Heading variant='title_filter_tagg'>{title}</Heading>
@@ -222,7 +226,7 @@ export const FilterWrapperBox = ({ app_data, title, children }: React.PropsWithC
   </Box>
 }
 
-export const FilterDataType = ({ app_data }: { app_data: Class_ApplicationData }) => {
+export const FilterDataType = ({ app_data,defaultOpen }: { app_data: Class_ApplicationData, defaultOpen?:boolean }) => {
   const { t } = app_data
   const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(app_data.drawing_area.type_data))
   const data_type_not_reconcilied = ['data', 'structure'].includes(app_data.drawing_area.type_data)
@@ -285,7 +289,8 @@ export const FilterDataType = ({ app_data }: { app_data: Class_ApplicationData }
 
   return <FilterWrapperBox
     app_data={app_data}
-    title={t('Banner.title_data_type')}>
+    title={t('Banner.title_data_type')}
+    defaultOpen={defaultOpen}>
     {content}
   </FilterWrapperBox>
 }
@@ -614,7 +619,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
 
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
-    <FilterWrapperBox app_data={app_data} title={t(`Banner.${config.title_key}`)}>
+    <FilterWrapperBox app_data={app_data} title={t(`Banner.${config.title_key}`)} defaultOpen={app_data.is_static}>
       {config.show_title_column ? title_filter_column(app_data as unknown as Class_ApplicationDataOSP) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}
