@@ -24,10 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, {
-  FC,
-  useEffect
-} from 'react'
+import React, { Dispatch, useEffect, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import * as d3 from 'd3'
 import { TourProvider } from '@reactour/tour'
@@ -90,15 +87,16 @@ export const OpenSankeyApp = ({
   const url_info = checkForUrlToJSON()
   // Initialize data
   const app_data = initializeApplicationData()
+  app_data.createNewMenuConfiguration()
   if (window.sankey && window.sankey.diagram) {
     console.log(window.sankey.diagram)
     app_data.file_name = window.sankey.diagram
-    loadUniversalJSON(window.sankey.diagram as string).then(data=>{
+    loadUniversalJSON(window.sankey.diagram as string).then(data => {
       app_data.fromJSON(data as Type_JSON)
       app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
-    }).catch(e=>console.log(e))
+    }).catch(e => console.log(e))
   } else if (json_data !== null && json_data != '' && json_data != 'null') {
-    app_data.fromJSON(JSON.parse(json_data))   
+    app_data.fromJSON(JSON.parse(json_data))
   }
 
   if (url_info) {
@@ -129,6 +127,22 @@ export const OpenSankeyApp = ({
   }, [])
 
   /*************************************************************************************************/
+  const processFunction = {
+    ref_processing: useRef(false),
+    ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+    failure: useRef(false),
+    not_started: useRef(true),
+    ref_result: useRef<Dispatch<SetStateAction<string>>>(() => null),
+    path: useRef(''),
+    launch: (cur_path: string) => {
+      processFunction.path.current = cur_path
+      app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)
+      processFunction.ref_setter_processing.current(true)
+      processFunction.failure.current = true
+      processFunction.not_started.current = false
+      processFunction.ref_result.current('')
+    }
+  }
 
   useEffect(() => {
     // Delete potential duplicat
@@ -152,7 +166,7 @@ export const OpenSankeyApp = ({
             app_data,
             app_data.menu_configuration.additionalMenus,
             menu_configuration_nodes_attributes,
-            app_data.processFunction
+            processFunction
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
         {
@@ -168,6 +182,7 @@ export const OpenSankeyApp = ({
         <>
           <Menu
             app_data={app_data}
+            processFunction={processFunction}
             external_modal={[
               <></>
             ]}

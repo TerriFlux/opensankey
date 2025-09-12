@@ -56,13 +56,7 @@ export class Class_ContainerElement extends ClassTemplate_Element{
 
   }
 
-  /**
-   * Config menu ref to html element & function to update it
-   * @protected
-   * @type {string}
-   * @memberof ClassTemplate_Element
-   */
-  protected _menu_config: Class_MenuConfig
+
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -102,11 +96,10 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     menu_config: Class_MenuConfig,
     drawing_area: Class_DrawingArea,
   ) {
-    super(id,drawing_area,drawing_area.sankey, menu_config, 'g_elements_sankey')
+    super(id,drawing_area,drawing_area.sankey, 'g_elements_sankey')
     this._display = {
       position: structuredClone(default_element_position as Type_ElementPosition),
     }
-    this._menu_config = menu_config
     // Free labels attributs
     this._title = 'Zone de texte ' + this.id
     this._content = default_container_content
@@ -131,7 +124,6 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       top: new ClassTemplate_Handler(
         'zdt_top_handle_' + id,
         drawing_area,
-        menu_config,
         this,
         this.dragHandleStart(),
         this.dragTopHandler(),
@@ -140,7 +132,6 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       bottom: new ClassTemplate_Handler(
         'zdt_bottom_handle_' + id,
         drawing_area,
-        menu_config,
         this,
         this.dragHandleStart(),
         this.dragBottomHandler(),
@@ -149,7 +140,6 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       left: new ClassTemplate_Handler(
         'zdt_left_handle_' + id,
         drawing_area,
-        menu_config,
         this,
         this.dragHandleStart(),
         this.dragLeftHandler(),
@@ -158,7 +148,6 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       right: new ClassTemplate_Handler(
         'zdt_right_handle_' + id,
         drawing_area,
-        menu_config,
         this,
         this.dragHandleStart(),
         this.dragRightHandler(),
@@ -447,7 +436,7 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     */
   private dragHandleEnd() {
     return () => {
-      this.menu_config.ref_to_menu_config_containers_updater.current()
+      this.drawing_area.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
 
       const old_val = {
         x: this.position_x,
@@ -661,13 +650,13 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       this.drawing_area.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
       this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
       this.drawing_area.contextualised_container = undefined
-      this.menu_config.ref_to_menu_context_container_updater.current()
+      this.drawing_area.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
       // SHIFT
       if (event.shiftKey) {
         // Add free label to selection
         drawing_area.addContainerToSelection(this)
         // Open related menu
-        this.menu_config.openConfigMenuElementsContainers()
+        this.drawing_area.application_data.menu_configuration.openConfigMenuElementsContainers()
       }
       // CTRL
       else if (event.ctrlKey) {
@@ -683,7 +672,7 @@ export class Class_ContainerElement extends ClassTemplate_Element{
         drawing_area.addContainerToSelection(this)
       }
       // Update components related to free label edition
-      this.menu_config.updateComponentRelatedToContainers()
+      this.drawing_area.application_data.menu_configuration.updateComponentRelatedToContainers()
 
       this.drawing_area.orderElementOnDA()
     }
@@ -717,9 +706,9 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       if (!this.drawing_area.selected_containers_list.includes(this)) {
         this.drawing_area.addContainerToSelection(this)
       }
-      this.menu_config.ref_to_menu_config_containers_updater.current()
+      this.drawing_area.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
       this.drawing_area.contextualised_container = this
-      this.menu_config.ref_to_menu_context_container_updater.current()
+      this.drawing_area.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
     }
   }
 
@@ -896,15 +885,6 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     super._applyPosition()
     this.drawDragHandlers()
   }
-
-
-  // GETTERS / SETTERS ==================================================================
-
-  // Overrides --------------------------------------------------------------------------
-
-  public get menu_config() { return this._menu_config }
-
-  // New --------------------------------------------------------------------------------
 
   public get is_visible() { return super.is_visible }
 

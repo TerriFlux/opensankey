@@ -218,7 +218,7 @@ export class NodeDrawNameLabel {
     drawingElements.d3_selection_g_name_label?.select('.name_label_text').style('display', 'inline-block')
     this.drawNameLabel()
     // Update selection menu for nodes
-    this._node.menu_config.updateComponentRelatedToNodesSelection()
+    this._node.drawing_area.application_data.menu_configuration.updateComponentRelatedToNodesSelection()
   }
 
   /**
@@ -355,7 +355,7 @@ export class NodeDrawNameLabel {
       this._node.display.position_y_label = old_val[1]
       nodeDisplay.attributes.name_label_horiz = old_val[2]
       nodeDisplay.attributes.name_label_vert = old_val[3]
-      this._node.menu_config.updateAllComponentsRelatedToLinks()
+      this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this.drawNameLabel()
     }
     
@@ -383,7 +383,7 @@ export class NodeDrawNameLabel {
    */
   private dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     this.drawNameLabel()
-    this._node.menu_config.updateAllComponentsRelatedToNodes()
+    this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     
     const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [
       this._node.display.position_x_label, 
@@ -400,7 +400,7 @@ export class NodeDrawNameLabel {
       this._node.display.position_y_label = old_val[1]
       this._node.display.attributes.name_label_horiz = old_val[2]
       this._node.display.attributes.name_label_vert = old_val[3]
-      this._node.menu_config.updateAllComponentsRelatedToLinks()
+      this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this.drawNameLabel()
     }
     

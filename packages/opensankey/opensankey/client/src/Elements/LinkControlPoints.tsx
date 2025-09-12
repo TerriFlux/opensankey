@@ -83,7 +83,6 @@ export class LinkControlPoints {
       starting_curve_point: new ClassTemplate_Handler(
         'cp_start_' + this.link.id,
         drawing_area,
-        this.link.menu_config,
         this.link,
         this.dragHandleStart(),
         this.startCurvePointDragEvent(),
@@ -92,7 +91,6 @@ export class LinkControlPoints {
       ending_curve_point: new ClassTemplate_Handler(
         'cp_end_' + this.link.id,
         drawing_area,
-        this.link.menu_config,
         this.link,
         this.dragHandleStart(),
         this.endCurvePointDragEvent(),
@@ -101,7 +99,6 @@ export class LinkControlPoints {
       starting_bezier_point: new ClassTemplate_Handler(
         'bz_start_' + this.link.id,
         drawing_area,
-        this.link.menu_config,
         this.link,
         this.dragHandleStart(),
         this.startTangeantDragEvent(),
@@ -110,7 +107,6 @@ export class LinkControlPoints {
       ending_bezier_point: new ClassTemplate_Handler(
         'bz_end_' + this.link.id,
         drawing_area,
-        this.link.menu_config,
         this.link,
         this.dragHandleStart(),
         this.endTangeantDragEvent(),
@@ -119,7 +115,6 @@ export class LinkControlPoints {
       middle_recycling_point: new ClassTemplate_Handler(
         'recy_middle_' + this.link.id,
         drawing_area,
-        this.link.menu_config,
         this.link,
         this.dragHandleStart(),
         this.middleRecyclingDragEvent(),
@@ -501,7 +496,7 @@ export class LinkControlPoints {
       this._control_points.is_dragged = false
 
       this.drawControlPoint()
-      this.link.menu_config.updateComponentRelatedToLinksApparence()
+      this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToLinksApparence()
       this.link.drawing_area.checkAndUpdateAreaSize()
       // Save current attribute val after mutating them in dragHandlers events
       const ghost = {

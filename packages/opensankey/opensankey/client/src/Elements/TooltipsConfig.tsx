@@ -17,6 +17,26 @@ export class TooltipEventManager {
   private mousePosition: { x: number; y: number } = { x: 0, y: 0 };
   private isProtected: boolean = false;
 
+    // ✅ AJOUT : Timer pour la fermeture automatique
+  private autoCloseTimer: NodeJS.Timeout | null = null;
+  private autoCloseDelay: number = 1000; // 2 secondes par défaut
+
+  // ✅ AJOUT : Méthode pour démarrer le timer de fermeture
+  private startAutoCloseTimer() {
+    this.clearAutoCloseTimer();
+    this.autoCloseTimer = setTimeout(() => {
+      this.closeTooltip();
+    }, this.autoCloseDelay);
+  }
+
+    // ✅ AJOUT : Méthode pour annuler le timer
+  private clearAutoCloseTimer() {
+    if (this.autoCloseTimer) {
+      clearTimeout(this.autoCloseTimer);
+      this.autoCloseTimer = null;
+    }
+  }
+
   public static getInstance(): TooltipEventManager {
     if (!TooltipEventManager.instance) {
       TooltipEventManager.instance = new TooltipEventManager();
@@ -42,8 +62,40 @@ export class TooltipEventManager {
         this.closeTooltip();
       }
     });
+      // ✅ AJOUT : Écouter les mouvements de souris globaux
+    document.addEventListener('mousemove', (event) => {
+      if (this.activeTooltip.element) {
+        const isOverElement = this.isMouseOverElement(event);
+        const isOverTooltip = this.isMouseOverTooltip(event);
+        
+        if (!isOverElement && !isOverTooltip) {
+          // La souris n'est ni sur l'élément ni sur le tooltip
+          this.startAutoCloseTimer();
+        } else {
+          // La souris est sur l'élément ou le tooltip, annuler la fermeture
+          this.clearAutoCloseTimer();
+        }
+      }
+    });
+  }
+  // ✅ AJOUT : Vérifier si la souris est sur l'élément actif
+  private isMouseOverElement(event: MouseEvent): boolean {
+    if (!this.activeTooltip.element || !this.activeTooltip.element.d3_selection) {
+      return false;
+    }
+    
+    const elementNode = this.activeTooltip.element.d3_selection.node();
+    if (!elementNode) return false;
+    
+    // Vérifier si l'événement vient de l'élément ou de ses enfants
+    return elementNode.contains(event.target as Node);
   }
 
+  // ✅ AJOUT : Vérifier si la souris est sur le tooltip
+  private isMouseOverTooltip(event: MouseEvent): boolean {
+    const tooltip = document.querySelector('.sankey-tooltip');
+    return tooltip ? tooltip.contains(event.target as Node) : false;
+  }
   /**
    * Ouvre un tooltip pour un élément donné
    */
@@ -57,7 +109,8 @@ export class TooltipEventManager {
     if (this.activeTooltip.element === element) {
       return;
     }
-
+    // ✅ MODIFICATION : Annuler le timer lors de l'ouverture
+    this.clearAutoCloseTimer();
     this.mousePosition = { x: mouseX, y: mouseY };
 
     // Marquer comme sélectionné pour les styles CSS
@@ -89,6 +142,8 @@ export class TooltipEventManager {
    * Ferme le tooltip actuel
    */
   public closeTooltip() {
+      // ✅ MODIFICATION : Annuler le timer lors de la fermeture
+    this.clearAutoCloseTimer();
     if (this.activeTooltip.element) {
       // Nettoyer les classes CSS
       this.activeTooltip.element.d3_selection?.classed('tooltip_shown', false);
@@ -104,7 +159,10 @@ export class TooltipEventManager {
       this.activeTooltip = { element: null, behaviorManager: null };
     }
   }
-
+  // ✅ AJOUT : Méthode pour configurer le délai de fermeture
+  public setAutoCloseDelay(delay: number) {
+    this.autoCloseDelay = delay;
+  }
   /**
    * Déplace le tooltip (si nécessaire)
    */
