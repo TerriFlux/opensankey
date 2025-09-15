@@ -348,8 +348,14 @@ export const OSMultiSelect = ({ elements, onClick }: {
     <MenuItem
       icon={(selected_elements.length == elements.length) ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
       onClick={() => {
+        if (selected_elements.length == elements.length) {
+          elements.forEach(e=>e.selected = false)
+        } else {
+          elements.forEach(e=>e.selected = true)
+        }
         const new_sel = selected_elements.length == elements.length ? [] : elements //select or deselect all
         onClick(new_sel)
+        setMenuListItems(renderMenu())
       }}>{t('Noeud.TS')}</MenuItem>
     <MenuDivider />
   </> : <></>
