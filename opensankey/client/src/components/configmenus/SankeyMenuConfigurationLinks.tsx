@@ -17,11 +17,11 @@ import { OSTooltip } from './MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /*************************************************************************************************/
-export const SankeyLinkSelection = ({app_data}:{app_data:Class_ApplicationData}) => {
-  const { t, icon_library,menu_configuration,drawing_area,history } = app_data
-  const {sankey} = drawing_area
+export const SankeyLinkSelection = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, icon_library, menu_configuration, drawing_area, history } = app_data
+  const { sankey } = drawing_area
   const { icon_add_element, icon_remove_element, icon_repeat, icon_element_visible, icon_element_invisible } = icon_library
-  
+
   let links: Class_LinkElement[]
   let selected_links: Class_LinkElement[]
   if (!menu_configuration.is_selector_only_for_visible_links) {
@@ -33,12 +33,12 @@ export const SankeyLinkSelection = ({app_data}:{app_data:Class_ApplicationData})
   }
 
   // Préparation des options pour MultiSelect
-  const INITIAL_OPTIONS_LINKS = links.map((d) => { 
-    return { 'label': d.name, 'value': d.id } 
+  const INITIAL_OPTIONS_LINKS = links.map((d) => {
+    return { 'label': d.name, 'value': d.id }
   })
 
-  const selected_for_multiselect = selected_links.map((d) => { 
-    return { 'label': d.name, 'value': d.id } 
+  const selected_for_multiselect = selected_links.map((d) => {
+    return { 'label': d.name, 'value': d.id }
   })
 
   // Nodes to display in selection menus ------------------------------------------------
@@ -93,18 +93,16 @@ export const SankeyLinkSelection = ({app_data}:{app_data:Class_ApplicationData})
     return (
       <Box
         layerStyle='submenuconfig_droplist'
-
+        width= '11vw'
       >
         {/* Position custom pour MultiSelect */}
-        <Box
-        >
           <MultiSelect
             options={INITIAL_OPTIONS_LINKS}
             value={selected_for_multiselect}
             labelledBy={t('Flux.TS') || 'Sélection des flux'}
             onChange={(selected: [{ label: string, value: string }]) => {
               const new_sel = selected.map(d => d.value)
-              
+
               // Mise à jour de la sélection
               links.forEach(link => {
                 if (new_sel.includes(link.id)) {
@@ -130,7 +128,6 @@ export const SankeyLinkSelection = ({app_data}:{app_data:Class_ApplicationData})
             }}
           />
         </Box>
-      </Box>
     )
   }
 
@@ -321,7 +318,7 @@ export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
   // Traduction
   const { t, icon_library } = new_data
   const { icon_element_visible, icon_element_invisible } = icon_library
-  
+
   // Links to display in selection menus ------------------------------------------------
 
   let links: Class_LinkElement[]
@@ -338,12 +335,12 @@ export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
   }
 
   // Préparation des options pour MultiSelect
-  const INITIAL_OPTIONS_LINKS = links.map((d) => { 
-    return { 'label': d.name, 'value': d.id } 
+  const INITIAL_OPTIONS_LINKS = links.map((d) => {
+    return { 'label': d.name, 'value': d.id }
   })
 
-  const selected_for_multiselect = selected_links.map((d) => { 
-    return { 'label': d.name, 'value': d.id } 
+  const selected_for_multiselect = selected_links.map((d) => {
+    return { 'label': d.name, 'value': d.id }
   })
 
   // Components updaters ----------------------------------------------------------------
@@ -373,41 +370,39 @@ export const SankeyLinkSelectionSimple: FC<BaseApplicationDataType> = (
     return (
       <Box
         layerStyle='submenuconfig_droplist'
+        width= '14vw'
       >
-        <Box
-        >
-          <MultiSelect
-            options={INITIAL_OPTIONS_LINKS}
-            value={selected_for_multiselect}
-            labelledBy={t('Flux.TS') || 'Sélection des flux'}
-            onChange={(selected: [{ label: string, value: string }]) => {
-              const new_sel = selected.map(d => d.value)
-              
-              // Mise à jour de la sélection
-              links.forEach(link => {
-                if (new_sel.includes(link.id)) {
-                  new_data.drawing_area.addLinkToSelection(link)
-                } else {
-                  new_data.drawing_area.removeLinkFromSelection(link)
-                }
-              })
+        <MultiSelect
+          options={INITIAL_OPTIONS_LINKS}
+          value={selected_for_multiselect}
+          labelledBy={t('Flux.TS') || 'Sélection des flux'}
+          onChange={(selected: [{ label: string, value: string }]) => {
+            const new_sel = selected.map(d => d.value)
 
-              // Update all menus
-              refreshThisAndUpdateRelatedComponents()
-            }}
-            valueRenderer={(selected: { label: string, value: string }[]) => {
-              return selected.length ? selected.map(({ label }) => label + ', ') : t('Flux.NS') || 'Aucun flux sélectionné'
-            }}
-            // overrideStrings={{
-            //   'selectAll': t('Flux.selectAll') || 'Tout sélectionner',
-            //   'allItemsAreSelected': t('Flux.allSelected') || 'Tous les éléments sont sélectionnés',
-            //   'clearSearch': t('Flux.clearSearch') || 'Effacer la recherche',
-            //   'noOptions': t('Flux.noOptions') || 'Aucune option',
-            //   'search': t('Flux.search') || 'Rechercher',
-            //   'selectSomeItems': t('Flux.selectSomeItems') || 'Sélectionner des éléments'
-            // }}
-          />
-        </Box>
+            // Mise à jour de la sélection
+            links.forEach(link => {
+              if (new_sel.includes(link.id)) {
+                new_data.drawing_area.addLinkToSelection(link)
+              } else {
+                new_data.drawing_area.removeLinkFromSelection(link)
+              }
+            })
+
+            // Update all menus
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          valueRenderer={(selected: { label: string, value: string }[]) => {
+            return selected.length ? selected.map(({ label }) => label + ', ') : t('Flux.NS') || 'Aucun flux sélectionné'
+          }}
+        // overrideStrings={{
+        //   'selectAll': t('Flux.selectAll') || 'Tout sélectionner',
+        //   'allItemsAreSelected': t('Flux.allSelected') || 'Tous les éléments sont sélectionnés',
+        //   'clearSearch': t('Flux.clearSearch') || 'Effacer la recherche',
+        //   'noOptions': t('Flux.noOptions') || 'Aucune option',
+        //   'search': t('Flux.search') || 'Rechercher',
+        //   'selectSomeItems': t('Flux.selectSomeItems') || 'Sélectionner des éléments'
+        // }}
+        />
       </Box>
     )
   }

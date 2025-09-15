@@ -160,7 +160,7 @@ export class LinkDrawValue {
         const xf = this._link.position_x_end
         const yf = this._link.position_y_end
         const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
-        if (Math.abs(yf - y0)>50 && (dist / this._link.thickness) < 1.1) return
+        if (this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv' &&  Math.abs(yf - y0)>50 && (dist / this._link.thickness) < 1.1) return
 
         // If label is undefined or null, do nothing
         if (label_to_display) {

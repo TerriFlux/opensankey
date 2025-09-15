@@ -30,7 +30,7 @@ export const SankeyNodeSelection: FC<FCType_SankeyNodeEdition> = (
   // Traduction
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible } = icon_library
-  
+
   // Nodes to select --------------------------------------------------------------------
 
   let nodes: Class_NodeElement[]
@@ -47,12 +47,12 @@ export const SankeyNodeSelection: FC<FCType_SankeyNodeEdition> = (
   }
 
   // Préparation des options pour MultiSelect
-  const INITIAL_OPTIONS = nodes.map((d) => { 
-    return { 'label': d.name, 'value': d.id } 
+  const INITIAL_OPTIONS = nodes.map((d) => {
+    return { 'label': d.name, 'value': d.id }
   })
 
-  const selected_for_multiselect = selected_nodes.map((d) => { 
-    return { 'label': d.name, 'value': d.id } 
+  const selected_for_multiselect = selected_nodes.map((d) => {
+    return { 'label': d.name, 'value': d.id }
   })
 
   // Menu updaters ----------------------------------------------------------------------
@@ -92,6 +92,7 @@ export const SankeyNodeSelection: FC<FCType_SankeyNodeEdition> = (
     return (
       <Box
         layerStyle='submenuconfig_droplist'
+        width='11vw'
       >
         {/* Position custom pour MultiSelect */}
         <Box
@@ -102,7 +103,7 @@ export const SankeyNodeSelection: FC<FCType_SankeyNodeEdition> = (
             labelledBy={t('Noeud.TS')}
             onChange={(selected: [{ label: string, value: string }]) => {
               const new_sel = selected.map(d => d.value)
-              
+
               // Mise à jour de la sélection
               nodes.forEach(n => {
                 if (new_sel.includes(n.id)) {
@@ -300,12 +301,12 @@ export const SankeyNodeSelectionSimple: FC<FCType_SankeyNodeEdition> = (
   }
 
   // Préparation des options pour MultiSelect
-  const INITIAL_OPTIONS = nodes.map((d) => { 
-    return { 'label': d.name, 'value': d.id } 
+  const INITIAL_OPTIONS = nodes.map((d) => {
+    return { 'label': d.name, 'value': d.id }
   })
 
-  const selected_for_multiselect = selected_nodes.map((d) => { 
-    return { 'label': d.name, 'value': d.id } 
+  const selected_for_multiselect = selected_nodes.map((d) => {
+    return { 'label': d.name, 'value': d.id }
   })
 
   // Menu updaters ----------------------------------------------------------------------
@@ -345,35 +346,31 @@ export const SankeyNodeSelectionSimple: FC<FCType_SankeyNodeEdition> = (
     return (
       <Box
         layerStyle='submenuconfig_droplist'
+        width='14vw'
       >
-        <Box
-          height='2rem'
-          width='14.75rem'
-        >
-          <MultiSelect
-            options={INITIAL_OPTIONS}
-            value={selected_for_multiselect}
-            labelledBy={t('Noeud.TS')}
-            onChange={(selected: [{ label: string, value: string }]) => {
-              const new_sel = selected.map(d => d.value)
-              
-              // Mise à jour de la sélection
-              nodes.forEach(n => {
-                if (new_sel.includes(n.id)) {
-                  new_data.drawing_area.addNodeToSelection(n)
-                } else {
-                  new_data.drawing_area.removeNodeFromSelection(n)
-                }
-              })
+        <MultiSelect
+          options={INITIAL_OPTIONS}
+          value={selected_for_multiselect}
+          labelledBy={t('Noeud.TS')}
+          onChange={(selected: [{ label: string, value: string }]) => {
+            const new_sel = selected.map(d => d.value)
 
-              // Update all menus
-              refreshThisAndUpdateRelatedComponents()
-            }}
-            valueRenderer={(selected: { label: string, value: string }[]) => {
-              return selected.length ? selected.map(({ label }) => label + ', ') : t('Noeud.NS')
-            }}
-          />
-        </Box>
+            // Mise à jour de la sélection
+            nodes.forEach(n => {
+              if (new_sel.includes(n.id)) {
+                new_data.drawing_area.addNodeToSelection(n)
+              } else {
+                new_data.drawing_area.removeNodeFromSelection(n)
+              }
+            })
+
+            // Update all menus
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          valueRenderer={(selected: { label: string, value: string }[]) => {
+            return selected.length ? selected.map(({ label }) => label + ', ') : t('Noeud.NS')
+          }}
+        />
       </Box>
     )
   }
