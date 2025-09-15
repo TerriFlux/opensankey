@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { Class_LinkElement } from './Link'
+import { Class_LinkElement, link_data_label } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 
 export class LinkTooltip {
@@ -85,23 +85,21 @@ export class LinkTooltip {
     const data_label_visible = this._link.value_label_is_visible
     this._link.value_label_is_visible = true
     // Valeur du lien
-    const prev_type = this._link.drawing_area.type_data
-    this._link.drawing_area.type_data = 'reconciled'
+    //const prev_type = this._link.drawing_area.type_data
+    //this._link.drawing_area.type_data = 'reconciled'
     html += '<tr>'
     html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.result_value')}</th>`
-    html += `<td>${this._link.data_label}</td>`
+    html += `<td>${link_data_label('reconciled',this._link)}</td>`
     html += '</tr>'
 
     if (this._link.value?.valueData !== null && this._link.value?.valueResult !== null) {
-      this._link.drawing_area.type_data = 'data'
       html += '<tr>'
       html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.data_value')}</th>`
-      html += `<td>${this._link.data_label}</td>`
+      html += `<td>${link_data_label('data',this._link)}</td>`
       html += '</tr>'
     }
     this._link.value_label_is_visible = data_label_visible
     
-    this._link.drawing_area.type_data = prev_type
     // Tags de flux
     this._link.flux_taggs_list.forEach(tagg => {
       const tagNames = this._link.flux_tags_list

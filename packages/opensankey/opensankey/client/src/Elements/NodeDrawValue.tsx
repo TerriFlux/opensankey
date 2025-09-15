@@ -182,7 +182,10 @@ export class NodeDrawValueLabel {
     const pow_out = Math.pow(10, max_digit_out)
     link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
     
-    return format_value(Math.max(input_val / pow_in, output_val / pow_out),this._node,this._node.value_label_unit)
+    return format_value(
+      this._node.sankey.drawing_area.type_data,
+      Math.max(input_val / pow_in, output_val / pow_out),this._node,this._node.value_label_unit
+    )
     // const display_unit = this._node.value_label_unit_visible && this._node.value_label_unit != ''
     // const factor_unit = display_unit && this._node.value_label_unit_factor > 1 ? this._node.value_label_unit_factor : 1
     // const label_unit = display_unit ? this._node.value_label_unit : ''

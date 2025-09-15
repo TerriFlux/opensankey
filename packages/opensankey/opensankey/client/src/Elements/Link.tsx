@@ -46,7 +46,8 @@ import {
   getJSONOrUndefinedFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringListFromJSON,
-  getStringFromJSON
+  getStringFromJSON,
+  Type_Structure
 } from '../types/Utils'
 import {
   Class_LinkAttribute,
@@ -180,7 +181,28 @@ export function sortLinksElementsByRelativeNodesPositions(
 
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
+export const link_data_label = (type_data:Type_Structure,link:Class_LinkElement) => {
+    if (type_data == 'data' || type_data == 'data_label') {
+      if (!link.value?.valueData) return ''
+      return link.formatValueWithOption(format_value(type_data,link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
+        return link.value?.unit_factor+link.sankey.unit_data_tag!+'/'+link.sankey.unit_first_datatag
+      }*/
+    }
+    if (link.value?.result_min !== null) {
+      if (type_data === 'free_interval') {
+        return '[' + format_value(type_data,link.value!.result_min, link, link.unit_name) + ',' + format_value(type_data,link.value!.result_max, link, link.unit_name) + ']'
+      }
+      if (type_data === 'free_value') {
+        return format_value(type_data,link.valueCurrent!, link, link.unit_name)
+      }
+      return ''
+    }
+
+    return format_value(type_data,link.valueCurrent!, link, link.unit_name)  
+}
+
 export const format_value = (
+  data_type:Type_Structure,
   data_value: number | undefined | null,
   element: Class_LinkElement | Class_NodeElement,
   unit_name: string
@@ -257,7 +279,7 @@ export const format_value = (
     return text_value
   }
   // Add unit suffix
-  if (element.sankey.drawing_area.type_data == 'data' || element.sankey.drawing_area.type_data == 'data_label' && link.value!.value_option == 'unit_ratio') return text_value
+  if (data_type == 'data' || data_type == 'data_label' && link.value!.value_option == 'unit_ratio') return text_value
   if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
   else if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
   else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
@@ -1753,21 +1775,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public get data_label() {
-    if (this.sankey.drawing_area.type_data == 'data' || this.sankey.drawing_area.type_data == 'data_label') {
-      if (!this.value?.valueData) return ''
-      return this.formatValueWithOption(format_value(this.value?.valueData, this, this.unit_name), this.value?.value_option)/*else if (this.value?.value_option == 'unit_ratio' ) {
-        return this.value?.unit_factor+this.sankey.unit_data_tag!+'/'+this.sankey.unit_first_datatag
-      }*/
-    }
-    if (this.value?.result_min !== null) {
-      if (this.drawing_area.type_data === 'free_interval')
-        return '[' + format_value(this.value!.result_min, this, this.unit_name) + ',' + format_value(this.value!.result_max, this, this.unit_name) + ']'
-      if (this.drawing_area.type_data === 'free_value')
-        return format_value(this.valueCurrent!, this, this.unit_name)
-      return ''
-    }
-
-    return format_value(this.valueCurrent!, this, this.unit_name)
+    return link_data_label(this.sankey.drawing_area.type_data,this)
   }
 
   /**
