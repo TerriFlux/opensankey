@@ -68,6 +68,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
     const DD = (
       <Box
         layerStyle='submenuconfig_droplist'
+        width= '11vw'
       >
         {/* Position custom pour MultiSelect */}
 
