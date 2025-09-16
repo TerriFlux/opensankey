@@ -147,14 +147,19 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   const logo_btn_fs = document.fullscreenElement ? app_data.icon_library.icon_enter_fullscreen : app_data.icon_library.icon_exit_fullscreen
 
-  const tmp = new KeyboardEvent('keydown', { key: 'F', ctrlKey: true })
-  const doc = document
-  // Function that trigger event on Ctrl + F
+  // const tmp = new KeyboardEvent('keydown', { key: 'F', ctrlKey: true })
+  // const doc = document
+  // // Function that trigger event on Ctrl + F
   const executeManualCtrlF = () => {
-    if (doc.onkeydown) {
-      doc.onkeydown(tmp as KeyboardEvent)
-    }
-    updateParentComponent()
+      //evt.preventDefault()
+      // Toggle fullscreen
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+      }
+      else if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+      updateParentComponent()
   }
 
   return <ButtonGroup isAttached orientation={app_data.is_static ? "vertical" : 'horizontal'}>

@@ -968,7 +968,7 @@ public readUrlJSON(url_data: string) {
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
     const evtCtrlAltS = evtCtrlAlt && evtKeyS
-    const evtCtrlF = evtCtrl && evtKeyF
+    //const evtCtrlF = evtCtrl && evtKeyF
     const evtCtrlZ = evtCtrl && evtKeyZ
     const evtCtrlY = evtCtrl && evtKeyY
     const evtCtrlShiftZ = evtCtrlShift && evtKeyZ
@@ -1068,17 +1068,17 @@ public readUrlJSON(url_data: string) {
       this.saveToExcel('/opensankey/',{} as JSON)
     }
     // Fullscreen --------------------------------------------------------------------
-    else if (evtCtrlF) {
-      // Prevent default event
-      evt.preventDefault()
-      // Toggle fullscreen
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen()
-      }
-      else if (document.exitFullscreen) {
-        document.exitFullscreen()
-      }
-    }
+    // else if (evtCtrlF) {
+    //   // Prevent default event
+    //   evt.preventDefault()
+    //   // Toggle fullscreen
+    //   if (!document.fullscreenElement) {
+    //     document.documentElement.requestFullscreen()
+    //   }
+    //   else if (document.exitFullscreen) {
+    //     document.exitFullscreen()
+    //   }
+    // }
     // Undo
     else if (evtCtrlZ) {
       evt.preventDefault()
