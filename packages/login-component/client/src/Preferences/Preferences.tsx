@@ -21,10 +21,10 @@ import { Type_AdditionalMenus } from '../deps/OpenSankey+/deps/OpenSankey/types/
 
 const paddingBoxPreference = '0.6rem'
 
-export const ModalPreference: FC<{
+export const ModalPreference = ({new_data, additionalMenus}:{
   new_data: Class_ApplicationDataOSP,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>
-}> = ({new_data, additionalMenus} ) => {
+}) => {
   // Component updater ------------------------------------------------------------------
   const [, setUpdate] = useState(0)
   const [show_preference, setShowPreference] = useState(false)
@@ -34,6 +34,7 @@ export const ModalPreference: FC<{
   }
 
   const ghost_data = useRef<Class_ApplicationDataOSP>(new Class_ApplicationDataOSP(true,{no_key_event:true}))
+  ghost_data.current.createNewMenuConfiguration()
   const list_palette: MutableRefObject<{ name: string, colors: string[] }[]> = useRef([])
 
   // user_data -------------------------------------------------------------------------------
@@ -200,7 +201,8 @@ export const ModalPreference: FC<{
  * @return {*} 
  */
 const TabsUserTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP }> = ({ user_data, app_data }) => {
-  const { t, menu_configuration } = user_data
+  const { menu_configuration } = user_data
+  const { t } = app_data
   const { ref_to_menu_config_nodes_selection_updater } = menu_configuration
   // Change ref of updater of node selection (not in use user_data) so SankeySettingsEditionElementTags update this composant and children
 
@@ -300,7 +302,7 @@ const TansferTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
 }
 
 const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, additionalMenus: MutableRefObject<Type_AdditionalMenus> }> = ({ user_data, app_data, additionalMenus }) => {
-  const { t } = user_data
+  const { t } = app_data
   const [, setUpdate] = useState(0)
   user_data.menu_configuration.ref_to_menu_config_nodes_styles_editor_updater.current = () => setUpdate(a => a + 1)
   user_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current = () => setUpdate(a => a + 1)
