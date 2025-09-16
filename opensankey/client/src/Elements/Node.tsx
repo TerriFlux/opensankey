@@ -1664,7 +1664,8 @@ export class Class_NodeElement extends ClassTemplate_Element {
       super.is_visible &&
       this.are_related_node_tags_selected &&
       this.are_related_dimensions_selected &&
-      this.are_links_visibilities_ok
+      this.are_links_visibilities_ok &&
+      this.orphan_visible
     )
   }
 
@@ -1913,10 +1914,17 @@ export class Class_NodeElement extends ClassTemplate_Element {
     return links_visibilities_fingerprint + '_' + this.sankey.data_tags_fingerprint
   }
 
-  private checkIfLinksVisibilitiesAreOK() {
+  private get orphan_visible() {
     if (this.input_links_list.length + this.output_links_list.length == 0) {
       if (this.orphan_node_visible) return true
       else return false
+    }
+    return true
+  }
+
+  private checkIfLinksVisibilitiesAreOK() {
+    if (this.input_links_list.length + this.output_links_list.length == 0) {
+      return true
     }
     const input_links_visible = this.input_links_list.filter(link =>
       link.is_not_zero &&
