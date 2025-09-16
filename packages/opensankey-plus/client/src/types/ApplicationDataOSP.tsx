@@ -6,6 +6,7 @@
 // Date : 28/08/2024
 // All rights reserved for TerriFlux
 // ==================================================================================================
+import { useToast } from '@chakra-ui/react'
 
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON, default_save_JSON_options } from '../deps/OpenSankey/types/Utils'
@@ -174,7 +175,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   public createNewMenuConfiguration() {
-    return new Class_MenuConfigOSP() as Class_MenuConfig
+    this._toast = useToast()
+    this._menu_configuration = new Class_MenuConfig()
+    this._history = new Class_ApplicationHistory(this._menu_configuration)
+    return this._menu_configuration
   }
 
   public createNewDrawingArea(id?: string) {
