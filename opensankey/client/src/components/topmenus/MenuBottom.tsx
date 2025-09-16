@@ -150,16 +150,18 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
   // const tmp = new KeyboardEvent('keydown', { key: 'F', ctrlKey: true })
   // const doc = document
   // // Function that trigger event on Ctrl + F
-  const executeManualCtrlF = () => {
-      //evt.preventDefault()
-      // Toggle fullscreen
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen()
-      }
-      else if (document.exitFullscreen) {
-        document.exitFullscreen()
-      }
-      updateParentComponent()
+  const executeManualCtrlF = async () => {
+    //evt.preventDefault()
+    // Toggle fullscreen
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen()
+      app_data.drawing_area.draw()
+    }
+    else if (document.exitFullscreen) {
+      await document.exitFullscreen()
+      app_data.drawing_area.draw()
+    }
+    updateParentComponent()
   }
 
   return <ButtonGroup isAttached orientation={app_data.is_static ? "vertical" : 'horizontal'}>
