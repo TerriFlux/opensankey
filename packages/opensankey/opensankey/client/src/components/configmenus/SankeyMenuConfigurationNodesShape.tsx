@@ -137,6 +137,21 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
     // And update this menu also
     app_data.menu_configuration.updateComponentRelatedToNodesApparence()
   }
+  const refreshThisAndUpdateRelatedComponentsGeometry = () => {
+    // Whatever is done, set saving indicator
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    if (menu_for_style) {
+      // Update menus for node's apparence in case we use this for style
+      app_data.menu_configuration.updateComponentRelatedToNodesStyles()
+      // Redraw all visible nodes if we modifie node style
+      sankey.visible_nodes_list.forEach(n => n.draw())
+    } else {
+        // Redraw all visible nodes if we modifie node style
+      selected_nodes.forEach(n => n.draw())
+    }
+    // And update this menu also
+    app_data.menu_configuration.updateComponentRelatedToNodesApparence()
+  }
 
   let disable_attr_props = sankey.node_styles_dict[default_style_id].customisable_attribute
   if (menu_for_style) disable_attr_props = sankey.node_styles_dict[ref_selected_style_node.current].customisable_attribute
@@ -488,7 +503,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       elements={elements}
       attributePath='Noeud.apparence'
       attributeKey={'position_u' as ValueKey}
-      refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+      refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
       minimum_value={1}
       unit_text='pixels'
       stepper={true} /> : <></>}
@@ -497,7 +512,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       elements={elements}
       attributePath='Noeud.apparence'
       attributeKey={'position_dx' as ValueKey}
-      refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+      refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
       unit_text='pixels'
       stepper={true} />
     <ElementAttrSetterNumberInput2Cols
@@ -505,7 +520,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       elements={elements}
       attributePath='Noeud.apparence'
       attributeKey={'position_dy' as ValueKey}
-      refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+      refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
       unit_text='pixels'
       stepper={true} />
 
