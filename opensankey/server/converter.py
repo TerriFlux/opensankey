@@ -1469,7 +1469,10 @@ class JsonToSankey(object):
             if "value_option" in datas_json:
                 data.value_option = datas_json["value_option"]
             if read_constraint and data.value_option in CONST_IO_XL.DATA_VALUE_PERCENT_CONSTRAINTS:
-                self.sankey.ratio_node(flux, datas_json)
+                self.sankey.ratio_node(flux, data, datas_json)
+            if read_constraint and data.value_option == CONST_IO_XL.DATA_VALUE_TYPE_UNIT_RATIO:
+                self.sankey.ratio_node(flux, data, datas_json)
+                data.natural_unit = datas_json["ratio_unit_tag"]
             if not read_constraint:
                 if "data_value" in datas_json:
                     data.data_value = datas_json["data_value"]
