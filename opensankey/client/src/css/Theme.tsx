@@ -1344,9 +1344,9 @@ export const checkboxStyles = {
       },
     },
     control: {
-      margin: '0.25rem',
-      width: '0.75rem',
-      height: '0.75rem',
+      // margin: '0.25rem',
+      // width: '0.75rem',
+      // height: '0.75rem',
       bg: 'gray.400',
       borderColor: 'gray.400',
       iconColor: 'white',
@@ -2700,7 +2700,7 @@ const layerStyles = {
     transform: 'translate(-50%)'
   },
   toolbar_right: {
-    width:'3rem',
+    width: '3rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
