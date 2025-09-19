@@ -1893,7 +1893,10 @@ const convert_nodes: convert_nodesFuncType = (
         n.local.name_label_horiz_shift = n.local.label_horiz_shift
       }
     }
-
+    if (!Array.isArray(n.style)) {
+      //@ts-expect-error xxx
+      n.style = [n.style]
+    }
   }
   )
 }
