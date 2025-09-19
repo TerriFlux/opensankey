@@ -1004,7 +1004,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
       .attr('x', 0)
       .append('g')
       .append('path')
-      .style('fill', (!this.shape_visible || this.icon_color_sustainable) ? this.icon_color : this.getShapeColorToUse())
+      .style('fill', this.icon_color_sustainable ? this.icon_color : this.getShapeColorToUse())
       .attr('d', this.sankey.getIconFromCatalog(this.icon_name))
   }
 
