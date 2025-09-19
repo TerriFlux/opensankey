@@ -459,6 +459,10 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     s[1].name_label_separator = ' - '
     //@ts-expect-error xxx
     s[1].name_label_separator_part = 'before'
+    if (s[1].label_color) {
+      //@ts-expect-error xxx
+      s[1].label_color = 'white'
+    }
   })
 
   const attributes_to_remove = [
@@ -1891,6 +1895,10 @@ const convert_nodes: convert_nodesFuncType = (
       }
       if (n.local.label_horiz_shift !== undefined) {
         n.local.name_label_horiz_shift = n.local.label_horiz_shift
+      }
+      if (n.local.label_color) {
+        //@ts-expect-error xxx
+        n.local.label_color = 'white'
       }
     }
     if (!Array.isArray(n.style)) {
