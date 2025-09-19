@@ -1739,18 +1739,18 @@ const convert_nodes: convert_nodesFuncType = (
         if (!data.levelTags[dim[0]]) {
           return
         }
-        if (!data.levelTags[dim[0]].activated) {
-          return
-        }
+        // if (!data.levelTags[dim[0]].activated) {
+        //   return
+        // }
         const node_tags_attr = n.tags[dim[0]]
         if (node_tags_attr != undefined && node_tags_attr.length != 0) {
           // If the node has at least 1 tag from the selected tag of the group then we display it
           // If the node has tag from the group attribued to it but are not selected then we don't display it
           const tags_from_grp_to_display = Object.values(data.levelTags[dim[0]].tags).filter(t => t.selected).map(t => t.name)
-          const tag_visible = node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0
+          const tag_visible = data.levelTags[dim[0]].activated && node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0
           if (!tag_visible && local_aggregation) {
             // Force to show this node
-            if (+node_tags_attr[0] > +tags_from_grp_to_display[0] &&
+            if ( (!data.levelTags[dim[0]].activated || +node_tags_attr[0] > +tags_from_grp_to_display[0]) &&
               dim[1].parent_name &&
               data.nodes[dim[1].parent_name!].local &&
               data.nodes[dim[1].parent_name!].local!.local_aggregation == false
