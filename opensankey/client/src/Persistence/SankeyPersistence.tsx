@@ -44,6 +44,7 @@ import { Class_ApplicationData } from '../types/ApplicationData'
 import { applyRandomColors } from '../Algorithms/Colors'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { FType_ProcessFunctions } from '../Modules'
+import { ExcelOptionType } from '../components/dialogs/ExcelModalSaver'
 
 declare global {
   interface Window {
@@ -354,7 +355,7 @@ export const JSONtoExcel = (
   data_as_json: Type_JSON,
   url_prefix: string,
   file_name: string,
-  save_options: JSON
+  save_options: ExcelOptionType
 ) => {
 
   let root = window.location.origin

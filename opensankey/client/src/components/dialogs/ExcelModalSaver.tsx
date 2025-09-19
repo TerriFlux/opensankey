@@ -613,7 +613,7 @@ export const ExcelModalSaver = ({ app_data }: { app_data: Class_ApplicationData 
         isActive
         size='sizeButtonDialog'
         onClick={() => {
-          app_data.saveToExcel('/opensankey/', options as unknown as JSON);
+          app_data.saveToExcel('/opensankey/', options);
         }}
       >{t('Menu.enregistrer')}</Button>
     </Box>
