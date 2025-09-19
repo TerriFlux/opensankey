@@ -1069,7 +1069,7 @@ class SankeyToJson(object):
             elif dimension.is_antagonist(node):
                 # Node does not exist in given dim
                 node_json["dimensions"][id] = {}
-                #if node._dimensions_as_child or node._dimensions_as_parent:
+                # if node._dimensions_as_child or node._dimensions_as_parent:
                 node_json["dimensions"][id]["antitag"] = True
         return node_json
 
@@ -1298,7 +1298,7 @@ class JsonToSankey(object):
                 if "parent_name" in dimension.keys():
                     all_dim_parent_child.append((dimension_id, dimension["parent_name"], node_id))
                 if "antitag" in dimension.keys():
-                    self.sankey.get_or_create_dimension(dimension_id).add_antagonist(node)           
+                    self.sankey.get_or_create_dimension(dimension_id).add_antagonist(node)
         # Apply all dimensions
         for dim_parent_child in all_dim_parent_child:
             dim_id, parent_id, child_id = dim_parent_child
