@@ -262,11 +262,11 @@ export const format_value = (
       // Do we need to keep only N significant numbers ?
       // 12345.67 avec nb_sign = 4 devient 12340
       text_value = String(parseFloat(data_value.toPrecision(element.value_label_nb_significant_digits)))
+      if (element.value_label_custom_digit) {
+        text_value = String(parseFloat(parseFloat(text_value).toFixed(element.value_label_nb_digit)))
+      }
       if (text_value[text_value.length - 1] == '0' && text_value.length == element.value_label_nb_significant_digits && text_value == String(data_value)) {
         text_value += '.'
-      }
-      if (element.value_label_custom_digit) {
-        text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
       }
     } else if (element.value_label_custom_digit) {
       text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
