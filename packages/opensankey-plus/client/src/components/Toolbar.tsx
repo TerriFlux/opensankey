@@ -1,4 +1,4 @@
-import React, { FC, useState, RefObject, useRef, ReactNode,useEffect } from 'react'
+import React, { FC, useState, RefObject, useRef, ReactNode, useEffect } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch
@@ -23,10 +23,6 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
   //@ts-ignore xxx
   app_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
-  useEffect(() => {
-    if (app_data.is_static) setDrawerOpen(true)
-  },[app_data.is_static])
-
   return <>
     <Button
       id='buttonOpenFilterDrawer'
@@ -206,7 +202,7 @@ export const CollapseButton = ({ app_data, isOpen, onToggle }: {
   </Button>
 }
 
-export const FilterWrapperBox = ({ app_data, title, defaultOpen,children }: React.PropsWithChildren<{
+export const FilterWrapperBox = ({ app_data, title, defaultOpen, children }: React.PropsWithChildren<{
   app_data: Class_ApplicationData,
   title: string,
   defaultOpen?: boolean
@@ -226,7 +222,7 @@ export const FilterWrapperBox = ({ app_data, title, defaultOpen,children }: Reac
   </Box>
 }
 
-export const FilterDataType = ({ app_data,defaultOpen }: { app_data: Class_ApplicationData, defaultOpen?:boolean }) => {
+export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_ApplicationData, defaultOpen?: boolean }) => {
   const { t } = app_data
   const [s_is_data_type_reconcilied, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(app_data.drawing_area.type_data))
   const data_type_not_reconcilied = ['data', 'structure'].includes(app_data.drawing_area.type_data)
@@ -485,7 +481,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
 
   // Création du sélecteur selon le type de banner
   const createSelector = (tagg: Class_TagGroup) => {
-    if (tagg.banner === 'one' ) {
+    if (tagg.banner === 'one') {
       const selected_value = tagg.selected_tags_list[0]?.id ?? ''
       return (
         <Select
@@ -588,9 +584,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
 
     return (
       <Box key={tagg.id} layerStyle={mode === 'data' ? 'menuconfigpanel_grid' : 'menuconfig_grid'}>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {tagg.name}
-        </Box>
+        {mode === 'level' && tagg.name === 'Primaire' ? <></> :
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {tagg.name}
+          </Box>}
         <Box layerStyle='filter_grid_row'>
           <OSTooltip label={t('Banner.ndd_lst')}>
             {selector}
@@ -617,9 +614,12 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
   </Box>
   ) : null
 
+  let title_key = config.title_key
+  if (mode === 'level' && taggs_in_banner.length>0 && taggs_in_banner[0].name === 'Primaire') title_key = 'ndd_one'
+
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
-    <FilterWrapperBox app_data={app_data} title={t(`Banner.${config.title_key}`)} defaultOpen={app_data.is_static}>
+    <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
       {config.show_title_column ? title_filter_column(app_data as unknown as Class_ApplicationDataOSP) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}
@@ -636,10 +636,19 @@ export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }
   const [, setCount] = useState(0)
   app_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
 
-  const level_filter = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length > 0
+  let nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
+  if (nb_level_taggs == 0) {
+    return <></>
+  }
+  if (nb_level_taggs == 1) {
+    const level_tagg = Object.values(app_data.drawing_area.sankey.level_taggs_dict)[0]
+    if (level_tagg.tags_list.length == 1) {
+      return <></>
+    }
+  }
   const content_popover = <UnifiedTagGroupFilter app_data={app_data} mode="level" />
 
-  return level_filter ? content_popover : <></>
+  return content_popover
 }
 
 export const DataTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) =>
